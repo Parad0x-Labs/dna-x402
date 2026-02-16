@@ -1,0 +1,38 @@
+# Node / JS
+node_modules/
+dist/
+.npm/
+
+# Rust / Solana
+target/
+**/*.so
+**/*.dylib
+**/*.rlib
+**/*.rmeta
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Build and runtime artifacts
+*.log
+*.pid
+reports/
+x402/audit_out/
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Local keys and secrets
+*.key
+*.pem
+*.secret
+deployer_wallet.json
+main_wallet.json
+relayer.json
+null_mint_authority.json
+wallet/*.json
+.env

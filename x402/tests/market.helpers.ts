@@ -1,0 +1,48 @@
+import bs58 from "bs58";
+import nacl from "tweetnacl";
+import { createSignedManifest } from "../src/market/manifest.js";
+import { ShopManifest, SignedShopManifest } from "../src/market/types.js";
+
+export function makeSignedShop(params: {
+  shopId: string;
+  capability: string;
+  endpointId?: string;
+  path?: string;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  priceAtomic?: string;
+  pricingModel?: ShopManifest["endpoints"][number]["pricingModel"];
+  settlementModes?: ShopManifest["endpoints"][number]["settlementModes"];
+  maxLatencyMs?: number;
+  availabilityTarget?: number;
+}): SignedShopManifest {
+  const kp = nacl.sign.keyPair();
+  const ownerPubkey = bs58.encode(kp.publicKey);
+  const ownerSecret = bs58.encode(kp.secretKey);
+
+  const manifest: ShopManifest = {
+    manifestVersion: "market-v1",
+    shopId: params.shopId,
+    name: `${params.shopId} Shop`,
+    ownerPubkey,
+    endpoints: [
+      {
+        endpointId: params.endpointId ?? `${params.shopId}-endpoint`,
+        method: params.method ?? "POST",
+        path: params.path ?? "/tool",
+        capabilityTags: [params.capability],
+        description: `${params.capability} endpoint`,
+        pricingModel: params.pricingModel ?? {
+          kind: "flat",
+          amountAtomic: params.priceAtomic ?? "1000",
+        },
+        settlementModes: params.settlementModes ?? ["transfer", "stream", "netting"],
+        sla: {
+          maxLatencyMs: params.maxLatencyMs ?? 1200,
+          availabilityTarget: params.availabilityTarget ?? 0.995,
+        },
+      },
+    ],
+  };
+
+  return createSignedManifest(manifest, ownerSecret);
+}

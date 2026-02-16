@@ -1,0 +1,58 @@
+import { exampleCurl, SKU_ICONS, TemplateSku } from "./metadata.js";
+
+export const researchPack: TemplateSku[] = [
+  {
+    shopId: "research-web-search",
+    name: "web_search_with_citations",
+    description: "Search web and return citations",
+    category: "research",
+    endpoint: {
+      endpointId: "web_search_with_citations",
+      method: "POST",
+      path: "/resource",
+      capabilityTags: ["web_search_with_citations", "research"],
+      description: "Searches web and attaches citations",
+      icon: SKU_ICONS.web_search_with_citations,
+      examples: [exampleCurl("POST", "/resource")],
+      pricingModel: { kind: "flat", amountAtomic: "900" },
+      settlementModes: ["transfer", "stream", "netting"],
+      sla: { maxLatencyMs: 1200, availabilityTarget: 0.995 },
+    },
+  },
+  {
+    shopId: "research-pdf-extract",
+    name: "pdf_fetch_extract",
+    description: "Fetch and extract text from PDF",
+    category: "research",
+    endpoint: {
+      endpointId: "pdf_fetch_extract",
+      method: "POST",
+      path: "/resource",
+      capabilityTags: ["pdf_fetch_extract", "research"],
+      description: "Fetches PDF and extracts text",
+      icon: SKU_ICONS.pdf_fetch_extract,
+      examples: [exampleCurl("POST", "/resource")],
+      pricingModel: { kind: "flat", amountAtomic: "1000" },
+      settlementModes: ["transfer", "stream", "netting"],
+      sla: { maxLatencyMs: 1400, availabilityTarget: 0.99 },
+    },
+  },
+  {
+    shopId: "research-summarize",
+    name: "summarize_with_quotes",
+    description: "Summarize with exact source quotes",
+    category: "research",
+    endpoint: {
+      endpointId: "summarize_with_quotes",
+      method: "POST",
+      path: "/resource",
+      capabilityTags: ["summarize_with_quotes", "research"],
+      description: "Produces summary plus direct quotes",
+      icon: SKU_ICONS.summarize_with_quotes,
+      examples: [exampleCurl("POST", "/resource")],
+      pricingModel: { kind: "flat", amountAtomic: "1200" },
+      settlementModes: ["transfer", "stream", "netting"],
+      sla: { maxLatencyMs: 1600, availabilityTarget: 0.99 },
+    },
+  },
+];

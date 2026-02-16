@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "PDX Dark Protocol",
+  "version": "1.0.0",
+  "description": "Privacy-preserving transfers on Solana",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.devnet.solana.com/*",
+    "https://api.mainnet-beta.solana.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PDX Dark"
+  }
+}

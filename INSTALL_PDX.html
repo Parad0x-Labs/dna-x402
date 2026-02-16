@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDX Dark Protocol - One-Click Install</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 2px solid #00ff88;
+        }
+
+        .logo {
+            font-size: 4em;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+            50% { text-shadow: 0 0 40px rgba(0, 255, 136, 1), 0 0 60px rgba(0, 204, 255, 0.5); }
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            color: #00ccff;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .install-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .step-counter {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .step.active .step-number {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        .step-text {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .step.active .step-text {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .main-action {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .big-button {
+            display: inline-block;
+            padding: 20px 40px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            color: #000;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .big-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 255, 136, 0.6);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4); }
+            50% { box-shadow: 0 8px 35px rgba(0, 255, 136, 0.8), 0 0 50px rgba(0, 204, 255, 0.4); }
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 4px solid #00ff88;
+        }
+
+        .instructions h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            background: rgba(0, 255, 136, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .warning {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .warning h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+
+        .success {
+            text-align: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            color: #000;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .browser-select {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .browser-btn {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .browser-btn:hover, .browser-btn.active {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+        }
+
+        @media (max-width: 768px) {
+            .logo { font-size: 3em; }
+            .big-button { padding: 15px 30px; font-size: 1.1em; }
+            .browser-select { flex-direction: column; align-items: center; }
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🕵️ PDX DARK</div>
+            <div class="tagline">Zero-Knowledge Privacy Wallet</div>
+            <div class="subtitle">One-click installation for anonymous Solana transfers</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress" style="width: 10%"></div>
+        </div>
+
+        <div class="step-counter">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-text">Choose Browser</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-text">Open Extensions</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-text">Install Extension</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-text">Start Using</div>
+            </div>
+        </div>
+
+        <div class="install-section">
+            <div class="browser-select">
+                <button class="browser-btn" onclick="selectBrowser('chrome')">🐙 Google Chrome</button>
+                <button class="browser-btn" onclick="selectBrowser('edge')">🌐 Microsoft Edge</button>
+            </div>
+
+            <div id="instructions" style="display: none;">
+                <div class="main-action">
+                    <button class="big-button" onclick="startInstall()">
+                        🚀 START ONE-CLICK INSTALL
+                    </button>
+                </div>
+
+                <div class="instructions">
+                    <h3>What happens next?</h3>
+                    <ol>
+                        <li>This page will open your browser's extensions settings</li>
+                        <li>You'll click just 2 buttons to enable developer mode and load PDX Dark</li>
+                        <li>PDX Dark privacy wallet will be installed and ready to use</li>
+                        <li>You can start sending anonymous zero-knowledge transfers immediately</li>
+                    </ol>
+                </div>
+
+                <div class="warning">
+                    <h4>⚠️ Why Developer Mode?</h4>
+                    <p>Chrome requires Developer Mode for extensions loaded from files (like PDX Dark) as a security measure. This prevents malware from auto-installing extensions. <strong>It's completely safe and standard for wallet extensions!</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="success" id="success" style="display: none;">
+            🎉 CONGRATULATIONS!<br>
+            PDX Dark Privacy Extension is now installed!<br><br>
+            <strong>How PDX Works:</strong><br>
+            🕵️ PDX Dark = Privacy protocol (adds zero-knowledge)<br>
+            👛 Your Wallet = Your money (Phantom/Solflare/etc.)<br>
+            🔗 Connection = Links them for anonymous transfers!<br><br>
+            <strong>Next steps:</strong><br>
+            1. Find PDX icon in browser toolbar<br>
+            2. Click "🔌 Connect Wallet" (Phantom/Solflare/etc.)<br>
+            3. Send privacy-protected transfers!<br><br>
+            Welcome to zero-knowledge privacy on Solana! 🛡️🔒
+        </div>
+
+        <div class="footer">
+            <p>Need help? Check the extension folder for detailed guides.</p>
+            <p>PDX Dark Protocol - Privacy through cryptography</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedBrowser = '';
+        let currentStep = 1;
+
+        function selectBrowser(browser) {
+            selectedBrowser = browser;
+            document.querySelectorAll('.browser-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('instructions').style.display = 'block';
+            updateProgress(25);
+        }
+
+        function startInstall() {
+            if (!selectedBrowser) {
+                alert('Please select your browser first!');
+                return;
+            }
+
+            updateStep(2);
+            updateProgress(50);
+
+            // Open extensions page
+            const extensionsUrl = selectedBrowser === 'chrome'
+                ? 'chrome://extensions/'
+                : 'edge://extensions/';
+
+            window.open(extensionsUrl, '_blank');
+
+            setTimeout(() => {
+                updateStep(3);
+                updateProgress(75);
+
+                alert(`🚨 CRITICAL: Select the CORRECT folder!\n\nPDX Dark Installation Guide:\n\n1. In ${selectedBrowser === 'chrome' ? 'Chrome' : 'Edge'}, click "Developer mode" toggle\n2. Click "Load unpacked" button\n3. Navigate to the "extension" folder\n4. IMPORTANT: Select the "extension" FOLDER (not the main pdx_dark_protocol folder!)\n5. Click "Select Folder"\n\n❌ Wrong: G:\\dark $NULL\\pdx_dark_protocol\n✅ Right: G:\\dark $NULL\\pdx_dark_protocol\\extension\n\nThat's it! PDX Dark will be installed.`);
+
+                setTimeout(() => {
+                    updateStep(4);
+                    updateProgress(100);
+                    document.getElementById('success').style.display = 'block';
+                }, 3000);
+            }, 2000);
+        }
+
+        function updateStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + step).classList.add('active');
+            currentStep = step;
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progress').style.width = percent + '%';
+        }
+    </script>
+</body>
+</html>

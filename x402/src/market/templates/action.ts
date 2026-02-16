@@ -1,0 +1,58 @@
+import { exampleCurl, SKU_ICONS, TemplateSku } from "./metadata.js";
+
+export const actionPack: TemplateSku[] = [
+  {
+    shopId: "action-email",
+    name: "send_email_stub",
+    description: "Email action tool stub",
+    category: "actions",
+    endpoint: {
+      endpointId: "send_email_stub",
+      method: "POST",
+      path: "/resource",
+      capabilityTags: ["send_email_stub", "actions"],
+      description: "Sends email (stub implementation)",
+      icon: SKU_ICONS.send_email_stub,
+      examples: [exampleCurl("POST", "/resource")],
+      pricingModel: { kind: "flat", amountAtomic: "500" },
+      settlementModes: ["transfer", "netting"],
+      sla: { maxLatencyMs: 1000, availabilityTarget: 0.995 },
+    },
+  },
+  {
+    shopId: "action-calendar",
+    name: "calendar_book_stub",
+    description: "Calendar booking action tool stub",
+    category: "actions",
+    endpoint: {
+      endpointId: "calendar_book_stub",
+      method: "POST",
+      path: "/resource",
+      capabilityTags: ["calendar_book_stub", "actions"],
+      description: "Books calendar slot (stub)",
+      icon: SKU_ICONS.calendar_book_stub,
+      examples: [exampleCurl("POST", "/resource")],
+      pricingModel: { kind: "flat", amountAtomic: "550" },
+      settlementModes: ["transfer", "netting"],
+      sla: { maxLatencyMs: 950, availabilityTarget: 0.995 },
+    },
+  },
+  {
+    shopId: "action-form-fill",
+    name: "form_fill_stub",
+    description: "Form-fill action tool stub",
+    category: "actions",
+    endpoint: {
+      endpointId: "form_fill_stub",
+      method: "POST",
+      path: "/resource",
+      capabilityTags: ["form_fill_stub", "actions"],
+      description: "Fills forms (stub)",
+      icon: SKU_ICONS.form_fill_stub,
+      examples: [exampleCurl("POST", "/resource")],
+      pricingModel: { kind: "flat", amountAtomic: "600" },
+      settlementModes: ["transfer", "netting"],
+      sla: { maxLatencyMs: 1100, availabilityTarget: 0.993 },
+    },
+  },
+];
