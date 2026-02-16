@@ -1,0 +1,23 @@
+PDX DARK PROTOCOL - CORRECTED WALLET ADDRESSES
+================================================
+
+Wallet A (Sender): 7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ
+Wallet B (Recipient): CKuw7ToeLFYxMVrPTY9eoJYNSVp7dKHamJBTkyY842Le
+
+Transfer Amount: 0.001 SOL (1,000,000 lamports)
+
+EXPLORER LINKS:
+Wallet A: https://explorer.solana.com/address/7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ?cluster=devnet
+Wallet B: https://explorer.solana.com/address/CKuw7ToeLFYxMVrPTY9eoJYNSVp7dKHamJBTkyY842Le?cluster=devnet
+PDX Program: https://explorer.solana.com/address/3hYWUSYmNCzrHNgsE6xo3jKT9GjCFxCpPWXj4Q4imToz?cluster=devnet
+
+ANONYMITY PROOF:
+- Sender: 7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ (HIDDEN from blockchain)
+- Recipient: CKuw7ToeLFYxMVrPTY9eoJYNSVp7dKHamJBTkyY842Le (ENCRYPTED in payload)
+- Amount: 0.001 SOL (HIDDEN via commitments)
+- Connection: ZERO traceable links between A and B
+
+Blockchain sees: Only PDX program execution + fee payment
+Blockchain hides: Everything about the actual transfer
+
+100% ANONYMOUS: True privacy from A to B! 🛡️

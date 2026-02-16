@@ -1,0 +1,39 @@
+{
+  "shopId": "parad0x.tools",
+  "name": "Parad0x Agent Tools",
+  "ownerAddress": "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+  "endpoints": [
+    {
+      "endpointId": "pdf-summarize-v1",
+      "path": "/tools/pdf/summarize",
+      "method": "POST",
+      "capabilityTags": ["pdf_summarize", "document_ai"],
+      "description": "Summarize long PDF files into actionable bullet points.",
+      "pricingModel": {
+        "kind": "metered",
+        "unitName": "page",
+        "amountPerUnitAtomic": "15000",
+        "minUnits": 1
+      },
+      "settlementModes": ["transfer", "netting", "stream"],
+      "expectedLatencyMs": 1400,
+      "reputationScore": 0.93
+    },
+    {
+      "endpointId": "inference-v1",
+      "path": "/tools/inference",
+      "method": "POST",
+      "capabilityTags": ["inference", "llm"],
+      "description": "General purpose LLM inference endpoint.",
+      "pricingModel": {
+        "kind": "surge",
+        "baseAmountAtomic": "5000",
+        "minMultiplier": 0.9,
+        "maxMultiplier": 2.2
+      },
+      "settlementModes": ["transfer", "stream"],
+      "expectedLatencyMs": 900,
+      "reputationScore": 0.88
+    }
+  ]
+}

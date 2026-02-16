@@ -1,0 +1,52 @@
+{
+  "name": "dnp-x402",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "x402-compatible micropayment server, agent SDK, and streaming wrapper for Dark Null Protocol.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "dev:market": "MARKET_ALLOW_DEV_INGEST=1 tsx watch src/server.ts",
+    "dev:marketplace": "tsx watch src/marketplace/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck:x402": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/server.js",
+    "start:marketplace": "node dist/marketplace/main.js",
+    "deploy:ledger": "tsx ../scripts/deploy-ledger.ts",
+    "deploy:buffers:close": "tsx ../scripts/close-buffers.ts",
+    "deploy:estimate": "tsx ../scripts/estimate-deploy-cost.ts",
+    "sim:1005": "tsx scripts/sim-1005.ts",
+    "sim:10agents": "tsx scripts/sim/run-10agents.ts",
+    "audit:full": "tsx scripts/audit/run-full-audit.ts",
+    "test": "vitest run",
+    "test:market": "vitest run tests/market*.test.ts",
+    "test:wow": "vitest run tests/market*.test.ts tests/openapi.import.test.ts",
+    "seed:market": "tsx src/market/seed.ts",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.4",
+    "@streamflow/stream": "^11.0.0",
+    "bn.js": "^5.2.2",
+    "bs58": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "tweetnacl": "^1.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.10",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

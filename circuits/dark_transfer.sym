@@ -1,0 +1,9 @@
+1,1,0,main.root
+2,2,0,main.nullifierHash_Asset
+3,3,0,main.nullifierHash_Fee
+4,4,0,main.commitment_New
+5,5,0,main.assetIdHash
+6,6,0,main.secret_Asset
+7,7,0,main.amount_Asset
+8,8,0,main.secret_Fee
+9,9,0,main.amount_Fee

@@ -1,0 +1,5 @@
+zstandard>=0.21.0
+solders>=0.20.0
+solana>=0.32.0
+pytest>=7.0.0
+pytest-asyncio>=0.21.0

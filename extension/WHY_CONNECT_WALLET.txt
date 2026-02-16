@@ -1,0 +1,29 @@
+🤔 WHY DOES PDX DARK ASK TO CONNECT A WALLET?
+
+PDX Dark is NOT a wallet replacement - it's a PRIVACY LAYER!
+
+Think of it like this:
+─────────────────────────
+🔐 SAFE (Your Wallet)     = Your money lives here
+🕵️  PDX Dark (Privacy)    = Adds zero-knowledge privacy
+🔗 CONNECTION            = Links them together
+
+PDX Dark works WITH your existing wallet:
+• Phantom ✅
+• Solflare ✅
+• Backpack ✅
+• Any Solana wallet ✅
+
+What happens when you connect:
+1. PDX can see your balance (to show amounts)
+2. PDX can request signatures (to send private transfers)
+3. Your funds stay 100% in your wallet
+4. PDX adds privacy using zero-knowledge proofs
+
+This is the same as how Uniswap connects to MetaMask,
+or how dApps connect to wallets - it's normal and safe!
+
+Your wallet = Your money
+PDX Dark = Privacy protection
+
+Together = Anonymous transfers! 🛡️🔒🕵️

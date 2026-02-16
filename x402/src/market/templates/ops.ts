@@ -1,0 +1,58 @@
+import { exampleCurl, SKU_ICONS, TemplateSku } from "./metadata.js";
+
+export const opsPack: TemplateSku[] = [
+  {
+    shopId: "ops-classify",
+    name: "classify_fast",
+    description: "Low-latency content classifier",
+    category: "ops",
+    endpoint: {
+      endpointId: "classify_fast",
+      method: "POST",
+      path: "/inference",
+      capabilityTags: ["classify_fast", "ops"],
+      description: "Fast classifier endpoint",
+      icon: SKU_ICONS.classify_fast,
+      examples: [exampleCurl("POST", "/inference")],
+      pricingModel: { kind: "surge", baseAmountAtomic: "700", minMultiplier: 0.8, maxMultiplier: 2.8 },
+      settlementModes: ["transfer", "stream", "netting"],
+      sla: { maxLatencyMs: 600, availabilityTarget: 0.997 },
+    },
+  },
+  {
+    shopId: "ops-dedupe",
+    name: "dedupe_normalize",
+    description: "Deduplicate and normalize data records",
+    category: "ops",
+    endpoint: {
+      endpointId: "dedupe_normalize",
+      method: "POST",
+      path: "/inference",
+      capabilityTags: ["dedupe_normalize", "ops"],
+      description: "Normalization + dedupe pass",
+      icon: SKU_ICONS.dedupe_normalize,
+      examples: [exampleCurl("POST", "/inference")],
+      pricingModel: { kind: "metered", unitName: "record", amountPerUnitAtomic: "2", minUnits: 100 },
+      settlementModes: ["transfer", "netting"],
+      sla: { maxLatencyMs: 900, availabilityTarget: 0.995 },
+    },
+  },
+  {
+    shopId: "ops-entity-extract",
+    name: "entity_extract",
+    description: "Named entity extraction",
+    category: "ops",
+    endpoint: {
+      endpointId: "entity_extract",
+      method: "POST",
+      path: "/inference",
+      capabilityTags: ["entity_extract", "ops"],
+      description: "Extract entities from text",
+      icon: SKU_ICONS.entity_extract,
+      examples: [exampleCurl("POST", "/inference")],
+      pricingModel: { kind: "flat", amountAtomic: "800" },
+      settlementModes: ["transfer", "stream", "netting"],
+      sla: { maxLatencyMs: 750, availabilityTarget: 0.996 },
+    },
+  },
+];
