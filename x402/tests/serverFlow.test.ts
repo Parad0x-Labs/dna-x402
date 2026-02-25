@@ -21,8 +21,15 @@ class FakeVerifier implements PaymentVerifier {
   }
 }
 
+class UnderpayVerifier implements PaymentVerifier {
+  async verify(_quote: Quote, _paymentProof: PaymentProof) {
+    return { ok: false, settledOnchain: false, error: "underpay: amount below quote total" };
+  }
+}
+
 const baseConfig: X402Config = {
   port: 8080,
+  appVersion: "test",
   solanaRpcUrl: "https://api.devnet.solana.com",
   usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
   paymentRecipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
@@ -42,6 +49,8 @@ const baseConfig: X402Config = {
   pauseMarket: false,
   pauseFinalize: false,
   pauseOrders: false,
+  disabledShops: [],
+  autoDisableReportThreshold: 0,
 };
 
 describe("x402 server flow", () => {
@@ -137,5 +146,37 @@ describe("x402 server flow", () => {
     expect(flush.body.batches[0].settleAmountAtomic).toBe("10100");
     expect(flush.body.batches[0].providerAmountAtomic).toBe("10000");
     expect(flush.body.batches[0].platformFeeAtomic).toBe("100");
+  });
+
+  it("returns X402_UNDERPAY when verifier detects underpayment", async () => {
+    const { app } = createX402App(baseConfig, {
+      paymentVerifier: new UnderpayVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    const first = await request(app).get("/resource").expect(402);
+    const quoteId: string = first.body.paymentRequirements.quote.quoteId;
+
+    const commit = await request(app)
+      .post("/commit")
+      .send({
+        quoteId,
+        payerCommitment32B: "0x" + "55".repeat(32),
+      })
+      .expect(201);
+
+    const finalized = await request(app)
+      .post("/finalize")
+      .send({
+        commitId: commit.body.commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-underpay-test-1234567890123456789012",
+          amountAtomic: "1",
+        },
+      })
+      .expect(402);
+
+    expect(finalized.body.error.code).toBe("X402_UNDERPAY");
   });
 });

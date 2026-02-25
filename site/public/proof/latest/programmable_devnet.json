@@ -1,0 +1,264 @@
+{
+  "generatedAt": "2026-02-17T11:27:45.306Z",
+  "baseUrl": "http://127.0.0.1:55789",
+  "cluster": "devnet",
+  "mode": "local",
+  "anchoringExpected": true,
+  "fingerprint": {
+    "gitCommit": "bd2939b332c79dbad5c604fc8adb5aca52fe1bb0",
+    "gitDirty": true,
+    "nodeVersion": "v20.20.0",
+    "npmVersion": "10.8.2",
+    "solanaVersion": "solana-cli 3.0.15 (src:42c10bf3; feat:3604001754, client:Agave)",
+    "cluster": "devnet"
+  },
+  "txMetrics": {
+    "singleBytes": 244,
+    "singleIxDataBytes": 34,
+    "singleAccounts": 4,
+    "singleSignatures": 1,
+    "singleUsesAlt": true,
+    "batch32Bytes": 1230,
+    "batch32Anchors": 32,
+    "singleComputeUnits": 13556,
+    "batch32ComputeUnits": 19386
+  },
+  "invariants": {
+    "paymentVerificationReasons": [
+      "wrong mint: expected usdc-mint",
+      "wrong recipient: expected recipient-wallet",
+      "underpaid: observed 20 expected >= 100",
+      "payment proof too old",
+      "wrong recipient: wrong-recipient"
+    ],
+    "rateLimitGuard": true,
+    "pauseFlags": true,
+    "fastCount": 20,
+    "verifiedCount": 10,
+    "verifiedLteFast": true,
+    "verifiedDefinition": "VERIFIED means fulfilled receipt with anchored=true and verificationTier=VERIFIED (on-chain anchor confirmed)."
+  },
+  "primitives": [
+    {
+      "primitiveId": "fixed_price_tool",
+      "title": "Fixed-Price Tool",
+      "resourcePath": "/programmability/fixed-price",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "4VyAtvQyu2WmPnqDX3Bs2KNodZrDkwEYhqfwBaoTmao4DHq9Fcvcyn8NEhauszmVNBFJXhfmT9iY93x5SerfmJA2",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "125977f4-7495-48db-891b-28935cc3ca25",
+      "notes": []
+    },
+    {
+      "primitiveId": "usage_metered_tool",
+      "title": "Usage-Metered Tool",
+      "resourcePath": "/programmability/usage-metered",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "3jfd6N61Fx8iQTpDVD51km162p1tPrEcb61Km2rzy1mTnMMsRhkg4Qv8ZbW4hwmyULLZGQVk3353pB4TSmL4hdd4",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "6ac24d6f-bbd5-4d6e-b554-d8fc44e9a417",
+      "notes": []
+    },
+    {
+      "primitiveId": "surge_priced_tool",
+      "title": "Surge-Priced Tool",
+      "resourcePath": "/programmability/surge-priced",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "2aRXNQf99AUow19UxRRnBZfJWEJsWRDZpb4np2mE72DMS2GbL1zWE6zr8q677HgDGuobVK9nwiy4gxF7yu78zWyn",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "c19d5cb8-90df-48b9-ad03-c0bfe1c8a122",
+      "notes": []
+    },
+    {
+      "primitiveId": "english_auction",
+      "title": "English Auction",
+      "resourcePath": "/programmability/english-auction",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "46rmmwpiKisYzPoTx1xYtCW7Gavj5sgDkugtZgHMGu9Fi78Qw6ZcuUYWKdSavt72gM1xvsvK8ezbppHLrgkL9fKC",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "b94a1934-b2e5-4c20-87fa-82609e8644c7",
+      "notes": []
+    },
+    {
+      "primitiveId": "dutch_auction",
+      "title": "Dutch Auction",
+      "resourcePath": "/programmability/dutch-auction",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "ZWR7U2z7ngkntGsaUFWJc5Vk5rZovzg2odevSA2H6wPjnuaAUjUivDePF5pcg7C3SR5yb18DbhMBbJvFJviL3g5",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "1ce30db3-3563-4b71-bfd6-77ccfcce0170",
+      "notes": []
+    },
+    {
+      "primitiveId": "sealed_bid_commit_reveal",
+      "title": "Sealed-Bid Commit/Reveal",
+      "resourcePath": "/programmability/sealed-bid",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "2uvsXw3b6L1Y8XhoA8AVtJ6j5ezieJ55skQ2LvUZ9iw2HuMDEzaZrrMd2KDAasLgn6FACREZQ8H7ioytRe8KDyef",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "c2c4cc2b-cdbf-4754-947a-de5c96a15f6a",
+      "notes": []
+    },
+    {
+      "primitiveId": "prediction_market_binary",
+      "title": "Prediction Market Binary Share",
+      "resourcePath": "/programmability/prediction-binary",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "5N2BdYkecyLtWgjU9CQsn6XdUSRAQPNxjFF1oNZEDb7vVT8AHC7umQXgUBkkDTp8udBbBENtv74t9mYvMSQFUFQa",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "74e73800-0a88-4765-b1f7-257abd752b7f",
+      "notes": []
+    },
+    {
+      "primitiveId": "reverse_auction",
+      "title": "Reverse Auction",
+      "resourcePath": "/programmability/reverse-auction",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "4o8CCbfqfh9aE1zHM3c7LV7oc2AywTNF1R1T5rNBgdPZf7gkRG8r7pyiz86fE6uQwrSikJKVCXGppKjB8bL98Bmm",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "29af2012-31b6-46da-a759-2a3a43f5cd82",
+      "notes": []
+    },
+    {
+      "primitiveId": "subscription_stream_gate",
+      "title": "Subscription Stream Gate",
+      "resourcePath": "/programmability/subscription-stream",
+      "settlementMode": "stream",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "stream-959fb18e82c8ba655862235833d1df3da941c30c",
+      "anchorTxSignature": "3xfF4PEiPnhjskP1szYk1a7Pkw7yx43yvhcAYNLRcrdxzfXavvDNvVB2AY3ZszZWm376bukXBFRcM5b86d3Rxtqb",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "a193d2a4-aa6e-49b5-9a09-658874be8355",
+      "notes": []
+    },
+    {
+      "primitiveId": "bundle_reseller_margin",
+      "title": "Bundle/Reseller Margin",
+      "resourcePath": "/programmability/bundle-margin",
+      "settlementMode": "netting",
+      "checks": {
+        "flow402": true,
+        "paymentVerification": true,
+        "receiptVerification": true,
+        "anchoringConfirm": true,
+        "feeCorrectness": true,
+        "txSizeBudget": true,
+        "pauseFlagsBehavior": true
+      },
+      "pass": true,
+      "paymentTxSignature": "netting-ledger",
+      "anchorTxSignature": "2AdW4sf2ZXoZqUQXjQTq7fyve5twMBo9d6mdeK1m2GVaCBmXTyUNq2SzxabhXpkwLGdGNTqX5jSHdfqUuqHTtvgX",
+      "anchorBucket": "5CBtaYDM8THUnQYeagYhyXNDycGNsKCHNcFfXykGSYyQ",
+      "anchorBucketId": "492035",
+      "receiptId": "d2caf134-d9f1-4563-841d-755265504af0",
+      "notes": []
+    }
+  ],
+  "overallPass": true
+}

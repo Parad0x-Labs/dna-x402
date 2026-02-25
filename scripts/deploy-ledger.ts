@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import {
   CliRunResult,
@@ -20,6 +21,7 @@ import {
 interface ProgramDeployLedger {
   programName: string;
   soPath: string;
+  soSizeBytes: number;
   stagedSoPath?: string;
   stagedProgramIdKeypairPath?: string;
   programId?: string;
@@ -65,7 +67,8 @@ function usage(): string {
     "  --cluster <devnet|testnet|mainnet-beta|url>   Cluster or RPC moniker (default: devnet)",
     "  --keypair <path>                                Deployer keypair path (default: Solana CLI default keypair)",
     "  --upgrade-authority <path>                      Upgrade authority signer (default: same as keypair/default)",
-    "  --program <path/to/program.so>                  Program artifact path (repeatable).",
+    "  --upgrade-authority-keypair <path>              Alias for --upgrade-authority",
+    "  --program <path/to/program.so|program_name>     Program artifact path or bare name (repeatable).",
     "                                                  If omitted, autodiscovers target/deploy/*.so",
     "  --out <path>                                    Output JSON report path",
     "  --with-compute-unit-price <microlamports>       Optional priority fee for deploy txs",
@@ -74,6 +77,48 @@ function usage(): string {
     "  --continue-on-error                             Continue deploying remaining programs after a failure",
     "  --help                                          Show this help",
   ].join("\n");
+}
+
+function redactPaths(input: string, values: Array<string | undefined>): string {
+  let output = input;
+  for (const value of values) {
+    if (!value) {
+      continue;
+    }
+    output = output.split(value).join("<redacted_path>");
+  }
+  return output;
+}
+
+function redactSensitiveCliOutput(input: string): string {
+  if (!input) {
+    return input;
+  }
+  // Redact transient recovery mnemonics emitted by `solana program deploy` failures.
+  return input
+    .replace(
+      /(`solana-keygen recover` and the following 12-word seed phrase:\s*=+\s*)([\s\S]*?)(\s*=+\s*To resume a deploy,)/m,
+      (_all, prefix: string, _secret: string, suffix: string) => `${prefix}<redacted_seed_phrase>${suffix}`,
+    )
+    .replace(
+      /(12-word seed phrase:\s*=+\s*)([\s\S]*?)(\s*=+\s*To resume a deploy,)/m,
+      (_all, prefix: string, _secret: string, suffix: string) => `${prefix}<redacted_seed_phrase>${suffix}`,
+    );
+}
+
+function resolveProgramSpec(value: string, repoRoot: string): string {
+  const asGiven = path.resolve(process.cwd(), value);
+  if (fs.existsSync(asGiven)) {
+    return asGiven;
+  }
+
+  const fileName = value.endsWith(".so") ? path.basename(value) : `${path.basename(value)}.so`;
+  const fromDeployDir = path.resolve(repoRoot, "target", "deploy", fileName);
+  if (fs.existsSync(fromDeployDir)) {
+    return fromDeployDir;
+  }
+
+  throw new Error(`Program artifact not found for --program ${value}`);
 }
 
 function detectProgramId(stdout: string, stderr: string): string | undefined {
@@ -112,7 +157,8 @@ function main(): void {
   const repoRoot = path.resolve(scriptDir, "..");
   const cluster = parseFlagValue(argv, "--cluster") ?? "devnet";
   const keypair = parseFlagValue(argv, "--keypair");
-  const upgradeAuthority = parseFlagValue(argv, "--upgrade-authority");
+  const upgradeAuthority = parseFlagValue(argv, "--upgrade-authority-keypair")
+    ?? parseFlagValue(argv, "--upgrade-authority");
   const stagedKeypair = stageSignerPath(keypair);
   const stagedUpgradeAuthority = stageSignerPath(upgradeAuthority);
   const outPath = parseFlagValue(argv, "--out")
@@ -123,7 +169,7 @@ function main(): void {
   const finalDeploy = hasFlag(argv, "--final");
 
   const requestedPrograms = parseRepeatedFlagValues(argv, "--program")
-    .map((entry) => path.resolve(process.cwd(), entry));
+    .map((entry) => resolveProgramSpec(entry, repoRoot));
   const discoveredPrograms = discoverProgramSoFiles(repoRoot);
   const programs = requestedPrograms.length > 0 ? requestedPrograms : discoveredPrograms;
 
@@ -140,6 +186,7 @@ function main(): void {
 
   for (const soPath of programs) {
     const programName = path.basename(soPath, ".so");
+    const soSizeBytes = fs.statSync(soPath).size;
     const balanceProgramBefore = getBalanceLamports(walletPubkey, context);
     const buffersBefore = getBufferAccounts(context);
 
@@ -185,13 +232,18 @@ function main(): void {
 
     const entry: ProgramDeployLedger = {
       programName,
-      soPath,
-      stagedSoPath,
-      stagedProgramIdKeypairPath,
+      soPath: path.relative(repoRoot, soPath),
+      soSizeBytes,
+      stagedSoPath: stagedSoPath ? "<redacted_path>" : undefined,
+      stagedProgramIdKeypairPath: stagedProgramIdKeypairPath ? "<redacted_path>" : undefined,
       programId: detectProgramId(result.stdout, result.stderr),
-      deployCommand: result.cmd,
-      deployStdout: result.stdout,
-      deployStderr: result.stderr,
+      deployCommand: redactPaths(result.cmd, [stagedKeypair, stagedUpgradeAuthority, stagedSoPath, stagedProgramIdKeypairPath]),
+      deployStdout: redactSensitiveCliOutput(
+        redactPaths(result.stdout, [stagedKeypair, stagedUpgradeAuthority, stagedSoPath, stagedProgramIdKeypairPath]),
+      ),
+      deployStderr: redactSensitiveCliOutput(
+        redactPaths(result.stderr, [stagedKeypair, stagedUpgradeAuthority, stagedSoPath, stagedProgramIdKeypairPath]),
+      ),
       success: result.status === 0,
       error: result.status === 0 ? undefined : `Deploy failed with exit code ${result.status}`,
       balanceBeforeLamports: balanceProgramBefore.toString(10),
@@ -218,12 +270,12 @@ function main(): void {
     generatedAt: new Date().toISOString(),
     cluster,
     walletPubkey,
-    keypair,
-    keypairUsedForDeploy: stagedKeypair,
-    upgradeAuthority,
-    upgradeAuthorityUsedForDeploy: stagedUpgradeAuthority,
+    keypair: keypair ? "<redacted_path>" : undefined,
+    keypairUsedForDeploy: stagedKeypair ? "<redacted_path>" : undefined,
+    upgradeAuthority: upgradeAuthority ? "<redacted_path>" : undefined,
+    upgradeAuthorityUsedForDeploy: stagedUpgradeAuthority ? "<redacted_path>" : undefined,
     dryRun,
-    programsRequested: programs,
+    programsRequested: programs.map((entry) => path.relative(repoRoot, entry)),
     balanceBeforeLamports: balanceBefore.toString(10),
     balanceAfterLamports: balanceAfter.toString(10),
     totalDeltaLamports: totalDelta.toString(10),

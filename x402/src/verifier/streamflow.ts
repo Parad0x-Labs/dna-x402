@@ -27,6 +27,16 @@ export interface StreamflowVerificationResult {
   streamId?: string;
   fundedAtomic?: string;
   error?: string;
+  errorCode?:
+    | "INVALID_PROOF"
+    | "NOT_CONFIRMED_YET"
+    | "RPC_UNAVAILABLE"
+    | "PAYMENT_INVALID"
+    | "UNDERPAY"
+    | "WRONG_MINT"
+    | "WRONG_RECIPIENT"
+    | "TOO_OLD";
+  retryable?: boolean;
 }
 
 export async function verifyStreamflowProof(
@@ -41,6 +51,8 @@ export async function verifyStreamflowProof(
       ok: false,
       settledOnchain: false,
       error: "stream not found",
+      errorCode: "NOT_CONFIRMED_YET",
+      retryable: true,
     };
   }
 
@@ -49,6 +61,8 @@ export async function verifyStreamflowProof(
       ok: false,
       settledOnchain: false,
       error: `wrong mint: ${stream.mint}`,
+      errorCode: "WRONG_MINT",
+      retryable: false,
     };
   }
 
@@ -57,6 +71,8 @@ export async function verifyStreamflowProof(
       ok: false,
       settledOnchain: false,
       error: `wrong recipient: ${stream.recipient}`,
+      errorCode: "WRONG_RECIPIENT",
+      retryable: false,
     };
   }
 
@@ -66,6 +82,8 @@ export async function verifyStreamflowProof(
         ok: false,
         settledOnchain: false,
         error: "stream is closed",
+        errorCode: "PAYMENT_INVALID",
+        retryable: false,
       };
     }
   }
@@ -80,6 +98,8 @@ export async function verifyStreamflowProof(
       settledOnchain: false,
       fundedAtomic: funded.toString(10),
       error: `insufficient funded amount ${funded.toString(10)}`,
+      errorCode: "UNDERPAY",
+      retryable: false,
     };
   }
 

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNP Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="nav-wrap">
+        <a class="brand" href="/">Dark Null Protocol</a>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/docs/">Docs</a>
+          <a href="/proof/">Proof</a>
+          <a class="active" href="/demo/">Demo</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <section class="hero">
+        <h1>60-second Demo</h1>
+        <p>Public demo of the 402 payment flow with receipt verification and optional anchoring.</p>
+      </section>
+      <section class="grid">
+        <article class="card" style="grid-column: span 12;">
+          <h3>CLI flow</h3>
+          <pre class="data">curl -i https://api.parad0xlabs.com/resource
+# Expect 402
+
+cd x402
+npm run audit:programmable -- --cluster devnet --base-url https://api.parad0xlabs.com
+# Executes pay+retry checks for 10 programmable primitives</pre>
+        </article>
+        <article class="card" style="grid-column: span 12;">
+          <h3>Expected result</h3>
+          <p>First call returns 402 with payment requirements. Paid retry returns 200 with signed receipt. Verified leaderboard increments only after anchor confirmation.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

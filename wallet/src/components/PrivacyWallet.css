@@ -12,6 +12,13 @@
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
+.wallet-account-copy {
+  margin: -10px 0 16px 0;
+  text-align: center;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .insufficient-funds {
   background: rgba(255, 193, 7, 0.2);
   border: 1px solid #ffc107;
@@ -356,6 +363,16 @@
   color: #fff;
 }
 
+.panel-warning {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.6);
+  color: #fff3cd;
+  font-size: 13px;
+}
+
 .snippet-box {
   margin-top: 10px;
   width: 100%;
@@ -418,7 +435,7 @@
 
 .market-controls {
   display: grid;
-  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
   gap: 10px;
 }
 
@@ -550,6 +567,54 @@
   gap: 4px;
 }
 
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.template-pill {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 8px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-pill.active {
+  border-color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.template-pill span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.divider {
+  margin: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.wizard-pricing {
+  margin-top: 12px;
+}
+
+.wizard-band-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.wizard-config.three-col {
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+}
+
 .spend-ledger {
   margin-top: 8px;
 }
@@ -580,6 +645,18 @@
   }
 
   .wizard-config {
+    grid-template-columns: 1fr;
+  }
+
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-band-row {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-config.three-col {
     grid-template-columns: 1fr;
   }
 }

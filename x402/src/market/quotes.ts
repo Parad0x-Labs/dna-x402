@@ -43,8 +43,26 @@ function applyEndpointPricing(endpoint: ShopEndpoint, baseAtomic: bigint, load: 
   return pricing.priceAtomic;
 }
 
-function signableQuotePayload(quote: Omit<MarketQuote, "signature">): Omit<MarketQuote, "signature"> {
-  return quote;
+type SignableQuote = Omit<MarketQuote, "signature" | "seller_defined" | "verifiable">;
+
+function signableQuotePayload(quote: Omit<MarketQuote, "signature">): SignableQuote {
+  return {
+    quoteId: quote.quoteId,
+    shopId: quote.shopId,
+    endpointId: quote.endpointId,
+    method: quote.method,
+    path: quote.path,
+    capabilityTags: quote.capabilityTags,
+    price: quote.price,
+    mint: quote.mint,
+    expiresAt: quote.expiresAt,
+    expectedLatencyMs: quote.expectedLatencyMs,
+    load: quote.load,
+    reputation: quote.reputation,
+    badges: quote.badges,
+    settlementModes: quote.settlementModes,
+    rankScore: quote.rankScore,
+  };
 }
 
 function initialBadgesForQuote(endpoint: ShopEndpoint, expectedLatencyMs: number, hasAnchorSignals: boolean): Badge[] {

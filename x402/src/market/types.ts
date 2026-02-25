@@ -2,6 +2,13 @@ import { PricingModel, SettlementMode } from "../types.js";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type VerificationTier = "FAST" | "VERIFIED";
+export type SafeCategory =
+  | "ai_inference"
+  | "image_generation"
+  | "data_enrichment"
+  | "workflow_tool";
+
+export type AbuseReportType = "scam" | "illegal" | "malware" | "impersonation" | "other";
 export type Badge =
   | "FAST_P95_<800MS"
   | "FULFILLMENT_99"
@@ -31,6 +38,11 @@ export interface ShopEndpoint {
   pricingParams?: Record<string, string | number | boolean>;
   limits?: Record<string, string | number | boolean>;
   proofPolicy?: Record<string, string | number | boolean>;
+  seller_defined?: boolean;
+  verifiable?: {
+    receipt: boolean;
+    anchored: boolean;
+  };
 }
 
 export interface ShopManifest {
@@ -38,7 +50,7 @@ export interface ShopManifest {
   shopId: string;
   name: string;
   description?: string;
-  category?: string;
+  category?: SafeCategory;
   ownerPubkey: string;
   endpoints: ShopEndpoint[];
 }
@@ -88,6 +100,16 @@ export interface MarketQuote {
   settlementModes: SettlementMode[];
   signature: string;
   rankScore: number;
+  trust?: {
+    score: number;
+    report_count: number;
+    warning: boolean;
+  };
+  seller_defined?: boolean;
+  verifiable?: {
+    receipt: boolean;
+    anchored: boolean;
+  };
 }
 
 export type OrderStatus = "pending" | "executed" | "cancelled" | "expired";
@@ -138,6 +160,15 @@ export interface MarketEvent {
   anchored?: boolean;
   receiptValid?: boolean;
   verificationTier?: VerificationTier;
+  buyerCommitment32B?: string;
+}
+
+export interface AbuseReport {
+  reportId: string;
+  ts: string;
+  shopId: string;
+  reportType: AbuseReportType;
+  reason?: string;
 }
 
 export interface MarketWindowQuery {

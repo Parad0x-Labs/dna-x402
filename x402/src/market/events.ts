@@ -17,6 +17,7 @@ export const marketEventSchema = z.object({
   anchored: z.boolean().optional(),
   receiptValid: z.boolean().optional(),
   verificationTier: z.enum(["FAST", "VERIFIED"]).optional(),
+  buyerCommitment32B: z.string().optional(),
   ownerPubkey: z.string().optional(),
   bundleId: z.string().optional(),
   upstreamCostAmount: z.string().regex(/^\d+$/).optional(),

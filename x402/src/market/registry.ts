@@ -30,6 +30,7 @@ function baseEndpointPriceAtomic(endpoint: ShopEndpoint): bigint {
 
 export class MarketRegistry {
   private readonly manifests = new Map<string, SignedShopManifest>();
+  private readonly disabledShops = new Set<string>();
 
   register(signedManifest: SignedShopManifest): ShopManifest {
     if (!verifyManifestSignature(signedManifest)) {
@@ -39,16 +40,56 @@ export class MarketRegistry {
     return signedManifest.manifest;
   }
 
-  list(): ShopManifest[] {
-    return Array.from(this.manifests.values()).map((entry) => entry.manifest);
+  setDisabledShops(shopIds: Iterable<string>): void {
+    this.disabledShops.clear();
+    for (const shopId of shopIds) {
+      if (shopId.trim().length > 0) {
+        this.disabledShops.add(shopId.trim());
+      }
+    }
   }
 
-  get(shopId: string): ShopManifest | undefined {
-    return this.manifests.get(shopId)?.manifest;
+  disable(shopId: string): void {
+    if (shopId.trim().length === 0) {
+      return;
+    }
+    this.disabledShops.add(shopId.trim());
   }
 
-  getSigned(shopId: string): SignedShopManifest | undefined {
-    return this.manifests.get(shopId);
+  enable(shopId: string): void {
+    this.disabledShops.delete(shopId.trim());
+  }
+
+  isDisabled(shopId: string): boolean {
+    return this.disabledShops.has(shopId.trim());
+  }
+
+  list(includeDisabled = false): ShopManifest[] {
+    return Array.from(this.manifests.values())
+      .filter((entry) => includeDisabled || !this.isDisabled(entry.manifest.shopId))
+      .map((entry) => entry.manifest);
+  }
+
+  get(shopId: string, includeDisabled = false): ShopManifest | undefined {
+    const manifest = this.manifests.get(shopId)?.manifest;
+    if (!manifest) {
+      return undefined;
+    }
+    if (!includeDisabled && this.isDisabled(shopId)) {
+      return undefined;
+    }
+    return manifest;
+  }
+
+  getSigned(shopId: string, includeDisabled = false): SignedShopManifest | undefined {
+    const signed = this.manifests.get(shopId);
+    if (!signed) {
+      return undefined;
+    }
+    if (!includeDisabled && this.isDisabled(shopId)) {
+      return undefined;
+    }
+    return signed;
   }
 
   search(query: MarketSearchQuery = {}): RegistrySearchResult[] {
@@ -56,6 +97,9 @@ export class MarketRegistry {
     const results: RegistrySearchResult[] = [];
 
     for (const signed of this.manifests.values()) {
+      if (this.isDisabled(signed.manifest.shopId)) {
+        continue;
+      }
       for (const endpoint of signed.manifest.endpoints) {
         if (query.capability && !endpoint.capabilityTags.includes(query.capability)) {
           continue;

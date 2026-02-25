@@ -1,4 +1,4 @@
-import { ShopManifest } from "../types.js";
+import { SafeCategory, ShopManifest } from "../types.js";
 import { actionPack } from "./action.js";
 import { alwaysOnPack } from "./alwaysOn.js";
 import { opsPack } from "./ops.js";
@@ -11,12 +11,25 @@ function toShopManifest(template: {
   category: string;
   endpoint: ShopManifest["endpoints"][number];
 }, ownerPubkey: string): ShopManifest {
+  const normalized = template.category.trim().toLowerCase();
+  const categoryByTemplate: Record<string, SafeCategory> = {
+    research: "data_enrichment",
+    ops: "workflow_tool",
+    action: "workflow_tool",
+    actions: "workflow_tool",
+    stream: "ai_inference",
+    ai_inference: "ai_inference",
+    image_generation: "image_generation",
+    data_enrichment: "data_enrichment",
+    workflow_tool: "workflow_tool",
+  };
+
   return {
     manifestVersion: "market-v1",
     shopId: template.shopId,
     name: template.name,
     description: template.description,
-    category: template.category,
+    category: categoryByTemplate[normalized] ?? "workflow_tool",
     ownerPubkey,
     endpoints: [template.endpoint],
   };

@@ -7,7 +7,7 @@ REPORTS_DIR="$WORKSPACE_ROOT/reports"
 OUT_DIR="$X402_DIR/audit_out"
 mkdir -p "$OUT_DIR"
 
-DEPLOYER_KEYPAIR="${DEPLOYER_KEYPAIR:-/Users/sauliuskruopis/.config/solana/devnet-deployer.json}"
+DEPLOYER_KEYPAIR="${DEPLOYER_KEYPAIR:-$HOME/.config/solana/devnet-deployer.json}"
 LATEST_LEDGER="$(ls -1t "$REPORTS_DIR"/deploy-ledger-*.json 2>/dev/null | head -n1 || true)"
 if [ -z "$LATEST_LEDGER" ]; then
   echo "No deploy-ledger-*.json found in $REPORTS_DIR" >&2

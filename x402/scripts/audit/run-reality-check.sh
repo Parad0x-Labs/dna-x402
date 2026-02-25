@@ -7,8 +7,8 @@ REPORTS_DIR="$WORKSPACE_ROOT/reports"
 OUT_DIR="$X402_DIR/audit_out"
 mkdir -p "$OUT_DIR"
 
-export DEPLOYER_KEYPAIR="${DEPLOYER_KEYPAIR:-/Users/sauliuskruopis/.config/solana/devnet-deployer.json}"
-export UPGRADE_AUTHORITY="${UPGRADE_AUTHORITY:-/Users/sauliuskruopis/Desktop/dark \$NULL/dark_null_protocol/deployer_wallet.json}"
+export DEPLOYER_KEYPAIR="${DEPLOYER_KEYPAIR:-$HOME/.config/solana/devnet-deployer.json}"
+export UPGRADE_AUTHORITY="${UPGRADE_AUTHORITY:-./deployer_wallet.json}"
 export MARKET_ALLOW_DEV_INGEST="0"
 
 "$X402_DIR/scripts/audit/prove-env.sh"

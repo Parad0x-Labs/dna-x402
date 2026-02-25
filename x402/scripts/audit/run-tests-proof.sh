@@ -5,8 +5,8 @@ X402_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT_DIR="$X402_DIR/audit_out"
 mkdir -p "$OUT_DIR"
 
-DEPLOYER_KEYPAIR="${DEPLOYER_KEYPAIR:-/Users/sauliuskruopis/.config/solana/devnet-deployer.json}"
-UPGRADE_AUTHORITY="${UPGRADE_AUTHORITY:-/Users/sauliuskruopis/Desktop/dark \$NULL/dark_null_protocol/deployer_wallet.json}"
+DEPLOYER_KEYPAIR="${DEPLOYER_KEYPAIR:-$HOME/.config/solana/devnet-deployer.json}"
+UPGRADE_AUTHORITY="${UPGRADE_AUTHORITY:-./deployer_wallet.json}"
 
 RESULTS_TSV="$OUT_DIR/tests_results.tsv"
 : > "$RESULTS_TSV"

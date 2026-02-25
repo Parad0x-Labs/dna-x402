@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-02-20T21:07:33Z",
+  "cluster": "mainnet-beta",
+  "mode": "NEW_DEPLOY",
+  "deployerPubkey": "FZAG4bTAmMTkb9hwmq5eFRn82k2UjDcGWCNHoERjpxi1",
+  "intendedUpgradeAuthorities": {
+    "receipt_anchor": "FZAG4bTAmMTkb9hwmq5eFRn82k2UjDcGWCNHoERjpxi1",
+    "pdx_dark_protocol": "FZAG4bTAmMTkb9hwmq5eFRn82k2UjDcGWCNHoERjpxi1"
+  },
+  "notes": [
+    "New deploy path selected.",
+    "Upgrade authority preflight checks are not required for new program ids."
+  ]
+}

@@ -264,6 +264,8 @@ export class MarketAnalytics {
   }
 
   snapshot(): {
+    fastCount24h: number;
+    verifiedCount24h: number;
     topCapabilitiesByDemandVelocity: RankedMetric[];
     medianPriceByCapability: Record<string, string>;
     sellerDensityByCapability: Record<string, number>;
@@ -338,7 +340,12 @@ export class MarketAnalytics {
       }),
     }));
 
+    const fastCount24h = this.verifiedFulfilledEvents(parseWindow("24h"), "FAST").length;
+    const verifiedCount24h = this.verifiedFulfilledEvents(parseWindow("24h"), "VERIFIED").length;
+
     return {
+      fastCount24h,
+      verifiedCount24h,
       topCapabilitiesByDemandVelocity: demandVelocity,
       medianPriceByCapability,
       sellerDensityByCapability,

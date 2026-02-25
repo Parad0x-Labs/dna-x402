@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-02-17T11:29:28.673Z",
+  "files": [
+    {
+      "source": "docs/FOOTPRINT.md",
+      "target": "site/public/proof/latest/footprint.md"
+    },
+    {
+      "source": "docs/PROOF.md",
+      "target": "site/public/proof/latest/proof.md"
+    },
+    {
+      "source": "x402/audit_out/PROGRAMMABILITY_READINESS_REPORT.md",
+      "target": "site/public/proof/latest/programmability.md"
+    },
+    {
+      "source": "reports/audit-2026-02-17T00-22-05.420Z.json",
+      "target": "site/public/proof/latest/audit.json"
+    },
+    {
+      "source": "x402/audit_out/programmable_devnet.json",
+      "target": "site/public/proof/latest/programmable_devnet.json"
+    }
+  ]
+}

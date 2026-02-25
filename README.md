@@ -230,6 +230,32 @@ Use the audited runbook:
 
 - `docs/DEVNET_DEPLOY.md`
 
+Programmability contract boundary:
+
+- `docs/PROGRAMMABILITY_CONTRACT.md`
+
+Open-source release posture:
+
+- `docs/OPEN_SOURCE_RELEASE.md`
+- `SECURITY.md`
+- `docs/GO_TO_MARKET_SAFE.md`
+
+Agent front door static site (`/agent`):
+
+- `site-agent/`
+- `docs/PROOF.md`
+- `docs/DEPLOY_RAILWAY.md`
+- `docs/DEPLOY_FLY.md`
+- `site/README_DEPLOY_PAGES.md`
+
+Website front door (static):
+
+```bash
+cd x402
+npm run publish:proof-bundle
+npm run site:build
+```
+
 ## 🎯 Roadmap
 
 ### Phase 1 (Current): Core Privacy Protocol

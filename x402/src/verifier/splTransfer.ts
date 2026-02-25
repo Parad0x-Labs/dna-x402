@@ -4,6 +4,7 @@ import {
   PartiallyDecodedInstruction,
 } from "@solana/web3.js";
 import { parseAtomic } from "../feePolicy.js";
+import { extractRpcErrorMessage, isRetryableRpcError } from "./rpcClient.js";
 
 export interface SplTransferVerificationInput {
   txSignature: string;
@@ -22,6 +23,17 @@ export interface SplTransferVerificationResult {
   blockTime?: number | null;
   amountObservedAtomic?: string;
   error?: string;
+  errorCode?:
+    | "INVALID_PROOF"
+    | "NOT_CONFIRMED_YET"
+    | "RPC_UNAVAILABLE"
+    | "PAYMENT_INVALID"
+    | "UNDERPAY"
+    | "WRONG_MINT"
+    | "WRONG_RECIPIENT"
+    | "TOO_OLD";
+  retryable?: boolean;
+  details?: Record<string, unknown>;
 }
 
 type TokenBalanceLike = {
@@ -92,16 +104,49 @@ function parsedTransferSignal(ix: ParsedInstruction): { destination?: string; mi
   return { destination, mint };
 }
 
+function looksLikeValidSolanaSignature(signature: string): boolean {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,88}$/.test(signature);
+}
+
+function rpcUnavailable(error: unknown): SplTransferVerificationResult {
+  const message = extractRpcErrorMessage(error);
+  return {
+    ok: false,
+    settledOnchain: false,
+    error: `rpc unavailable: ${message}`,
+    errorCode: "RPC_UNAVAILABLE",
+    retryable: isRetryableRpcError(error),
+    details: { rpcError: message },
+  };
+}
+
 export async function verifySplTransferProof(
   connection: Pick<Connection, "getSignatureStatus" | "getParsedTransaction" | "getBlockTime">,
   input: SplTransferVerificationInput,
 ): Promise<SplTransferVerificationResult> {
-  const status = await connection.getSignatureStatus(input.txSignature, { searchTransactionHistory: true });
+  if (!looksLikeValidSolanaSignature(input.txSignature)) {
+    return {
+      ok: false,
+      settledOnchain: false,
+      error: "invalid tx signature format",
+      errorCode: "INVALID_PROOF",
+      retryable: false,
+    };
+  }
+
+  let status: Awaited<ReturnType<typeof connection.getSignatureStatus>>;
+  try {
+    status = await connection.getSignatureStatus(input.txSignature, { searchTransactionHistory: true });
+  } catch (error) {
+    return rpcUnavailable(error);
+  }
   if (!status.value) {
     return {
       ok: false,
       settledOnchain: false,
-      error: "signature not found",
+      error: "signature not found or not confirmed yet",
+      errorCode: "NOT_CONFIRMED_YET",
+      retryable: true,
     };
   }
 
@@ -110,19 +155,28 @@ export async function verifySplTransferProof(
       ok: false,
       settledOnchain: false,
       error: "transaction failed",
+      errorCode: "PAYMENT_INVALID",
+      retryable: false,
     };
   }
 
-  const tx = await connection.getParsedTransaction(input.txSignature, {
-    commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
-  });
+  let tx: Awaited<ReturnType<typeof connection.getParsedTransaction>>;
+  try {
+    tx = await connection.getParsedTransaction(input.txSignature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
+  } catch (error) {
+    return rpcUnavailable(error);
+  }
 
   if (!tx || !tx.meta) {
     return {
       ok: false,
       settledOnchain: false,
       error: "parsed transaction unavailable",
+      errorCode: "NOT_CONFIRMED_YET",
+      retryable: true,
     };
   }
 
@@ -131,6 +185,8 @@ export async function verifySplTransferProof(
       ok: false,
       settledOnchain: false,
       error: "on-chain transaction contains error",
+      errorCode: "PAYMENT_INVALID",
+      retryable: false,
     };
   }
 
@@ -184,6 +240,8 @@ export async function verifySplTransferProof(
         blockTime: tx.blockTime,
         amountObservedAtomic: observed.toString(10),
         error: `wrong mint: expected ${input.expectedMint}`,
+        errorCode: "WRONG_MINT",
+        retryable: false,
       };
     }
 
@@ -195,6 +253,8 @@ export async function verifySplTransferProof(
         blockTime: tx.blockTime,
         amountObservedAtomic: observed.toString(10),
         error: `wrong recipient: expected ${input.expectedRecipient}`,
+        errorCode: "WRONG_RECIPIENT",
+        retryable: false,
       };
     }
 
@@ -205,10 +265,19 @@ export async function verifySplTransferProof(
       blockTime: tx.blockTime,
       amountObservedAtomic: observed.toString(10),
       error: `underpaid: observed ${observed.toString(10)} expected >= ${minAmount.toString(10)}`,
+      errorCode: "UNDERPAY",
+      retryable: false,
     };
   }
 
-  const blockTime = tx.blockTime ?? (await connection.getBlockTime(tx.slot));
+  let blockTime = tx.blockTime;
+  if (blockTime === null || blockTime === undefined) {
+    try {
+      blockTime = await connection.getBlockTime(tx.slot);
+    } catch (error) {
+      return rpcUnavailable(error);
+    }
+  }
   if (input.maxAgeSeconds && blockTime) {
     const nowMs = input.nowMs ?? Date.now();
     const ageMs = nowMs - blockTime * 1000;
@@ -221,6 +290,8 @@ export async function verifySplTransferProof(
         blockTime,
         amountObservedAtomic: observed.toString(10),
         error: "payment proof too old",
+        errorCode: "TOO_OLD",
+        retryable: false,
       };
     }
   }

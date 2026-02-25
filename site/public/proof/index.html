@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNP Proof</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="nav-wrap">
+        <a class="brand" href="/">Dark Null Protocol</a>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/docs/">Docs</a>
+          <a class="active" href="/proof/">Proof</a>
+          <a href="/demo/">Demo</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <section class="hero">
+        <h1>Proof & Audit Evidence</h1>
+        <p>This page reads the latest proof bundle published to <code>/proof/latest/*</code>.</p>
+      </section>
+      <section class="grid">
+        <article class="card kpi">
+          <span class="note">Single anchor bytes</span>
+          <strong id="singleBytes">-</strong>
+        </article>
+        <article class="card kpi">
+          <span class="note">Batch(32) bytes</span>
+          <strong id="batchBytes">-</strong>
+        </article>
+        <article class="card kpi">
+          <span class="note">FAST / VERIFIED</span>
+          <strong id="fastVerified">-</strong>
+        </article>
+      </section>
+      <section class="grid">
+        <article class="card" style="grid-column: span 12;">
+          <h3>Programmability Report (latest)</h3>
+          <pre class="data" id="programmability">Loading...</pre>
+        </article>
+      </section>
+      <section class="grid">
+        <article class="card" style="grid-column: span 12;">
+          <h3>Live API Status</h3>
+          <p class="note">Set <code>?api=https://api.parad0xlabs.com</code> in URL to query your live status endpoint.</p>
+          <pre class="data" id="statusBox">No API URL provided.</pre>
+        </article>
+      </section>
+    </main>
+    <script src="/proof/proof.js" type="module"></script>
+  </body>
+</html>

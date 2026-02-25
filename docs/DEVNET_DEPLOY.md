@@ -1,7 +1,7 @@
 # Devnet Deploy Runbook (Audit Gate)
 
 Date: 2026-02-16  
-Workspace: `/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol`
+Workspace: `<repo-root>`
 
 ## Non-negotiable note
 
@@ -22,7 +22,7 @@ From `x402/`:
 - `npm run sim:10agents`
 - `MARKET_ALLOW_DEV_INGEST=0 npm run audit:full -- --cluster devnet --deployer-keypair <KEYPAIR> --upgrade-authority <AUTHORITY>`
 
-These scripts write JSON reports under `/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports`.
+These scripts write JSON reports under `<repo-root>/reports`.
 
 ## Program selection
 
@@ -37,9 +37,9 @@ Current workspace has at least:
 You can override with explicit program list:
 
 ```bash
-cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'
+cd '<repo-root>/x402'
 npm run deploy:ledger -- --cluster devnet \
-  --program '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/target/deploy/pdx_dark_protocol.so'
+  --program '<repo-root>/target/deploy/pdx_dark_protocol.so'
 ```
 
 ## Step-by-step
@@ -47,27 +47,27 @@ npm run deploy:ledger -- --cluster devnet \
 ### 1) Create dedicated deployer keypair
 
 ```bash
-solana-keygen new --outfile '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json'
+solana-keygen new --outfile '<repo-root>/devnet_deployer.json'
 ```
 
 Optional separate upgrade authority:
 
 ```bash
-solana-keygen new --outfile '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_upgrade_authority.json'
+solana-keygen new --outfile '<repo-root>/devnet_upgrade_authority.json'
 ```
 
 ### 2) Point CLI to devnet and verify address
 
 ```bash
 solana config set -u devnet
-solana address -k '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json'
+solana address -k '<repo-root>/devnet_deployer.json'
 ```
 
 ### 3) Fund deployer on devnet
 
 ```bash
-solana airdrop 5 -u devnet -k '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json'
-solana balance -u devnet -k '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json'
+solana airdrop 5 -u devnet -k '<repo-root>/devnet_deployer.json'
+solana balance -u devnet -k '<repo-root>/devnet_deployer.json'
 ```
 
 Repeat as allowed, or top up from faucet.
@@ -75,37 +75,37 @@ Repeat as allowed, or top up from faucet.
 ### 4) Pre-flight deploy estimate
 
 ```bash
-cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'
+cd '<repo-root>/x402'
 npm run deploy:estimate -- \
   --cluster devnet \
-  --keypair '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json'
+  --keypair '<repo-root>/devnet_deployer.json'
 ```
 
 ### 5) Dry-run deploy ledger (no chain writes)
 
 ```bash
-cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'
+cd '<repo-root>/x402'
 npm run deploy:ledger -- \
   --cluster devnet \
-  --keypair '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json' \
-  --upgrade-authority '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_upgrade_authority.json' \
+  --keypair '<repo-root>/devnet_deployer.json' \
+  --upgrade-authority '<repo-root>/devnet_upgrade_authority.json' \
   --dry-run
 ```
 
 ### 6) Real deploy with measured cost deltas
 
 ```bash
-cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'
+cd '<repo-root>/x402'
 npm run deploy:ledger -- \
   --cluster devnet \
-  --keypair '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json' \
-  --upgrade-authority '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_upgrade_authority.json'
+  --keypair '<repo-root>/devnet_deployer.json' \
+  --upgrade-authority '<repo-root>/devnet_upgrade_authority.json'
 ```
 
 ### 7) Run quality gate + deterministic 1005 simulations
 
 ```bash
-cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'
+cd '<repo-root>/x402'
 npm run typecheck:x402
 npm run test:wow
 npm test
@@ -113,18 +113,18 @@ npm run sim:1005 -- --runs 1005 --seed 20260216
 npm run sim:10agents
 MARKET_ALLOW_DEV_INGEST=0 npm run audit:full -- \
   --cluster devnet \
-  --deployer-keypair '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json' \
-  --upgrade-authority '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_upgrade_authority.json'
+  --deployer-keypair '<repo-root>/devnet_deployer.json' \
+  --upgrade-authority '<repo-root>/devnet_upgrade_authority.json'
 ```
 
 ### 8) Rehearse buffer cleanup and reclaim path
 
 ```bash
-cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'
+cd '<repo-root>/x402'
 npm run deploy:buffers:close -- \
   --cluster devnet \
-  --keypair '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_deployer.json' \
-  --authority '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/devnet_upgrade_authority.json'
+  --keypair '<repo-root>/devnet_deployer.json' \
+  --authority '<repo-root>/devnet_upgrade_authority.json'
 ```
 
 ### 9) Publish evidence bundle
@@ -139,7 +139,7 @@ Collect and store:
 
 All are written to:
 
-- `/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports`
+- `<repo-root>/reports`
 
 ## Audit positions checklist (must pass)
 

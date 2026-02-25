@@ -13,9 +13,11 @@ import { validateManifest, validateSignedManifest, ManifestValidationError } fro
 import { importMcpTools } from "./import/mcp.js";
 import { importOpenApiSpec } from "./import/openapi.js";
 import { MarketOrders } from "./orders.js";
+import { findMatchedDenylistKeyword, isSafeCategory } from "./policy.js";
 import { QuoteBook } from "./quotes.js";
 import { ReputationEngine } from "./reputation.js";
 import { MarketRegistry } from "./registry.js";
+import { createAbuseReport, reportBodySchema } from "./report.js";
 import { MarketStorage } from "./storage.js";
 import { MarketEvent, MarketOrder, MarketOrderInput, SignedShopManifest } from "./types.js";
 
@@ -36,6 +38,8 @@ interface CreateMarketDeps {
   orderPollIntervalMs?: number;
   pauseMarket?: boolean;
   pauseOrders?: boolean;
+  disabledShops?: string[];
+  autoDisableReportThreshold?: number;
 }
 
 export interface MarketContext {
@@ -104,6 +108,11 @@ const reputationQuerySchema = z.object({
   endpointId: z.string().min(1).optional(),
 });
 
+const sellerDashboardQuerySchema = z.object({
+  ownerPubkey: z.string().min(32).optional(),
+  shopId: z.string().min(1).optional(),
+});
+
 const devIngestSchema = z.object({
   events: z.array(z.unknown()).min(1),
 });
@@ -138,22 +147,55 @@ function toIssueList(error: unknown): string[] | undefined {
   return undefined;
 }
 
+function findDisallowedShopTerm(signed: SignedShopManifest): string | undefined {
+  const fields: string[] = [
+    signed.manifest.name,
+    signed.manifest.description ?? "",
+    signed.manifest.category ?? "",
+  ];
+
+  for (const endpoint of signed.manifest.endpoints) {
+    fields.push(endpoint.path, endpoint.description);
+    for (const tag of endpoint.capabilityTags) {
+      fields.push(tag);
+    }
+  }
+  return findMatchedDenylistKeyword(fields);
+}
+
+function policyBlocked(error: {
+  matchedKeyword: string;
+  reason: "unsafe_category" | "denylist_match" | "disabled_shop";
+}) {
+  return {
+    ok: false,
+    error: "POLICY_BLOCKED",
+    reason: error.reason,
+    matched_keyword: error.matchedKeyword,
+  };
+}
+
 export function createMarketRouter(deps: CreateMarketDeps = {}): { router: express.Router; context: MarketContext } {
   const now = deps.now ?? (() => new Date());
   const signer = deps.signer ?? ReceiptSigner.generate();
   const registry = deps.registry ?? new MarketRegistry();
+  registry.setDisabledShops(deps.disabledShops ?? []);
   const bundles = deps.bundles ?? new BundleRegistry();
   const heartbeat = deps.heartbeat ?? new HeartbeatIndex();
   const storage = deps.storage ?? new MarketStorage({ snapshotPath: deps.snapshotPath });
+  const autoDisableReportThreshold = Math.max(0, deps.autoDisableReportThreshold ?? 0);
   const eventBus = deps.eventBus ?? new MarketEventBus();
-  const reputation = deps.reputation ?? new ReputationEngine((shopId) => {
-    const live = heartbeat.get(shopId);
-    if (!live) {
-      return 0.9;
-    }
-    const uptime = 1 - Math.min(0.9, live.load * 0.5);
-    return Math.max(0.05, Math.min(1, uptime));
-  });
+  const reputation = deps.reputation ?? new ReputationEngine(
+    (shopId) => {
+      const live = heartbeat.get(shopId);
+      if (!live) {
+        return 0.9;
+      }
+      const uptime = 1 - Math.min(0.9, live.load * 0.5);
+      return Math.max(0.05, Math.min(1, uptime));
+    },
+    (shopId) => storage.reportsForShop(shopId).length,
+  );
   const quoteBook = deps.quoteBook ?? new QuoteBook(
     registry,
     heartbeat,
@@ -196,6 +238,19 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     filtered.push(nowMs);
     rateLimiter.set(key, filtered);
     return true;
+  }
+
+  function getShopTrust(shopId: string): { score: number; report_count: number; warning: boolean } {
+    const score = reputation.scoreForSeller(storage.inWindow(parseWindow("24h"), now()), shopId);
+    return {
+      score: score.sellerScore,
+      report_count: score.reportCount,
+      warning: score.warning,
+    };
+  }
+
+  function isShopBlocked(shopId: string): boolean {
+    return registry.isDisabled(shopId);
   }
 
   async function notifyOrderCallback(order: MarketOrder): Promise<void> {
@@ -252,10 +307,37 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
         return;
       }
       validateManifest(signed.manifest);
+      if (!signed.manifest.category || !isSafeCategory(signed.manifest.category)) {
+        res.status(422).json(policyBlocked({
+          matchedKeyword: signed.manifest.category ?? "missing_category",
+          reason: "unsafe_category",
+        }));
+        return;
+      }
+      const blockedTerm = findDisallowedShopTerm(signed);
+      if (blockedTerm) {
+        res.status(422).json(policyBlocked({
+          matchedKeyword: blockedTerm,
+          reason: "denylist_match",
+        }));
+        return;
+      }
+      if (isShopBlocked(signed.manifest.shopId)) {
+        res.status(423).json(policyBlocked({
+          matchedKeyword: signed.manifest.shopId,
+          reason: "disabled_shop",
+        }));
+        return;
+      }
       registry.register(signed);
       res.status(201).json({
         ok: true,
         shopId: signed.manifest.shopId,
+        seller_defined: true,
+        verifiable: {
+          receipt: true,
+          anchored: false,
+        },
       });
     } catch (error) {
       res.status(400).json({
@@ -267,12 +349,28 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   router.get("/shops", (_req, res) => {
-    res.json({ shops: registry.list() });
+    const shops = registry.list().map((shop) => ({
+      ...shop,
+      seller_defined: true,
+      verifiable: {
+        receipt: true,
+        anchored: false,
+      },
+      trust: getShopTrust(shop.shopId),
+    }));
+    res.json({ shops });
   });
 
   router.get("/shops/:shopId", (req, res) => {
     const signed = registry.getSigned(req.params.shopId);
     if (!signed) {
+      if (registry.getSigned(req.params.shopId, true) && isShopBlocked(req.params.shopId)) {
+        res.status(423).json(policyBlocked({
+          matchedKeyword: req.params.shopId,
+          reason: "disabled_shop",
+        }));
+        return;
+      }
       res.status(404).json({ error: "shop not found" });
       return;
     }
@@ -293,12 +391,23 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
       badges: badgesByEndpoint[endpoint.endpointId] ?? [],
       category: signed.manifest.category,
       examples: endpoint.examples ?? [],
+      seller_defined: true,
+      verifiable: {
+        receipt: true,
+        anchored: Boolean(endpoint.proofPolicy?.anchor32),
+      },
     }));
 
     res.json({
       shop: {
         ...signed.manifest,
         endpoints,
+        seller_defined: true,
+        verifiable: {
+          receipt: true,
+          anchored: false,
+        },
+        trust: getShopTrust(signed.manifest.shopId),
       },
       signature: {
         manifestHash: signed.manifestHash,
@@ -329,6 +438,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
       ...item,
       category: item.category,
       examples: item.endpoint.examples ?? [],
+      trust: getShopTrust(item.shopId),
       badges: computeEndpointBadges({
         shopId: item.shopId,
         endpoint: item.endpoint,
@@ -336,6 +446,11 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
         heartbeat: heartbeat.get(item.shopId),
         topSellerKeys,
       }),
+      seller_defined: true,
+      verifiable: {
+        receipt: true,
+        anchored: Boolean(item.endpoint.proofPolicy?.anchor32),
+      },
     }));
 
     res.json({ results: withBadges });
@@ -390,9 +505,19 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
       });
     }
 
+    const labeledQuotes = quotes.map((quote) => ({
+      ...quote,
+      trust: getShopTrust(quote.shopId),
+      seller_defined: true,
+      verifiable: {
+        receipt: true,
+        anchored: Boolean(quote.badges?.includes("PROOF_ANCHORED")),
+      },
+    }));
+
     res.json({
       signerPublicKey: signer.signerPublicKey,
-      quotes,
+      quotes: labeledQuotes,
     });
   });
 
@@ -445,6 +570,11 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     const listed = bundles.list().map((bundle) => ({
       ...bundle,
       breakdown: bundles.costBreakdown(quoteBook, bundle.bundleId),
+      seller_defined: true,
+      verifiable: {
+        receipt: true,
+        anchored: false,
+      },
     }));
     res.json({ bundles: listed });
   });
@@ -459,6 +589,11 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
       bundle,
       signature: bundles.getSigned(req.params.id),
       breakdown: bundles.costBreakdown(quoteBook, bundle.bundleId),
+      seller_defined: true,
+      verifiable: {
+        receipt: true,
+        anchored: false,
+      },
     });
   });
 
@@ -553,6 +688,35 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     res.json({ executed });
   });
 
+  router.post("/report", (req, res) => {
+    const parsed = reportBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+    if (!registry.get(parsed.data.shopId, true)) {
+      res.status(404).json({ ok: false, error: "shop_not_found" });
+      return;
+    }
+    const report = createAbuseReport({
+      shopId: parsed.data.shopId,
+      reportType: parsed.data.reportType,
+      reason: parsed.data.reason,
+      now: now(),
+    });
+    storage.appendReport(report);
+    const reportCount = storage.reportsForShop(parsed.data.shopId).length;
+    if (autoDisableReportThreshold > 0 && reportCount >= autoDisableReportThreshold) {
+      registry.disable(parsed.data.shopId);
+    }
+    res.status(201).json({
+      ok: true,
+      reportId: report.reportId,
+      report_count: reportCount,
+      disabled: registry.isDisabled(parsed.data.shopId),
+    });
+  });
+
   router.get("/top-selling", (req, res) => {
     const parsed = marketWindowSchema.safeParse(req.query);
     if (!parsed.success) {
@@ -627,6 +791,101 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     res.json(analytics.snapshot());
   });
 
+  router.get("/seller-dashboard", (req, res) => {
+    const parsed = sellerDashboardQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+    if (!parsed.data.ownerPubkey && !parsed.data.shopId) {
+      res.status(400).json({ error: "ownerPubkey or shopId is required" });
+      return;
+    }
+
+    const shops = registry
+      .list(true)
+      .filter((shop) => (parsed.data.ownerPubkey ? shop.ownerPubkey === parsed.data.ownerPubkey : true))
+      .filter((shop) => (parsed.data.shopId ? shop.shopId === parsed.data.shopId : true));
+
+    if (shops.length === 0) {
+      res.json({
+        window: "24h",
+        ownerPubkey: parsed.data.ownerPubkey ?? null,
+        shops: [],
+        totals: {
+          earningsAtomic: "0",
+          topBuyersCount: 0,
+          anchoredReceiptsCount: 0,
+        },
+      });
+      return;
+    }
+
+    const events24h = storage.inWindow(parseWindow("24h"), now());
+    const paymentEvents24h = events24h.filter((event) => event.type === "PAYMENT_VERIFIED");
+    const marketAvgPrice = paymentEvents24h.length > 0
+      ? paymentEvents24h.reduce((sum, event) => sum + Number.parseInt(event.priceAmount, 10), 0) / paymentEvents24h.length
+      : 0;
+
+    const rows = shops.map((shop) => {
+      const shopEvents = paymentEvents24h.filter((event) => event.shopId === shop.shopId);
+      const earningsAtomicBig = shopEvents.reduce((sum, event) => sum + BigInt(event.priceAmount), 0n);
+      const anchoredReceiptsCount = shopEvents.filter((event) => event.anchored === true).length;
+      const topBuyersCount = new Set(
+        shopEvents
+          .map((event) => event.buyerCommitment32B)
+          .filter((value): value is string => Boolean(value)),
+      ).size;
+      const reportCount = storage.reportsForShop(shop.shopId).length;
+      const score = reputation.scoreForSeller(events24h, shop.shopId, reportCount);
+      const shopAvgPrice = shopEvents.length > 0
+        ? shopEvents.reduce((sum, event) => sum + Number.parseInt(event.priceAmount, 10), 0) / shopEvents.length
+        : 0;
+
+      let suggestedPriceBand: "cheap" | "typical" | "premium" = "typical";
+      if (marketAvgPrice > 0 && shopAvgPrice > 0) {
+        const ratio = shopAvgPrice / marketAvgPrice;
+        if (ratio <= 0.85) {
+          suggestedPriceBand = "cheap";
+        } else if (ratio >= 1.15) {
+          suggestedPriceBand = "premium";
+        }
+      }
+
+      return {
+        shopId: shop.shopId,
+        ownerPubkey: shop.ownerPubkey,
+        earningsAtomic: earningsAtomicBig.toString(10),
+        topBuyersCount,
+        anchoredReceiptsCount,
+        report_count: reportCount,
+        score,
+        suggestedPriceBand,
+      };
+    });
+
+    const totals = rows.reduce((acc, row) => ({
+      earningsAtomicBig: acc.earningsAtomicBig + BigInt(row.earningsAtomic),
+      topBuyersCount: acc.topBuyersCount + row.topBuyersCount,
+      anchoredReceiptsCount: acc.anchoredReceiptsCount + row.anchoredReceiptsCount,
+    }), {
+      earningsAtomicBig: 0n,
+      topBuyersCount: 0,
+      anchoredReceiptsCount: 0,
+    });
+
+    res.json({
+      window: "24h",
+      ownerPubkey: parsed.data.ownerPubkey ?? null,
+      shops: rows,
+      totals: {
+        earningsAtomic: totals.earningsAtomicBig.toString(10),
+        topBuyersCount: totals.topBuyersCount,
+        anchoredReceiptsCount: totals.anchoredReceiptsCount,
+      },
+    });
+  });
+
   router.post("/dev/events", (req, res) => {
     if (process.env.MARKET_ALLOW_DEV_INGEST !== "1") {
       res.status(404).json({ error: "not_found" });
@@ -661,20 +920,29 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     }
 
     const events = storage.inWindow(parseWindow("24h"), now());
+    const reportCount = storage.reportsForShop(parsed.data.shopId).length;
     if (parsed.data.endpointId) {
+      const score = reputation.scoreForEndpoint(events, parsed.data.shopId, parsed.data.endpointId, reportCount);
       res.json({
         window: "24h",
         shopId: parsed.data.shopId,
         endpointId: parsed.data.endpointId,
-        score: reputation.scoreForEndpoint(events, parsed.data.shopId, parsed.data.endpointId),
+        report_count: reportCount,
+        score,
+        warning: score.warning,
+        disabled: registry.isDisabled(parsed.data.shopId),
       });
       return;
     }
 
+    const score = reputation.scoreForSeller(events, parsed.data.shopId, reportCount);
     res.json({
       window: "24h",
       shopId: parsed.data.shopId,
-      score: reputation.scoreForSeller(events, parsed.data.shopId),
+      report_count: reportCount,
+      score,
+      warning: score.warning,
+      disabled: registry.isDisabled(parsed.data.shopId),
     });
   });
 
