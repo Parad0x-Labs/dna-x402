@@ -9,14 +9,14 @@
     "details": {
       "totalEstimatedLowSol": "3.678443520",
       "totalEstimatedHighSol": "4.414132224",
-      "reportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/estimate-deploy-cost-2026-02-17T00-22-05.420Z.json"
+      "reportPath": "reports/estimate-deploy-cost-2026-02-17T00-22-05.420Z.json"
     }
   },
   "deployLedger": {
     "ok": true,
     "message": "validated 1 ledger entries",
     "details": {
-      "reportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/deploy-ledger-receipt-anchor-20260217T001315Z.json",
+      "reportPath": "reports/deploy-ledger-receipt-anchor-20260217T001315Z.json",
       "totalDeltaSol": "-0.597842680",
       "entries": 1
     }
@@ -29,7 +29,7 @@
       "deltaSol": "0.000000000",
       "buffersBefore": 0,
       "buffersAfter": 0,
-      "reportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/close-buffers-2026-02-17T00-22-05.420Z.json"
+      "reportPath": "reports/close-buffers-2026-02-17T00-22-05.420Z.json"
     }
   },
   "pauseFlags": {
@@ -57,7 +57,7 @@
     "ok": true,
     "message": "10-agent simulation passed",
     "details": {
-      "outPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/sim-10agents-2026-02-17T00-22-05.420Z.json",
+      "outPath": "reports/sim-10agents-2026-02-17T00-22-05.420Z.json",
       "passedScenarios": 6,
       "failedScenarios": 0
     }
@@ -72,7 +72,7 @@
       "retryOk": true,
       "anchoringEnabled": true,
       "anchoringReceiptStatus": 200,
-      "anchoringSignatureLogPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/anchor_tx_sigs.txt"
+      "anchoringSignatureLogPath": "reports/anchor_tx_sigs.txt"
     }
   },
   "smokeRemote": {
@@ -89,24 +89,24 @@
       "signature": "2n7cubhzCXjnyyHncJ3dQyDvpsHRsNJMfC7wmURqVuKo3R2TsgWrH9Z2sgspZBydbi7tCSUsPoFaHiq1jRCQHhMK",
       "bucket": "7eVvRFkHQosNva1YFMQDCtJHrCrpFzN8Z973nsEtn3v6",
       "bucketId": "492024",
-      "signatureLogPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/anchor_tx_sigs.txt",
-      "outSignaturesPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/anchor_tx_sigs-2026-02-17T00-22-05.420Z.txt",
-      "outConfirmPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/anchor_confirm-2026-02-17T00-22-05.420Z.txt",
-      "outBucketDumpPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/bucket_account_dump-2026-02-17T00-22-05.420Z.txt"
+      "signatureLogPath": "reports/anchor_tx_sigs.txt",
+      "outSignaturesPath": "reports/anchor_tx_sigs-2026-02-17T00-22-05.420Z.txt",
+      "outConfirmPath": "reports/anchor_confirm-2026-02-17T00-22-05.420Z.txt",
+      "outBucketDumpPath": "reports/bucket_account_dump-2026-02-17T00-22-05.420Z.txt"
     }
   },
   "artifacts": {
-    "estimateReportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/estimate-deploy-cost-2026-02-17T00-22-05.420Z.json",
-    "ledgerReportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/deploy-ledger-receipt-anchor-20260217T001315Z.json",
-    "closeBuffersReportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/close-buffers-2026-02-17T00-22-05.420Z.json",
-    "simulationReportPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/sim-10agents-2026-02-17T00-22-05.420Z.json",
-    "anchorSignaturesPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/anchor_tx_sigs-2026-02-17T00-22-05.420Z.txt",
-    "anchorConfirmPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/anchor_confirm-2026-02-17T00-22-05.420Z.txt",
-    "bucketAccountDumpPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/bucket_account_dump-2026-02-17T00-22-05.420Z.txt",
-    "auditJsonPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/audit-2026-02-17T00-22-05.420Z.json",
-    "auditMarkdownPath": "/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/AUDIT_REPORT.md"
+    "estimateReportPath": "reports/estimate-deploy-cost-2026-02-17T00-22-05.420Z.json",
+    "ledgerReportPath": "reports/deploy-ledger-receipt-anchor-20260217T001315Z.json",
+    "closeBuffersReportPath": "reports/close-buffers-2026-02-17T00-22-05.420Z.json",
+    "simulationReportPath": "reports/sim-10agents-2026-02-17T00-22-05.420Z.json",
+    "anchorSignaturesPath": "reports/anchor_tx_sigs-2026-02-17T00-22-05.420Z.txt",
+    "anchorConfirmPath": "reports/anchor_confirm-2026-02-17T00-22-05.420Z.txt",
+    "bucketAccountDumpPath": "reports/bucket_account_dump-2026-02-17T00-22-05.420Z.txt",
+    "auditJsonPath": "reports/audit-2026-02-17T00-22-05.420Z.json",
+    "auditMarkdownPath": "AUDIT_REPORT.md"
   },
   "notes": [
-    "Reused latest deploy-ledger report: /Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/reports/deploy-ledger-receipt-anchor-20260217T001315Z.json"
+    "Reused latest deploy-ledger report: reports/deploy-ledger-receipt-anchor-20260217T001315Z.json"
   ]
 }

@@ -25,9 +25,9 @@ Generated: 2026-02-17T00:23:41.093Z
 
 ## Benchmark Inputs
 
-- txsize report: /Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402/reports/bench_txsize.json
-- compute report: /Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402/reports/bench_compute.json
-- soak report: /Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402/reports/soak-2026-02-17T00-23-05.216Z.json
+- txsize report: `x402/reports/bench_txsize.json`
+- compute report: `x402/reports/bench_compute.json`
+- soak report: `x402/reports/soak-2026-02-17T00-23-05.216Z.json`
 
 ## Verified Tier Definition
 
