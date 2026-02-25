@@ -39,11 +39,21 @@ function trackedFiles(repoRoot: string): string[] {
   return out.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 
+const SCANNER_FILES = [
+  "scripts/ci/secret-scan.sh",
+  "x402/scripts/security/scan-secrets.ts",
+  "x402/scripts/audit/run-prod-audit.ts",
+  "x402/scripts/sim/run-20agents-gauntlet.ts",
+];
+
 function isIgnoredExample(file: string): boolean {
   return file.endsWith(".env.example")
     || file.endsWith(".example")
     || file.includes("/examples/")
-    || file.includes("/fixtures/");
+    || file.includes("/fixtures/")
+    || SCANNER_FILES.some((s) => file.endsWith(s))
+    || file.endsWith("AGENTS.md")
+    || file.endsWith("README.md");
 }
 
 function hasForbiddenEnvFilename(file: string): boolean {
