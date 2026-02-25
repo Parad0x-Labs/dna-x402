@@ -1,261 +1,180 @@
-# DNP x402 Module
+# DNA x402 — Payment Rails for AI Agents
 
-HTTP-native micropayment service + agent SDK for Dark Null Protocol.
+**DNA** (Dark Null Apex) is an open-source payment protocol for AI agents on Solana. It implements the x402 HTTP payment standard: any API can require payment, and any AI agent can pay — programmatically, with no human in the loop.
 
-## Handover Notes
+**Program**: [`9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`](https://solscan.io/account/9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF)
 
-Important implementation + startup handover:
-`../docs/HANDOVER_MARKET_INTELLIGENCE.md`
+## Why DNA
 
-## Features shipped
+AI agents need to pay for things: inference, storage, data, compute. Current options are API keys (no metering), credit cards (no agents), or crypto wallets (too manual). DNA solves this with a single SDK that handles quoting, payment, verification, and receipts — from $0.00001 to $100+ per call.
 
-- `GET /resource` returns HTTP `402` + payment requirements
-- `POST /commit` + `POST /finalize` + `GET /receipt/:id`
-- Signed, hash-chained receipts
-- Signed competing marketplace quotes with TTL
-- Dynamic fee policy (`max(minFee, base + bps)`) with netting accrual threshold
-- Netting ledger keyed by `payerCommitment32B + provider`
-- Streamflow wrapper (`createStream`, `topupStream`, `getStream`)
-- Strict proof verifiers for SPL transfer and Streamflow proofs
-- Tool catalog estimator for realistic call-range budgeting
-- Manifest validator (`shop.json`) + marketplace APIs (`/shops`, `/search`, `/quotes`, `/orders`)
-- Agent helper: `fetchWith402(url, { wallet, maxSpendAtomic, maxPriceAtomic, maxSpendPerDayAtomic, preferStream })`
-- x402 compatibility parser for Coinbase/Memeputer/generic header variants
-- `/x402/doctor` diagnostics endpoint for integration debugging
+## Features
 
-## x402 Compatibility + Doctor
+- **Three settlement modes**: Netting (off-chain batched, cheapest), Transfer (real on-chain USDC), Stream (continuous)
+- **x402 HTTP standard**: Any REST API becomes payment-gated with one middleware call
+- **Receipt anchoring**: All payments get cryptographic receipts anchored on Solana via `receipt_anchor` program
+- **Marketplace**: Agents discover and compare providers by capability, price, and latency
+- **Audit logging**: NDJSON corporate-grade audit trail for every payment event
+- **Webhooks**: HMAC-signed async payment notifications with retry logic
+- **Liquefy bridge**: Archive payment data into verified `.null` vaults
 
-- Compatibility reference: `../docs/X402_COMPAT.md`
-- Diagnostics:
-  - `GET /x402/doctor`
-  - `POST /x402/doctor`
+## Quick Start
 
-## Install
+### For Buyers (AI Agents)
+
+```typescript
+import { fetchWith402 } from "@dna/x402";
+
+const result = await fetchWith402("https://provider.example/api/inference", {
+  wallet: {
+    payNetted: async (quote) => ({
+      settlement: "netting",
+      amountAtomic: quote.totalAtomic,
+    }),
+  },
+  maxSpendAtomic: "50000",
+});
+
+const data = await result.response.json();
+```
+
+### For Sellers (API Providers)
+
+```typescript
+import express from "express";
+import { dnaPaywall } from "@dna/x402";
+
+const app = express();
+
+app.use("/api/inference", dnaPaywall({
+  priceAtomic: "5000",
+  recipient: "YOUR_SOLANA_WALLET",
+}));
+
+app.get("/api/inference", (req, res) => {
+  res.json({ result: "inference output" });
+});
+```
+
+## Settlement Modes
+
+| Mode | Per-TX Solana Fee | Best For | How It Works |
+|------|-------------------|----------|-------------|
+| **Netting** | None | Nano/micro payments | Off-chain ledger, batched settlement |
+| **Transfer** | ~$0.0001 | Larger payments | Real on-chain USDC SPL transfer |
+| **Stream** | ~$0.0001 | Continuous access | Streamflow time-locked payments |
+
+## Architecture
+
+```
+Agent (buyer)                         API Provider (seller)
+     |                                      |
+     |  1. GET /api/inference               |
+     |------------------------------------->|
+     |  2. 402 Payment Required             |
+     |<-------------------------------------|
+     |  3. POST /commit (lock quote)        |
+     |------------------------------------->|
+     |  4. Pay (netting/transfer/stream)    |
+     |------------------------------------->|
+     |  5. POST /finalize (submit proof)    |
+     |------------------------------------->|
+     |  6. Receipt + access                 |
+     |<-------------------------------------|
+     |                                      |
+     |  All receipts anchored on Solana     |
+     |  via receipt_anchor program          |
+```
+
+## Project Structure
+
+```
+x402/
+├── src/
+│   ├── server.ts           # Main x402 payment server
+│   ├── client.ts           # Agent SDK (fetchWith402, marketCall)
+│   ├── sdk/
+│   │   ├── index.ts        # SDK entry point
+│   │   ├── paywall.ts      # Express payment middleware
+│   │   └── webhook.ts      # HMAC webhook service
+│   ├── logging/
+│   │   └── audit.ts        # Corporate audit logger
+│   ├── market/             # Agent marketplace
+│   ├── bridge/
+│   │   └── liquefy/        # Liquefy vault bridge
+│   └── verifier/           # On-chain payment verification
+├── examples/
+│   ├── buyer-agent.ts      # Agent paying for APIs
+│   ├── seller-api.ts       # API accepting payments
+│   └── liquefy-gated-vault.ts  # Liquefy + DNA integration
+├── test-mainnet/
+│   ├── mayhem-50.mjs       # 50-agent stress test
+│   └── MAYHEM_50_REPORT.md # Test results
+└── AGENTS.md               # AI agent quick reference
+```
+
+## Running the Server
 
 ```bash
-cd x402
+git clone https://github.com/Parad0x-Labs/dna-x402
+cd dna-x402
 npm install
+cp .env.example .env       # Configure your wallet + RPC
+npm run build
+npm start
 ```
 
-## Run server
+## Liquefy Integration
+
+DNA integrates with [Liquefy](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) for archiving payment data into verified `.null` vaults.
+
+### Export Payment Data to Liquefy Vault
 
 ```bash
-npm run dev
+# One-shot export
+curl -s http://localhost:8080/admin/audit/export | \
+  npx tsx src/bridge/liquefy/cli.ts --stdin --out ./vault-staging/run-001
+
+# Pack with Liquefy
+python tools/tracevault_pack.py ./vault-staging/run-001 --org dna --out ./vault/run-001
 ```
 
-Server starts at `http://localhost:8080` by default.
+### Live Sidecar (Auto-Archive)
 
-## Run marketplace
+```typescript
+import { LiquefySidecar } from "@dna/x402";
 
-```bash
-npm run dev:marketplace
+const sidecar = new LiquefySidecar({
+  outDir: "./vault-live",
+  cluster: "mainnet-beta",
+});
+sidecar.attachAuditLogger(auditLogger);
+sidecar.startPeriodicFlush();
 ```
 
-Marketplace starts at `http://localhost:8090` by default (`MARKETPLACE_PORT` override).
+### Payment-Gated Vault Access
 
-## Run integrated market intelligence
+Use DNA to monetize Liquefy vault operations. See `examples/liquefy-gated-vault.ts` for a complete example.
 
-```bash
-npm run dev:market
-```
+## Mainnet Test Results
 
-This runs the main x402 server with integrated `/market/*` routes and dev telemetry ingest enabled (`MARKET_ALLOW_DEV_INGEST=1`).
+50-agent stress test on Solana mainnet:
 
-## Quick manual flow
+| Metric | Result |
+|--------|--------|
+| Agents | 50 (30 netting + 20 transfer) |
+| Total Trades | 80 |
+| Tests Passed | 84/84 (100%) |
+| On-Chain USDC Transfers | 20 |
+| Receipts Anchored | 80/80 |
+| Amount Range | $0.00001 — $2.00 |
 
-1) Request protected resource (expect 402):
+Full report: [`test-mainnet/MAYHEM_50_REPORT.md`](./test-mainnet/MAYHEM_50_REPORT.md)
 
-```bash
-curl -i http://localhost:8080/resource
-```
+## API Reference
 
-2) Use `quoteId` from response, then commit:
+See [`AGENTS.md`](./AGENTS.md) for the complete API reference and copy-paste integration guide.
 
-```bash
-curl -s http://localhost:8080/commit \
-  -H 'content-type: application/json' \
-  -d '{"quoteId":"<QUOTE_ID>","payerCommitment32B":"0x1111111111111111111111111111111111111111111111111111111111111111"}'
-```
+## License
 
-3) Finalize with proof (dev example):
-
-```bash
-curl -s http://localhost:8080/finalize \
-  -H 'content-type: application/json' \
-  -d '{"commitId":"<COMMIT_ID>","paymentProof":{"settlement":"transfer","txSignature":"<TX_SIG>"}}'
-```
-
-4) Retry protected resource with payment header:
-
-```bash
-curl -s http://localhost:8080/resource -H "x-dnp-commit-id: <COMMIT_ID>"
-```
-
-## Test
-
-```bash
-npm test
-```
-
-### Market-focused test suite
-
-```bash
-npm run test:market
-```
-
-## Typecheck
-
-```bash
-npm run typecheck:x402
-```
-
-## Seed market demo data
-
-```bash
-npm run seed:market
-```
-
-This registers sample shops and quote traffic against a running server (`X402_BASE_URL`, default `http://localhost:8080`).
-
-### Try these seeded SKUs (10)
-
-- Research: `web_search_with_citations`, `pdf_fetch_extract`, `summarize_with_quotes`
-- Ops: `classify_fast`, `dedupe_normalize`, `entity_extract`
-- Actions: `send_email_stub`, `calendar_book_stub`, `form_fill_stub`
-- Always-on: `tool_gateway_stream_access`
-
-## WOW Demo (60s)
-
-1. `npm run dev:market`
-2. `npm run seed:market`
-3. Open wallet (`wallet` package), go to Marketplace, click `Refresh Market`, then `Try It`
-4. In wallet, open `Create Shop Wizard`, paste OpenAPI JSON/URL, import endpoints, publish
-5. Re-run quote search and use a quote; inspect receipt and spend ledger export
-
-## WOW Test Suite
-
-```bash
-npm run test:wow
-```
-
-## Devnet Deploy Tooling
-
-From this package:
-
-```bash
-npm run deploy:estimate -- --cluster devnet
-npm run deploy:ledger -- --cluster devnet --dry-run
-npm run deploy:ledger -- --cluster devnet
-npm run deploy:buffers:close -- --cluster devnet
-```
-
-Deterministic simulation gate:
-
-```bash
-npm run sim:1005 -- --runs 1005 --seed 20260216
-npm run sim:10agents
-npm run sim:soak -- --duration-ms 300000
-```
-
-Full audit runner (deploy cost + buffer reclaim + pause/proof checks + sim):
-
-```bash
-npm run audit:full -- --cluster devnet --deployer-keypair <KEYPAIR> --upgrade-authority <AUTHORITY>
-```
-
-Programmability readiness audit (10 seller-defined primitives on rails):
-
-```bash
-npm run audit:programmable -- --cluster devnet
-```
-
-Security scan before publishing repo:
-
-```bash
-npm run security:scan
-npm run audit:prod
-```
-
-Publish proof bundle to static site:
-
-```bash
-npm run publish:proof-bundle
-npm run site:build
-```
-
-Artifacts are written to:
-- `x402/audit_out/PROGRAMMABILITY_READINESS_REPORT.md`
-- `x402/audit_out/programmable_readiness.json`
-- `x402/audit_out/programmable_devnet.json` (when cluster is devnet)
-
-Full audited runbook:
-`../docs/DEVNET_DEPLOY.md`
-
-## Footprint Benchmarks
-
-```bash
-npm run bench:txsize
-npm run bench:compute -- --payer-keypair <KEYPAIR>
-npm run bench:footprint
-```
-
-Outputs:
-- `x402/reports/bench_txsize.json`
-- `x402/reports/bench_compute.json`
-- `../docs/FOOTPRINT.md`
-
-## ALT Tooling
-
-```bash
-npm run alt:create -- --cluster devnet --keypair <KEYPAIR>
-npm run alt:extend -- --cluster devnet --alt <ALT> --address <PUBKEY> --address <PUBKEY>
-npm run alt:show -- --cluster devnet --alt <ALT>
-```
-
-Detailed runbook:
-`../docs/ALT_SETUP.md`
-
-## Environment
-
-- `PORT` (default `8080`)
-- `APP_VERSION` (default `dev`)
-- `BUILD_COMMIT` (optional git hash)
-- `SOLANA_RPC_URL` (default devnet)
-- `PAYMENT_PROGRAM_ID` (optional main payment program id for `/status`)
-- `USDC_MINT` (default devnet USDC)
-- `PAYMENT_RECIPIENT` (provider wallet)
-- `DEFAULT_CURRENCY` (default `USDC`)
-- `ENABLED_PRICING_MODELS` (default `flat,surge,stream`)
-- `MARKETPLACE_SELECTION` (default `cheapest_sla_else_limit_order`)
-- `BASE_FEE_ATOMIC` (default `0`)
-- `FEE_BPS` (default `30`)
-- `MIN_FEE_ATOMIC` (default `0`)
-- `ACCRUE_THRESHOLD_ATOMIC` (default `1000`)
-- `MIN_SETTLE_ATOMIC` (default `0`)
-- `NETTING_THRESHOLD_ATOMIC` (default `1000`)
-- `NETTING_INTERVAL_MS` (default `60000`)
-- `QUOTE_TTL_SECONDS` (default `180`)
-- `RECEIPT_SIGNING_SECRET` (optional base58 64-byte ed25519 secret)
-- `MARKET_ALLOW_DEV_INGEST` (`1` enables `/market/dev/events` for local synthetic telemetry)
-- `PAUSE_MARKET` (`1` pauses `/market/*` routes and `/bundle/:id/run`)
-- `PAUSE_FINALIZE` (`1` pauses `/finalize`)
-- `PAUSE_ORDERS` (`1` pauses `/market/orders*`)
-
-## Verification Tiers
-
-- `FAST`: fulfilled request + payment verified + receipt signature valid.
-- `VERIFIED`: `FAST` plus explicit anchoring marker (`anchored === true`) for the paired events.
-  - If anchoring is not active, VERIFIED leaderboards should stay empty or below FAST.
-
-## Programmability Boundary
-
-Protocol boundary and seller-defined responsibility split:
-`../docs/PROGRAMMABILITY_CONTRACT.md`
-
-Open source release note:
-`../docs/OPEN_SOURCE_RELEASE.md`
-
-## Runtime Endpoints
-
-- `GET /health` full runtime health payload
-- `GET /status` launch-safe status payload (cluster/program IDs/anchoring/fees/build)
+MIT — Parad0x Labs
