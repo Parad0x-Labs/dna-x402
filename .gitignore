@@ -20,6 +20,8 @@ __pycache__/
 *.pid
 reports/
 x402/audit_out/
+x402/audit_out_mainnet/
+x402/audit_out_gauntlet_20/
 
 # IDE / OS
 .DS_Store
@@ -36,3 +38,16 @@ relayer.json
 null_mint_authority.json
 wallet/*.json
 .env
+.env.local
+.env.production
+.env.development
+.env.mainnet
+
+# Test/audit artifacts (large, ephemeral)
+x402/audit_out*/
+x402/test-mainnet/keys/
+x402/keys/
+x402/reports/
+
+# Solana program builds (large binaries)
+programs/*/target/

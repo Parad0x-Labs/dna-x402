@@ -1,0 +1,12 @@
+{
+  "name": "dark-null-protocol-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "site-agent:dev": "npm --prefix site-agent run dev",
+    "site-agent:build": "npm --prefix site-agent run build",
+    "site-agent:preview": "npm --prefix site-agent run preview -- --host --port 4174",
+    "site-agent:test": "npm --prefix site-agent run test",
+    "site-agent:proof:sync": "npm --prefix site-agent run proof:sync"
+  }
+}

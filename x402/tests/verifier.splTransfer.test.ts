@@ -41,7 +41,7 @@ describe("strict SPL transfer verifier", () => {
     };
 
     const verified = await verifySplTransferProof(connection, {
-      txSignature: "sig-1",
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
       expectedMint: "usdc-mint",
       expectedRecipient: "recipient-wallet",
       minAmountAtomic: "1500",
@@ -80,7 +80,7 @@ describe("strict SPL transfer verifier", () => {
     };
 
     const verified = await verifySplTransferProof(connection, {
-      txSignature: "sig-2",
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg8",
       expectedMint: "usdc-mint",
       expectedRecipient: "recipient-wallet",
       minAmountAtomic: "1",
@@ -123,7 +123,7 @@ describe("strict SPL transfer verifier", () => {
     };
 
     const verified = await verifySplTransferProof(connection, {
-      txSignature: "sig-3",
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg9",
       expectedMint: "usdc-mint",
       expectedRecipient: "recipient-wallet",
       minAmountAtomic: "500",
@@ -166,7 +166,7 @@ describe("strict SPL transfer verifier", () => {
     };
 
     const verified = await verifySplTransferProof(connection, {
-      txSignature: "sig-4",
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xgA",
       expectedMint: "usdc-mint",
       expectedRecipient: "recipient-wallet",
       minAmountAtomic: "500",
@@ -208,7 +208,7 @@ describe("strict SPL transfer verifier", () => {
     };
 
     const verified = await verifySplTransferProof(connection, {
-      txSignature: "sig-5",
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xgB",
       expectedMint: "usdc-mint",
       expectedRecipient: "recipient-wallet",
       minAmountAtomic: "500",
@@ -217,5 +217,56 @@ describe("strict SPL transfer verifier", () => {
 
     expect(verified.ok).toBe(false);
     expect(verified.error).toContain("wrong recipient");
+  });
+
+  it("fails fast with INVALID_PROOF for malformed signatures", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        throw new Error("should not call rpc for invalid signature");
+      },
+      async getParsedTransaction() {
+        throw new Error("should not call rpc for invalid signature");
+      },
+      async getBlockTime() {
+        throw new Error("should not call rpc for invalid signature");
+      },
+    };
+
+    const verified = await verifySplTransferProof(connection, {
+      txSignature: "bad_sig",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1",
+      maxAgeSeconds: 900,
+    });
+
+    expect(verified.ok).toBe(false);
+    expect(verified.errorCode).toBe("INVALID_PROOF");
+  });
+
+  it("maps retryable rpc errors to RPC_UNAVAILABLE", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        throw new Error("429 Too Many Requests");
+      },
+      async getParsedTransaction() {
+        throw new Error("unused");
+      },
+      async getBlockTime() {
+        throw new Error("unused");
+      },
+    };
+
+    const verified = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1",
+      maxAgeSeconds: 900,
+    });
+
+    expect(verified.ok).toBe(false);
+    expect(verified.errorCode).toBe("RPC_UNAVAILABLE");
+    expect(verified.retryable).toBe(true);
   });
 });

@@ -17,6 +17,7 @@ class FakeVerifier implements PaymentVerifier {
 
 const baseConfig: X402Config = {
   port: 8080,
+  appVersion: "test",
   solanaRpcUrl: "https://api.devnet.solana.com",
   usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
   paymentRecipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
@@ -36,6 +37,8 @@ const baseConfig: X402Config = {
   pauseMarket: false,
   pauseFinalize: false,
   pauseOrders: false,
+  disabledShops: [],
+  autoDisableReportThreshold: 0,
 };
 
 describe("pause flags", () => {
@@ -69,7 +72,9 @@ describe("pause flags", () => {
       })
       .expect(503);
 
-    expect(finalize.body.error).toBe("finalize_paused");
+    expect(finalize.body.error.code).toBe("X402_PAUSED");
+    expect(finalize.body.error.traceId).toBeTruthy();
+    expect(finalize.headers["x-trace-id"]).toBe(finalize.body.error.traceId);
   });
 
   it("blocks market and orders when pause flags are enabled", async () => {

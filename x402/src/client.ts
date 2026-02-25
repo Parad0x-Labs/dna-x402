@@ -3,6 +3,8 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
+import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
+import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
 export interface AgentWallet {
   payTransfer(quote: QuoteResponse): Promise<PaymentProof>;
@@ -28,6 +30,7 @@ export interface FetchWith402Options extends RequestInit {
   maxPriceAtomic?: string;
   maxSpendPerDayAtomic?: string;
   preferStream?: boolean;
+  proofHeaderStyle?: "PAYMENT-SIGNATURE" | "X-PAYMENT" | "X-402-PAYMENT";
   receiptStore?: ReceiptStore;
   spendTracker?: SpendTracker;
 }
@@ -89,26 +92,107 @@ function absolute(url: string, endpoint: string): string {
   return new URL(endpoint, `${base.origin}/`).toString();
 }
 
-function parsePaymentRequirements(payload: unknown): PaymentRequirements {
+function proofHeaderName(style: FetchWith402Options["proofHeaderStyle"]): "PAYMENT-SIGNATURE" | "X-PAYMENT" | "X-402-PAYMENT" {
+  if (style === "X-PAYMENT" || style === "X-402-PAYMENT") {
+    return style;
+  }
+  return "PAYMENT-SIGNATURE";
+}
+
+function toCanonicalProof(paymentProof: PaymentProof): CanonicalPaymentProof {
+  if (paymentProof.settlement === "transfer") {
+    return {
+      version: "x402-proof-v1",
+      scheme: "solana_spl",
+      txSig: paymentProof.txSignature,
+      amountAtomic: paymentProof.amountAtomic,
+      raw: { headers: {} },
+    };
+  }
+  if (paymentProof.settlement === "stream") {
+    return {
+      version: "x402-proof-v1",
+      scheme: "unknown",
+      proofBlob: JSON.stringify(paymentProof),
+      raw: { headers: {} },
+    };
+  }
+  return {
+    version: "x402-proof-v1",
+    scheme: "unknown",
+    proofBlob: JSON.stringify(paymentProof),
+    raw: { headers: {} },
+  };
+}
+
+function parsePaymentRequirements(payload: unknown, headers: Headers, requestUrl: string): {
+  requirements: PaymentRequirements;
+  headerFlow: boolean;
+  requiredHeaderValue?: string;
+} {
   const maybe = payload as { paymentRequirements?: PaymentRequirements };
   const requirements = maybe?.paymentRequirements;
-  if (!requirements?.quote?.quoteId) {
+  if (requirements?.quote?.quoteId) {
+    if (!requirements.accepts || requirements.accepts.length === 0) {
+      requirements.accepts = requirements.quote.settlement.map((mode) => ({
+        scheme: "solana-spl",
+        network: "solana-devnet",
+        mint: requirements.quote.mint,
+        maxAmount: requirements.quote.totalAtomic,
+        recipient: requirements.quote.recipient,
+        mode,
+      }));
+    }
+    if (!requirements.recommendedMode) {
+      requirements.recommendedMode = requirements.quote.settlement[0] ?? "transfer";
+    }
+    return { requirements, headerFlow: false };
+  }
+
+  const headerMap = Object.fromEntries(Array.from(headers.entries()));
+  const normalized = normalizeX402({ headers: headerMap, body: payload });
+  if (!normalized.required) {
     throw new Error("402 response missing payment requirements");
   }
-  if (!requirements.accepts || requirements.accepts.length === 0) {
-    requirements.accepts = requirements.quote.settlement.map((mode) => ({
+
+  const base = new URL(requestUrl);
+  const quoteId = normalized.required.memo ? `compat-${normalized.required.memo.slice(0, 24)}` : `compat-${Date.now()}`;
+  const inferredRequirements: PaymentRequirements = {
+    version: "x402-dnp-v1",
+    quote: {
+      amount: normalized.required.amountAtomic,
+      mint: normalized.required.settlement.mint ?? "unknown",
+      recipient: normalized.required.recipient,
+      expiresAt: normalized.required.expiresAt ? new Date(normalized.required.expiresAt).toISOString() : new Date(Date.now() + 60_000).toISOString(),
+      settlement: ["transfer"],
+      memoHash: normalized.required.memo ?? quoteId,
+      quoteId,
+      feeAtomic: "0",
+      totalAtomic: normalized.required.amountAtomic,
+    },
+    accepts: [{
       scheme: "solana-spl",
       network: "solana-devnet",
-      mint: requirements.quote.mint,
-      maxAmount: requirements.quote.totalAtomic,
-      recipient: requirements.quote.recipient,
-      mode,
-    }));
-  }
-  if (!requirements.recommendedMode) {
-    requirements.recommendedMode = requirements.quote.settlement[0] ?? "transfer";
-  }
-  return requirements;
+      mint: normalized.required.settlement.mint ?? "unknown",
+      maxAmount: normalized.required.amountAtomic,
+      recipient: normalized.required.recipient,
+      mode: "transfer",
+    }],
+    recommendedMode: "transfer",
+    commitEndpoint: `${base.origin}/commit`,
+    finalizeEndpoint: `${base.origin}/finalize`,
+    receiptEndpoint: `${base.origin}/receipt/:receiptId`,
+  };
+
+  const requiredHeaderValue = headerMap["payment-required"]
+    ?? headerMap["x-payment-required"]
+    ?? headerMap["x-402-payment-required"];
+
+  return {
+    requirements: inferredRequirements,
+    headerFlow: true,
+    requiredHeaderValue,
+  };
 }
 
 function chooseSettlement(
@@ -197,6 +281,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     maxPriceAtomic,
     maxSpendPerDayAtomic,
     preferStream = false,
+    proofHeaderStyle = "PAYMENT-SIGNATURE",
     receiptStore,
     spendTracker = new InMemorySpendTracker(),
     headers,
@@ -212,7 +297,9 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     return { response: firstResponse };
   }
 
-  const requirements = parsePaymentRequirements(await firstResponse.json());
+  const firstPayload = await firstResponse.json();
+  const parsed402 = parsePaymentRequirements(firstPayload, firstResponse.headers, url);
+  const requirements = parsed402.requirements;
   const maxSpend = parseAtomic(maxSpendAtomic);
   const quoteTotal = parseAtomic(requirements.quote.totalAtomic);
   if (maxPriceAtomic) {
@@ -235,6 +322,30 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     }
   }
 
+  const paymentProof = await chooseSettlement(requirements.quote, requirements, wallet, preferStream);
+  const proofHeader = proofHeaderName(proofHeaderStyle);
+  const encodedProof = encodeCanonicalProofHeader(toCanonicalProof(paymentProof));
+
+  if (parsed402.headerFlow) {
+    const retryResponse = await fetch(url, {
+      ...fetchOptions,
+      headers: {
+        ...(headers ?? {}),
+        [proofHeader]: encodedProof,
+        ...(parsed402.requiredHeaderValue ? { "PAYMENT-REQUIRED": parsed402.requiredHeaderValue } : {}),
+      },
+    });
+
+    if (maxSpendPerDayAtomic) {
+      await spendTracker.addSpendForDateAtomic(dateKeyUtc(), quoteTotal);
+    }
+
+    return {
+      response: retryResponse,
+      paymentRequirements: requirements,
+    };
+  }
+
   const payerCommitment32B = `0x${crypto.randomBytes(32).toString("hex")}`;
 
   const commitRes = await fetch(absolute(url, requirements.commitEndpoint), {
@@ -254,12 +365,13 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
   }
 
   const commitData = (await commitRes.json()) as { commitId: string };
-  const paymentProof = await chooseSettlement(requirements.quote, requirements, wallet, preferStream);
 
   const finalizeRes = await fetch(absolute(url, requirements.finalizeEndpoint), {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      [proofHeader]: encodedProof,
+      ...(parsed402.requiredHeaderValue ? { "PAYMENT-REQUIRED": parsed402.requiredHeaderValue } : {}),
     },
     body: JSON.stringify({
       commitId: commitData.commitId,

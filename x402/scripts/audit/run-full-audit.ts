@@ -32,11 +32,15 @@ interface AuditReport {
   simulation10Agents: StepResult;
   smokeLocal: StepResult;
   smokeRemote: StepResult;
+  anchoringEvidence: StepResult;
   artifacts: {
     estimateReportPath?: string;
     ledgerReportPath?: string;
     closeBuffersReportPath?: string;
     simulationReportPath?: string;
+    anchorSignaturesPath?: string;
+    anchorConfirmPath?: string;
+    bucketAccountDumpPath?: string;
     auditJsonPath: string;
     auditMarkdownPath: string;
   };
@@ -475,7 +479,20 @@ async function runVerificationNegativeChecks(): Promise<StepResult> {
 }
 
 async function runLocalSmoke(): Promise<StepResult> {
-  const { app } = createX402App(buildBaseConfig(), {
+  const anchoringEnabled = Boolean(process.env.RECEIPT_ANCHOR_PROGRAM_ID && process.env.ANCHORING_KEYPAIR_PATH);
+  const signatureLogPath = process.env.ANCHORING_SIGNATURE_LOG_PATH
+    ?? path.resolve(process.cwd(), "..", "reports", "anchor_tx_sigs.txt");
+
+  const { app } = createX402App(buildBaseConfig({
+    anchoringEnabled,
+    receiptAnchorProgramId: process.env.RECEIPT_ANCHOR_PROGRAM_ID,
+    anchoringKeypairPath: process.env.ANCHORING_KEYPAIR_PATH,
+    anchoringAltAddress: process.env.ANCHORING_ALT_ADDRESS,
+    anchoringImmediate: anchoringEnabled,
+    anchoringBatchSize: 32,
+    anchoringFlushIntervalMs: 1_000,
+    anchoringSignatureLogPath: signatureLogPath,
+  }), {
     paymentVerifier: new FakeVerifier(),
     receiptSigner: ReceiptSigner.generate(),
   });
@@ -483,12 +500,59 @@ async function runLocalSmoke(): Promise<StepResult> {
   const health = await request(app).get("/health").expect(200);
   const snapshot = await request(app).get("/market/snapshot").expect(200);
 
+  const first = await request(app).get("/resource").expect(402);
+  const quoteId = first.body.paymentRequirements.quote.quoteId as string;
+  const commit = await request(app)
+    .post("/commit")
+    .send({
+      quoteId,
+      payerCommitment32B: `0x${"77".repeat(32)}`,
+    })
+    .expect(201);
+  const finalized = await request(app)
+    .post("/finalize")
+    .send({
+      commitId: commit.body.commitId,
+      paymentProof: {
+        settlement: "transfer",
+        txSignature: "tx-ok-123456789012345678901234567890",
+      },
+    })
+    .expect(200);
+  const retry = await request(app)
+    .get("/resource")
+    .set("x-dnp-commit-id", commit.body.commitId)
+    .expect(200);
+
+  let anchoringReceiptStatus = 0;
+  if (anchoringEnabled) {
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const probe = await request(app).get(`/anchoring/receipt/${finalized.body.receiptId}`);
+      anchoringReceiptStatus = probe.status;
+      if (probe.status === 200) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+  }
+
   return {
-    ok: Boolean(health.body.ok) && snapshot.body !== undefined,
-    message: "Local smoke endpoints passed (/health, /market/snapshot)",
+    ok: Boolean(health.body.ok)
+      && snapshot.body !== undefined
+      && retry.body?.ok === true
+      && (!anchoringEnabled || anchoringReceiptStatus === 200),
+    message: anchoringEnabled
+      ? "Local smoke passed (/health, /market/snapshot, 402->finalize->200, anchoring confirmed)"
+      : "Local smoke passed (/health, /market/snapshot, 402->finalize->200)",
     details: {
       healthOk: health.body.ok,
       snapshotKeys: Object.keys(snapshot.body ?? {}).length,
+      receiptId: finalized.body.receiptId,
+      retryOk: retry.body?.ok === true,
+      anchoringEnabled,
+      anchoringReceiptStatus: anchoringEnabled ? anchoringReceiptStatus : "disabled",
+      anchoringSignatureLogPath: signatureLogPath,
     },
   };
 }
@@ -530,6 +594,85 @@ async function runRemoteSmoke(baseUrl: string | undefined): Promise<StepResult> 
   }
 }
 
+function runAnchoringEvidence(params: {
+  cluster: string;
+  signatureLogPath: string;
+  outSignaturesPath: string;
+  outConfirmPath: string;
+  outBucketDumpPath: string;
+}): StepResult {
+  if (!fs.existsSync(params.signatureLogPath)) {
+    return {
+      ok: true,
+      message: `Anchoring signature log not found: ${params.signatureLogPath}`,
+      details: { skipped: true },
+    };
+  }
+
+  const lines = fs.readFileSync(params.signatureLogPath, "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return {
+      ok: true,
+      message: "Anchoring signature log exists but has no entries.",
+      details: { skipped: true, signatureLogPath: params.signatureLogPath },
+    };
+  }
+
+  const signatures = lines.map((line) => {
+    const sig = /sig=([1-9A-HJ-NP-Za-km-z]{32,88})/.exec(line)?.[1];
+    const bucket = /bucket=([1-9A-HJ-NP-Za-km-z]{32,44})/.exec(line)?.[1];
+    const bucketId = /bucketId=([0-9]+)/.exec(line)?.[1];
+    return { line, sig, bucket, bucketId };
+  });
+
+  fs.writeFileSync(params.outSignaturesPath, `${lines.join("\n")}\n`);
+
+  const latest = signatures[signatures.length - 1];
+  if (!latest.sig || !latest.bucket) {
+    return {
+      ok: false,
+      message: "Could not parse latest anchoring signature/bucket from log.",
+      details: {
+        signatureLogPath: params.signatureLogPath,
+        lastLine: latest.line,
+      },
+    };
+  }
+
+  const confirm = spawnSync("solana", ["confirm", latest.sig, "-u", params.cluster], {
+    encoding: "utf8",
+    env: process.env,
+  });
+  fs.writeFileSync(params.outConfirmPath, `${confirm.stdout ?? ""}${confirm.stderr ?? ""}`);
+
+  const bucketDump = spawnSync("solana", ["account", latest.bucket, "-u", params.cluster], {
+    encoding: "utf8",
+    env: process.env,
+  });
+  fs.writeFileSync(params.outBucketDumpPath, `${bucketDump.stdout ?? ""}${bucketDump.stderr ?? ""}`);
+
+  const ok = (confirm.status ?? 1) === 0 && (bucketDump.status ?? 1) === 0;
+  return {
+    ok,
+    message: ok
+      ? `Anchoring evidence confirmed for ${latest.sig}`
+      : `Anchoring evidence failed (confirm=${confirm.status}, bucketDump=${bucketDump.status})`,
+    details: {
+      signature: latest.sig,
+      bucket: latest.bucket,
+      bucketId: latest.bucketId,
+      signatureLogPath: params.signatureLogPath,
+      outSignaturesPath: params.outSignaturesPath,
+      outConfirmPath: params.outConfirmPath,
+      outBucketDumpPath: params.outBucketDumpPath,
+    },
+  };
+}
+
 function markdownForReport(report: AuditReport): string {
   const lines = [
     "# Full Audit Report",
@@ -547,6 +690,7 @@ function markdownForReport(report: AuditReport): string {
     `- 10-agent simulation: ${report.simulation10Agents.ok ? "PASS" : "FAIL"} - ${report.simulation10Agents.message}`,
     `- Local smoke: ${report.smokeLocal.ok ? "PASS" : "FAIL"} - ${report.smokeLocal.message}`,
     `- Remote smoke: ${report.smokeRemote.ok ? "PASS" : "FAIL"} - ${report.smokeRemote.message}`,
+    `- Anchoring evidence: ${report.anchoringEvidence.ok ? "PASS" : "FAIL"} - ${report.anchoringEvidence.message}`,
     "",
     "## Artifacts",
     `- audit json: ${report.artifacts.auditJsonPath}`,
@@ -554,6 +698,9 @@ function markdownForReport(report: AuditReport): string {
     `- deploy ledger: ${report.artifacts.ledgerReportPath ?? "n/a"}`,
     `- close buffers: ${report.artifacts.closeBuffersReportPath ?? "n/a"}`,
     `- sim 10 agents: ${report.artifacts.simulationReportPath ?? "n/a"}`,
+    `- anchor tx sigs: ${report.artifacts.anchorSignaturesPath ?? "n/a"}`,
+    `- anchor confirm: ${report.artifacts.anchorConfirmPath ?? "n/a"}`,
+    `- bucket dump: ${report.artifacts.bucketAccountDumpPath ?? "n/a"}`,
     "",
     "## Notes",
   ];
@@ -589,6 +736,9 @@ async function main(): Promise<void> {
   const generatedLedgerPath = path.join(reportsDir, `deploy-ledger-${stamp}.json`);
   const closeBuffersReportPath = path.join(reportsDir, `close-buffers-${stamp}.json`);
   const simulationReportPath = path.join(reportsDir, `sim-10agents-${stamp}.json`);
+  const anchorSignaturesPath = path.join(reportsDir, `anchor_tx_sigs-${stamp}.txt`);
+  const anchorConfirmPath = path.join(reportsDir, `anchor_confirm-${stamp}.txt`);
+  const bucketAccountDumpPath = path.join(reportsDir, `bucket_account_dump-${stamp}.txt`);
   const auditJsonPath = path.join(reportsDir, `audit-${stamp}.json`);
   const auditMarkdownPath = path.join(repoRoot, "AUDIT_REPORT.md");
 
@@ -730,6 +880,15 @@ async function main(): Promise<void> {
 
   const smokeLocal = await runLocalSmoke();
   const smokeRemote = await runRemoteSmoke(baseUrl);
+  const signatureLogPath = process.env.ANCHORING_SIGNATURE_LOG_PATH
+    ?? path.join(repoRoot, "reports", "anchor_tx_sigs.txt");
+  const anchoringEvidence = runAnchoringEvidence({
+    cluster,
+    signatureLogPath,
+    outSignaturesPath: anchorSignaturesPath,
+    outConfirmPath: anchorConfirmPath,
+    outBucketDumpPath: bucketAccountDumpPath,
+  });
 
   if (!smokeRemote.ok && baseUrl === undefined) {
     notes.push("Remote smoke was skipped because no base URL was provided.");
@@ -747,6 +906,7 @@ async function main(): Promise<void> {
       && negativeResult.ok
       && simulationResult.ok
       && smokeLocal.ok
+      && anchoringEvidence.ok
       && (smokeRemote.ok || baseUrl === undefined),
     deployEstimate: deployEstimateResult,
     deployLedger: deployLedgerResult,
@@ -756,11 +916,15 @@ async function main(): Promise<void> {
     simulation10Agents: simulationResult,
     smokeLocal,
     smokeRemote,
+    anchoringEvidence,
     artifacts: {
       estimateReportPath,
       ledgerReportPath,
       closeBuffersReportPath,
       simulationReportPath: fs.existsSync(simulationReportPath) ? simulationReportPath : undefined,
+      anchorSignaturesPath: fs.existsSync(anchorSignaturesPath) ? anchorSignaturesPath : undefined,
+      anchorConfirmPath: fs.existsSync(anchorConfirmPath) ? anchorConfirmPath : undefined,
+      bucketAccountDumpPath: fs.existsSync(bucketAccountDumpPath) ? bucketAccountDumpPath : undefined,
       auditJsonPath,
       auditMarkdownPath,
     },
@@ -784,6 +948,7 @@ async function main(): Promise<void> {
       simulation10Agents: report.simulation10Agents.ok,
       smokeLocal: report.smokeLocal.ok,
       smokeRemote: report.smokeRemote.ok,
+      anchoringEvidence: report.anchoringEvidence.ok,
     },
   }, null, 2));
 

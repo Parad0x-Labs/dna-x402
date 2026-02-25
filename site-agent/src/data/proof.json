@@ -1,0 +1,8 @@
+{
+  "txBytesSingle": 244,
+  "ixBytes": 34,
+  "batch32TxBytes": 1230,
+  "cuSingle": 13600,
+  "cuBatch32": 19434,
+  "verifiedDefinition": "anchored on-chain + fulfilled + verified receipt"
+}

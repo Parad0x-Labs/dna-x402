@@ -14,6 +14,7 @@ import { useProgramState } from '../hooks/useProgramState';
 import { ShopWizard, ShopWizardPublishInput } from './ShopWizard';
 import { SpendLedger } from './SpendLedger';
 import { appendSpendLedger, readSpendLedger, SpendLedgerEntry } from '../lib/ledger';
+import { requiresUnverifiedConfirm } from '../lib/marketSafety';
 import './PrivacyWallet.css';
 
 interface PrivacyWalletProps {
@@ -104,6 +105,16 @@ interface MarketQuote {
   expectedLatencyMs: number;
   rankScore: number;
   badges?: string[];
+  trust?: {
+    score: number;
+    report_count: number;
+    warning: boolean;
+  };
+  seller_defined?: boolean;
+  verifiable?: {
+    receipt: boolean;
+    anchored: boolean;
+  };
 }
 
 interface MarketSnapshot {
@@ -113,11 +124,20 @@ interface MarketSnapshot {
   volatilityScoreByCapability: Record<string, number>;
 }
 
+interface SellerDashboardRow {
+  shopId: string;
+  ownerPubkey: string;
+  earningsAtomic: string;
+  topBuyersCount: number;
+  anchoredReceiptsCount: number;
+  report_count: number;
+  suggestedPriceBand: 'cheap' | 'typical' | 'premium';
+}
+
 const USDC_DECIMALS = 6;
 const DEFAULT_X402_BASE_URL = String(import.meta.env.VITE_X402_BASE_URL ?? 'http://localhost:8080').trim();
 const AGENT_KEY_STORAGE_KEY = 'dnp_agent_key';
 const USAGE_LOG_STORAGE_KEY = 'dnp_x402_usage_logs';
-const SHOP_SIGNER_SECRET_STORAGE_KEY = 'dnp_shop_signer_secret_v1';
 
 const TOOL_PRICES: ToolPrice[] = [
   { toolId: 'inference-fast', label: 'Fast Inference', amountAtomic: '5000', tier: 'surge', weight: 5 },
@@ -349,7 +369,8 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
   const [streamSession, setStreamSession] = useState<StreamSession | null>(null);
 
   const [marketWindow, setMarketWindow] = useState<'1h' | '24h'>('24h');
-  const [marketVerificationTier, setMarketVerificationTier] = useState<'FAST' | 'VERIFIED'>('FAST');
+  const [marketVerificationTier, setMarketVerificationTier] = useState<'FAST' | 'VERIFIED'>('VERIFIED');
+  const [marketVerifiedOnly, setMarketVerifiedOnly] = useState(true);
   const [marketCapability, setMarketCapability] = useState('inference');
   const [marketMaxPriceAtomic, setMarketMaxPriceAtomic] = useState('5000');
   const [marketMaxLatencyMs, setMarketMaxLatencyMs] = useState('2000');
@@ -361,8 +382,47 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
   const [marketTopRevenue, setMarketTopRevenue] = useState<RankedMetric[]>([]);
   const [marketQuotes, setMarketQuotes] = useState<MarketQuote[]>([]);
   const [marketSnapshot, setMarketSnapshot] = useState<MarketSnapshot | null>(null);
+  const [sellerDashboardRows, setSellerDashboardRows] = useState<SellerDashboardRow[]>([]);
 
   const budgetEstimate = useMemo(() => estimateBudget(usdcBalanceAtomic, TOOL_PRICES, usageLogs), [usdcBalanceAtomic, usageLogs]);
+  const visibleMarketQuotes = useMemo(() => (
+    marketVerifiedOnly
+      ? marketQuotes.filter((quote) => quote.verifiable?.anchored === true)
+      : marketQuotes
+  ), [marketQuotes, marketVerifiedOnly]);
+  const dailySpendAtomic = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return spendLedger
+      .filter((entry) => new Date(entry.ts).getTime() >= cutoff)
+      .reduce((sum, entry) => sum + parseAtomic(entry.amountAtomic), 0n)
+      .toString(10);
+  }, [spendLedger]);
+  const dailyBudgetExceeded = useMemo(() => {
+    if (!/^\d+$/.test(dailyBudgetAtomic)) {
+      return false;
+    }
+    return parseAtomic(dailySpendAtomic) > parseAtomic(dailyBudgetAtomic);
+  }, [dailyBudgetAtomic, dailySpendAtomic]);
+  const callsPerUsdcAtTypical = useMemo(() => {
+    const balance = Number(usdcBalanceAtomic);
+    if (!Number.isFinite(balance) || balance <= 0) {
+      return 0;
+    }
+    const balanceUsdc = balance / 1_000_000;
+    if (balanceUsdc <= 0) {
+      return 0;
+    }
+    return Math.max(0, Math.floor(budgetEstimate.callsRemainingAtTypicalMix / balanceUsdc));
+  }, [budgetEstimate.callsRemainingAtTypicalMix, usdcBalanceAtomic]);
+  const sellerDashboardTotals = useMemo(() => sellerDashboardRows.reduce((acc, row) => ({
+    earningsAtomic: acc.earningsAtomic + parseAtomic(row.earningsAtomic),
+    topBuyersCount: acc.topBuyersCount + row.topBuyersCount,
+    anchoredReceiptsCount: acc.anchoredReceiptsCount + row.anchoredReceiptsCount,
+  }), {
+    earningsAtomic: 0n,
+    topBuyersCount: 0,
+    anchoredReceiptsCount: 0,
+  }), [sellerDashboardRows]);
 
   const pdxClient = useMemo(() => new PDXDarkClient(connection), [connection]);
 
@@ -498,51 +558,15 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
     setSpendLedger(updated);
   };
 
-  const resolveFallbackShopSigner = () => {
-    const existing = localStorage.getItem(SHOP_SIGNER_SECRET_STORAGE_KEY);
-    if (existing) {
-      try {
-        const secretKey = bs58.decode(existing);
-        if (secretKey.length === 64) {
-          const keypair = nacl.sign.keyPair.fromSecretKey(secretKey);
-          return {
-            secretKey,
-            ownerPubkey: bs58.encode(keypair.publicKey),
-          };
-        }
-      } catch {
-        // ignore malformed local key and rotate below
-      }
-    }
-
-    const keypair = nacl.sign.keyPair();
-    const encoded = bs58.encode(keypair.secretKey);
-    localStorage.setItem(SHOP_SIGNER_SECRET_STORAGE_KEY, encoded);
-    return {
-      secretKey: keypair.secretKey,
-      ownerPubkey: bs58.encode(keypair.publicKey),
-    };
-  };
-
   const signManifestHash = async (hashHex: string): Promise<{ ownerPubkey: string; signature: string }> => {
     const digest = hexToBytes(hashHex);
-    if (publicKey && signMessage) {
-      try {
-        const walletSig = await signMessage(digest);
-        return {
-          ownerPubkey: publicKey.toBase58(),
-          signature: bs58.encode(walletSig),
-        };
-      } catch {
-        // Fall through to local signer in wallets without message-sign support.
-      }
+    if (!publicKey || !signMessage) {
+      throw new Error('Publishing requires wallet message signature (wallet is your account).');
     }
-
-    const fallback = resolveFallbackShopSigner();
-    const localSig = nacl.sign.detached(digest, fallback.secretKey);
+    const walletSig = await signMessage(digest);
     return {
-      ownerPubkey: fallback.ownerPubkey,
-      signature: bs58.encode(localSig),
+      ownerPubkey: publicKey.toBase58(),
+      signature: bs58.encode(walletSig),
     };
   };
 
@@ -550,15 +574,20 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
     if (!x402BaseUrl) {
       throw new Error('Missing X402 base URL');
     }
+    if (!publicKey) {
+      throw new Error('Connect wallet first. Wallet address is your seller account.');
+    }
+    if (!signMessage) {
+      throw new Error('Wallet must support message signing to publish shops.');
+    }
 
-    const provisionalOwner = publicKey?.toBase58() ?? resolveFallbackShopSigner().ownerPubkey;
     const manifest = {
       manifestVersion: 'market-v1' as const,
       shopId: toShopId(input.name),
       name: input.name,
       description: input.description,
       category: input.category,
-      ownerPubkey: provisionalOwner,
+      ownerPubkey: publicKey.toBase58(),
       endpoints: input.endpoints,
     };
 
@@ -747,6 +776,18 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
       setMarketTopSelling(topSelling.results.slice(0, 5));
       setMarketTopRevenue(topRevenue.results.slice(0, 5));
       setMarketSnapshot(snapshot);
+
+      if (publicKey) {
+        const sellerDashboardRes = await fetch(`${x402BaseUrl}/market/seller-dashboard?ownerPubkey=${encodeURIComponent(publicKey.toBase58())}`);
+        if (sellerDashboardRes.ok) {
+          const sellerPayload = await sellerDashboardRes.json() as { shops?: SellerDashboardRow[] };
+          setSellerDashboardRows((sellerPayload.shops ?? []).slice(0, 5));
+        } else {
+          setSellerDashboardRows([]);
+        }
+      } else {
+        setSellerDashboardRows([]);
+      }
     } catch (error) {
       setMarketError(error instanceof Error ? error.message : 'Failed to load market insights');
     } finally {
@@ -778,6 +819,13 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
   };
 
   const runQuoteDemo = async (quote: MarketQuote) => {
+    const requiresWarningConfirm = requiresUnverifiedConfirm(quote);
+    if (requiresWarningConfirm) {
+      const accepted = window.confirm('This shop uses seller-defined logic and is not fully verified yet. Click OK to proceed.');
+      if (!accepted) {
+        return;
+      }
+    }
     const capability = quote.capabilityTags[0];
     const quotePath = quote.path.startsWith('/') ? quote.path : `/${quote.path}`;
     try {
@@ -796,7 +844,7 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
     fetchMarketInsights().catch(() => {
       setMarketError('Failed to load market insights');
     });
-  }, [x402BaseUrl, marketWindow, marketVerificationTier]);
+  }, [x402BaseUrl, marketWindow, marketVerificationTier, publicKey]);
 
   const runStreamTransfer = async (target: string, topupAtomic: string): Promise<string> => {
     if (!publicKey) {
@@ -924,6 +972,7 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
   return (
     <div className="privacy-wallet">
       <h2>x402 Agent Wallet</h2>
+      <p className="wallet-account-copy">Your wallet is your account. No email. No password.</p>
 
       {disabled && (
         <div className="insufficient-funds">
@@ -984,10 +1033,14 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
       </section>
 
       <section className="wallet-panel">
-        <h3>Catalog-Aware Budget</h3>
+        <h3>Buyer Budget Panel</h3>
         <div className="metric-row">
           <span>Calls at typical mix</span>
           <strong>{budgetEstimate.callsRemainingAtTypicalMix}</strong>
+        </div>
+        <div className="metric-row">
+          <span>1 USDC ≈ calls (typical mix)</span>
+          <strong>{callsPerUsdcAtTypical}</strong>
         </div>
         <div className="metric-row">
           <span>Min calls (cheapest tools)</span>
@@ -1001,9 +1054,18 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
           <span>Projected last 7d spend</span>
           <strong>{atomicToUi(budgetEstimate.last7dProjectedSpend).toFixed(6)} USDC</strong>
         </div>
+        <div className="metric-row">
+          <span>Spend in last 24h</span>
+          <strong>{atomicToUi(dailySpendAtomic).toFixed(6)} USDC</strong>
+        </div>
         <p className="panel-note">
           {budgetEstimate.basedOnRecentMix ? 'Based on your recent mix.' : 'Based on default typical tool mix.'}
         </p>
+        {dailyBudgetExceeded ? (
+          <div className="panel-warning">
+            Budget alert: projected daily spend is above your cap. Try VERIFIED-only offers or cheaper quotes.
+          </div>
+        ) : null}
       </section>
 
       <section className="wallet-panel">
@@ -1039,7 +1101,7 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
       </section>
 
       <section className="wallet-panel">
-        <h3>Create Shop Wizard</h3>
+        <h3>Create Shop (5 clicks)</h3>
         <ShopWizard
           x402BaseUrl={x402BaseUrl}
           disabled={isPaused}
@@ -1049,6 +1111,45 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
             fetchMarketQuotes().catch(() => undefined);
           }}
         />
+      </section>
+
+      <section className="wallet-panel">
+        <h3>Seller Dashboard</h3>
+        {!publicKey ? (
+          <p className="panel-note">Connect a wallet to view your seller earnings and market price band.</p>
+        ) : (
+          <>
+            <div className="metric-row">
+              <span>Last 24h earnings</span>
+              <strong>{atomicToUi(sellerDashboardTotals.earningsAtomic.toString(10)).toFixed(6)} USDC</strong>
+            </div>
+            <div className="metric-row">
+              <span>Top buyers count</span>
+              <strong>{sellerDashboardTotals.topBuyersCount}</strong>
+            </div>
+            <div className="metric-row">
+              <span>Anchored receipts count</span>
+              <strong>{sellerDashboardTotals.anchoredReceiptsCount}</strong>
+            </div>
+            <div className="quote-list">
+              {sellerDashboardRows.map((row) => (
+                <div className="quote-row" key={`seller-${row.shopId}`}>
+                  <div>
+                    <strong>{row.shopId}</strong>
+                    <div className="panel-note">Suggested price band: {row.suggestedPriceBand}</div>
+                    {row.report_count > 0 ? <div className="panel-warning">Warning: {row.report_count} abuse report(s)</div> : null}
+                  </div>
+                  <div className="quote-metrics">
+                    <span>{atomicToUi(row.earningsAtomic).toFixed(6)} USDC</span>
+                    <span>buyers {row.topBuyersCount}</span>
+                    <span>anchors {row.anchoredReceiptsCount}</span>
+                  </div>
+                </div>
+              ))}
+              {sellerDashboardRows.length === 0 ? <p className="panel-note">No seller activity in the last 24h.</p> : null}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="wallet-panel">
@@ -1076,6 +1177,17 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
               <option value="FAST">Fast</option>
               <option value="VERIFIED">Verified</option>
             </select>
+          </div>
+          <div className="form-group">
+            <label>Verified-only Quotes</label>
+            <label className="wizard-checkbox">
+              <input
+                type="checkbox"
+                checked={marketVerifiedOnly}
+                onChange={(e) => setMarketVerifiedOnly(e.target.checked)}
+              />
+              Show anchored-only offers
+            </label>
           </div>
           <div className="form-group">
             <label>Capability</label>
@@ -1161,11 +1273,32 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
 
         <div className="quote-list">
           <h4>Competing Quotes</h4>
-          {marketQuotes.map((quote) => (
+          {visibleMarketQuotes.map((quote) => (
             <div className="quote-row" key={quote.quoteId}>
               <div>
                 <strong>{quote.shopId}</strong>
                 <div className="panel-note">{quote.endpointId} · {quote.capabilityTags.join(', ')}</div>
+                {requiresUnverifiedConfirm(quote) ? (
+                  <div className="panel-warning">
+                    Warning: unverified or flagged seller-defined logic. Confirm before buying.
+                  </div>
+                ) : null}
+                {quote.seller_defined ? (
+                  <div className="panel-note">Seller-defined pricing & resolution</div>
+                ) : null}
+                {quote.verifiable ? (
+                  <div className="panel-note">
+                    Verifiable: receipt {quote.verifiable.receipt ? 'yes' : 'no'} · anchored {quote.verifiable.anchored ? 'yes' : 'no'}
+                  </div>
+                ) : null}
+                <div className="quote-badges">
+                  RECEIPT VERIFIED{quote.verifiable?.anchored ? ' · ANCHORED' : ''}
+                </div>
+                {quote.trust ? (
+                  <div className="panel-note">
+                    Reputation {quote.trust.score.toFixed(1)} · reports {quote.trust.report_count}
+                  </div>
+                ) : null}
                 {quote.badges && quote.badges.length > 0 ? (
                   <div className="quote-badges">{quote.badges.join(' · ')}</div>
                 ) : null}
@@ -1180,7 +1313,7 @@ export const PrivacyWallet: React.FC<PrivacyWalletProps> = ({
               </button>
             </div>
           ))}
-          {marketQuotes.length === 0 ? <p className="panel-note">Run “Find Quotes” to discover market offers.</p> : null}
+          {visibleMarketQuotes.length === 0 ? <p className="panel-note">Run “Find Quotes” to discover market offers.</p> : null}
         </div>
       </section>
 

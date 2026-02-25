@@ -2,6 +2,7 @@ import { Connection } from "@solana/web3.js";
 import { PaymentProof, Quote, VerificationResult } from "./types.js";
 import { verifySplTransferProof } from "./verifier/splTransfer.js";
 import { StreamflowClientLike, verifyStreamflowProof } from "./verifier/streamflow.js";
+import { CachedRpcClient, extractRpcErrorMessage, isRetryableRpcError } from "./verifier/rpcClient.js";
 
 export interface PaymentVerifier {
   verify(quote: Quote, paymentProof: PaymentProof): Promise<VerificationResult>;
@@ -10,13 +11,27 @@ export interface PaymentVerifier {
 export interface SolanaPaymentVerifierOptions {
   streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
+  rpcCache?: {
+    statusTtlMs?: number;
+    parsedTxTtlMs?: number;
+    blockTimeTtlMs?: number;
+    maxCacheEntries?: number;
+    maxRetries?: number;
+    retryBaseMs?: number;
+    circuitBreakerFailures?: number;
+    circuitBreakerCooldownMs?: number;
+  };
 }
 
 export class SolanaPaymentVerifier implements PaymentVerifier {
+  private readonly cachedRpc: CachedRpcClient;
+
   constructor(
     private readonly connection: Connection,
     private readonly options: SolanaPaymentVerifierOptions = {},
-  ) {}
+  ) {
+    this.cachedRpc = new CachedRpcClient(connection, options.rpcCache);
+  }
 
   async verify(quote: Quote, paymentProof: PaymentProof): Promise<VerificationResult> {
     switch (paymentProof.settlement) {
@@ -38,14 +53,42 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
     }
   }
 
+  private parseAtomicHint(value?: string): bigint | undefined {
+    if (!value) {
+      return undefined;
+    }
+    try {
+      return BigInt(value);
+    } catch {
+      return undefined;
+    }
+  }
+
   private async verifyTransfer(quote: Quote, txSignature: string, amountAtomicHint?: string): Promise<VerificationResult> {
-    return verifySplTransferProof(this.connection, {
-      txSignature,
-      expectedMint: quote.mint,
-      expectedRecipient: quote.recipient,
-      minAmountAtomic: amountAtomicHint ?? quote.totalAtomic,
-      maxAgeSeconds: this.options.maxTransferProofAgeSeconds ?? 900,
-    });
+    const requiredMinAmount = quote.totalAtomic;
+    const hintedAmount = this.parseAtomicHint(amountAtomicHint);
+    const effectiveMinAmount = hintedAmount && hintedAmount > BigInt(requiredMinAmount)
+      ? hintedAmount.toString(10)
+      : requiredMinAmount;
+    try {
+      return await verifySplTransferProof(this.cachedRpc, {
+        txSignature,
+        expectedMint: quote.mint,
+        expectedRecipient: quote.recipient,
+        minAmountAtomic: effectiveMinAmount,
+        maxAgeSeconds: this.options.maxTransferProofAgeSeconds ?? 900,
+      });
+    } catch (error) {
+      const cause = extractRpcErrorMessage(error);
+      const invalidParam = cause.toLowerCase().includes("invalid param: invalid");
+      return {
+        ok: false,
+        settledOnchain: false,
+        error: invalidParam ? "invalid tx signature format" : `rpc unavailable: ${cause}`,
+        errorCode: invalidParam ? "INVALID_PROOF" : "RPC_UNAVAILABLE",
+        retryable: invalidParam ? false : isRetryableRpcError(error),
+      };
+    }
   }
 
   private async verifyStream(quote: Quote, streamId: string, amountAtomicHint?: string, topupSignature?: string): Promise<VerificationResult> {
@@ -58,11 +101,16 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
     }
 
     if (this.options.streamflowClient) {
+      const requiredMinFunded = quote.totalAtomic;
+      const hintedAmount = this.parseAtomicHint(amountAtomicHint);
+      const effectiveMinFunded = hintedAmount && hintedAmount > BigInt(requiredMinFunded)
+        ? hintedAmount.toString(10)
+        : requiredMinFunded;
       return verifyStreamflowProof(this.options.streamflowClient, {
         streamId,
         expectedRecipient: quote.recipient,
         expectedMint: quote.mint,
-        minFundedAtomic: amountAtomicHint ?? quote.totalAtomic,
+        minFundedAtomic: effectiveMinFunded,
         requireActive: true,
       });
     }
@@ -76,14 +124,29 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
       };
     }
 
-    const status = await this.connection.getSignatureStatus(topupSignature, { searchTransactionHistory: true });
-    const ok = Boolean(status.value && !status.value.err);
-    return {
-      ok,
-      settledOnchain: ok,
-      txSignature: topupSignature,
-      streamId,
-      error: ok ? undefined : "Top-up signature not confirmed",
-    };
+    try {
+      const status = await this.cachedRpc.getSignatureStatus(topupSignature, { searchTransactionHistory: true });
+      const ok = Boolean(status.value && !status.value.err);
+      return {
+        ok,
+        settledOnchain: ok,
+        txSignature: topupSignature,
+        streamId,
+        error: ok ? undefined : "Top-up signature not confirmed",
+        errorCode: ok ? undefined : "NOT_CONFIRMED_YET",
+        retryable: ok ? undefined : true,
+      };
+    } catch (error) {
+      const cause = extractRpcErrorMessage(error);
+      const invalidParam = cause.toLowerCase().includes("invalid param: invalid");
+      return {
+        ok: false,
+        settledOnchain: false,
+        streamId,
+        error: invalidParam ? "invalid topup signature format" : `rpc unavailable: ${cause}`,
+        errorCode: invalidParam ? "INVALID_PROOF" : "RPC_UNAVAILABLE",
+        retryable: invalidParam ? false : isRetryableRpcError(error),
+      };
+    }
   }
 }

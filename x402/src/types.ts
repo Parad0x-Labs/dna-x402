@@ -119,6 +119,10 @@ export interface ReceiptPayload {
   quoteId: string;
   commitId: string;
   resource: string;
+  requestId: string;
+  requestDigest: string;
+  responseDigest: string;
+  shopId: string;
   payerCommitment32B: string;
   recipient: string;
   mint: string;
@@ -177,4 +181,15 @@ export interface VerificationResult {
   txSignature?: string;
   streamId?: string;
   error?: string;
+  errorCode?:
+    | "INVALID_PROOF"
+    | "NOT_CONFIRMED_YET"
+    | "RPC_UNAVAILABLE"
+    | "PAYMENT_INVALID"
+    | "UNDERPAY"
+    | "WRONG_MINT"
+    | "WRONG_RECIPIENT"
+    | "TOO_OLD";
+  retryable?: boolean;
+  details?: Record<string, unknown>;
 }

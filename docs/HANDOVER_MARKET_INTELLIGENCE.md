@@ -1,27 +1,27 @@
 # HANDOVER: x402 + Market Intelligence + WOW Layer (Important)
 
 Date: 2026-02-16  
-Workspace: `/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol`
+Workspace: `<repo-root>`
 
 ## IMPORTANT (Start Here)
 
 Use these commands in order:
 
-1. `cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol'`
+1. `cd '<repo-root>'`
 2. `cargo test`
-3. `cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402'`
+3. `cd '<repo-root>/x402'`
 4. `npm install`
 5. `npm run typecheck:x402`
 6. `npm run test:market`
 7. `npm run test:wow`
 8. `npm test`
 9. `npm run dev:market`
-10. `cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402' && npm run seed:market`
+10. `cd '<repo-root>/x402' && npm run seed:market`
 11. `curl -s 'http://localhost:8080/market/snapshot'`
 
 If wallet validation is needed:
 
-1. `cd '/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/wallet'`
+1. `cd '<repo-root>/wallet'`
 2. `npm install`
 3. `npm run typecheck:wallet-min`
 4. `npm run build`

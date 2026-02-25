@@ -16,6 +16,18 @@ function encodeDetachedPayload(payload: unknown): string {
   return JSON.stringify(payload);
 }
 
+function canonicalBody(value: unknown): string {
+  return JSON.stringify(value ?? null);
+}
+
+export function computeRequestDigest(input: { method: string; path: string; body?: unknown }): string {
+  return hashHex(`${input.method.toUpperCase()}|${input.path}|${canonicalBody(input.body)}`);
+}
+
+export function computeResponseDigest(input: { status: number; body?: unknown }): string {
+  return hashHex(`${input.status}|${canonicalBody(input.body)}`);
+}
+
 export function normalizeCommitment32B(value: string): string {
   const normalized = value.startsWith("0x") ? value.slice(2) : value;
   if (!/^[a-fA-F0-9]{64}$/.test(normalized)) {
@@ -93,4 +105,26 @@ export function verifyDetachedSignature(payload: unknown, signature: string, sig
   const sig = bs58.decode(signature);
   const pub = bs58.decode(signerPublicKey);
   return nacl.sign.detached.verify(Buffer.from(payloadHash, "hex"), sig, pub);
+}
+
+export function verifyReceiptBinding(
+  receipt: SignedReceipt,
+  expected: { requestDigest: string; responseDigest: string; recipient?: string; mint?: string; totalAtomic?: string },
+): boolean {
+  if (receipt.payload.requestDigest !== expected.requestDigest) {
+    return false;
+  }
+  if (receipt.payload.responseDigest !== expected.responseDigest) {
+    return false;
+  }
+  if (expected.recipient && receipt.payload.recipient !== expected.recipient) {
+    return false;
+  }
+  if (expected.mint && receipt.payload.mint !== expected.mint) {
+    return false;
+  }
+  if (expected.totalAtomic && receipt.payload.totalAtomic !== expected.totalAtomic) {
+    return false;
+  }
+  return true;
 }

@@ -6,6 +6,10 @@ import { ShopManifest, SignedShopManifest } from "../src/market/types.js";
 export function makeSignedShop(params: {
   shopId: string;
   capability: string;
+  category?: "ai_inference" | "image_generation" | "data_enrichment" | "workflow_tool";
+  name?: string;
+  description?: string;
+  extraTags?: string[];
   endpointId?: string;
   path?: string;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -22,14 +26,16 @@ export function makeSignedShop(params: {
   const manifest: ShopManifest = {
     manifestVersion: "market-v1",
     shopId: params.shopId,
-    name: `${params.shopId} Shop`,
+    name: params.name ?? `${params.shopId} Shop`,
+    ...(params.description ? { description: params.description } : {}),
+    category: params.category ?? "ai_inference",
     ownerPubkey,
     endpoints: [
       {
         endpointId: params.endpointId ?? `${params.shopId}-endpoint`,
         method: params.method ?? "POST",
         path: params.path ?? "/tool",
-        capabilityTags: [params.capability],
+        capabilityTags: [params.capability, ...(params.extraTags ?? [])],
         description: `${params.capability} endpoint`,
         pricingModel: params.pricingModel ?? {
           kind: "flat",

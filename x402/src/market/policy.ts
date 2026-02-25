@@ -2,6 +2,85 @@ import { z } from "zod";
 import { parseAtomic } from "../feePolicy.js";
 import { MarketQuote } from "./types.js";
 
+export const SAFE_CATEGORIES = [
+  "ai_inference",
+  "image_generation",
+  "data_enrichment",
+  "workflow_tool",
+] as const;
+
+export const DENYLIST_KEYWORDS = [
+  "vpn",
+  "proxy",
+  "socks",
+  "tor",
+  "residential proxy",
+  "rdp",
+  "vnc",
+  "remote desktop",
+  "citrix",
+  "malware",
+  "stealer",
+  "credential",
+  "keylogger",
+  "exploit",
+  "crack",
+  "pirated",
+  "drm",
+  "ddos",
+  "botnet",
+  "betting",
+  "wager",
+  "odds",
+  "prediction market",
+  "binary options",
+  "sportsbook",
+  "casino",
+] as const;
+
+export type SafeCategory = (typeof SAFE_CATEGORIES)[number];
+
+function tokenize(input: string): string[] {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+export function isSafeCategory(value: string): value is SafeCategory {
+  return SAFE_CATEGORIES.includes(value as SafeCategory);
+}
+
+export function findMatchedDenylistKeyword(fields: string[]): string | undefined {
+  const haystackTokens = tokenize(fields.join("\n"));
+  if (haystackTokens.length === 0) {
+    return undefined;
+  }
+
+  for (const keyword of DENYLIST_KEYWORDS) {
+    const keywordTokens = tokenize(keyword);
+    if (keywordTokens.length === 0) {
+      continue;
+    }
+    for (let i = 0; i <= haystackTokens.length - keywordTokens.length; i += 1) {
+      let matches = true;
+      for (let j = 0; j < keywordTokens.length; j += 1) {
+        if (haystackTokens[i + j] !== keywordTokens[j]) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) {
+        return keyword;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 export const marketPolicySchema = z.object({
   capability: z.string().min(1),
   maxPrice: z.number().positive().optional(),

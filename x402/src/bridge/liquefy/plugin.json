@@ -1,0 +1,48 @@
+{
+  "_schema": "liquefy.community.plugin.v1",
+  "plugin_id": "dna-x402-payment-bridge",
+  "name": "DNA Payment Rail Bridge",
+  "version": "1.0.0",
+  "description": "Bridges DNA x402 micropayment audit logs and signed receipts into Liquefy vaults as proof artifacts. Enables Pay-Prove-Pack workflow for AI agent commerce.",
+  "author": "Dark Null Apex",
+  "license": "MIT",
+  "homepage": "https://github.com/darknullapex/dna",
+  "capabilities": [
+    "telemetry_source",
+    "proof_artifact",
+    "audit_chain"
+  ],
+  "data_types": [
+    "dna.payment.audit",
+    "dna.signed.receipt",
+    "dna.anchor.proof",
+    "dna.netting.batch"
+  ],
+  "schemas": {
+    "telemetry": "liquefy.dna.telemetry.v1",
+    "proof": "liquefy.dna.proof.v1",
+    "run_manifest": "liquefy.dna.run.v1"
+  },
+  "input_format": "ndjson",
+  "output_structure": {
+    "manifest.json": "Run-level metadata (payments, mints, shops, totals)",
+    "telemetry.jsonl": "All audit events in Liquefy telemetry format",
+    "receipts.jsonl": "All proof artifacts as NDJSON bulk",
+    "proofs/<receiptId>.json": "Individual signed receipt proof artifacts"
+  },
+  "integration": {
+    "liquefy_telemetry_sink": "Pipe telemetry.jsonl directly",
+    "tracevault_pack": "Pack the output directory into a .null vault",
+    "liquefy_audit_chain": "Receipts form a hash chain compatible with Liquefy audit verify"
+  },
+  "tags": [
+    "payments",
+    "micropayments",
+    "ai-agents",
+    "solana",
+    "x402",
+    "receipts",
+    "audit",
+    "compliance"
+  ]
+}

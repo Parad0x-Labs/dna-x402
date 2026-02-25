@@ -8,9 +8,16 @@ import { ReceiptSigner } from "../src/receipts.js";
 import { createX402App } from "../src/server.js";
 import { PaymentProof, Quote } from "../src/types.js";
 
+function dateKeyUtc(now = new Date()): string {
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 class FakeVerifier implements PaymentVerifier {
   async verify(_quote: Quote, paymentProof: PaymentProof) {
-    if (paymentProof.settlement === "transfer" && paymentProof.txSignature === "tx-ok-123456789012345678901234567890") {
+    if (paymentProof.settlement === "transfer" && paymentProof.txSignature?.startsWith("tx-ok-")) {
       return { ok: true, settledOnchain: true, txSignature: paymentProof.txSignature };
     }
     return { ok: false, settledOnchain: false, error: "bad payment" };
@@ -19,6 +26,7 @@ class FakeVerifier implements PaymentVerifier {
 
 const config: X402Config = {
   port: 0,
+  appVersion: "test",
   solanaRpcUrl: "https://api.devnet.solana.com",
   usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
   paymentRecipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
@@ -38,6 +46,8 @@ const config: X402Config = {
   pauseMarket: false,
   pauseFinalize: false,
   pauseOrders: false,
+  disabledShops: [],
+  autoDisableReportThreshold: 0,
 };
 
 describe("fetchWith402", () => {
@@ -79,7 +89,7 @@ describe("fetchWith402", () => {
         async payTransfer() {
           return {
             settlement: "transfer",
-            txSignature: "tx-ok-123456789012345678901234567890",
+            txSignature: "tx-ok-auto-pay-12345678901234567890",
           };
         },
       },
@@ -99,7 +109,7 @@ describe("fetchWith402", () => {
         async payTransfer() {
           return {
             settlement: "transfer",
-            txSignature: "tx-ok-123456789012345678901234567890",
+            txSignature: "tx-ok-max-price-123456789012345678",
           };
         },
       },
@@ -116,26 +126,27 @@ describe("fetchWith402", () => {
         async payTransfer() {
           return {
             settlement: "transfer",
-            txSignature: "tx-ok-123456789012345678901234567890",
+            txSignature: "tx-ok-daily-11111111111111111111111",
           };
         },
       },
       maxSpendAtomic: "100000",
-      maxSpendPerDayAtomic: "1500",
+      maxSpendPerDayAtomic: "100000",
       spendTracker,
     });
+    expect(spendTracker.getSpentForDateAtomic(dateKeyUtc())).toBeGreaterThan(0n);
 
     await expect(fetchWith402(`${baseUrl}/resource`, {
       wallet: {
         async payTransfer() {
           return {
             settlement: "transfer",
-            txSignature: "tx-ok-123456789012345678901234567890",
+            txSignature: "tx-ok-daily-22222222222222222222222",
           };
         },
       },
       maxSpendAtomic: "100000",
-      maxSpendPerDayAtomic: "1500",
+      maxSpendPerDayAtomic: "1",
       spendTracker,
     })).rejects.toThrow(/Daily spend limit exceeded/);
   });

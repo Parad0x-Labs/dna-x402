@@ -1,0 +1,1 @@
+{"paymentRequired":{"network":"solana","currency":"USDC","amountAtomic":"900","recipient":"CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2","settlement":{"mode":"spl_transfer","mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"}},"payment":{"txSig":"tx-ok-123456789012345678901234567890","scheme":"solana_spl"}}

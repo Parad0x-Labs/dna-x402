@@ -20,6 +20,15 @@ Important implementation + startup handover:
 - Tool catalog estimator for realistic call-range budgeting
 - Manifest validator (`shop.json`) + marketplace APIs (`/shops`, `/search`, `/quotes`, `/orders`)
 - Agent helper: `fetchWith402(url, { wallet, maxSpendAtomic, maxPriceAtomic, maxSpendPerDayAtomic, preferStream })`
+- x402 compatibility parser for Coinbase/Memeputer/generic header variants
+- `/x402/doctor` diagnostics endpoint for integration debugging
+
+## x402 Compatibility + Doctor
+
+- Compatibility reference: `../docs/X402_COMPAT.md`
+- Diagnostics:
+  - `GET /x402/doctor`
+  - `POST /x402/doctor`
 
 ## Install
 
@@ -145,6 +154,7 @@ Deterministic simulation gate:
 ```bash
 npm run sim:1005 -- --runs 1005 --seed 20260216
 npm run sim:10agents
+npm run sim:soak -- --duration-ms 300000
 ```
 
 Full audit runner (deploy cost + buffer reclaim + pause/proof checks + sim):
@@ -153,13 +163,65 @@ Full audit runner (deploy cost + buffer reclaim + pause/proof checks + sim):
 npm run audit:full -- --cluster devnet --deployer-keypair <KEYPAIR> --upgrade-authority <AUTHORITY>
 ```
 
+Programmability readiness audit (10 seller-defined primitives on rails):
+
+```bash
+npm run audit:programmable -- --cluster devnet
+```
+
+Security scan before publishing repo:
+
+```bash
+npm run security:scan
+npm run audit:prod
+```
+
+Publish proof bundle to static site:
+
+```bash
+npm run publish:proof-bundle
+npm run site:build
+```
+
+Artifacts are written to:
+- `x402/audit_out/PROGRAMMABILITY_READINESS_REPORT.md`
+- `x402/audit_out/programmable_readiness.json`
+- `x402/audit_out/programmable_devnet.json` (when cluster is devnet)
+
 Full audited runbook:
 `../docs/DEVNET_DEPLOY.md`
+
+## Footprint Benchmarks
+
+```bash
+npm run bench:txsize
+npm run bench:compute -- --payer-keypair <KEYPAIR>
+npm run bench:footprint
+```
+
+Outputs:
+- `x402/reports/bench_txsize.json`
+- `x402/reports/bench_compute.json`
+- `../docs/FOOTPRINT.md`
+
+## ALT Tooling
+
+```bash
+npm run alt:create -- --cluster devnet --keypair <KEYPAIR>
+npm run alt:extend -- --cluster devnet --alt <ALT> --address <PUBKEY> --address <PUBKEY>
+npm run alt:show -- --cluster devnet --alt <ALT>
+```
+
+Detailed runbook:
+`../docs/ALT_SETUP.md`
 
 ## Environment
 
 - `PORT` (default `8080`)
+- `APP_VERSION` (default `dev`)
+- `BUILD_COMMIT` (optional git hash)
 - `SOLANA_RPC_URL` (default devnet)
+- `PAYMENT_PROGRAM_ID` (optional main payment program id for `/status`)
 - `USDC_MINT` (default devnet USDC)
 - `PAYMENT_RECIPIENT` (provider wallet)
 - `DEFAULT_CURRENCY` (default `USDC`)
@@ -184,3 +246,16 @@ Full audited runbook:
 - `FAST`: fulfilled request + payment verified + receipt signature valid.
 - `VERIFIED`: `FAST` plus explicit anchoring marker (`anchored === true`) for the paired events.
   - If anchoring is not active, VERIFIED leaderboards should stay empty or below FAST.
+
+## Programmability Boundary
+
+Protocol boundary and seller-defined responsibility split:
+`../docs/PROGRAMMABILITY_CONTRACT.md`
+
+Open source release note:
+`../docs/OPEN_SOURCE_RELEASE.md`
+
+## Runtime Endpoints
+
+- `GET /health` full runtime health payload
+- `GET /status` launch-safe status payload (cluster/program IDs/anchoring/fees/build)

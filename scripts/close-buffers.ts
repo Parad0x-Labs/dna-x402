@@ -31,6 +31,7 @@ interface CloseBuffersReport {
   buffersBefore: string[];
   buffersAfter: string[];
   closedBuffers: string[];
+  dryRun: boolean;
 }
 
 function usage(): string {
@@ -41,7 +42,9 @@ function usage(): string {
     "  --cluster <devnet|testnet|mainnet-beta|url>   Cluster or RPC moniker (default: devnet)",
     "  --keypair <path>                                Fee payer keypair path",
     "  --authority <path>                              Buffer authority signer (default: keypair/default)",
+    "  --authority-keypair <path>                      Alias for --authority",
     "  --recipient <pubkey|keypair>                    Recipient for reclaimed lamports (default: deployer address)",
+    "  --dry-run                                       Print command/report without closing buffers",
     "  --out <path>                                    Output JSON report path",
     "  --help                                          Show this help",
   ].join("\n");
@@ -65,11 +68,13 @@ function main(): void {
 
   const cluster = parseFlagValue(argv, "--cluster") ?? "devnet";
   const keypair = parseFlagValue(argv, "--keypair");
-  const authority = parseFlagValue(argv, "--authority");
+  const authority = parseFlagValue(argv, "--authority-keypair")
+    ?? parseFlagValue(argv, "--authority");
   const stagedKeypair = stageSignerPath(keypair);
   const stagedAuthority = stageSignerPath(authority);
   const outPath = parseFlagValue(argv, "--out")
     ?? path.join(repoRoot, "reports", `close-buffers-${nowStamp()}.json`);
+  const dryRun = hasFlag(argv, "--dry-run");
 
   const context = { cluster, keypair: stagedKeypair };
   const deployerAddress = getAddress(context);
@@ -86,7 +91,14 @@ function main(): void {
     args.push("--authority", stagedAuthority);
   }
 
-  const result = runSolana(args, repoRoot);
+  const result = dryRun
+    ? {
+      status: 0,
+      stdout: "dry-run: close buffers skipped",
+      stderr: "",
+      cmd: `solana ${args.join(" ")}`,
+    }
+    : runSolana(args, repoRoot);
 
   const afterBalance = getBalanceLamports(deployerAddress, context);
   const afterBuffers = getBufferAccounts(context);
@@ -112,6 +124,7 @@ function main(): void {
     buffersBefore: beforeBuffers,
     buffersAfter: afterBuffers,
     closedBuffers,
+    dryRun,
   };
 
   writeJson(outPath, report);

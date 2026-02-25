@@ -19,6 +19,7 @@ class FakeVerifier implements PaymentVerifier {
 
 const baseConfig: X402Config = {
   port: 8080,
+  appVersion: "test",
   solanaRpcUrl: "https://api.devnet.solana.com",
   usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
   paymentRecipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
@@ -38,6 +39,8 @@ const baseConfig: X402Config = {
   pauseMarket: false,
   pauseFinalize: false,
   pauseOrders: false,
+  disabledShops: [],
+  autoDisableReportThreshold: 0,
 };
 
 describe("market routes on x402 server", () => {

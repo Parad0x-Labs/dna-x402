@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-02-20T21:06:42Z",
+  "cluster": "mainnet-beta",
+  "rpcUrl": "https://api.mainnet-beta.solana.com",
+  "gitCommit": "bd2939b332c79dbad5c604fc8adb5aca52fe1bb0",
+  "node": "v20.20.0",
+  "npm": "10.8.2",
+  "solanaCli": "solana-cli 3.0.15 (src:42c10bf3; feat:3604001754, client:Agave)"
+}
