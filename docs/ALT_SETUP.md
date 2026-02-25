@@ -1,6 +1,6 @@
 # ALT Setup
 
-Address Lookup Tables (ALTs) reduce transaction key bloat for v0 messages. Use these scripts from `/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402`.
+Address Lookup Tables (ALTs) reduce transaction key bloat for v0 messages. Use these scripts from the `x402/` directory.
 
 ## 1) Create ALT
 
@@ -40,7 +40,7 @@ This writes `x402/reports/alt-show-*.txt`.
 
 ## 4) Use in tx builders
 
-`/Users/sauliuskruopis/Desktop/dark $NULL/dark_null_protocol/x402/src/tx/buildV0.ts` includes:
+`x402/src/tx/buildV0.ts` includes:
 - `buildV0AnchorTransaction(...)`
 - `createSyntheticLookupTable(...)` for local size benchmarking
 
