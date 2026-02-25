@@ -38,23 +38,27 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 const data = await result.response.json();
 ```
 
-### For Sellers (API Providers)
+### For Sellers (Sell Compute, AI, Data — Anything)
 
 ```typescript
 import express from "express";
-import { dnaPaywall } from "@dna/x402";
+import { dnaSeller, dnaPrice } from "@dna/x402/seller";
 
 const app = express();
+app.use(express.json());
 
-app.use("/api/inference", dnaPaywall({
-  priceAtomic: "5000",
-  recipient: "YOUR_SOLANA_WALLET",
-}));
+// 1. One line — enable payments to your wallet
+const pay = dnaSeller(app, { recipient: "YOUR_SOLANA_WALLET" });
 
-app.get("/api/inference", (req, res) => {
+// 2. Gate any endpoint with a price
+app.get("/api/inference", dnaPrice("5000", pay), (req, res) => {
   res.json({ result: "inference output" });
 });
+
+app.listen(3000);
 ```
+
+That's it. No separate server. Clone, set wallet, set prices, run. Any x402-compatible agent can discover and pay your endpoints automatically. See `examples/sell-compute.ts` for a full working example.
 
 ## Settlement Modes
 
@@ -95,7 +99,8 @@ x402/
 │   ├── client.ts           # Agent SDK (fetchWith402, marketCall)
 │   ├── sdk/
 │   │   ├── index.ts        # SDK entry point
-│   │   ├── paywall.ts      # Express payment middleware
+│   │   ├── seller.ts       # Self-contained seller SDK (dnaSeller + dnaPrice)
+│   │   ├── paywall.ts      # Express payment middleware (advanced)
 │   │   └── webhook.ts      # HMAC webhook service
 │   ├── logging/
 │   │   └── audit.ts        # Corporate audit logger
@@ -104,8 +109,9 @@ x402/
 │   │   └── liquefy/        # Liquefy vault bridge
 │   └── verifier/           # On-chain payment verification
 ├── examples/
+│   ├── sell-compute.ts     # Sell your compute in 10 lines (start here)
 │   ├── buyer-agent.ts      # Agent paying for APIs
-│   ├── seller-api.ts       # API accepting payments
+│   ├── seller-api.ts       # API accepting payments (advanced)
 │   └── liquefy-gated-vault.ts  # Liquefy + DNA integration
 ├── test-mainnet/
 │   ├── mayhem-50.mjs       # 50-agent stress test

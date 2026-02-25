@@ -77,32 +77,51 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 });
 ```
 
-## Seller (Your API Accepts Payments)
+## Seller (Sell Compute / AI / Data — Anything)
+
+### Fastest way — self-contained (no separate server needed)
 
 ```typescript
 import express from "express";
-import { dnaPaywall } from "@dna/x402";
+import { dnaSeller, dnaPrice } from "@dna/x402/seller";
 
 const app = express();
+app.use(express.json());
 
-app.use("/api/inference", dnaPaywall({
-  priceAtomic: "5000",   // $0.005 per call
-  recipient: "YOUR_SOLANA_WALLET_ADDRESS",
-  settlement: ["netting", "transfer"],
-}));
+// 1. Enable payments to your wallet
+const pay = dnaSeller(app, { recipient: "YOUR_SOLANA_WALLET" });
 
-app.get("/api/inference", (req, res) => {
+// 2. Set a price on any endpoint
+app.get("/api/inference", dnaPrice("5000", pay), (req, res) => {
   res.json({ result: "your inference output" });
+});
+
+// Free endpoints work normally
+app.get("/", (req, res) => {
+  res.json({ pricing: { "/api/inference": "$0.005" } });
 });
 
 app.listen(3000);
 ```
 
-Any agent calling `/api/inference` gets a `402 Payment Required` response with payment details. After paying, the agent retries with the commit ID and gets the result.
+That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically.
+Any x402 agent hits your endpoint → gets 402 → pays → retries → gets the result.
 
-### With API key + payment (hybrid auth)
+### Multiple prices on different endpoints
 
 ```typescript
+app.get("/api/inference", dnaPrice("5000", pay), handler);   // $0.005
+app.get("/api/embedding", dnaPrice("1000", pay), handler);   // $0.001
+app.post("/api/batch",    dnaPrice("50000", pay), handler);  // $0.05
+```
+
+### Advanced — with the full DNA server (on-chain verification, anchoring, marketplace)
+
+Use `dnaPaywall` if you're running the full DNA x402 server and want features like receipt anchoring, marketplace listing, netting flush, and webhooks:
+
+```typescript
+import { dnaPaywall } from "@dna/x402";
+
 app.use("/api/premium", dnaPaywall({
   priceAtomic: "10000",
   recipient: "YOUR_WALLET",
@@ -219,10 +238,13 @@ PORT=8080
 ## SDK Exports
 
 ```typescript
+// Seller (self-contained — start here)
+import { dnaSeller, dnaPrice } from "@dna/x402/seller";
+
 // Buyer
 import { fetchWith402, marketCall } from "@dna/x402";
 
-// Seller
+// Seller (advanced — requires full DNA server)
 import { dnaPaywall, apiKeyGuard } from "@dna/x402";
 
 // Infrastructure
