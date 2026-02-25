@@ -204,8 +204,119 @@ sidecar.attachAuditLogger(auditLogger);
 sidecar.startPeriodicFlush();
 ```
 
+## Market Intelligence (query before you buy)
+
+```typescript
+// What's trending right now?
+const trending = await fetch("https://dna-server/market/trending?window=1h");
+
+// Who's selling the most?
+const topSelling = await fetch("https://dna-server/market/top-selling?window=24h");
+
+// Who's making the most revenue?
+const topRevenue = await fetch("https://dna-server/market/top-revenue?window=24h");
+
+// Any price drops?
+const onSale = await fetch("https://dna-server/market/on-sale?window=24h");
+
+// Price history for a specific endpoint
+const history = await fetch("https://dna-server/market/price-history?endpointId=shop::inference&window=7d");
+
+// Full market snapshot (demand velocity, median prices, seller density, volatility, recommended providers)
+const snapshot = await fetch("https://dna-server/market/snapshot");
+```
+
+Use this to shop smart — find the cheapest provider, spot trends, detect deals, compare before buying.
+
+## Reputation & Badges
+
+Every seller gets a reputation score (0–100) based on:
+- Fulfillment rate, latency, dispute rate
+- Verified payment rate, uptime
+- Anchored receipts count
+
+Tiers: **bronze** (< 50), **silver** (50–79), **gold** (80+)
+
+Badges are auto-awarded: `FAST_P95_<800MS`, `FULFILLMENT_99`, `TOP_SELLER_24H`, `PROOF_ANCHORED`, `STREAM_READY`, `LOW_REFUND`
+
+Quotes include reputation and badges — your agent can filter by them.
+
+## Limit Orders (set and forget)
+
+```typescript
+// "Buy inference at max $0.003 — execute when available"
+const order = await fetch("https://dna-server/market/orders", {
+  method: "POST",
+  body: JSON.stringify({
+    capability: "text-generation",
+    maxPriceAtomic: "3000",
+    expiresInMs: 3600000,
+    callbackUrl: "https://my-agent/order-filled",
+  }),
+});
+```
+
+DNA auto-executes when a quote matches your constraints. No polling needed.
+
+## Surge Pricing
+
+Prices adjust automatically based on seller load:
+- Low load → prices drop to 0.8x
+- High load → prices rise up to 2.5x
+- Based on: queue depth, inflight requests, p95 latency, error rate
+
+Your agent sees the real-time price in every quote. No surprises.
+
+## Bundle Execution (multi-step chains)
+
+```typescript
+// Execute a multi-step workflow as one transaction
+// e.g., "search → summarize → translate" in a single bundle
+const bundle = await fetch("https://dna-server/market/bundles", {
+  method: "POST",
+  body: JSON.stringify({
+    steps: [
+      { capability: "web-search", input: { query: "latest AI news" } },
+      { capability: "summarize", input: { fromPrevious: true } },
+      { capability: "translate", input: { fromPrevious: true, lang: "es" } },
+    ],
+  }),
+});
+```
+
+## OpenAPI / MCP Import
+
+Auto-generate shop endpoints from existing specs:
+
+```typescript
+// Import from OpenAPI spec
+POST /market/import/openapi
+{ "specUrl": "https://my-api.com/openapi.json", "wallet": "MY_WALLET" }
+
+// Import from MCP tool definition
+POST /market/import/mcp
+{ "tool": { "name": "search", "description": "...", "inputSchema": {...} } }
+```
+
+Your existing API becomes a DNA shop with zero manual endpoint configuration.
+
+## Abuse Reporting
+
+```typescript
+// Report a bad actor
+POST /market/report
+{
+  "shopId": "scam-shop-123",
+  "type": "scam",
+  "reason": "Never delivers results after payment"
+}
+```
+
+Types: `scam`, `illegal`, `malware`, `impersonation`, `other`
+
 ## Server Endpoints
 
+### Core Payment
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
 | `/health` | GET | Server status |
@@ -215,11 +326,38 @@ sidecar.startPeriodicFlush();
 | `/receipt/:id` | GET | Fetch signed receipt |
 | `/settlements/flush` | POST | Settle netting batch |
 | `/anchoring/receipt/:id` | GET | Check on-chain anchor |
+
+### Marketplace
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
 | `/market/shops` | GET | List marketplace shops |
 | `/market/shops` | POST | Register a shop |
-| `/market/quotes` | GET | Get marketplace quotes |
+| `/market/quotes` | GET | Get ranked quotes by capability |
+| `/market/orders` | POST | Create a limit order |
+| `/market/orders` | GET | List your orders |
+| `/market/heartbeat` | POST | Report shop load metrics |
+| `/market/trending` | GET | Trending services (velocity) |
+| `/market/top-selling` | GET | Most sold (by tx count) |
+| `/market/top-revenue` | GET | Highest earning shops |
+| `/market/on-sale` | GET | Price drops detected |
+| `/market/price-history` | GET | Price chart per endpoint |
+| `/market/snapshot` | GET | Full market dashboard |
+| `/market/report` | POST | Report abuse |
+| `/market/import/openapi` | POST | Import from OpenAPI spec |
+| `/market/import/mcp` | POST | Import from MCP tool |
+
+### Admin
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
 | `/admin/overview` | GET | System dashboard |
 | `/admin/audit/export` | GET | NDJSON audit export |
+| `/admin/audit/summary` | GET | Audit event summary |
+| `/admin/receipts/:id` | GET | Inspect a receipt |
+| `/admin/netting/snapshot` | GET | Netting ledger state |
+| `/admin/replay-store/stats` | GET | Replay protection stats |
+| `/admin/pause/market` | POST | Pause marketplace writes |
+| `/admin/pause/orders` | POST | Pause order execution |
+| `/admin/pause/finalize` | POST | Pause payment finalization |
 
 ## Environment Variables
 

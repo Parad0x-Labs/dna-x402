@@ -10,13 +10,40 @@ AI agents need to pay for things: inference, storage, data, compute. Current opt
 
 ## Features
 
-- **Three settlement modes**: Netting (off-chain batched, cheapest), Transfer (real on-chain USDC), Stream (continuous)
+### Payments
+- **Three settlement modes**: Netting (off-chain batched, cheapest), Transfer (real on-chain USDC), Stream (Streamflow time-locked)
 - **x402 HTTP standard**: Any REST API becomes payment-gated with one middleware call
-- **Receipt anchoring**: All payments get cryptographic receipts anchored on Solana via `receipt_anchor` program
-- **Marketplace**: Agents discover and compare providers by capability, price, and latency
+- **Receipt anchoring**: Cryptographic receipts anchored on Solana via `receipt_anchor` program with Merkle-style accumulator hashing
+- **Replay protection**: TTL-based replay attack prevention on every payment proof
+- **Surge pricing**: Dynamic price multipliers (0.8x–2.5x) based on real-time load (queue depth, inflight, latency, error rate)
+
+### Marketplace
+- **Shop discovery**: Agents find providers by capability, price, latency, and reputation
+- **Reputation engine**: Scores sellers 0–100 based on fulfillment rate, latency, disputes, uptime, and anchored receipts — bronze/silver/gold tiers
+- **Badge system**: Auto-awarded badges — `FAST_P95`, `FULFILLMENT_99`, `TOP_SELLER_24H`, `PROOF_ANCHORED`, `STREAM_READY`
+- **Ranking engine**: Weighted scoring (50% price, 30% latency, 20% reputation) for quote comparison
+- **Limit orders**: Agents set "buy at max $X" — auto-executes when a quote matches
+- **Market analytics**: Trending, top-selling, top-revenue, on-sale detection, price history, demand velocity, volatility scores
+- **Bundle system**: Multi-step capability chains with cost breakdowns, margin policies, and execution hashing
+- **Abuse reporting**: Scam/malware/impersonation reports against shops
+- **OpenAPI/MCP import**: Auto-generate shop endpoints from OpenAPI specs or MCP tool definitions
+- **Shop templates**: Pre-built configs for research, ops, action, and always-on agent types
+
+### Developer Tools
+- **Seller SDK**: Self-contained `dnaSeller()` — no separate server needed, 3 lines to sell
+- **x402 Doctor**: Diagnostic tool that detects x402 dialects (Coinbase, Memeputer, generic), identifies missing headers, suggests fixes
+- **Tool catalog**: Cost estimation, balance coverage, projected spend based on usage patterns
+- **25+ structured error codes**: Every error returns hints, trace IDs, docs URLs, and redacted payloads
+- **Trace IDs**: UUID per request via `X-TRACE-ID` header
+
+### Infrastructure
 - **Audit logging**: NDJSON corporate-grade audit trail for every payment event
-- **Webhooks**: HMAC-signed async payment notifications with retry logic
-- **Liquefy bridge**: Archive payment data into verified `.null` vaults
+- **Webhooks**: HMAC-signed async payment notifications with retry logic and exponential backoff
+- **Cached RPC client**: Solana RPC with TTL cache, circuit breaker, retry logic, and in-flight deduplication
+- **Heartbeat system**: Real-time shop load monitoring (queue depth, p95 latency, error rate)
+- **Admin API**: Full observability — audit export, receipt inspection, pause controls, replay store stats
+- **Liquefy bridge**: Archive payment data into verified `.null` vaults with live sidecar streaming
+- **Benchmarking suite**: Compute profiling, transaction size analysis, soak test thresholds
 
 ## Install
 
@@ -103,28 +130,53 @@ Agent (buyer)                         API Provider (seller)
 ```
 x402/
 ├── src/
-│   ├── server.ts           # Main x402 payment server
-│   ├── client.ts           # Agent SDK (fetchWith402, marketCall)
+│   ├── server.ts              # Main x402 payment server
+│   ├── client.ts              # Agent SDK (fetchWith402, marketCall)
+│   ├── catalog.ts             # Tool catalog — cost estimation + balance coverage
+│   ├── streaming.ts           # Streamflow integration for streaming payments
 │   ├── sdk/
-│   │   ├── index.ts        # SDK entry point
-│   │   ├── seller.ts       # Self-contained seller SDK (dnaSeller + dnaPrice)
-│   │   ├── paywall.ts      # Express payment middleware (advanced)
-│   │   └── webhook.ts      # HMAC webhook service
+│   │   ├── seller.ts          # Self-contained seller SDK (start here)
+│   │   ├── paywall.ts         # Express payment middleware
+│   │   └── webhook.ts         # HMAC webhook delivery with retries
+│   ├── market/
+│   │   ├── analytics.ts       # Trending, top-selling, revenue, on-sale, price history
+│   │   ├── reputation.ts      # Seller reputation scoring (0-100, bronze/silver/gold)
+│   │   ├── badges.ts          # Auto-awarded performance badges
+│   │   ├── ranking.ts         # Weighted quote ranking (price/latency/reputation)
+│   │   ├── orders.ts          # Limit order book with auto-execution
+│   │   ├── bundles.ts         # Multi-step capability chains
+│   │   ├── heartbeat.ts       # Real-time shop load monitoring
+│   │   ├── policy.ts          # Smart routing with preferences and denylists
+│   │   ├── import/            # OpenAPI + MCP auto-importers
+│   │   └── templates/         # Pre-built shop configs (research, ops, action)
+│   ├── pricing/
+│   │   └── surge.ts           # Dynamic surge pricing (0.8x–2.5x)
+│   ├── x402/
+│   │   ├── doctor.ts          # x402 dialect diagnostics + fix suggestions
+│   │   ├── errors.ts          # 25+ structured error codes with hints
+│   │   └── compat/            # Multi-dialect parser (Coinbase, Memeputer, etc.)
+│   ├── verifier/
+│   │   ├── splTransfer.ts     # On-chain USDC transfer verification
+│   │   ├── streamflow.ts      # Stream payment verification
+│   │   ├── replayStore.ts     # Replay attack prevention
+│   │   └── rpcClient.ts       # Cached RPC with circuit breaker
+│   ├── packing/
+│   │   └── anchorV1.ts        # Binary packing + Merkle accumulator hashing
 │   ├── logging/
-│   │   └── audit.ts        # Corporate audit logger
-│   ├── market/             # Agent marketplace
-│   ├── bridge/
-│   │   └── liquefy/        # Liquefy vault bridge
-│   └── verifier/           # On-chain payment verification
+│   │   └── audit.ts           # NDJSON corporate audit logger
+│   ├── bridge/liquefy/        # Vault exporter, sidecar, CLI, adapter
+│   ├── admin/                 # Admin API (audit, receipts, pause controls)
+│   ├── bench/                 # Compute profiling, tx metrics, thresholds
+│   └── middleware/             # HTTPS enforcement, trace ID injection
 ├── examples/
-│   ├── sell-compute.ts     # Sell your compute in 10 lines (start here)
-│   ├── buyer-agent.ts      # Agent paying for APIs
-│   ├── seller-api.ts       # API accepting payments (advanced)
-│   └── liquefy-gated-vault.ts  # Liquefy + DNA integration
+│   ├── sell-compute.ts        # Sell your compute in 10 lines (start here)
+│   ├── buyer-agent.ts         # Agent paying for APIs
+│   ├── seller-api.ts          # API accepting payments (advanced)
+│   └── liquefy-gated-vault.ts # Liquefy + DNA integration
 ├── test-mainnet/
-│   ├── mayhem-50.mjs       # 50-agent stress test
-│   └── MAYHEM_50_REPORT.md # Test results
-└── AGENTS.md               # AI agent quick reference
+│   ├── mayhem-50.mjs          # 50-agent stress test
+│   └── MAYHEM_50_REPORT.md    # Test results
+└── AGENTS.md                  # AI agent quick reference
 ```
 
 ## Running the Server
@@ -169,6 +221,21 @@ sidecar.startPeriodicFlush();
 ### Payment-Gated Vault Access
 
 Use DNA to monetize Liquefy vault operations. See `examples/liquefy-gated-vault.ts` for a complete example.
+
+## Market Intelligence API
+
+Real-time analytics on every trade flowing through DNA:
+
+| Endpoint | What It Returns |
+|----------|----------------|
+| `GET /market/trending?window=1h` | What's hot — demand velocity vs previous period |
+| `GET /market/top-selling?window=24h` | Most transactions by shop/endpoint |
+| `GET /market/top-revenue?window=24h` | Highest earning shops |
+| `GET /market/on-sale?window=24h` | Price drops detected |
+| `GET /market/price-history?endpointId=X` | Price chart for any endpoint |
+| `GET /market/snapshot` | Full dashboard — demand velocity, median prices, seller density, volatility, recommended providers |
+
+Agents use this to shop smart — compare providers, find deals, track trends, and make data-driven purchasing decisions. All programmatic, no human needed.
 
 ## Mainnet Test Results
 
