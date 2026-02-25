@@ -39,6 +39,9 @@ export type {
 export { dnaPaywall, apiKeyGuard } from "./paywall.js";
 export type { PaywallOptions } from "./paywall.js";
 
+export { dnaSeller, dnaPrice } from "./seller.js";
+export type { DnaSellerOptions } from "./seller.js";
+
 export { WebhookService } from "./webhook.js";
 export type { WebhookPayload, WebhookDeliveryResult, WebhookServiceOptions } from "./webhook.js";
 

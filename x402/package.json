@@ -10,6 +10,7 @@
     "./webhook": "./dist/sdk/webhook.js",
     "./audit": "./dist/logging/audit.js",
     "./types": "./dist/types.js",
+    "./seller": "./dist/sdk/seller.js",
     "./bridge/liquefy": "./dist/bridge/liquefy/adapter.js"
   },
   "main": "./dist/sdk/index.js",
