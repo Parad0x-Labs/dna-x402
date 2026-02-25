@@ -13,13 +13,13 @@ Three settlement modes: **netting** (off-chain batched, cheapest), **transfer** 
 ## Install
 
 ```bash
-npm install @dna/x402
+npm install dna-x402
 ```
 
 ## Buyer (Your Agent Pays for an API)
 
 ```typescript
-import { fetchWith402 } from "@dna/x402";
+import { fetchWith402 } from "dna-x402";
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
@@ -40,7 +40,7 @@ That's it. The SDK handles the 402 handshake, quote, commit, and finalize automa
 ### With real USDC transfer (on-chain proof)
 
 ```typescript
-import { fetchWith402 } from "@dna/x402";
+import { fetchWith402 } from "dna-x402";
 import { Connection, Keypair } from "@solana/web3.js";
 import { getAssociatedTokenAddress, createTransferInstruction } from "@solana/spl-token";
 
@@ -63,7 +63,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 ### With spend tracking (daily budget)
 
 ```typescript
-import { fetchWith402, InMemorySpendTracker, InMemoryReceiptStore } from "@dna/x402";
+import { fetchWith402, InMemorySpendTracker, InMemoryReceiptStore } from "dna-x402";
 
 const tracker = new InMemorySpendTracker();
 const receipts = new InMemoryReceiptStore();
@@ -83,7 +83,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 
 ```typescript
 import express from "express";
-import { dnaSeller, dnaPrice } from "@dna/x402/seller";
+import { dnaSeller, dnaPrice } from "dna-x402/seller";
 
 const app = express();
 app.use(express.json());
@@ -120,7 +120,7 @@ app.post("/api/batch",    dnaPrice("50000", pay), handler);  // $0.05
 Use `dnaPaywall` if you're running the full DNA x402 server and want features like receipt anchoring, marketplace listing, netting flush, and webhooks:
 
 ```typescript
-import { dnaPaywall } from "@dna/x402";
+import { dnaPaywall } from "dna-x402";
 
 app.use("/api/premium", dnaPaywall({
   priceAtomic: "10000",
@@ -133,7 +133,7 @@ app.use("/api/premium", dnaPaywall({
 ## Marketplace (Discover + Buy Agent Services)
 
 ```typescript
-import { marketCall } from "@dna/x402";
+import { marketCall } from "dna-x402";
 
 const result = await marketCall({
   wallet: myWallet,
@@ -154,7 +154,7 @@ console.log("Used provider:", result.provider.shopId);
 ## Webhooks (Async Payment Notifications)
 
 ```typescript
-import { WebhookService } from "@dna/x402";
+import { WebhookService } from "dna-x402";
 
 const webhooks = new WebhookService({ signingSecret: "your-hmac-secret" });
 
@@ -169,7 +169,7 @@ await webhooks.deliver("https://your-agent/webhook", {
 ## Audit Logging
 
 ```typescript
-import { AuditLogger } from "@dna/x402";
+import { AuditLogger } from "dna-x402";
 
 const audit = new AuditLogger({ logPath: "./audit.ndjson" });
 audit.record({ kind: "PAYMENT_VERIFIED", amountAtomic: "5000" });
@@ -194,7 +194,7 @@ python tools/tracevault_pack.py ./vault-staging/run-001 --org dna --out ./vault/
 ### Live sidecar (auto-stream to vault)
 
 ```typescript
-import { LiquefySidecar } from "@dna/x402";
+import { LiquefySidecar } from "dna-x402";
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live",
@@ -239,20 +239,20 @@ PORT=8080
 
 ```typescript
 // Seller (self-contained — start here)
-import { dnaSeller, dnaPrice } from "@dna/x402/seller";
+import { dnaSeller, dnaPrice } from "dna-x402/seller";
 
 // Buyer
-import { fetchWith402, marketCall } from "@dna/x402";
+import { fetchWith402, marketCall } from "dna-x402";
 
 // Seller (advanced — requires full DNA server)
-import { dnaPaywall, apiKeyGuard } from "@dna/x402";
+import { dnaPaywall, apiKeyGuard } from "dna-x402";
 
 // Infrastructure
-import { WebhookService, AuditLogger } from "@dna/x402";
+import { WebhookService, AuditLogger } from "dna-x402";
 
 // Spend management
-import { InMemoryReceiptStore, InMemorySpendTracker } from "@dna/x402";
+import { InMemoryReceiptStore, InMemorySpendTracker } from "dna-x402";
 
 // Liquefy bridge
-import { LiquefyVaultExporter, LiquefySidecar } from "@dna/x402";
+import { LiquefyVaultExporter, LiquefySidecar } from "dna-x402";
 ```

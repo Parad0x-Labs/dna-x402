@@ -80,7 +80,7 @@ Duration:         165 seconds
 - Solana mainnet
 - USDC (SPL Token)
 - Custom `receipt_anchor` Solana program
-- Express middleware SDK (`@dna/x402`)
+- Express middleware SDK (`dna-x402`)
 - Netting ledger for batched micropayments
 - Corporate audit logging (NDJSON)
 - Webhook system with HMAC signing

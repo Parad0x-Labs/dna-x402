@@ -4,7 +4,7 @@
  * One-import integration for any AI agent to plug into DNA payments.
  *
  * Quick start:
- *   import { fetchWith402, marketCall, dnaPaywall } from "@dna/x402-sdk";
+ *   import { fetchWith402, marketCall, dnaPaywall } from "dna-x402";
  *
  * Agent (buyer) side:
  *   const result = await fetchWith402("https://provider.example/api/inference", {

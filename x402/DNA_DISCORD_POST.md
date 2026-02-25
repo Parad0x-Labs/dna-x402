@@ -1,93 +1,97 @@
-# Discord Announcement (paste into #announcements or similar)
+# Discord Announcement
 
 ---
 
-## 🧬 DNA — Dark Null Apex is LIVE on Solana Mainnet
+## DNA x402 — Now Open Source on GitHub
 
-> The payment rail AI agents actually deserve.
+> One payment standard. Every AI agent. No more incompatibility.
 
-**What is it?**
-A micropayment protocol that lets any AI agent pay any other AI agent for services. Instantly. No humans in the loop.
+**The problem:**
+AI agents can't pay each other. Every framework has its own auth, its own billing, its own API keys. Agents from different ecosystems can't transact. The result? Fragmentation. Agents that should collaborate — can't.
 
-Built on the **x402 protocol** — your agent hits an API, gets a price quote, pays, gets a cryptographic receipt anchored on Solana. Three HTTP calls. Done.
+**The fix:**
+DNA x402. A single open-source payment protocol on Solana. Any agent pays any API. Three HTTP calls. Done.
 
-**What just happened:**
+**What's in the repo:**
 ```
-✅ 52/52 mainnet integration tests passed
-✅ 8 real payment flows across 3 service types
-✅ 8/8 receipts anchored on-chain
-✅ Multi-agent burst trading stress tested
-✅ Full marketplace: register, discover, trade
-✅ Total cost of entire test suite: 0.000040 SOL
+Standalone x402 server         — drop-in payment infrastructure
+SDK (dna-x402)                — 3 lines to buy, 3 lines to sell
+Netting ledger                 — batches nano payments off-chain
+On-chain USDC transfers        — real SPL transfers, verified
+Receipt anchoring              — every receipt on Solana, verifiable
+Marketplace                    — agents discover + compare providers
+Audit logging                  — NDJSON corporate-grade trail
+Webhook service                — HMAC-signed async notifications
+Liquefy OpenClaw integration   — payment data → verified .null vaults
 ```
 
-**Why it matters:**
-AI agents need to transact at machine speed, at machine scale, at micro amounts. Thousands of $0.001 payments per minute. No existing rail handles that.
-
-DNA does.
-
-→ **Netting ledger** batches micro-payments off-chain, settles in bulk
-→ **0.3% fees** — on $0.001 that's $0.000003
-→ **On-chain receipts** via custom Solana program `receipt_anchor`
-→ **3 lines of code** to integrate any agent as a buyer
-→ **2 lines of code** to monetize any API as a seller
+**Mainnet stress test results:**
+```
+Agents:              50 (30 netting + 20 real USDC transfer)
+Total trades:        80
+Tests passed:        84/84 (100%)
+Amount range:        $0.00001 → $2.00
+Receipts anchored:   80/80
+Settlement modes:    Netting + Transfer
+Duration:            165 seconds
+```
 
 **For agents that buy:**
 ```typescript
-import { fetchWith402 } from "@dna/x402";
-const result = await fetchWith402("https://provider.ai/api/summarize", {
-  body: JSON.stringify({ text: doc }),
+import { fetchWith402 } from "dna-x402";
+
+const result = await fetchWith402("https://provider.ai/api/inference", {
+  wallet: myWallet,
+  maxSpendAtomic: "50000",
 });
 ```
 
 **For APIs that sell:**
 ```typescript
-import { dnaPaywall } from "@dna/x402/paywall";
-app.use("/api/summarize", dnaPaywall({ amountAtomic: "2000" }));
+import { dnaPaywall } from "dna-x402";
+
+app.use("/api/inference", dnaPaywall({
+  priceAtomic: "5000",
+  recipient: "YOUR_WALLET",
+}));
 ```
 
-**The stack:**
-x402 server • receipt anchoring (Rust/Solana) • netting ledger • marketplace w/ reputation • SDK • admin API • audit logging • webhook service • Liquefy bridge
+**GitHub:**
+DNA x402 (standalone): https://github.com/Parad0x-Labs/dna-x402
+Liquefy + DNA bridge:  https://github.com/Parad0x-Labs/liquefy-openclaw-integration
 
-**Program ID:** `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`
+**Program:** `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`
 
-The payment rail for the agent economy isn't coming — it's here.
-
-**Coming to your local Git store tonight** 🫡
-
----
----
----
-
-# X Post (single post — copy the block below)
+If you're building agents — plug in, test it, break it. Open source. MIT license.
+We want every AI agent speaking the same payment language.
 
 ---
+---
+---
 
-🧬 DNA — Dark Null Apex is live on Solana mainnet.
+# X Post (single post — copy below)
 
-Micropayment protocol for AI agent-to-agent payments. Not a framework — infrastructure.
+---
 
-What we built:
-• x402 protocol — HTTP 402 Payment Required done right
-• receipt_anchor — custom Solana program for on-chain proof
-• Netting ledger — batches 1000s of micropayments into single settlements
-• Marketplace — agents register, discover, and trade services
-• SDK — 3 lines to buy, 2 lines to sell
+DNA x402 is now open source.
 
-What we just tested on mainnet:
-• 52/52 integration tests passed
-• 8 real payment flows across 3 service tiers
-• 8/8 receipts anchored on-chain
-• Multi-agent burst trading under load
-• Marketplace registration w/ ed25519 signed manifests
-• Full audit trail: 56 events logged
-• 0.3% fees — $0.001 payment = $0.000003 fee
-• Total cost of entire test suite: 0.000040 SOL
+One payment standard for all AI agents. No more incompatibility. No more agents that can't talk money to each other.
+
+What it is:
+— x402 protocol on Solana. Any agent pays any API. Programmatically.
+— Netting for nano payments ($0.00001+), real on-chain USDC for larger amounts
+— 3 lines to integrate as buyer. 3 lines as seller.
+— Receipts anchored on-chain. Verifiable by anyone.
+
+Tested: 50 agents, 80 trades, 84/84 passed on mainnet. Zero failures.
+
+Standalone or integrated with Liquefy OpenClaw for payment-gated vaults + audit archival.
+
+github.com/Parad0x-Labs/dna-x402
+github.com/Parad0x-Labs/liquefy-openclaw-integration
 
 Program: 9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF
 
-The payment rail for the agent economy isn't coming — it's here.
+Building agents? Plug in, test it, break it. One language for agent payments.
 
-Coming to your local Git store tonight 🫡
-
----
+#DNA #DarkNullApex #Solana #AI #x402 #OpenSource

@@ -18,12 +18,20 @@ AI agents need to pay for things: inference, storage, data, compute. Current opt
 - **Webhooks**: HMAC-signed async payment notifications with retry logic
 - **Liquefy bridge**: Archive payment data into verified `.null` vaults
 
+## Install
+
+```bash
+npm install dna-x402
+```
+
+That's it. One command. Works for buyers (AI agents) and sellers (API providers).
+
 ## Quick Start
 
 ### For Buyers (AI Agents)
 
 ```typescript
-import { fetchWith402 } from "@dna/x402";
+import { fetchWith402 } from "dna-x402";
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
@@ -42,7 +50,7 @@ const data = await result.response.json();
 
 ```typescript
 import express from "express";
-import { dnaSeller, dnaPrice } from "@dna/x402/seller";
+import { dnaSeller, dnaPrice } from "dna-x402/seller";
 
 const app = express();
 app.use(express.json());
@@ -148,7 +156,7 @@ python tools/tracevault_pack.py ./vault-staging/run-001 --org dna --out ./vault/
 ### Live Sidecar (Auto-Archive)
 
 ```typescript
-import { LiquefySidecar } from "@dna/x402";
+import { LiquefySidecar } from "dna-x402";
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live",
