@@ -46,6 +46,7 @@ wallet/*.json
 # Test/audit artifacts (large, ephemeral)
 x402/audit_out*/
 x402/test-mainnet/keys/
+x402/test-mainnet/*_DATA.json
 x402/keys/
 x402/reports/
 
