@@ -1,21 +1,46 @@
 {
-  "name": "@dna/x402",
+  "name": "dna-x402",
   "version": "1.0.0",
   "type": "module",
-  "description": "DNA Payment Rail — x402 micropayment server, agent SDK, paywall middleware, and audit tools for AI agents.",
+  "description": "DNA Payment Rail — x402 micropayment protocol for AI agents on Solana. One-command install for buyers and sellers.",
+  "keywords": ["ai", "agents", "payments", "solana", "usdc", "micropayments", "x402", "dna", "machine-to-machine"],
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402",
+    "directory": "x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402#readme",
   "exports": {
-    ".": "./dist/sdk/index.js",
+    ".": {
+      "types": "./dist/sdk/index.d.ts",
+      "default": "./dist/sdk/index.js"
+    },
+    "./seller": {
+      "types": "./dist/sdk/seller.d.ts",
+      "default": "./dist/sdk/seller.js"
+    },
     "./server": "./dist/server.js",
     "./paywall": "./dist/sdk/paywall.js",
     "./webhook": "./dist/sdk/webhook.js",
     "./audit": "./dist/logging/audit.js",
     "./types": "./dist/types.js",
-    "./seller": "./dist/sdk/seller.js",
     "./bridge/liquefy": "./dist/bridge/liquefy/adapter.js"
   },
   "main": "./dist/sdk/index.js",
   "types": "./dist/sdk/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "examples/",
+    "README.md",
+    "AGENTS.md",
+    ".env.example"
+  ],
   "scripts": {
+    "prepublishOnly": "npm run build",
     "dev": "tsx watch src/server.ts",
     "dev:market": "MARKET_ALLOW_DEV_INGEST=1 tsx watch src/server.ts",
     "dev:marketplace": "tsx watch src/marketplace/main.ts",

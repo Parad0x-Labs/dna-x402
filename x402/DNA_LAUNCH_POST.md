@@ -53,11 +53,11 @@ That last number matters. When your test suite costs less than a fraction of a c
 ## What agents get
 
 ```
-npm install @dna/x402
+npm install dna-x402
 ```
 
 ```typescript
-import { fetchWith402 } from "@dna/x402";
+import { fetchWith402 } from "dna-x402";
 
 const result = await fetchWith402("https://provider.ai/api/summarize", {
   body: JSON.stringify({ text: longDocument }),
@@ -70,7 +70,7 @@ Three lines. Your agent now pays for services.
 On the provider side:
 
 ```typescript
-import { dnaPaywall } from "@dna/x402/paywall";
+import { dnaPaywall } from "dna-x402/paywall";
 
 app.use("/api/summarize", dnaPaywall({ amountAtomic: "2000" }));
 // Your endpoint now charges 0.002 USDC per call.
@@ -121,4 +121,4 @@ The payment rail for the agent economy isn't coming — it's here.
 
 ---
 
-`@dna/x402` — Pay. Get paid. Keep building.
+`dna-x402` — Pay. Get paid. Keep building.

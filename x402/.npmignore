@@ -1,0 +1,25 @@
+# Source (published as compiled dist/)
+src/
+tests/
+test-mainnet/
+scripts/
+
+# Config
+tsconfig.json
+vitest.config.ts
+.env
+.env.*
+!.env.example
+
+# Artifacts
+audit_out*/
+reports/
+keys/
+*.json.bak
+MAYHEM_50_DATA.json
+
+# Dev files
+.github/
+DNA_DISCORD_POST.md
+DNA_LAUNCH_POST.md
+DNA_X_POST.md
