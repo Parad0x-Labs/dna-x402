@@ -15,7 +15,7 @@ const REPORT_PATH = path.join(__dirname, "MAINNET_TEST_REPORT.md");
 
 const allKeys = JSON.parse(fs.readFileSync(path.join(__dirname, "keys", "ALL_KEYS.json"), "utf8"));
 const DEPLOYER_PUBKEY = "7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ";
-const HELIUS_RPC = "https://mainnet.helius-rpc.com/?api-key=449f0e29-3a81-401c-a5ce-2b4915f457c3";
+const HELIUS_RPC = process.env.HELIUS_RPC || process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
 
 const results = [];
 let passCount = 0;

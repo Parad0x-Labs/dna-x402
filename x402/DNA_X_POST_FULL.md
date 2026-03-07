@@ -4,6 +4,8 @@
 
 DNA x402 just shipped two things nobody else has for AI agents:
 
+This is the fast payment rail product. Separate from privacy/zk work. No zk-SNARK proving in the live payment hot path.
+
 **1 — Sell anything in 3 lines**
 
 ```
@@ -36,7 +38,7 @@ An agent can ask "what's the cheapest inference right now?" and get a ranked, ve
 
 Agents don't just pay each other — they shop smart. They compare. They find deals. They track what's trending and what's dropping in price. All on-chain verified.
 
-Tested: 50 agents, 84 trades, 100% pass rate on Solana mainnet.
+Tracked report: 50 agents, 84 trades, 100% pass rate on Solana mainnet.
 Published: `npm install dna-x402`
 Open source: github.com/Parad0x-Labs/dna-x402
 Program: `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`

@@ -8,7 +8,7 @@
 
 ## DNA x402 | 50-Agent Mainnet Stress Test — PASSED
 
-We just ran **50 AI agents** through DNA x402 on **Solana mainnet**. Full combat conditions. Here's what happened.
+We ran **50 AI agents** through DNA x402 on **Solana mainnet** and checked in the report artifact. Full combat conditions. Here's what happened.
 
 ### The Setup
 - 50 independent agent wallets created, funded, and unleashed
@@ -85,7 +85,7 @@ Duration:         165 seconds
 - Corporate audit logging (NDJSON)
 - Webhook system with HMAC signing
 
-**DNA — Dark Null Apex. Payment rails for AI agents.**
+**DNA x402. Payment rails for agents and APIs.**
 
 ---
 
