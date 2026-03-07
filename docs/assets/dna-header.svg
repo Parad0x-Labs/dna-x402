@@ -1,0 +1,44 @@
+<svg width="1280" height="420" viewBox="0 0 1280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#03111E"/>
+      <stop offset="0.55" stop-color="#082A3A"/>
+      <stop offset="1" stop-color="#0B3B4A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="120" y1="80" x2="680" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#19F6C7" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#57B7FF" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="420" rx="28" fill="url(#bg)"/>
+  <g opacity="0.14" stroke="#7ED7FF">
+    <path d="M0 80H1280"/>
+    <path d="M0 160H1280"/>
+    <path d="M0 240H1280"/>
+    <path d="M0 320H1280"/>
+    <path d="M120 0V420"/>
+    <path d="M320 0V420"/>
+    <path d="M520 0V420"/>
+    <path d="M720 0V420"/>
+    <path d="M920 0V420"/>
+    <path d="M1120 0V420"/>
+  </g>
+  <circle cx="1030" cy="100" r="210" fill="url(#accent)"/>
+  <rect x="72" y="64" width="184" height="34" rx="17" fill="#0D2230" stroke="#1FD6B8"/>
+  <text x="96" y="86" fill="#9AEFDE" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">SOLANA AGENT COMMERCE</text>
+  <text x="72" y="162" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="800">DNA x402</text>
+  <text x="72" y="222" fill="#DDEEFF" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">Turn any API into an agent-ready paid endpoint.</text>
+  <text x="72" y="262" fill="#B8D9E8" font-family="Arial, Helvetica, sans-serif" font-size="24">Quote - Pay - Verify - Receipt - Anchor</text>
+  <text x="72" y="320" fill="#9FD2E6" font-family="Arial, Helvetica, sans-serif" font-size="21">Fast x402 payment rail with receipts, replay-safe verification, and market intelligence.</text>
+  <g>
+    <rect x="760" y="72" width="430" height="88" rx="18" fill="#081A24" stroke="#184659"/>
+    <text x="792" y="108" fill="#8CC9E0" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">BUYER LOOP</text>
+    <text x="792" y="138" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">402  ->  pay  ->  retry  ->  access</text>
+    <rect x="760" y="180" width="430" height="88" rx="18" fill="#081A24" stroke="#184659"/>
+    <text x="792" y="216" fill="#8CC9E0" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">TRUST LAYER</text>
+    <text x="792" y="246" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">signed receipts + optional anchoring</text>
+    <rect x="760" y="288" width="430" height="88" rx="18" fill="#081A24" stroke="#184659"/>
+    <text x="792" y="324" fill="#8CC9E0" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">SELLER SIDE</text>
+    <text x="792" y="354" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">SDK + paywall + diagnostics + analytics</text>
+  </g>
+</svg>

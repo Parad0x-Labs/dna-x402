@@ -5,6 +5,8 @@
 ![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
 ![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
 
+![DNA x402 Header](./docs/assets/dna-header.svg)
+
 **Any API can become a paid endpoint. Any agent can quote, pay, verify, and continue in one machine-readable loop.**
 
 **Quote. Pay. Verify. Receipt. Anchor.**
@@ -33,6 +35,8 @@ not_for:
 related_repo:
   privacy_settlement: https://github.com/Parad0x-Labs/Dark-Null-Protocol
 ```
+
+![DNA x402 Proof Snapshot](./docs/assets/dna-proof-card.svg)
 
 ## For AI Agents and Integrators
 
@@ -99,6 +103,8 @@ Parad0x Labs has two separate lanes:
    - Different latency and operational profile
 
 This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path payment system.
+
+![DNA x402 Architecture](./docs/assets/dna-architecture.svg)
 
 ## What ships in this repo
 
