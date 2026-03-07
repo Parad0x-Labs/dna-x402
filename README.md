@@ -1,15 +1,28 @@
-# DNA x402: Payment Rail for Agent Commerce
+# DNA x402: Turn Any API Into Agent-Ready Commerce
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Chain: Solana](https://img.shields.io/badge/Chain-Solana-14F195?style=flat-square)
 ![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
 ![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
 
+**Any API can become a paid endpoint. Any agent can quote, pay, verify, and continue in one machine-readable loop.**
+
 **Quote. Pay. Verify. Receipt. Anchor.**
 
 DNA x402 is Parad0x Labs' payment rail for agent-to-agent and API commerce on Solana. It turns paid endpoints into machine-readable x402 flows with payment verification, signed receipts, optional on-chain anchoring, analytics, and seller tooling.
 
 The active product in this repository is the [`x402/`](./x402) package.
+
+## For AI Agents and Integrators
+
+| If you need... | Use DNA x402 for... |
+|---|---|
+| machine-speed paid API calls | `402 -> pay -> retry -> receipt` |
+| a buyer integration | [`fetchWith402`](./x402/README.md) |
+| a seller/paywall integration | `dnaSeller()` and seller middleware |
+| proof and verification | signed receipts + replay-safe verification |
+| on-chain auditability | `receipt_anchor` and VERIFIED semantics |
+| privacy settlement | **not this repo** - use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) |
 
 ## Why teams use DNA
 
