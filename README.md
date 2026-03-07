@@ -1,62 +1,116 @@
-# DNA x402
+# DNA x402: Payment Rail for Agent Commerce
 
-`dna-x402` is Parad0x Labs' payment rail for agent-to-agent and API commerce on Solana.
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Chain: Solana](https://img.shields.io/badge/Chain-Solana-14F195?style=flat-square)
+![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
+![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
 
-This repository's active product is the `x402/` package: quote, payment verification, receipts, anchoring, analytics, marketplace intelligence, and seller tooling for machine-speed payments. The published npm package is `dna-x402`, and the git remote for this repo is `Parad0x-Labs/dna-x402`.
+**Quote. Pay. Verify. Receipt. Anchor.**
 
-## What This Repo Is
+DNA x402 is Parad0x Labs' payment rail for agent-to-agent and API commerce on Solana. It turns paid endpoints into machine-readable x402 flows with payment verification, signed receipts, optional on-chain anchoring, analytics, and seller tooling.
 
-- Fast x402 payment infrastructure for agents and APIs
-- Solana settlement via netting, SPL transfers, and stream-style access flows
-- Signed receipts plus `receipt_anchor` on-chain anchoring
-- Agent-facing seller SDK, buyer SDK, diagnostics, analytics, and audit tooling
+The active product in this repository is the [`x402/`](./x402) package.
 
-## What This Repo Is Not
+## Why teams use DNA
 
-- Not a mixer repo
-- Not a privacy-pool product landing page
-- Not a zk-SNARK hot-path payment system
+- **Fast x402 payments** - low-latency request gating for agents and APIs
+- **Verified settlement** - payment proof verification, replay protection, and receipt signing
+- **On-chain accountability** - receipts can be anchored through `receipt_anchor`
+- **Developer-ready integration** - seller SDK, buyer SDK, diagnostics, and audit tooling
+- **Market intelligence built in** - pricing, reputation, ranking, badges, and routing signals
 
-The live x402 payment path in this repo does not use zk proofs. It is optimized for low-latency agent payments.
+## Status Snapshot
+
+| Area | Status | Notes |
+|---|---|---|
+| `x402/` package | Active | Canonical product surface |
+| `receipt_anchor` program | Active | Receipt anchoring for VERIFIED semantics |
+| Seller / buyer SDKs | Active | Live in `x402/src/` |
+| Proof / audit docs | Active | See [`docs/`](./docs) |
+| `/agent` front door | Active | See [`site-agent/`](./site-agent) |
+| Privacy / zk settlement | Separate repo | Use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) |
 
 ## Product Boundary
 
 Parad0x Labs has two separate lanes:
 
-1. `DNA x402`
-   Fast payment rail for agent commerce. This is the active product in this repo.
+1. **DNA x402**
+   - Fast payment rail for agent commerce
+   - Optimized for the hot path: `402 -> pay -> retry -> receipt`
+   - No zk-SNARK proving in the live per-request path
 
-2. `Dark Null Protocol`
-   Separate privacy research/product line for private settlement and zk-based flows. That work belongs in its own repo and is not the live `dna-x402` payment path.
+2. **Dark Null Protocol**
+   - Separate privacy settlement protocol
+   - Optimistic-ZK / challenge-window design
+   - Different latency and operational profile
 
-If you are looking for the privacy protocol, treat it as a separate project. Do not read this repo as a privacy-pool or mixer product.
+This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path payment system.
+
+## What ships in this repo
+
+### Payments and Verification
+- x402 HTTP payment flows for APIs and agents
+- Solana settlement via netting, SPL transfers, and stream-style access flows
+- Signed receipts and anchored receipt commitments
+- Replay protection, wrong-recipient checks, wrong-mint checks, underpay checks
+
+### Intelligence and Routing
+- quote comparison and ranking
+- reputation scoring and shop badges
+- surge pricing and limit orders
+- abuse reporting and trust warnings
+- heartbeat telemetry and market snapshots
+
+### Developer Tooling
+- seller SDK and paywall helpers
+- buyer SDK and `fetchWith402`
+- x402 Doctor for dialect detection and fix hints
+- proof/audit runners, stress tests, and benchmarking scripts
 
 ## Start Here
 
-- Product docs: `x402/README.md`
-- Agent quick reference: `x402/AGENTS.md`
-- Proof and audit docs: `docs/`
-- Front-end entry points: `site/` and `site-agent/`
+- Package docs: [`x402/README.md`](./x402/README.md)
+- Agent integration reference: [`x402/AGENTS.md`](./x402/AGENTS.md)
+- Proof and rollout docs: [`docs/`](./docs)
+- Public site: [`site/`](./site)
+- `/agent` UI: [`site-agent/`](./site-agent)
+
+## Quick Start
+
+```bash
+git clone https://github.com/Parad0x-Labs/dna-x402
+cd dna-x402/x402
+npm install
+cp .env.example .env
+npm run build
+npm start
+```
+
+For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.md).
 
 ## Repo Layout
 
-- `x402/`
-  Canonical product package and server for DNA x402
-- `programs/receipt_anchor/`
-  Solana program that anchors payment receipts
-- `site/`
-  Public proof/docs front door
-- `site-agent/`
-  `/agent` onboarding and control-room UI
-- `docs/`
-  Deploy, proof, programmability, and security docs
+| Path | Purpose |
+|---|---|
+| [`x402/`](./x402) | Canonical package, server, SDKs, verifier, diagnostics |
+| [`programs/receipt_anchor/`](./programs/receipt_anchor) | Solana program for receipt anchoring |
+| [`docs/`](./docs) | Proof, security, deploy, and programmability docs |
+| [`site/`](./site) | Public docs/proof front door |
+| [`site-agent/`](./site-agent) | `/agent` onboarding and control-room UI |
+| [`scripts/`](./scripts) | Deployment and ops helpers |
 
-Some older top-level files and directories in this workspace come from prior privacy-protocol experiments. They are not the canonical DNA x402 package surface.
+## Proof and Docs
 
-## Current Status
+- [`docs/PROOF.md`](./docs/PROOF.md)
+- [`docs/FOOTPRINT.md`](./docs/FOOTPRINT.md)
+- [`docs/PROGRAMMABILITY_CONTRACT.md`](./docs/PROGRAMMABILITY_CONTRACT.md)
+- [`docs/X402_COMPAT.md`](./docs/X402_COMPAT.md)
+- [`x402/test-mainnet/`](./x402/test-mainnet)
 
-- `dna-x402@1.0.0` package metadata is present under `x402/package.json`
-- Mainnet reports and stress artifacts are checked in under `x402/test-mainnet/`
-- Current audit/sim/gauntlet tooling lives under `x402/scripts/`
+## Related Repo
 
-For the actual product entry point, open `x402/README.md`.
+- Privacy settlement lane: [`Parad0x-Labs/Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol)
+
+## License
+
+MIT - Parad0x Labs
