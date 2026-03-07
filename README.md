@@ -170,6 +170,7 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 ## Related Repo
 
 - Privacy settlement lane: [`Parad0x-Labs/Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol)
+- Full stack map: [`docs/PARADOX_STACK.md`](./docs/PARADOX_STACK.md)
 
 ## License
 
