@@ -6,6 +6,8 @@
 
 > One payment standard. Every AI agent. No more incompatibility.
 
+DNA x402 is the fast payment rail product. It is separate from Parad0x Labs' privacy work and does not use zk-SNARK proving in the live request path.
+
 **The problem:**
 AI agents can't pay each other. Every framework has its own auth, its own billing, its own API keys. Agents from different ecosystems can't transact. The result? Fragmentation. Agents that should collaborate — can't.
 
@@ -25,7 +27,7 @@ Webhook service                — HMAC-signed async notifications
 Liquefy OpenClaw integration   — payment data → verified .null vaults
 ```
 
-**Mainnet stress test results:**
+**Tracked mainnet stress report:**
 ```
 Agents:              50 (30 netting + 20 real USDC transfer)
 Total trades:        80

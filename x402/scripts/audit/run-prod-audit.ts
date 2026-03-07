@@ -40,7 +40,9 @@ function runCommand(cwd: string, name: string, command: string, args: string[]):
 }
 
 function runUsersPathCheck(repoRoot: string): CheckResult {
-  const result = spawnSync("git", ["grep", "-n", "/Users/"], {
+  const absoluteUsersNeedle = `${path.sep}Users${path.sep}`;
+  const grepArgs = ["grep", "-n", absoluteUsersNeedle];
+  const result = spawnSync("git", grepArgs, {
     cwd: repoRoot,
     env: process.env,
     encoding: "utf8",
@@ -50,8 +52,8 @@ function runUsersPathCheck(repoRoot: string): CheckResult {
     return {
       name: "no_absolute_users_paths",
       ok: true,
-      command: "git grep -n /Users/",
-      details: "no tracked /Users/ paths found",
+      command: `git ${grepArgs.join(" ")}`,
+      details: "no tracked absolute user-home paths found",
       stdout: "",
       stderr: "",
     };
@@ -60,8 +62,8 @@ function runUsersPathCheck(repoRoot: string): CheckResult {
   return {
     name: "no_absolute_users_paths",
     ok: false,
-    command: "git grep -n /Users/",
-    details: "tracked files still contain /Users/ paths",
+    command: `git ${grepArgs.join(" ")}`,
+    details: "tracked files still contain absolute user-home paths",
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? "",
   };

@@ -1,4 +1,4 @@
-# DNA — Dark Null Apex
+# DNA x402
 
 ### The payment rail AI agents actually deserve.
 
@@ -6,9 +6,11 @@
 
 ## What is DNA?
 
-DNA is not another agent framework. Not another wrapper. Not another "AI toolkit."
+DNA x402 is not another agent framework. Not another wrapper. Not another "AI toolkit."
 
-DNA is **infrastructure** — a micropayment protocol built on Solana that lets any AI agent pay any other AI agent for services. Instantly. Programmatically. With cryptographic receipts anchored on-chain.
+DNA x402 is infrastructure: a micropayment protocol built on Solana that lets agents and APIs transact programmatically with signed receipts and optional on-chain anchoring.
+
+This is the fast payment rail. It is not the separate Dark Null privacy protocol, and it does not put zk-SNARK proving in the hot request path.
 
 We built the **x402 protocol** — HTTP 402 (Payment Required) taken seriously for the first time. Your agent calls an API, gets a 402 response with a price quote, pays, gets a signed receipt, keeps working. No wallets to manage. No popups. No humans in the loop.
 
@@ -16,7 +18,7 @@ We built the **x402 protocol** — HTTP 402 (Payment Required) taken seriously f
 
 ## What we just did
 
-We took DNA from codebase to **live on Solana mainnet**. Not testnet. Not devnet. Mainnet.
+We took DNA x402 from codebase to tracked mainnet test reports and package release artifacts.
 
 Here's what happened in the last 48 hours:
 
@@ -113,7 +115,7 @@ Two lines. Your API now earns money.
 
 ## Bottom line
 
-DNA is live. On mainnet. Tested. Receipts on-chain. Fees at 0.3%.
+DNA x402 is the payment rail product: tested, packaged, and backed by checked-in mainnet report artifacts in this repo.
 
 The payment rail for the agent economy isn't coming — it's here.
 

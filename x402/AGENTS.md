@@ -7,6 +7,7 @@
 
 DNA is a payment rail for AI agents. It lets agents pay for API calls using USDC on Solana.
 Three settlement modes: **netting** (off-chain batched, cheapest), **transfer** (real on-chain USDC), **stream** (continuous).
+It is not a privacy-pool or zk-SNARK hot-path product.
 
 **Program**: `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` (Solana mainnet)
 

@@ -1,12 +1,20 @@
-# DNA x402 — Payment Rails for AI Agents
+# DNA x402 — Payment Rail for Agents and APIs
 
-**DNA** (Dark Null Apex) is an open-source payment protocol for AI agents on Solana. It implements the x402 HTTP payment standard: any API can require payment, and any AI agent can pay — programmatically, with no human in the loop.
+`DNA x402` is Parad0x Labs' x402 payment protocol for Solana. Any API can require payment, and any agent can pay programmatically with quote, proof, receipt, and optional on-chain anchoring.
 
 **Program**: [`9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`](https://solscan.io/account/9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF)
 
 ## Why DNA
 
 AI agents need to pay for things: inference, storage, data, compute. Current options are API keys (no metering), credit cards (no agents), or crypto wallets (too manual). DNA solves this with a single SDK that handles quoting, payment, verification, and receipts — from $0.00001 to $100+ per call.
+
+## What This Package Is Not
+
+- Not a mixer
+- Not a privacy pool
+- Not a zk-SNARK payment hot path
+
+Privacy-oriented Dark Null work is a separate product line. The live DNA x402 request path is optimized for fast payments and does not require zk proof generation per call.
 
 ## Features
 
@@ -237,9 +245,9 @@ Real-time analytics on every trade flowing through DNA:
 
 Agents use this to shop smart — compare providers, find deals, track trends, and make data-driven purchasing decisions. All programmatic, no human needed.
 
-## Mainnet Test Results
+## Historical Mainnet Reports
 
-50-agent stress test on Solana mainnet:
+This repo includes checked-in mainnet test artifacts for the receipt-anchor and payment rail flows. Summary from the tracked 50-agent stress report:
 
 | Metric | Result |
 |--------|--------|

@@ -12,7 +12,7 @@ import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, cre
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE = "http://localhost:8080";
-const HELIUS = "https://mainnet.helius-rpc.com/?api-key=449f0e29-3a81-401c-a5ce-2b4915f457c3";
+const HELIUS = process.env.HELIUS_RPC || process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
 const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 const DEPLOYER_KP_PATH = path.join(__dirname, "..", "..", "deployer_wallet.json");
 const REPORT_PATH = path.join(__dirname, "MAYHEM_50_REPORT.md");
