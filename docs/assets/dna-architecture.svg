@@ -1,0 +1,33 @@
+<svg width="1280" height="360" viewBox="0 0 1280 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="360" rx="24" fill="#07131C"/>
+  <text x="52" y="54" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">How DNA x402 Fits Together</text>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="54" y="120" width="190" height="128" rx="18" fill="#0D1D29" stroke="#154B63"/>
+    <text x="88" y="166" fill="#8ED6E7" font-size="18" font-weight="700">BUYER AGENT</text>
+    <text x="88" y="202" fill="white" font-size="28" font-weight="800">request + pay</text>
+
+    <rect x="302" y="120" width="210" height="128" rx="18" fill="#0D1D29" stroke="#154B63"/>
+    <text x="334" y="166" fill="#8ED6E7" font-size="18" font-weight="700">SELLER API</text>
+    <text x="334" y="202" fill="white" font-size="28" font-weight="800">402 paywall</text>
+
+    <rect x="570" y="96" width="240" height="176" rx="18" fill="#102130" stroke="#1FD6B8"/>
+    <text x="606" y="144" fill="#9EF4E2" font-size="18" font-weight="700">DNA x402 CORE</text>
+    <text x="606" y="182" fill="white" font-size="28" font-weight="800">verify + receipt</text>
+    <text x="606" y="218" fill="#A8D0DF" font-size="20">compat layer, replay store,</text>
+    <text x="606" y="244" fill="#A8D0DF" font-size="20">doctor, audit log</text>
+
+    <rect x="868" y="120" width="166" height="128" rx="18" fill="#0D1D29" stroke="#154B63"/>
+    <text x="895" y="166" fill="#8ED6E7" font-size="18" font-weight="700">RECEIPTS</text>
+    <text x="895" y="202" fill="white" font-size="28" font-weight="800">FAST tier</text>
+
+    <rect x="1092" y="120" width="140" height="128" rx="18" fill="#0D1D29" stroke="#154B63"/>
+    <text x="1118" y="166" fill="#8ED6E7" font-size="18" font-weight="700">ANCHOR</text>
+    <text x="1118" y="202" fill="white" font-size="28" font-weight="800">VERIFIED</text>
+
+    <path d="M244 184H302" stroke="#66C7DD" stroke-width="4" stroke-linecap="round"/>
+    <path d="M512 184H570" stroke="#66C7DD" stroke-width="4" stroke-linecap="round"/>
+    <path d="M810 184H868" stroke="#66C7DD" stroke-width="4" stroke-linecap="round"/>
+    <path d="M1034 184H1092" stroke="#66C7DD" stroke-width="4" stroke-linecap="round"/>
+    <text x="438" y="300" fill="#9BC8D8" font-size="18">Market intelligence, ranking, badges, and routing sit on top of the verified payment rail.</text>
+  </g>
+</svg>
