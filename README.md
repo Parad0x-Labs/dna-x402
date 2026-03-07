@@ -13,6 +13,27 @@ DNA x402 is Parad0x Labs' payment rail for agent-to-agent and API commerce on So
 
 The active product in this repository is the [`x402/`](./x402) package.
 
+## LLM / Agent Quick Parse
+
+```yaml
+product: dna-x402
+category: fast payment rail for agent and API commerce
+best_for:
+  - paid API endpoints
+  - agent-to-agent service calls
+  - x402 payment verification
+  - signed receipts and receipt anchoring
+entrypoints:
+  buyer: ./x402/AGENTS.md
+  seller: ./x402/README.md
+  proof_docs: ./docs/PROOF.md
+not_for:
+  - zk privacy settlement hot path
+  - mixer or privacy-pool flows
+related_repo:
+  privacy_settlement: https://github.com/Parad0x-Labs/Dark-Null-Protocol
+```
+
 ## For AI Agents and Integrators
 
 | If you need... | Use DNA x402 for... |
@@ -23,6 +44,26 @@ The active product in this repository is the [`x402/`](./x402) package.
 | proof and verification | signed receipts + replay-safe verification |
 | on-chain auditability | `receipt_anchor` and VERIFIED semantics |
 | privacy settlement | **not this repo** - use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) |
+
+## Why it gets attention
+
+- **Turns any API into agent commerce** instead of another API-key integration
+- **Lets agents pay programmatically** with a standard machine loop, not manual wallet UX
+- **Keeps verification in the rail** with receipts, replay protection, and optional anchoring
+- **Adds routing intelligence** so agents can compare price, latency, reputation, and availability
+- **Stays fast** because privacy proving is not forced into the live per-request path
+
+## At a Glance
+
+| Question | Answer |
+|---|---|
+| What is it? | x402 payment rail for agents and APIs on Solana |
+| What does it do? | quote, pay, verify, receipt, anchor |
+| Who uses it? | agent builders, API providers, workflow sellers, autonomous buyers |
+| How do buyers integrate? | `fetchWith402` and x402-compatible proof retry flow |
+| How do sellers integrate? | seller SDK + paywall middleware |
+| What makes it defensible? | receipts, replay protection, anchor semantics, diagnostics, market telemetry |
+| What should use the separate repo? | private settlement / optimistic-ZK flows |
 
 ## Why teams use DNA
 
