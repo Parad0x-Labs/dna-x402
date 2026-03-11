@@ -21,6 +21,10 @@
       "types": "./dist/sdk/seller.d.ts",
       "default": "./dist/sdk/seller.js"
     },
+    "./guard": {
+      "types": "./dist/sdk/guard.d.ts",
+      "default": "./dist/sdk/guard.js"
+    },
     "./server": "./dist/server.js",
     "./paywall": "./dist/sdk/paywall.js",
     "./webhook": "./dist/sdk/webhook.js",
@@ -73,6 +77,7 @@
     "alt:extend": "tsx scripts/alt/extend-alt.ts",
     "alt:show": "tsx scripts/alt/show-alt.ts",
     "test": "vitest run",
+    "test:guard": "vitest run tests/guard*.test.ts tests/liquefy.bridge.test.ts",
     "test:market": "vitest run tests/market*.test.ts",
     "test:wow": "vitest run tests/market*.test.ts tests/openapi.import.test.ts",
     "seed:market": "tsx src/market/seed.ts",

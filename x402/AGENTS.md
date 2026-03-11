@@ -172,11 +172,54 @@ await webhooks.deliver("https://your-agent/webhook", {
 ```typescript
 import { AuditLogger } from "dna-x402";
 
-const audit = new AuditLogger({ logPath: "./audit.ndjson" });
+const audit = new AuditLogger({ filePath: "./audit.ndjson" });
 audit.record({ kind: "PAYMENT_VERIFIED", amountAtomic: "5000" });
 
 const recent = audit.query({ kind: "PAYMENT_VERIFIED", limit: 100 });
 const ndjson = audit.exportNdjson();
+```
+
+## DNA Guard
+
+Use this when the user wants risk controls, provider scoring, or receipt/dispute telemetry without changing the on-chain rail.
+
+```typescript
+import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "dna-x402";
+
+const pay = dnaSeller(app, { recipient: "YOUR_SOLANA_WALLET" });
+const audit = new AuditLogger({ filePath: "./audit-guard.ndjson" });
+const guard = createDnaGuard({ auditLog: audit });
+
+app.use("/guard", guard.router());
+app.get("/api/inference", dnaPrice("5000", pay), guard.protect({
+  providerId: "seller-a",
+  endpointId: "inference",
+  amountAtomic: "5000",
+  spendCeilings: { buyerAtomic: "15000" },
+  failMode: "fail-open",
+}), handler);
+```
+
+Guard routes:
+- `GET /guard/summary`
+- `GET /guard/leaderboard`
+- `GET /guard/reputation/:providerId`
+- `GET /guard/compare?providers=a,b`
+- `GET/POST /guard/receipt/:receiptId/verify`
+
+Main server flags:
+
+```bash
+DNA_GUARD_ENABLED=1
+DNA_GUARD_FAIL_MODE=fail-closed
+DNA_GUARD_SNAPSHOT_PATH=./state/dna-guard.json
+DNA_GUARD_BUYER_CEILING_ATOMIC=500000
+```
+
+Test it with:
+
+```bash
+npm run test:guard
 ```
 
 ## Liquefy Bridge (Vault Payment Data)

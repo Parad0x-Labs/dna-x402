@@ -24,7 +24,7 @@ const RECIPIENT = process.env.RECIPIENT ?? "7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b
 const LIQUEFY_PATH = process.env.LIQUEFY_PATH ?? "/path/to/liquefy";
 const VAULT_PATH = process.env.VAULT_PATH ?? "./vault";
 
-const audit = new AuditLogger({ logPath: "./audit-liquefy.ndjson" });
+const audit = new AuditLogger({ filePath: "./audit-liquefy.ndjson" });
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live/dna-payments",

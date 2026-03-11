@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { z } from "zod";
 import { FeePolicy, parseAtomic } from "./feePolicy.js";
+import type { DnaGuardSpendCeilings } from "./guard/engine.js";
 
 const DEFAULT_USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
@@ -48,7 +49,25 @@ const schema = z.object({
   ADMIN_SECRET: z.string().optional(),
   AUDIT_LOG_PATH: z.string().optional(),
   WEBHOOK_SIGNING_SECRET: z.string().optional(),
+  DNA_GUARD_ENABLED: z.string().optional(),
+  DNA_GUARD_FAIL_MODE: z.enum(["fail-open", "fail-closed"]).default("fail-open"),
+  DNA_GUARD_WINDOW_MS: z.coerce.number().int().positive().default(86_400_000),
+  DNA_GUARD_SNAPSHOT_PATH: z.string().optional(),
+  DNA_GUARD_BUYER_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  DNA_GUARD_WALLET_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  DNA_GUARD_AGENT_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  DNA_GUARD_API_KEY_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
 });
+
+export type X402GuardFailMode = "fail-open" | "fail-closed";
+
+export interface X402GuardConfig {
+  enabled: boolean;
+  failMode: X402GuardFailMode;
+  windowMs: number;
+  snapshotPath?: string;
+  spendCeilings: DnaGuardSpendCeilings;
+}
 
 export interface X402Config {
   cluster?: string;
@@ -89,6 +108,7 @@ export interface X402Config {
   adminSecret?: string;
   auditLogPath?: string;
   webhookSigningSecret?: string;
+  dnaGuard?: X402GuardConfig;
 }
 
 function parseBooleanEnv(value: string | undefined, fallback = false): boolean {
@@ -156,5 +176,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
     adminSecret: parsed.ADMIN_SECRET,
     auditLogPath: parsed.AUDIT_LOG_PATH,
     webhookSigningSecret: parsed.WEBHOOK_SIGNING_SECRET,
+    dnaGuard: {
+      enabled: parseBooleanEnv(parsed.DNA_GUARD_ENABLED, false),
+      failMode: parsed.DNA_GUARD_FAIL_MODE,
+      windowMs: parsed.DNA_GUARD_WINDOW_MS,
+      snapshotPath: parsed.DNA_GUARD_SNAPSHOT_PATH,
+      spendCeilings: {
+        buyerAtomic: parsed.DNA_GUARD_BUYER_CEILING_ATOMIC,
+        walletAtomic: parsed.DNA_GUARD_WALLET_CEILING_ATOMIC,
+        agentAtomic: parsed.DNA_GUARD_AGENT_CEILING_ATOMIC,
+        apiKeyAtomic: parsed.DNA_GUARD_API_KEY_CEILING_ATOMIC,
+      },
+    },
   };
 }
