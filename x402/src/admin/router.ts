@@ -44,6 +44,7 @@ export function createAdminRouter(deps: AdminRouterDeps): express.Router {
     const marketShops = context.market.registry.list().length;
     const marketEvents = context.market.storage.all().length;
     const auditSummary = auditLog.summary();
+    const guardSummary = context.guard?.ledger.summary() ?? null;
     const uptimeMs = Date.now() - new Date(startedAt).getTime();
 
     res.json({
@@ -62,6 +63,7 @@ export function createAdminRouter(deps: AdminRouterDeps): express.Router {
         netting: nettingSnapshot,
         marketShops,
         marketEvents,
+        guard: guardSummary,
       },
       audit24h: auditSummary,
       pauseFlags: {
@@ -80,7 +82,17 @@ export function createAdminRouter(deps: AdminRouterDeps): express.Router {
         },
         anchoringEnabled: Boolean(context.anchoringQueue),
         receiptAnchorProgramId: config.receiptAnchorProgramId ?? null,
+        dnaGuardEnabled: Boolean(context.guard),
       },
+    });
+  });
+
+  router.get("/guard", (_req, res) => {
+    res.json({
+      enabled: Boolean(context.guard),
+      config: config.dnaGuard ?? null,
+      summary: context.guard?.ledger.summary() ?? null,
+      leaderboard: context.guard?.leaderboard(10) ?? [],
     });
   });
 

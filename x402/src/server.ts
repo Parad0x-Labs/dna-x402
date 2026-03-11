@@ -5,7 +5,7 @@ import express from "express";
 import cors from "cors";
 import { z } from "zod";
 import { Connection } from "@solana/web3.js";
-import { X402Config, loadConfig } from "./config.js";
+import { X402Config, X402GuardConfig, loadConfig } from "./config.js";
 import { calculateFeeAtomic, calculateTotalAtomic, parseAtomic, shouldUseNetting, toAtomicString } from "./feePolicy.js";
 import { NettingLedger } from "./nettingLedger.js";
 import { PaymentVerifier, SolanaPaymentVerifier } from "./paymentVerifier.js";
@@ -31,6 +31,8 @@ import { logError, logRequestHeaders } from "./logging/logger.js";
 import { AuditLogger } from "./logging/audit.js";
 import { WebhookService } from "./sdk/webhook.js";
 import { createAdminRouter } from "./admin/router.js";
+import { createDnaGuard, DnaGuardController } from "./sdk/guard.js";
+import { createFileBackedDnaGuardLedger } from "./guard/storage.js";
 import {
   CommitRecord,
   PaymentAccept,
@@ -52,6 +54,7 @@ interface CreateAppDeps {
   replayStore?: ReplayStore;
   auditLog?: AuditLogger;
   webhookService?: WebhookService;
+  guard?: DnaGuardController;
 }
 
 export interface X402AppContext {
@@ -65,6 +68,7 @@ export interface X402AppContext {
   config: X402Config;
   auditLog: AuditLogger;
   webhookService: WebhookService;
+  guard?: DnaGuardController;
 }
 
 const quoteQuerySchema = z.object({
@@ -331,12 +335,45 @@ function createFixedWindowRateLimiter(maxRequests: number, windowMs: number) {
   };
 }
 
+function resolveGuardConfig(config: X402Config): X402GuardConfig {
+  return config.dnaGuard ?? {
+    enabled: false,
+    failMode: "fail-open",
+    windowMs: 86_400_000,
+    spendCeilings: {},
+  };
+}
+
+function guardActorFromRequest(req: express.Request): {
+  buyerId?: string;
+  walletAddress?: string;
+  agentId?: string;
+  apiKeyId?: string;
+} {
+  return {
+    buyerId: req.header("x-dna-buyer-id") ?? undefined,
+    walletAddress: req.header("x-dna-wallet") ?? undefined,
+    agentId: req.header("x-dna-agent-id") ?? undefined,
+    apiKeyId: req.header("x-dna-api-key-id") ?? undefined,
+  };
+}
+
+function hasGuardSpendCeilings(config: X402GuardConfig): boolean {
+  return Boolean(
+    config.spendCeilings.buyerAtomic
+    || config.spendCeilings.walletAtomic
+    || config.spendCeilings.agentAtomic
+    || config.spendCeilings.apiKeyAtomic,
+  );
+}
+
 export function createX402App(config: X402Config = loadConfig(), deps: CreateAppDeps = {}): {
   app: express.Express;
   context: X402AppContext;
 } {
   const app = express();
   const now = deps.now ?? (() => new Date());
+  const guardConfig = resolveGuardConfig(config);
 
   const connection = new Connection(config.solanaRpcUrl, "confirmed");
   const paymentVerifier = deps.paymentVerifier ?? new SolanaPaymentVerifier(connection);
@@ -363,6 +400,16 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
     },
   });
+  const guard = deps.guard ?? (guardConfig.enabled
+    ? createDnaGuard({
+      auditLog,
+      ledger: createFileBackedDnaGuardLedger({
+        snapshotPath: guardConfig.snapshotPath,
+        windowMs: guardConfig.windowMs,
+        now,
+      }),
+    })
+    : undefined);
   const { router: marketRouter, context: market } = createMarketRouter({
     now,
     signer: receiptSigner,
@@ -387,6 +434,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     config,
     auditLog,
     webhookService,
+    guard,
   };
   const auditFixturesEnabled = Boolean(config.auditFixtures) && isDevnetCluster(config);
   if (config.gauntletMode && !isDevnetCluster(config)) {
@@ -401,6 +449,174 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       market.recordEvent(event);
     } catch {
       // Ignore analytics failures to keep payment path hot.
+    }
+  }
+
+  function recordGuardAudit(
+    kind:
+    | "GUARD_SPEND_BLOCKED"
+    | "GUARD_REPLAY_ALERT"
+    | "GUARD_VALIDATION_FAILED"
+    | "GUARD_DISPUTE_TAGGED"
+    | "GUARD_RECEIPT_VERIFIED"
+    | "GUARD_RECEIPT_INVALID"
+    | "GUARD_FAIL_OPEN"
+    | "GUARD_RUNTIME_ERROR",
+    input: {
+      req?: express.Request;
+      endpointId?: string;
+      receiptId?: string;
+      amountAtomic?: string;
+      reason?: string;
+      meta?: Record<string, unknown>;
+    },
+  ): void {
+    const actor = input.req ? guardActorFromRequest(input.req) : undefined;
+    auditLog.record({
+      kind,
+      traceId: input.req?.traceId,
+      actor: actor?.buyerId ?? actor?.agentId ?? actor?.walletAddress ?? actor?.apiKeyId,
+      shopId: CORE_SHOP_ID,
+      endpointId: input.endpointId,
+      receiptId: input.receiptId,
+      amountAtomic: input.amountAtomic,
+      errorMessage: input.reason,
+      meta: input.meta,
+    });
+  }
+
+  function enforceGuardSpend(
+    req: express.Request,
+    res: express.Response,
+    input: {
+      resource: string;
+      amountAtomic: string;
+      stage: "quote" | "finalize" | "compat";
+    },
+  ): boolean {
+    if (!guard || !hasGuardSpendCeilings(guardConfig)) {
+      return true;
+    }
+
+    const endpointId = endpointIdForResource(input.resource);
+    try {
+      const decision = guard.ledger.checkSpend(
+        guardActorFromRequest(req),
+        input.amountAtomic,
+        guardConfig.spendCeilings,
+        now(),
+      );
+      if (decision.ok) {
+        return true;
+      }
+      guard.ledger.recordSpendBlocked(CORE_SHOP_ID, endpointId);
+      recordGuardAudit("GUARD_SPEND_BLOCKED", {
+        req,
+        endpointId,
+        amountAtomic: input.amountAtomic,
+        reason: "spend_ceiling_exceeded",
+        meta: {
+          enforced: guardConfig.failMode === "fail-closed",
+          stage: input.stage,
+          blocked: decision.blocked,
+        },
+      });
+      if (guardConfig.failMode === "fail-closed") {
+        res.status(429).json({
+          error: "dna_guard_spend_blocked",
+          blocked: decision.blocked,
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      recordGuardAudit(guardConfig.failMode === "fail-open" ? "GUARD_FAIL_OPEN" : "GUARD_RUNTIME_ERROR", {
+        req,
+        endpointId,
+        amountAtomic: input.amountAtomic,
+        reason: error instanceof Error ? error.message : "guard_runtime_error",
+        meta: { stage: input.stage },
+      });
+      if (guardConfig.failMode === "fail-closed") {
+        res.status(500).json({ error: "dna_guard_runtime_error" });
+        return false;
+      }
+      return true;
+    }
+  }
+
+  function recordGuardReplay(_req: express.Request, resource: string, reason: string): void {
+    if (!guard) {
+      return;
+    }
+    const endpointId = endpointIdForResource(resource);
+    guard.recordReplayAlert({
+      providerId: CORE_SHOP_ID,
+      endpointId,
+      reason,
+    });
+  }
+
+  function recordGuardReceiptVerification(
+    _req: express.Request | undefined,
+    resource: string,
+    receiptId: string,
+    valid: boolean,
+    reason?: string,
+  ): void {
+    if (!guard) {
+      return;
+    }
+    const endpointId = endpointIdForResource(resource);
+    guard.verifyReceipt({
+      providerId: CORE_SHOP_ID,
+      endpointId,
+      receiptId,
+      valid,
+      reason,
+      now: now(),
+    });
+  }
+
+  function recordGuardDelivery(
+    resource: string,
+    latencyMs: number,
+    statusCode: number,
+    receiptId?: string,
+    qualityAccepted?: boolean,
+  ): void {
+    if (!guard) {
+      return;
+    }
+    const endpointId = endpointIdForResource(resource);
+    guard.ledger.recordDelivery({
+      providerId: CORE_SHOP_ID,
+      endpointId,
+      latencyMs,
+      statusCode,
+      receiptId,
+      qualityAccepted,
+    });
+    if (receiptId && qualityAccepted === false) {
+      recordGuardAudit("GUARD_VALIDATION_FAILED", {
+        endpointId,
+        receiptId,
+        reason: "non_conforming_core_response",
+      });
+      guard.tagDispute({
+        providerId: CORE_SHOP_ID,
+        endpointId,
+        receiptId,
+        reason: "non_conforming_core_response",
+      });
+    }
+    if (receiptId && statusCode >= 500) {
+      guard.tagDispute({
+        providerId: CORE_SHOP_ID,
+        endpointId,
+        receiptId,
+        reason: `delivery_failed_${statusCode}`,
+      });
     }
   }
 
@@ -445,6 +661,11 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return parseAtomic(explicitAtomic);
     }
     return DEFAULT_RESOURCE_PRICING[resource] ?? DEFAULT_RESOURCE_PRICING["/resource"];
+  }
+
+  function getTotalAtomicForResource(resource: string, explicitAtomic?: string): string {
+    const amountAtomic = getAmountForResource(resource, explicitAtomic);
+    return toAtomicString(calculateTotalAtomic(config.feePolicy, amountAtomic));
   }
 
   async function verifyPaymentForQuote(quote: Quote, paymentProof: PaymentProof): Promise<{
@@ -707,6 +928,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       memoHash: hashHex(JSON.stringify(normalized.required)),
     };
 
+    if (!enforceGuardSpend(req, res, {
+      resource,
+      amountAtomic: quote.totalAtomic,
+      stage: "compat",
+    })) {
+      return { handled: true };
+    }
+
     const paymentProof = proofToPaymentProof(proof, normalized.required);
     const verification = await verifyPaymentForQuote(quote, paymentProof);
     if (!verification.ok) {
@@ -729,6 +958,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         mint: quote.mint,
       });
       if (!replayStore.consume(key, now().getTime())) {
+        recordGuardReplay(req, resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
           dialectDetected: normalized.style,
           paymentRequired: normalized.required,
@@ -763,6 +993,10 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       responseDigest,
       shopId: CORE_SHOP_ID,
     });
+    const receiptValid = verifySignedReceipt(receipt);
+    guard?.ledger.commitSpend(guardActorFromRequest(req), quote.totalAtomic, now());
+    recordGuardReceiptVerification(req, resource, receipt.payload.receiptId, receiptValid, receiptValid ? undefined : "receipt_signature_invalid");
+    recordGuardDelivery(resource, 0, 200, receipt.payload.receiptId, receiptValid);
 
     recordMarketEvent({
       type: "PAYMENT_VERIFIED",
@@ -777,7 +1011,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       buyerCommitment32B: receipt.payload.payerCommitment32B,
       anchored: false,
       verificationTier: "FAST",
-      receiptValid: verifySignedReceipt(receipt),
+      receiptValid,
     });
 
     context.anchoringQueue?.enqueue({
@@ -804,7 +1038,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       anchor32: receipt.payload.payerCommitment32B,
       anchored: false,
       verificationTier: "FAST",
-      receiptValid: verifySignedReceipt(receipt),
+      receiptValid,
     });
 
     const body = {
@@ -833,6 +1067,9 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     adminSecret: config.adminSecret,
   });
   app.use("/admin", adminRouter);
+  if (guard) {
+    app.use("/guard", guard.router());
+  }
 
   auditLog.record({ kind: "CONFIG_LOADED", meta: {
     cluster: config.cluster,
@@ -872,6 +1109,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       runtime: {
         auditFixturesEnabled,
         gauntletMode: Boolean(config.gauntletMode),
+      },
+      guard: {
+        enabled: Boolean(guard),
+        failMode: guardConfig.failMode,
+        windowMs: guardConfig.windowMs,
+        snapshotPath: guardConfig.snapshotPath ?? null,
+        spendCeilings: guardConfig.spendCeilings,
+        summary: guard?.ledger.summary() ?? null,
       },
       anchoring: {
         enabled: Boolean(context.anchoringQueue),
@@ -941,6 +1186,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         auditFixturesEnabled,
         gauntletMode: Boolean(config.gauntletMode),
       },
+      guard: {
+        enabled: Boolean(guard),
+        failMode: guardConfig.failMode,
+        windowMs: guardConfig.windowMs,
+        snapshotPath: guardConfig.snapshotPath ?? null,
+        spendCeilings: guardConfig.spendCeilings,
+        summary: guard?.ledger.summary() ?? null,
+      },
     });
   });
 
@@ -1007,6 +1260,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return;
     }
 
+    if (!enforceGuardSpend(req, res, {
+      resource: parsed.data.resource,
+      amountAtomic: getTotalAtomicForResource(parsed.data.resource, parsed.data.amountAtomic),
+      stage: "quote",
+    })) {
+      return;
+    }
+
     const quote = issueQuote(parsed.data.resource, parsed.data.amountAtomic);
     res.json(toQuoteResponse(quote));
   });
@@ -1026,6 +1287,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
     if (isExpired(quote.expiresAt, now())) {
       res.status(410).json({ error: "quote expired" });
+      return;
+    }
+
+    if (!enforceGuardSpend(req, res, {
+      resource: quote.resource,
+      amountAtomic: quote.totalAtomic,
+      stage: "finalize",
+    })) {
       return;
     }
 
@@ -1117,6 +1386,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         mint: quote.mint,
       });
       if (!replayStore.consume(replayKey, now().getTime())) {
+        recordGuardReplay(req, quote.resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: paymentProof.settlement },
         }), {
@@ -1154,6 +1424,8 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       shopId: CORE_SHOP_ID,
     });
     const receiptValid = verifySignedReceipt(signedReceipt);
+    guard?.ledger.commitSpend(guardActorFromRequest(req), quote.totalAtomic, now());
+    recordGuardReceiptVerification(req, quote.resource, signedReceipt.payload.receiptId, receiptValid, receiptValid ? undefined : "receipt_signature_invalid");
     recordMarketEvent({
       type: "PAYMENT_VERIFIED",
       shopId: CORE_SHOP_ID,
@@ -1300,9 +1572,11 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
           const quote = quotes.get(commit.quoteId);
           const receipt = receipts.get(commit.receiptId);
 
-          if (quote && receipt && quote.resource === fixture.path) {
-            const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
-            recordMarketEvent({
+        if (quote && receipt && quote.resource === fixture.path) {
+          const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+          const qualityAccepted = verifySignedReceipt(receipt);
+          recordGuardDelivery(fixture.path, Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
+          recordMarketEvent({
               type: "REQUEST_FULFILLED",
               shopId: CORE_SHOP_ID,
               endpointId: endpointIdForResource(quote.resource),
@@ -1341,6 +1615,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
       void handle().then((handled) => {
         if (handled) {
+          return;
+        }
+
+        if (!enforceGuardSpend(req, res, {
+          resource: fixture.path,
+          amountAtomic: getTotalAtomicForResource(fixture.path),
+          stage: "quote",
+        })) {
           return;
         }
 
@@ -1413,6 +1695,8 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
         if (quote && receipt && quote.resource === "/resource") {
           const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+          const qualityAccepted = verifySignedReceipt(receipt);
+          recordGuardDelivery("/resource", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
           recordMarketEvent({
             type: "REQUEST_FULFILLED",
             shopId: CORE_SHOP_ID,
@@ -1428,8 +1712,8 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
             buyerCommitment32B: commit.payerCommitment32B,
             anchored,
             verificationTier: anchored ? "VERIFIED" : "FAST",
-            receiptValid: verifySignedReceipt(receipt),
-          });
+              receiptValid: verifySignedReceipt(receipt),
+            });
           res.json({
             ok: true,
             data: "resource payload",
@@ -1442,6 +1726,13 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
     void handle().then((handled) => {
       if (handled) {
+        return;
+      }
+      if (!enforceGuardSpend(req, res, {
+        resource: "/resource",
+        amountAtomic: getTotalAtomicForResource("/resource"),
+        stage: "quote",
+      })) {
         return;
       }
       const quote = issueQuote("/resource");
@@ -1481,6 +1772,8 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         const receipt = receipts.get(commit.receiptId);
         if (quote && receipt && quote.resource === "/inference") {
           const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+          const qualityAccepted = verifySignedReceipt(receipt);
+          recordGuardDelivery("/inference", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
           recordMarketEvent({
             type: "REQUEST_FULFILLED",
             shopId: CORE_SHOP_ID,
@@ -1510,6 +1803,13 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
     void handle().then((handled) => {
       if (handled) {
+        return;
+      }
+      if (!enforceGuardSpend(req, res, {
+        resource: "/inference",
+        amountAtomic: getTotalAtomicForResource("/inference"),
+        stage: "quote",
+      })) {
         return;
       }
       const quote = issueQuote("/inference");

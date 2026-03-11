@@ -42,6 +42,28 @@ export type { PaywallOptions } from "./paywall.js";
 export { dnaSeller, dnaPrice } from "./seller.js";
 export type { DnaSellerOptions } from "./seller.js";
 
+export {
+  createDnaGuard,
+  DnaGuardLedger,
+  createFileBackedDnaGuardLedger,
+  loadDnaGuardSnapshot,
+  persistDnaGuardSnapshot,
+} from "./guard.js";
+export type {
+  DnaGuardActor,
+  DnaGuardSpendCeilings,
+  DnaGuardSpendDecision,
+  DnaGuardProviderSnapshot,
+  DnaGuardReceiptStatus,
+  DnaGuardFailMode,
+  DnaGuardValidationResult,
+  DnaGuardBestQuoteResult,
+  DnaGuardController,
+  DnaGuardControllerOptions,
+  DnaGuardMiddlewareOptions,
+  DnaGuardFileStoreOptions,
+} from "./guard.js";
+
 export { WebhookService } from "./webhook.js";
 export type { WebhookPayload, WebhookDeliveryResult, WebhookServiceOptions } from "./webhook.js";
 

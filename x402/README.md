@@ -39,6 +39,7 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 
 ### Developer Tools
 - **Seller SDK**: Self-contained `dnaSeller()` — no separate server needed, 3 lines to sell
+- **DNA Guard**: Fail-open/fail-closed middleware for spend ceilings, replay alerts, quality validation, receipt verification logs, and provider scoring
 - **x402 Doctor**: Diagnostic tool that detects x402 dialects (Coinbase, Memeputer, generic), identifies missing headers, suggests fixes
 - **Tool catalog**: Cost estimation, balance coverage, projected spend based on usage patterns
 - **25+ structured error codes**: Every error returns hints, trace IDs, docs URLs, and redacted payloads
@@ -103,6 +104,45 @@ app.listen(3000);
 
 That's it. No separate server. Clone, set wallet, set prices, run. Any x402-compatible agent can discover and pay your endpoints automatically. See `examples/sell-compute.ts` for a full working example.
 
+### Add DNA Guard (Spend Caps + Quality + Reputation API)
+
+```typescript
+import express from "express";
+import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "dna-x402";
+
+const app = express();
+app.use(express.json());
+
+const pay = dnaSeller(app, { recipient: "YOUR_SOLANA_WALLET" });
+const audit = new AuditLogger({ filePath: "./audit-guard.ndjson" });
+const guard = createDnaGuard({ auditLog: audit });
+
+app.use("/guard", guard.router());
+
+app.get("/api/inference", dnaPrice("5000", pay), guard.protect({
+  providerId: "gpu-cluster-a",
+  endpointId: "inference",
+  amountAtomic: "5000",
+  spendCeilings: { buyerAtomic: "15000", walletAtomic: "25000" },
+  qualityValidator: (body) => ({
+    ok: typeof (body as { result?: unknown }).result === "string",
+    reason: "missing_result_string",
+  }),
+  failMode: "fail-open",
+}), (_req, res) => {
+  res.json({ result: "inference output" });
+});
+```
+
+That gives you:
+- spend ceilings per buyer / wallet / agent / api key
+- replay anomaly logging
+- quality validation and dispute tagging
+- `/guard/leaderboard`, `/guard/reputation/:providerId`, `/guard/compare`, `/guard/quote/best`
+- receipt verification endpoints at `/guard/receipt/:receiptId/verify`
+
+Use `examples/dna-guard-seller.ts` for the full runnable example.
+
 ## Settlement Modes
 
 | Mode | Per-TX Solana Fee | Best For | How It Works |
@@ -144,6 +184,7 @@ x402/
 │   ├── streaming.ts           # Streamflow integration for streaming payments
 │   ├── sdk/
 │   │   ├── seller.ts          # Self-contained seller SDK (start here)
+│   │   ├── guard.ts           # DNA Guard middleware + provider reputation API
 │   │   ├── paywall.ts         # Express payment middleware
 │   │   └── webhook.ts         # HMAC webhook delivery with retries
 │   ├── market/
@@ -178,6 +219,7 @@ x402/
 │   └── middleware/             # HTTPS enforcement, trace ID injection
 ├── examples/
 │   ├── sell-compute.ts        # Sell your compute in 10 lines (start here)
+│   ├── dna-guard-seller.ts    # Add spend caps, quality checks, and reputation APIs
 │   ├── buyer-agent.ts         # Agent paying for APIs
 │   ├── seller-api.ts          # API accepting payments (advanced)
 │   └── liquefy-gated-vault.ts # Liquefy + DNA integration
@@ -198,6 +240,45 @@ npm run build
 npm start
 ```
 
+## DNA Guard Commands
+
+```bash
+npm run test:guard
+npx tsx examples/dna-guard-seller.ts
+```
+
+Main x402 server integration is now built in behind config flags. When `DNA_GUARD_ENABLED=1`, `createX402App()` mounts `/guard`, enforces spend ceilings during quote/finalize flows, records receipt verification, and persists ledger state if `DNA_GUARD_SNAPSHOT_PATH` is set.
+
+```bash
+DNA_GUARD_ENABLED=1
+DNA_GUARD_FAIL_MODE=fail-closed
+DNA_GUARD_SNAPSHOT_PATH=./state/dna-guard.json
+DNA_GUARD_BUYER_CEILING_ATOMIC=500000
+DNA_GUARD_WALLET_CEILING_ATOMIC=1000000
+```
+
+For custom servers, you can also use the file-backed ledger helper directly:
+
+```typescript
+import { createDnaGuard, createFileBackedDnaGuardLedger } from "dna-x402";
+
+const ledger = createFileBackedDnaGuardLedger({
+  snapshotPath: "./state/dna-guard.json",
+  windowMs: 86_400_000,
+});
+const guard = createDnaGuard({ ledger });
+```
+
+Key routes after mounting `app.use("/guard", guard.router())`:
+- `GET /guard/summary`
+- `GET /guard/leaderboard`
+- `GET /guard/score/:providerId`
+- `GET /guard/reputation/:providerId`
+- `GET /guard/compare?providers=provider-a,provider-b`
+- `GET /guard/quote/best?providers=provider-a,provider-b`
+- `GET /guard/receipt/:receiptId/verify`
+- `POST /guard/receipt/:receiptId/verify`
+
 ## Liquefy Integration
 
 DNA integrates with [Liquefy](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) for archiving payment data into verified `.null` vaults.
@@ -212,6 +293,13 @@ curl -s http://localhost:8080/admin/audit/export | \
 # Pack with Liquefy
 python tools/tracevault_pack.py ./vault-staging/run-001 --org dna --out ./vault/run-001
 ```
+
+DNA Guard audit events archive through the same bridge, including:
+- spend blocks
+- replay alerts
+- validation failures and disputes
+- receipt verified / invalid states
+- fail-open and runtime-error signals
 
 ### Live Sidecar (Auto-Archive)
 
