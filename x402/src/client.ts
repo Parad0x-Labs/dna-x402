@@ -3,7 +3,13 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
-import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "./receipts.js";
+import {
+  computeRequestDigest,
+  computeResponseDigest,
+  decodeReceiptHeader,
+  RECEIPT_HEADER_NAME,
+  verifySignedReceipt,
+} from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
@@ -114,6 +120,39 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+async function computeDeliveredResponseDigest(response: Response): Promise<string | undefined> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    let payload: unknown;
+    try {
+      payload = await response.clone().json();
+    } catch {
+      return undefined;
+    }
+    if (isJsonObject(payload)) {
+      const businessBody = { ...payload };
+      delete businessBody.receipt;
+      return computeResponseDigest({
+        status: response.status,
+        body: businessBody,
+      });
+    }
+    return computeResponseDigest({
+      status: response.status,
+      body: payload,
+    });
+  }
+
+  try {
+    return computeResponseDigest({
+      status: response.status,
+      body: await response.clone().text(),
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 async function assertDeliveredResponseIntegrity(
   response: Response,
   receipt: SignedReceipt,
@@ -132,29 +171,10 @@ async function assertDeliveredResponseIntegrity(
     throw new Error("Receipt verification failed: delivered request digest mismatch");
   }
 
-  const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
+  const deliveredDigest = await computeDeliveredResponseDigest(response);
+  if (!deliveredDigest) {
     return;
   }
-
-  let payload: unknown;
-  try {
-    payload = await response.clone().json();
-  } catch {
-    return;
-  }
-
-  if (!isJsonObject(payload)) {
-    return;
-  }
-
-  const businessBody = { ...payload };
-  delete businessBody.receipt;
-
-  const deliveredDigest = computeResponseDigest({
-    status: response.status,
-    body: businessBody,
-  });
 
   if (receipt.payload.responseDigest !== deliveredDigest) {
     throw new Error("Receipt verification failed: delivered response digest mismatch");
@@ -218,6 +238,78 @@ async function extractAndVerifyEmbeddedReceipt(
   }
   if (receipt.payload.responseDigest !== responseDigest) {
     throw new Error("Receipt verification failed: embedded response digest mismatch");
+  }
+  if (expected.quoteId && receipt.payload.quoteId !== expected.quoteId) {
+    throw new Error(`Receipt verification failed: quoteId mismatch (${receipt.payload.quoteId})`);
+  }
+  if (expected.commitId && receipt.payload.commitId !== expected.commitId) {
+    throw new Error(`Receipt verification failed: commitId mismatch (${receipt.payload.commitId})`);
+  }
+  if (receipt.payload.recipient !== expected.recipient) {
+    throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
+  }
+  if (receipt.payload.mint !== expected.mint) {
+    throw new Error(`Receipt verification failed: mint mismatch (${receipt.payload.mint})`);
+  }
+  if (receipt.payload.totalAtomic !== expected.totalAtomic) {
+    throw new Error(`Receipt verification failed: totalAtomic mismatch (${receipt.payload.totalAtomic})`);
+  }
+  if (receipt.payload.settlement !== expected.settlement) {
+    throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
+  }
+
+  return receipt;
+}
+
+async function extractAndVerifyHeaderReceipt(
+  response: Response,
+  expected: {
+    requestUrl: string;
+    method: string;
+    body?: unknown;
+    quoteId?: string;
+    commitId?: string;
+    recipient: string;
+    mint: string;
+    totalAtomic: string;
+    settlement: PaymentProof["settlement"];
+  },
+): Promise<SignedReceipt | undefined> {
+  if (!response.ok) {
+    return undefined;
+  }
+
+  const encoded = response.headers.get(RECEIPT_HEADER_NAME);
+  if (!encoded) {
+    return undefined;
+  }
+
+  let receipt: SignedReceipt;
+  try {
+    receipt = decodeReceiptHeader(encoded);
+  } catch {
+    throw new Error("Receipt verification failed: invalid receipt header");
+  }
+
+  if (!verifySignedReceipt(receipt)) {
+    throw new Error("Receipt verification failed: invalid signature or tampered payload");
+  }
+
+  const requestDigest = computeRequestDigest({
+    method: expected.method,
+    path: new URL(expected.requestUrl).pathname,
+    body: expected.body,
+  });
+  const responseDigest = await computeDeliveredResponseDigest(response);
+  if (!responseDigest) {
+    throw new Error("Receipt verification failed: unsupported response type for receipt header");
+  }
+
+  if (receipt.payload.requestDigest !== requestDigest) {
+    throw new Error("Receipt verification failed: header request digest mismatch");
+  }
+  if (receipt.payload.responseDigest !== responseDigest) {
+    throw new Error("Receipt verification failed: header response digest mismatch");
   }
   if (expected.quoteId && receipt.payload.quoteId !== expected.quoteId) {
     throw new Error(`Receipt verification failed: quoteId mismatch (${receipt.payload.quoteId})`);
@@ -516,7 +608,16 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
         ...(parsed402.requiredHeaderValue ? { "PAYMENT-REQUIRED": parsed402.requiredHeaderValue } : {}),
       },
     });
-    const embeddedReceipt = await extractAndVerifyEmbeddedReceipt(retryResponse, {
+    const headerReceipt = await extractAndVerifyHeaderReceipt(retryResponse, {
+      requestUrl: url,
+      method: (fetchOptions.method ?? "GET").toUpperCase(),
+      body: fetchOptions.body,
+      recipient: requirements.quote.recipient,
+      mint: requirements.quote.mint,
+      totalAtomic: requirements.quote.totalAtomic,
+      settlement: paymentProof.settlement,
+    });
+    const embeddedReceipt = headerReceipt ?? await extractAndVerifyEmbeddedReceipt(retryResponse, {
       requestUrl: url,
       method: (fetchOptions.method ?? "GET").toUpperCase(),
       body: fetchOptions.body,
@@ -535,7 +636,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
 
     return {
       response: retryResponse,
-      receipt: embeddedReceipt,
+      receipt: headerReceipt ?? embeddedReceipt,
       paymentRequirements: requirements,
     };
   }
@@ -623,7 +724,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
       "x-dnp-commit-id": commitData.commitId,
     },
   });
-  const embeddedReceipt = await extractAndVerifyEmbeddedReceipt(retryResponse, {
+  const headerReceipt = await extractAndVerifyHeaderReceipt(retryResponse, {
     requestUrl: url,
     method: (fetchOptions.method ?? "GET").toUpperCase(),
     body: fetchOptions.body,
@@ -634,7 +735,18 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     totalAtomic: requirements.quote.totalAtomic,
     settlement: paymentProof.settlement,
   });
-  if (!embeddedReceipt) {
+  const embeddedReceipt = headerReceipt ?? await extractAndVerifyEmbeddedReceipt(retryResponse, {
+    requestUrl: url,
+    method: (fetchOptions.method ?? "GET").toUpperCase(),
+    body: fetchOptions.body,
+    quoteId: requirements.quote.quoteId,
+    commitId: commitData.commitId,
+    recipient: requirements.quote.recipient,
+    mint: requirements.quote.mint,
+    totalAtomic: requirements.quote.totalAtomic,
+    settlement: paymentProof.settlement,
+  });
+  if (!headerReceipt && !embeddedReceipt) {
     await assertDeliveredResponseIntegrity(retryResponse, receipt, {
       url,
       method: (fetchOptions.method ?? "GET").toUpperCase(),
@@ -654,7 +766,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
   return {
     response: retryResponse,
     commitId: commitData.commitId,
-    receipt: embeddedReceipt ?? receipt,
+    receipt: headerReceipt ?? embeddedReceipt ?? receipt,
     paymentRequirements: requirements,
   };
 }

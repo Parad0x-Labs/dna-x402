@@ -2,7 +2,13 @@ import { EventEmitter } from "node:events";
 import express, { type Request, type RequestHandler, type Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import type { PaymentVerifier } from "../src/paymentVerifier.js";
-import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "../src/receipts.js";
+import {
+  computeRequestDigest,
+  computeResponseDigest,
+  decodeReceiptHeader,
+  RECEIPT_HEADER_NAME,
+  verifySignedReceipt,
+} from "../src/receipts.js";
 import type { PaymentProof, Quote } from "../src/types.js";
 import { dnaPaywall } from "../src/sdk/paywall.js";
 
@@ -15,6 +21,19 @@ class FakeVerifier implements PaymentVerifier {
 
   async verify(_quote: Quote, _paymentProof: PaymentProof) {
     return this.response;
+  }
+}
+
+class RecordingVerifier implements PaymentVerifier {
+  lastQuote?: Quote;
+
+  async verify(quote: Quote, _paymentProof: PaymentProof) {
+    this.lastQuote = quote;
+    return {
+      ok: true,
+      settledOnchain: true,
+      txSignature: "tx-ok-paywall-recording-12345678901234567890",
+    } as const;
   }
 }
 
@@ -265,6 +284,44 @@ describe("dnaPaywall", () => {
     expect(onPaymentVerified).toHaveBeenCalledTimes(1);
   });
 
+  it("verifies payments against the quoted protected resource instead of /finalize", async () => {
+    const app = express();
+    const verifier = new RecordingVerifier();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: verifier,
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/resource-check" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "34".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-recording-12345678901234567890",
+        },
+      },
+    }), makeResponse());
+
+    expect(verifier.lastQuote?.resource).toBe("/api/resource-check");
+  });
+
   it("emits a delivery-bound receipt on unlocked JSON responses", async () => {
     const app = express();
     const middleware = dnaPaywall({
@@ -334,6 +391,73 @@ describe("dnaPaywall", () => {
         ok: true,
         data: "delivery output",
       },
+    }));
+    expect(unlockedRes.headers[RECEIPT_HEADER_NAME]).toBeTruthy();
+  });
+
+  it("emits a signed delivery receipt header on unlocked text responses", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-text-12345678901234567890",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/text" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "56".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-text-12345678901234567890",
+        },
+      },
+    }), makeResponse());
+
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/text",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.send("plain paywall output");
+      },
+    );
+
+    expect(unlockedRes.body).toBe("plain paywall output");
+    expect(unlockedRes.headers[RECEIPT_HEADER_NAME]).toBeTruthy();
+    const receipt = decodeReceiptHeader(unlockedRes.headers[RECEIPT_HEADER_NAME] as string);
+    expect(verifySignedReceipt(receipt)).toBe(true);
+    expect(receipt.payload.requestDigest).toBe(computeRequestDigest({
+      method: "GET",
+      path: "/api/text",
+    }));
+    expect(receipt.payload.responseDigest).toBe(computeResponseDigest({
+      status: 200,
+      body: "plain paywall output",
     }));
   });
 

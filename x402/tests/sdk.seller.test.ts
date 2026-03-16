@@ -2,7 +2,13 @@ import { EventEmitter } from "node:events";
 import express, { type Request, type RequestHandler, type Response } from "express";
 import { describe, expect, it } from "vitest";
 import type { PaymentVerifier } from "../src/paymentVerifier.js";
-import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "../src/receipts.js";
+import {
+  computeRequestDigest,
+  computeResponseDigest,
+  decodeReceiptHeader,
+  RECEIPT_HEADER_NAME,
+  verifySignedReceipt,
+} from "../src/receipts.js";
 import type { PaymentProof, Quote } from "../src/types.js";
 import { dnaPrice, dnaSeller } from "../src/sdk/seller.js";
 
@@ -324,6 +330,67 @@ describe("dnaSeller", () => {
         ok: true,
         result: "premium output",
       },
+    }));
+    expect(unlockedRes.headers[RECEIPT_HEADER_NAME]).toBeTruthy();
+  });
+
+  it("emits a signed delivery receipt header on unlocked text responses", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-text-12345678901234567890",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/text", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "88".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-text-12345678901234567890",
+        },
+      },
+    }), makeResponse());
+
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/text",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.send("plain premium output");
+      },
+    );
+
+    expect(unlockedRes.body).toBe("plain premium output");
+    expect(unlockedRes.headers[RECEIPT_HEADER_NAME]).toBeTruthy();
+    const receipt = decodeReceiptHeader(unlockedRes.headers[RECEIPT_HEADER_NAME] as string);
+    expect(verifySignedReceipt(receipt)).toBe(true);
+    expect(receipt.payload.requestDigest).toBe(computeRequestDigest({
+      method: "GET",
+      path: "/api/text",
+    }));
+    expect(receipt.payload.responseDigest).toBe(computeResponseDigest({
+      status: 200,
+      body: "plain premium output",
     }));
   });
 

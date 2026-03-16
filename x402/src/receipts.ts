@@ -3,6 +3,8 @@ import bs58 from "bs58";
 import nacl from "tweetnacl";
 import { SignedReceipt, ReceiptPayload } from "./types.js";
 
+export const RECEIPT_HEADER_NAME = "x-dna-receipt";
+
 function hashHex(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
@@ -98,6 +100,14 @@ export function verifySignedReceipt(receipt: SignedReceipt): boolean {
   const signature = bs58.decode(receipt.signature);
   const publicKey = bs58.decode(receipt.signerPublicKey);
   return nacl.sign.detached.verify(Buffer.from(receipt.receiptHash, "hex"), signature, publicKey);
+}
+
+export function encodeReceiptHeader(receipt: SignedReceipt): string {
+  return Buffer.from(JSON.stringify(receipt), "utf8").toString("base64url");
+}
+
+export function decodeReceiptHeader(value: string): SignedReceipt {
+  return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as SignedReceipt;
 }
 
 export function verifyDetachedSignature(payload: unknown, signature: string, signerPublicKey: string): boolean {

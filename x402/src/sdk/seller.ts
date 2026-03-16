@@ -25,7 +25,14 @@ import * as crypto from "node:crypto";
 import type { Express, NextFunction, Request, Response } from "express";
 import { parseAtomic, toAtomicString } from "../feePolicy.js";
 import { PaymentVerifier } from "../paymentVerifier.js";
-import { computeRequestDigest, computeResponseDigest, normalizeCommitment32B, ReceiptSigner } from "../receipts.js";
+import {
+  computeRequestDigest,
+  computeResponseDigest,
+  encodeReceiptHeader,
+  normalizeCommitment32B,
+  ReceiptSigner,
+  RECEIPT_HEADER_NAME,
+} from "../receipts.js";
 import { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import {
   createPaymentVerifier,
@@ -286,7 +293,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     issueDeliveryReceipt(
       commitId: string,
       req: Request,
-      responseBody: Record<string, unknown>,
+      responseBody: unknown,
       statusCode = 200,
     ): SignedReceipt | undefined {
       const commit = commits.get(commitId);
@@ -386,13 +393,33 @@ export function dnaPrice(
         }
       });
       const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+      let deliveryReceiptIssued = false;
+      const attachDeliveryReceipt = (body: unknown): SignedReceipt | undefined => {
+        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+          return undefined;
+        }
+        const deliveryReceipt = seller.issueDeliveryReceipt(commitId, req, body, res.statusCode || 200);
+        if (deliveryReceipt) {
+          res.setHeader(RECEIPT_HEADER_NAME, encodeReceiptHeader(deliveryReceipt));
+          deliveryReceiptIssued = true;
+        }
+        return deliveryReceipt;
+      };
       res.json = ((body: unknown) => {
         if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
           return originalJson(body);
         }
-        const deliveryReceipt = seller.issueDeliveryReceipt(commitId, req, body, res.statusCode || 200);
+        const deliveryReceipt = attachDeliveryReceipt(body);
         return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
       }) as typeof res.json;
+      res.send = ((body: unknown) => {
+        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400 || typeof body !== "string") {
+          return originalSend(body as never);
+        }
+        attachDeliveryReceipt(body);
+        return originalSend(body as never);
+      }) as typeof res.send;
       next();
       return;
     }
