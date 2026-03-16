@@ -53,6 +53,33 @@ function compat402Response(overrides: Partial<{
   });
 }
 
+function compat402HeaderOnlyResponse(overrides: Partial<{
+  amountAtomic: string;
+  mint: string;
+  recipient: string;
+  memo: string;
+}> = {}): Response {
+  return new Response("", {
+    status: 402,
+    headers: {
+      "payment-required": encodeCanonicalRequiredHeader({
+        version: "x402-v1",
+        network: "solana",
+        currency: "USDC",
+        amountAtomic: overrides.amountAtomic ?? "1000",
+        recipient: overrides.recipient ?? "recipient-1",
+        memo: overrides.memo ?? "memo-compat-1",
+        expiresAt: Date.parse("2026-03-16T00:10:00.000Z"),
+        settlement: {
+          mode: "spl_transfer",
+          mint: overrides.mint ?? "mint-1",
+        },
+        raw: { headers: {} },
+      }),
+    },
+  });
+}
+
 function makeSignedReceipt(overrides: Partial<SignedReceipt["payload"]> = {}): SignedReceipt {
   const signer = ReceiptSigner.generate();
   return signer.sign({
@@ -518,6 +545,42 @@ describe("fetchWith402 receipt verification", () => {
 
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(compat402Response())
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "resource payload",
+        receipt,
+      }, 200));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchWith402("https://seller.test/resource", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-1234567890123456789012345",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: store,
+      proofHeaderStyle: "X-PAYMENT",
+    });
+
+    expect(result.response.status).toBe(200);
+    expect(result.receipt?.payload.receiptId).toBe("receipt-1");
+    expect(store.receipts.size).toBe(1);
+  });
+
+  it("supports header-only 402 responses in x402 compat flow", async () => {
+    const store = new InMemoryReceiptStore();
+    const receipt = makeSignedReceipt({
+      quoteId: "compat-quote-unused",
+      commitId: "compat-commit-unused",
+    });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(compat402HeaderOnlyResponse())
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
         data: "resource payload",
