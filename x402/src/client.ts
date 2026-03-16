@@ -81,6 +81,11 @@ function isReceiptBoundRoute(pathname: string): boolean {
     || pathname.startsWith("/audit/primitives/");
 }
 
+function requestTargetFromUrl(rawUrl: string): string {
+  const parsed = new URL(rawUrl);
+  return `${parsed.pathname}${parsed.search}`;
+}
+
 function assertReceiptIntegrity(
   receipt: SignedReceipt,
   expected: {
@@ -184,7 +189,7 @@ async function assertDeliveredResponseIntegrity(
 
   const expectedRequestDigest = computeRequestDigest({
     method: request.method,
-    path: new URL(request.url).pathname,
+    path: requestTargetFromUrl(request.url),
     body: request.body,
   });
   if (receipt.payload.requestDigest !== expectedRequestDigest) {
@@ -245,7 +250,7 @@ async function extractAndVerifyEmbeddedReceipt(
 
   const requestDigest = computeRequestDigest({
     method: expected.method,
-    path: new URL(expected.requestUrl).pathname,
+    path: requestTargetFromUrl(expected.requestUrl),
     body: expected.body,
   });
   const responseDigest = computeResponseDigest({
@@ -317,7 +322,7 @@ async function extractAndVerifyHeaderReceipt(
 
   const requestDigest = computeRequestDigest({
     method: expected.method,
-    path: new URL(expected.requestUrl).pathname,
+    path: requestTargetFromUrl(expected.requestUrl),
     body: expected.body,
   });
   const responseDigest = await computeDeliveredResponseDigest(response);
@@ -748,7 +753,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
   });
   const finalizeRequestDigest = computeRequestDigest({
     method: "POST",
-    path: new URL(absolute(url, requirements.finalizeEndpoint)).pathname,
+    path: requestTargetFromUrl(absolute(url, requirements.finalizeEndpoint)),
     body: finalizeRequestBody,
   });
   const finalizeResponseDigest = computeResponseDigest({

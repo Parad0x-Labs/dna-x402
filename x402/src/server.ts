@@ -1019,7 +1019,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
     const requestDigest = computeRequestDigest({
       method: req.method,
-      path: req.path,
+      path: req.originalUrl ?? req.path,
       body: req.body,
     });
     const responseBody = fulfilledResponseBody(resource);

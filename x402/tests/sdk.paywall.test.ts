@@ -107,6 +107,7 @@ function makeRequest(app: express.Express, input: {
   body?: unknown;
   params?: Record<string, string>;
   path?: string;
+  originalUrl?: string;
 } = {}): Request {
   const headers = Object.fromEntries(
     Object.entries(input.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value]),
@@ -117,6 +118,7 @@ function makeRequest(app: express.Express, input: {
     method: input.method ?? "GET",
     params: input.params ?? {},
     path: input.path ?? "/",
+    originalUrl: input.originalUrl ?? input.path ?? "/",
     protocol: "https",
     headers,
     header(name: string) {
@@ -953,6 +955,89 @@ describe("dnaPaywall", () => {
 
     expect(correctRouteRes.statusCode).toBe(200);
     expect((correctRouteRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
+    expect(runtime?.paidCommits.has(commitId)).toBe(false);
+  });
+
+  it("does not unlock the same paywalled path with a different query string", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-query-bind-123456789012345",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/search",
+        originalUrl: "/api/search?q=alpha",
+      }),
+      firstRes,
+    );
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "cf".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-query-bind-123456789012345",
+        },
+      },
+    }), makeResponse());
+
+    const wrongQueryRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/search",
+        originalUrl: "/api/search?q=beta",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      wrongQueryRes,
+    );
+
+    expect(wrongQueryRes.statusCode).toBe(402);
+    expect((wrongQueryRes.body as { error: string }).error).toBe("payment_required");
+    const runtime = (app.locals as { __dnaPaywallRuntime?: { paidCommits: Set<string> } }).__dnaPaywallRuntime;
+    expect(runtime?.paidCommits.has(commitId)).toBe(true);
+
+    const correctQueryRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/search",
+        originalUrl: "/api/search?q=alpha",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      correctQueryRes,
+      () => {
+        correctQueryRes.json({ ok: true, query: "alpha" });
+      },
+    );
+
+    expect(correctQueryRes.statusCode).toBe(200);
+    expect((correctQueryRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
     expect(runtime?.paidCommits.has(commitId)).toBe(false);
   });
 });

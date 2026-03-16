@@ -821,6 +821,92 @@ describe("fetchWith402 receipt verification", () => {
     expect(store.receipts.size).toBe(2);
   });
 
+  it("verifies header-bound delivery receipts on query-specific text responses", async () => {
+    const paymentReceipt = makeSignedFinalizeReceipt({
+      receiptId: "payment-receipt-query-1",
+      quoteId: "quote-query-1",
+      commitId: "commit-query-1",
+      responseDigest: computeResponseDigest({
+        status: 200,
+        body: {
+          ok: true,
+          receiptId: "payment-receipt-query-1",
+          commitId: "commit-query-1",
+          settlement: "transfer",
+        },
+      }),
+    });
+    const deliveryReceipt = makeSignedReceipt({
+      receiptId: "delivery-receipt-query-1",
+      quoteId: "quote-query-1",
+      commitId: "commit-query-1",
+      requestDigest: computeRequestDigest({
+        method: "GET",
+        path: "/resource?q=alpha",
+      }),
+      responseDigest: computeResponseDigest({
+        status: 200,
+        body: "query specific payload",
+      }),
+    });
+    const store = new InMemoryReceiptStore();
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        paymentRequirements: {
+          version: "x402-dnp-v1",
+          quote: {
+            quoteId: "quote-query-1",
+            amount: "1000",
+            feeAtomic: "0",
+            totalAtomic: "1000",
+            mint: "mint-1",
+            recipient: "recipient-1",
+            expiresAt: "2026-03-16T00:10:00.000Z",
+            settlement: ["transfer"],
+            memoHash: "memo-query-1",
+          },
+          accepts: [{
+            scheme: "solana-spl",
+            network: "solana-devnet",
+            mint: "mint-1",
+            maxAmount: "1000",
+            recipient: "recipient-1",
+            mode: "transfer",
+          }],
+          recommendedMode: "transfer",
+          commitEndpoint: "https://seller.test/commit",
+          finalizeEndpoint: "https://seller.test/finalize",
+          receiptEndpoint: "https://seller.test/receipt/:receiptId",
+        },
+      }, 402))
+      .mockResolvedValueOnce(jsonResponse({ commitId: "commit-query-1" }, 201))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-query-1" }))
+      .mockResolvedValueOnce(jsonResponse(paymentReceipt))
+      .mockResolvedValueOnce(textResponse("query specific payload", 200, {
+        "x-dna-receipt": encodeReceiptHeader(deliveryReceipt),
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchWith402("https://seller.test/resource?q=alpha", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-query-12345678901234567890",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: store,
+    });
+
+    expect(await result.response.text()).toBe("query specific payload");
+    expect(result.receipt?.payload.receiptId).toBe("delivery-receipt-query-1");
+    expect(store.receipts.size).toBe(2);
+  });
+
   it("rejects tampered header-bound delivery receipts on text responses", async () => {
     const paymentReceipt = makeSignedFinalizeReceipt({
       receiptId: "payment-receipt-1",
