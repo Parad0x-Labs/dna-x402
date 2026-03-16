@@ -24,7 +24,7 @@
 import * as crypto from "node:crypto";
 import type { Express, NextFunction, Request, Response } from "express";
 import { PaymentVerifier } from "../paymentVerifier.js";
-import { ReceiptSigner } from "../receipts.js";
+import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../receipts.js";
 import { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
 
@@ -200,14 +200,15 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     }
 
     const receiptId = crypto.randomUUID();
+    const finalizeResponse = { ok: true, receiptId, commitId, settlement: settlementMode };
     const signedReceipt = receiptSigner.sign({
       receiptId,
       quoteId: commit.quoteId,
       commitId,
       resource: quote.resource,
       requestId: commitId,
-      requestDigest: quote.memoHash,
-      responseDigest: "",
+      requestDigest: computeRequestDigest({ method: req.method, path: req.path, body: req.body }),
+      responseDigest: computeResponseDigest({ status: 200, body: finalizeResponse }),
       shopId: "self",
       payerCommitment32B: commit.payerCommitment,
       recipient: quote.recipient,
@@ -227,7 +228,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     commit.receiptId = receiptId;
     paidCommits.add(commitId);
 
-    res.json({ ok: true, receiptId, commitId, settlement: settlementMode });
+    res.json(finalizeResponse);
   });
 
   // GET /receipt/:id
