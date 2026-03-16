@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { PaymentVerifier } from "../src/paymentVerifier.js";
 import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "../src/receipts.js";
 import type { PaymentProof, Quote } from "../src/types.js";
-import { dnaSeller } from "../src/sdk/seller.js";
+import { dnaPrice, dnaSeller } from "../src/sdk/seller.js";
 
 class FakeVerifier implements PaymentVerifier {
   constructor(
@@ -78,8 +78,8 @@ function makeResponse(): Response {
   return new MockResponse() as unknown as Response;
 }
 
-async function invoke(handler: RequestHandler, req: Request, res: Response): Promise<void> {
-  await Promise.resolve(handler(req, res, () => undefined));
+async function invoke(handler: RequestHandler, req: Request, res: Response, next?: () => void): Promise<void> {
+  await Promise.resolve(handler(req, res, next ?? (() => undefined)));
 }
 
 function routeHandler(app: express.Express, method: "get" | "post", pathName: string): RequestHandler {
@@ -202,5 +202,73 @@ describe("dnaSeller", () => {
       error: { code: "INVALID_PROOF" },
     });
     expect(seller.paidCommits.has(commitId)).toBe(false);
+  });
+
+  it("emits a delivery-bound receipt on unlocked JSON responses", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-delivery-123456789012345678",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/premium", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "44".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-delivery-123456789012345678",
+        },
+      },
+    }), makeResponse());
+
+    const gate = dnaPrice("5000", seller);
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      gate,
+      makeRequest({
+        method: "GET",
+        path: "/api/premium",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.json({ ok: true, result: "premium output" });
+      },
+    );
+
+    expect(unlockedRes.statusCode).toBe(200);
+    const unlockedBody = unlockedRes.body as {
+      ok: boolean;
+      result: string;
+      receipt: SignedReceipt;
+    };
+    expect(unlockedBody.result).toBe("premium output");
+    expect(verifySignedReceipt(unlockedBody.receipt)).toBe(true);
+    expect(unlockedBody.receipt.payload.requestDigest).toBe(computeRequestDigest({
+      method: "GET",
+      path: "/api/premium",
+    }));
+    expect(unlockedBody.receipt.payload.responseDigest).toBe(computeResponseDigest({
+      status: 200,
+      body: {
+        ok: true,
+        result: "premium output",
+      },
+    }));
   });
 });

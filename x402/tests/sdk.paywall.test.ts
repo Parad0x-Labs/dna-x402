@@ -192,4 +192,76 @@ describe("dnaPaywall", () => {
     expect(nextCalled).toBe(true);
     expect(onPaymentVerified).toHaveBeenCalledTimes(1);
   });
+
+  it("emits a delivery-bound receipt on unlocked JSON responses", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-delivery-123456789012345678",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/delivery" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "55".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-delivery-123456789012345678",
+        },
+      },
+    }), makeResponse());
+
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/delivery",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.json({ ok: true, data: "delivery output" });
+      },
+    );
+
+    const unlockedBody = unlockedRes.body as {
+      ok: boolean;
+      data: string;
+      receipt: SignedReceipt;
+    };
+    expect(unlockedBody.data).toBe("delivery output");
+    expect(verifySignedReceipt(unlockedBody.receipt)).toBe(true);
+    expect(unlockedBody.receipt.payload.requestDigest).toBe(computeRequestDigest({
+      method: "GET",
+      path: "/api/delivery",
+    }));
+    expect(unlockedBody.receipt.payload.responseDigest).toBe(computeResponseDigest({
+      status: 200,
+      body: {
+        ok: true,
+        data: "delivery output",
+      },
+    }));
+  });
 });

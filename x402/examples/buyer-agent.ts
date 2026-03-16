@@ -1,8 +1,8 @@
 /**
  * DNA x402 — Buyer Agent Example
  *
- * An AI agent that pays for API calls using DNA's netting mode.
- * Netting = off-chain batched micropayments. No per-call Solana tx fee.
+ * An AI agent skeleton that pays for API calls using DNA's transfer mode.
+ * Replace the placeholder tx signature with a real wallet implementation.
  *
  * Run:
  *   npx tsx examples/buyer-agent.ts
@@ -16,16 +16,10 @@ import type { AgentWallet, FetchWith402Result } from "../src/client.js";
 
 const DNA_SERVER = process.env.DNA_SERVER ?? "http://localhost:8080";
 
-const nettingWallet: AgentWallet = {
+const wallet: AgentWallet = {
   payTransfer: async (quote) => ({
-    settlement: "netting",
-    amountAtomic: quote.totalAtomic,
-    note: "buyer-agent-example",
-  }),
-  payNetted: async (quote) => ({
-    settlement: "netting",
-    amountAtomic: quote.totalAtomic,
-    note: "buyer-agent-example",
+    settlement: "transfer",
+    txSignature: `replace-with-real-wallet-${quote.quoteId.slice(0, 12)}`,
   }),
 };
 
@@ -34,7 +28,7 @@ const spendTracker = new InMemorySpendTracker();
 
 async function callPaidApi(resource: string): Promise<FetchWith402Result> {
   return fetchWith402(`${DNA_SERVER}${resource}`, {
-    wallet: nettingWallet,
+    wallet,
     maxSpendAtomic: "100000",         // $0.10 max per call
     maxSpendPerDayAtomic: "5000000",  // $5.00 daily budget
     receiptStore: receipts,
