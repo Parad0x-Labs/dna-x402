@@ -38,7 +38,7 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 - **Shop templates**: Pre-built configs for research, ops, action, and always-on agent types
 
 ### Developer Tools
-- **Seller SDK**: Self-contained `dnaSeller()` — no separate server needed, 3 lines to sell
+- **Seller SDK**: Self-contained `dnaSeller()` scaffold for trusted/demo integrations
 - **DNA Guard**: Fail-open/fail-closed middleware for spend ceilings, replay alerts, quality validation, receipt verification logs, and provider scoring
 - **x402 Doctor**: Diagnostic tool that detects x402 dialects (Coinbase, Memeputer, generic), identifies missing headers, suggests fixes
 - **Tool catalog**: Cost estimation, balance coverage, projected spend based on usage patterns
@@ -102,7 +102,9 @@ app.get("/api/inference", dnaPrice("5000", pay), (req, res) => {
 app.listen(3000);
 ```
 
-That's it. No separate server. Clone, set wallet, set prices, run. Any x402-compatible agent can discover and pay your endpoints automatically. See `examples/sell-compute.ts` for a full working example.
+That is the fastest scaffold, not the strongest verifier. `dnaSeller()` trusts finalize proofs for simplicity; for untrusted buyers or real payment verification, use the full x402 server path instead of the tiny scaffold.
+
+Unsigned netting is now disabled by default in the main server. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1`.
 
 ### Add DNA Guard (Spend Caps + Quality + Reputation API)
 

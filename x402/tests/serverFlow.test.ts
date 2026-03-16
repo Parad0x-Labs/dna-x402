@@ -99,6 +99,7 @@ describe("x402 server flow", () => {
     const { app } = createX402App(
       {
         ...baseConfig,
+        unsafeUnverifiedNettingEnabled: true,
         feePolicy: {
           ...baseConfig.feePolicy,
           minSettleAtomic: 1_000_000n,
@@ -146,6 +147,47 @@ describe("x402 server flow", () => {
     expect(flush.body.batches[0].settleAmountAtomic).toBe("10100");
     expect(flush.body.batches[0].providerAmountAtomic).toBe("10000");
     expect(flush.body.batches[0].platformFeeAtomic).toBe("100");
+  });
+
+  it("does not advertise or accept unsigned netting by default", async () => {
+    const { app } = createX402App(
+      {
+        ...baseConfig,
+        feePolicy: {
+          ...baseConfig.feePolicy,
+          minSettleAtomic: 1_000_000n,
+        },
+      },
+      {
+        paymentVerifier: new FakeVerifier(),
+        receiptSigner: ReceiptSigner.generate(),
+      },
+    );
+
+    const quote = await request(app)
+      .get("/quote")
+      .query({ resource: "/resource", amountAtomic: "100" })
+      .expect(200);
+
+    expect(quote.body.settlement).toEqual(["transfer", "stream"]);
+
+    const commit = await request(app)
+      .post("/commit")
+      .send({
+        quoteId: quote.body.quoteId,
+        payerCommitment32B: "0x" + "33".repeat(32),
+      })
+      .expect(201);
+
+    await request(app)
+      .post("/finalize")
+      .send({
+        commitId: commit.body.commitId,
+        paymentProof: {
+          settlement: "netting",
+        },
+      })
+      .expect(400);
   });
 
   it("returns X402_UNDERPAY when verifier detects underpayment", async () => {
