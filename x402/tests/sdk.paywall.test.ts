@@ -93,6 +93,45 @@ function routeHandler(app: express.Express, method: "get" | "post", pathName: st
 }
 
 describe("dnaPaywall", () => {
+  it("uses a network-aware USDC mint by default", async () => {
+    const app = express();
+    const devnetMiddleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-default-devnet-1234567890",
+      }),
+    });
+    const mainnetMiddleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      network: "solana-mainnet",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-default-mainnet-1234567890",
+      }),
+    });
+
+    const devnetRes = makeResponse() as Response & MockResponse;
+    await invoke(devnetMiddleware, makeRequest(app, { method: "GET", path: "/api/devnet" }), devnetRes);
+    expect(devnetRes.body).toMatchObject({
+      paymentRequirements: {
+        quote: { mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" },
+      },
+    });
+
+    const mainnetRes = makeResponse() as Response & MockResponse;
+    await invoke(mainnetMiddleware, makeRequest(app, { method: "GET", path: "/api/mainnet" }), mainnetRes);
+    expect(mainnetRes.body).toMatchObject({
+      paymentRequirements: {
+        quote: { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
+      },
+    });
+  });
+
   it("mounts commit/finalize/receipt routes and unlocks the route after verification", async () => {
     const app = express();
     const onPaymentVerified = vi.fn();

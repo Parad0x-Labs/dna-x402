@@ -92,6 +92,22 @@ function routeHandler(app: express.Express, method: "get" | "post", pathName: st
 }
 
 describe("dnaSeller", () => {
+  it("uses a network-aware USDC mint by default", () => {
+    const app = express();
+    const devnetSeller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+    });
+    const mainnetSeller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      network: "solana-mainnet",
+    });
+
+    expect(devnetSeller.createQuote("/api/devnet", "5000", "https://example.test").mint)
+      .toBe("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+    expect(mainnetSeller.createQuote("/api/mainnet", "5000", "https://example.test").mint)
+      .toBe("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+  });
+
   it("verifies transfer proofs and emits on-chain receipt data", async () => {
     const app = express();
     const seller = dnaSeller(app, {

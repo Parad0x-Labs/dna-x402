@@ -31,6 +31,7 @@ export interface FetchWith402Options extends RequestInit {
   maxPriceAtomic?: string;
   maxSpendPerDayAtomic?: string;
   preferStream?: boolean;
+  preferNetting?: boolean;
   proofHeaderStyle?: "PAYMENT-SIGNATURE" | "X-PAYMENT" | "X-402-PAYMENT";
   receiptStore?: ReceiptStore;
   spendTracker?: SpendTracker;
@@ -166,6 +167,8 @@ async function extractAndVerifyEmbeddedReceipt(
     requestUrl: string;
     method: string;
     body?: unknown;
+    quoteId?: string;
+    commitId?: string;
     recipient: string;
     mint: string;
     totalAtomic: string;
@@ -215,6 +218,12 @@ async function extractAndVerifyEmbeddedReceipt(
   }
   if (receipt.payload.responseDigest !== responseDigest) {
     throw new Error("Receipt verification failed: embedded response digest mismatch");
+  }
+  if (expected.quoteId && receipt.payload.quoteId !== expected.quoteId) {
+    throw new Error(`Receipt verification failed: quoteId mismatch (${receipt.payload.quoteId})`);
+  }
+  if (expected.commitId && receipt.payload.commitId !== expected.commitId) {
+    throw new Error(`Receipt verification failed: commitId mismatch (${receipt.payload.commitId})`);
   }
   if (receipt.payload.recipient !== expected.recipient) {
     throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
@@ -364,10 +373,13 @@ function chooseSettlement(
   quote: QuoteResponse,
   requirements: PaymentRequirements,
   wallet: AgentWallet,
-  preferStream: boolean,
+  options: {
+    preferStream: boolean;
+    preferNetting: boolean;
+  },
 ): Promise<PaymentProof> {
   const acceptsMode = (mode: "transfer" | "stream" | "netting") => requirements.accepts.some((accept) => accept.mode === mode);
-  if (preferStream && wallet.payStream && quote.settlement.includes("stream") && acceptsMode("stream")) {
+  if (options.preferStream && wallet.payStream && quote.settlement.includes("stream") && acceptsMode("stream")) {
     return wallet.payStream(quote);
   }
   if (requirements.recommendedMode === "stream" && wallet.payStream && quote.settlement.includes("stream") && acceptsMode("stream")) {
@@ -376,7 +388,7 @@ function chooseSettlement(
   if (requirements.recommendedMode === "netting" && wallet.payNetted && quote.settlement.includes("netting") && acceptsMode("netting")) {
     return wallet.payNetted(quote);
   }
-  if (wallet.payNetted && quote.settlement.includes("netting") && acceptsMode("netting")) {
+  if (options.preferNetting && wallet.payNetted && quote.settlement.includes("netting") && acceptsMode("netting")) {
     return wallet.payNetted(quote);
   }
   return wallet.payTransfer(quote);
@@ -446,6 +458,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     maxPriceAtomic,
     maxSpendPerDayAtomic,
     preferStream = false,
+    preferNetting = false,
     proofHeaderStyle = "PAYMENT-SIGNATURE",
     receiptStore,
     spendTracker = new InMemorySpendTracker(),
@@ -487,7 +500,10 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     }
   }
 
-  const paymentProof = await chooseSettlement(requirements.quote, requirements, wallet, preferStream);
+  const paymentProof = await chooseSettlement(requirements.quote, requirements, wallet, {
+    preferStream,
+    preferNetting,
+  });
   const proofHeader = proofHeaderName(proofHeaderStyle);
   const encodedProof = encodeCanonicalProofHeader(toCanonicalProof(paymentProof));
 
@@ -569,6 +585,10 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     throw new Error(`Receipt fetch failed: ${receiptRes.status}`);
   }
   const receipt = (await receiptRes.json()) as SignedReceipt;
+  const finalizeRequestBody = {
+    commitId: commitData.commitId,
+    paymentProof,
+  };
   assertReceiptIntegrity(receipt, {
     quoteId: requirements.quote.quoteId,
     commitId: commitData.commitId,
@@ -577,6 +597,24 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     totalAtomic: requirements.quote.totalAtomic,
     settlement: paymentProof.settlement,
   });
+  const finalizeRequestDigest = computeRequestDigest({
+    method: "POST",
+    path: new URL(absolute(url, requirements.finalizeEndpoint)).pathname,
+    body: finalizeRequestBody,
+  });
+  const finalizeResponseDigest = computeResponseDigest({
+    status: finalizeRes.status,
+    body: finalizeData,
+  });
+  const receiptMatchesFinalizeHandshake =
+    receipt.payload.requestDigest === finalizeRequestDigest
+    && receipt.payload.responseDigest === finalizeResponseDigest;
+  if (!isReceiptBoundRoute(new URL(url).pathname) && !receiptMatchesFinalizeHandshake) {
+    if (receipt.payload.requestDigest !== finalizeRequestDigest) {
+      throw new Error("Receipt verification failed: request digest mismatch");
+    }
+    throw new Error("Receipt verification failed: response digest mismatch");
+  }
 
   const retryResponse = await fetch(url, {
     ...fetchOptions,
@@ -589,6 +627,8 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     requestUrl: url,
     method: (fetchOptions.method ?? "GET").toUpperCase(),
     body: fetchOptions.body,
+    quoteId: requirements.quote.quoteId,
+    commitId: commitData.commitId,
     recipient: requirements.quote.recipient,
     mint: requirements.quote.mint,
     totalAtomic: requirements.quote.totalAtomic,

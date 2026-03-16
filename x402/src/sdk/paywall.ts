@@ -3,7 +3,13 @@ import type { NextFunction, Request, Response } from "express";
 import type { PaymentVerifier } from "../paymentVerifier.js";
 import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../receipts.js";
 import type { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
-import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
+import {
+  createPaymentVerifier,
+  defaultUsdcMintForNetwork,
+  inferPaymentNetwork,
+  SupportedNetwork,
+  verificationFailureStatus,
+} from "./paymentSupport.js";
 
 export interface PaywallOptions {
   priceAtomic: string;
@@ -291,10 +297,10 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
  *   3. GET /api/inference with x-dnp-commit-id header -> 200
  */
 export function dnaPaywall(options: PaywallOptions) {
-  const ttl = options.quoteTtlSeconds ?? 180;
-  const mint = options.mint ?? "USDC";
-  const settlement = options.settlement ?? ["transfer"];
   const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
+  const ttl = options.quoteTtlSeconds ?? 180;
+  const mint = options.mint ?? defaultUsdcMintForNetwork(options.network, options.solanaRpcUrl);
+  const settlement = options.settlement ?? ["transfer"];
   const paymentVerifier = createPaymentVerifier({
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,

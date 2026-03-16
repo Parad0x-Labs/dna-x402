@@ -34,6 +34,7 @@ export function createFileBackedDnaGuardLedger(options: DnaGuardFileStoreOptions
   const snapshot = options.snapshotPath ? loadDnaGuardSnapshot(options.snapshotPath) : undefined;
   const ledger = new DnaGuardLedger({
     windowMs: snapshot?.windowMs ?? options.windowMs,
+    now,
     onChange: options.snapshotPath
       ? (nextSnapshot) => persistDnaGuardSnapshot(options.snapshotPath as string, nextSnapshot)
       : options.onChange,

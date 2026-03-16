@@ -26,7 +26,13 @@ import type { Express, NextFunction, Request, Response } from "express";
 import { PaymentVerifier } from "../paymentVerifier.js";
 import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../receipts.js";
 import { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
-import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
+import {
+  createPaymentVerifier,
+  defaultUsdcMintForNetwork,
+  inferPaymentNetwork,
+  SupportedNetwork,
+  verificationFailureStatus,
+} from "./paymentSupport.js";
 
 export interface DnaSellerOptions {
   recipient: string;
@@ -88,11 +94,11 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const receipts = new Map<string, ReceiptRecord>();
   const paidCommits = new Set<string>();
 
-  const mint = options.mint ?? "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+  const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
+  const mint = options.mint ?? defaultUsdcMintForNetwork(options.network, options.solanaRpcUrl);
   const feeBps = options.feeBps ?? 0;
   const ttl = options.quoteTtlSeconds ?? 300;
   const settlement = options.settlement ?? ["transfer"];
-  const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
   const receiptSigner = options.receiptSigner ?? ReceiptSigner.generate();
   const paymentVerifier = createPaymentVerifier({
     rpcUrl: options.solanaRpcUrl,
