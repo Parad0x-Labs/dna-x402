@@ -58,9 +58,9 @@ app.listen(3000, () => {
   console.log("");
   console.log("Endpoints:");
   console.log("  GET  /                → free (price list)");
-  console.log("  GET  /api/inference   → $0.005 (netting or transfer)");
-  console.log("  GET  /api/embedding   → $0.001 (netting or transfer)");
-  console.log("  POST /api/batch       → $0.05  (netting or transfer)");
+  console.log("  GET  /api/inference   → $0.005 (verified transfer)");
+  console.log("  GET  /api/embedding   → $0.001 (verified transfer)");
+  console.log("  POST /api/batch       → $0.05  (verified transfer)");
   console.log("");
   console.log("Any x402 agent can pay and access these automatically.");
 });

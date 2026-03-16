@@ -116,9 +116,9 @@ app.get("/api/embedding", dnaPrice("1000", pay), handler);   // $0.001
 app.post("/api/batch",    dnaPrice("50000", pay), handler);  // $0.05
 ```
 
-### Advanced — with the full DNA server (on-chain verification, anchoring, marketplace)
+### Advanced — paywall middleware
 
-Use `dnaPaywall` if you're running the full DNA x402 server and want features like receipt anchoring, marketplace listing, netting flush, and webhooks:
+Use `dnaPaywall` when you want route-level payment gating with self-mounted `/commit`, `/finalize`, and `/receipt/:id` routes. For anchoring, marketplace listing, netting flush, and broader policy controls, move up to the full DNA x402 server:
 
 ```typescript
 import { dnaPaywall } from "dna-x402";
@@ -126,6 +126,7 @@ import { dnaPaywall } from "dna-x402";
 app.use("/api/premium", dnaPaywall({
   priceAtomic: "10000",
   recipient: "YOUR_WALLET",
+  settlement: ["transfer"],
   requireApiKey: true,
   apiKeys: new Set(["key-abc123", "key-def456"]),
 }));

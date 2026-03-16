@@ -32,7 +32,7 @@ app.get("/", (_req, res) => {
 app.use("/api/cheap", dnaPaywall({
   priceAtomic: "1000",
   recipient: RECIPIENT,
-  settlement: ["netting", "transfer"],
+  settlement: ["transfer"],
 }));
 
 app.get("/api/cheap", (_req, res) => {
@@ -43,7 +43,7 @@ app.get("/api/cheap", (_req, res) => {
 app.use("/api/premium", dnaPaywall({
   priceAtomic: "10000",
   recipient: RECIPIENT,
-  settlement: ["netting", "transfer"],
+  settlement: ["transfer"],
 }));
 
 app.get("/api/premium", (_req, res) => {
@@ -69,7 +69,7 @@ app.listen(PORT, () => {
   console.log(`Recipient wallet: ${RECIPIENT}`);
   console.log("\nEndpoints:");
   console.log("  GET /              — Service info (free)");
-  console.log("  GET /api/cheap     — $0.001 (netting or transfer)");
-  console.log("  GET /api/premium   — $0.01  (netting or transfer)");
+  console.log("  GET /api/cheap     — $0.001 (verified transfer)");
+  console.log("  GET /api/premium   — $0.01  (verified transfer)");
   console.log("  GET /api/bulk      — $0.10  (transfer only, API key required)");
 });
