@@ -70,6 +70,10 @@ interface ReceiptRecord {
   signedReceipt: SignedReceipt;
 }
 
+function isJsonRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function hashHex(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
@@ -265,6 +269,53 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     commits,
     receipts,
     paidCommits,
+    issueDeliveryReceipt(
+      commitId: string,
+      req: Request,
+      responseBody: Record<string, unknown>,
+      statusCode = 200,
+    ): SignedReceipt | undefined {
+      const commit = commits.get(commitId);
+      if (!commit) {
+        return undefined;
+      }
+      const quote = quotes.get(commit.quoteId);
+      const paymentReceipt = commit.receiptId ? receipts.get(commit.receiptId) : undefined;
+      if (!quote || !paymentReceipt) {
+        return undefined;
+      }
+
+      const signedReceipt = receiptSigner.sign({
+        receiptId: crypto.randomUUID(),
+        quoteId: commit.quoteId,
+        commitId,
+        resource: quote.resource,
+        requestId: commitId,
+        requestDigest: computeRequestDigest({
+          method: req.method,
+          path: req.path,
+          body: req.body,
+        }),
+        responseDigest: computeResponseDigest({
+          status: statusCode,
+          body: responseBody,
+        }),
+        shopId: "self",
+        payerCommitment32B: commit.payerCommitment,
+        recipient: quote.recipient,
+        mint: quote.mint,
+        amountAtomic: quote.amount,
+        feeAtomic: quote.feeAtomic,
+        totalAtomic: quote.totalAtomic,
+        settlement: paymentReceipt.signedReceipt.payload.settlement,
+        settledOnchain: paymentReceipt.signedReceipt.payload.settledOnchain,
+        txSignature: paymentReceipt.signedReceipt.payload.txSignature,
+        createdAt: new Date().toISOString(),
+      });
+
+      receipts.set(signedReceipt.payload.receiptId, { signedReceipt });
+      return signedReceipt;
+    },
 
     /**
      * Create a quote for a resource at a given price.
@@ -314,6 +365,14 @@ export function dnaPrice(
     const commitId = req.header("x-dnp-commit-id");
     if (commitId && seller.paidCommits.has(commitId)) {
       seller.paidCommits.delete(commitId);
+      const originalJson = res.json.bind(res);
+      res.json = ((body: unknown) => {
+        if (!isJsonRecord(body)) {
+          return originalJson(body);
+        }
+        const deliveryReceipt = seller.issueDeliveryReceipt(commitId, req, body, res.statusCode || 200);
+        return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
+      }) as typeof res.json;
       next();
       return;
     }

@@ -3,7 +3,7 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
-import { computeRequestDigest, computeResponseDigest, verifyReceiptBinding, verifySignedReceipt } from "./receipts.js";
+import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
@@ -210,14 +210,20 @@ async function extractAndVerifyEmbeddedReceipt(
     body: businessBody,
   });
 
-  if (!verifyReceiptBinding(receipt, {
-    requestDigest,
-    responseDigest,
-    recipient: expected.recipient,
-    mint: expected.mint,
-    totalAtomic: expected.totalAtomic,
-  })) {
-    throw new Error("Receipt verification failed: embedded receipt binding mismatch");
+  if (receipt.payload.requestDigest !== requestDigest) {
+    throw new Error("Receipt verification failed: embedded request digest mismatch");
+  }
+  if (receipt.payload.responseDigest !== responseDigest) {
+    throw new Error("Receipt verification failed: embedded response digest mismatch");
+  }
+  if (receipt.payload.recipient !== expected.recipient) {
+    throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
+  }
+  if (receipt.payload.mint !== expected.mint) {
+    throw new Error(`Receipt verification failed: mint mismatch (${receipt.payload.mint})`);
+  }
+  if (receipt.payload.totalAtomic !== expected.totalAtomic) {
+    throw new Error(`Receipt verification failed: totalAtomic mismatch (${receipt.payload.totalAtomic})`);
   }
   if (receipt.payload.settlement !== expected.settlement) {
     throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
@@ -579,13 +585,27 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
       "x-dnp-commit-id": commitData.commitId,
     },
   });
-  await assertDeliveredResponseIntegrity(retryResponse, receipt, {
-    url,
+  const embeddedReceipt = await extractAndVerifyEmbeddedReceipt(retryResponse, {
+    requestUrl: url,
     method: (fetchOptions.method ?? "GET").toUpperCase(),
     body: fetchOptions.body,
+    recipient: requirements.quote.recipient,
+    mint: requirements.quote.mint,
+    totalAtomic: requirements.quote.totalAtomic,
+    settlement: paymentProof.settlement,
   });
+  if (!embeddedReceipt) {
+    await assertDeliveredResponseIntegrity(retryResponse, receipt, {
+      url,
+      method: (fetchOptions.method ?? "GET").toUpperCase(),
+      body: fetchOptions.body,
+    });
+  }
   if (receiptStore) {
     await receiptStore.save(receipt);
+    if (embeddedReceipt && embeddedReceipt.payload.receiptId !== receipt.payload.receiptId) {
+      await receiptStore.save(embeddedReceipt);
+    }
   }
   if (maxSpendPerDayAtomic) {
     await spendTracker.addSpendForDateAtomic(dateKeyUtc(), quoteTotal);
@@ -594,7 +614,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
   return {
     response: retryResponse,
     commitId: commitData.commitId,
-    receipt,
+    receipt: embeddedReceipt ?? receipt,
     paymentRequirements: requirements,
   };
 }

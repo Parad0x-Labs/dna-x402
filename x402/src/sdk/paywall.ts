@@ -52,6 +52,10 @@ interface ReceiptRecord {
   onPaymentVerified?: (receipt: unknown, req: Request) => void;
 }
 
+function isJsonRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 interface PaywallRuntime {
   quotes: Map<string, QuoteRecord>;
   commits: Map<string, CommitRecord>;
@@ -68,6 +72,55 @@ function hashHex(input: string): string {
 
 function createReceiptPayload(receipt: ReceiptRecord) {
   return receipt.signedReceipt;
+}
+
+function issueDeliveryReceipt(
+  runtime: PaywallRuntime,
+  commitId: string,
+  req: Request,
+  responseBody: Record<string, unknown>,
+  statusCode = 200,
+): SignedReceipt | undefined {
+  const commit = runtime.commits.get(commitId);
+  if (!commit) {
+    return undefined;
+  }
+  const quote = runtime.quotes.get(commit.quoteId);
+  const paymentReceipt = commit.receiptId ? runtime.receipts.get(commit.receiptId) : undefined;
+  if (!quote || !paymentReceipt) {
+    return undefined;
+  }
+
+  const signedReceipt = quote.receiptSigner.sign({
+    receiptId: crypto.randomUUID(),
+    quoteId: commit.quoteId,
+    commitId,
+    resource: quote.resource,
+    requestId: commitId,
+    requestDigest: computeRequestDigest({
+      method: req.method,
+      path: req.path,
+      body: req.body,
+    }),
+    responseDigest: computeResponseDigest({
+      status: statusCode,
+      body: responseBody,
+    }),
+    shopId: "self",
+    payerCommitment32B: commit.payerCommitment,
+    recipient: quote.recipient,
+    mint: quote.mint,
+    amountAtomic: quote.priceAtomic,
+    feeAtomic: "0",
+    totalAtomic: quote.priceAtomic,
+    settlement: paymentReceipt.signedReceipt.payload.settlement,
+    settledOnchain: paymentReceipt.signedReceipt.payload.settledOnchain,
+    txSignature: paymentReceipt.signedReceipt.payload.txSignature,
+    createdAt: new Date().toISOString(),
+  });
+
+  runtime.receipts.set(signedReceipt.payload.receiptId, { signedReceipt });
+  return signedReceipt;
 }
 
 function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
@@ -276,6 +329,14 @@ export function dnaPaywall(options: PaywallOptions) {
           receipt.onPaymentVerified(createReceiptPayload(receipt), req);
         }
       }
+      const originalJson = res.json.bind(res);
+      res.json = ((body: unknown) => {
+        if (!isJsonRecord(body)) {
+          return originalJson(body);
+        }
+        const deliveryReceipt = issueDeliveryReceipt(runtime, commitId, req, body, res.statusCode || 200);
+        return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
+      }) as typeof res.json;
       next();
       return;
     }
