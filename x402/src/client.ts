@@ -7,6 +7,7 @@ import {
   computeRequestDigest,
   computeResponseDigest,
   decodeReceiptHeader,
+  normalizeCommitment32B,
   RECEIPT_HEADER_NAME,
   verifySignedReceipt,
 } from "./receipts.js";
@@ -36,6 +37,7 @@ export interface FetchWith402Options extends RequestInit {
   maxSpendAtomic: string;
   maxPriceAtomic?: string;
   maxSpendPerDayAtomic?: string;
+  payerCommitment32B?: string;
   preferStream?: boolean;
   preferNetting?: boolean;
   proofHeaderStyle?: "PAYMENT-SIGNATURE" | "X-PAYMENT" | "X-402-PAYMENT";
@@ -91,6 +93,7 @@ function assertReceiptIntegrity(
   expected: {
     quoteId: string;
     commitId: string;
+    payerCommitment32B?: string;
     recipient: string;
     mint: string;
     totalAtomic: string;
@@ -106,6 +109,9 @@ function assertReceiptIntegrity(
   }
   if (receipt.payload.commitId !== expected.commitId) {
     throw new Error(`Receipt verification failed: commitId mismatch (${receipt.payload.commitId})`);
+  }
+  if (expected.payerCommitment32B && receipt.payload.payerCommitment32B !== expected.payerCommitment32B) {
+    throw new Error(`Receipt verification failed: payerCommitment32B mismatch (${receipt.payload.payerCommitment32B})`);
   }
   if (receipt.payload.recipient !== expected.recipient) {
     throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
@@ -214,6 +220,7 @@ async function extractAndVerifyEmbeddedReceipt(
     body?: unknown;
     quoteId?: string;
     commitId?: string;
+    payerCommitment32B?: string;
     recipient: string;
     mint: string;
     totalAtomic: string;
@@ -270,6 +277,9 @@ async function extractAndVerifyEmbeddedReceipt(
   if (expected.commitId && receipt.payload.commitId !== expected.commitId) {
     throw new Error(`Receipt verification failed: commitId mismatch (${receipt.payload.commitId})`);
   }
+  if (expected.payerCommitment32B && receipt.payload.payerCommitment32B !== expected.payerCommitment32B) {
+    throw new Error(`Receipt verification failed: payerCommitment32B mismatch (${receipt.payload.payerCommitment32B})`);
+  }
   if (receipt.payload.recipient !== expected.recipient) {
     throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
   }
@@ -294,6 +304,7 @@ async function extractAndVerifyHeaderReceipt(
     body?: unknown;
     quoteId?: string;
     commitId?: string;
+    payerCommitment32B?: string;
     recipient: string;
     mint: string;
     totalAtomic: string;
@@ -341,6 +352,9 @@ async function extractAndVerifyHeaderReceipt(
   }
   if (expected.commitId && receipt.payload.commitId !== expected.commitId) {
     throw new Error(`Receipt verification failed: commitId mismatch (${receipt.payload.commitId})`);
+  }
+  if (expected.payerCommitment32B && receipt.payload.payerCommitment32B !== expected.payerCommitment32B) {
+    throw new Error(`Receipt verification failed: payerCommitment32B mismatch (${receipt.payload.payerCommitment32B})`);
   }
   if (receipt.payload.recipient !== expected.recipient) {
     throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
@@ -694,7 +708,9 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     };
   }
 
-  const payerCommitment32B = `0x${crypto.randomBytes(32).toString("hex")}`;
+  const payerCommitment32B = normalizeCommitment32B(
+    options.payerCommitment32B ?? `0x${crypto.randomBytes(32).toString("hex")}`,
+  );
 
   const commitRes = await fetch(absolute(url, requirements.commitEndpoint), {
     method: "POST",
@@ -703,7 +719,6 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     },
     body: JSON.stringify({
       quoteId: requirements.quote.quoteId,
-      // Caller can replace this with a deterministic commitment source.
       payerCommitment32B,
     }),
   });
@@ -746,6 +761,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
   assertReceiptIntegrity(receipt, {
     quoteId: requirements.quote.quoteId,
     commitId: commitData.commitId,
+    payerCommitment32B,
     recipient: requirements.quote.recipient,
     mint: requirements.quote.mint,
     totalAtomic: requirements.quote.totalAtomic,
@@ -783,6 +799,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     body: fetchOptions.body,
     quoteId: requirements.quote.quoteId,
     commitId: commitData.commitId,
+    payerCommitment32B,
     recipient: requirements.quote.recipient,
     mint: requirements.quote.mint,
     totalAtomic: requirements.quote.totalAtomic,
@@ -794,6 +811,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     body: fetchOptions.body,
     quoteId: requirements.quote.quoteId,
     commitId: commitData.commitId,
+    payerCommitment32B,
     recipient: requirements.quote.recipient,
     mint: requirements.quote.mint,
     totalAtomic: requirements.quote.totalAtomic,

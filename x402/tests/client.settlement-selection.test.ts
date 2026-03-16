@@ -123,6 +123,18 @@ function customPaymentRequiredResponse(input: {
   }, 402);
 }
 
+const TEST_PAYER_COMMITMENT = "aa".repeat(32);
+
+function fetchWithTestCommitment(
+  url: string,
+  options: Parameters<typeof fetchWith402>[1],
+) {
+  return fetchWith402(url, {
+    payerCommitment32B: TEST_PAYER_COMMITMENT,
+    ...options,
+  });
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -148,7 +160,7 @@ describe("fetchWith402 settlement selection", () => {
       .mockResolvedValueOnce(jsonResponse(transferReceipt))
       .mockResolvedValueOnce(jsonResponse({ ok: true, data: "paid" })));
 
-    const result = await fetchWith402("https://seller.test/paid", {
+    const result = await fetchWithTestCommitment("https://seller.test/paid", {
       wallet: {
         payTransfer,
         payNetted,
@@ -181,7 +193,7 @@ describe("fetchWith402 settlement selection", () => {
       .mockResolvedValueOnce(jsonResponse(nettingReceipt))
       .mockResolvedValueOnce(jsonResponse({ ok: true, data: "paid" })));
 
-    const result = await fetchWith402("https://seller.test/paid", {
+    const result = await fetchWithTestCommitment("https://seller.test/paid", {
       wallet: {
         payTransfer,
         payNetted,
@@ -215,7 +227,7 @@ describe("fetchWith402 settlement selection", () => {
       .mockResolvedValueOnce(jsonResponse(streamReceipt))
       .mockResolvedValueOnce(jsonResponse({ ok: true, data: "paid" })));
 
-    const result = await fetchWith402("https://seller.test/paid", {
+    const result = await fetchWithTestCommitment("https://seller.test/paid", {
       wallet: {
         payTransfer,
         payStream,
@@ -237,7 +249,7 @@ describe("fetchWith402 settlement selection", () => {
     vi.stubGlobal("fetch", vi.fn()
       .mockResolvedValueOnce(customPaymentRequiredResponse({ recommendedMode: "netting", settlement: ["netting"] })));
 
-    await expect(fetchWith402("https://seller.test/paid", {
+    await expect(fetchWithTestCommitment("https://seller.test/paid", {
       wallet: {
         payTransfer,
       },
