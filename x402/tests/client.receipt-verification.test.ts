@@ -228,7 +228,7 @@ describe("fetchWith402 receipt verification", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchWithTestCommitment("https://seller.test/paid", {
+    await expect(fetchWithTestCommitment("https://seller.test/resource", {
       wallet: {
         async payTransfer() {
           return {
@@ -286,7 +286,7 @@ describe("fetchWith402 receipt verification", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchWithTestCommitment("https://seller.test/paid", {
+    await expect(fetchWithTestCommitment("https://seller.test/resource", {
       wallet: {
         async payTransfer() {
           return {
@@ -300,6 +300,115 @@ describe("fetchWith402 receipt verification", () => {
     })).rejects.toThrow(/recipient mismatch/i);
 
     expect(store.receipts.size).toBe(0);
+  });
+
+  it("rejects finalized transfer receipts that omit canonical txSignature", async () => {
+    const receipt = makeSignedFinalizeReceipt({ txSignature: undefined });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        paymentRequirements: {
+          version: "x402-dnp-v1",
+          quote: {
+            quoteId: "quote-1",
+            amount: "1000",
+            feeAtomic: "0",
+            totalAtomic: "1000",
+            mint: "mint-1",
+            recipient: "recipient-1",
+            expiresAt: "2026-03-16T00:10:00.000Z",
+            settlement: ["transfer"],
+            memoHash: "memo-1",
+          },
+          accepts: [{
+            scheme: "solana-spl",
+            network: "solana-devnet",
+            mint: "mint-1",
+            maxAmount: "1000",
+            recipient: "recipient-1",
+            mode: "transfer",
+          }],
+          recommendedMode: "transfer",
+          commitEndpoint: "https://seller.test/commit",
+          finalizeEndpoint: "https://seller.test/finalize",
+          receiptEndpoint: "https://seller.test/receipt/:receiptId",
+        },
+      }, 402))
+      .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(receipt));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithTestCommitment("https://seller.test/paid", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-12345678901234567890",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: new InMemoryReceiptStore(),
+    })).rejects.toThrow(/missing canonical txSignature/i);
+  });
+
+  it("rejects embedded transfer receipts that omit canonical txSignature", async () => {
+    const receipt = makeSignedReceipt({ txSignature: undefined });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        paymentRequirements: {
+          version: "x402-dnp-v1",
+          quote: {
+            quoteId: "quote-1",
+            amount: "1000",
+            feeAtomic: "0",
+            totalAtomic: "1000",
+            mint: "mint-1",
+            recipient: "recipient-1",
+            expiresAt: "2026-03-16T00:10:00.000Z",
+            settlement: ["transfer"],
+            memoHash: "memo-1",
+          },
+          accepts: [{
+            scheme: "solana-spl",
+            network: "solana-devnet",
+            mint: "mint-1",
+            maxAmount: "1000",
+            recipient: "recipient-1",
+            mode: "transfer",
+          }],
+          recommendedMode: "transfer",
+          commitEndpoint: "https://seller.test/commit",
+          finalizeEndpoint: "https://seller.test/finalize",
+          receiptEndpoint: "https://seller.test/receipt/:receiptId",
+        },
+      }, 402))
+      .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(makeSignedFinalizeReceipt()))
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "resource payload",
+        receipt,
+      }, 200));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithTestCommitment("https://seller.test/resource", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-12345678901234567890",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: new InMemoryReceiptStore(),
+    })).rejects.toThrow(/missing canonical txSignature/i);
   });
 
   it("rejects receipts whose payer commitment does not match the committed buyer value", async () => {

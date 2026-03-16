@@ -125,6 +125,16 @@ function assertReceiptIntegrity(
   if (receipt.payload.settlement !== expected.settlement) {
     throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
   }
+  assertCanonicalReceiptSettlementIdentity(receipt);
+}
+
+function assertCanonicalReceiptSettlementIdentity(receipt: SignedReceipt): void {
+  if (receipt.payload.settlement === "transfer" && !receipt.payload.txSignature) {
+    throw new Error("Receipt verification failed: transfer receipt missing canonical txSignature");
+  }
+  if (receipt.payload.settlement === "stream" && !receipt.payload.streamId) {
+    throw new Error("Receipt verification failed: stream receipt missing canonical streamId");
+  }
 }
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
@@ -292,6 +302,7 @@ async function extractAndVerifyEmbeddedReceipt(
   if (receipt.payload.settlement !== expected.settlement) {
     throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
   }
+  assertCanonicalReceiptSettlementIdentity(receipt);
 
   return receipt;
 }
@@ -368,6 +379,7 @@ async function extractAndVerifyHeaderReceipt(
   if (receipt.payload.settlement !== expected.settlement) {
     throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
   }
+  assertCanonicalReceiptSettlementIdentity(receipt);
 
   return receipt;
 }

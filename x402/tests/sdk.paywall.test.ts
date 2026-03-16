@@ -1326,4 +1326,84 @@ describe("dnaPaywall", () => {
     }).__dnaPaywallRuntime;
     expect(runtime?.commits.get(secondCommitId)?.finalized).toBe(false);
   });
+
+  it("locks paywall transfer replay on the verifier's canonical txSignature", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: {
+        async verify() {
+          return {
+            ok: true,
+            settledOnchain: true,
+            txSignature: "tx-canonical-paywall-proof-1234567890123",
+          } as const;
+        },
+      },
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/reuse-canonical-a" }), firstRes);
+    const firstQuoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const secondRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/reuse-canonical-b" }), secondRes);
+    const secondQuoteId = (secondRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const firstCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: firstQuoteId, payerCommitment32B: "0x" + "d7".repeat(32) },
+    }), firstCommitRes);
+    const firstCommitId = (firstCommitRes.body as { commitId: string }).commitId;
+
+    const secondCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: secondQuoteId, payerCommitment32B: "0x" + "d8".repeat(32) },
+    }), secondCommitRes);
+    const secondCommitId = (secondCommitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: firstCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-proof-alias-paywall-a-12345678901234",
+        },
+      },
+    }), makeResponse());
+
+    const duplicateFinalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: secondCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-proof-alias-paywall-b-12345678901234",
+        },
+      },
+    }), duplicateFinalizeRes);
+
+    expect(duplicateFinalizeRes.statusCode).toBe(409);
+    expect(duplicateFinalizeRes.body).toEqual({
+      error: "Transfer proof already used",
+      commitId: firstCommitId,
+    });
+    const runtime = (app.locals as {
+      __dnaPaywallRuntime?: { commits: Map<string, { finalized: boolean }> };
+    }).__dnaPaywallRuntime;
+    expect(runtime?.commits.get(secondCommitId)?.finalized).toBe(false);
+  });
 });

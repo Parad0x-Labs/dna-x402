@@ -311,6 +311,28 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         });
         return;
       }
+      if (proof.settlement === "transfer") {
+        const canonicalTxSignature = verification.txSignature!;
+        const canonicalCommitId = runtime?.usedTransferProofs.get(canonicalTxSignature);
+        if (canonicalCommitId && canonicalCommitId !== commitId) {
+          routeRes.status(409).json({
+            error: "Transfer proof already used",
+            commitId: canonicalCommitId,
+          });
+          return;
+        }
+      }
+      if (proof.settlement === "stream") {
+        const canonicalStreamId = verification.streamId!;
+        const canonicalCommitId = runtime?.usedStreamProofs.get(canonicalStreamId);
+        if (canonicalCommitId && canonicalCommitId !== commitId) {
+          routeRes.status(409).json({
+            error: "Stream proof already used",
+            commitId: canonicalCommitId,
+          });
+          return;
+        }
+      }
 
       const receiptId = crypto.randomUUID();
       const finalizeResponse = { ok: true, receiptId, commitId, settlement: proof.settlement };
@@ -341,10 +363,12 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
 
       runtime?.receipts.set(receiptId, receipt);
       if (proof.settlement === "transfer") {
-        runtime?.usedTransferProofs.set(proof.txSignature, commitId);
+        const canonicalTxSignature = verification.txSignature!;
+        runtime?.usedTransferProofs.set(canonicalTxSignature, commitId);
       }
       if (proof.settlement === "stream") {
-        runtime?.usedStreamProofs.set(proof.streamId, commitId);
+        const canonicalStreamId = verification.streamId!;
+        runtime?.usedStreamProofs.set(canonicalStreamId, commitId);
       }
       commit.finalized = true;
       commit.receiptId = receiptId;

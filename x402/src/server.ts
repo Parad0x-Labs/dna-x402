@@ -987,6 +987,17 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return { handled: true };
     }
 
+    if (paymentProof.settlement === "transfer" && !verification.txSignature) {
+      sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+        cause: "verified transfer settlement is missing canonical txSignature",
+      }), {
+        dialectDetected: normalized.style,
+        paymentRequired: normalized.required,
+        paymentProof: proof,
+      });
+      return { handled: true };
+    }
+
     if (paymentProof.settlement === "transfer" && verification.txSignature) {
       const key = createReplayKey({
         shopId: CORE_SHOP_ID,
@@ -1483,8 +1494,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       }
     }
 
-    const quoteAtomic = parseAtomic(quote.totalAtomic);
-    if (paymentProof.settlement === "netting" || shouldUseNetting(config.feePolicy, quoteAtomic)) {
+    if (paymentProof.settlement === "netting") {
       nettingLedger.add({
         payerCommitment32B: commit.payerCommitment32B,
         providerId: quote.recipient,
