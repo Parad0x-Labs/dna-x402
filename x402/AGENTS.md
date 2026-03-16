@@ -104,7 +104,7 @@ app.get("/", (req, res) => {
 app.listen(3000);
 ```
 
-That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically, verifies `transfer` proofs locally, returns signed receipts for the payment finalize handshake, and on unlocked JSON responses can emit a stronger delivery-bound receipt for the actual protected body. Unlocked text and binary responses also expose a signed `x-dna-receipt` header. A `5xx` response does not consume the paid unlock; the scaffold restores the commit for retry.
+That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically, verifies `transfer` proofs locally, returns signed receipts for the payment finalize handshake, and on unlocked JSON responses can emit a stronger delivery-bound receipt for the actual protected body. Unlocked text and binary responses also expose a signed `x-dna-receipt` header. Manual streaming/chunked protected responses are rejected with `501 unsupported_delivery_mode` instead of being silently delivered without a verifiable receipt. A `5xx` response does not consume the paid unlock; the scaffold restores the commit for retry.
 Any x402 agent hits your endpoint → gets 402 → pays → retries → gets the result.
 
 ### Multiple prices on different endpoints

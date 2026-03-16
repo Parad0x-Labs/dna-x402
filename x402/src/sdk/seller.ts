@@ -398,7 +398,15 @@ export function dnaPrice(
       });
       const originalJson = res.json.bind(res);
       const originalSend = res.send.bind(res);
+      const mutableRes = res as Response & {
+        write?: (...args: any[]) => any;
+        end?: (...args: any[]) => any;
+      };
+      const originalWrite = mutableRes.write?.bind(res);
+      const originalEnd = mutableRes.end?.bind(res);
       let deliveryReceiptIssued = false;
+      let allowNativeBodyWrite = false;
+      let unsupportedDeliveryRejected = false;
       const attachDeliveryReceipt = (body: unknown): SignedReceipt | undefined => {
         if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
           return undefined;
@@ -410,20 +418,70 @@ export function dnaPrice(
         }
         return deliveryReceipt;
       };
-      res.json = ((body: unknown) => {
-        if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
-          return originalJson(body);
+      const rejectUnsupportedDelivery = (): boolean => {
+        if (unsupportedDeliveryRejected) {
+          return false;
         }
-        const deliveryReceipt = attachDeliveryReceipt(body);
-        return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
+        unsupportedDeliveryRejected = true;
+        res.status(501);
+        allowNativeBodyWrite = true;
+        try {
+          originalJson({
+            error: "unsupported_delivery_mode",
+            message: "dnaPrice protected responses must use res.json or res.send for verifiable delivery",
+          });
+        } finally {
+          allowNativeBodyWrite = false;
+        }
+        return false;
+      };
+      res.json = ((body: unknown) => {
+        allowNativeBodyWrite = true;
+        try {
+          if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
+            return originalJson(body);
+          }
+          const deliveryReceipt = attachDeliveryReceipt(body);
+          return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
+        } finally {
+          allowNativeBodyWrite = false;
+        }
       }) as typeof res.json;
       res.send = ((body: unknown) => {
-        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400 || (!isBinaryBody(body) && typeof body !== "string")) {
+        allowNativeBodyWrite = true;
+        try {
+          if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400 || (!isBinaryBody(body) && typeof body !== "string")) {
+            return originalSend(body as never);
+          }
+          attachDeliveryReceipt(body);
           return originalSend(body as never);
+        } finally {
+          allowNativeBodyWrite = false;
         }
-        attachDeliveryReceipt(body);
-        return originalSend(body as never);
       }) as typeof res.send;
+      if (originalWrite) {
+        mutableRes.write = ((...args: any[]) => {
+          if (allowNativeBodyWrite || deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+            return originalWrite(...args);
+          }
+          if (unsupportedDeliveryRejected) {
+            return false;
+          }
+          return rejectUnsupportedDelivery();
+        }) as typeof mutableRes.write;
+      }
+      if (originalEnd) {
+        mutableRes.end = ((...args: any[]) => {
+          if (allowNativeBodyWrite || deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+            return originalEnd(...args);
+          }
+          if (unsupportedDeliveryRejected) {
+            return res;
+          }
+          rejectUnsupportedDelivery();
+          return res;
+        }) as typeof mutableRes.end;
+      }
       next();
       return;
     }

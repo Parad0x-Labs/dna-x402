@@ -41,6 +41,7 @@ class MockResponse extends EventEmitter {
   statusCode = 200;
   body: unknown;
   headers: Record<string, string> = {};
+  ended = false;
 
   status(code: number): this {
     this.statusCode = code;
@@ -50,11 +51,36 @@ class MockResponse extends EventEmitter {
   json(body: unknown): this {
     this.body = body;
     this.emit("finish");
+    this.ended = true;
     return this;
   }
 
   send(body: unknown): this {
     this.body = body;
+    this.emit("finish");
+    this.ended = true;
+    return this;
+  }
+
+  write(chunk: unknown): boolean {
+    if (this.ended) {
+      return false;
+    }
+    if (this.body === undefined) {
+      this.body = chunk;
+    } else if (Buffer.isBuffer(this.body) && Buffer.isBuffer(chunk)) {
+      this.body = Buffer.concat([this.body, chunk]);
+    } else {
+      this.body = String(this.body) + String(chunk);
+    }
+    return true;
+  }
+
+  end(chunk?: unknown): this {
+    if (chunk !== undefined) {
+      this.write(chunk);
+    }
+    this.ended = true;
     this.emit("finish");
     return this;
   }
@@ -596,5 +622,68 @@ describe("dnaPaywall", () => {
 
     expect(onPaymentVerified).toHaveBeenCalledTimes(1);
     expect((retryRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
+  });
+
+  it("fails closed on streamed protected responses and restores the paid commit", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-stream-123456789012345678",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/stream" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "99".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-stream-123456789012345678",
+        },
+      },
+    }), makeResponse());
+
+    const streamedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/stream",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      streamedRes,
+      () => {
+        streamedRes.write("chunk-1");
+        streamedRes.end("chunk-2");
+      },
+    );
+
+    expect(streamedRes.statusCode).toBe(501);
+    expect(streamedRes.body).toEqual({
+      error: "unsupported_delivery_mode",
+      message: "dnaPaywall protected responses must use res.json or res.send for verifiable delivery",
+    });
+    expect(streamedRes.headers[RECEIPT_HEADER_NAME]).toBeUndefined();
+    const runtime = (app.locals as { __dnaPaywallRuntime?: { paidCommits: Set<string> } }).__dnaPaywallRuntime;
+    expect(runtime?.paidCommits.has(commitId)).toBe(true);
   });
 });
