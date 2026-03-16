@@ -108,6 +108,20 @@ describe("dnaSeller", () => {
       .toBe("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
   });
 
+  it("uses bigint-safe fee math for large quotes", () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      feeBps: 30,
+    });
+
+    const quote = seller.createQuote("https://example.test/api/huge", "900719925474099312345", "https://example.test");
+    const expectedFee = ((900719925474099312345n * 30n) + 9_999n) / 10_000n;
+
+    expect(quote.feeAtomic).toBe(expectedFee.toString());
+    expect(quote.totalAtomic).toBe((900719925474099312345n + expectedFee).toString());
+  });
+
   it("verifies transfer proofs and emits on-chain receipt data", async () => {
     const app = express();
     const seller = dnaSeller(app, {
@@ -175,6 +189,31 @@ describe("dnaSeller", () => {
       },
     });
     expect(verifySignedReceipt(receiptRes.body as Parameters<typeof verifySignedReceipt>[0])).toBe(true);
+  });
+
+  it("rejects malformed payer commitments during commit", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-commit-12345678901234567890",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/inference", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "not-a-32-byte-hex" },
+    }), commitRes);
+
+    expect(commitRes.statusCode).toBe(400);
+    expect(commitRes.body).toMatchObject({
+      error: "payerCommitment32B must be 32-byte hex (64 chars)",
+    });
   });
 
   it("rejects invalid proofs instead of unlocking the paid commit", async () => {
@@ -286,5 +325,72 @@ describe("dnaSeller", () => {
         result: "premium output",
       },
     }));
+  });
+
+  it("restores a paid commit after a 500 response and consumes it only after success", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-retry-12345678901234567890",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/retry", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "66".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-retry-12345678901234567890",
+        },
+      },
+    }), makeResponse());
+
+    const failedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/retry",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      failedRes,
+      () => {
+        failedRes.status(500).json({ error: "boom" });
+      },
+    );
+
+    expect(seller.paidCommits.has(commitId)).toBe(true);
+    expect((failedRes.body as { receipt?: unknown }).receipt).toBeUndefined();
+
+    const okRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/retry",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      okRes,
+      () => {
+        okRes.json({ ok: true, result: "retry worked" });
+      },
+    );
+
+    expect(seller.paidCommits.has(commitId)).toBe(false);
+    expect((okRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
   });
 });

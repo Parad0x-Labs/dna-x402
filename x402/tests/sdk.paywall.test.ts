@@ -132,6 +132,37 @@ describe("dnaPaywall", () => {
     });
   });
 
+  it("rejects malformed payer commitments during commit", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-bad-commit-1234567890",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/commit-check" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "not-a-32-byte-hex" },
+    }), commitRes);
+
+    expect(commitRes.statusCode).toBe(400);
+    expect(commitRes.body).toMatchObject({
+      error: "payerCommitment32B must be 32-byte hex (64 chars)",
+    });
+  });
+
   it("mounts commit/finalize/receipt routes and unlocks the route after verification", async () => {
     const app = express();
     const onPaymentVerified = vi.fn();
@@ -215,6 +246,7 @@ describe("dnaPaywall", () => {
     expect(verifySignedReceipt(receiptRes.body as Parameters<typeof verifySignedReceipt>[0])).toBe(true);
 
     let nextCalled = false;
+    const unlockedRes = makeResponse() as Response & MockResponse;
     await invoke(
       middleware,
       makeRequest(app, {
@@ -222,9 +254,10 @@ describe("dnaPaywall", () => {
         path: "/api/cheap",
         headers: { "x-dnp-commit-id": commitId },
       }),
-      makeResponse(),
+      unlockedRes,
       () => {
         nextCalled = true;
+        unlockedRes.json({ ok: true, data: "paid response" });
       },
     );
 
@@ -302,5 +335,79 @@ describe("dnaPaywall", () => {
         data: "delivery output",
       },
     }));
+  });
+
+  it("restores a paid commit after a 500 response and fires onPaymentVerified only after success", async () => {
+    const app = express();
+    const onPaymentVerified = vi.fn();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-retry-123456789012345678",
+      }),
+      onPaymentVerified,
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/retry" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "77".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-retry-123456789012345678",
+        },
+      },
+    }), makeResponse());
+
+    const failedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/retry",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      failedRes,
+      () => {
+        failedRes.status(500).json({ error: "boom" });
+      },
+    );
+
+    expect(onPaymentVerified).not.toHaveBeenCalled();
+
+    const retryRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/retry",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      retryRes,
+      () => {
+        retryRes.json({ ok: true, data: "retry worked" });
+      },
+    );
+
+    expect(onPaymentVerified).toHaveBeenCalledTimes(1);
+    expect((retryRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
   });
 });

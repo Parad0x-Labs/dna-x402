@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { PaymentVerifier } from "../paymentVerifier.js";
-import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../receipts.js";
+import { computeRequestDigest, computeResponseDigest, normalizeCommitment32B, ReceiptSigner } from "../receipts.js";
 import type { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import {
   createPaymentVerifier,
@@ -152,6 +152,13 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         routeRes.status(400).json({ error: "Missing quoteId or payerCommitment32B" });
         return;
       }
+      let normalizedCommitment: string;
+      try {
+        normalizedCommitment = normalizeCommitment32B(payerCommitment32B);
+      } catch (error) {
+        routeRes.status(400).json({ error: (error as Error).message });
+        return;
+      }
 
       const quote = runtime?.quotes.get(quoteId);
       if (!quote) {
@@ -169,7 +176,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       runtime?.commits.set(commitId, {
         commitId,
         quoteId,
-        payerCommitment: payerCommitment32B,
+        payerCommitment: normalizedCommitment,
         createdAt: new Date().toISOString(),
         finalized: false,
       });
@@ -328,16 +335,26 @@ export function dnaPaywall(options: PaywallOptions) {
     const commitId = req.header("x-dnp-commit-id");
     if (commitId && runtime.paidCommits.has(commitId)) {
       runtime.paidCommits.delete(commitId);
-      const receiptId = runtime.commits.get(commitId)?.receiptId;
-      if (receiptId) {
+      res.once("finish", () => {
+        if ((res.statusCode ?? 200) >= 500) {
+          runtime.paidCommits.add(commitId);
+          return;
+        }
+        if ((res.statusCode ?? 200) >= 400) {
+          return;
+        }
+        const receiptId = runtime.commits.get(commitId)?.receiptId;
+        if (!receiptId) {
+          return;
+        }
         const receipt = runtime.receipts.get(receiptId);
         if (receipt?.onPaymentVerified) {
           receipt.onPaymentVerified(createReceiptPayload(receipt), req);
         }
-      }
+      });
       const originalJson = res.json.bind(res);
       res.json = ((body: unknown) => {
-        if (!isJsonRecord(body)) {
+        if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
           return originalJson(body);
         }
         const deliveryReceipt = issueDeliveryReceipt(runtime, commitId, req, body, res.statusCode || 200);
