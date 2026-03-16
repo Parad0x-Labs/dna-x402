@@ -68,6 +68,7 @@ interface QuoteRecord {
   settlement: string[];
   memoHash: string;
   resource: string;
+  method: string;
   network: PaymentAccept["network"];
 }
 
@@ -111,6 +112,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const commits = new Map<string, CommitRecord>();
   const receipts = new Map<string, ReceiptRecord>();
   const paidCommits = new Set<string>();
+  const usedTransferProofs = new Map<string, string>();
 
   const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
   const mint = options.mint ?? defaultUsdcMintForNetwork(options.network, options.solanaRpcUrl);
@@ -186,10 +188,21 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       return;
     }
 
-    if (commit.finalized) {
-      res.status(409).json({ error: "Already finalized", receiptId: commit.receiptId });
-      return;
-    }
+      if (commit.finalized) {
+        res.status(409).json({ error: "Already finalized", receiptId: commit.receiptId });
+        return;
+      }
+
+      if (paymentProof.settlement === "transfer") {
+        const existingCommitId = usedTransferProofs.get(paymentProof.txSignature);
+        if (existingCommitId && existingCommitId !== commitId) {
+          res.status(409).json({
+            error: "Transfer proof already used",
+            commitId: existingCommitId,
+          });
+          return;
+        }
+      }
 
     const quote = quotes.get(commit.quoteId);
     if (!quote) {
@@ -259,6 +272,9 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     const receipt: ReceiptRecord = { signedReceipt };
 
     receipts.set(receiptId, receipt);
+    if (paymentProof.settlement === "transfer") {
+      usedTransferProofs.set(paymentProof.txSignature, commitId);
+    }
     commit.finalized = true;
     commit.receiptId = receiptId;
     paidCommits.add(commitId);
@@ -351,7 +367,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     /**
      * Create a quote for a resource at a given price.
      */
-    createQuote(resource: string, priceAtomic: string, baseUrl: string): QuoteRecord {
+    createQuote(resource: string, priceAtomic: string, baseUrl: string, method = "GET"): QuoteRecord {
       expireOld();
       const quoteId = crypto.randomUUID();
       const amountAtomic = parseAtomic(priceAtomic);
@@ -360,7 +376,8 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         : "0";
       const totalAtomic = toAtomicString(amountAtomic + parseAtomic(feeAtomic));
       const expiresAt = new Date(Date.now() + ttl * 1000).toISOString();
-      const memoHash = hashHex(`${quoteId}:${resource}:${priceAtomic}:${expiresAt}`);
+      const normalizedMethod = method.toUpperCase();
+      const memoHash = hashHex(`${quoteId}:${normalizedMethod}:${resource}:${priceAtomic}:${expiresAt}`);
 
       const quote: QuoteRecord = {
         quoteId,
@@ -373,6 +390,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         settlement,
         memoHash,
         resource,
+        method: normalizedMethod,
         network,
       };
       quotes.set(quoteId, quote);
@@ -401,6 +419,7 @@ export function dnaPrice(
       commitId
       && seller.paidCommits.has(commitId)
       && paidCommit?.finalized
+      && paidQuote?.method === req.method.toUpperCase()
       && paidQuote?.resource === requestTarget(req)
     ) {
       seller.paidCommits.delete(commitId);
@@ -549,7 +568,7 @@ export function dnaPrice(
     // Issue quote
     const host = req.get("host") ?? "localhost";
     const baseUrl = `${req.protocol}://${host}`;
-    const quote = seller.createQuote(requestTarget(req), priceAtomic, baseUrl);
+    const quote = seller.createQuote(requestTarget(req), priceAtomic, baseUrl, req.method);
 
     res.status(402).json({
       error: "payment_required",

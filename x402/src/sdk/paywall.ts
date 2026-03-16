@@ -45,6 +45,7 @@ interface QuoteRecord {
   settlement: string[];
   memoHash: string;
   resource: string;
+  method: string;
   network: PaymentAccept["network"];
   paymentVerifier: PaymentVerifier;
   receiptSigner: ReceiptSigner;
@@ -78,6 +79,7 @@ interface PaywallRuntime {
   commits: Map<string, CommitRecord>;
   receipts: Map<string, ReceiptRecord>;
   paidCommits: Set<string>;
+  usedTransferProofs: Map<string, string>;
   routesMounted: boolean;
 }
 
@@ -155,6 +157,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       commits: new Map<string, CommitRecord>(),
       receipts: new Map<string, ReceiptRecord>(),
       paidCommits: new Set<string>(),
+      usedTransferProofs: new Map<string, string>(),
       routesMounted: false,
     };
     locals[PAYWALL_RUNTIME_KEY] = runtime;
@@ -236,6 +239,17 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         return;
       }
 
+      if (proof.settlement === "transfer") {
+        const existingCommitId = runtime?.usedTransferProofs.get(proof.txSignature);
+        if (existingCommitId && existingCommitId !== commitId) {
+          routeRes.status(409).json({
+            error: "Transfer proof already used",
+            commitId: existingCommitId,
+          });
+          return;
+        }
+      }
+
       const verification = await quote.paymentVerifier.verify({
         quoteId: quote.quoteId,
         resource: quote.resource,
@@ -288,6 +302,9 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       };
 
       runtime?.receipts.set(receiptId, receipt);
+      if (proof.settlement === "transfer") {
+        runtime?.usedTransferProofs.set(proof.txSignature, commitId);
+      }
       commit.finalized = true;
       commit.receiptId = receiptId;
       runtime?.paidCommits.add(commitId);
@@ -356,6 +373,7 @@ export function dnaPaywall(options: PaywallOptions) {
       commitId
       && runtime.paidCommits.has(commitId)
       && paidCommit?.finalized
+      && paidQuote?.method === req.method.toUpperCase()
       && paidQuote?.resource === requestTarget(req)
     ) {
       runtime.paidCommits.delete(commitId);
@@ -514,7 +532,8 @@ export function dnaPaywall(options: PaywallOptions) {
     const quoteId = crypto.randomUUID();
     const expiresAt = new Date(now.getTime() + ttl * 1000).toISOString();
     const target = requestTarget(req);
-    const memoHash = hashHex(`${quoteId}:${target}:${options.priceAtomic}:${expiresAt}`);
+    const method = req.method.toUpperCase();
+    const memoHash = hashHex(`${quoteId}:${method}:${target}:${options.priceAtomic}:${expiresAt}`);
 
     const quote: QuoteRecord = {
       quoteId,
@@ -525,6 +544,7 @@ export function dnaPaywall(options: PaywallOptions) {
       settlement,
       memoHash,
       resource: target,
+      method,
       network,
       paymentVerifier,
       receiptSigner,

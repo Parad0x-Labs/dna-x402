@@ -921,4 +921,145 @@ describe("dnaSeller", () => {
     expect((correctQueryRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
     expect(seller.paidCommits.has(commitId)).toBe(false);
   });
+
+  it("does not unlock the same path with a different HTTP method", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-method-bind-123456789012345",
+      }),
+    });
+
+    const firstQuoteRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/method-bound",
+      }),
+      firstQuoteRes,
+    );
+    const quoteId = (firstQuoteRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "cd".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-method-bind-123456789012345",
+        },
+      },
+    }), makeResponse());
+
+    const wrongMethodRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "POST",
+        path: "/api/method-bound",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      wrongMethodRes,
+    );
+
+    expect(wrongMethodRes.statusCode).toBe(402);
+    expect((wrongMethodRes.body as { error: string }).error).toBe("payment_required");
+    expect(seller.paidCommits.has(commitId)).toBe(true);
+
+    const correctMethodRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/method-bound",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      correctMethodRes,
+      () => {
+        correctMethodRes.json({ ok: true, method: "GET" });
+      },
+    );
+
+    expect(correctMethodRes.statusCode).toBe(200);
+    expect((correctMethodRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
+    expect(seller.paidCommits.has(commitId)).toBe(false);
+  });
+
+  it("rejects reusing the same transfer proof across different commits", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-proof-reuse-12345678901234",
+      }),
+    });
+
+    const firstQuote = seller.createQuote("/api/reuse-a", "5000", "https://example.test");
+    const secondQuote = seller.createQuote("/api/reuse-b", "5000", "https://example.test");
+
+    const firstCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: firstQuote.quoteId, payerCommitment32B: "0x" + "d1".repeat(32) },
+    }), firstCommitRes);
+    const firstCommitId = (firstCommitRes.body as { commitId: string }).commitId;
+
+    const secondCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: secondQuote.quoteId, payerCommitment32B: "0x" + "d2".repeat(32) },
+    }), secondCommitRes);
+    const secondCommitId = (secondCommitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: firstCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-proof-reuse-12345678901234",
+        },
+      },
+    }), makeResponse());
+
+    const duplicateFinalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: secondCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-proof-reuse-12345678901234",
+        },
+      },
+    }), duplicateFinalizeRes);
+
+    expect(duplicateFinalizeRes.statusCode).toBe(409);
+    expect(duplicateFinalizeRes.body).toEqual({
+      error: "Transfer proof already used",
+      commitId: firstCommitId,
+    });
+    expect(seller.commits.get(secondCommitId)?.finalized).toBe(false);
+  });
 });
