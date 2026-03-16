@@ -204,6 +204,62 @@ describe("server receipt response binding", () => {
     expectResponseDigest(deliveredReceipt, businessBody);
   });
 
+  it("consumes finalized commits after one protected delivery", async () => {
+    const { app, context } = createX402App(baseConfig(), {
+      paymentVerifier: new FakeVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    const quoteRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/quote"), makeRequest({
+      method: "GET",
+      path: "/quote",
+      query: { resource: "/resource" },
+    }), quoteRes);
+    const quoteId = (quoteRes.body as { quoteId: string }).quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: {
+        quoteId,
+        payerCommitment32B: "0x" + "77".repeat(32),
+      },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-server-receipt-consume-1234567890123",
+        },
+      },
+    }), makeResponse());
+
+    const firstDelivery = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/resource"), makeRequest({
+      method: "GET",
+      path: "/resource",
+      headers: { "x-dnp-commit-id": commitId },
+    }), firstDelivery);
+    expect(firstDelivery.statusCode).toBe(200);
+    expect(context.commits.get(commitId)?.consumedAt).toBeTruthy();
+
+    const secondDelivery = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/resource"), makeRequest({
+      method: "GET",
+      path: "/resource",
+      headers: { "x-dnp-commit-id": commitId },
+    }), secondDelivery);
+    expect(secondDelivery.statusCode).toBe(402);
+    expect(secondDelivery.body).toMatchObject({ error: "payment_required" });
+  });
+
   it("binds /inference receipts to the unlocked protected payload", async () => {
     const { app, context } = createX402App(baseConfig(), {
       paymentVerifier: new FakeVerifier(),

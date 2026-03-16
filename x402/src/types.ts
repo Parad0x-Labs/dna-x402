@@ -112,6 +112,7 @@ export interface CommitRecord {
   status: "pending" | "finalized" | "failed";
   settlementMode?: SettlementMode;
   receiptId?: string;
+  consumedAt?: string;
 }
 
 export interface ReceiptPayload {

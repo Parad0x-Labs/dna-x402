@@ -796,6 +796,24 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     return signed;
   }
 
+  function claimCommitDelivery(commit: CommitRecord, receiptId: string): boolean {
+    if (commit.consumedAt) {
+      return false;
+    }
+    commit.consumedAt = now().toISOString();
+    commits.set(commit.commitId, commit);
+    return true;
+  }
+
+  function restoreClaimedCommitDelivery(commitId: string, receiptId: string): void {
+    const current = commits.get(commitId);
+    if (!current || current.receiptId !== receiptId) {
+      return;
+    }
+    current.consumedAt = undefined;
+    commits.set(commitId, current);
+  }
+
   async function tryCompatPayment(
     req: express.Request,
     res: express.Response,
@@ -1597,37 +1615,44 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
           const quote = quotes.get(commit.quoteId);
           const receipt = receipts.get(commit.receiptId);
 
-        if (quote && receipt && quote.resource === fixture.path) {
-          const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
-          const qualityAccepted = verifySignedReceipt(receipt);
-          const responseBody = fulfilledResponseBody(fixture.path);
-          recordGuardDelivery(fixture.path, Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
-          recordMarketEvent({
-              type: "REQUEST_FULFILLED",
-              shopId: CORE_SHOP_ID,
-              endpointId: endpointIdForResource(quote.resource),
-              capabilityTags: capabilityTagsForResource(quote.resource),
-              priceAmount: quote.totalAtomic,
-              mint: quote.mint,
-              settlementMode: commit.settlementMode,
-              latencyMs: Date.now() - started,
-              statusCode: 200,
-              receiptId: receipt.payload.receiptId,
-              anchor32: commit.payerCommitment32B,
-              buyerCommitment32B: commit.payerCommitment32B,
-              anchored,
-              verificationTier: anchored ? "VERIFIED" : "FAST",
-              receiptValid: verifySignedReceipt(receipt),
-            });
-            res.json({
-              ...responseBody,
-              verifiable: {
-                receipt: true,
+          if (quote && receipt && quote.resource === fixture.path) {
+            if (claimCommitDelivery(commit, receipt.payload.receiptId)) {
+              res.once("finish", () => {
+                if ((res.statusCode ?? 200) >= 500) {
+                  restoreClaimedCommitDelivery(commit.commitId, receipt.payload.receiptId);
+                }
+              });
+              const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+              const qualityAccepted = verifySignedReceipt(receipt);
+              const responseBody = fulfilledResponseBody(fixture.path);
+              recordGuardDelivery(fixture.path, Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
+              recordMarketEvent({
+                type: "REQUEST_FULFILLED",
+                shopId: CORE_SHOP_ID,
+                endpointId: endpointIdForResource(quote.resource),
+                capabilityTags: capabilityTagsForResource(quote.resource),
+                priceAmount: quote.totalAtomic,
+                mint: quote.mint,
+                settlementMode: commit.settlementMode,
+                latencyMs: Date.now() - started,
+                statusCode: 200,
+                receiptId: receipt.payload.receiptId,
+                anchor32: commit.payerCommitment32B,
+                buyerCommitment32B: commit.payerCommitment32B,
                 anchored,
-              },
-              receipt,
-            });
-            return;
+                verificationTier: anchored ? "VERIFIED" : "FAST",
+                receiptValid: verifySignedReceipt(receipt),
+              });
+              res.json({
+                ...responseBody,
+                verifiable: {
+                  receipt: true,
+                  anchored,
+                },
+                receipt,
+              });
+              return;
+            }
           }
         }
       }
@@ -1713,32 +1738,39 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         const receipt = receipts.get(commit.receiptId);
 
         if (quote && receipt && quote.resource === "/resource") {
-          const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
-          const qualityAccepted = verifySignedReceipt(receipt);
-          const responseBody = fulfilledResponseBody("/resource");
-          recordGuardDelivery("/resource", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
-          recordMarketEvent({
-            type: "REQUEST_FULFILLED",
-            shopId: CORE_SHOP_ID,
-            endpointId: endpointIdForResource(quote.resource),
-            capabilityTags: capabilityTagsForResource(quote.resource),
-            priceAmount: quote.totalAtomic,
-            mint: quote.mint,
-            settlementMode: commit.settlementMode,
-            latencyMs: Date.now() - started,
-            statusCode: 200,
-            receiptId: receipt.payload.receiptId,
-            anchor32: commit.payerCommitment32B,
-            buyerCommitment32B: commit.payerCommitment32B,
-            anchored,
-            verificationTier: anchored ? "VERIFIED" : "FAST",
+          if (claimCommitDelivery(commit, receipt.payload.receiptId)) {
+            res.once("finish", () => {
+              if ((res.statusCode ?? 200) >= 500) {
+                restoreClaimedCommitDelivery(commit.commitId, receipt.payload.receiptId);
+              }
+            });
+            const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+            const qualityAccepted = verifySignedReceipt(receipt);
+            const responseBody = fulfilledResponseBody("/resource");
+            recordGuardDelivery("/resource", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
+            recordMarketEvent({
+              type: "REQUEST_FULFILLED",
+              shopId: CORE_SHOP_ID,
+              endpointId: endpointIdForResource(quote.resource),
+              capabilityTags: capabilityTagsForResource(quote.resource),
+              priceAmount: quote.totalAtomic,
+              mint: quote.mint,
+              settlementMode: commit.settlementMode,
+              latencyMs: Date.now() - started,
+              statusCode: 200,
+              receiptId: receipt.payload.receiptId,
+              anchor32: commit.payerCommitment32B,
+              buyerCommitment32B: commit.payerCommitment32B,
+              anchored,
+              verificationTier: anchored ? "VERIFIED" : "FAST",
               receiptValid: verifySignedReceipt(receipt),
             });
-          res.json({
-            ...responseBody,
-            receipt,
-          });
-          return;
+            res.json({
+              ...responseBody,
+              receipt,
+            });
+            return;
+          }
         }
       }
     }
@@ -1790,32 +1822,39 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         const quote = quotes.get(commit.quoteId);
         const receipt = receipts.get(commit.receiptId);
         if (quote && receipt && quote.resource === "/inference") {
-          const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
-          const qualityAccepted = verifySignedReceipt(receipt);
-          const responseBody = fulfilledResponseBody("/inference");
-          recordGuardDelivery("/inference", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
-          recordMarketEvent({
-            type: "REQUEST_FULFILLED",
-            shopId: CORE_SHOP_ID,
-            endpointId: endpointIdForResource(quote.resource),
-            capabilityTags: capabilityTagsForResource(quote.resource),
-            priceAmount: quote.totalAtomic,
-            mint: quote.mint,
-            settlementMode: commit.settlementMode,
-            latencyMs: Date.now() - started,
-            statusCode: 200,
-            receiptId: receipt.payload.receiptId,
-            anchor32: commit.payerCommitment32B,
-            buyerCommitment32B: commit.payerCommitment32B,
-            anchored,
-            verificationTier: anchored ? "VERIFIED" : "FAST",
-            receiptValid: verifySignedReceipt(receipt),
-          });
-          res.json({
-            ...responseBody,
-            receipt,
-          });
-          return;
+          if (claimCommitDelivery(commit, receipt.payload.receiptId)) {
+            res.once("finish", () => {
+              if ((res.statusCode ?? 200) >= 500) {
+                restoreClaimedCommitDelivery(commit.commitId, receipt.payload.receiptId);
+              }
+            });
+            const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+            const qualityAccepted = verifySignedReceipt(receipt);
+            const responseBody = fulfilledResponseBody("/inference");
+            recordGuardDelivery("/inference", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
+            recordMarketEvent({
+              type: "REQUEST_FULFILLED",
+              shopId: CORE_SHOP_ID,
+              endpointId: endpointIdForResource(quote.resource),
+              capabilityTags: capabilityTagsForResource(quote.resource),
+              priceAmount: quote.totalAtomic,
+              mint: quote.mint,
+              settlementMode: commit.settlementMode,
+              latencyMs: Date.now() - started,
+              statusCode: 200,
+              receiptId: receipt.payload.receiptId,
+              anchor32: commit.payerCommitment32B,
+              buyerCommitment32B: commit.payerCommitment32B,
+              anchored,
+              verificationTier: anchored ? "VERIFIED" : "FAST",
+              receiptValid: verifySignedReceipt(receipt),
+            });
+            res.json({
+              ...responseBody,
+              receipt,
+            });
+            return;
+          }
         }
       }
     }
