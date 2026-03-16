@@ -11,6 +11,7 @@ export interface PaymentVerifier {
 export interface SolanaPaymentVerifierOptions {
   streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
+  allowUnverifiedNetting?: boolean;
   rpcCache?: {
     statusTtlMs?: number;
     parsedTxTtlMs?: number;
@@ -40,6 +41,15 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
       case "stream":
         return this.verifyStream(quote, paymentProof.streamId, paymentProof.amountAtomic, paymentProof.topupSignature);
       case "netting":
+        if (!this.options.allowUnverifiedNetting) {
+          return {
+            ok: false,
+            settledOnchain: false,
+            error: "netting settlement requires explicit external liability attestation",
+            errorCode: "PAYMENT_INVALID",
+            retryable: false,
+          };
+        }
         return {
           ok: true,
           settledOnchain: false,

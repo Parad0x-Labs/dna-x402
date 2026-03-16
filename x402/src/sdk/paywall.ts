@@ -43,7 +43,7 @@ export function dnaPaywall(options: PaywallOptions) {
   const paidCommits = new Set<string>();
   const ttl = options.quoteTtlSeconds ?? 180;
   const mint = options.mint ?? "USDC";
-  const settlement = options.settlement ?? ["transfer", "netting"];
+  const settlement = options.settlement ?? ["transfer"];
 
   return function paywallMiddleware(req: Request, res: Response, next: NextFunction): void {
     if (options.requireApiKey) {

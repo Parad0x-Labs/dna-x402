@@ -163,7 +163,7 @@ function inferNetworkLabel(rpcUrl: string): "solana-devnet" | "solana-mainnet" {
 
 function chooseRecommendedMode(quote: Quote, config: X402Config): SettlementMode {
   const total = parseAtomic(quote.totalAtomic);
-  if (shouldUseNetting(config.feePolicy, total) && quote.settlement.includes("netting")) {
+  if (config.unsafeUnverifiedNettingEnabled && shouldUseNetting(config.feePolicy, total) && quote.settlement.includes("netting")) {
     return "netting";
   }
   if (quote.resource.includes("stream") && quote.settlement.includes("stream")) {
@@ -376,7 +376,9 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const guardConfig = resolveGuardConfig(config);
 
   const connection = new Connection(config.solanaRpcUrl, "confirmed");
-  const paymentVerifier = deps.paymentVerifier ?? new SolanaPaymentVerifier(connection);
+  const paymentVerifier = deps.paymentVerifier ?? new SolanaPaymentVerifier(connection, {
+    allowUnverifiedNetting: config.unsafeUnverifiedNettingEnabled,
+  });
   const receiptSigner = deps.receiptSigner ?? (config.receiptSigningSecret
     ? ReceiptSigner.fromBase58Secret(config.receiptSigningSecret)
     : ReceiptSigner.generate());
@@ -726,7 +728,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       mint: config.usdcMint,
       recipient: config.paymentRecipient,
       expiresAt,
-      settlement: ["transfer", "stream", "netting"],
+      settlement: config.unsafeUnverifiedNettingEnabled ? ["transfer", "stream", "netting"] : ["transfer", "stream"],
       memoHash,
     };
 
@@ -924,7 +926,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       expiresAt: normalized.required.expiresAt
         ? new Date(normalized.required.expiresAt).toISOString()
         : new Date(now().getTime() + config.quoteTtlSeconds * 1000).toISOString(),
-      settlement: ["transfer", "netting"],
+      settlement: config.unsafeUnverifiedNettingEnabled ? ["transfer", "netting"] : ["transfer"],
       memoHash: hashHex(JSON.stringify(normalized.required)),
     };
 
@@ -1353,6 +1355,15 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 
     if (!quote.settlement.includes(parsed.data.paymentProof.settlement)) {
       res.status(400).json({ ok: false, error: `Unsupported settlement mode: ${parsed.data.paymentProof.settlement}` });
+      return;
+    }
+
+    if (parsed.data.paymentProof.settlement === "netting" && !config.unsafeUnverifiedNettingEnabled) {
+      res.status(422).json({
+        ok: false,
+        error: "netting_disabled",
+        message: "Unsigned netting is disabled. Enable UNSAFE_UNVERIFIED_NETTING_ENABLED only for trusted bilateral settlement.",
+      });
       return;
     }
 

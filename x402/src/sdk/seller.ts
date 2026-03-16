@@ -5,6 +5,9 @@
  * Handles quotes, commits, finalization, receipts, and netting internally.
  * No separate DNA server needed.
  *
+ * Warning: this is a DX scaffold, not a trustless verifier. It trusts finalize proofs
+ * instead of verifying on-chain settlement. Use the full DNA server for untrusted buyers.
+ *
  * Usage:
  *   import express from "express";
  *   import { dnaSeller, dnaPrice } from "dna-x402/seller";
@@ -79,7 +82,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const mint = options.mint ?? "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
   const feeBps = options.feeBps ?? 0;
   const ttl = options.quoteTtlSeconds ?? 300;
-  const settlement = options.settlement ?? ["netting", "transfer"];
+  const settlement = options.settlement ?? ["transfer"];
 
   function expireOld() {
     const now = Date.now();

@@ -25,6 +25,7 @@ const schema = z.object({
   MIN_SETTLE_ATOMIC: z.string().regex(/^\d+$/).default("0"),
   NETTING_THRESHOLD_ATOMIC: z.string().regex(/^\d+$/).default("1000"),
   NETTING_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
+  UNSAFE_UNVERIFIED_NETTING_ENABLED: z.string().optional(),
   QUOTE_TTL_SECONDS: z.coerce.number().int().positive().default(180),
   RECEIPT_SIGNING_SECRET: z.string().optional(),
   ANCHORING_ENABLED: z.string().optional(),
@@ -86,6 +87,7 @@ export interface X402Config {
   feePolicy: FeePolicy;
   nettingThresholdAtomic: bigint;
   nettingIntervalMs: number;
+  unsafeUnverifiedNettingEnabled?: boolean;
   receiptSigningSecret?: string;
   anchoringEnabled?: boolean;
   receiptAnchorProgramId?: string;
@@ -151,6 +153,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
     },
     nettingThresholdAtomic: parseAtomic(parsed.NETTING_THRESHOLD_ATOMIC),
     nettingIntervalMs: parsed.NETTING_INTERVAL_MS,
+    unsafeUnverifiedNettingEnabled: parseBooleanEnv(parsed.UNSAFE_UNVERIFIED_NETTING_ENABLED, false),
     receiptSigningSecret: parsed.RECEIPT_SIGNING_SECRET,
     anchoringEnabled: parseBooleanEnv(parsed.ANCHORING_ENABLED, false),
     receiptAnchorProgramId: parsed.RECEIPT_ANCHOR_PROGRAM_ID,
