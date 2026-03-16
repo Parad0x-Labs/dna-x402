@@ -420,11 +420,14 @@ export function dnaPaywall(options: PaywallOptions) {
       res.json = ((body: unknown) => {
         allowNativeBodyWrite = true;
         try {
-          if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
+          if ((res.statusCode ?? 200) >= 400) {
             return originalJson(body);
           }
           const deliveryReceipt = attachDeliveryReceipt(body);
-          return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
+          if (deliveryReceipt && isJsonRecord(body)) {
+            return originalJson({ ...body, receipt: deliveryReceipt });
+          }
+          return originalJson(body);
         } finally {
           allowNativeBodyWrite = false;
         }
