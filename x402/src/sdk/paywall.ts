@@ -1,7 +1,14 @@
 import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { PaymentVerifier } from "../paymentVerifier.js";
-import { computeRequestDigest, computeResponseDigest, normalizeCommitment32B, ReceiptSigner } from "../receipts.js";
+import {
+  computeRequestDigest,
+  computeResponseDigest,
+  encodeReceiptHeader,
+  normalizeCommitment32B,
+  ReceiptSigner,
+  RECEIPT_HEADER_NAME,
+} from "../receipts.js";
 import type { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import {
   createPaymentVerifier,
@@ -84,7 +91,7 @@ function issueDeliveryReceipt(
   runtime: PaywallRuntime,
   commitId: string,
   req: Request,
-  responseBody: Record<string, unknown>,
+  responseBody: unknown,
   statusCode = 200,
 ): SignedReceipt | undefined {
   const commit = runtime.commits.get(commitId);
@@ -221,7 +228,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
 
       const verification = await quote.paymentVerifier.verify({
         quoteId: quote.quoteId,
-        resource: routeReq.path,
+        resource: quote.resource,
         amountAtomic: quote.priceAtomic,
         feeAtomic: "0",
         totalAtomic: quote.priceAtomic,
@@ -353,13 +360,33 @@ export function dnaPaywall(options: PaywallOptions) {
         }
       });
       const originalJson = res.json.bind(res);
+      const originalSend = res.send.bind(res);
+      let deliveryReceiptIssued = false;
+      const attachDeliveryReceipt = (body: unknown): SignedReceipt | undefined => {
+        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+          return undefined;
+        }
+        const deliveryReceipt = issueDeliveryReceipt(runtime, commitId, req, body, res.statusCode || 200);
+        if (deliveryReceipt) {
+          res.setHeader(RECEIPT_HEADER_NAME, encodeReceiptHeader(deliveryReceipt));
+          deliveryReceiptIssued = true;
+        }
+        return deliveryReceipt;
+      };
       res.json = ((body: unknown) => {
         if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
           return originalJson(body);
         }
-        const deliveryReceipt = issueDeliveryReceipt(runtime, commitId, req, body, res.statusCode || 200);
+        const deliveryReceipt = attachDeliveryReceipt(body);
         return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
       }) as typeof res.json;
+      res.send = ((body: unknown) => {
+        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400 || typeof body !== "string") {
+          return originalSend(body as never);
+        }
+        attachDeliveryReceipt(body);
+        return originalSend(body as never);
+      }) as typeof res.send;
       next();
       return;
     }
