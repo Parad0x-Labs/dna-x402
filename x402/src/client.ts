@@ -580,7 +580,22 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     return { response: firstResponse };
   }
 
-  const firstPayload = await firstResponse.json();
+  let firstPayload: unknown;
+  const firstContentType = firstResponse.headers.get("content-type") ?? "";
+  if (firstContentType.includes("application/json")) {
+    try {
+      firstPayload = await firstResponse.clone().json();
+    } catch {
+      firstPayload = undefined;
+    }
+  } else {
+    try {
+      const raw = await firstResponse.clone().text();
+      firstPayload = raw ? JSON.parse(raw) : undefined;
+    } catch {
+      firstPayload = undefined;
+    }
+  }
   const parsed402 = parsePaymentRequirements(firstPayload, firstResponse.headers, url);
   const requirements = parsed402.requirements;
   const maxSpend = parseAtomic(maxSpendAtomic);
