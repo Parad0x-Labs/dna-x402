@@ -60,7 +60,7 @@ app.get("/vault/list", (_req, res) => {
 app.use("/vault/search", dnaPaywall({
   priceAtomic: "1000",
   recipient: RECIPIENT,
-  settlement: ["netting", "transfer"],
+  settlement: ["transfer"],
 }));
 
 app.get("/vault/search", (req, res) => {

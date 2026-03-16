@@ -1,5 +1,8 @@
 import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
+import type { PaymentVerifier } from "../paymentVerifier.js";
+import type { PaymentAccept, PaymentProof } from "../types.js";
+import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
 
 export interface PaywallOptions {
   priceAtomic: string;
@@ -7,6 +10,11 @@ export interface PaywallOptions {
   recipient: string;
   quoteTtlSeconds?: number;
   settlement?: Array<"transfer" | "stream" | "netting">;
+  network?: SupportedNetwork;
+  solanaRpcUrl?: string;
+  paymentVerifier?: PaymentVerifier;
+  maxTransferProofAgeSeconds?: number;
+  unsafeUnverifiedNettingEnabled?: boolean;
   requireApiKey?: boolean;
   apiKeyHeader?: string;
   apiKeys?: Set<string>;
@@ -21,10 +29,218 @@ interface QuoteRecord {
   expiresAt: string;
   settlement: string[];
   memoHash: string;
+  network: PaymentAccept["network"];
+  paymentVerifier: PaymentVerifier;
+  onPaymentVerified?: (receipt: unknown, req: Request) => void;
 }
+
+interface CommitRecord {
+  commitId: string;
+  quoteId: string;
+  payerCommitment: string;
+  createdAt: string;
+  finalized: boolean;
+  receiptId?: string;
+}
+
+interface ReceiptRecord {
+  receiptId: string;
+  commitId: string;
+  quoteId: string;
+  settlement: string;
+  amountAtomic: string;
+  recipient: string;
+  mint: string;
+  createdAt: string;
+  settledOnchain: boolean;
+  txSignature?: string;
+  onPaymentVerified?: (receipt: unknown, req: Request) => void;
+}
+
+interface PaywallRuntime {
+  quotes: Map<string, QuoteRecord>;
+  commits: Map<string, CommitRecord>;
+  receipts: Map<string, ReceiptRecord>;
+  paidCommits: Set<string>;
+  routesMounted: boolean;
+}
+
+const PAYWALL_RUNTIME_KEY = "__dnaPaywallRuntime";
 
 function hashHex(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+function createReceiptPayload(receipt: ReceiptRecord) {
+  return {
+    payload: {
+      receiptId: receipt.receiptId,
+      quoteId: receipt.quoteId,
+      commitId: receipt.commitId,
+      settlement: receipt.settlement,
+      amountAtomic: receipt.amountAtomic,
+      totalAtomic: receipt.amountAtomic,
+      feeAtomic: "0",
+      mint: receipt.mint,
+      recipient: receipt.recipient,
+      createdAt: receipt.createdAt,
+      resource: "/",
+      shopId: "self",
+      requestDigest: "",
+      responseDigest: "",
+      settledOnchain: receipt.settledOnchain,
+      txSignature: receipt.txSignature ?? null,
+    },
+    signature: "self-signed",
+    signerPublicKey: receipt.recipient,
+    receiptHash: hashHex(receipt.receiptId),
+    prevHash: "0",
+  };
+}
+
+function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
+  const locals = req.app.locals as Record<string, unknown>;
+  let runtime = locals[PAYWALL_RUNTIME_KEY] as PaywallRuntime | undefined;
+  if (!runtime) {
+    runtime = {
+      quotes: new Map<string, QuoteRecord>(),
+      commits: new Map<string, CommitRecord>(),
+      receipts: new Map<string, ReceiptRecord>(),
+      paidCommits: new Set<string>(),
+      routesMounted: false,
+    };
+    locals[PAYWALL_RUNTIME_KEY] = runtime;
+  }
+
+  if (!runtime.routesMounted) {
+    runtime.routesMounted = true;
+
+    req.app.post("/commit", (routeReq: Request, routeRes: Response) => {
+      const { quoteId, payerCommitment32B } = routeReq.body ?? {};
+      if (!quoteId || !payerCommitment32B) {
+        routeRes.status(400).json({ error: "Missing quoteId or payerCommitment32B" });
+        return;
+      }
+
+      const quote = runtime?.quotes.get(quoteId);
+      if (!quote) {
+        routeRes.status(404).json({ error: "Quote not found or expired" });
+        return;
+      }
+
+      if (new Date(quote.expiresAt).getTime() < Date.now()) {
+        runtime?.quotes.delete(quoteId);
+        routeRes.status(410).json({ error: "Quote expired" });
+        return;
+      }
+
+      const commitId = crypto.randomUUID();
+      runtime?.commits.set(commitId, {
+        commitId,
+        quoteId,
+        payerCommitment: payerCommitment32B,
+        createdAt: new Date().toISOString(),
+        finalized: false,
+      });
+
+      routeRes.status(201).json({ commitId, quoteId, expiresAt: quote.expiresAt });
+    });
+
+    req.app.post("/finalize", async (routeReq: Request, routeRes: Response) => {
+      const { commitId, paymentProof } = routeReq.body ?? {};
+      if (!commitId) {
+        routeRes.status(400).json({ error: "Missing commitId" });
+        return;
+      }
+
+      const commit = runtime?.commits.get(commitId);
+      if (!commit) {
+        routeRes.status(404).json({ error: "Commit not found" });
+        return;
+      }
+
+      if (commit.finalized) {
+        routeRes.status(409).json({ error: "Already finalized", receiptId: commit.receiptId });
+        return;
+      }
+
+      const quote = runtime?.quotes.get(commit.quoteId);
+      if (!quote) {
+        routeRes.status(410).json({ error: "Quote expired" });
+        return;
+      }
+
+      const proof = paymentProof as PaymentProof | undefined;
+      if (!proof || (proof.settlement !== "transfer" && proof.settlement !== "stream" && proof.settlement !== "netting")) {
+        routeRes.status(400).json({ error: "Missing or invalid paymentProof" });
+        return;
+      }
+
+      if (!quote.settlement.includes(proof.settlement)) {
+        routeRes.status(400).json({ error: `Unsupported settlement mode: ${proof.settlement}` });
+        return;
+      }
+
+      const verification = await quote.paymentVerifier.verify({
+        quoteId: quote.quoteId,
+        resource: routeReq.path,
+        amountAtomic: quote.priceAtomic,
+        feeAtomic: "0",
+        totalAtomic: quote.priceAtomic,
+        mint: quote.mint,
+        recipient: quote.recipient,
+        expiresAt: quote.expiresAt,
+        settlement: quote.settlement as Array<"transfer" | "stream" | "netting">,
+        memoHash: quote.memoHash,
+      }, proof);
+
+      if (!verification?.ok) {
+        routeRes.status(verificationFailureStatus(verification ?? { ok: false, settledOnchain: false })).json({
+          ok: false,
+          error: {
+            code: verification?.errorCode ?? "PAYMENT_INVALID",
+            message: verification?.error ?? "Payment verification failed",
+            retryable: verification?.retryable ?? false,
+          },
+        });
+        return;
+      }
+
+      const receiptId = crypto.randomUUID();
+      const receipt: ReceiptRecord = {
+        receiptId,
+        commitId,
+        quoteId: commit.quoteId,
+        settlement: proof.settlement,
+        amountAtomic: quote.priceAtomic,
+        recipient: quote.recipient,
+        mint: quote.mint,
+        createdAt: new Date().toISOString(),
+        settledOnchain: verification.settledOnchain,
+        txSignature: verification.txSignature,
+        onPaymentVerified: quote.onPaymentVerified,
+      };
+
+      runtime?.receipts.set(receiptId, receipt);
+      commit.finalized = true;
+      commit.receiptId = receiptId;
+      runtime?.paidCommits.add(commitId);
+
+      routeRes.json({ ok: true, receiptId, commitId, settlement: proof.settlement });
+    });
+
+    req.app.get("/receipt/:id", (routeReq: Request, routeRes: Response) => {
+      const receipt = runtime?.receipts.get(routeReq.params.id as string);
+      if (!receipt) {
+        routeRes.status(404).json({ error: "Receipt not found" });
+        return;
+      }
+
+      routeRes.json(createReceiptPayload(receipt));
+    });
+  }
+
+  return runtime;
 }
 
 /**
@@ -39,13 +255,20 @@ function hashHex(input: string): string {
  *   3. GET /api/inference with x-dnp-commit-id header -> 200
  */
 export function dnaPaywall(options: PaywallOptions) {
-  const quotes = new Map<string, QuoteRecord>();
-  const paidCommits = new Set<string>();
   const ttl = options.quoteTtlSeconds ?? 180;
   const mint = options.mint ?? "USDC";
   const settlement = options.settlement ?? ["transfer"];
+  const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
+  const paymentVerifier = createPaymentVerifier({
+    rpcUrl: options.solanaRpcUrl,
+    maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
+    allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
+    paymentVerifier: options.paymentVerifier,
+  });
 
   return function paywallMiddleware(req: Request, res: Response, next: NextFunction): void {
+    const runtime = getRuntime(req, options);
+
     if (options.requireApiKey) {
       const headerName = options.apiKeyHeader ?? "x-api-key";
       const key = req.header(headerName);
@@ -60,8 +283,15 @@ export function dnaPaywall(options: PaywallOptions) {
     }
 
     const commitId = req.header("x-dnp-commit-id");
-    if (commitId && paidCommits.has(commitId)) {
-      paidCommits.delete(commitId);
+    if (commitId && runtime.paidCommits.has(commitId)) {
+      runtime.paidCommits.delete(commitId);
+      const receiptId = runtime.commits.get(commitId)?.receiptId;
+      if (receiptId) {
+        const receipt = runtime.receipts.get(receiptId);
+        if (receipt?.onPaymentVerified) {
+          receipt.onPaymentVerified(createReceiptPayload(receipt), req);
+        }
+      }
       next();
       return;
     }
@@ -79,8 +309,11 @@ export function dnaPaywall(options: PaywallOptions) {
       expiresAt,
       settlement,
       memoHash,
+      network,
+      paymentVerifier,
+      onPaymentVerified: options.onPaymentVerified,
     };
-    quotes.set(quoteId, quote);
+    runtime.quotes.set(quoteId, quote);
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
@@ -101,7 +334,7 @@ export function dnaPaywall(options: PaywallOptions) {
         },
         accepts: settlement.map((mode) => ({
           scheme: "solana-spl",
-          network: "solana-mainnet",
+          network,
           mint,
           maxAmount: options.priceAtomic,
           recipient: options.recipient,

@@ -2,11 +2,11 @@
  * DNA x402 — Self-Contained Seller SDK
  *
  * One function to turn any Express app into a payment-accepting API.
- * Handles quotes, commits, finalization, receipts, and netting internally.
+ * Handles quotes, commits, finalization, and receipts internally.
  * No separate DNA server needed.
  *
- * Warning: this is a DX scaffold, not a trustless verifier. It trusts finalize proofs
- * instead of verifying on-chain settlement. Use the full DNA server for untrusted buyers.
+ * Warning: this is still a DX scaffold. It now verifies transfer proofs through the local
+ * payment verifier, but advanced policy/replay/market controls still live in the full server.
  *
  * Usage:
  *   import express from "express";
@@ -23,6 +23,9 @@
  */
 import * as crypto from "node:crypto";
 import type { Express, NextFunction, Request, Response } from "express";
+import { PaymentVerifier } from "../paymentVerifier.js";
+import { PaymentAccept, PaymentProof } from "../types.js";
+import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
 
 export interface DnaSellerOptions {
   recipient: string;
@@ -31,6 +34,11 @@ export interface DnaSellerOptions {
   quoteTtlSeconds?: number;
   settlement?: Array<"transfer" | "netting">;
   dnaServerUrl?: string;
+  network?: SupportedNetwork;
+  solanaRpcUrl?: string;
+  paymentVerifier?: PaymentVerifier;
+  maxTransferProofAgeSeconds?: number;
+  unsafeUnverifiedNettingEnabled?: boolean;
 }
 
 interface QuoteRecord {
@@ -44,6 +52,7 @@ interface QuoteRecord {
   settlement: string[];
   memoHash: string;
   resource: string;
+  network: PaymentAccept["network"];
 }
 
 interface CommitRecord {
@@ -63,6 +72,8 @@ interface ReceiptRecord {
   amountAtomic: string;
   recipient: string;
   createdAt: string;
+  settledOnchain: boolean;
+  txSignature?: string;
 }
 
 function hashHex(input: string): string {
@@ -83,6 +94,13 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const feeBps = options.feeBps ?? 0;
   const ttl = options.quoteTtlSeconds ?? 300;
   const settlement = options.settlement ?? ["transfer"];
+  const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
+  const paymentVerifier = createPaymentVerifier({
+    rpcUrl: options.solanaRpcUrl,
+    maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
+    allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
+    paymentVerifier: options.paymentVerifier,
+  });
 
   function expireOld() {
     const now = Date.now();
@@ -125,7 +143,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   });
 
   // POST /finalize — submit payment proof
-  app.post("/finalize", (req: Request, res: Response) => {
+  app.post("/finalize", async (req: Request, res: Response) => {
     const { commitId, paymentProof } = req.body ?? {};
     if (!commitId) {
       res.status(400).json({ error: "Missing commitId" });
@@ -149,12 +167,42 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       return;
     }
 
-    const proof = paymentProof ?? {};
-    const settlementMode = proof.settlement ?? "netting";
+    const proof = paymentProof as PaymentProof | undefined;
+    if (!proof || (proof.settlement !== "transfer" && proof.settlement !== "netting")) {
+      res.status(400).json({ error: "Missing or invalid paymentProof" });
+      return;
+    }
 
-    // For netting: trust the commitment (off-chain settlement)
-    // For transfer: in production, verify the on-chain tx here
-    // This SDK trusts the proof for simplicity — use the full DNA server for on-chain verification
+    const settlementMode = proof.settlement;
+    if (!quote.settlement.includes(settlementMode)) {
+      res.status(400).json({ error: `Unsupported settlement mode: ${settlementMode}` });
+      return;
+    }
+
+    const verification = await paymentVerifier.verify({
+      quoteId: quote.quoteId,
+      resource: quote.resource,
+      amountAtomic: quote.amount,
+      feeAtomic: quote.feeAtomic,
+      totalAtomic: quote.totalAtomic,
+      mint: quote.mint,
+      recipient: quote.recipient,
+      expiresAt: quote.expiresAt,
+      settlement: quote.settlement as Array<"transfer" | "stream" | "netting">,
+      memoHash: quote.memoHash,
+    }, proof);
+
+    if (!verification.ok) {
+      res.status(verificationFailureStatus(verification)).json({
+        ok: false,
+        error: {
+          code: verification.errorCode ?? "PAYMENT_INVALID",
+          message: verification.error ?? "Payment verification failed",
+          retryable: verification.retryable ?? false,
+        },
+      });
+      return;
+    }
 
     const receiptId = crypto.randomUUID();
     const receipt: ReceiptRecord = {
@@ -165,6 +213,8 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       amountAtomic: quote.totalAtomic,
       recipient: quote.recipient,
       createdAt: new Date().toISOString(),
+      settledOnchain: verification.settledOnchain,
+      txSignature: verification.txSignature,
     };
 
     receipts.set(receiptId, receipt);
@@ -198,8 +248,8 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         shopId: "self",
         requestDigest: "",
         responseDigest: "",
-        settledOnchain: receipt.settlement === "transfer",
-        txSignature: null,
+        settledOnchain: receipt.settledOnchain,
+        txSignature: receipt.txSignature ?? null,
       },
       signature: "self-signed",
       signerPublicKey: receipt.recipient,
@@ -215,6 +265,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       mode: "dna-seller-sdk",
       recipient: options.recipient,
       mint,
+      network,
       settlement,
       quotes: quotes.size,
       receipts: receipts.size,
@@ -255,6 +306,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         settlement,
         memoHash,
         resource,
+        network,
       };
       quotes.set(quoteId, quote);
       return quote;
@@ -304,7 +356,7 @@ export function dnaPrice(
         },
         accepts: quote.settlement.map((mode) => ({
           scheme: "solana-spl",
-          network: "solana-mainnet",
+          network: quote.network,
           mint: quote.mint,
           maxAmount: quote.totalAtomic,
           recipient: quote.recipient,
