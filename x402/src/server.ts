@@ -213,7 +213,25 @@ function capabilityTagsForResource(resource: string): string[] {
   return RESOURCE_CAPABILITY_TAGS[resource] ?? [endpointIdForResource(resource)];
 }
 
+function auditFixtureForResource(resource: string): { id: string; path: string; title: string } | undefined {
+  return AUDIT_FIXTURES.find((fixture) => fixture.path === resource);
+}
+
 function fulfilledResponseBody(resource: string): Record<string, unknown> {
+  // Bind receipts to the stable protected payload, not to dynamic metadata like the receipt itself.
+  const fixture = auditFixtureForResource(resource);
+  if (fixture) {
+    return {
+      ok: true,
+      fixtureId: fixture.id,
+      title: fixture.title,
+      seller_defined: true,
+      output: {
+        primitive: fixture.id,
+        mode: "audit-fixture",
+      },
+    };
+  }
   if (resource === "/inference") {
     return { ok: true, output: "inference result" };
   }
@@ -1586,6 +1604,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         if (quote && receipt && quote.resource === fixture.path) {
           const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
           const qualityAccepted = verifySignedReceipt(receipt);
+          const responseBody = fulfilledResponseBody(fixture.path);
           recordGuardDelivery(fixture.path, Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
           recordMarketEvent({
               type: "REQUEST_FULFILLED",
@@ -1605,17 +1624,10 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
               receiptValid: verifySignedReceipt(receipt),
             });
             res.json({
-              ok: true,
-              fixtureId: fixture.id,
-              title: fixture.title,
-              seller_defined: true,
+              ...responseBody,
               verifiable: {
                 receipt: true,
                 anchored,
-              },
-              output: {
-                primitive: fixture.id,
-                mode: "audit-fixture",
               },
               receipt,
             });
@@ -1707,6 +1719,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         if (quote && receipt && quote.resource === "/resource") {
           const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
           const qualityAccepted = verifySignedReceipt(receipt);
+          const responseBody = fulfilledResponseBody("/resource");
           recordGuardDelivery("/resource", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
           recordMarketEvent({
             type: "REQUEST_FULFILLED",
@@ -1726,8 +1739,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
               receiptValid: verifySignedReceipt(receipt),
             });
           res.json({
-            ok: true,
-            data: "resource payload",
+            ...responseBody,
             receipt,
           });
           return;
@@ -1784,6 +1796,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         if (quote && receipt && quote.resource === "/inference") {
           const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
           const qualityAccepted = verifySignedReceipt(receipt);
+          const responseBody = fulfilledResponseBody("/inference");
           recordGuardDelivery("/inference", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
           recordMarketEvent({
             type: "REQUEST_FULFILLED",
@@ -1803,8 +1816,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
             receiptValid: verifySignedReceipt(receipt),
           });
           res.json({
-            ok: true,
-            output: "inference result",
+            ...responseBody,
             receipt,
           });
           return;
