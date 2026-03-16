@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import express, { type Request, type RequestHandler, type Response } from "express";
 import { describe, expect, it } from "vitest";
 import type { PaymentVerifier } from "../src/paymentVerifier.js";
+import { verifySignedReceipt } from "../src/receipts.js";
 import type { PaymentProof, Quote } from "../src/types.js";
 import { dnaSeller } from "../src/sdk/seller.js";
 
@@ -144,6 +145,7 @@ describe("dnaSeller", () => {
         txSignature: "tx-ok-seller-12345678901234567890",
       },
     });
+    expect(verifySignedReceipt(receiptRes.body as Parameters<typeof verifySignedReceipt>[0])).toBe(true);
   });
 
   it("rejects invalid proofs instead of unlocking the paid commit", async () => {

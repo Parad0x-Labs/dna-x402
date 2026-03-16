@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { PaymentVerifier } from "../paymentVerifier.js";
-import type { PaymentAccept, PaymentProof } from "../types.js";
+import { ReceiptSigner } from "../receipts.js";
+import type { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
 
 export interface PaywallOptions {
@@ -15,6 +16,7 @@ export interface PaywallOptions {
   paymentVerifier?: PaymentVerifier;
   maxTransferProofAgeSeconds?: number;
   unsafeUnverifiedNettingEnabled?: boolean;
+  receiptSigner?: ReceiptSigner;
   requireApiKey?: boolean;
   apiKeyHeader?: string;
   apiKeys?: Set<string>;
@@ -29,8 +31,10 @@ interface QuoteRecord {
   expiresAt: string;
   settlement: string[];
   memoHash: string;
+  resource: string;
   network: PaymentAccept["network"];
   paymentVerifier: PaymentVerifier;
+  receiptSigner: ReceiptSigner;
   onPaymentVerified?: (receipt: unknown, req: Request) => void;
 }
 
@@ -44,16 +48,7 @@ interface CommitRecord {
 }
 
 interface ReceiptRecord {
-  receiptId: string;
-  commitId: string;
-  quoteId: string;
-  settlement: string;
-  amountAtomic: string;
-  recipient: string;
-  mint: string;
-  createdAt: string;
-  settledOnchain: boolean;
-  txSignature?: string;
+  signedReceipt: SignedReceipt;
   onPaymentVerified?: (receipt: unknown, req: Request) => void;
 }
 
@@ -72,30 +67,7 @@ function hashHex(input: string): string {
 }
 
 function createReceiptPayload(receipt: ReceiptRecord) {
-  return {
-    payload: {
-      receiptId: receipt.receiptId,
-      quoteId: receipt.quoteId,
-      commitId: receipt.commitId,
-      settlement: receipt.settlement,
-      amountAtomic: receipt.amountAtomic,
-      totalAtomic: receipt.amountAtomic,
-      feeAtomic: "0",
-      mint: receipt.mint,
-      recipient: receipt.recipient,
-      createdAt: receipt.createdAt,
-      resource: "/",
-      shopId: "self",
-      requestDigest: "",
-      responseDigest: "",
-      settledOnchain: receipt.settledOnchain,
-      txSignature: receipt.txSignature ?? null,
-    },
-    signature: "self-signed",
-    signerPublicKey: receipt.recipient,
-    receiptHash: hashHex(receipt.receiptId),
-    prevHash: "0",
-  };
+  return receipt.signedReceipt;
 }
 
 function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
@@ -208,16 +180,26 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
 
       const receiptId = crypto.randomUUID();
       const receipt: ReceiptRecord = {
-        receiptId,
-        commitId,
-        quoteId: commit.quoteId,
-        settlement: proof.settlement,
-        amountAtomic: quote.priceAtomic,
-        recipient: quote.recipient,
-        mint: quote.mint,
-        createdAt: new Date().toISOString(),
-        settledOnchain: verification.settledOnchain,
-        txSignature: verification.txSignature,
+        signedReceipt: quote.receiptSigner.sign({
+          receiptId,
+          quoteId: commit.quoteId,
+          commitId,
+          resource: quote.resource,
+          requestId: commitId,
+          requestDigest: quote.memoHash,
+          responseDigest: "",
+          shopId: "self",
+          payerCommitment32B: commit.payerCommitment,
+          recipient: quote.recipient,
+          mint: quote.mint,
+          amountAtomic: quote.priceAtomic,
+          feeAtomic: "0",
+          totalAtomic: quote.priceAtomic,
+          settlement: proof.settlement,
+          settledOnchain: verification.settledOnchain,
+          txSignature: verification.txSignature,
+          createdAt: new Date().toISOString(),
+        }),
         onPaymentVerified: quote.onPaymentVerified,
       };
 
@@ -265,6 +247,7 @@ export function dnaPaywall(options: PaywallOptions) {
     allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
     paymentVerifier: options.paymentVerifier,
   });
+  const receiptSigner = options.receiptSigner ?? ReceiptSigner.generate();
 
   return function paywallMiddleware(req: Request, res: Response, next: NextFunction): void {
     const runtime = getRuntime(req, options);
@@ -309,8 +292,10 @@ export function dnaPaywall(options: PaywallOptions) {
       expiresAt,
       settlement,
       memoHash,
+      resource: req.path,
       network,
       paymentVerifier,
+      receiptSigner,
       onPaymentVerified: options.onPaymentVerified,
     };
     runtime.quotes.set(quoteId, quote);
