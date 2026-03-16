@@ -1444,10 +1444,6 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       requestDigest: computeRequestDigest({
         method: "GET",
         path: quote.resource,
-        body: {
-          commitId: commit.commitId,
-          quoteId: quote.quoteId,
-        },
       }),
       responseDigest: fulfilledResponseDigest(quote.resource),
       shopId: CORE_SHOP_ID,

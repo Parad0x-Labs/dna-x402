@@ -3,7 +3,7 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
-import { computeResponseDigest, verifySignedReceipt } from "./receipts.js";
+import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
@@ -68,7 +68,11 @@ interface FinalizeResponse {
   receiptId: string;
 }
 
-const RECEIPT_BOUND_ROUTE_SET = new Set(["/resource", "/inference"]);
+function isReceiptBoundRoute(pathname: string): boolean {
+  return pathname === "/resource"
+    || pathname === "/inference"
+    || pathname.startsWith("/audit/primitives/");
+}
 
 function assertReceiptIntegrity(
   receipt: SignedReceipt,
@@ -109,9 +113,22 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-async function assertDeliveredResponseIntegrity(response: Response, receipt: SignedReceipt): Promise<void> {
-  if (!response.ok || !RECEIPT_BOUND_ROUTE_SET.has(receipt.payload.resource)) {
+async function assertDeliveredResponseIntegrity(
+  response: Response,
+  receipt: SignedReceipt,
+  request: { url: string; method: string; body?: unknown },
+): Promise<void> {
+  if (!response.ok || !isReceiptBoundRoute(receipt.payload.resource)) {
     return;
+  }
+
+  const expectedRequestDigest = computeRequestDigest({
+    method: request.method,
+    path: new URL(request.url).pathname,
+    body: request.body,
+  });
+  if (receipt.payload.requestDigest !== expectedRequestDigest) {
+    throw new Error("Receipt verification failed: delivered request digest mismatch");
   }
 
   const contentType = response.headers.get("content-type") ?? "";
@@ -483,7 +500,11 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
       "x-dnp-commit-id": commitData.commitId,
     },
   });
-  await assertDeliveredResponseIntegrity(retryResponse, receipt);
+  await assertDeliveredResponseIntegrity(retryResponse, receipt, {
+    url,
+    method: (fetchOptions.method ?? "GET").toUpperCase(),
+    body: fetchOptions.body,
+  });
   if (receiptStore) {
     await receiptStore.save(receipt);
   }

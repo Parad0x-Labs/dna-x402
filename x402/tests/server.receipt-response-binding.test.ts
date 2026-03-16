@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { X402Config } from "../src/config.js";
 import { PaymentVerifier } from "../src/paymentVerifier.js";
 import {
+  computeRequestDigest,
   computeResponseDigest,
   ReceiptSigner,
   verifySignedReceipt,
@@ -134,6 +135,13 @@ function expectResponseDigest(receipt: SignedReceipt, body: Record<string, unkno
   expect(verifySignedReceipt(receipt)).toBe(true);
 }
 
+function expectRequestDigest(receipt: SignedReceipt, path: string): void {
+  expect(receipt.payload.requestDigest).toBe(computeRequestDigest({
+    method: "GET",
+    path,
+  }));
+}
+
 describe("server receipt response binding", () => {
   it("binds /resource receipts to the unlocked protected payload", async () => {
     const { app, context } = createX402App(baseConfig(), {
@@ -180,6 +188,7 @@ describe("server receipt response binding", () => {
     expect(receipt).toBeTruthy();
 
     const protectedBody = { ok: true, data: "resource payload" };
+    expectRequestDigest(receipt as SignedReceipt, "/resource");
     expectResponseDigest(receipt as SignedReceipt, protectedBody);
 
     const resourceRes = makeResponse() as Response & MockResponse;
@@ -240,6 +249,7 @@ describe("server receipt response binding", () => {
     expect(receipt).toBeTruthy();
 
     const protectedBody = { ok: true, output: "inference result" };
+    expectRequestDigest(receipt as SignedReceipt, "/inference");
     expectResponseDigest(receipt as SignedReceipt, protectedBody);
 
     const inferenceRes = makeResponse() as Response & MockResponse;
@@ -310,6 +320,7 @@ describe("server receipt response binding", () => {
         mode: "audit-fixture",
       },
     };
+    expectRequestDigest(receipt as SignedReceipt, resource);
     expectResponseDigest(receipt as SignedReceipt, protectedBody);
   });
 });
