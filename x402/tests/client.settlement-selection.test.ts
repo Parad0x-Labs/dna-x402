@@ -89,6 +89,40 @@ function paymentRequiredResponse(recommendedMode: "transfer" | "netting"): Respo
   }, 402);
 }
 
+function customPaymentRequiredResponse(input: {
+  recommendedMode: "transfer" | "stream" | "netting";
+  settlement: Array<"transfer" | "stream" | "netting">;
+}): Response {
+  return jsonResponse({
+    paymentRequirements: {
+      version: "x402-dnp-v1",
+      quote: {
+        quoteId: "quote-1",
+        amount: "1000",
+        feeAtomic: "0",
+        totalAtomic: "1000",
+        mint: "mint-1",
+        recipient: "recipient-1",
+        expiresAt: "2026-03-16T00:10:00.000Z",
+        settlement: input.settlement,
+        memoHash: "memo-1",
+      },
+      accepts: input.settlement.map((mode) => ({
+        scheme: "solana-spl",
+        network: "solana-devnet",
+        mint: "mint-1",
+        maxAmount: "1000",
+        recipient: "recipient-1",
+        mode,
+      })),
+      recommendedMode: input.recommendedMode,
+      commitEndpoint: "https://seller.test/commit",
+      finalizeEndpoint: "https://seller.test/finalize",
+      receiptEndpoint: "https://seller.test/receipt/:receiptId",
+    },
+  }, 402);
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -158,6 +192,58 @@ describe("fetchWith402 settlement selection", () => {
 
     expect(result.response.status).toBe(200);
     expect(payNetted).toHaveBeenCalledTimes(1);
+    expect(payTransfer).not.toHaveBeenCalled();
+  });
+
+  it("uses stream automatically when transfer is not offered", async () => {
+    const streamProof: PaymentProof = {
+      settlement: "stream",
+      streamId: "stream-1",
+      topupSignature: "topup-1",
+    };
+    const streamReceipt = makeSignedFinalizeReceipt(streamProof);
+    const payTransfer = vi.fn().mockResolvedValue({
+      settlement: "transfer",
+      txSignature: "tx-should-not-run-12345678901234567890",
+    } satisfies PaymentProof);
+    const payStream = vi.fn().mockResolvedValue(streamProof);
+
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(customPaymentRequiredResponse({ recommendedMode: "stream", settlement: ["stream"] }))
+      .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1", commitId: "commit-1", settlement: "stream" }))
+      .mockResolvedValueOnce(jsonResponse(streamReceipt))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, data: "paid" })));
+
+    const result = await fetchWith402("https://seller.test/paid", {
+      wallet: {
+        payTransfer,
+        payStream,
+      },
+      maxSpendAtomic: "1000",
+    });
+
+    expect(result.response.status).toBe(200);
+    expect(payStream).toHaveBeenCalledTimes(1);
+    expect(payTransfer).not.toHaveBeenCalled();
+  });
+
+  it("fails fast when the seller offers only unsupported settlement modes", async () => {
+    const payTransfer = vi.fn().mockResolvedValue({
+      settlement: "transfer",
+      txSignature: "tx-should-not-run-12345678901234567890",
+    } satisfies PaymentProof);
+
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(customPaymentRequiredResponse({ recommendedMode: "netting", settlement: ["netting"] })));
+
+    await expect(fetchWith402("https://seller.test/paid", {
+      wallet: {
+        payTransfer,
+      },
+      maxSpendAtomic: "1000",
+    })).rejects.toThrow(/No supported settlement mode available/i);
+
     expect(payTransfer).not.toHaveBeenCalled();
   });
 });

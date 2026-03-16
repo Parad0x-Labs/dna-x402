@@ -471,6 +471,9 @@ function chooseSettlement(
   },
 ): Promise<PaymentProof> {
   const acceptsMode = (mode: "transfer" | "stream" | "netting") => requirements.accepts.some((accept) => accept.mode === mode);
+  const supportsTransfer = quote.settlement.includes("transfer") && acceptsMode("transfer");
+  const supportsStream = Boolean(wallet.payStream) && quote.settlement.includes("stream") && acceptsMode("stream");
+  const supportsNetting = Boolean(wallet.payNetted) && quote.settlement.includes("netting") && acceptsMode("netting");
   if (options.preferStream && wallet.payStream && quote.settlement.includes("stream") && acceptsMode("stream")) {
     return wallet.payStream(quote);
   }
@@ -483,7 +486,17 @@ function chooseSettlement(
   if (options.preferNetting && wallet.payNetted && quote.settlement.includes("netting") && acceptsMode("netting")) {
     return wallet.payNetted(quote);
   }
-  return wallet.payTransfer(quote);
+  if (supportsTransfer) {
+    return wallet.payTransfer(quote);
+  }
+  if (supportsStream && wallet.payStream) {
+    return wallet.payStream(quote);
+  }
+  if (supportsNetting && wallet.payNetted) {
+    return wallet.payNetted(quote);
+  }
+
+  throw new Error(`No supported settlement mode available: offered=${quote.settlement.join(",")}`);
 }
 
 function dateKeyUtc(now = new Date()): string {
