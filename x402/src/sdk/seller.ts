@@ -23,8 +23,9 @@
  */
 import * as crypto from "node:crypto";
 import type { Express, NextFunction, Request, Response } from "express";
+import { parseAtomic, toAtomicString } from "../feePolicy.js";
 import { PaymentVerifier } from "../paymentVerifier.js";
-import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../receipts.js";
+import { computeRequestDigest, computeResponseDigest, normalizeCommitment32B, ReceiptSigner } from "../receipts.js";
 import { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import {
   createPaymentVerifier,
@@ -121,6 +122,13 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       res.status(400).json({ error: "Missing quoteId or payerCommitment32B" });
       return;
     }
+    let normalizedCommitment: string;
+    try {
+      normalizedCommitment = normalizeCommitment32B(payerCommitment32B);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+      return;
+    }
 
     expireOld();
     const quote = quotes.get(quoteId);
@@ -139,7 +147,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     commits.set(commitId, {
       commitId,
       quoteId,
-      payerCommitment: payerCommitment32B,
+      payerCommitment: normalizedCommitment,
       createdAt: new Date().toISOString(),
       finalized: false,
     });
@@ -329,10 +337,11 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     createQuote(resource: string, priceAtomic: string, baseUrl: string): QuoteRecord {
       expireOld();
       const quoteId = crypto.randomUUID();
+      const amountAtomic = parseAtomic(priceAtomic);
       const feeAtomic = feeBps > 0
-        ? String(Math.ceil((Number(priceAtomic) * feeBps) / 10000))
+        ? toAtomicString((amountAtomic * BigInt(feeBps) + 9_999n) / 10_000n)
         : "0";
-      const totalAtomic = String(Number(priceAtomic) + Number(feeAtomic));
+      const totalAtomic = toAtomicString(amountAtomic + parseAtomic(feeAtomic));
       const expiresAt = new Date(Date.now() + ttl * 1000).toISOString();
       const memoHash = hashHex(`${quoteId}:${resource}:${priceAtomic}:${expiresAt}`);
 
@@ -371,9 +380,14 @@ export function dnaPrice(
     const commitId = req.header("x-dnp-commit-id");
     if (commitId && seller.paidCommits.has(commitId)) {
       seller.paidCommits.delete(commitId);
+      res.once("finish", () => {
+        if ((res.statusCode ?? 200) >= 500) {
+          seller.paidCommits.add(commitId);
+        }
+      });
       const originalJson = res.json.bind(res);
       res.json = ((body: unknown) => {
-        if (!isJsonRecord(body)) {
+        if (!isJsonRecord(body) || (res.statusCode ?? 200) >= 400) {
           return originalJson(body);
         }
         const deliveryReceipt = seller.issueDeliveryReceipt(commitId, req, body, res.statusCode || 200);
