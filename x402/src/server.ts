@@ -1423,11 +1423,50 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
       return;
     }
+    if (paymentProof.settlement === "transfer" && !verification.txSignature) {
+      commit.status = "failed";
+      commits.set(commit.commitId, commit);
+      sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+        cause: "verified transfer settlement is missing canonical txSignature",
+      }), {
+        dialectDetected: "generic",
+      });
+      return;
+    }
+    if (paymentProof.settlement === "stream" && !verification.streamId) {
+      commit.status = "failed";
+      commits.set(commit.commitId, commit);
+      sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+        cause: "verified stream settlement is missing canonical streamId",
+      }), {
+        dialectDetected: "generic",
+      });
+      return;
+    }
 
     if (paymentProof.settlement === "transfer" && verification.txSignature) {
       const replayKey = createReplayKey({
         shopId: CORE_SHOP_ID,
         txSig: verification.txSignature,
+        amountAtomic: quote.totalAtomic,
+        recipient: quote.recipient,
+        mint: quote.mint,
+      });
+      if (!replayStore.consume(replayKey, now().getTime())) {
+        recordGuardReplay(req, quote.resource, "x402_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          details: { settlement: paymentProof.settlement },
+        }), {
+          dialectDetected: "generic",
+          missing: [],
+        });
+        return;
+      }
+    }
+    if (paymentProof.settlement === "stream" && verification.streamId) {
+      const replayKey = createReplayKey({
+        shopId: CORE_SHOP_ID,
+        txSig: `stream:${verification.streamId}`,
         amountAtomic: quote.totalAtomic,
         recipient: quote.recipient,
         mint: quote.mint,

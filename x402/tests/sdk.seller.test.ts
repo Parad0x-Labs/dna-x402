@@ -236,6 +236,205 @@ describe("dnaSeller", () => {
     expect(verifySignedReceipt(receiptRes.body as Parameters<typeof verifySignedReceipt>[0])).toBe(true);
   });
 
+  it("verifies stream proofs through a configured streamflow client and preserves streamId in receipts", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      network: "solana-devnet",
+      settlement: ["stream"],
+      streamflowClient: {
+        async getOne() {
+          return {
+            recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+            mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+            depositedAmount: { toString: () => "9000" } as any,
+            withdrawnAmount: { toString: () => "1000" } as any,
+            closed: false,
+          };
+        },
+      },
+    });
+
+    const quote = seller.createQuote("/api/stream-quote", "5000", "https://example.test");
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "12".repeat(32) },
+    }), commitRes);
+    expect(commitRes.statusCode).toBe(201);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-seller-verified-1234567890",
+          amountAtomic: "8000",
+        },
+      },
+    }), finalizeRes);
+
+    expect(finalizeRes.statusCode).toBe(200);
+    const receiptId = (finalizeRes.body as { receiptId: string }).receiptId;
+
+    const receiptRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/receipt/:id"), makeRequest({
+      method: "GET",
+      path: `/receipt/${receiptId}`,
+      params: { id: receiptId },
+    }), receiptRes);
+
+    expect(receiptRes.body).toMatchObject({
+      payload: {
+        settlement: "stream",
+        settledOnchain: true,
+        streamId: "stream-seller-verified-1234567890",
+      },
+    });
+    expect(verifySignedReceipt(receiptRes.body as Parameters<typeof verifySignedReceipt>[0])).toBe(true);
+
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/stream-quote",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.json({ ok: true, mode: "stream" });
+      },
+    );
+
+    const unlockedBody = unlockedRes.body as { ok: boolean; mode: string; receipt: Parameters<typeof verifySignedReceipt>[0] };
+    expect(unlockedBody.mode).toBe("stream");
+    expect(unlockedBody.receipt.payload.streamId).toBe("stream-seller-verified-1234567890");
+    expect(verifySignedReceipt(unlockedBody.receipt)).toBe(true);
+  });
+
+  it("rejects a transfer verification result that omits the canonical txSignature", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: {
+        async verify() {
+          return { ok: true, settledOnchain: true } as const;
+        },
+      },
+    });
+
+    const quote = seller.createQuote("/api/transfer-missing-sig", "5000", "https://example.test");
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "15".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-seller-missing-sig-12345678901234567890",
+        },
+      },
+    }), finalizeRes);
+
+    expect(finalizeRes.statusCode).toBe(422);
+    expect(finalizeRes.body).toMatchObject({
+      ok: false,
+      error: {
+        code: "PAYMENT_INVALID",
+        message: "Verified transfer settlement is missing canonical txSignature",
+        retryable: false,
+      },
+    });
+  });
+
+  it("rejects reusing the same stream proof across different commits", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      settlement: ["stream"],
+      streamflowClient: {
+        async getOne() {
+          return {
+            recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+            mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+            depositedAmount: { toString: () => "9000" } as any,
+            withdrawnAmount: { toString: () => "0" } as any,
+            closed: false,
+          };
+        },
+      },
+    });
+
+    const firstQuote = seller.createQuote("/api/stream-a", "5000", "https://example.test");
+    const secondQuote = seller.createQuote("/api/stream-b", "5000", "https://example.test");
+
+    const firstCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: firstQuote.quoteId, payerCommitment32B: "0x" + "13".repeat(32) },
+    }), firstCommitRes);
+    const firstCommitId = (firstCommitRes.body as { commitId: string }).commitId;
+
+    const secondCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: secondQuote.quoteId, payerCommitment32B: "0x" + "14".repeat(32) },
+    }), secondCommitRes);
+    const secondCommitId = (secondCommitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: firstCommitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-seller-replay-1234567890",
+          amountAtomic: "9000",
+        },
+      },
+    }), makeResponse());
+
+    const replayRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: secondCommitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-seller-replay-1234567890",
+          amountAtomic: "9000",
+        },
+      },
+    }), replayRes);
+
+    expect(replayRes.statusCode).toBe(409);
+    expect(replayRes.body).toMatchObject({
+      error: "Stream proof already used",
+      commitId: firstCommitId,
+    });
+  });
+
   it("rejects malformed payer commitments during commit", async () => {
     const app = express();
     const seller = dnaSeller(app, {

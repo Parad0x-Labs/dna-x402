@@ -361,6 +361,136 @@ describe("dnaPaywall", () => {
     expect(verifier.lastQuote?.resource).toBe("/api/resource-check");
   });
 
+  it("verifies stream proofs through a configured streamflow client and preserves streamId in delivery receipts", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "5000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      settlement: ["stream"],
+      streamflowClient: {
+        async getOne() {
+          return {
+            recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+            mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+            depositedAmount: { toString: () => "7000" } as any,
+            withdrawnAmount: { toString: () => "0" } as any,
+            closed: false,
+          };
+        },
+      },
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/stream-proof" }), firstRes);
+    expect(firstRes.body).toMatchObject({
+      paymentRequirements: {
+        accepts: [{ mode: "stream" }],
+      },
+    });
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "35".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-paywall-verified-1234567890",
+          amountAtomic: "7000",
+        },
+      },
+    }), finalizeRes);
+    expect(finalizeRes.statusCode).toBe(200);
+
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/stream-proof",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.json({ ok: true, data: "stream output" });
+      },
+    );
+
+    const unlockedBody = unlockedRes.body as {
+      ok: boolean;
+      data: string;
+      receipt: SignedReceipt;
+    };
+    expect(unlockedBody.data).toBe("stream output");
+    expect(unlockedBody.receipt.payload.settlement).toBe("stream");
+    expect(unlockedBody.receipt.payload.streamId).toBe("stream-paywall-verified-1234567890");
+    expect(verifySignedReceipt(unlockedBody.receipt)).toBe(true);
+  });
+
+  it("rejects a stream verification result that omits the canonical streamId", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "5000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      settlement: ["stream"],
+      paymentVerifier: {
+        async verify() {
+          return { ok: true, settledOnchain: true } as const;
+        },
+      },
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/stream-missing-id" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "36".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-paywall-missing-id-1234567890",
+          amountAtomic: "5000",
+        },
+      },
+    }), finalizeRes);
+
+    expect(finalizeRes.statusCode).toBe(422);
+    expect(finalizeRes.body).toMatchObject({
+      ok: false,
+      error: {
+        code: "PAYMENT_INVALID",
+        message: "Verified stream settlement is missing canonical streamId",
+        retryable: false,
+      },
+    });
+  });
+
   it("emits a delivery-bound receipt on unlocked JSON responses", async () => {
     const app = express();
     const middleware = dnaPaywall({

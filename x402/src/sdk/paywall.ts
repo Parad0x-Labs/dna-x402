@@ -17,6 +17,7 @@ import {
   SupportedNetwork,
   verificationFailureStatus,
 } from "./paymentSupport.js";
+import type { StreamflowClientLike } from "../verifier/streamflow.js";
 
 export interface PaywallOptions {
   priceAtomic: string;
@@ -27,6 +28,7 @@ export interface PaywallOptions {
   network?: SupportedNetwork;
   solanaRpcUrl?: string;
   paymentVerifier?: PaymentVerifier;
+  streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
   unsafeUnverifiedNettingEnabled?: boolean;
   receiptSigner?: ReceiptSigner;
@@ -80,6 +82,7 @@ interface PaywallRuntime {
   receipts: Map<string, ReceiptRecord>;
   paidCommits: Set<string>;
   usedTransferProofs: Map<string, string>;
+  usedStreamProofs: Map<string, string>;
   routesMounted: boolean;
 }
 
@@ -141,6 +144,7 @@ function issueDeliveryReceipt(
     settlement: paymentReceipt.signedReceipt.payload.settlement,
     settledOnchain: paymentReceipt.signedReceipt.payload.settledOnchain,
     txSignature: paymentReceipt.signedReceipt.payload.txSignature,
+    streamId: paymentReceipt.signedReceipt.payload.streamId,
     createdAt: new Date().toISOString(),
   });
 
@@ -158,6 +162,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       receipts: new Map<string, ReceiptRecord>(),
       paidCommits: new Set<string>(),
       usedTransferProofs: new Map<string, string>(),
+      usedStreamProofs: new Map<string, string>(),
       routesMounted: false,
     };
     locals[PAYWALL_RUNTIME_KEY] = runtime;
@@ -249,6 +254,16 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
           return;
         }
       }
+      if (proof.settlement === "stream") {
+        const existingCommitId = runtime?.usedStreamProofs.get(proof.streamId);
+        if (existingCommitId && existingCommitId !== commitId) {
+          routeRes.status(409).json({
+            error: "Stream proof already used",
+            commitId: existingCommitId,
+          });
+          return;
+        }
+      }
 
       const verification = await quote.paymentVerifier.verify({
         quoteId: quote.quoteId,
@@ -270,6 +285,28 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
             code: verification?.errorCode ?? "PAYMENT_INVALID",
             message: verification?.error ?? "Payment verification failed",
             retryable: verification?.retryable ?? false,
+          },
+        });
+        return;
+      }
+      if (proof.settlement === "transfer" && !verification?.txSignature) {
+        routeRes.status(422).json({
+          ok: false,
+          error: {
+            code: "PAYMENT_INVALID",
+            message: "Verified transfer settlement is missing canonical txSignature",
+            retryable: false,
+          },
+        });
+        return;
+      }
+      if (proof.settlement === "stream" && !verification?.streamId) {
+        routeRes.status(422).json({
+          ok: false,
+          error: {
+            code: "PAYMENT_INVALID",
+            message: "Verified stream settlement is missing canonical streamId",
+            retryable: false,
           },
         });
         return;
@@ -296,6 +333,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
           settlement: proof.settlement,
           settledOnchain: verification.settledOnchain,
           txSignature: verification.txSignature,
+          streamId: verification.streamId,
           createdAt: new Date().toISOString(),
         }),
         onPaymentVerified: quote.onPaymentVerified,
@@ -304,6 +342,9 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       runtime?.receipts.set(receiptId, receipt);
       if (proof.settlement === "transfer") {
         runtime?.usedTransferProofs.set(proof.txSignature, commitId);
+      }
+      if (proof.settlement === "stream") {
+        runtime?.usedStreamProofs.set(proof.streamId, commitId);
       }
       commit.finalized = true;
       commit.receiptId = receiptId;
@@ -346,6 +387,7 @@ export function dnaPaywall(options: PaywallOptions) {
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
+    streamflowClient: options.streamflowClient,
     paymentVerifier: options.paymentVerifier,
   });
   const receiptSigner = options.receiptSigner ?? ReceiptSigner.generate();
