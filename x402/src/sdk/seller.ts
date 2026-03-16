@@ -192,41 +192,41 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       return;
     }
 
-      if (commit.finalized) {
-        res.status(409).json({ error: "Already finalized", receiptId: commit.receiptId });
-        return;
-      }
-
-      if (paymentProof.settlement === "transfer") {
-        const existingCommitId = usedTransferProofs.get(paymentProof.txSignature);
-        if (existingCommitId && existingCommitId !== commitId) {
-          res.status(409).json({
-            error: "Transfer proof already used",
-            commitId: existingCommitId,
-          });
-          return;
-        }
-      }
-      if (paymentProof.settlement === "stream") {
-        const existingCommitId = usedStreamProofs.get(paymentProof.streamId);
-        if (existingCommitId && existingCommitId !== commitId) {
-          res.status(409).json({
-            error: "Stream proof already used",
-            commitId: existingCommitId,
-          });
-          return;
-        }
-      }
-
-    const quote = quotes.get(commit.quoteId);
-    if (!quote) {
-      res.status(410).json({ error: "Quote expired" });
+    if (commit.finalized) {
+      res.status(409).json({ error: "Already finalized", receiptId: commit.receiptId });
       return;
     }
 
     const proof = paymentProof as PaymentProof | undefined;
     if (!proof || (proof.settlement !== "transfer" && proof.settlement !== "stream" && proof.settlement !== "netting")) {
       res.status(400).json({ error: "Missing or invalid paymentProof" });
+      return;
+    }
+
+    if (proof.settlement === "transfer") {
+      const existingCommitId = usedTransferProofs.get(proof.txSignature);
+      if (existingCommitId && existingCommitId !== commitId) {
+        res.status(409).json({
+          error: "Transfer proof already used",
+          commitId: existingCommitId,
+        });
+        return;
+      }
+    }
+    if (proof.settlement === "stream") {
+      const existingCommitId = usedStreamProofs.get(proof.streamId);
+      if (existingCommitId && existingCommitId !== commitId) {
+        res.status(409).json({
+          error: "Stream proof already used",
+          commitId: existingCommitId,
+        });
+        return;
+      }
+    }
+
+    const quote = quotes.get(commit.quoteId);
+    if (!quote) {
+      res.status(410).json({ error: "Quote expired" });
       return;
     }
 
@@ -282,6 +282,28 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       });
       return;
     }
+    if (proof.settlement === "transfer") {
+      const canonicalTxSignature = verification.txSignature!;
+      const canonicalCommitId = usedTransferProofs.get(canonicalTxSignature);
+      if (canonicalCommitId && canonicalCommitId !== commitId) {
+        res.status(409).json({
+          error: "Transfer proof already used",
+          commitId: canonicalCommitId,
+        });
+        return;
+      }
+    }
+    if (proof.settlement === "stream") {
+      const canonicalStreamId = verification.streamId!;
+      const canonicalCommitId = usedStreamProofs.get(canonicalStreamId);
+      if (canonicalCommitId && canonicalCommitId !== commitId) {
+        res.status(409).json({
+          error: "Stream proof already used",
+          commitId: canonicalCommitId,
+        });
+        return;
+      }
+    }
 
     const receiptId = crypto.randomUUID();
     const finalizeResponse = { ok: true, receiptId, commitId, settlement: settlementMode };
@@ -309,11 +331,13 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     const receipt: ReceiptRecord = { signedReceipt };
 
     receipts.set(receiptId, receipt);
-    if (paymentProof.settlement === "transfer") {
-      usedTransferProofs.set(paymentProof.txSignature, commitId);
+    if (proof.settlement === "transfer") {
+      const canonicalTxSignature = verification.txSignature!;
+      usedTransferProofs.set(canonicalTxSignature, commitId);
     }
-    if (paymentProof.settlement === "stream") {
-      usedStreamProofs.set(paymentProof.streamId, commitId);
+    if (proof.settlement === "stream") {
+      const canonicalStreamId = verification.streamId!;
+      usedStreamProofs.set(canonicalStreamId, commitId);
     }
     commit.finalized = true;
     commit.receiptId = receiptId;

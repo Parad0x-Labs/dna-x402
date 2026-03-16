@@ -319,6 +319,40 @@ describe("dnaSeller", () => {
     expect(verifySignedReceipt(unlockedBody.receipt)).toBe(true);
   });
 
+  it("rejects missing paymentProof before replay checks", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      network: "solana-devnet",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-missing-proof-1234567890123456",
+      }),
+    });
+
+    const quote = seller.createQuote("/paid", "1000", "https://example.test");
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "17".repeat(32) },
+    }), commitRes);
+    expect(commitRes.statusCode).toBe(201);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: { commitId },
+    }), finalizeRes);
+
+    expect(finalizeRes.statusCode).toBe(400);
+    expect(finalizeRes.body).toMatchObject({ error: "Missing or invalid paymentProof" });
+  });
+
   it("rejects a transfer verification result that omits the canonical txSignature", async () => {
     const app = express();
     const seller = dnaSeller(app, {
@@ -1250,6 +1284,73 @@ describe("dnaSeller", () => {
         paymentProof: {
           settlement: "transfer",
           txSignature: "tx-ok-seller-proof-reuse-12345678901234",
+        },
+      },
+    }), duplicateFinalizeRes);
+
+    expect(duplicateFinalizeRes.statusCode).toBe(409);
+    expect(duplicateFinalizeRes.body).toEqual({
+      error: "Transfer proof already used",
+      commitId: firstCommitId,
+    });
+    expect(seller.commits.get(secondCommitId)?.finalized).toBe(false);
+  });
+
+  it("locks transfer proof replay on the verifier's canonical txSignature", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: {
+        async verify() {
+          return {
+            ok: true,
+            settledOnchain: true,
+            txSignature: "tx-canonical-seller-proof-1234567890123",
+          } as const;
+        },
+      },
+    });
+
+    const firstQuote = seller.createQuote("/api/reuse-canonical-a", "5000", "https://example.test");
+    const secondQuote = seller.createQuote("/api/reuse-canonical-b", "5000", "https://example.test");
+
+    const firstCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: firstQuote.quoteId, payerCommitment32B: "0x" + "d5".repeat(32) },
+    }), firstCommitRes);
+    const firstCommitId = (firstCommitRes.body as { commitId: string }).commitId;
+
+    const secondCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: secondQuote.quoteId, payerCommitment32B: "0x" + "d6".repeat(32) },
+    }), secondCommitRes);
+    const secondCommitId = (secondCommitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: firstCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-proof-alias-seller-a-123456789012345",
+        },
+      },
+    }), makeResponse());
+
+    const duplicateFinalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: secondCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-proof-alias-seller-b-123456789012345",
         },
       },
     }), duplicateFinalizeRes);

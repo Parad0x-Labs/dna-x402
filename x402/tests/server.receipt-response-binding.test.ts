@@ -260,6 +260,117 @@ describe("server receipt response binding", () => {
     expect(secondDelivery.body).toMatchObject({ error: "payment_required" });
   });
 
+  it("does not record transfer settlements in the netting ledger even when netting would be recommended", async () => {
+    const config = baseConfig();
+    config.unsafeUnverifiedNettingEnabled = true;
+    config.feePolicy = {
+      ...config.feePolicy,
+      minSettleAtomic: 2_000n,
+    };
+
+    const { app, context } = createX402App(config, {
+      paymentVerifier: new FakeVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    const quoteRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/quote"), makeRequest({
+      method: "GET",
+      path: "/quote",
+      query: { resource: "/resource" },
+    }), quoteRes);
+    expect(quoteRes.statusCode).toBe(200);
+    const quoteBody = quoteRes.body as { quoteId: string; settlement: string[] };
+    expect(quoteBody.settlement).toContain("netting");
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: {
+        quoteId: quoteBody.quoteId,
+        payerCommitment32B: "0x" + "88".repeat(32),
+      },
+    }), commitRes);
+    expect(commitRes.statusCode).toBe(201);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-server-transfer-no-netting-1234567890",
+        },
+      },
+    }), finalizeRes);
+    expect(finalizeRes.statusCode).toBe(200);
+    expect(context.nettingLedger.snapshot()).toEqual([]);
+  });
+
+  it("records actual netting settlements in the netting ledger", async () => {
+    const config = baseConfig();
+    config.unsafeUnverifiedNettingEnabled = true;
+    config.feePolicy = {
+      ...config.feePolicy,
+      minSettleAtomic: 2_000n,
+    };
+
+    const { app, context } = createX402App(config, {
+      paymentVerifier: new FakeVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    const quoteRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/quote"), makeRequest({
+      method: "GET",
+      path: "/quote",
+      query: { resource: "/resource" },
+    }), quoteRes);
+    expect(quoteRes.statusCode).toBe(200);
+    const quoteId = (quoteRes.body as { quoteId: string }).quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: {
+        quoteId,
+        payerCommitment32B: "0x" + "99".repeat(32),
+      },
+    }), commitRes);
+    expect(commitRes.statusCode).toBe(201);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    const finalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "netting",
+          amountAtomic: "1000",
+          note: "bilateral ledger accrual",
+        },
+      },
+    }), finalizeRes);
+    expect(finalizeRes.statusCode).toBe(200);
+
+    expect(context.nettingLedger.snapshot()).toMatchObject([{
+      payerCommitment32B: "99".repeat(32),
+      providerId: config.paymentRecipient,
+      balanceDeltaAtomic: "1000",
+      providerDueAtomic: "1000",
+      platformFeeAtomic: "0",
+      charges: 1,
+      commitIds: [commitId],
+    }]);
+  });
+
   it("binds /inference receipts to the unlocked protected payload", async () => {
     const { app, context } = createX402App(baseConfig(), {
       paymentVerifier: new FakeVerifier(),

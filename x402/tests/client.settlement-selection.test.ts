@@ -47,6 +47,7 @@ function makeSignedFinalizeReceipt(paymentProof: PaymentProof): SignedReceipt {
     settlement: paymentProof.settlement,
     settledOnchain: paymentProof.settlement === "transfer",
     txSignature: paymentProof.settlement === "transfer" ? paymentProof.txSignature : undefined,
+    streamId: paymentProof.settlement === "stream" ? paymentProof.streamId : undefined,
     createdAt: "2026-03-16T00:00:00.000Z",
   });
 }
