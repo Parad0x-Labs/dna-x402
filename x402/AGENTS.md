@@ -216,6 +216,8 @@ DNA_GUARD_SNAPSHOT_PATH=./state/dna-guard.json
 DNA_GUARD_BUYER_CEILING_ATOMIC=500000
 ```
 
+Built-in protected routes treat `x-dnp-commit-id` as single-use after a successful delivery. Do not assume a finalized commit can unlock unlimited repeated reads.
+
 Test it with:
 
 ```bash
