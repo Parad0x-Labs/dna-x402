@@ -102,7 +102,7 @@ app.get("/api/inference", dnaPrice("5000", pay), (req, res) => {
 app.listen(3000);
 ```
 
-That is the fastest scaffold, not the strongest control surface. `dnaSeller()` now verifies `transfer` proofs through the local Solana payment verifier, emits real signed receipts, and keeps unsigned netting behind explicit unsafe opt-in, but guard policies, replay controls, market routing, and anchoring still live in the full x402 server path.
+That is the fastest scaffold, not the strongest control surface. `dnaSeller()` now verifies `transfer` proofs through the local Solana payment verifier, emits real signed receipts for the payment finalize handshake, and keeps unsigned netting behind explicit unsafe opt-in, but guard policies, replay controls, market routing, richer request/response binding, and anchoring still live in the full x402 server path.
 
 Unsigned netting is now disabled by default in the main server. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1`.
 

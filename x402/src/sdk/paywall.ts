@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { PaymentVerifier } from "../paymentVerifier.js";
-import { ReceiptSigner } from "../receipts.js";
+import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../receipts.js";
 import type { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
 
@@ -179,6 +179,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       }
 
       const receiptId = crypto.randomUUID();
+      const finalizeResponse = { ok: true, receiptId, commitId, settlement: proof.settlement };
       const receipt: ReceiptRecord = {
         signedReceipt: quote.receiptSigner.sign({
           receiptId,
@@ -186,8 +187,8 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
           commitId,
           resource: quote.resource,
           requestId: commitId,
-          requestDigest: quote.memoHash,
-          responseDigest: "",
+          requestDigest: computeRequestDigest({ method: routeReq.method, path: routeReq.path, body: routeReq.body }),
+          responseDigest: computeResponseDigest({ status: 200, body: finalizeResponse }),
           shopId: "self",
           payerCommitment32B: commit.payerCommitment,
           recipient: quote.recipient,
@@ -208,7 +209,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       commit.receiptId = receiptId;
       runtime?.paidCommits.add(commitId);
 
-      routeRes.json({ ok: true, receiptId, commitId, settlement: proof.settlement });
+      routeRes.json(finalizeResponse);
     });
 
     req.app.get("/receipt/:id", (routeReq: Request, routeRes: Response) => {

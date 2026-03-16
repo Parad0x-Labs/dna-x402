@@ -105,7 +105,7 @@ app.get("/", (req, res) => {
 app.listen(3000);
 ```
 
-That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically, verifies `transfer` proofs locally, and returns signed receipts.
+That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically, verifies `transfer` proofs locally, and returns signed receipts for the payment finalize handshake.
 Any x402 agent hits your endpoint → gets 402 → pays → retries → gets the result.
 
 ### Multiple prices on different endpoints

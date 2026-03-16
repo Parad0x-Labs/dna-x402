@@ -2,7 +2,7 @@ import { EventEmitter } from "node:events";
 import express, { type Request, type RequestHandler, type Response } from "express";
 import { describe, expect, it } from "vitest";
 import type { PaymentVerifier } from "../src/paymentVerifier.js";
-import { verifySignedReceipt } from "../src/receipts.js";
+import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "../src/receipts.js";
 import type { PaymentProof, Quote } from "../src/types.js";
 import { dnaSeller } from "../src/sdk/seller.js";
 
@@ -129,6 +129,7 @@ describe("dnaSeller", () => {
     }), finalizeRes);
 
     expect(finalizeRes.statusCode).toBe(200);
+    const finalizeBody = finalizeRes.body as { receiptId: string; commitId: string; settlement: string };
     const receiptId = (finalizeRes.body as { receiptId: string }).receiptId;
 
     const receiptRes = makeResponse() as Response & MockResponse;
@@ -143,6 +144,18 @@ describe("dnaSeller", () => {
         settlement: "transfer",
         settledOnchain: true,
         txSignature: "tx-ok-seller-12345678901234567890",
+        requestDigest: computeRequestDigest({
+          method: "POST",
+          path: "/finalize",
+          body: {
+            commitId,
+            paymentProof: {
+              settlement: "transfer",
+              txSignature: "tx-ok-seller-12345678901234567890",
+            },
+          },
+        }),
+        responseDigest: computeResponseDigest({ status: 200, body: finalizeBody }),
       },
     });
     expect(verifySignedReceipt(receiptRes.body as Parameters<typeof verifySignedReceipt>[0])).toBe(true);
