@@ -3,7 +3,7 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
-import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "./receipts.js";
+import { computeRequestDigest, computeResponseDigest, verifyReceiptBinding, verifySignedReceipt } from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
@@ -158,6 +158,72 @@ async function assertDeliveredResponseIntegrity(
   if (receipt.payload.responseDigest !== deliveredDigest) {
     throw new Error("Receipt verification failed: delivered response digest mismatch");
   }
+}
+
+async function extractAndVerifyEmbeddedReceipt(
+  response: Response,
+  expected: {
+    requestUrl: string;
+    method: string;
+    body?: unknown;
+    recipient: string;
+    mint: string;
+    totalAtomic: string;
+    settlement: PaymentProof["settlement"];
+  },
+): Promise<SignedReceipt | undefined> {
+  if (!response.ok) {
+    return undefined;
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return undefined;
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.clone().json();
+  } catch {
+    return undefined;
+  }
+
+  if (!isJsonObject(payload) || !isJsonObject(payload.receipt)) {
+    return undefined;
+  }
+
+  const receipt = payload.receipt as unknown as SignedReceipt;
+  if (!verifySignedReceipt(receipt)) {
+    throw new Error("Receipt verification failed: invalid signature or tampered payload");
+  }
+
+  const businessBody = { ...payload };
+  delete businessBody.receipt;
+
+  const requestDigest = computeRequestDigest({
+    method: expected.method,
+    path: new URL(expected.requestUrl).pathname,
+    body: expected.body,
+  });
+  const responseDigest = computeResponseDigest({
+    status: response.status,
+    body: businessBody,
+  });
+
+  if (!verifyReceiptBinding(receipt, {
+    requestDigest,
+    responseDigest,
+    recipient: expected.recipient,
+    mint: expected.mint,
+    totalAtomic: expected.totalAtomic,
+  })) {
+    throw new Error("Receipt verification failed: embedded receipt binding mismatch");
+  }
+  if (receipt.payload.settlement !== expected.settlement) {
+    throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
+  }
+
+  return receipt;
 }
 
 export interface SpendTracker {
@@ -428,6 +494,18 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
         ...(parsed402.requiredHeaderValue ? { "PAYMENT-REQUIRED": parsed402.requiredHeaderValue } : {}),
       },
     });
+    const embeddedReceipt = await extractAndVerifyEmbeddedReceipt(retryResponse, {
+      requestUrl: url,
+      method: (fetchOptions.method ?? "GET").toUpperCase(),
+      body: fetchOptions.body,
+      recipient: requirements.quote.recipient,
+      mint: requirements.quote.mint,
+      totalAtomic: requirements.quote.totalAtomic,
+      settlement: paymentProof.settlement,
+    });
+    if (embeddedReceipt && receiptStore) {
+      await receiptStore.save(embeddedReceipt);
+    }
 
     if (maxSpendPerDayAtomic) {
       await spendTracker.addSpendForDateAtomic(dateKeyUtc(), quoteTotal);
@@ -435,6 +513,7 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
 
     return {
       response: retryResponse,
+      receipt: embeddedReceipt,
       paymentRequirements: requirements,
     };
   }

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchWith402, InMemoryReceiptStore } from "../src/client.js";
 import { computeRequestDigest, computeResponseDigest, ReceiptSigner } from "../src/receipts.js";
 import type { SignedReceipt } from "../src/types.js";
+import { encodeCanonicalRequiredHeader } from "../src/x402/compat/parse.js";
 
 function jsonResponse(body: unknown, status = 200, headers?: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
@@ -10,6 +11,30 @@ function jsonResponse(body: unknown, status = 200, headers?: Record<string, stri
       "content-type": "application/json",
       ...(headers ?? {}),
     },
+  });
+}
+
+function compat402Response(overrides: Partial<{
+  amountAtomic: string;
+  mint: string;
+  recipient: string;
+  memo: string;
+}> = {}): Response {
+  return jsonResponse({ error: "payment_required" }, 402, {
+    "payment-required": encodeCanonicalRequiredHeader({
+      version: "x402-v1",
+      network: "solana",
+      currency: "USDC",
+      amountAtomic: overrides.amountAtomic ?? "1000",
+      recipient: overrides.recipient ?? "recipient-1",
+      memo: overrides.memo ?? "memo-compat-1",
+      expiresAt: Date.parse("2026-03-16T00:10:00.000Z"),
+      settlement: {
+        mode: "spl_transfer",
+        mint: overrides.mint ?? "mint-1",
+      },
+      raw: { headers: {} },
+    }),
   });
 }
 
@@ -287,5 +312,76 @@ describe("fetchWith402 receipt verification", () => {
       maxSpendAtomic: "1000",
       receiptStore: new InMemoryReceiptStore(),
     })).rejects.toThrow(/request digest mismatch/i);
+  });
+
+  it("verifies and stores embedded receipts in x402 header-compat flow", async () => {
+    const store = new InMemoryReceiptStore();
+    const receipt = makeSignedReceipt({
+      quoteId: "compat-quote-unused",
+      commitId: "compat-commit-unused",
+    });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(compat402Response())
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "resource payload",
+        receipt,
+      }, 200));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchWith402("https://seller.test/resource", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-1234567890123456789012345",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: store,
+      proofHeaderStyle: "X-PAYMENT",
+    });
+
+    expect(result.response.status).toBe(200);
+    expect(result.receipt?.payload.receiptId).toBe("receipt-1");
+    expect(store.receipts.size).toBe(1);
+  });
+
+  it("rejects tampered embedded receipts in x402 header-compat flow", async () => {
+    const receipt = makeSignedReceipt({
+      responseDigest: computeResponseDigest({
+        status: 200,
+        body: {
+          ok: true,
+          data: "different payload",
+        },
+      }),
+    });
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(compat402Response())
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "resource payload",
+        receipt,
+      }, 200));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWith402("https://seller.test/resource", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-1234567890123456789012345",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      proofHeaderStyle: "X-PAYMENT",
+    })).rejects.toThrow(/embedded receipt binding mismatch/i);
   });
 });
