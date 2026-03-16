@@ -96,6 +96,12 @@ function hashHex(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
 
+function requestTarget(req: Request): string {
+  return typeof req.originalUrl === "string" && req.originalUrl.length > 0
+    ? req.originalUrl
+    : req.path;
+}
+
 /**
  * Initialize DNA payment handling on an Express app.
  * Mounts /commit, /finalize, /receipt/:id routes automatically.
@@ -236,7 +242,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       commitId,
       resource: quote.resource,
       requestId: commitId,
-      requestDigest: computeRequestDigest({ method: req.method, path: req.path, body: req.body }),
+      requestDigest: computeRequestDigest({ method: req.method, path: requestTarget(req), body: req.body }),
       responseDigest: computeResponseDigest({ status: 200, body: finalizeResponse }),
       shopId: "self",
       payerCommitment32B: commit.payerCommitment,
@@ -318,7 +324,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         requestId: commitId,
         requestDigest: computeRequestDigest({
           method: req.method,
-          path: req.path,
+          path: requestTarget(req),
           body: req.body,
         }),
         responseDigest: computeResponseDigest({
@@ -395,7 +401,7 @@ export function dnaPrice(
       commitId
       && seller.paidCommits.has(commitId)
       && paidCommit?.finalized
-      && paidQuote?.resource === req.path
+      && paidQuote?.resource === requestTarget(req)
     ) {
       seller.paidCommits.delete(commitId);
       res.once("finish", () => {
@@ -543,7 +549,7 @@ export function dnaPrice(
     // Issue quote
     const host = req.get("host") ?? "localhost";
     const baseUrl = `${req.protocol}://${host}`;
-    const quote = seller.createQuote(req.path, priceAtomic, baseUrl);
+    const quote = seller.createQuote(requestTarget(req), priceAtomic, baseUrl);
 
     res.status(402).json({
       error: "payment_required",

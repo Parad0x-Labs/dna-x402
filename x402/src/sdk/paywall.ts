@@ -87,6 +87,12 @@ function hashHex(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
 
+function requestTarget(req: Request): string {
+  return typeof req.originalUrl === "string" && req.originalUrl.length > 0
+    ? req.originalUrl
+    : req.path;
+}
+
 function createReceiptPayload(receipt: ReceiptRecord) {
   return receipt.signedReceipt;
 }
@@ -116,7 +122,7 @@ function issueDeliveryReceipt(
     requestId: commitId,
     requestDigest: computeRequestDigest({
       method: req.method,
-      path: req.path,
+      path: requestTarget(req),
       body: req.body,
     }),
     responseDigest: computeResponseDigest({
@@ -264,7 +270,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
           commitId,
           resource: quote.resource,
           requestId: commitId,
-          requestDigest: computeRequestDigest({ method: routeReq.method, path: routeReq.path, body: routeReq.body }),
+          requestDigest: computeRequestDigest({ method: routeReq.method, path: requestTarget(routeReq), body: routeReq.body }),
           responseDigest: computeResponseDigest({ status: 200, body: finalizeResponse }),
           shopId: "self",
           payerCommitment32B: commit.payerCommitment,
@@ -350,7 +356,7 @@ export function dnaPaywall(options: PaywallOptions) {
       commitId
       && runtime.paidCommits.has(commitId)
       && paidCommit?.finalized
-      && paidQuote?.resource === req.path
+      && paidQuote?.resource === requestTarget(req)
     ) {
       runtime.paidCommits.delete(commitId);
       res.once("finish", () => {
@@ -507,7 +513,8 @@ export function dnaPaywall(options: PaywallOptions) {
     const now = new Date();
     const quoteId = crypto.randomUUID();
     const expiresAt = new Date(now.getTime() + ttl * 1000).toISOString();
-    const memoHash = hashHex(`${quoteId}:${req.path}:${options.priceAtomic}:${expiresAt}`);
+    const target = requestTarget(req);
+    const memoHash = hashHex(`${quoteId}:${target}:${options.priceAtomic}:${expiresAt}`);
 
     const quote: QuoteRecord = {
       quoteId,
@@ -517,7 +524,7 @@ export function dnaPaywall(options: PaywallOptions) {
       expiresAt,
       settlement,
       memoHash,
-      resource: req.path,
+      resource: target,
       network,
       paymentVerifier,
       receiptSigner,
