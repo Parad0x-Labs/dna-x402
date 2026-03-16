@@ -61,6 +61,7 @@ export interface X402AppContext {
   quotes: Map<string, Quote>;
   commits: Map<string, CommitRecord>;
   receipts: Map<string, SignedReceipt>;
+  receiptSigner: ReceiptSigner;
   nettingLedger: NettingLedger;
   market: MarketContext;
   anchoringQueue?: AnchoringQueue;
@@ -234,6 +235,15 @@ function fulfilledResponseBody(resource: string): Record<string, unknown> {
   }
   if (resource === "/inference") {
     return { ok: true, output: "inference result" };
+  }
+  if (resource === "/stream-access") {
+    return {
+      ok: true,
+      stream: {
+        access: "granted",
+        mode: "realtime",
+      },
+    };
   }
   return { ok: true, data: "resource payload" };
 }
@@ -447,6 +457,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     quotes,
     commits,
     receipts,
+    receiptSigner,
     nettingLedger,
     market,
     anchoringQueue: undefined,
@@ -999,14 +1010,34 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
 
     if (paymentProof.settlement === "transfer" && verification.txSignature) {
-      const key = createReplayKey({
+      const compatProofReplayId = proof.txSig
+        ?? verification.txSignature
+        ?? `compat-proof:${hashHex(JSON.stringify(proof))}`;
+      const proofReplayKey = createReplayKey({
+        shopId: CORE_SHOP_ID,
+        txSig: compatProofReplayId,
+        amountAtomic: quote.totalAtomic,
+        recipient: quote.recipient,
+        mint: quote.mint,
+      });
+      if (!replayStore.consume(proofReplayKey, now().getTime())) {
+        recordGuardReplay(req, resource, "x402_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
+          dialectDetected: normalized.style,
+          paymentRequired: normalized.required,
+          paymentProof: proof,
+        });
+        return { handled: true };
+      }
+
+      const canonicalKey = createReplayKey({
         shopId: CORE_SHOP_ID,
         txSig: verification.txSignature,
         amountAtomic: quote.totalAtomic,
         recipient: quote.recipient,
         mint: quote.mint,
       });
-      if (!replayStore.consume(key, now().getTime())) {
+      if (canonicalKey !== proofReplayKey && !replayStore.consume(canonicalKey, now().getTime())) {
         recordGuardReplay(req, resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
           dialectDetected: normalized.style,
@@ -1934,6 +1965,90 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
     }).catch((error) => {
       logError("inference_handler_failure", { error: String(error) }, { traceId: req.traceId, route: "/inference" });
+      sendX402Error(req, res, error);
+    });
+  });
+
+  app.get("/stream-access", (req, res) => {
+    const handle = async () => {
+      const compat = await tryCompatPayment(req, res, "/stream-access");
+      if (compat.handled) {
+        return true;
+      }
+      return false;
+    };
+
+    const started = Date.now();
+    const commitId = req.header("x-dnp-commit-id");
+    if (commitId) {
+      const commit = commits.get(commitId);
+      if (commit && commit.status === "finalized" && commit.receiptId) {
+        const quote = quotes.get(commit.quoteId);
+        const receipt = receipts.get(commit.receiptId);
+        if (quote && receipt && quote.resource === "/stream-access") {
+          if (claimCommitDelivery(commit, receipt.payload.receiptId)) {
+            res.once("finish", () => {
+              if ((res.statusCode ?? 200) >= 500) {
+                restoreClaimedCommitDelivery(commit.commitId, receipt.payload.receiptId);
+              }
+            });
+            const anchored = context.anchoringQueue?.isAnchored(receipt.payload.receiptId) ?? false;
+            const qualityAccepted = verifySignedReceipt(receipt);
+            const responseBody = fulfilledResponseBody("/stream-access");
+            recordGuardDelivery("/stream-access", Date.now() - started, 200, receipt.payload.receiptId, qualityAccepted);
+            recordMarketEvent({
+              type: "REQUEST_FULFILLED",
+              shopId: CORE_SHOP_ID,
+              endpointId: endpointIdForResource(quote.resource),
+              capabilityTags: capabilityTagsForResource(quote.resource),
+              priceAmount: quote.totalAtomic,
+              mint: quote.mint,
+              settlementMode: commit.settlementMode,
+              latencyMs: Date.now() - started,
+              statusCode: 200,
+              receiptId: receipt.payload.receiptId,
+              anchor32: commit.payerCommitment32B,
+              buyerCommitment32B: commit.payerCommitment32B,
+              anchored,
+              verificationTier: anchored ? "VERIFIED" : "FAST",
+              receiptValid: verifySignedReceipt(receipt),
+            });
+            res.json({
+              ...responseBody,
+              receipt,
+            });
+            return;
+          }
+        }
+      }
+    }
+
+    void handle().then((handled) => {
+      if (handled) {
+        return;
+      }
+      if (!enforceGuardSpend(req, res, {
+        resource: "/stream-access",
+        amountAtomic: getTotalAtomicForResource("/stream-access"),
+        stage: "quote",
+      })) {
+        return;
+      }
+      const quote = issueQuote("/stream-access");
+      const baseUrl = inferBaseUrl(req);
+      const paymentRequirements = buildPaymentRequirements(quote, baseUrl, config);
+      const canonicalRequired = canonicalRequiredFromQuote(quote, config);
+      const encodedRequired = encodeCanonicalRequiredHeader(canonicalRequired);
+
+      res.setHeader("PAYMENT-REQUIRED", encodedRequired);
+      res.setHeader("X-PAYMENT-REQUIRED", encodedRequired);
+      res.setHeader("X-402-PAYMENT-REQUIRED", encodedRequired);
+      res.status(402).json({
+        error: "payment_required",
+        paymentRequirements,
+      });
+    }).catch((error) => {
+      logError("stream_access_handler_failure", { error: String(error) }, { traceId: req.traceId, route: "/stream-access" });
       sendX402Error(req, res, error);
     });
   });
