@@ -394,6 +394,63 @@ describe("dnaSeller", () => {
     }));
   });
 
+  it("emits a signed delivery receipt header on unlocked binary responses", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-binary-12345678901234567890",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/blob", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "99".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-binary-12345678901234567890",
+        },
+      },
+    }), makeResponse());
+
+    const payload = Buffer.from([1, 2, 3, 4, 5, 6]);
+    const unlockedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/blob",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      unlockedRes,
+      () => {
+        unlockedRes.send(payload);
+      },
+    );
+
+    expect(unlockedRes.body).toEqual(payload);
+    expect(unlockedRes.headers[RECEIPT_HEADER_NAME]).toBeTruthy();
+    const receipt = decodeReceiptHeader(unlockedRes.headers[RECEIPT_HEADER_NAME] as string);
+    expect(verifySignedReceipt(receipt)).toBe(true);
+    expect(receipt.payload.responseDigest).toBe(computeResponseDigest({
+      status: 200,
+      body: payload,
+    }));
+  });
+
   it("restores a paid commit after a 500 response and consumes it only after success", async () => {
     const app = express();
     const seller = dnaSeller(app, {

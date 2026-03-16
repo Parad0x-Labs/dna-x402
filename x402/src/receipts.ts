@@ -18,7 +18,17 @@ function encodeDetachedPayload(payload: unknown): string {
   return JSON.stringify(payload);
 }
 
+function encodeBinaryBody(value: ArrayBuffer | ArrayBufferView): string {
+  if (value instanceof ArrayBuffer) {
+    return `base64:${Buffer.from(value).toString("base64url")}`;
+  }
+  return `base64:${Buffer.from(value.buffer, value.byteOffset, value.byteLength).toString("base64url")}`;
+}
+
 function canonicalBody(value: unknown): string {
+  if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
+    return encodeBinaryBody(value);
+  }
   return JSON.stringify(value ?? null);
 }
 
