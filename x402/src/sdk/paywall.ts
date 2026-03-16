@@ -354,11 +354,8 @@ export function dnaPaywall(options: PaywallOptions) {
     ) {
       runtime.paidCommits.delete(commitId);
       res.once("finish", () => {
-        if ((res.statusCode ?? 200) >= 500) {
-          runtime.paidCommits.add(commitId);
-          return;
-        }
         if ((res.statusCode ?? 200) >= 400) {
+          runtime.paidCommits.add(commitId);
           return;
         }
         const receiptId = runtime.commits.get(commitId)?.receiptId;

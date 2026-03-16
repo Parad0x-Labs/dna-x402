@@ -399,7 +399,7 @@ export function dnaPrice(
     ) {
       seller.paidCommits.delete(commitId);
       res.once("finish", () => {
-        if ((res.statusCode ?? 200) >= 500) {
+        if ((res.statusCode ?? 200) >= 400) {
           seller.paidCommits.add(commitId);
         }
       });
