@@ -69,6 +69,10 @@ function isJsonRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isBinaryBody(value: unknown): value is ArrayBuffer | ArrayBufferView {
+  return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
+}
+
 interface PaywallRuntime {
   quotes: Map<string, QuoteRecord>;
   commits: Map<string, CommitRecord>;
@@ -381,7 +385,7 @@ export function dnaPaywall(options: PaywallOptions) {
         return originalJson(deliveryReceipt ? { ...body, receipt: deliveryReceipt } : body);
       }) as typeof res.json;
       res.send = ((body: unknown) => {
-        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400 || typeof body !== "string") {
+        if (deliveryReceiptIssued || (res.statusCode ?? 200) >= 400 || (!isBinaryBody(body) && typeof body !== "string")) {
           return originalSend(body as never);
         }
         attachDeliveryReceipt(body);

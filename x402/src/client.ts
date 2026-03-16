@@ -120,6 +120,15 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isTextLikeContentType(contentType: string): boolean {
+  const normalized = contentType.toLowerCase();
+  return normalized.startsWith("text/")
+    || normalized.includes("charset=")
+    || normalized.startsWith("application/xml")
+    || normalized.startsWith("application/javascript")
+    || normalized.startsWith("application/xhtml+xml");
+}
+
 async function computeDeliveredResponseDigest(response: Response): Promise<string | undefined> {
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
@@ -143,10 +152,21 @@ async function computeDeliveredResponseDigest(response: Response): Promise<strin
     });
   }
 
+  if (isTextLikeContentType(contentType)) {
+    try {
+      return computeResponseDigest({
+        status: response.status,
+        body: await response.clone().text(),
+      });
+    } catch {
+      return undefined;
+    }
+  }
+
   try {
     return computeResponseDigest({
       status: response.status,
-      body: await response.clone().text(),
+      body: new Uint8Array(await response.clone().arrayBuffer()),
     });
   } catch {
     return undefined;
