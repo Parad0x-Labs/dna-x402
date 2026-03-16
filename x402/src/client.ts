@@ -3,7 +3,7 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
-import { verifySignedReceipt } from "./receipts.js";
+import { computeResponseDigest, verifySignedReceipt } from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
@@ -68,6 +68,8 @@ interface FinalizeResponse {
   receiptId: string;
 }
 
+const RECEIPT_BOUND_ROUTE_SET = new Set(["/resource", "/inference"]);
+
 function assertReceiptIntegrity(
   receipt: SignedReceipt,
   expected: {
@@ -100,6 +102,44 @@ function assertReceiptIntegrity(
   }
   if (receipt.payload.settlement !== expected.settlement) {
     throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
+  }
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+async function assertDeliveredResponseIntegrity(response: Response, receipt: SignedReceipt): Promise<void> {
+  if (!response.ok || !RECEIPT_BOUND_ROUTE_SET.has(receipt.payload.resource)) {
+    return;
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return;
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.clone().json();
+  } catch {
+    return;
+  }
+
+  if (!isJsonObject(payload)) {
+    return;
+  }
+
+  const businessBody = { ...payload };
+  delete businessBody.receipt;
+
+  const deliveredDigest = computeResponseDigest({
+    status: response.status,
+    body: businessBody,
+  });
+
+  if (receipt.payload.responseDigest !== deliveredDigest) {
+    throw new Error("Receipt verification failed: delivered response digest mismatch");
   }
 }
 
@@ -435,12 +475,6 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     totalAtomic: requirements.quote.totalAtomic,
     settlement: paymentProof.settlement,
   });
-  if (receiptStore) {
-    await receiptStore.save(receipt);
-  }
-  if (maxSpendPerDayAtomic) {
-    await spendTracker.addSpendForDateAtomic(dateKeyUtc(), quoteTotal);
-  }
 
   const retryResponse = await fetch(url, {
     ...fetchOptions,
@@ -449,6 +483,13 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
       "x-dnp-commit-id": commitData.commitId,
     },
   });
+  await assertDeliveredResponseIntegrity(retryResponse, receipt);
+  if (receiptStore) {
+    await receiptStore.save(receipt);
+  }
+  if (maxSpendPerDayAtomic) {
+    await spendTracker.addSpendForDateAtomic(dateKeyUtc(), quoteTotal);
+  }
 
   return {
     response: retryResponse,

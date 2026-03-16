@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchWith402, InMemoryReceiptStore } from "../src/client.js";
-import { ReceiptSigner } from "../src/receipts.js";
+import { computeResponseDigest, ReceiptSigner } from "../src/receipts.js";
 import type { SignedReceipt } from "../src/types.js";
 
 function jsonResponse(body: unknown, status = 200, headers?: Record<string, string>): Response {
@@ -22,7 +22,13 @@ function makeSignedReceipt(overrides: Partial<SignedReceipt["payload"]> = {}): S
     resource: "/resource",
     requestId: "commit-1",
     requestDigest: "memo-1",
-    responseDigest: "",
+    responseDigest: computeResponseDigest({
+      status: 200,
+      body: {
+        ok: true,
+        data: "resource payload",
+      },
+    }),
     shopId: "self",
     payerCommitment32B: "aa".repeat(32),
     recipient: "recipient-1",
@@ -79,7 +85,11 @@ describe("fetchWith402 receipt verification", () => {
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
       .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
       .mockResolvedValueOnce(jsonResponse(receipt))
-      .mockResolvedValueOnce(jsonResponse({ ok: true }, 200));
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "resource payload",
+        receipt,
+      }, 200));
 
     vi.stubGlobal("fetch", fetchMock);
 
@@ -133,7 +143,11 @@ describe("fetchWith402 receipt verification", () => {
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
       .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
       .mockResolvedValueOnce(jsonResponse(receipt))
-      .mockResolvedValueOnce(jsonResponse({ ok: true }, 200));
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "resource payload",
+        receipt,
+      }, 200));
 
     vi.stubGlobal("fetch", fetchMock);
 
@@ -151,5 +165,62 @@ describe("fetchWith402 receipt verification", () => {
     })).rejects.toThrow(/recipient mismatch/i);
 
     expect(store.receipts.size).toBe(0);
+  });
+
+  it("rejects unlocked responses that do not match the signed response digest", async () => {
+    const receipt = makeSignedReceipt();
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        paymentRequirements: {
+          version: "x402-dnp-v1",
+          quote: {
+            quoteId: "quote-1",
+            amount: "1000",
+            feeAtomic: "0",
+            totalAtomic: "1000",
+            mint: "mint-1",
+            recipient: "recipient-1",
+            expiresAt: "2026-03-16T00:10:00.000Z",
+            settlement: ["transfer"],
+            memoHash: "memo-1",
+          },
+          accepts: [{
+            scheme: "solana-spl",
+            network: "solana-devnet",
+            mint: "mint-1",
+            maxAmount: "1000",
+            recipient: "recipient-1",
+            mode: "transfer",
+          }],
+          recommendedMode: "transfer",
+          commitEndpoint: "https://seller.test/commit",
+          finalizeEndpoint: "https://seller.test/finalize",
+          receiptEndpoint: "https://seller.test/receipt/:receiptId",
+        },
+      }, 402))
+      .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(receipt))
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        data: "tampered payload",
+        receipt,
+      }, 200));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWith402("https://seller.test/resource", {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-12345678901234567890",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: new InMemoryReceiptStore(),
+    })).rejects.toThrow(/response digest mismatch/i);
   });
 });
