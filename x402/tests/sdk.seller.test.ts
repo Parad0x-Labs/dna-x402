@@ -72,6 +72,17 @@ class MockResponse extends EventEmitter {
     return this;
   }
 
+  redirect(location: string): this {
+    if (this.ended) {
+      return this;
+    }
+    this.statusCode = this.statusCode === 200 ? 302 : this.statusCode;
+    this.body = { location };
+    this.ended = true;
+    this.emit("finish");
+    return this;
+  }
+
   setHeader(name: string, value: string): void {
     this.headers[name.toLowerCase()] = value;
   }
@@ -597,6 +608,61 @@ describe("dnaSeller", () => {
       message: "dnaPrice protected responses must use res.json or res.send for verifiable delivery",
     });
     expect(streamedRes.headers[RECEIPT_HEADER_NAME]).toBeUndefined();
+    expect(seller.paidCommits.has(commitId)).toBe(true);
+  });
+
+  it("fails closed on redirect-based protected responses and restores the paid commit", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-redirect-123456789012345678",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/redirect", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "aa".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-redirect-123456789012345678",
+        },
+      },
+    }), makeResponse());
+
+    const redirectRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/redirect",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      redirectRes,
+      () => {
+        redirectRes.redirect("https://example.test/private");
+      },
+    );
+
+    expect(redirectRes.statusCode).toBe(501);
+    expect(redirectRes.body).toEqual({
+      error: "unsupported_delivery_mode",
+      message: "dnaPrice protected responses must use res.json or res.send for verifiable delivery",
+    });
+    expect(redirectRes.headers[RECEIPT_HEADER_NAME]).toBeUndefined();
     expect(seller.paidCommits.has(commitId)).toBe(true);
   });
 });

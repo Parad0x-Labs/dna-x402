@@ -401,9 +401,17 @@ export function dnaPrice(
       const mutableRes = res as Response & {
         write?: (...args: any[]) => any;
         end?: (...args: any[]) => any;
+        redirect?: (...args: any[]) => any;
+        sendFile?: (...args: any[]) => any;
+        download?: (...args: any[]) => any;
+        render?: (...args: any[]) => any;
       };
       const originalWrite = mutableRes.write?.bind(res);
       const originalEnd = mutableRes.end?.bind(res);
+      const originalRedirect = mutableRes.redirect?.bind(res);
+      const originalSendFile = mutableRes.sendFile?.bind(res);
+      const originalDownload = mutableRes.download?.bind(res);
+      const originalRender = mutableRes.render?.bind(res);
       let deliveryReceiptIssued = false;
       let allowNativeBodyWrite = false;
       let unsupportedDeliveryRejected = false;
@@ -481,6 +489,42 @@ export function dnaPrice(
           rejectUnsupportedDelivery();
           return res;
         }) as typeof mutableRes.end;
+      }
+      const rejectUnsupportedResponseHelper = (): Response => {
+        rejectUnsupportedDelivery();
+        return res;
+      };
+      if (originalRedirect) {
+        mutableRes.redirect = ((...args: any[]) => {
+          if (allowNativeBodyWrite || deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+            return originalRedirect(...args);
+          }
+          return rejectUnsupportedResponseHelper();
+        }) as typeof mutableRes.redirect;
+      }
+      if (originalSendFile) {
+        mutableRes.sendFile = ((...args: any[]) => {
+          if (allowNativeBodyWrite || deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+            return originalSendFile(...args);
+          }
+          return rejectUnsupportedResponseHelper();
+        }) as typeof mutableRes.sendFile;
+      }
+      if (originalDownload) {
+        mutableRes.download = ((...args: any[]) => {
+          if (allowNativeBodyWrite || deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+            return originalDownload(...args);
+          }
+          return rejectUnsupportedResponseHelper();
+        }) as typeof mutableRes.download;
+      }
+      if (originalRender) {
+        mutableRes.render = ((...args: any[]) => {
+          if (allowNativeBodyWrite || deliveryReceiptIssued || (res.statusCode ?? 200) >= 400) {
+            return originalRender(...args);
+          }
+          return rejectUnsupportedResponseHelper();
+        }) as typeof mutableRes.render;
       }
       next();
       return;

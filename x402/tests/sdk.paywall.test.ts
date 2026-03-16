@@ -85,6 +85,17 @@ class MockResponse extends EventEmitter {
     return this;
   }
 
+  redirect(location: string): this {
+    if (this.ended) {
+      return this;
+    }
+    this.statusCode = this.statusCode === 200 ? 302 : this.statusCode;
+    this.body = { location };
+    this.ended = true;
+    this.emit("finish");
+    return this;
+  }
+
   setHeader(name: string, value: string): void {
     this.headers[name.toLowerCase()] = value;
   }
@@ -683,6 +694,68 @@ describe("dnaPaywall", () => {
       message: "dnaPaywall protected responses must use res.json or res.send for verifiable delivery",
     });
     expect(streamedRes.headers[RECEIPT_HEADER_NAME]).toBeUndefined();
+    const runtime = (app.locals as { __dnaPaywallRuntime?: { paidCommits: Set<string> } }).__dnaPaywallRuntime;
+    expect(runtime?.paidCommits.has(commitId)).toBe(true);
+  });
+
+  it("fails closed on redirect-based protected responses and restores the paid commit", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-redirect-12345678901234567",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/redirect" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "bb".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-redirect-12345678901234567",
+        },
+      },
+    }), makeResponse());
+
+    const redirectRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/redirect",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      redirectRes,
+      () => {
+        redirectRes.redirect("https://example.test/private");
+      },
+    );
+
+    expect(redirectRes.statusCode).toBe(501);
+    expect(redirectRes.body).toEqual({
+      error: "unsupported_delivery_mode",
+      message: "dnaPaywall protected responses must use res.json or res.send for verifiable delivery",
+    });
+    expect(redirectRes.headers[RECEIPT_HEADER_NAME]).toBeUndefined();
     const runtime = (app.locals as { __dnaPaywallRuntime?: { paidCommits: Set<string> } }).__dnaPaywallRuntime;
     expect(runtime?.paidCommits.has(commitId)).toBe(true);
   });
