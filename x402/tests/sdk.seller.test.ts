@@ -723,6 +723,56 @@ describe("dnaSeller", () => {
     expect(seller.paidCommits.has(commitId)).toBe(true);
   });
 
+  it("restores a paid commit after a 4xx protected response", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-4xx-123456789012345678901234",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/retry-4xx", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "ab".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-4xx-123456789012345678901234",
+        },
+      },
+    }), makeResponse());
+
+    const failedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/retry-4xx",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      failedRes,
+      () => {
+        failedRes.status(422).json({ error: "invalid_input" });
+      },
+    );
+
+    expect(seller.paidCommits.has(commitId)).toBe(true);
+    expect((failedRes.body as { receipt?: unknown }).receipt).toBeUndefined();
+  });
+
   it("does not unlock a different priced route with a finalized commit from another resource", async () => {
     const app = express();
     const seller = dnaSeller(app, {

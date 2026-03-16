@@ -823,6 +823,66 @@ describe("dnaPaywall", () => {
     expect(runtime?.paidCommits.has(commitId)).toBe(true);
   });
 
+  it("restores a paid commit after a 4xx protected response and does not fire onPaymentVerified", async () => {
+    const app = express();
+    const onPaymentVerified = vi.fn();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-4xx-1234567890123456789012",
+      }),
+      onPaymentVerified,
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/retry-4xx" }), firstRes);
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "ac".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-4xx-1234567890123456789012",
+        },
+      },
+    }), makeResponse());
+
+    const failedRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/retry-4xx",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      failedRes,
+      () => {
+        failedRes.status(422).json({ error: "invalid_input" });
+      },
+    );
+
+    expect(onPaymentVerified).not.toHaveBeenCalled();
+    const runtime = (app.locals as { __dnaPaywallRuntime?: { paidCommits: Set<string> } }).__dnaPaywallRuntime;
+    expect(runtime?.paidCommits.has(commitId)).toBe(true);
+    expect((failedRes.body as { receipt?: unknown }).receipt).toBeUndefined();
+  });
+
   it("does not unlock a different paywalled route with a finalized commit from another resource", async () => {
     const app = express();
     const middleware = dnaPaywall({
