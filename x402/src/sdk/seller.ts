@@ -24,7 +24,8 @@
 import * as crypto from "node:crypto";
 import type { Express, NextFunction, Request, Response } from "express";
 import { PaymentVerifier } from "../paymentVerifier.js";
-import { PaymentAccept, PaymentProof } from "../types.js";
+import { ReceiptSigner } from "../receipts.js";
+import { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import { createPaymentVerifier, inferPaymentNetwork, SupportedNetwork, verificationFailureStatus } from "./paymentSupport.js";
 
 export interface DnaSellerOptions {
@@ -39,6 +40,7 @@ export interface DnaSellerOptions {
   paymentVerifier?: PaymentVerifier;
   maxTransferProofAgeSeconds?: number;
   unsafeUnverifiedNettingEnabled?: boolean;
+  receiptSigner?: ReceiptSigner;
 }
 
 interface QuoteRecord {
@@ -65,15 +67,7 @@ interface CommitRecord {
 }
 
 interface ReceiptRecord {
-  receiptId: string;
-  commitId: string;
-  quoteId: string;
-  settlement: string;
-  amountAtomic: string;
-  recipient: string;
-  createdAt: string;
-  settledOnchain: boolean;
-  txSignature?: string;
+  signedReceipt: SignedReceipt;
 }
 
 function hashHex(input: string): string {
@@ -95,6 +89,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const ttl = options.quoteTtlSeconds ?? 300;
   const settlement = options.settlement ?? ["transfer"];
   const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
+  const receiptSigner = options.receiptSigner ?? ReceiptSigner.generate();
   const paymentVerifier = createPaymentVerifier({
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
@@ -205,17 +200,27 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     }
 
     const receiptId = crypto.randomUUID();
-    const receipt: ReceiptRecord = {
+    const signedReceipt = receiptSigner.sign({
       receiptId,
-      commitId,
       quoteId: commit.quoteId,
-      settlement: settlementMode,
-      amountAtomic: quote.totalAtomic,
+      commitId,
+      resource: quote.resource,
+      requestId: commitId,
+      requestDigest: quote.memoHash,
+      responseDigest: "",
+      shopId: "self",
+      payerCommitment32B: commit.payerCommitment,
       recipient: quote.recipient,
-      createdAt: new Date().toISOString(),
+      mint: quote.mint,
+      amountAtomic: quote.amount,
+      feeAtomic: quote.feeAtomic,
+      totalAtomic: quote.totalAtomic,
+      settlement: settlementMode,
       settledOnchain: verification.settledOnchain,
       txSignature: verification.txSignature,
-    };
+      createdAt: new Date().toISOString(),
+    });
+    const receipt: ReceiptRecord = { signedReceipt };
 
     receipts.set(receiptId, receipt);
     commit.finalized = true;
@@ -232,30 +237,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       res.status(404).json({ error: "Receipt not found" });
       return;
     }
-    res.json({
-      payload: {
-        receiptId: receipt.receiptId,
-        quoteId: receipt.quoteId,
-        commitId: receipt.commitId,
-        settlement: receipt.settlement,
-        amountAtomic: receipt.amountAtomic,
-        totalAtomic: receipt.amountAtomic,
-        feeAtomic: "0",
-        mint,
-        recipient: receipt.recipient,
-        createdAt: receipt.createdAt,
-        resource: "/",
-        shopId: "self",
-        requestDigest: "",
-        responseDigest: "",
-        settledOnchain: receipt.settledOnchain,
-        txSignature: receipt.txSignature ?? null,
-      },
-      signature: "self-signed",
-      signerPublicKey: receipt.recipient,
-      receiptHash: hashHex(receipt.receiptId),
-      prevHash: "0",
-    });
+    res.json(receipt.signedReceipt);
   });
 
   // GET /health
@@ -266,6 +248,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       recipient: options.recipient,
       mint,
       network,
+      receiptSigner: receiptSigner.signerPublicKey,
       settlement,
       quotes: quotes.size,
       receipts: receipts.size,
