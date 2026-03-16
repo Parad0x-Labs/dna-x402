@@ -3,6 +3,7 @@ import { PaymentProof, PaymentRequirements, QuoteResponse, SignedReceipt } from 
 import crypto from "node:crypto";
 import { MarketPolicy, marketPolicySchema, quoteQueryFromPolicy, selectQuoteByPolicy } from "./market/policy.js";
 import { MarketOrder, MarketQuote } from "./market/types.js";
+import { verifySignedReceipt } from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
 
@@ -65,6 +66,41 @@ export interface MarketCallResult extends FetchWith402Result {
 interface FinalizeResponse {
   ok: boolean;
   receiptId: string;
+}
+
+function assertReceiptIntegrity(
+  receipt: SignedReceipt,
+  expected: {
+    quoteId: string;
+    commitId: string;
+    recipient: string;
+    mint: string;
+    totalAtomic: string;
+    settlement: PaymentProof["settlement"];
+  },
+): void {
+  if (!verifySignedReceipt(receipt)) {
+    throw new Error("Receipt verification failed: invalid signature or tampered payload");
+  }
+
+  if (receipt.payload.quoteId !== expected.quoteId) {
+    throw new Error(`Receipt verification failed: quoteId mismatch (${receipt.payload.quoteId})`);
+  }
+  if (receipt.payload.commitId !== expected.commitId) {
+    throw new Error(`Receipt verification failed: commitId mismatch (${receipt.payload.commitId})`);
+  }
+  if (receipt.payload.recipient !== expected.recipient) {
+    throw new Error(`Receipt verification failed: recipient mismatch (${receipt.payload.recipient})`);
+  }
+  if (receipt.payload.mint !== expected.mint) {
+    throw new Error(`Receipt verification failed: mint mismatch (${receipt.payload.mint})`);
+  }
+  if (receipt.payload.totalAtomic !== expected.totalAtomic) {
+    throw new Error(`Receipt verification failed: totalAtomic mismatch (${receipt.payload.totalAtomic})`);
+  }
+  if (receipt.payload.settlement !== expected.settlement) {
+    throw new Error(`Receipt verification failed: settlement mismatch (${receipt.payload.settlement})`);
+  }
 }
 
 export interface SpendTracker {
@@ -391,6 +427,14 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     throw new Error(`Receipt fetch failed: ${receiptRes.status}`);
   }
   const receipt = (await receiptRes.json()) as SignedReceipt;
+  assertReceiptIntegrity(receipt, {
+    quoteId: requirements.quote.quoteId,
+    commitId: commitData.commitId,
+    recipient: requirements.quote.recipient,
+    mint: requirements.quote.mint,
+    totalAtomic: requirements.quote.totalAtomic,
+    settlement: paymentProof.settlement,
+  });
   if (receiptStore) {
     await receiptStore.save(receipt);
   }
