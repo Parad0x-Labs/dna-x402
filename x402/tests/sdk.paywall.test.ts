@@ -1040,4 +1040,160 @@ describe("dnaPaywall", () => {
     expect((correctQueryRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
     expect(runtime?.paidCommits.has(commitId)).toBe(false);
   });
+
+  it("does not unlock the same paywalled path with a different HTTP method", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-method-bind-12345678901234",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/method-bound",
+      }),
+      firstRes,
+    );
+    const quoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId, payerCommitment32B: "0x" + "d0".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-method-bind-12345678901234",
+        },
+      },
+    }), makeResponse());
+
+    const wrongMethodRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "POST",
+        path: "/api/method-bound",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      wrongMethodRes,
+    );
+
+    expect(wrongMethodRes.statusCode).toBe(402);
+    expect((wrongMethodRes.body as { error: string }).error).toBe("payment_required");
+    const runtime = (app.locals as { __dnaPaywallRuntime?: { paidCommits: Set<string> } }).__dnaPaywallRuntime;
+    expect(runtime?.paidCommits.has(commitId)).toBe(true);
+
+    const correctMethodRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      middleware,
+      makeRequest(app, {
+        method: "GET",
+        path: "/api/method-bound",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      correctMethodRes,
+      () => {
+        correctMethodRes.json({ ok: true, method: "GET" });
+      },
+    );
+
+    expect(correctMethodRes.statusCode).toBe(200);
+    expect((correctMethodRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
+    expect(runtime?.paidCommits.has(commitId)).toBe(false);
+  });
+
+  it("rejects reusing the same transfer proof across different paywall commits", async () => {
+    const app = express();
+    const middleware = dnaPaywall({
+      priceAtomic: "1000",
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-paywall-proof-reuse-1234567890123",
+      }),
+    });
+
+    const firstRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/reuse-a" }), firstRes);
+    const firstQuoteId = (firstRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const secondRes = makeResponse() as Response & MockResponse;
+    await invoke(middleware, makeRequest(app, { method: "GET", path: "/api/reuse-b" }), secondRes);
+    const secondQuoteId = (secondRes.body as {
+      paymentRequirements: { quote: { quoteId: string } };
+    }).paymentRequirements.quote.quoteId;
+
+    const firstCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: firstQuoteId, payerCommitment32B: "0x" + "d3".repeat(32) },
+    }), firstCommitRes);
+    const firstCommitId = (firstCommitRes.body as { commitId: string }).commitId;
+
+    const secondCommitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest(app, {
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: secondQuoteId, payerCommitment32B: "0x" + "d4".repeat(32) },
+    }), secondCommitRes);
+    const secondCommitId = (secondCommitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: firstCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-proof-reuse-1234567890123",
+        },
+      },
+    }), makeResponse());
+
+    const duplicateFinalizeRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest(app, {
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId: secondCommitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-paywall-proof-reuse-1234567890123",
+        },
+      },
+    }), duplicateFinalizeRes);
+
+    expect(duplicateFinalizeRes.statusCode).toBe(409);
+    expect(duplicateFinalizeRes.body).toEqual({
+      error: "Transfer proof already used",
+      commitId: firstCommitId,
+    });
+    const runtime = (app.locals as {
+      __dnaPaywallRuntime?: { commits: Map<string, { finalized: boolean }> };
+    }).__dnaPaywallRuntime;
+    expect(runtime?.commits.get(secondCommitId)?.finalized).toBe(false);
+  });
 });
