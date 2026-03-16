@@ -665,4 +665,70 @@ describe("dnaSeller", () => {
     expect(redirectRes.headers[RECEIPT_HEADER_NAME]).toBeUndefined();
     expect(seller.paidCommits.has(commitId)).toBe(true);
   });
+
+  it("does not unlock a different priced route with a finalized commit from another resource", async () => {
+    const app = express();
+    const seller = dnaSeller(app, {
+      recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
+      paymentVerifier: new FakeVerifier({
+        ok: true,
+        settledOnchain: true,
+        txSignature: "tx-ok-seller-resource-bind-12345678901234",
+      }),
+    });
+
+    const quote = seller.createQuote("/api/alpha", "5000", "https://example.test");
+    const commitRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "post", "/commit"), makeRequest({
+      method: "POST",
+      path: "/commit",
+      body: { quoteId: quote.quoteId, payerCommitment32B: "0x" + "cc".repeat(32) },
+    }), commitRes);
+    const commitId = (commitRes.body as { commitId: string }).commitId;
+
+    await invoke(routeHandler(app, "post", "/finalize"), makeRequest({
+      method: "POST",
+      path: "/finalize",
+      body: {
+        commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-seller-resource-bind-12345678901234",
+        },
+      },
+    }), makeResponse());
+
+    const wrongRouteRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/beta",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      wrongRouteRes,
+    );
+
+    expect(wrongRouteRes.statusCode).toBe(402);
+    expect((wrongRouteRes.body as { error: string }).error).toBe("payment_required");
+    expect(seller.paidCommits.has(commitId)).toBe(true);
+
+    const correctRouteRes = makeResponse() as Response & MockResponse;
+    await invoke(
+      dnaPrice("5000", seller),
+      makeRequest({
+        method: "GET",
+        path: "/api/alpha",
+        headers: { "x-dnp-commit-id": commitId },
+      }),
+      correctRouteRes,
+      () => {
+        correctRouteRes.json({ ok: true, route: "alpha" });
+      },
+    );
+
+    expect(correctRouteRes.statusCode).toBe(200);
+    expect((correctRouteRes.body as { receipt?: SignedReceipt }).receipt).toBeTruthy();
+    expect(seller.paidCommits.has(commitId)).toBe(false);
+  });
 });

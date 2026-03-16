@@ -389,7 +389,14 @@ export function dnaPrice(
   return function priceMiddleware(req: Request, res: Response, next: NextFunction): void {
     // Check if already paid
     const commitId = req.header("x-dnp-commit-id");
-    if (commitId && seller.paidCommits.has(commitId)) {
+    const paidCommit = commitId ? seller.commits.get(commitId) : undefined;
+    const paidQuote = paidCommit ? seller.quotes.get(paidCommit.quoteId) : undefined;
+    if (
+      commitId
+      && seller.paidCommits.has(commitId)
+      && paidCommit?.finalized
+      && paidQuote?.resource === req.path
+    ) {
       seller.paidCommits.delete(commitId);
       res.once("finish", () => {
         if ((res.statusCode ?? 200) >= 500) {

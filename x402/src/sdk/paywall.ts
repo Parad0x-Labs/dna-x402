@@ -344,7 +344,14 @@ export function dnaPaywall(options: PaywallOptions) {
     }
 
     const commitId = req.header("x-dnp-commit-id");
-    if (commitId && runtime.paidCommits.has(commitId)) {
+    const paidCommit = commitId ? runtime.commits.get(commitId) : undefined;
+    const paidQuote = paidCommit ? runtime.quotes.get(paidCommit.quoteId) : undefined;
+    if (
+      commitId
+      && runtime.paidCommits.has(commitId)
+      && paidCommit?.finalized
+      && paidQuote?.resource === req.path
+    ) {
       runtime.paidCommits.delete(commitId);
       res.once("finish", () => {
         if ((res.statusCode ?? 200) >= 500) {
