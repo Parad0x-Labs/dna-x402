@@ -82,6 +82,16 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 const data = await result.response.json();
 ```
 
+If your buyer wants a deterministic receipt binding instead of a random per-call commitment, pass `payerCommitment32B` explicitly:
+
+```typescript
+const result = await fetchWith402("https://provider.example/api/inference", {
+  wallet: myWallet,
+  maxSpendAtomic: "50000",
+  payerCommitment32B: "9f".repeat(32), // 32-byte hex, with or without 0x prefix
+});
+```
+
 ### For Sellers (Sell Compute, AI, Data — Anything)
 
 ```typescript

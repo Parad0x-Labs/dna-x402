@@ -36,6 +36,7 @@ const data = await result.response.json();
 ```
 
 That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. Netting is no longer auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for an intentional trusted loop.
+If you need deterministic receipt binding, pass `payerCommitment32B` explicitly as a 32-byte hex string instead of letting the client generate a random one per call.
 
 ### With real USDC transfer (on-chain proof)
 
