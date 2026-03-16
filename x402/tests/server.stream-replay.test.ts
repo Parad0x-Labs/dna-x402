@@ -164,6 +164,28 @@ async function issueQuoteAndCommit(app: Express, resource: string, commitmentHex
 }
 
 describe("server stream settlement safety", () => {
+  it("exposes /stream-access as a protected canonical route", async () => {
+    const { app } = createX402App(baseConfig(), {
+      paymentVerifier: new StreamVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    const streamRouteRes = makeResponse() as Response & MockResponse;
+    await invoke(routeHandler(app, "get", "/stream-access"), makeRequest({
+      method: "GET",
+      path: "/stream-access",
+    }), streamRouteRes);
+
+    expect(streamRouteRes.statusCode).toBe(402);
+    expect(streamRouteRes.body).toMatchObject({
+      error: "payment_required",
+      paymentRequirements: {
+        recommendedMode: "stream",
+      },
+    });
+    expect((streamRouteRes.body as { paymentRequirements: { quote: { amount: string } } }).paymentRequirements.quote.amount).toBe("100");
+  });
+
   it("rejects reusing the same streamId across different commits", async () => {
     const { app } = createX402App(baseConfig(), {
       paymentVerifier: new StreamVerifier(),

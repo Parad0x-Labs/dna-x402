@@ -92,17 +92,20 @@ function compat402HeaderOnlyResponse(overrides: Partial<{
 
 function makeSignedReceipt(overrides: Partial<SignedReceipt["payload"]> = {}): SignedReceipt {
   const signer = ReceiptSigner.generate();
-  return signer.sign({
-    receiptId: "receipt-1",
-    quoteId: "quote-1",
-    commitId: "commit-1",
-    resource: "/resource",
-    requestId: "commit-1",
-    requestDigest: computeRequestDigest({
+  const settlement = overrides.settlement ?? "transfer";
+  const resource = overrides.resource ?? "/resource";
+  const receiptId = overrides.receiptId ?? "receipt-1";
+  const payload = {
+    receiptId,
+    quoteId: overrides.quoteId ?? "quote-1",
+    commitId: overrides.commitId ?? "commit-1",
+    resource,
+    requestId: overrides.requestId ?? (overrides.commitId ?? "commit-1"),
+    requestDigest: overrides.requestDigest ?? computeRequestDigest({
       method: "GET",
-      path: "/resource",
+      path: resource,
     }),
-    responseDigest: computeResponseDigest({
+    responseDigest: overrides.responseDigest ?? computeResponseDigest({
       status: 200,
       body: {
         ok: true,
@@ -111,60 +114,81 @@ function makeSignedReceipt(overrides: Partial<SignedReceipt["payload"]> = {}): S
     }),
     shopId: "self",
     payerCommitment32B: "aa".repeat(32),
-    recipient: "recipient-1",
-    mint: "mint-1",
-    amountAtomic: "1000",
-    feeAtomic: "0",
-    totalAtomic: "1000",
-    settlement: "transfer",
+    recipient: overrides.recipient ?? "recipient-1",
+    mint: overrides.mint ?? "mint-1",
+    amountAtomic: overrides.amountAtomic ?? "1000",
+    feeAtomic: overrides.feeAtomic ?? "0",
+    totalAtomic: overrides.totalAtomic ?? "1000",
+    settlement,
     settledOnchain: true,
-    txSignature: "tx-ok-client-12345678901234567890",
+    txSignature: settlement === "transfer" ? (overrides.txSignature ?? "tx-ok-client-12345678901234567890") : overrides.txSignature,
+    streamId: settlement === "stream" ? (overrides.streamId ?? "stream-ok-client-1234567890") : overrides.streamId,
     createdAt: "2026-03-16T00:00:00.000Z",
     ...overrides,
-  });
+  } satisfies SignedReceipt["payload"];
+  return signer.sign(payload);
 }
 
 function makeSignedFinalizeReceipt(overrides: Partial<SignedReceipt["payload"]> = {}): SignedReceipt {
   const signer = ReceiptSigner.generate();
-  return signer.sign({
+  const settlement = overrides.settlement ?? "transfer";
+  const receiptId = overrides.receiptId ?? "receipt-1";
+  const commitId = overrides.commitId ?? "commit-1";
+  const resource = overrides.resource ?? "/resource";
+  const paymentProof = settlement === "stream"
+    ? {
+      settlement,
+      streamId: overrides.streamId ?? "stream-ok-client-1234567890",
+    }
+    : {
+      settlement,
+      txSignature: overrides.txSignature ?? "tx-ok-client-12345678901234567890",
+    };
+  const payload = {
     receiptId: "receipt-1",
-    quoteId: "quote-1",
-    commitId: "commit-1",
-    resource: "/resource",
-    requestId: "commit-1",
-    requestDigest: computeRequestDigest({
+    quoteId: overrides.quoteId ?? "quote-1",
+    commitId,
+    resource,
+    requestId: overrides.requestId ?? commitId,
+    requestDigest: overrides.requestDigest ?? computeRequestDigest({
       method: "POST",
       path: "/finalize",
       body: {
-        commitId: "commit-1",
-        paymentProof: {
-          settlement: "transfer",
-          txSignature: "tx-ok-client-12345678901234567890",
-        },
+        commitId,
+        paymentProof,
       },
     }),
-    responseDigest: computeResponseDigest({
+    responseDigest: overrides.responseDigest ?? computeResponseDigest({
       status: 200,
-      body: {
-        ok: true,
-        receiptId: "receipt-1",
-        commitId: "commit-1",
-        settlement: "transfer",
-      },
+      body: finalizeSuccessResponse(receiptId, commitId, resource, settlement),
     }),
     shopId: "self",
     payerCommitment32B: "aa".repeat(32),
-    recipient: "recipient-1",
-    mint: "mint-1",
-    amountAtomic: "1000",
-    feeAtomic: "0",
-    totalAtomic: "1000",
-    settlement: "transfer",
+    recipient: overrides.recipient ?? "recipient-1",
+    mint: overrides.mint ?? "mint-1",
+    amountAtomic: overrides.amountAtomic ?? "1000",
+    feeAtomic: overrides.feeAtomic ?? "0",
+    totalAtomic: overrides.totalAtomic ?? "1000",
+    settlement,
     settledOnchain: true,
-    txSignature: "tx-ok-client-12345678901234567890",
+    txSignature: settlement === "transfer" ? (overrides.txSignature ?? "tx-ok-client-12345678901234567890") : overrides.txSignature,
+    streamId: settlement === "stream" ? (overrides.streamId ?? "stream-ok-client-1234567890") : overrides.streamId,
     createdAt: "2026-03-16T00:00:00.000Z",
     ...overrides,
-  });
+  } satisfies SignedReceipt["payload"];
+  return signer.sign(payload);
+}
+
+function finalizeSuccessResponse(receiptId = "receipt-1", commitId = "commit-1", resource = "/resource", settlement = "transfer") {
+  return {
+    ok: true,
+    receiptId,
+    accessTokenOrResult: {
+      commitId,
+      resource,
+    },
+    ...(settlement ? { settlement } : {}),
+  };
 }
 
 const TEST_PAYER_COMMITMENT = "aa".repeat(32);
@@ -218,7 +242,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -276,7 +300,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -335,7 +359,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt));
 
     vi.stubGlobal("fetch", fetchMock);
@@ -387,7 +411,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(makeSignedFinalizeReceipt()))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -444,7 +468,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt));
 
     vi.stubGlobal("fetch", fetchMock);
@@ -509,7 +533,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt));
 
     vi.stubGlobal("fetch", fetchMock);
@@ -561,7 +585,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -623,7 +647,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
       .mockResolvedValueOnce(jsonResponse(receipt))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -652,12 +676,7 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-1",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-1",
-          commitId: "commit-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-1"),
       }),
     });
     const deliveryReceipt = makeSignedReceipt({
@@ -695,7 +714,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-1")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -717,6 +736,87 @@ describe("fetchWith402 receipt verification", () => {
       maxSpendAtomic: "1000",
       receiptStore: new InMemoryReceiptStore(),
     })).rejects.toThrow(/commitId mismatch/i);
+  });
+
+  it("accepts route-bound payment receipts for seller-defined protected routes", async () => {
+    const customUrl = "https://seller.test/programmability/fixed-price?mode=fast";
+    const routeBoundReceipt = makeSignedReceipt({
+      resource: "/programmability/fixed-price",
+      requestDigest: computeRequestDigest({
+        method: "GET",
+        path: "/programmability/fixed-price?mode=fast",
+      }),
+      responseDigest: computeResponseDigest({
+        status: 200,
+        body: {
+          ok: true,
+          fixtureId: "fixed-price-tool",
+          output: {
+            result: "paid fixture payload",
+          },
+        },
+      }),
+    });
+    const store = new InMemoryReceiptStore();
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        paymentRequirements: {
+          version: "x402-dnp-v1",
+          quote: {
+            quoteId: "quote-1",
+            amount: "1000",
+            feeAtomic: "0",
+            totalAtomic: "1000",
+            mint: "mint-1",
+            recipient: "recipient-1",
+            expiresAt: "2026-03-16T00:10:00.000Z",
+            settlement: ["transfer"],
+            memoHash: "memo-1",
+          },
+          accepts: [{
+            scheme: "solana-spl",
+            network: "solana-devnet",
+            mint: "mint-1",
+            maxAmount: "1000",
+            recipient: "recipient-1",
+            mode: "transfer",
+          }],
+          recommendedMode: "transfer",
+          commitEndpoint: "https://seller.test/commit",
+          finalizeEndpoint: "https://seller.test/finalize",
+          receiptEndpoint: "https://seller.test/receipt/:receiptId",
+        },
+      }, 402))
+      .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse()))
+      .mockResolvedValueOnce(jsonResponse(routeBoundReceipt))
+      .mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        fixtureId: "fixed-price-tool",
+        output: {
+          result: "paid fixture payload",
+        },
+      }, 200));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchWithTestCommitment(customUrl, {
+      wallet: {
+        async payTransfer() {
+          return {
+            settlement: "transfer",
+            txSignature: "tx-ok-client-12345678901234567890",
+          };
+        },
+      },
+      maxSpendAtomic: "1000",
+      receiptStore: store,
+    });
+
+    expect(result.response.status).toBe(200);
+    expect(result.receipt?.payload.receiptId).toBe("receipt-1");
+    expect(store.receipts.size).toBe(1);
   });
 
   it("verifies and stores embedded receipts in x402 header-compat flow", async () => {
@@ -831,12 +931,7 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-1",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-1",
-          commitId: "commit-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-1"),
       }),
     });
     const deliveryReceipt = makeSignedReceipt({
@@ -885,7 +980,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-1")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(jsonResponse({
         ok: true,
@@ -917,12 +1012,7 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-1",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-1",
-          commitId: "commit-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-1"),
       }),
     });
     const deliveryReceipt = makeSignedReceipt({
@@ -968,7 +1058,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-1")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(textResponse("plain resource payload", 200, {
         "x-dna-receipt": encodeReceiptHeader(deliveryReceipt),
@@ -999,14 +1089,10 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-query-1",
       quoteId: "quote-query-1",
       commitId: "commit-query-1",
+      txSignature: "tx-ok-client-query-12345678901234567890",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-query-1",
-          commitId: "commit-query-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-query-1", "commit-query-1", "/resource?q=alpha"),
       }),
     });
     const deliveryReceipt = makeSignedReceipt({
@@ -1054,7 +1140,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-query-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-query-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-query-1", "commit-query-1", "/resource?q=alpha")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(textResponse("query specific payload", 200, {
         "x-dna-receipt": encodeReceiptHeader(deliveryReceipt),
@@ -1085,12 +1171,7 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-1",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-1",
-          commitId: "commit-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-1"),
       }),
     });
     const deliveryReceipt = makeSignedReceipt({
@@ -1135,7 +1216,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-1")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(textResponse("plain resource payload", 200, {
         "x-dna-receipt": encodeReceiptHeader(deliveryReceipt),
@@ -1162,12 +1243,7 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-1",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-1",
-          commitId: "commit-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-1"),
       }),
     });
     const payload = new Uint8Array([1, 2, 3, 4, 5, 6]);
@@ -1214,7 +1290,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-1")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(binaryResponse(payload, 200, {
         "x-dna-receipt": encodeReceiptHeader(deliveryReceipt),
@@ -1245,12 +1321,7 @@ describe("fetchWith402 receipt verification", () => {
       receiptId: "payment-receipt-1",
       responseDigest: computeResponseDigest({
         status: 200,
-        body: {
-          ok: true,
-          receiptId: "payment-receipt-1",
-          commitId: "commit-1",
-          settlement: "transfer",
-        },
+        body: finalizeSuccessResponse("payment-receipt-1"),
       }),
     });
     const payload = new Uint8Array([1, 2, 3, 4, 5, 6]);
@@ -1296,7 +1367,7 @@ describe("fetchWith402 receipt verification", () => {
         },
       }, 402))
       .mockResolvedValueOnce(jsonResponse({ commitId: "commit-1" }, 201))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, receiptId: "payment-receipt-1" }))
+      .mockResolvedValueOnce(jsonResponse(finalizeSuccessResponse("payment-receipt-1")))
       .mockResolvedValueOnce(jsonResponse(paymentReceipt))
       .mockResolvedValueOnce(binaryResponse(payload, 200, {
         "x-dna-receipt": encodeReceiptHeader(deliveryReceipt),

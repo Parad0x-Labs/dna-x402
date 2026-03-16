@@ -265,7 +265,7 @@ npx tsx examples/dna-guard-seller.ts
 
 Main x402 server integration is now built in behind config flags. When `DNA_GUARD_ENABLED=1`, `createX402App()` mounts `/guard`, enforces spend ceilings during quote/finalize flows, records receipt verification, and persists ledger state if `DNA_GUARD_SNAPSHOT_PATH` is set.
 
-On the built-in protected routes (`/resource`, `/inference`, and audit fixtures), a finalized `x-dnp-commit-id` is now treated as a single-use delivery token. Successful delivery consumes it; failed delivery can be retried after a `5xx`.
+On the built-in protected routes (`/resource`, `/inference`, `/stream-access`, and audit fixtures), a finalized `x-dnp-commit-id` is now treated as a single-use delivery token. Successful delivery consumes it; failed delivery can be retried after a `5xx`.
 
 ```bash
 DNA_GUARD_ENABLED=1

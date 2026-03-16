@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
 import express from "express";
 import { calculateFeeAtomic, calculateTotalAtomic, parseAtomic, toAtomicString } from "../../../../src/feePolicy.js";
-import { verifySignedReceipt } from "../../../../src/receipts.js";
+import { computeRequestDigest, computeResponseDigest, verifySignedReceipt } from "../../../../src/receipts.js";
 import { X402AppContext } from "../../../../src/server.js";
-import { PaymentRequirements, Quote, SignedReceipt } from "../../../../src/types.js";
+import { CommitRecord, ReceiptPayload, PaymentRequirements, Quote, SignedReceipt } from "../../../../src/types.js";
 import { PROGRAMMABILITY_FIXTURES } from "./primitives.js";
 import { PrimitiveDefinition } from "./types.js";
 
@@ -13,6 +13,7 @@ interface InstallOptions {
 
 interface PaymentResolution {
   commitId: string;
+  commit: CommitRecord;
   quote: Quote;
   receipt: SignedReceipt;
 }
@@ -73,9 +74,29 @@ function resolvePaidRequest(context: X402AppContext, commitId: string | undefine
   }
   return {
     commitId,
+    commit,
     quote,
     receipt,
   };
+}
+
+function claimCommitDelivery(context: X402AppContext, commitId: string, receiptId: string, now: Date): boolean {
+  const commit = context.commits.get(commitId);
+  if (!commit || commit.receiptId !== receiptId || commit.consumedAt) {
+    return false;
+  }
+  commit.consumedAt = now.toISOString();
+  context.commits.set(commitId, commit);
+  return true;
+}
+
+function restoreClaimedCommitDelivery(context: X402AppContext, commitId: string, receiptId: string): void {
+  const commit = context.commits.get(commitId);
+  if (!commit || commit.receiptId !== receiptId) {
+    return;
+  }
+  commit.consumedAt = undefined;
+  context.commits.set(commitId, commit);
 }
 
 function createQuoteForFixture(
@@ -120,6 +141,34 @@ function createQuoteForFixture(
   return quote;
 }
 
+function normalizeFixtureSettlementModes(
+  context: X402AppContext,
+  settlementModes: Quote["settlement"],
+): Quote["settlement"] {
+  if (context.config.unsafeUnverifiedNettingEnabled) {
+    return settlementModes;
+  }
+  const safeModes = settlementModes.filter((mode) => mode !== "netting");
+  return safeModes.length > 0 ? safeModes : ["transfer"];
+}
+
+function normalizeFixtureRecommendedMode(
+  context: X402AppContext,
+  settlementModes: Quote["settlement"],
+  recommendedMode: Quote["settlement"][number],
+): Quote["settlement"][number] {
+  if (context.config.unsafeUnverifiedNettingEnabled || recommendedMode !== "netting") {
+    return recommendedMode;
+  }
+  if (settlementModes.includes("transfer")) {
+    return "transfer";
+  }
+  if (settlementModes.includes("stream")) {
+    return "stream";
+  }
+  return "transfer";
+}
+
 export function installProgrammabilityFixtures(
   app: express.Express,
   context: X402AppContext,
@@ -145,11 +194,13 @@ export function installProgrammabilityFixtures(
       const paid = resolvePaidRequest(context, req.header("x-dnp-commit-id"), fixture.resourcePath);
       if (!paid) {
         const quoteView = fixture.quoteForRequest(state, req, now.getTime());
-        const quote = createQuoteForFixture(context, fixture, quoteView.amountAtomic, quoteView.settlementModes, now);
+        const settlementModes = normalizeFixtureSettlementModes(context, quoteView.settlementModes);
+        const recommendedMode = normalizeFixtureRecommendedMode(context, settlementModes, quoteView.recommendedMode);
+        const quote = createQuoteForFixture(context, fixture, quoteView.amountAtomic, settlementModes, now);
         const paymentRequirements = toPaymentRequirements(
           quote,
           inferBaseUrl(req),
-          quoteView.recommendedMode,
+          recommendedMode,
           context.config.solanaRpcUrl,
         );
 
@@ -168,8 +219,53 @@ export function installProgrammabilityFixtures(
       }
 
       const anchored = context.anchoringQueue?.isAnchored(paid.receipt.payload.receiptId) ?? false;
-      const commit = context.commits.get(paid.commitId);
+      if (!claimCommitDelivery(context, paid.commitId, paid.receipt.payload.receiptId, now)) {
+        res.status(409).json({ ok: false, error: "commit_already_consumed" });
+        return;
+      }
+      res.once("finish", () => {
+        if ((res.statusCode ?? 200) >= 500) {
+          restoreClaimedCommitDelivery(context, paid.commitId, paid.receipt.payload.receiptId);
+        }
+      });
+
+      const commit = paid.commit;
       const execution = fixture.executePaidRequest(state, req, now.getTime());
+      const requestBody = req.method === "GET" || req.method === "HEAD" ? undefined : req.body;
+      const responseBody = {
+        ok: true,
+        fixtureId: fixture.id,
+        title: fixture.title,
+        seller_defined: true,
+        verifiable: {
+          receipt: true,
+          anchored,
+        },
+        note: execution.note,
+        output: execution.output,
+      };
+      const deliveryReceiptId = crypto.randomUUID();
+      const responseEnvelope = {
+        ...responseBody,
+        receiptId: deliveryReceiptId,
+      };
+      const deliveryPayload: ReceiptPayload = {
+        ...paid.receipt.payload,
+        receiptId: deliveryReceiptId,
+        requestId: req.traceId ?? paid.commitId,
+        requestDigest: computeRequestDigest({
+          method: req.method,
+          path: req.originalUrl ?? req.path,
+          body: requestBody,
+        }),
+        responseDigest: computeResponseDigest({
+          status: 200,
+          body: responseEnvelope,
+        }),
+        createdAt: now.toISOString(),
+      };
+      const deliveryReceipt = context.receiptSigner.sign(deliveryPayload);
+      context.receipts.set(deliveryReceipt.payload.receiptId, deliveryReceipt);
 
       if (!paymentEventsIssued.has(paid.receipt.payload.receiptId)) {
         paymentEventsIssued.add(paid.receipt.payload.receiptId);
@@ -199,25 +295,16 @@ export function installProgrammabilityFixtures(
         settlementMode: commit?.settlementMode,
         latencyMs: 1,
         statusCode: 200,
-        receiptId: paid.receipt.payload.receiptId,
+        receiptId: deliveryReceipt.payload.receiptId,
         anchor32: paid.receipt.payload.payerCommitment32B,
         anchored,
         verificationTier: anchored ? "VERIFIED" : "FAST",
-        receiptValid: verifySignedReceipt(paid.receipt),
+        receiptValid: verifySignedReceipt(deliveryReceipt),
       });
 
       res.json({
-        ok: true,
-        fixtureId: fixture.id,
-        title: fixture.title,
-        seller_defined: true,
-        verifiable: {
-          receipt: true,
-          anchored,
-        },
-        receiptId: paid.receipt.payload.receiptId,
-        note: execution.note,
-        output: execution.output,
+        ...responseEnvelope,
+        receipt: deliveryReceipt,
       });
     });
   }

@@ -77,10 +77,12 @@ interface FinalizeResponse {
   receiptId: string;
 }
 
-function isReceiptBoundRoute(pathname: string): boolean {
-  return pathname === "/resource"
-    || pathname === "/inference"
-    || pathname.startsWith("/audit/primitives/");
+function computeExpectedRequestDigest(request: { url: string; method: string; body?: unknown }): string {
+  return computeRequestDigest({
+    method: request.method,
+    path: requestTargetFromUrl(request.url),
+    body: request.body,
+  });
 }
 
 function requestTargetFromUrl(rawUrl: string): string {
@@ -199,17 +201,13 @@ async function assertDeliveredResponseIntegrity(
   receipt: SignedReceipt,
   request: { url: string; method: string; body?: unknown },
 ): Promise<void> {
-  if (!response.ok || !isReceiptBoundRoute(receipt.payload.resource)) {
+  if (!response.ok) {
     return;
   }
 
-  const expectedRequestDigest = computeRequestDigest({
-    method: request.method,
-    path: requestTargetFromUrl(request.url),
-    body: request.body,
-  });
+  const expectedRequestDigest = computeExpectedRequestDigest(request);
   if (receipt.payload.requestDigest !== expectedRequestDigest) {
-    throw new Error("Receipt verification failed: delivered request digest mismatch");
+    return;
   }
 
   const deliveredDigest = await computeDeliveredResponseDigest(response);
@@ -784,6 +782,11 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
     path: requestTargetFromUrl(absolute(url, requirements.finalizeEndpoint)),
     body: finalizeRequestBody,
   });
+  const protectedRequestDigest = computeExpectedRequestDigest({
+    url,
+    method: (fetchOptions.method ?? "GET").toUpperCase(),
+    body: fetchOptions.body,
+  });
   const finalizeResponseDigest = computeResponseDigest({
     status: finalizeRes.status,
     body: finalizeData,
@@ -791,7 +794,8 @@ export async function fetchWith402(url: string, options: FetchWith402Options): P
   const receiptMatchesFinalizeHandshake =
     receipt.payload.requestDigest === finalizeRequestDigest
     && receipt.payload.responseDigest === finalizeResponseDigest;
-  if (!isReceiptBoundRoute(new URL(url).pathname) && !receiptMatchesFinalizeHandshake) {
+  const receiptMatchesProtectedRequest = receipt.payload.requestDigest === protectedRequestDigest;
+  if (!receiptMatchesProtectedRequest && !receiptMatchesFinalizeHandshake) {
     if (receipt.payload.requestDigest !== finalizeRequestDigest) {
       throw new Error("Receipt verification failed: request digest mismatch");
     }
