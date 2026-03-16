@@ -151,6 +151,7 @@ interface MutableProviderStats {
 export interface DnaGuardLedgerOptions {
   windowMs?: number;
   onChange?: (snapshot: DnaGuardLedgerSnapshot) => void;
+  now?: () => Date;
 }
 
 function actorIdForScope(actor: DnaGuardActor, scope: DnaGuardSpendScope): string | undefined {
@@ -224,6 +225,7 @@ function computeScore(stats: MutableProviderStats): number {
 export class DnaGuardLedger {
   private readonly windowMs: number;
   private readonly onChange?: (snapshot: DnaGuardLedgerSnapshot) => void;
+  private readonly now: () => Date;
   private readonly spendByScope = new Map<string, SpendSample[]>();
   private readonly providerStats = new Map<string, MutableProviderStats>();
   private readonly receiptStatuses = new Map<string, DnaGuardReceiptStatus>();
@@ -231,9 +233,10 @@ export class DnaGuardLedger {
   constructor(options: DnaGuardLedgerOptions = {}) {
     this.windowMs = options.windowMs ?? 86_400_000;
     this.onChange = options.onChange;
+    this.now = options.now ?? (() => new Date());
   }
 
-  private emitChange(now = new Date()): void {
+  private emitChange(now = this.now()): void {
     this.onChange?.(this.snapshot(now));
   }
 
@@ -296,7 +299,7 @@ export class DnaGuardLedger {
     return created;
   }
 
-  checkSpend(actor: DnaGuardActor, attemptedAtomic: string, ceilings: DnaGuardSpendCeilings, now = new Date()): DnaGuardSpendDecision {
+  checkSpend(actor: DnaGuardActor, attemptedAtomic: string, ceilings: DnaGuardSpendCeilings, now = this.now()): DnaGuardSpendDecision {
     const amountAtomic = parseAtomic(attemptedAtomic);
     const nowMs = now.getTime();
     const blocked: DnaGuardSpendBlock[] = [];
@@ -327,7 +330,7 @@ export class DnaGuardLedger {
     };
   }
 
-  commitSpend(actor: DnaGuardActor, amountAtomic: string, now = new Date()): void {
+  commitSpend(actor: DnaGuardActor, amountAtomic: string, now = this.now()): void {
     const amount = parseAtomic(amountAtomic);
     const nowMs = now.getTime();
     for (const scope of ["buyer", "wallet", "agent", "apiKey"] as DnaGuardSpendScope[]) {
@@ -343,7 +346,7 @@ export class DnaGuardLedger {
     this.emitChange(now);
   }
 
-  spendSnapshot(actor: DnaGuardActor, now = new Date()): Partial<Record<DnaGuardSpendScope, string>> {
+  spendSnapshot(actor: DnaGuardActor, now = this.now()): Partial<Record<DnaGuardSpendScope, string>> {
     const nowMs = now.getTime();
     const snapshot: Partial<Record<DnaGuardSpendScope, string>> = {};
     for (const scope of ["buyer", "wallet", "agent", "apiKey"] as DnaGuardSpendScope[]) {
@@ -393,7 +396,7 @@ export class DnaGuardLedger {
     this.emitChange();
   }
 
-  recordReceiptVerification(record: DnaGuardReceiptVerificationRecord, now = new Date()): void {
+  recordReceiptVerification(record: DnaGuardReceiptVerificationRecord, now = this.now()): void {
     this.applyToProvider(record.providerId, record.endpointId, (stats) => {
       if (record.valid) {
         stats.receiptsVerified += 1;
@@ -424,7 +427,7 @@ export class DnaGuardLedger {
     this.emitChange();
   }
 
-  snapshot(now = new Date()): DnaGuardLedgerSnapshot {
+  snapshot(now = this.now()): DnaGuardLedgerSnapshot {
     const nowMs = now.getTime();
     const spendByScope = Array.from(this.spendByScope.entries()).map(([key, records]) => {
       const [scope, ...actorParts] = key.split(":");
@@ -474,7 +477,7 @@ export class DnaGuardLedger {
     };
   }
 
-  restore(snapshot: DnaGuardLedgerSnapshot, now = new Date()): void {
+  restore(snapshot: DnaGuardLedgerSnapshot, now = this.now()): void {
     this.spendByScope.clear();
     this.providerStats.clear();
     this.receiptStatuses.clear();

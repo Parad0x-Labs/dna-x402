@@ -6,7 +6,7 @@
 ## What DNA Does
 
 DNA is a payment rail for AI agents. It lets agents pay for API calls using USDC on Solana.
-Three settlement modes: **netting** (off-chain batched, cheapest), **transfer** (real on-chain USDC), **stream** (continuous).
+Three settlement modes: **transfer** (real on-chain USDC, safest default), **stream** (continuous), **netting** (trusted/off-chain only, explicit opt-in).
 It is not a privacy-pool or zk-SNARK hot-path product.
 
 **Program**: `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` (Solana mainnet)
@@ -24,10 +24,9 @@ import { fetchWith402 } from "dna-x402";
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
-    payNetted: async (quote) => ({
-      settlement: "netting",
-      amountAtomic: quote.totalAtomic,
-      note: "my-agent-run-001",
+    payTransfer: async (quote) => ({
+      settlement: "transfer",
+      txSignature: "replace-with-real-wallet-tx-signature",
     }),
   },
   maxSpendAtomic: "50000", // max $0.05 USDC
@@ -36,7 +35,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 const data = await result.response.json();
 ```
 
-That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically.
+That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. Netting is no longer auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for an intentional trusted loop.
 
 ### With real USDC transfer (on-chain proof)
 

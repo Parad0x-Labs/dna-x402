@@ -5,6 +5,8 @@ import { VerificationResult } from "../types.js";
 export type SupportedNetwork = "solana-devnet" | "solana-mainnet";
 
 const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com";
+export const DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+export const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
 export interface PaymentSupportOptions {
   rpcUrl?: string;
@@ -27,6 +29,15 @@ export function inferPaymentNetwork(
   }
 
   return "solana-mainnet";
+}
+
+export function defaultUsdcMintForNetwork(
+  explicit?: SupportedNetwork,
+  rpcUrl?: string,
+): string {
+  return inferPaymentNetwork(explicit, rpcUrl) === "solana-mainnet"
+    ? MAINNET_USDC_MINT
+    : DEVNET_USDC_MINT;
 }
 
 export function createPaymentVerifier(options: PaymentSupportOptions): PaymentVerifier {

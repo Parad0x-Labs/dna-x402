@@ -71,9 +71,9 @@ import { fetchWith402 } from "dna-x402";
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
-    payNetted: async (quote) => ({
-      settlement: "netting",
-      amountAtomic: quote.totalAtomic,
+    payTransfer: async (quote) => ({
+      settlement: "transfer",
+      txSignature: "replace-with-real-wallet-tx-signature",
     }),
   },
   maxSpendAtomic: "50000",
@@ -104,7 +104,7 @@ app.listen(3000);
 
 That is the fastest scaffold, not the strongest control surface. `dnaSeller()` now verifies `transfer` proofs through the local Solana payment verifier, emits real signed receipts for the payment finalize handshake, and for unlocked JSON routes emits a second delivery-bound receipt tied to the actual protected response body. Non-JSON handlers still only have the finalize-handshake receipt. Guard policies, replay controls, market routing, and anchoring still live in the full x402 server path.
 
-Unsigned netting is now disabled by default in the main server. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1`.
+Transfer is now the default buyer path. Unsigned netting is disabled by default in the main server, and the buyer SDK no longer auto-picks it just because `payNetted()` exists. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1` and pass `preferNetting: true` in the buyer call.
 
 ### Add DNA Guard (Spend Caps + Quality + Reputation API)
 
