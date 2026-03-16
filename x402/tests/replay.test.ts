@@ -11,6 +11,9 @@ class ReplayVerifier implements PaymentVerifier {
     if (paymentProof.settlement === "transfer") {
       return { ok: true, settledOnchain: true, txSignature: paymentProof.txSignature };
     }
+    if (paymentProof.settlement === "stream") {
+      return { ok: true, settledOnchain: true, streamId: paymentProof.streamId };
+    }
     return { ok: false, settledOnchain: false, error: "bad" };
   }
 }
@@ -104,5 +107,55 @@ describe("x402 replay defense", () => {
     const replayCount = attempts.filter((entry) => entry.status === 409 && entry.code === "X402_REPLAY_DETECTED").length;
     expect(successCount).toBe(1);
     expect(replayCount).toBe(49);
+  });
+
+  it("rejects reusing the same streamId across different commits", async () => {
+    const { app } = createX402App(config, {
+      paymentVerifier: new ReplayVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    const firstRequired = await request(app).get("/stream-access").expect(402);
+    const firstQuoteId = firstRequired.body.paymentRequirements.quote.quoteId as string;
+    const firstCommit = await request(app)
+      .post("/commit")
+      .send({ quoteId: firstQuoteId, payerCommitment32B: "0x" + "41".repeat(32) })
+      .expect(201);
+    const firstCommitId = firstCommit.body.commitId as string;
+
+    await request(app)
+      .post("/finalize")
+      .send({
+        commitId: firstCommitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-replay-1234567890",
+          amountAtomic: "100",
+        },
+      })
+      .expect(200);
+
+    const secondRequired = await request(app).get("/stream-access").expect(402);
+    const secondQuoteId = secondRequired.body.paymentRequirements.quote.quoteId as string;
+    const secondCommit = await request(app)
+      .post("/commit")
+      .send({ quoteId: secondQuoteId, payerCommitment32B: "0x" + "42".repeat(32) })
+      .expect(201);
+    const secondCommitId = secondCommit.body.commitId as string;
+
+    const replay = await request(app)
+      .post("/finalize")
+      .send({
+        commitId: secondCommitId,
+        paymentProof: {
+          settlement: "stream",
+          streamId: "stream-replay-1234567890",
+          amountAtomic: "100",
+        },
+      })
+      .expect(409);
+
+    expect(replay.body.error.code).toBe("X402_REPLAY_DETECTED");
+    expect(replay.body.error.traceId).toBeTruthy();
   });
 });

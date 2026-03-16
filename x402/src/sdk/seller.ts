@@ -41,17 +41,19 @@ import {
   SupportedNetwork,
   verificationFailureStatus,
 } from "./paymentSupport.js";
+import type { StreamflowClientLike } from "../verifier/streamflow.js";
 
 export interface DnaSellerOptions {
   recipient: string;
   mint?: string;
   feeBps?: number;
   quoteTtlSeconds?: number;
-  settlement?: Array<"transfer" | "netting">;
+  settlement?: Array<"transfer" | "stream" | "netting">;
   dnaServerUrl?: string;
   network?: SupportedNetwork;
   solanaRpcUrl?: string;
   paymentVerifier?: PaymentVerifier;
+  streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
   unsafeUnverifiedNettingEnabled?: boolean;
   receiptSigner?: ReceiptSigner;
@@ -113,6 +115,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const receipts = new Map<string, ReceiptRecord>();
   const paidCommits = new Set<string>();
   const usedTransferProofs = new Map<string, string>();
+  const usedStreamProofs = new Map<string, string>();
 
   const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
   const mint = options.mint ?? defaultUsdcMintForNetwork(options.network, options.solanaRpcUrl);
@@ -124,6 +127,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
+    streamflowClient: options.streamflowClient,
     paymentVerifier: options.paymentVerifier,
   });
 
@@ -203,6 +207,16 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
           return;
         }
       }
+      if (paymentProof.settlement === "stream") {
+        const existingCommitId = usedStreamProofs.get(paymentProof.streamId);
+        if (existingCommitId && existingCommitId !== commitId) {
+          res.status(409).json({
+            error: "Stream proof already used",
+            commitId: existingCommitId,
+          });
+          return;
+        }
+      }
 
     const quote = quotes.get(commit.quoteId);
     if (!quote) {
@@ -211,7 +225,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     }
 
     const proof = paymentProof as PaymentProof | undefined;
-    if (!proof || (proof.settlement !== "transfer" && proof.settlement !== "netting")) {
+    if (!proof || (proof.settlement !== "transfer" && proof.settlement !== "stream" && proof.settlement !== "netting")) {
       res.status(400).json({ error: "Missing or invalid paymentProof" });
       return;
     }
@@ -246,6 +260,28 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       });
       return;
     }
+    if (proof.settlement === "transfer" && !verification.txSignature) {
+      res.status(422).json({
+        ok: false,
+        error: {
+          code: "PAYMENT_INVALID",
+          message: "Verified transfer settlement is missing canonical txSignature",
+          retryable: false,
+        },
+      });
+      return;
+    }
+    if (proof.settlement === "stream" && !verification.streamId) {
+      res.status(422).json({
+        ok: false,
+        error: {
+          code: "PAYMENT_INVALID",
+          message: "Verified stream settlement is missing canonical streamId",
+          retryable: false,
+        },
+      });
+      return;
+    }
 
     const receiptId = crypto.randomUUID();
     const finalizeResponse = { ok: true, receiptId, commitId, settlement: settlementMode };
@@ -267,6 +303,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       settlement: settlementMode,
       settledOnchain: verification.settledOnchain,
       txSignature: verification.txSignature,
+      streamId: verification.streamId,
       createdAt: new Date().toISOString(),
     });
     const receipt: ReceiptRecord = { signedReceipt };
@@ -274,6 +311,9 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     receipts.set(receiptId, receipt);
     if (paymentProof.settlement === "transfer") {
       usedTransferProofs.set(paymentProof.txSignature, commitId);
+    }
+    if (paymentProof.settlement === "stream") {
+      usedStreamProofs.set(paymentProof.streamId, commitId);
     }
     commit.finalized = true;
     commit.receiptId = receiptId;
@@ -357,6 +397,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         settlement: paymentReceipt.signedReceipt.payload.settlement,
         settledOnchain: paymentReceipt.signedReceipt.payload.settledOnchain,
         txSignature: paymentReceipt.signedReceipt.payload.txSignature,
+        streamId: paymentReceipt.signedReceipt.payload.streamId,
         createdAt: new Date().toISOString(),
       });
 

@@ -101,7 +101,7 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
     }
   }
 
-  private async verifyStream(quote: Quote, streamId: string, amountAtomicHint?: string, topupSignature?: string): Promise<VerificationResult> {
+  private async verifyStream(quote: Quote, streamId: string, amountAtomicHint?: string, _topupSignature?: string): Promise<VerificationResult> {
     if (!streamId) {
       return {
         ok: false,
@@ -125,38 +125,13 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
       });
     }
 
-    if (!topupSignature) {
-      return {
-        ok: false,
-        settledOnchain: false,
-        streamId,
-        error: "stream proof missing topupSignature and streamflow client",
-      };
-    }
-
-    try {
-      const status = await this.cachedRpc.getSignatureStatus(topupSignature, { searchTransactionHistory: true });
-      const ok = Boolean(status.value && !status.value.err);
-      return {
-        ok,
-        settledOnchain: ok,
-        txSignature: topupSignature,
-        streamId,
-        error: ok ? undefined : "Top-up signature not confirmed",
-        errorCode: ok ? undefined : "NOT_CONFIRMED_YET",
-        retryable: ok ? undefined : true,
-      };
-    } catch (error) {
-      const cause = extractRpcErrorMessage(error);
-      const invalidParam = cause.toLowerCase().includes("invalid param: invalid");
-      return {
-        ok: false,
-        settledOnchain: false,
-        streamId,
-        error: invalidParam ? "invalid topup signature format" : `rpc unavailable: ${cause}`,
-        errorCode: invalidParam ? "INVALID_PROOF" : "RPC_UNAVAILABLE",
-        retryable: invalidParam ? false : isRetryableRpcError(error),
-      };
-    }
+    return {
+      ok: false,
+      settledOnchain: false,
+      streamId,
+      error: "stream settlement requires a streamflow client for funded-state verification",
+      errorCode: "PAYMENT_INVALID",
+      retryable: false,
+    };
   }
 }

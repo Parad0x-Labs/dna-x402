@@ -1,6 +1,7 @@
 import { Connection } from "@solana/web3.js";
 import { PaymentVerifier, SolanaPaymentVerifier } from "../paymentVerifier.js";
 import { VerificationResult } from "../types.js";
+import type { StreamflowClientLike } from "../verifier/streamflow.js";
 
 export type SupportedNetwork = "solana-devnet" | "solana-mainnet";
 
@@ -12,6 +13,7 @@ export interface PaymentSupportOptions {
   rpcUrl?: string;
   maxTransferProofAgeSeconds?: number;
   allowUnverifiedNetting?: boolean;
+  streamflowClient?: StreamflowClientLike;
   paymentVerifier?: PaymentVerifier;
 }
 
@@ -49,6 +51,7 @@ export function createPaymentVerifier(options: PaymentSupportOptions): PaymentVe
   return new SolanaPaymentVerifier(connection, {
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.allowUnverifiedNetting,
+    streamflowClient: options.streamflowClient,
   });
 }
 
