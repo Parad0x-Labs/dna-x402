@@ -1,58 +1,26 @@
 /**
  * DNA x402 — Buyer Agent Example
  *
- * An AI agent skeleton that pays for API calls using DNA's transfer mode.
- * Replace the placeholder tx signature with a real wallet implementation.
+ * Runnable buyer demo that pairs with `examples/sell-compute.ts`.
+ * Default mode is `transfer`; override with DNA_DEMO_MODE=netting|stream.
  *
  * Run:
  *   npx tsx examples/buyer-agent.ts
  */
-import {
-  fetchWith402,
-  InMemoryReceiptStore,
-  InMemorySpendTracker,
-} from "../src/sdk/index.js";
-import type { AgentWallet, FetchWith402Result } from "../src/client.js";
+import { loadDemoSdk } from "./_runtime.js";
 
-const DNA_SERVER = process.env.DNA_SERVER ?? "http://localhost:8080";
+const DNA_SERVER = process.env.DNA_SERVER ?? "http://127.0.0.1:3000";
+const DNA_DEMO_MODE = process.env.DNA_DEMO_MODE;
 
-const wallet: AgentWallet = {
-  payTransfer: async (quote) => ({
-    settlement: "transfer",
-    txSignature: `replace-with-real-wallet-${quote.quoteId.slice(0, 12)}`,
-  }),
-};
-
-const receipts = new InMemoryReceiptStore();
-const spendTracker = new InMemorySpendTracker();
-
-async function callPaidApi(resource: string): Promise<FetchWith402Result> {
-  return fetchWith402(`${DNA_SERVER}${resource}`, {
-    wallet,
-    maxSpendAtomic: "100000",         // $0.10 max per call
-    maxSpendPerDayAtomic: "5000000",  // $5.00 daily budget
-    receiptStore: receipts,
-    spendTracker,
+async function main() {
+  const { normalizeDemoMode, runDemoBuyer } = await loadDemoSdk();
+  await runDemoBuyer({
+    baseUrl: DNA_SERVER,
+    mode: normalizeDemoMode(DNA_DEMO_MODE),
   });
 }
 
-async function main() {
-  console.log("DNA Buyer Agent starting...");
-  console.log("Server:", DNA_SERVER);
-
-  const resources = ["/resource", "/inference", "/stream-access"];
-
-  for (const r of resources) {
-    try {
-      const result = await callPaidApi(r);
-      console.log(`${r} → ${result.response.status}`, result.receipt?.payload.receiptId ?? "");
-    } catch (e) {
-      console.error(`${r} failed:`, (e as Error).message);
-    }
-  }
-
-  console.log("\nReceipts collected:", receipts.receipts.size);
-  console.log("Done.");
-}
-
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
