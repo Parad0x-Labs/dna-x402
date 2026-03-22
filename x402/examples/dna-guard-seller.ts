@@ -9,7 +9,9 @@
  *   curl http://localhost:3003/guard/leaderboard
  */
 import express from "express";
-import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "../src/sdk/index.js";
+import { loadSdk } from "./_runtime.js";
+
+const { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } = await loadSdk();
 
 const app = express();
 app.use(express.json());

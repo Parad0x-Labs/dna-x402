@@ -214,6 +214,16 @@ function capabilityTagsForResource(resource: string): string[] {
   return RESOURCE_CAPABILITY_TAGS[resource] ?? [endpointIdForResource(resource)];
 }
 
+function requestBodyForDigest(req: express.Request): unknown {
+  if (req.method === "GET" || req.method === "HEAD") {
+    return undefined;
+  }
+  if (req.body && typeof req.body === "object" && !Array.isArray(req.body) && Object.keys(req.body as Record<string, unknown>).length === 0) {
+    return undefined;
+  }
+  return req.body;
+}
+
 function auditFixtureForResource(resource: string): { id: string; path: string; title: string } | undefined {
   return AUDIT_FIXTURES.find((fixture) => fixture.path === resource);
 }
@@ -418,7 +428,6 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const replayStore = deps.replayStore ?? new ReplayStore();
   const auditLog = deps.auditLog ?? new AuditLogger({
     filePath: config.auditLogPath,
-    stdout: true,
   });
   const webhookService = deps.webhookService ?? new WebhookService({
     signingSecret: config.webhookSigningSecret,
@@ -1062,7 +1071,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     const requestDigest = computeRequestDigest({
       method: req.method,
       path: req.originalUrl ?? req.path,
-      body: req.body,
+      body: requestBodyForDigest(req),
     });
     const responseBody = fulfilledResponseBody(resource);
     const responseDigest = computeResponseDigest({ status: 200, body: responseBody });

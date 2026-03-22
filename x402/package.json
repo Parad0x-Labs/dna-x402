@@ -1,8 +1,8 @@
 {
   "name": "dna-x402",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "DNA Payment Rail — x402 micropayment protocol for AI agents on Solana. One-command install for buyers and sellers.",
+  "description": "DNA Payment Rail — x402 SDK and CLI for AI agent buyers and sellers on Solana.",
   "keywords": ["ai", "agents", "payments", "solana", "usdc", "micropayments", "x402", "dna", "machine-to-machine"],
   "license": "MIT",
   "author": "Parad0x Labs",
@@ -16,6 +16,10 @@
     ".": {
       "types": "./dist/sdk/index.d.ts",
       "default": "./dist/sdk/index.js"
+    },
+    "./demo": {
+      "types": "./dist/demo/index.d.ts",
+      "default": "./dist/demo/index.js"
     },
     "./seller": {
       "types": "./dist/sdk/seller.d.ts",
@@ -32,6 +36,9 @@
     "./types": "./dist/types.js",
     "./bridge/liquefy": "./dist/bridge/liquefy/adapter.js"
   },
+  "bin": {
+    "dna-x402": "./dist/cli.js"
+  },
   "main": "./dist/sdk/index.js",
   "types": "./dist/sdk/index.d.ts",
   "files": [
@@ -45,6 +52,10 @@
   ],
   "scripts": {
     "prepublishOnly": "npm run build",
+    "demo:seller": "tsx src/cli.ts demo seller",
+    "demo:buyer": "tsx src/cli.ts demo buyer",
+    "init:seller": "tsx src/cli.ts init seller",
+    "init:buyer": "tsx src/cli.ts init buyer",
     "dev": "tsx watch src/server.ts",
     "dev:market": "MARKET_ALLOW_DEV_INGEST=1 tsx watch src/server.ts",
     "dev:marketplace": "tsx watch src/marketplace/main.ts",
@@ -85,11 +96,14 @@
     "bridge:liquefy": "tsx src/bridge/liquefy/cli.ts",
     "bridge:liquefy:live": "curl -s http://localhost:8080/admin/audit/export | tsx src/bridge/liquefy/cli.ts --stdin --out ./vault-staging/live"
   },
+  "overrides": {
+    "bn.js": "^5.2.3"
+  },
   "dependencies": {
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.95.4",
     "@streamflow/stream": "^11.0.0",
-    "bn.js": "^5.2.2",
+    "bn.js": "^5.2.3",
     "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

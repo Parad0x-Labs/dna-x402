@@ -60,7 +60,48 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 npm install dna-x402
 ```
 
-That's it. One command. Works for buyers (AI agents) and sellers (API providers).
+That installs the SDK and the `dna-x402` CLI. Use the SDK for production buyer/seller integrations, and use the CLI for zero-config demos or starter scaffolds.
+
+## Zero-Config Demo
+
+Bring up a local seller in one terminal:
+
+```bash
+npx dna-x402 demo seller --mode netting --port 3000
+```
+
+Then hit it from a buyer in another terminal:
+
+```bash
+npx dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
+```
+
+Supported demo modes:
+- `transfer`
+- `netting`
+- `stream`
+
+The demo path is for proving the full 402 handshake, receipt flow, and settlement-mode wiring without forcing you to wire a real wallet first. It is not a substitute for production wallet and custody policy.
+
+## Starter Scaffolds
+
+Generate a runnable seller project:
+
+```bash
+npx dna-x402 init seller my-seller
+cd my-seller
+npm start
+```
+
+Generate a runnable buyer project:
+
+```bash
+npx dna-x402 init buyer my-buyer
+cd my-buyer
+npm start
+```
+
+The generated seller starter enables trusted local `netting` by default via `DNA_TRUSTED_LOCAL_NETTING=1`, and the generated buyer starter uses that mode so you can validate the full loop immediately. Disable it before exposing the seller beyond local development, then replace the buyer wallet stub before using real `transfer` or `stream` money flows.
 
 ## Quick Start
 
@@ -80,6 +121,12 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 });
 
 const data = await result.response.json();
+```
+
+For a no-code smoke test instead of writing a buyer immediately:
+
+```bash
+npx dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000
 ```
 
 If your buyer wants a deterministic receipt binding instead of a random per-call commitment, pass `payerCommitment32B` explicitly:
@@ -113,6 +160,12 @@ app.listen(3000);
 ```
 
 That is the fastest scaffold, not the strongest control surface. `dnaSeller()` now verifies `transfer` proofs through the local Solana payment verifier, and it can verify `stream` proofs too if you pass a real `streamflowClient` into the scaffold options. Signed receipts for the payment finalize handshake preserve the transfer signature or verified `streamId`, and unlocked JSON routes emit a second delivery-bound receipt tied to the actual protected response body. Finalized commits are bound to the quoted HTTP method and full request target; a commit for `GET /api/a?x=1` will not unlock `POST /api/a?x=1`, `GET /api/a?x=2`, or `/api/b`. The scaffold also rejects reusing the same transfer signature across different commits, so one on-chain payment proof cannot unlock multiple paid requests. Unlocked text and binary responses also carry a signed delivery receipt in the `x-dna-receipt` header. Manual streaming/chunked handlers and redirect/file helper responses are rejected with `501 unsupported_delivery_mode` so the scaffold does not pretend it can prove a delivery it never signed. Failed protected deliveries now restore the paid unlock on any `4xx` or `5xx`, instead of charging for an application error by default. Guard policies, replay controls, market routing, and anchoring still live in the full x402 server path.
+
+For the zero-config runnable seller instead of hand-writing the app first:
+
+```bash
+npx dna-x402 demo seller --mode transfer --port 3000
+```
 
 Transfer is now the default buyer path. Unsigned netting is disabled by default in the main server, and the buyer SDK no longer auto-picks it just because `payNetted()` exists. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1` and pass `preferNetting: true` in the buyer call.
 The main server only accrues balances into the netting ledger for actual `netting` settlements now; verified `transfer` and `stream` payments are not silently mirrored into off-chain netting state.
@@ -194,10 +247,12 @@ Agent (buyer)                         API Provider (seller)
 ```
 x402/
 ├── src/
+│   ├── cli.ts                 # `dna-x402` CLI (`demo` + `init`)
 │   ├── server.ts              # Main x402 payment server
 │   ├── client.ts              # Agent SDK (fetchWith402, marketCall)
 │   ├── catalog.ts             # Tool catalog — cost estimation + balance coverage
 │   ├── streaming.ts           # Streamflow integration for streaming payments
+│   ├── demo/                  # Zero-config buyer/seller demos for transfer/netting/stream
 │   ├── sdk/
 │   │   ├── seller.ts          # Self-contained seller SDK (start here)
 │   │   ├── guard.ts           # DNA Guard middleware + provider reputation API
@@ -234,9 +289,9 @@ x402/
 │   ├── bench/                 # Compute profiling, tx metrics, thresholds
 │   └── middleware/             # HTTPS enforcement, trace ID injection
 ├── examples/
-│   ├── sell-compute.ts        # Sell your compute in 10 lines (start here)
+│   ├── sell-compute.ts        # Runnable seller demo (CLI-compatible)
 │   ├── dna-guard-seller.ts    # Add spend caps, quality checks, and reputation APIs
-│   ├── buyer-agent.ts         # Agent paying for APIs
+│   ├── buyer-agent.ts         # Runnable buyer demo (pairs with sell-compute)
 │   ├── seller-api.ts          # API accepting payments (advanced)
 │   └── liquefy-gated-vault.ts # Liquefy + DNA integration
 ├── test-mainnet/
@@ -254,6 +309,13 @@ npm install
 cp .env.example .env       # Configure your wallet + RPC
 npm run build
 npm start
+```
+
+If you only want a local buyer/seller proof without running the full server, prefer:
+
+```bash
+npx dna-x402 demo seller --mode netting --port 3000
+npx dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
 ```
 
 ## DNA Guard Commands

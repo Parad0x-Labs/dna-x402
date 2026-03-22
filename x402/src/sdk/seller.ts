@@ -105,6 +105,16 @@ function requestTarget(req: Request): string {
     : req.path;
 }
 
+function requestBodyForDigest(req: Request): unknown {
+  if (req.method === "GET" || req.method === "HEAD") {
+    return undefined;
+  }
+  if (isJsonRecord(req.body) && Object.keys(req.body).length === 0) {
+    return undefined;
+  }
+  return req.body;
+}
+
 /**
  * Initialize DNA payment handling on an Express app.
  * Mounts /commit, /finalize, /receipt/:id routes automatically.
@@ -313,7 +323,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       commitId,
       resource: quote.resource,
       requestId: commitId,
-      requestDigest: computeRequestDigest({ method: req.method, path: requestTarget(req), body: req.body }),
+      requestDigest: computeRequestDigest({ method: req.method, path: requestTarget(req), body: requestBodyForDigest(req) }),
       responseDigest: computeResponseDigest({ status: 200, body: finalizeResponse }),
       shopId: "self",
       payerCommitment32B: commit.payerCommitment,
@@ -405,7 +415,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
         requestDigest: computeRequestDigest({
           method: req.method,
           path: requestTarget(req),
-          body: req.body,
+          body: requestBodyForDigest(req),
         }),
         responseDigest: computeResponseDigest({
           status: statusCode,

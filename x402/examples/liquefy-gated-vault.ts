@@ -9,27 +9,47 @@
  *   DNA Audit Logs → Liquefy Sidecar → .null vault (archived)
  *
  * Run:
- *   npx tsx examples/liquefy-gated-vault.ts
+ *   RECIPIENT=<your-solana-wallet> LIQUEFY_PATH=/abs/path/to/liquefy npx tsx examples/liquefy-gated-vault.ts
  */
 import express from "express";
-import { execSync } from "node:child_process";
-import { dnaPaywall } from "../src/sdk/index.js";
-import { AuditLogger } from "../src/logging/audit.js";
-import { LiquefySidecar } from "../src/bridge/liquefy/sidecar.js";
+import { execFileSync } from "node:child_process";
+import { readdirSync, statSync } from "node:fs";
+import path from "node:path";
+import { loadSdk } from "./_runtime.js";
+
+const { AuditLogger, LiquefySidecar, dnaPaywall } = await loadSdk();
 
 const app = express();
 app.use(express.json());
 
-const RECIPIENT = process.env.RECIPIENT ?? "7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ";
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Set ${name} before running this example.`);
+  }
+  return value;
+}
+
+const RECIPIENT = requireEnv("RECIPIENT");
 const LIQUEFY_PATH = process.env.LIQUEFY_PATH ?? "/path/to/liquefy";
 const VAULT_PATH = process.env.VAULT_PATH ?? "./vault";
+const PYTHON_BIN = process.env.LIQUEFY_PYTHON ?? process.env.PYTHON_BIN ?? "python3";
+
+function runLiquefyTool(args: string[], timeout: number): string {
+  return execFileSync(PYTHON_BIN, args, {
+    cwd: LIQUEFY_PATH,
+    encoding: "utf8",
+    timeout,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
 
 const audit = new AuditLogger({ filePath: "./audit-liquefy.ndjson" });
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live/dna-payments",
   cluster: "mainnet-beta",
-  version: "1.0.0",
+  version: "1.1.0",
 });
 sidecar.attachAuditLogger(audit);
 sidecar.startPeriodicFlush();
@@ -49,8 +69,17 @@ app.get("/", (_req, res) => {
 // Free: list vaults
 app.get("/vault/list", (_req, res) => {
   try {
-    const output = execSync(`ls -la ${VAULT_PATH}`, { encoding: "utf8" });
-    res.json({ vaults: output.split("\n").filter(Boolean) });
+    const vaultRoot = path.resolve(VAULT_PATH);
+    const vaults = readdirSync(vaultRoot, { withFileTypes: true }).map((entry) => {
+      const fullPath = path.join(vaultRoot, entry.name);
+      const stats = statSync(fullPath);
+      return {
+        name: entry.name,
+        type: entry.isDirectory() ? "dir" : "file",
+        size: stats.size,
+      };
+    });
+    res.json({ vaults });
   } catch {
     res.json({ vaults: [], note: "Configure VAULT_PATH" });
   }
@@ -73,10 +102,12 @@ app.get("/vault/search", (req, res) => {
   audit.record({ kind: "PAYMENT_VERIFIED", meta: { action: "vault_search", query } });
 
   try {
-    const cmd = `cd ${LIQUEFY_PATH} && python tools/tracevault_search.py ${VAULT_PATH} --query "${query}" --json 2>/dev/null`;
-    const output = execSync(cmd, { encoding: "utf8", timeout: 30000 });
+    const output = runLiquefyTool(
+      ["tools/tracevault_search.py", path.resolve(VAULT_PATH), "--query", query, "--json"],
+      30000,
+    );
     res.json({ query, results: JSON.parse(output) });
-  } catch (e) {
+  } catch {
     res.json({ query, results: [], note: "Search returned no results or Liquefy not configured" });
   }
 });
@@ -99,8 +130,16 @@ app.post("/vault/restore", (req, res) => {
 
   const target = outDir ?? `./restored/${vaultId}`;
   try {
-    const cmd = `cd ${LIQUEFY_PATH} && python tools/tracevault_restore.py ${VAULT_PATH}/${vaultId} --out ${target} --json 2>/dev/null`;
-    const output = execSync(cmd, { encoding: "utf8", timeout: 60000 });
+    const output = runLiquefyTool(
+      [
+        "tools/tracevault_restore.py",
+        path.join(path.resolve(VAULT_PATH), String(vaultId)),
+        "--out",
+        path.resolve(String(target)),
+        "--json",
+      ],
+      60000,
+    );
     res.json({ vaultId, restored: true, output: JSON.parse(output) });
   } catch {
     res.json({ vaultId, restored: false, note: "Restore failed or Liquefy not configured" });

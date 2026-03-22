@@ -17,6 +17,22 @@ It is not a privacy-pool or zk-SNARK hot-path product.
 npm install dna-x402
 ```
 
+That gives you both the SDK and the `dna-x402` CLI.
+
+Fastest local proof:
+
+```bash
+npx dna-x402 demo seller --mode netting --port 3000
+npx dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
+```
+
+Starter scaffolds:
+
+```bash
+npx dna-x402 init seller my-seller
+npx dna-x402 init buyer my-buyer
+```
+
 ## Buyer (Your Agent Pays for an API)
 
 ```typescript
@@ -37,6 +53,7 @@ const data = await result.response.json();
 
 That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. Netting is no longer auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for an intentional trusted loop.
 If you need deterministic receipt binding, pass `payerCommitment32B` explicitly as a 32-byte hex string instead of letting the client generate a random one per call.
+If you want a no-code buyer smoke test first, use `npx dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000`.
 
 ### With real USDC transfer (on-chain proof)
 
@@ -106,6 +123,7 @@ app.listen(3000);
 ```
 
 That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically, verifies `transfer` proofs locally, and can verify `stream` proofs too if you pass a real `streamflowClient`. Signed finalize receipts preserve the transfer signature or verified `streamId`, and unlocked JSON responses can emit a stronger delivery-bound receipt for the actual protected body. Finalized commits are bound to the quoted HTTP method and full request target: a commit for `GET /api/a?x=1` will not unlock `POST /api/a?x=1`, `/api/a?x=2`, or another path. The scaffold also rejects reusing the same transfer signature across different commits, so one on-chain payment proof cannot unlock multiple paid requests. Unlocked text and binary responses also expose a signed `x-dna-receipt` header. Manual streaming/chunked protected responses and redirect/file helper responses are rejected with `501 unsupported_delivery_mode` instead of being silently delivered without a verifiable receipt. A failed protected response (`4xx` or `5xx`) does not consume the paid unlock; the scaffold restores the commit for retry.
+If you want a runnable seller before hand-writing the integration, use `npx dna-x402 demo seller --mode transfer --port 3000` or scaffold a project with `npx dna-x402 init seller my-seller`.
 
 If you expose `stream` in a scaffolded seller or paywall, wire a real `streamflowClient`; otherwise stream verification now fails closed instead of accepting a bare top-up signature. In the current per-request quote/finalize flow, verified `streamId` proofs are also treated as single-use, just like transfer proofs. If you want long-lived subscription semantics, build that session policy explicitly instead of reusing one finalize proof forever.
 In the full server, netting ledger accrual only happens for actual `netting` settlements, and the x402 header-compat transfer path now fails closed unless verification returns the canonical `txSignature`.

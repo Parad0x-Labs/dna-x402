@@ -5,15 +5,25 @@
  * Any AI agent with DNA SDK can pay and access these endpoints.
  *
  * Run:
- *   npx tsx examples/seller-api.ts
+ *   RECIPIENT=<your-solana-wallet> npx tsx examples/seller-api.ts
  */
 import express from "express";
-import { dnaPaywall, apiKeyGuard } from "../src/sdk/index.js";
+import { loadSdk } from "./_runtime.js";
+
+const { dnaPaywall } = await loadSdk();
 
 const app = express();
 app.use(express.json());
 
-const RECIPIENT = process.env.RECIPIENT ?? "7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ";
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Set ${name} before running this example.`);
+  }
+  return value;
+}
+
+const RECIPIENT = requireEnv("RECIPIENT");
 
 // Public endpoint — no payment required
 app.get("/", (_req, res) => {

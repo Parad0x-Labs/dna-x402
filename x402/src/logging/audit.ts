@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { shouldEmitStdoutLogs } from "./logger.js";
 
 export type AuditEventKind =
   | "QUOTE_ISSUED"
@@ -64,7 +65,7 @@ export class AuditLogger {
 
   constructor(options: AuditLoggerOptions = {}) {
     this.maxEntries = options.maxEntriesInMemory ?? 10_000;
-    this.stdout = options.stdout ?? true;
+    this.stdout = options.stdout ?? shouldEmitStdoutLogs();
     this.filePath = options.filePath;
 
     if (this.filePath) {
