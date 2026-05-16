@@ -53,3 +53,18 @@ Alpha monetization configs are stored in `alpha_monetization_configs`.
 Alpha fee accruals are stored in `alpha_fee_accruals`.
 
 The copied-lot record stores `alphaFeeBpsAtEntry`, so later fee changes do not rewrite old lots. Backup/restore verification must prove the fee amount still matches the original finalized copied-lot PnL.
+
+## Agent Builder Integration
+
+Agent Builder can add alpha monetization to a draft when the prompt, template, guided answers, or cloned recipe asks for a valid success fee.
+
+Allowed generated values remain:
+
+- `50`
+- `100`
+- `150`
+- `200`
+- `250`
+- `300`
+
+The builder rejects prompts that request fees above 3%, hidden fees, fees on losses, or fees on unrealized PnL.

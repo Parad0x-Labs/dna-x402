@@ -13,6 +13,7 @@ import {
 } from "./receipts.js";
 import { encodeCanonicalProofHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentProof } from "./x402/compat/types.js";
+import type { AgentBuilderRequest, AgentConfigDraft, AgentRecipe } from "./agents/builder/compiler.js";
 
 export interface AgentWallet {
   payTransfer(quote: QuoteResponse): Promise<PaymentProof>;
@@ -921,4 +922,81 @@ export async function marketCall(options: MarketCallOptions): Promise<MarketCall
     },
     orderId,
   };
+}
+
+async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      "content-type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  const body = await response.json() as T & { error?: string; message?: string };
+  if (!response.ok) {
+    throw new Error(body.message ?? body.error ?? `HTTP ${response.status}`);
+  }
+  return body;
+}
+
+export interface AgentBuilderClientOptions {
+  baseUrl: string;
+  fetchImpl?: typeof fetch;
+}
+
+function agentBuilderUrl(baseUrl: string, path: string): string {
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
+}
+
+export async function createAgentDraft(baseUrl: string, request: AgentBuilderRequest): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, "/v1/agent-builder/draft"), {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
+}
+
+export async function confirmAgentDraft(
+  baseUrl: string,
+  draftId: string,
+  input: { ownerWallet: string; acceptedRiskSummary: boolean; confirmations?: string[] },
+): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, `/v1/agent-builder/drafts/${encodeURIComponent(draftId)}/confirm`), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getGuidedTree(baseUrl: string): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, "/v1/agent-builder/guided-tree"));
+}
+
+export async function listAgentTemplates(baseUrl: string): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, "/v1/agent-builder/templates"));
+}
+
+export async function createAgentRecipe(
+  baseUrl: string,
+  input: {
+    ownerWallet: string;
+    title: string;
+    description: string;
+    config: AgentConfigDraft;
+    visibility?: AgentRecipe["visibility"];
+  },
+): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, "/v1/agent-builder/recipes"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function cloneAgentRecipe(baseUrl: string, recipeId: string, ownerWallet: string): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, `/v1/agent-builder/recipes/${encodeURIComponent(recipeId)}/clone`), {
+    method: "POST",
+    body: JSON.stringify({ ownerWallet }),
+  });
+}
+
+export async function getPublicRecipes(baseUrl: string): Promise<unknown> {
+  return jsonRequest(agentBuilderUrl(baseUrl, "/v1/agent-builder/recipes/public"));
 }

@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { AgentBuilderRepositories, AgentBuilderService } from "../../src/agents/builder/compiler.js";
 import { AgentTradingRepositories, AgentTradingService } from "../../src/agents/trading.js";
 import { createPostgresClientFromEnv, databaseUrlFromEnv } from "../../src/db/connection.js";
 import { runMigrations } from "../../src/db/migrate.js";
@@ -19,6 +20,14 @@ function agentRepos(repos: ReturnType<typeof createPostgresCommerceRepositories>
     copiedLots: repos.copied_lots as AgentTradingRepositories["copiedLots"],
     alphaFeeAccruals: repos.alpha_fee_accruals as AgentTradingRepositories["alphaFeeAccruals"],
     agentActionLedgers: repos.agent_action_ledgers as AgentTradingRepositories["agentActionLedgers"],
+  };
+}
+
+function builderRepos(repos: ReturnType<typeof createPostgresCommerceRepositories>): AgentBuilderRepositories {
+  return {
+    drafts: repos.agent_builder_drafts as AgentBuilderRepositories["drafts"],
+    recipes: repos.agent_recipes as AgentBuilderRepositories["recipes"],
+    events: repos.agent_builder_events as AgentBuilderRepositories["events"],
   };
 }
 
@@ -134,6 +143,36 @@ async function seedCriticalState(): Promise<void> {
       realizedPnlAtomic: "100000",
       finalized: true,
     });
+
+    const agentBuilder = new AgentBuilderService(() => new Date("2026-05-16T10:32:00.000Z"), builderRepos(repos));
+    const draft = await agentBuilder.createDraft({
+      inputMode: "PROMPT",
+      ownerWallet: "builder-owner-restore",
+      prompt: [
+        "Create a Polymarket copy agent that follows BTC 5m markets,",
+        "only copies entries between 40c and 60c, max $5 per bet,",
+        "stops after $25 daily loss, max open exposure $100,",
+        "copies buys only, and charges followers 2% of profit.",
+      ].join(" "),
+    });
+    if (!draft.draftId || !draft.riskSummary || !draft.agentConfig) {
+      throw new Error("agent builder restore seed failed: draft missing");
+    }
+    const confirmed = await agentBuilder.confirmDraft({
+      draftId: draft.draftId,
+      ownerWallet: "builder-owner-restore",
+      acceptedRiskSummary: true,
+      confirmations: draft.riskSummary.requiredConfirmations,
+    });
+    await agentBuilder.createRecipe({
+      ownerWallet: "builder-owner-restore",
+      title: "Restore Builder Recipe",
+      description: "Backup/restore builder recipe.",
+      config: confirmed.agentConfig,
+      riskSummary: confirmed.riskSummary,
+      visibility: "CLONEABLE",
+      source: "PROMPT",
+    });
   } finally {
     await db.close?.();
   }
@@ -165,6 +204,8 @@ async function verifyCriticalState(): Promise<void> {
       repos.agent_profiles.get("agent-restore"),
       repos.alpha_monetization_configs.get("alpha-restore"),
       repos.copy_settings.get("copy-settings-restore"),
+      repos.agent_builder_drafts.list().then((rows) => rows.find((row) => row.payload.ownerWallet === "builder-owner-restore")),
+      repos.agent_recipes.list().then((rows) => rows.find((row) => row.payload.title === "Restore Builder Recipe")),
     ];
     const rows = await Promise.all(required);
     if (rows.some((row) => !row)) {
@@ -220,6 +261,20 @@ async function verifyCriticalState(): Promise<void> {
     };
     if (containsForbiddenKeyMaterial({ wallets, account, lots, accruals, ledger })) {
       throw new Error("Postgres restore verification failed: private key material present in agent/copy records");
+    }
+    const agentBuilder = new AgentBuilderService(() => new Date("2026-05-16T10:33:00.000Z"), builderRepos(repos));
+    const recipes = await agentBuilder.publicRecipes();
+    const recipe = recipes.find((item) => item.title === "Restore Builder Recipe");
+    if (!recipe || recipe.visibility !== "CLONEABLE") {
+      throw new Error("Postgres restore verification failed: agent builder recipe missing");
+    }
+    const clone = await agentBuilder.cloneRecipe(recipe.recipeId, "builder-clone-restore");
+    if (clone.status !== "DRAFT_CREATED" || clone.agentConfig?.copySettings?.minEntryPriceBps !== 4000) {
+      throw new Error("Postgres restore verification failed: agent builder clone failed");
+    }
+    const builderEvents = await agentBuilder.listEvents();
+    if (!builderEvents.some((event) => event.kind === "AGENT_BUILDER_DRAFT_CONFIRMED")) {
+      throw new Error("Postgres restore verification failed: agent builder events missing");
     }
   } finally {
     await db.close?.();

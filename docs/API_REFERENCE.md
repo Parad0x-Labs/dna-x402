@@ -382,3 +382,60 @@ Finalize copied lot:
 `POST /v1/copy/lots/:copiedLotId/finalize`
 
 A copied lot can be finalized once. Positive finalized PnL creates alpha accrual if monetization was active at entry. Losses, break-even, and unrealized PnL create no alpha fee.
+
+## Agent Builder
+
+Create a prompt/guided/template/clone draft:
+
+`POST /v1/agent-builder/draft`
+
+Get draft:
+
+`GET /v1/agent-builder/drafts/:draftId`
+
+Confirm draft:
+
+`POST /v1/agent-builder/drafts/:draftId/confirm`
+
+Reject draft:
+
+`POST /v1/agent-builder/drafts/:draftId/reject`
+
+List templates:
+
+`GET /v1/agent-builder/templates`
+
+Get guided tree:
+
+`GET /v1/agent-builder/guided-tree`
+
+Create recipe:
+
+`POST /v1/agent-builder/recipes`
+
+Get recipe:
+
+`GET /v1/agent-builder/recipes/:recipeId`
+
+Clone recipe:
+
+`POST /v1/agent-builder/recipes/:recipeId/clone`
+
+List public recipes:
+
+`GET /v1/agent-builder/recipes/public`
+
+Generated drafts are policy-checked before persistence. Confirmation requires owner wallet match, risk summary acceptance, required confirmation strings, and no forbidden backend key/signing/custody fields.
+
+Unsafe prompt reason codes include:
+
+- `AGENT_BUILDER_PRIVATE_KEY_FORBIDDEN`
+- `AGENT_BUILDER_BACKEND_SIGNING_FORBIDDEN`
+- `AGENT_BUILDER_BACKEND_CUSTODY_FORBIDDEN`
+- `AGENT_BUILDER_UNATTENDED_LIVE_OUT_OF_SCOPE`
+- `AGENT_BUILDER_POLYMARKET_LIVE_OUT_OF_SCOPE`
+- `AGENT_BUILDER_SOLANA_AUTONOMOUS_OUT_OF_SCOPE`
+- `AGENT_BUILDER_HIGH_RISK_CATEGORY_OUT_OF_SCOPE`
+- `AGENT_BUILDER_HIDDEN_FEE_FORBIDDEN`
+- `AGENT_BUILDER_INVALID_ALPHA_FEE`
+- `AGENT_BUILDER_MISSING_RISK_LIMITS`

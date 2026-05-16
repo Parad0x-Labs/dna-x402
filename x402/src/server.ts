@@ -71,6 +71,13 @@ import {
   SourceAgentAction,
 } from "./agents/trading.js";
 import {
+  AgentBuilderError,
+  AgentBuilderRepositories,
+  AgentBuilderRequest,
+  AgentBuilderService,
+  AgentConfigDraft,
+} from "./agents/builder/compiler.js";
+import {
   CommitRecord,
   PaymentAccept,
   PaymentProof,
@@ -98,6 +105,7 @@ interface CreateAppDeps {
   webhookReplayClaimStore?: WebhookReplayClaimStore;
   feeLedgerStore?: FeeLedgerStore;
   agentTrading?: AgentTradingService;
+  agentBuilder?: AgentBuilderService;
 }
 
 interface WebhookReplayClaimInput {
@@ -132,6 +140,7 @@ export interface X402AppContext {
   feeAccruals: FeeAccrualRecord[];
   observedAgentIds: Set<string>;
   agentTrading: AgentTradingService;
+  agentBuilder: AgentBuilderService;
   guard?: DnaGuardController;
   emergencyPause: EmergencyPauseController;
   governance: GovernanceService;
@@ -301,6 +310,114 @@ const copyDecisionSchema = z.object({
 const copiedLotFinalizeSchema = z.object({
   realizedPnlAtomic: z.string().regex(/^-?\d+$/),
   finalized: z.boolean().optional(),
+});
+
+const agentBuilderRequestSchema = z.object({
+  inputMode: z.enum(["PROMPT", "GUIDED", "TEMPLATE", "CLONE"]),
+  prompt: z.string().max(4000).optional(),
+  templateId: z.string().min(1).optional(),
+  cloneFromAgentId: z.string().min(1).optional(),
+  guidedAnswers: z.record(z.string(), z.unknown()).optional(),
+  ownerWallet: z.string().min(1),
+}).passthrough();
+
+const agentBuilderConfirmSchema = z.object({
+  ownerWallet: z.string().min(1),
+  acceptedRiskSummary: z.boolean(),
+  confirmations: z.array(z.string()).optional(),
+});
+
+const agentBuilderRejectSchema = z.object({
+  ownerWallet: z.string().min(1).optional(),
+});
+
+const agentConfigDraftSchema: z.ZodType<AgentConfigDraft> = z.object({
+  draftId: z.string().min(1),
+  ownerWallet: z.string().min(1),
+  agentType: z.enum([
+    "PAPER_AGENT",
+    "POLYMARKET_SIGNAL_AGENT",
+    "POLYMARKET_COPY_AGENT",
+    "SOLANA_TOKEN_SIGNAL_AGENT",
+    "SOLANA_TOKEN_COPY_AGENT",
+    "PAID_API_AGENT",
+    "DATA_FEED_AGENT",
+    "BUILDER_TOOL_AGENT",
+    "ALPHA_PROFILE_AGENT",
+  ]),
+  displayName: z.string().min(1),
+  slug: z.string().min(1),
+  mode: z.enum(["PAPER", "SIGNAL_ONLY", "USER_CONFIRMED_LIVE", "AUTO_COPY_PUBLIC_BETA"]),
+  walletMode: z.enum(["NONE_REQUIRED", "CLIENT_SIDE_USER_OWNED", "EXTERNAL_WALLET"]),
+  backendCustody: z.literal(false),
+  backendSigning: z.literal(false),
+  marketScope: z.object({
+    venue: z.enum(["POLYMARKET", "SOLANA", "DNA_X402", "OTHER"]).optional(),
+    categories: z.array(z.string()).optional(),
+    allowedMarketIds: z.array(z.string()).optional(),
+    blockedMarketIds: z.array(z.string()).optional(),
+    tokenMints: z.array(z.string()).optional(),
+    marketFilters: z.array(z.string()).optional(),
+  }).optional(),
+  copySettings: z.object({
+    copyBuys: z.boolean(),
+    copySells: z.boolean(),
+    copyExits: z.boolean(),
+    minEntryPriceBps: z.number().int().min(0).max(10_000).optional(),
+    maxEntryPriceBps: z.number().int().min(0).max(10_000).optional(),
+    maxBetSizeAtomic: z.string().regex(/^\d+$/).optional(),
+    maxDailySpendAtomic: z.string().regex(/^\d+$/).optional(),
+    maxDailyLossAtomic: z.string().regex(/^\d+$/).optional(),
+    maxOpenExposureAtomic: z.string().regex(/^\d+$/).optional(),
+    customTakeProfitBps: z.number().int().min(0).max(100_000).optional(),
+    customStopLossBps: z.number().int().min(0).max(100_000).optional(),
+    requireApprovalAlways: z.boolean(),
+    requireApprovalAboveAtomic: z.string().regex(/^\d+$/).optional(),
+  }).optional(),
+  monetization: z.object({
+    enabled: z.boolean(),
+    successFeeBps: z.union([
+      z.literal(50),
+      z.literal(100),
+      z.literal(150),
+      z.literal(200),
+      z.literal(250),
+      z.literal(300),
+    ]).optional(),
+    appliesTo: z.literal("POSITIVE_FINALIZED_COPIED_LOT_PNL"),
+    mode: z.enum(["DISPLAY_ONLY", "ACCRUAL", "DIRECT_SPLIT_GATED"]),
+  }).optional(),
+  visibility: z.enum(["PRIVATE", "PUBLIC"]),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+const agentRecipeCreateSchema = z.object({
+  ownerWallet: z.string().min(1),
+  title: z.string().min(1).max(140),
+  description: z.string().min(1).max(1000),
+  prompt: z.string().max(4000).optional(),
+  source: z.enum(["PROMPT", "GUIDED", "TEMPLATE", "CLONE"]).optional(),
+  ownerAgentId: z.string().min(1).optional(),
+  visibility: z.enum(["PRIVATE", "PUBLIC", "CLONEABLE"]).optional(),
+  config: agentConfigDraftSchema,
+  riskSummary: z.object({
+    riskLevel: z.enum(["LOW", "MEDIUM", "HIGH", "OUT_OF_SCOPE"]),
+    realFundsAtRisk: z.boolean(),
+    requiresClientSignature: z.boolean(),
+    backendCustody: z.literal(false),
+    backendSigning: z.literal(false),
+    maxBetSizeAtomic: z.string().regex(/^\d+$/).optional(),
+    maxDailySpendAtomic: z.string().regex(/^\d+$/).optional(),
+    maxDailyLossAtomic: z.string().regex(/^\d+$/).optional(),
+    maxOpenExposureAtomic: z.string().regex(/^\d+$/).optional(),
+    warnings: z.array(z.string()),
+    requiredConfirmations: z.array(z.string()),
+  }).optional(),
+});
+
+const agentRecipeCloneSchema = z.object({
+  ownerWallet: z.string().min(1),
 });
 
 const signedWebhookEnvelopeSchema = z.object({
@@ -783,6 +900,22 @@ function createAgentTradingRepositories(config: X402Config): AgentTradingReposit
   };
 }
 
+function createAgentBuilderRepositories(config: X402Config): AgentBuilderRepositories | undefined {
+  const databaseUrl = config.databaseUrl;
+  const usePostgres = (config.repositoryMode ?? "").toLowerCase() === "postgres" && Boolean(databaseUrl);
+  if (!usePostgres || !databaseUrl) {
+    return undefined;
+  }
+
+  const db = new PostgresDbClient({ connectionString: databaseUrl });
+  const repositories = createPostgresCommerceRepositories(db);
+  return {
+    drafts: repositories.agent_builder_drafts as AgentBuilderRepositories["drafts"],
+    recipes: repositories.agent_recipes as AgentBuilderRepositories["recipes"],
+    events: repositories.agent_builder_events as AgentBuilderRepositories["events"],
+  };
+}
+
 export function createX402App(config: X402Config = loadConfig(), deps: CreateAppDeps = {}): {
   app: express.Express;
   context: X402AppContext;
@@ -835,6 +968,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const emergencyPause = deps.emergencyPause ?? new EmergencyPauseController(undefined, undefined, now);
   const governance = deps.governance ?? new GovernanceService(now);
   const agentTrading = deps.agentTrading ?? new AgentTradingService(now, createAgentTradingRepositories(config));
+  const agentBuilder = deps.agentBuilder ?? new AgentBuilderService(now, createAgentBuilderRepositories(config));
   const { router: marketRouter, context: market } = createMarketRouter({
     now,
     signer: receiptSigner,
@@ -870,6 +1004,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     feeAccruals,
     observedAgentIds,
     agentTrading,
+    agentBuilder,
     guard,
     emergencyPause,
     governance,
@@ -2127,6 +2262,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     res.status(500).json({ ok: false, error: "agent_control_plane_failed", message: error instanceof Error ? error.message : String(error) });
   }
 
+  function sendAgentBuilderError(res: express.Response, error: unknown): void {
+    if (error instanceof AgentBuilderError) {
+      res.status(error.status).json({ ok: false, error: error.code, message: error.message });
+      return;
+    }
+    res.status(500).json({ ok: false, error: "agent_builder_failed", message: error instanceof Error ? error.message : String(error) });
+  }
+
   function requirePublicBetaFeature(
     res: express.Response,
     feature: "agentCreation" | "paperAgents" | "publicAgentProfiles" | "copySettings" | "alphaMonetization",
@@ -2264,6 +2407,143 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       receipts: receipts.size,
       signer: receiptSigner.signerPublicKey,
     });
+  });
+
+  app.post("/v1/agent-builder/draft", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder")) return;
+    const parsed = agentBuilderRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_builder_request", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await agentBuilder.createDraft(parsed.data as AgentBuilderRequest);
+      auditLog.record({
+        kind: result.status === "REJECTED" ? "AGENT_BUILDER_DRAFT_REJECTED" : "AGENT_BUILDER_DRAFT_CREATED",
+        meta: {
+          draftId: result.draftId,
+          ownerWallet: parsed.data.ownerWallet,
+          inputMode: parsed.data.inputMode,
+          status: result.status,
+          reasonCodes: result.reasonCodes,
+        },
+      });
+      res.status(result.status === "REJECTED" ? 422 : 201).json({ ok: result.status !== "REJECTED", ...result });
+    } catch (error) {
+      sendAgentBuilderError(res, error);
+    }
+  });
+
+  app.get("/v1/agent-builder/drafts/:draftId", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder drafts")) return;
+    const draft = await agentBuilder.getDraft(req.params.draftId);
+    if (!draft) {
+      res.status(404).json({ ok: false, error: "agent_builder_draft_not_found" });
+      return;
+    }
+    res.json({ ok: true, draft });
+  });
+
+  app.post("/v1/agent-builder/drafts/:draftId/confirm", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder confirmation")) return;
+    const parsed = agentBuilderConfirmSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_builder_confirm", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await agentBuilder.confirmDraft({ draftId: req.params.draftId, ...parsed.data });
+      observedAgentIds.add(result.agentConfig.slug);
+      auditLog.record({
+        kind: "AGENT_BUILDER_DRAFT_CONFIRMED",
+        meta: {
+          draftId: req.params.draftId,
+          ownerWallet: parsed.data.ownerWallet,
+          agentType: result.agentConfig.agentType,
+          mode: result.agentConfig.mode,
+          riskLevel: result.riskSummary.riskLevel,
+        },
+      });
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      sendAgentBuilderError(res, error);
+    }
+  });
+
+  app.post("/v1/agent-builder/drafts/:draftId/reject", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder drafts")) return;
+    const parsed = agentBuilderRejectSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_builder_reject", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const draft = await agentBuilder.rejectDraft(req.params.draftId, parsed.data.ownerWallet);
+      auditLog.record({ kind: "AGENT_BUILDER_DRAFT_REJECTED", meta: { draftId: req.params.draftId, ownerWallet: draft.ownerWallet } });
+      res.json({ ok: true, draft });
+    } catch (error) {
+      sendAgentBuilderError(res, error);
+    }
+  });
+
+  app.get("/v1/agent-builder/templates", async (_req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder templates")) return;
+    res.json({ ok: true, templates: await agentBuilder.listTemplates() });
+  });
+
+  app.get("/v1/agent-builder/guided-tree", (_req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder guided tree")) return;
+    res.json({ ok: true, tree: agentBuilder.guidedTree() });
+  });
+
+  app.post("/v1/agent-builder/recipes", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder recipes")) return;
+    const parsed = agentRecipeCreateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_recipe", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const recipe = await agentBuilder.createRecipe(parsed.data);
+      auditLog.record({ kind: "AGENT_RECIPE_CREATED", meta: { recipeId: recipe.recipeId, ownerWallet: parsed.data.ownerWallet, visibility: recipe.visibility } });
+      res.status(201).json({ ok: true, recipe });
+    } catch (error) {
+      sendAgentBuilderError(res, error);
+    }
+  });
+
+  app.get("/v1/agent-builder/recipes/public", async (_req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder public recipes")) return;
+    res.json({ ok: true, recipes: await agentBuilder.publicRecipes() });
+  });
+
+  app.get("/v1/agent-builder/recipes/:recipeId", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder recipes")) return;
+    const recipe = await agentBuilder.getRecipe(req.params.recipeId);
+    if (!recipe) {
+      res.status(404).json({ ok: false, error: "agent_recipe_not_found" });
+      return;
+    }
+    res.json({ ok: true, recipe });
+  });
+
+  app.post("/v1/agent-builder/recipes/:recipeId/clone", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder recipe clone")) return;
+    const parsed = agentRecipeCloneSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_recipe_clone", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await agentBuilder.cloneRecipe(req.params.recipeId, parsed.data.ownerWallet);
+      auditLog.record({
+        kind: "AGENT_RECIPE_CLONED",
+        meta: { recipeId: req.params.recipeId, draftId: result.draftId, ownerWallet: parsed.data.ownerWallet, status: result.status },
+      });
+      res.status(result.status === "REJECTED" ? 422 : 201).json({ ok: result.status !== "REJECTED", ...result });
+    } catch (error) {
+      sendAgentBuilderError(res, error);
+    }
   });
 
   app.post("/v1/agents/:agentId/wallets/register", async (req, res) => {

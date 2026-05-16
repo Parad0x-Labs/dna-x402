@@ -61,3 +61,20 @@ Copy decisions are stored in `copy_decisions`.
 Action/audit ledger entries are stored in `agent_action_ledgers`.
 
 Restart verification must prove buy/sell/exit toggles, entry filters, custom TP/SL, risk caps, and emergency-pause behavior still apply after repository reload.
+
+## Agent Builder Integration
+
+Prompt-to-Agent and Guided Agent Builder can generate copy settings, but only as draft configuration.
+
+The compiler maps phrases like:
+
+```txt
+only copy entries between 40c and 60c
+max $5 per bet
+stop after $25 daily loss
+copy buys only
+```
+
+into structured copy settings. The draft must still pass policy validation and user confirmation before activation.
+
+The builder rejects prompts that ask for unlimited auto-copy, emergency pause bypass, backend signing, or backend custody.

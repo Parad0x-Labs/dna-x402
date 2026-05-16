@@ -77,3 +77,35 @@ Never send private keys, seed phrases, keypairs, or wallet dumps to the backend.
 Copy settings are follower-controlled. A follower can copy buys, sells, exits, filter entry price ranges, set custom TP/SL, and require approval above a threshold. The backend evaluates copy decisions and records copied lots; it does not sign trades.
 
 Alpha monetization is accrual/display only unless a direct split gate is explicitly approved. Alpha fees apply only to positive finalized copied-lot profit.
+
+## Prompt-To-Agent Builder
+
+Public Beta builders can create agent drafts through the backend compiler:
+
+```ts
+await fetch(`${baseUrl}/v1/agent-builder/draft`, {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({
+    inputMode: "PROMPT",
+    ownerWallet: "mother-wallet-public-key",
+    prompt: "Create a Polymarket copy agent that follows BTC 5m markets, only copies entries between 40c and 60c, max $5 per bet, stops after $25 daily loss, max open exposure $100, copies buys only, and charges followers 2% of profit."
+  })
+});
+```
+
+The response is a draft plus risk summary. The user must accept the risk summary before confirmation:
+
+```ts
+await fetch(`${baseUrl}/v1/agent-builder/drafts/${draftId}/confirm`, {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({
+    ownerWallet: "mother-wallet-public-key",
+    acceptedRiskSummary: true,
+    confirmations: riskSummary.requiredConfirmations
+  })
+});
+```
+
+The compiler rejects prompts that ask for backend custody, backend signing, hidden fees, unlimited live movement, physical/high-risk categories, or alpha fees on losses.

@@ -95,6 +95,12 @@ X402_ENABLE_POLYMARKET_LIVE=0
 ## Acceptance Checks
 
 - Public Beta flag enables agent creation.
+- Agent Builder prompt mode creates policy-checked drafts.
+- Agent Builder guided mode creates policy-checked drafts.
+- Agent Builder templates create policy-checked drafts.
+- Agent Builder public/cloneable recipes clone into new drafts.
+- Agent Builder confirmation requires risk-summary acknowledgement.
+- Unsafe Agent Builder prompts are rejected.
 - Public Beta flag enables paper agents.
 - Public Beta flag enables public profiles.
 - Public Beta flag enables copy settings.

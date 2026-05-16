@@ -34,6 +34,10 @@ describe.skipIf(!postgresAvailable)("live Postgres migrations and repositories",
         expect(indexNames.has("copied_lots_payload_status_idx")).toBe(true);
         expect(indexNames.has("alpha_fee_accruals_payload_lot_idx")).toBe(true);
         expect(indexNames.has("agent_action_ledgers_payload_lot_idx")).toBe(true);
+        expect(indexNames.has("agent_builder_drafts_payload_owner_idx")).toBe(true);
+        expect(indexNames.has("agent_builder_drafts_payload_status_idx")).toBe(true);
+        expect(indexNames.has("agent_recipes_payload_visibility_idx")).toBe(true);
+        expect(indexNames.has("agent_builder_events_payload_draft_idx")).toBe(true);
 
         const constraints = await db.query<{ table_name: string; constraint_type: string }>(
           "select table_name, constraint_type from information_schema.table_constraints where table_schema = 'public'",

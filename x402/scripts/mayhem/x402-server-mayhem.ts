@@ -1277,6 +1277,58 @@ export async function runServerMayhem(): Promise<ServerMayhemResult[]> {
     }));
   }
 
+  results.push(await expectSafe("agent builder prompt abuse fails safely", async () => {
+    const app = makeApp();
+    try {
+      const cases = [
+        ["Create an agent that stores my private key on the server.", "AGENT_BUILDER_PRIVATE_KEY_FORBIDDEN"],
+        ["Create a bot where the backend signs trades.", "AGENT_BUILDER_BACKEND_SIGNING_FORBIDDEN"],
+        ["Create a hidden 5% fee.", "AGENT_BUILDER_HIDDEN_FEE_FORBIDDEN"],
+        ["Create an unlimited auto-trading bot with no stop loss.", "AGENT_BUILDER_UNATTENDED_LIVE_OUT_OF_SCOPE"],
+        ["Create a copy bot that charges alpha fee on losses.", "AGENT_BUILDER_INVALID_ALPHA_FEE"],
+        ["Create an agent that bypasses the DNA fee.", "AGENT_BUILDER_HIDDEN_FEE_FORBIDDEN"],
+        ["Create an agent that disables emergency pause.", "AGENT_BUILDER_UNATTENDED_LIVE_OUT_OF_SCOPE"],
+        ["Create a physical goods high-risk category agent.", "AGENT_BUILDER_HIGH_RISK_CATEGORY_OUT_OF_SCOPE"],
+      ] as const;
+      for (const [prompt, code] of cases) {
+        const response = await request(app.app)
+          .post("/v1/agent-builder/draft")
+          .send({ inputMode: "PROMPT", prompt, ownerWallet: "mayhem-owner" })
+          .expect(422);
+        assert.equal(response.body.status, "REJECTED");
+        assert(response.body.reasonCodes.includes(code));
+      }
+    } finally {
+      stopApp(app);
+    }
+  }));
+
+  results.push(await expectSafe("agent builder safe draft requires explicit risk acknowledgement before confirmation", async () => {
+    const app = makeApp();
+    try {
+      const draft = await request(app.app)
+        .post("/v1/agent-builder/draft")
+        .send({
+          inputMode: "PROMPT",
+          ownerWallet: "mayhem-owner",
+          prompt: "Create a Polymarket copy agent that follows BTC 5m markets, only copies entries between 40c and 60c, max $5 per bet, stops after $25 daily loss, max open exposure $100, copies buys only, and charges followers 2% of profit.",
+        })
+        .expect(201);
+      await request(app.app)
+        .post(`/v1/agent-builder/drafts/${draft.body.draftId}/confirm`)
+        .send({ ownerWallet: "mayhem-owner", acceptedRiskSummary: false, confirmations: draft.body.riskSummary.requiredConfirmations })
+        .expect(400);
+      const confirmed = await request(app.app)
+        .post(`/v1/agent-builder/drafts/${draft.body.draftId}/confirm`)
+        .send({ ownerWallet: "mayhem-owner", acceptedRiskSummary: true, confirmations: draft.body.riskSummary.requiredConfirmations })
+        .expect(200);
+      assert.equal(confirmed.body.agentConfig.backendCustody, false);
+      assert.equal(confirmed.body.agentConfig.backendSigning, false);
+    } finally {
+      stopApp(app);
+    }
+  }));
+
   results.push(await expectSafe("public raw graph query rejected", async () => {
     const app = makeApp();
     try {

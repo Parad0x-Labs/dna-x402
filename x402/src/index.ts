@@ -1,6 +1,7 @@
 export * from "./config.js";
 export * from "./feePolicy.js";
 export * from "./fees/waterfall.js";
+export * from "./agents/builder/compiler.js";
 export {
   AgentTradingError,
   AgentTradingService,

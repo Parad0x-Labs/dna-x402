@@ -4,6 +4,7 @@ import { realpathSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { compileAgentPrompt, GUIDED_BUILDER_TREE, listAgentBuilderTemplates } from "./agents/builder/compiler.js";
 import { DemoMode, runDemoBuyer, startDemoSeller } from "./demo/index.js";
 
 interface CliIo {
@@ -45,6 +46,12 @@ function printHelp(io: CliIo): void {
     "  dna-x402 init seller [dir] [--no-install] [--force]",
     "  dna-x402 init buyer [dir] [--no-install] [--force]",
     "  dna-x402 init agent [dir] [--template service|marketplace|auction|trading|restricted-market] [--no-install] [--force]",
+    "  dna-x402 agent-builder templates",
+    "  dna-x402 agent-builder draft --prompt \"...\" [--owner-wallet WALLET]",
+    "  dna-x402 agent-builder guided",
+    "  dna-x402 agent-builder confirm <draftId> --base-url URL --owner-wallet WALLET",
+    "  dna-x402 agent-builder recipes --base-url URL",
+    "  dna-x402 agent-builder clone <recipeId> --base-url URL --owner-wallet WALLET",
   ].join("\n"));
 }
 
@@ -73,7 +80,7 @@ function hasFlag(args: string[], name: string): boolean {
 }
 
 function positionalArgs(args: string[]): string[] {
-  const flagsWithValue = new Set(["--template"]);
+  const flagsWithValue = new Set(["--template", "--prompt", "--owner-wallet", "--base-url"]);
   const result: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -86,6 +93,80 @@ function positionalArgs(args: string[]): string[] {
     result.push(arg);
   }
   return result;
+}
+
+async function postJson(url: string, body: unknown): Promise<unknown> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const parsed = await response.json();
+  if (!response.ok) {
+    throw new Error(JSON.stringify(parsed));
+  }
+  return parsed;
+}
+
+async function getJson(url: string): Promise<unknown> {
+  const response = await fetch(url);
+  const parsed = await response.json();
+  if (!response.ok) {
+    throw new Error(JSON.stringify(parsed));
+  }
+  return parsed;
+}
+
+async function runAgentBuilderCommand(subcommand: string | undefined, args: string[], io: CliIo): Promise<number> {
+  if (subcommand === "templates") {
+    io.stdout(JSON.stringify({ ok: true, templates: listAgentBuilderTemplates() }, null, 2));
+    return 0;
+  }
+  if (subcommand === "guided") {
+    io.stdout(JSON.stringify({ ok: true, tree: GUIDED_BUILDER_TREE }, null, 2));
+    return 0;
+  }
+  if (subcommand === "draft") {
+    const prompt = readFlag(args, "--prompt");
+    if (!prompt) throw new Error("agent-builder draft requires --prompt");
+    const ownerWallet = readFlag(args, "--owner-wallet", "LOCAL_PREVIEW_OWNER") ?? "LOCAL_PREVIEW_OWNER";
+    io.stdout(JSON.stringify({ ok: true, ...compileAgentPrompt(prompt, ownerWallet) }, null, 2));
+    return 0;
+  }
+  if (subcommand === "confirm") {
+    const draftId = positionalArgs(args)[0];
+    const baseUrl = readFlag(args, "--base-url");
+    const ownerWallet = readFlag(args, "--owner-wallet");
+    if (!draftId || !baseUrl || !ownerWallet) throw new Error("agent-builder confirm requires <draftId>, --base-url, and --owner-wallet");
+    const draft = await getJson(`${baseUrl.replace(/\/$/, "")}/v1/agent-builder/drafts/${encodeURIComponent(draftId)}`) as {
+      draft?: { result?: { riskSummary?: { requiredConfirmations?: string[] } } };
+    };
+    const confirmations = draft.draft?.result?.riskSummary?.requiredConfirmations ?? [];
+    const result = await postJson(`${baseUrl.replace(/\/$/, "")}/v1/agent-builder/drafts/${encodeURIComponent(draftId)}/confirm`, {
+      ownerWallet,
+      acceptedRiskSummary: true,
+      confirmations,
+    });
+    io.stdout(JSON.stringify(result, null, 2));
+    return 0;
+  }
+  if (subcommand === "recipes") {
+    const baseUrl = readFlag(args, "--base-url");
+    if (!baseUrl) throw new Error("agent-builder recipes requires --base-url");
+    io.stdout(JSON.stringify(await getJson(`${baseUrl.replace(/\/$/, "")}/v1/agent-builder/recipes/public`), null, 2));
+    return 0;
+  }
+  if (subcommand === "clone") {
+    const recipeId = positionalArgs(args)[0];
+    const baseUrl = readFlag(args, "--base-url");
+    const ownerWallet = readFlag(args, "--owner-wallet");
+    if (!recipeId || !baseUrl || !ownerWallet) throw new Error("agent-builder clone requires <recipeId>, --base-url, and --owner-wallet");
+    io.stdout(JSON.stringify(await postJson(`${baseUrl.replace(/\/$/, "")}/v1/agent-builder/recipes/${encodeURIComponent(recipeId)}/clone`, { ownerWallet }), null, 2));
+    return 0;
+  }
+  io.stderr(`Unknown agent-builder command: ${subcommand ?? ""}`);
+  printHelp(io);
+  return 1;
 }
 
 function parseAgentTemplate(args: string[]): AgentTemplate {
@@ -933,6 +1014,10 @@ export async function runCli(argv: string[], io: CliIo = DEFAULT_IO): Promise<nu
 
   if (command === "init" && (subcommand === "buyer" || subcommand === "seller" || subcommand === "agent")) {
     return scaffoldProject(subcommand, rest, io);
+  }
+
+  if (command === "agent-builder") {
+    return runAgentBuilderCommand(subcommand, rest, io);
   }
 
   io.stderr(`Unknown command: ${[command, subcommand].filter(Boolean).join(" ")}`);
