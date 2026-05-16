@@ -1,0 +1,70 @@
+{
+  "orderSigning": {
+    "ok": true,
+    "checkedAt": "2026-05-14T21:10:18.000Z",
+    "ownerSignerSource": "browser-local",
+    "depositWalletHash": "3ef3669d70fe272503c2de33ab9c469bd2c7ea42cc4ce1e3eb6b1bcb80b0b5fd",
+    "ownerAddressHash": "30846c3c9369718fa79a052fb51443d3291d92e5443ca1563b1c7a0bfd3fc9ff",
+    "signatureType": 3,
+    "builderCode": "0x100d7a6b325d63750f6d617565aa9c31277f0ca846f4af2a1bddab6ccfca57b3",
+    "makerIsDepositWallet": true,
+    "signerIsDepositWallet": true,
+    "builderAttached": true,
+    "signatureHashPresent": true,
+    "mismatches": [],
+    "noOrderPosted": true,
+    "noPusdTransfer": true,
+    "snapshotPath": "G:\\DNA x402\\reports\\polymarket-phase0\\2026-05-14T21-10-18-000Z-browser-local.json"
+  },
+  "walletCreate": {
+    "ok": true,
+    "checkedAt": "2026-05-14T21:10:43.546Z",
+    "ownerAddressHash": "30846c3c9369718fa79a052fb51443d3291d92e5443ca1563b1c7a0bfd3fc9ff",
+    "depositWalletHash": "3ef3669d70fe272503c2de33ab9c469bd2c7ea42cc4ce1e3eb6b1bcb80b0b5fd",
+    "transactionHashPresent": true,
+    "noPusdTransfer": true,
+    "snapshotPath": "G:\\DNA x402\\reports\\polymarket-phase0\\2026-05-14T21-10-43-546Z-browser-local.json"
+  },
+  "accountingModel": {
+    "ok": true,
+    "averageEntryFormula": "sum(entry pUSD) / sum(position size)",
+    "averageExitFormula": "sum(exit pUSD) / sum(closed size)",
+    "successFeeFormula": "2% of positive finalized copied-lot PnL only",
+    "example": {
+      "closedLots": 2,
+      "wins": 1,
+      "losses": 1,
+      "winRate": "50.00%",
+      "averageEntryPrice": "0.533333 pUSD",
+      "averageExitPrice": "0.666666 pUSD",
+      "realizedPnl24h": "+35.000000 pUSD",
+      "realizedPnl7d": "+20.000000 pUSD",
+      "realizedPnl30d": "+20.000000 pUSD",
+      "realizedPnlAllTime": "+20.000000 pUSD",
+      "alphaFeeAssessed": "0.700000 pUSD"
+    }
+  },
+  "agentProfileModel": {
+    "ok": true,
+    "namePolicy": "Agent slug is immutable after creation",
+    "defaultWithdrawal": "Owner Solana wallet",
+    "emergencyWithdrawal": "Different recipient requires admin approval, reason, and audit log id",
+    "custodyPolicy": "Public addresses only; backend rejects private keys, seed phrases, session keys, and wallet dumps",
+    "defaultRiskSettings": {
+      "maxTradeSizePusd": 25,
+      "maxDailySpendPusd": 250,
+      "maxDailyLossPusd": 50,
+      "maxMarketExposurePusd": 100,
+      "maxOpenOrders": 10,
+      "maxSlippageBps": 100,
+      "dryRun": true,
+      "manualApprovalMode": true
+    }
+  },
+  "stateMachines": {
+    "ok": true,
+    "depositIntent": "Idempotent asset selection, address creation after valid selection, detected tx, bridge pending, pUSD credited, reconciled",
+    "withdrawalIntent": "Quote-bound intent, final confirmation before address creation, no address reuse, pUSD signed/confirmed, bridge pending, destination received, reconciled",
+    "liveMoneyMovement": "Not in beta scope until user-confirmed approval, pUSD transfer, and withdrawal status proof pass"
+  }
+}

@@ -23,8 +23,8 @@ __pycache__/
 *.pid
 reports/
 .runtime/
-.deploy/
-data/
+/.deploy/
+/data/
 x402/audit_out/
 x402/audit_out_mainnet/
 x402/audit_out_gauntlet_20/
