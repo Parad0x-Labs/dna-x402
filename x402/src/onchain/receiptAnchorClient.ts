@@ -96,6 +96,33 @@ function parseError(value: unknown): string | undefined {
   return JSON.stringify(value);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableRpcError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /429|too many requests|rate limit|timeout|econnreset|fetch failed|socket|websocket/i.test(message);
+}
+
+async function withRpcRetry<T>(label: string, fn: () => Promise<T>, attempts = 8): Promise<T> {
+  let delayMs = 750;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (!isRetryableRpcError(error) || attempt === attempts) {
+        throw error;
+      }
+      // eslint-disable-next-line no-console
+      console.warn(`anchor_rpc_retry attempt=${attempt}/${attempts} label=${label} message=${String(error).slice(0, 160)}`);
+      await sleep(delayMs);
+      delayMs = Math.min(delayMs * 2, 12_000);
+    }
+  }
+  throw new Error(`RPC retry exhausted: ${label}`);
+}
+
 function decodeAnchorBucketState(data: Buffer): AnchorBucketState {
   if (data.length < 54) {
     throw new Error(`Anchor bucket account too small: ${data.length}`);
@@ -177,9 +204,9 @@ export class ReceiptAnchorClient {
     if (this.cachedAlt) {
       return [this.cachedAlt];
     }
-    const alt = await this.config.connection.getAddressLookupTable(this.config.altAddress, {
+    const alt = await withRpcRetry("get address lookup table", () => this.config.connection.getAddressLookupTable(this.config.altAddress as PublicKey, {
       commitment: this.commitment,
-    });
+    }));
     if (!alt.value) {
       return undefined;
     }
@@ -200,8 +227,35 @@ export class ReceiptAnchorClient {
   }
 
   private async latestBlockhash(): Promise<string> {
-    const latest = await this.config.connection.getLatestBlockhash(this.commitment);
+    const latest = await withRpcRetry("latest blockhash", () => this.config.connection.getLatestBlockhash(this.commitment));
     return latest.blockhash;
+  }
+
+  private async latestBlockhashWithExpiry(): Promise<{ blockhash: string; lastValidBlockHeight: number }> {
+    return withRpcRetry("latest blockhash with expiry", () => this.config.connection.getLatestBlockhash(this.commitment));
+  }
+
+  private async confirmSignature(signature: string): Promise<{ slot: number; err: unknown | null }> {
+    const deadline = Date.now() + 180_000;
+    let delayMs = 1_000;
+    while (Date.now() < deadline) {
+      const status = await withRpcRetry(`signature status ${signature}`, async () => {
+        const response = await this.config.connection.getSignatureStatuses([signature], {
+          searchTransactionHistory: true,
+        });
+        return response.value[0];
+      });
+
+      if (status?.err) {
+        return { slot: status.slot, err: status.err };
+      }
+      if (status?.confirmationStatus === "confirmed" || status?.confirmationStatus === "finalized") {
+        return { slot: status.slot, err: null };
+      }
+      await sleep(delayMs);
+      delayMs = Math.min(delayMs * 2, 10_000);
+    }
+    throw new Error(`anchor confirmation timeout: ${signature}`);
   }
 
   private async simulateAndNormalize(tx: VersionedTransaction, meta: {
@@ -209,7 +263,7 @@ export class ReceiptAnchorClient {
     bucketId: bigint;
     anchorsCount: number;
   }): Promise<AnchorSimulationResult> {
-    const simulation = await this.config.connection.simulateTransaction(tx);
+    const simulation = await withRpcRetry("simulate anchor transaction", () => this.config.connection.simulateTransaction(tx));
     return {
       ok: simulation.value.err === null,
       unitsConsumed: simulation.value.unitsConsumed ?? 0,
@@ -301,7 +355,7 @@ export class ReceiptAnchorClient {
     const { bucketPda, bucketId } = this.deriveBucket(nowMs, resolvedBucketId);
     const lookupTables = await this.resolveLookupTables(params.useAlt ?? this.useAltByDefault);
 
-    const latest = await this.config.connection.getLatestBlockhash(this.commitment);
+    const latest = await this.latestBlockhashWithExpiry();
 
     const tx = buildV0AnchorBatchTransaction({
       payer: this.config.payer,
@@ -314,25 +368,18 @@ export class ReceiptAnchorClient {
       lookupTables,
     });
 
-    const signature = await this.config.connection.sendTransaction(tx, {
+    const signature = await withRpcRetry("send anchor batch", () => this.config.connection.sendTransaction(tx, {
       maxRetries: 3,
       skipPreflight: false,
       preflightCommitment: this.commitment,
-    });
+    }));
 
-    const confirmation = await this.config.connection.confirmTransaction(
-      {
-        signature,
-        blockhash: latest.blockhash,
-        lastValidBlockHeight: latest.lastValidBlockHeight,
-      },
-      this.commitment,
-    );
+    const confirmation = await this.confirmSignature(signature);
 
     return {
       signature,
-      slot: confirmation.context.slot,
-      confirmed: confirmation.value.err === null,
+      slot: confirmation.slot,
+      confirmed: confirmation.err === null,
       bucketPda: bucketPda.toBase58(),
       bucketId: bucketId.toString(10),
       anchorsCount: params.anchors.length,
@@ -354,7 +401,7 @@ export class ReceiptAnchorClient {
     const { bucketPda, bucketId } = this.deriveBucket(nowMs, resolvedBucketId);
     const lookupTables = await this.resolveLookupTables(params.useAlt ?? this.useAltByDefault);
 
-    const latest = await this.config.connection.getLatestBlockhash(this.commitment);
+    const latest = await this.latestBlockhashWithExpiry();
     const tx = buildV0AnchorTransaction({
       payer: this.config.payer,
       recentBlockhash: latest.blockhash,
@@ -368,25 +415,18 @@ export class ReceiptAnchorClient {
       lookupTables,
     });
 
-    const signature = await this.config.connection.sendTransaction(tx, {
+    const signature = await withRpcRetry("send anchor single", () => this.config.connection.sendTransaction(tx, {
       maxRetries: 3,
       skipPreflight: false,
       preflightCommitment: this.commitment,
-    });
+    }));
 
-    const confirmation = await this.config.connection.confirmTransaction(
-      {
-        signature,
-        blockhash: latest.blockhash,
-        lastValidBlockHeight: latest.lastValidBlockHeight,
-      },
-      this.commitment,
-    );
+    const confirmation = await this.confirmSignature(signature);
 
     return {
       signature,
-      slot: confirmation.context.slot,
-      confirmed: confirmation.value.err === null,
+      slot: confirmation.slot,
+      confirmed: confirmation.err === null,
       bucketPda: bucketPda.toBase58(),
       bucketId: bucketId.toString(10),
       anchorsCount: 1,
@@ -394,7 +434,7 @@ export class ReceiptAnchorClient {
   }
 
   async fetchBucketState(bucketPda: PublicKey): Promise<AnchorBucketState | null> {
-    const account = await this.config.connection.getAccountInfo(bucketPda, this.commitment);
+    const account = await withRpcRetry("fetch anchor bucket state", () => this.config.connection.getAccountInfo(bucketPda, this.commitment));
     if (!account) {
       return null;
     }

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   discoverProgramSoFiles,
   ensureSuccess,
@@ -83,7 +84,7 @@ function main(): void {
     return;
   }
 
-  const scriptDir = path.dirname(decodeURIComponent(new URL(import.meta.url).pathname));
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(scriptDir, "..");
 
   const cluster = parseFlagValue(argv, "--cluster") ?? "devnet";

@@ -1,0 +1,27 @@
+{
+  "name": "polymarket-phase0-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "phase0:browser": "tsx phase0-browser-server.ts",
+    "phase0:dry": "tsx phase0-live-spike.ts --dry-run",
+    "phase0:live": "tsx phase0-live-spike.ts --live"
+  },
+  "dependencies": {
+    "@polymarket/builder-relayer-client": "^0.0.9",
+    "@polymarket/builder-signing-sdk": "^1.0.0",
+    "@polymarket/clob-client-v2": "^1.0.6",
+    "buffer": "^6.0.3",
+    "viem": "^2.49.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^8.0.13"
+  },
+  "overrides": {
+    "axios": "^1.16.1",
+    "elliptic": "^6.6.1"
+  }
+}

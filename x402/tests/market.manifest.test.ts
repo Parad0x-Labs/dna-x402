@@ -18,6 +18,25 @@ describe("market manifest", () => {
     expect(verifyManifestSignature(validated)).toBe(true);
   });
 
+  it("binds optional builder metadata into the signed manifest hash", () => {
+    const signed = makeSignedShop({
+      shopId: "builder-shop",
+      capability: "data_feed",
+      builder: {
+        builderId: "builder_123",
+        feeConfigId: "fee_config_456",
+      },
+    });
+
+    const manifest = validateManifest(signed.manifest);
+    expect(manifest.builder).toEqual({
+      builderId: "builder_123",
+      feeConfigId: "fee_config_456",
+    });
+    expect(hashManifest(manifest)).toBe(signed.manifestHash);
+    expect(verifyManifestSignature(signed)).toBe(true);
+  });
+
   it("rejects malformed manifests with actionable issues", () => {
     expect(() => validateManifest({ shopId: "x" })).toThrowError("Invalid manifest");
   });

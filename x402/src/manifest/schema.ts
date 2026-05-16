@@ -63,6 +63,10 @@ export const shopManifestSchema = z.object({
   shopId: z.string().min(1),
   name: z.string().min(1),
   ownerAddress: z.string().min(32),
+  builder: z.object({
+    builderId: z.string().min(1),
+    feeConfigId: z.string().min(1).optional(),
+  }).optional(),
   endpoints: z.array(endpointSchema).min(1),
 });
 

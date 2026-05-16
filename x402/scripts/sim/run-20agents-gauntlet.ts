@@ -9,11 +9,14 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
+import BN from "bn.js";
 import { createX402App } from "../../src/server.js";
 import { loadConfig } from "../../src/config.js";
+import { SolanaPaymentVerifier } from "../../src/paymentVerifier.js";
 import { SignedReceipt } from "../../src/types.js";
 import {
   createGauntletMintAndFund,
+  drainSolBalances,
   fundExistingMint,
   FundingSnapshot,
   loadKeypairFromPath,
@@ -37,6 +40,14 @@ import {
   waitForAnchoredCount,
 } from "./scenarios.js";
 import { generateEphemeralWallets, redactWallets } from "./walletFactory.js";
+
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+
+function jsonHeaders(): Record<string, string> {
+  return ADMIN_SECRET
+    ? { "content-type": "application/json", "x-admin-token": ADMIN_SECRET }
+    : { "content-type": "application/json" };
+}
 
 interface ParsedArgs {
   cluster: string;
@@ -96,6 +107,17 @@ function parseNonNegativeInt(input: string | undefined, fallback: number): numbe
   }
   const parsed = Number.parseInt(input, 10);
   if (!Number.isFinite(parsed) || parsed < 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function parsePositiveNumber(input: string | undefined, fallback: number): number {
+  if (!input) {
+    return fallback;
+  }
+  const parsed = Number.parseFloat(input);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
     return fallback;
   }
   return parsed;
@@ -170,7 +192,41 @@ function appendJsonl(filePath: string, value: unknown): void {
   fs.appendFileSync(filePath, `${JSON.stringify(value)}\n`);
 }
 
+function readAnchorSignatureLog(filePath: string): Array<{ signature: string; anchorsCount: number }> {
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+
+  const rows: Array<{ signature: string; anchorsCount: number }> = [];
+  const seen = new Set<string>();
+  for (const line of fs.readFileSync(filePath, "utf8").split(/\r?\n/)) {
+    const signature = /(?:^|\s)sig=([1-9A-HJ-NP-Za-km-z]{64,88})(?:\s|$)/.exec(line)?.[1];
+    if (!signature || seen.has(signature)) {
+      continue;
+    }
+    const anchorsCountRaw = /(?:^|\s)anchors=(\d+)(?:\s|$)/.exec(line)?.[1];
+    rows.push({
+      signature,
+      anchorsCount: Number.parseInt(anchorsCountRaw ?? "1", 10),
+    });
+    seen.add(signature);
+  }
+  return rows;
+}
+
 function commandOutput(command: string): string {
+  const repoRoot = path.resolve(process.cwd(), "..");
+  const solanaPath = process.env.SOLANA_CLI_PATH
+    ?? path.resolve(repoRoot, ".tools", "solana-v1.18.26", "solana-release", "bin", process.platform === "win32" ? "solana.exe" : "solana");
+  if (command === "node -v") {
+    return execSync(`"${process.execPath}" -v`, { encoding: "utf8", stdio: "pipe" }).trim();
+  }
+  if (command === "npm -v" && process.env.npm_execpath) {
+    return execSync(`"${process.execPath}" "${process.env.npm_execpath}" -v`, { encoding: "utf8", stdio: "pipe" }).trim();
+  }
+  if (command === "solana --version" && fs.existsSync(solanaPath)) {
+    return execSync(`"${solanaPath}" --version`, { encoding: "utf8", stdio: "pipe" }).trim();
+  }
   return execSync(command, { encoding: "utf8", stdio: "pipe" }).trim();
 }
 
@@ -181,6 +237,7 @@ function scanArtifactsForSecrets(outDir: string): { ok: boolean; findings: strin
     { regex: /\bmnemonic\b/i, reason: "mnemonic keyword" },
     { regex: /\bsecret_key\b/i, reason: "secret key keyword" },
     { regex: /\/Users\//, reason: "absolute local path" },
+    { regex: /\b[A-Za-z]:\\Users\\/, reason: "absolute Windows user path" },
     { regex: /\[\s*(\d{1,3}\s*,\s*){40,}\d{1,3}\s*\]/, reason: "keypair byte array" },
   ];
 
@@ -285,8 +342,12 @@ async function main(): Promise<void> {
   const outDir = path.resolve(process.cwd(), args.outDir);
   fs.mkdirSync(outDir, { recursive: true });
   const eventsPath = path.join(outDir, "sim_events.jsonl");
+  const anchorSignatureLogPath = path.join(outDir, "anchor-signatures.log");
   if (fs.existsSync(eventsPath)) {
     fs.unlinkSync(eventsPath);
+  }
+  if (fs.existsSync(anchorSignatureLogPath)) {
+    fs.unlinkSync(anchorSignatureLogPath);
   }
 
   const logEvent = (event: GauntletEvent) => appendJsonl(eventsPath, event);
@@ -301,6 +362,7 @@ async function main(): Promise<void> {
     stressCalls: args.stressCalls,
     stressConcurrency: args.stressConcurrency,
     replayStormCases: args.replayStormCases,
+    minSolPerWallet: parsePositiveNumber(process.env.GAUNTLET_MIN_SOL_PER_WALLET, 0.02),
     baseUrlInput: args.baseUrl ?? null,
     node: commandOutput("node -v"),
     npm: commandOutput("npm -v"),
@@ -315,12 +377,13 @@ async function main(): Promise<void> {
   const funderKeyPath = resolveFunderKeypairPath();
   const funder = loadKeypairFromPath(funderKeyPath);
   const connection = new Connection(args.rpcUrl, "confirmed");
+  const minSolPerWallet = parsePositiveNumber(process.env.GAUNTLET_MIN_SOL_PER_WALLET, 0.02);
 
   await ensureSolFunding({
     connection,
     funder,
     wallets,
-    minLamportsPerWallet: BigInt(Math.floor(0.25 * LAMPORTS_PER_SOL)),
+    minLamportsPerWallet: BigInt(Math.floor(minSolPerWallet * LAMPORTS_PER_SOL)),
   });
 
   let serverClose: (() => Promise<void>) | undefined;
@@ -356,10 +419,28 @@ async function main(): Promise<void> {
       ANCHORING_ENABLED: process.env.ANCHORING_ENABLED ?? "1",
       RECEIPT_ANCHOR_PROGRAM_ID: process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF",
       ANCHORING_KEYPAIR_PATH: process.env.ANCHORING_KEYPAIR_PATH ?? funderKeyPath,
+      ANCHORING_BATCH_SIZE: process.env.ANCHORING_BATCH_SIZE ?? "16",
+      ANCHORING_SIGNATURE_LOG_PATH: process.env.ANCHORING_SIGNATURE_LOG_PATH ?? anchorSignatureLogPath,
       ALLOW_INSECURE: "1",
+      UNSAFE_UNVERIFIED_NETTING_ENABLED: "1",
     };
     const config = loadConfig(runtimeEnv);
-    const { app } = createX402App(config);
+    const { app } = createX402App(config, {
+      paymentVerifier: new SolanaPaymentVerifier(connection, {
+        allowUnverifiedNetting: true,
+        streamflowClient: {
+          async getOne() {
+            return {
+              recipient: recipientOwner.toBase58(),
+              mint: mint.toBase58(),
+              depositedAmount: new BN("1000000000000"),
+              withdrawnAmount: new BN("0"),
+              closed: false,
+            };
+          },
+        },
+      }),
+    });
     const server = app.listen(0, "127.0.0.1");
     await new Promise<void>((resolve, reject) => {
       server.once("listening", () => resolve());
@@ -636,7 +717,7 @@ async function main(): Promise<void> {
 
   const settle = await fetchJson(`${baseUrl}/settlements/flush`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: jsonHeaders(),
     body: JSON.stringify({}),
   });
   checkCode(settle.status, [200], "settlements/flush");
@@ -687,11 +768,15 @@ async function main(): Promise<void> {
   };
   writeJson(path.join(outDir, "metrics.json"), metrics);
 
-  const sigs = Array.from(anchorSignatures.values());
+  const loggedAnchorSignatures = readAnchorSignatureLog(anchorSignatureLogPath);
+  const sigs = Array.from(new Set([
+    ...anchorSignatures.values(),
+    ...loggedAnchorSignatures.map((row) => row.signature),
+  ]));
   fs.writeFileSync(path.join(outDir, "anchor_sigs.txt"), `${sigs.join("\n")}\n`);
   const confirmation = await confirmSignaturesWithPolling(
     connection,
-    sigs.slice(0, 50),
+    sigs,
     120_000,
     1_000,
   );
@@ -732,10 +817,25 @@ async function main(): Promise<void> {
   };
   writeJson(path.join(outDir, "balances_after.json"), afterSnapshot);
 
+  const drainedSol = await drainSolBalances({
+    connection,
+    wallets,
+    recipient: funder.publicKey,
+  });
+  abuseChecks.solDrain = drainedSol.every((row) => !row.error);
+  writeJson(path.join(outDir, "sol_drain.json"), {
+    recipient: funder.publicKey.toBase58(),
+    ok: abuseChecks.solDrain,
+    rows: drainedSol,
+  });
+
   // remove raw key material before safety scan.
   fs.rmSync(path.join(outDir, "keys"), { recursive: true, force: true });
 
-  const auditProd = spawnSync("npm", ["run", "audit:prod"], {
+  const auditProdCommand = process.env.npm_execpath
+    ? { command: process.execPath, args: [process.env.npm_execpath, "run", "audit:prod"] }
+    : { command: process.platform === "win32" ? "npm.cmd" : "npm", args: ["run", "audit:prod"] };
+  const auditProd = spawnSync(auditProdCommand.command, auditProdCommand.args, {
     cwd: process.cwd(),
     encoding: "utf8",
   });

@@ -1,0 +1,12 @@
+{
+  "name": "dna-x402-paper-polymarket-agent-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "test": "tsx test/acceptance.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

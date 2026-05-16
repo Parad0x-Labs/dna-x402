@@ -52,6 +52,10 @@ export interface ShopManifest {
   description?: string;
   category?: SafeCategory;
   ownerPubkey: string;
+  builder?: {
+    builderId: string;
+    feeConfigId?: string;
+  };
   endpoints: ShopEndpoint[];
 }
 

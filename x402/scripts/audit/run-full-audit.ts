@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import request from "supertest";
+import bs58 from "bs58";
 import { X402Config } from "../../src/config.js";
 import { createX402App } from "../../src/server.js";
 import { PaymentVerifier } from "../../src/paymentVerifier.js";
@@ -68,6 +70,7 @@ function usage(): string {
     "  --base-url <url>            Remote server URL for smoke test (default: X402_BASE_URL env)",
     "  --deployer-keypair <path>   Solana keypair for deploy scripts (default: DEPLOYER_KEYPAIR env)",
     "  --upgrade-authority <path>  Upgrade/buffer authority path (default: deployer keypair)",
+    "  --program <path>            Program artifact path for estimate/deploy ledger (repeatable)",
     "  --deploy                    Run live deploy-ledger instead of reusing latest report",
     "  --help                      Show this help",
   ].join("\n");
@@ -81,6 +84,17 @@ function parseFlagValue(args: string[], flag: string): string | undefined {
   return args[index + 1];
 }
 
+function parseRepeatedFlagValues(args: string[], flag: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === flag && index + 1 < args.length) {
+      values.push(args[index + 1]);
+      index += 1;
+    }
+  }
+  return values;
+}
+
 function hasFlag(args: string[], flag: string): boolean {
   return args.includes(flag);
 }
@@ -89,13 +103,19 @@ function nowStamp(): string {
   return new Date().toISOString().replace(/[:]/g, "-");
 }
 
+function deterministicSignature(label: string): string {
+  return bs58.encode(Buffer.from(label.padEnd(64, "0").slice(0, 64)));
+}
+
 function runNpmScript(cwd: string, script: string, extraArgs: string[]): { ok: boolean; stdout: string; stderr: string; command: string } {
   const args = ["run", script];
   if (extraArgs.length > 0) {
     args.push("--", ...extraArgs);
   }
   const command = `npm ${args.join(" ")}`;
-  const result = spawnSync("npm", args, {
+  const executable = process.env.npm_execpath ? process.execPath : (process.platform === "win32" ? "npm.cmd" : "npm");
+  const executableArgs = process.env.npm_execpath ? [process.env.npm_execpath, ...args] : args;
+  const result = spawnSync(executable, executableArgs, {
     cwd,
     encoding: "utf8",
     env: process.env,
@@ -232,7 +252,7 @@ async function runPauseFlagChecks(): Promise<StepResult> {
     .expect(503);
 
   const ok = marketWrite.body.error === "market_paused"
-    && finalizeResp.body.error === "finalize_paused"
+    && finalizeResp.body.error?.code === "X402_PAUSED"
     && orderCreate.body.error === "orders_paused";
 
   return {
@@ -366,7 +386,7 @@ async function runVerificationNegativeChecks(): Promise<StepResult> {
   };
 
   const wrongMint = await verifySplTransferProof(wrongMintConnection, {
-    txSignature: "wrong-mint-audit",
+    txSignature: deterministicSignature("wrong-mint-audit"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -375,7 +395,7 @@ async function runVerificationNegativeChecks(): Promise<StepResult> {
   });
 
   const wrongRecipient = await verifySplTransferProof(wrongRecipientConnection, {
-    txSignature: "wrong-recipient-audit",
+    txSignature: deterministicSignature("wrong-recipient-audit"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -384,7 +404,7 @@ async function runVerificationNegativeChecks(): Promise<StepResult> {
   });
 
   const underpay = await verifySplTransferProof(underpayConnection, {
-    txSignature: "underpay-audit",
+    txSignature: deterministicSignature("underpay-audit"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -393,7 +413,7 @@ async function runVerificationNegativeChecks(): Promise<StepResult> {
   });
 
   const stale = await verifySplTransferProof(staleConnection, {
-    txSignature: "stale-audit",
+    txSignature: deterministicSignature("stale-audit"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -720,7 +740,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const x402Dir = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..");
+  const x402Dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const repoRoot = path.resolve(x402Dir, "..");
   const reportsDir = path.join(repoRoot, "reports");
   fs.mkdirSync(reportsDir, { recursive: true });
@@ -730,6 +750,7 @@ async function main(): Promise<void> {
   const baseUrl = parseFlagValue(argv, "--base-url") ?? process.env.X402_BASE_URL;
   const deployerKeypair = parseFlagValue(argv, "--deployer-keypair") ?? process.env.DEPLOYER_KEYPAIR;
   const upgradeAuthority = parseFlagValue(argv, "--upgrade-authority") ?? process.env.UPGRADE_AUTHORITY ?? deployerKeypair;
+  const programArgs = parseRepeatedFlagValues(argv, "--program");
   const runDeploy = hasFlag(argv, "--deploy");
 
   const estimateReportPath = path.join(reportsDir, `estimate-deploy-cost-${stamp}.json`);
@@ -749,6 +770,9 @@ async function main(): Promise<void> {
   }
 
   const estimateArgs = ["--cluster", cluster, "--out", estimateReportPath];
+  for (const programPath of programArgs) {
+    estimateArgs.push("--program", programPath);
+  }
   if (deployerKeypair) {
     estimateArgs.push("--keypair", deployerKeypair);
   }
@@ -761,6 +785,9 @@ async function main(): Promise<void> {
   let ledgerReportPath: string | undefined;
   if (runDeploy) {
     const ledgerArgs = ["--cluster", cluster, "--out", generatedLedgerPath];
+    for (const programPath of programArgs) {
+      ledgerArgs.push("--program", programPath);
+    }
     if (deployerKeypair) {
       ledgerArgs.push("--keypair", deployerKeypair);
     }
@@ -773,9 +800,12 @@ async function main(): Promise<void> {
     }
     ledgerReportPath = generatedLedgerPath;
   } else {
-    ledgerReportPath = latestReportByPrefix(reportsDir, "deploy-ledger-");
+    ledgerReportPath = programArgs.length === 0 ? latestReportByPrefix(reportsDir, "deploy-ledger-") : undefined;
     if (!ledgerReportPath) {
       const dryArgs = ["--cluster", cluster, "--dry-run", "--out", generatedLedgerPath];
+      for (const programPath of programArgs) {
+        dryArgs.push("--program", programPath);
+      }
       if (deployerKeypair) {
         dryArgs.push("--keypair", deployerKeypair);
       }

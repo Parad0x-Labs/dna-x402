@@ -16,6 +16,25 @@ const DEFAULT_IO: CliIo = {
   stderr: (message) => console.error(message),
 };
 
+type ScaffoldKind = "buyer" | "seller" | "agent";
+type AgentTemplate = "service" | "marketplace" | "auction" | "trading" | "restricted-market";
+
+const AGENT_TEMPLATE_ALIASES: Record<string, AgentTemplate> = {
+  service: "service",
+  seller: "service",
+  api: "service",
+  marketplace: "marketplace",
+  market: "marketplace",
+  auction: "auction",
+  trading: "trading",
+  strategy: "trading",
+  "restricted-market": "restricted-market",
+  restricted: "restricted-market",
+  betting: "restricted-market",
+  wagering: "restricted-market",
+  gambling: "restricted-market",
+};
+
 function printHelp(io: CliIo): void {
   io.stdout([
     "dna-x402",
@@ -25,12 +44,20 @@ function printHelp(io: CliIo): void {
     "  dna-x402 demo buyer [--mode transfer|netting|stream] [--base-url http://127.0.0.1:3000]",
     "  dna-x402 init seller [dir] [--no-install] [--force]",
     "  dna-x402 init buyer [dir] [--no-install] [--force]",
+    "  dna-x402 init agent [dir] [--template service|marketplace|auction|trading|restricted-market] [--no-install] [--force]",
   ].join("\n"));
 }
 
 function packageRootDir(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
   return path.resolve(here, "../");
+}
+
+function npmCommand(args: string[]): { command: string; args: string[] } {
+  if (process.env.npm_execpath) {
+    return { command: process.execPath, args: [process.env.npm_execpath, ...args] };
+  }
+  return { command: process.platform === "win32" ? "npm.cmd" : "npm", args };
 }
 
 function readFlag(args: string[], name: string, fallback?: string): string | undefined {
@@ -43,6 +70,40 @@ function readFlag(args: string[], name: string, fallback?: string): string | und
 
 function hasFlag(args: string[], name: string): boolean {
   return args.includes(name);
+}
+
+function positionalArgs(args: string[]): string[] {
+  const flagsWithValue = new Set(["--template"]);
+  const result: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg.startsWith("-")) {
+      if (flagsWithValue.has(arg)) {
+        index += 1;
+      }
+      continue;
+    }
+    result.push(arg);
+  }
+  return result;
+}
+
+function parseAgentTemplate(args: string[]): AgentTemplate {
+  const raw = readFlag(args, "--template", "service") ?? "service";
+  const normalized = raw.trim().toLowerCase();
+  const template = AGENT_TEMPLATE_ALIASES[normalized];
+  if (!template) {
+    throw new Error(`Invalid --template: ${raw}. Expected service, marketplace, auction, trading, or restricted-market.`);
+  }
+  return template;
+}
+
+function sanitizePackageName(name: string): string {
+  const normalized = name
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return normalized || "dna-x402-agent";
 }
 
 function parseDemoModeArg(args: string[]): DemoMode {
@@ -196,7 +257,8 @@ async function packCurrentPackage(targetDir: string): Promise<string> {
   const tarballName = await new Promise<string>((resolve, reject) => {
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
-    const child = spawn("npm", ["pack", "--json", "--silent", "--pack-destination", vendorDir], {
+    const npm = npmCommand(["pack", "--json", "--silent", "--pack-destination", vendorDir]);
+    const child = spawn(npm.command, npm.args, {
       cwd: packageRootDir(),
       stdio: ["ignore", "pipe", "pipe"],
       shell: false,
@@ -284,10 +346,493 @@ function buyerEnvExample(): string {
   ].join("\n");
 }
 
+function agentPackageJson(packageSpec: string, name: string): string {
+  return JSON.stringify({
+    name: sanitizePackageName(name),
+    private: true,
+    type: "module",
+    scripts: {
+      dev: "tsx watch index.ts",
+      start: "tsx index.ts",
+      "sign-manifest": "tsx sign-manifest.ts",
+    },
+    dependencies: {
+      "dna-x402": packageSpec,
+      "express": "^4.21.2",
+    },
+    devDependencies: {
+      "@types/express": "^5.0.0",
+      "@types/node": "^22.10.10",
+      "tsx": "^4.19.2",
+    },
+  }, null, 2) + "\n";
+}
+
+function agentTemplateTitle(template: AgentTemplate): string {
+  switch (template) {
+    case "service":
+      return "Paid Service Agent";
+    case "marketplace":
+      return "Marketplace Seller Agent";
+    case "auction":
+      return "Auction Tool Agent";
+    case "trading":
+      return "Trading Strategy Agent";
+    case "restricted-market":
+      return "Restricted Market Compliance Shell";
+    default:
+      return "DNA x402 Agent";
+  }
+}
+
+function agentManifest(template: AgentTemplate): Record<string, unknown> {
+  const ownerPubkey = "OWNER_SOLANA_WALLET_PUBLIC_KEY_BASE58";
+  if (template === "marketplace") {
+    return {
+      manifestVersion: "market-v1",
+      shopId: "marketplace-agent",
+      name: "Marketplace Seller Agent",
+      description: "Publishes paid marketplace search, quote, and order tools for safe service listings.",
+      category: "workflow_tool",
+      ownerPubkey,
+      endpoints: [
+        {
+          endpointId: "marketplace-search",
+          method: "POST",
+          path: "/marketplace/search",
+          capabilityTags: ["marketplace_search", "routing", "seller_discovery"],
+          description: "Find service providers and return ranked marketplace options.",
+          pricingModel: { kind: "flat", amountAtomic: "2500" },
+          settlementModes: ["transfer", "stream"],
+          sla: { maxLatencyMs: 1200, availabilityTarget: 0.995 },
+        },
+        {
+          endpointId: "marketplace-order-plan",
+          method: "POST",
+          path: "/marketplace/order-plan",
+          capabilityTags: ["order_planning", "routing", "workflow_tool"],
+          description: "Build a safe order plan across listed providers without taking custody.",
+          pricingModel: { kind: "flat", amountAtomic: "5000" },
+          settlementModes: ["transfer", "stream"],
+          sla: { maxLatencyMs: 1800, availabilityTarget: 0.99 },
+        },
+      ],
+    };
+  }
+
+  if (template === "auction") {
+    return {
+      manifestVersion: "market-v1",
+      shopId: "auction-tool-agent",
+      name: "Auction Tool Agent",
+      description: "Paid auction discovery and bid-planning tools for ordinary marketplace inventory.",
+      category: "workflow_tool",
+      ownerPubkey,
+      endpoints: [
+        {
+          endpointId: "auction-discovery",
+          method: "GET",
+          path: "/auction/listings",
+          capabilityTags: ["auction_discovery", "pricing", "workflow_tool"],
+          description: "Return active safe-category auction inventory and clearing windows.",
+          pricingModel: { kind: "flat", amountAtomic: "1500" },
+          settlementModes: ["transfer", "stream"],
+          sla: { maxLatencyMs: 1200, availabilityTarget: 0.995 },
+        },
+        {
+          endpointId: "auction-bid-plan",
+          method: "POST",
+          path: "/auction/bid-plan",
+          capabilityTags: ["auction_strategy", "price_discovery", "workflow_tool"],
+          description: "Create a bid plan with budget limits and no custody or wager handling.",
+          pricingModel: { kind: "flat", amountAtomic: "4500" },
+          settlementModes: ["transfer", "stream"],
+          sla: { maxLatencyMs: 1800, availabilityTarget: 0.99 },
+        },
+      ],
+    };
+  }
+
+  if (template === "trading") {
+    return {
+      manifestVersion: "market-v1",
+      shopId: "trading-strategy-agent",
+      name: "Trading Strategy Agent",
+      description: "Sells strategy research, backtests, and signal reports; execution and custody are disabled by default.",
+      category: "data_enrichment",
+      ownerPubkey,
+      endpoints: [
+        {
+          endpointId: "strategy-report",
+          method: "POST",
+          path: "/strategy/report",
+          capabilityTags: ["strategy_research", "backtest", "data_enrichment"],
+          description: "Generate a paid strategy report from user-supplied market assumptions.",
+          pricingModel: { kind: "flat", amountAtomic: "7500" },
+          settlementModes: ["transfer", "stream"],
+          sla: { maxLatencyMs: 2500, availabilityTarget: 0.99 },
+        },
+        {
+          endpointId: "signal-subscription-preview",
+          method: "GET",
+          path: "/strategy/signals",
+          capabilityTags: ["signal_feed", "research", "data_enrichment"],
+          description: "Return a paid preview of strategy signal metadata without trade execution.",
+          pricingModel: { kind: "flat", amountAtomic: "2500" },
+          settlementModes: ["transfer", "stream"],
+          sla: { maxLatencyMs: 1400, availabilityTarget: 0.995 },
+        },
+      ],
+    };
+  }
+
+  if (template === "restricted-market") {
+    return {
+      manifestVersion: "market-v1",
+      shopId: "restricted-market-shell",
+      name: "Restricted Market Compliance Shell",
+      description: "Compliance-gated betting and wagering shell. Public marketplace policy must block this manifest until licensing controls exist.",
+      category: "workflow_tool",
+      ownerPubkey,
+      endpoints: [
+        {
+          endpointId: "restricted-status",
+          method: "GET",
+          path: "/restricted/status",
+          capabilityTags: ["restricted_market", "compliance_review", "policy_blocked"],
+          description: "Reports that betting, wagering, odds, and gambling flows are disabled by default.",
+          pricingModel: { kind: "flat", amountAtomic: "0" },
+          settlementModes: ["transfer"],
+          sla: { maxLatencyMs: 500, availabilityTarget: 0.999 },
+        },
+      ],
+    };
+  }
+
+  return {
+    manifestVersion: "market-v1",
+    shopId: "paid-service-agent",
+    name: "Paid Service Agent",
+    description: "One-command x402 seller for paid API, inference, data, and workflow services.",
+    category: "workflow_tool",
+    ownerPubkey,
+    endpoints: [
+      {
+        endpointId: "resource",
+        method: "GET",
+        path: "/resource",
+        capabilityTags: ["resource_access", "workflow_tool"],
+        description: "Return a paid resource payload.",
+        pricingModel: { kind: "flat", amountAtomic: "1000" },
+        settlementModes: ["transfer", "stream"],
+        sla: { maxLatencyMs: 800, availabilityTarget: 0.995 },
+      },
+      {
+        endpointId: "inference",
+        method: "POST",
+        path: "/inference",
+        capabilityTags: ["ai_inference", "workflow_tool"],
+        description: "Run a paid inference-style service call.",
+        pricingModel: { kind: "flat", amountAtomic: "5000" },
+        settlementModes: ["transfer", "stream"],
+        sla: { maxLatencyMs: 1600, availabilityTarget: 0.99 },
+      },
+    ],
+  };
+}
+
+function agentEnvExample(template: AgentTemplate): string {
+  const rows = [
+    "RECIPIENT=YOUR_SOLANA_WALLET_ADDRESS",
+    "OWNER_PUBKEY=YOUR_SOLANA_WALLET_ADDRESS",
+    "OWNER_SECRET_BASE58=",
+    "PORT=3000",
+    "SOLANA_RPC_URL=https://api.mainnet-beta.solana.com",
+    "DNA_TRUSTED_LOCAL_NETTING=0",
+  ];
+  if (template === "restricted-market") {
+    rows.push("RESTRICTED_MARKET_COMPLIANCE_UNLOCKED=0");
+  }
+  rows.push("");
+  return rows.join("\n");
+}
+
+function paidEndpointSource(template: AgentTemplate): string {
+  if (template === "marketplace") {
+    return `
+app.post("/marketplace/search", dnaPrice("2500", pay), (req, res) => {
+  const query = String(req.body?.query ?? "safe service");
+  res.json({
+    ok: true,
+    query,
+    results: [
+      { shopId: "research-pack", capability: "data_enrichment", priceAtomic: "2500", p95LatencyMs: 780 },
+      { shopId: "ops-automation", capability: "workflow_tool", priceAtomic: "3200", p95LatencyMs: 940 },
+    ],
+  });
+});
+
+app.post("/marketplace/order-plan", dnaPrice("5000", pay), (req, res) => {
+  res.json({
+    ok: true,
+    planId: crypto.randomUUID(),
+    objective: req.body?.objective ?? "route safe service order",
+    constraints: req.body?.constraints ?? {},
+    custody: "none",
+    settlement: "x402 receipt required per paid step",
+  });
+});
+`;
+  }
+
+  if (template === "auction") {
+    return `
+app.get("/auction/listings", dnaPrice("1500", pay), (_req, res) => {
+  res.json({
+    ok: true,
+    listings: [
+      { auctionId: "svc-001", asset: "data-enrichment slot", currentPriceAtomic: "12000", closesInSeconds: 900 },
+      { auctionId: "svc-002", asset: "workflow automation slot", currentPriceAtomic: "18000", closesInSeconds: 1500 },
+    ],
+  });
+});
+
+app.post("/auction/bid-plan", dnaPrice("4500", pay), (req, res) => {
+  res.json({
+    ok: true,
+    planId: crypto.randomUUID(),
+    auctionId: req.body?.auctionId ?? "svc-001",
+    maxBidAtomic: String(req.body?.maxBidAtomic ?? "0"),
+    guardrails: ["no custody", "no wager handling", "budget capped"],
+  });
+});
+`;
+  }
+
+  if (template === "trading") {
+    return `
+app.post("/strategy/report", dnaPrice("7500", pay), (req, res) => {
+  res.json({
+    ok: true,
+    reportId: crypto.randomUUID(),
+    market: req.body?.market ?? "user-supplied",
+    summary: "Research-only strategy report generated. Execution and custody are disabled.",
+    risk: ["not financial advice", "no custody", "no automated execution"],
+  });
+});
+
+app.get("/strategy/signals", dnaPrice("2500", pay), (_req, res) => {
+  res.json({
+    ok: true,
+    feed: "research-preview",
+    signals: [
+      { symbol: "EXAMPLE", horizon: "1h", confidence: 0.61, execution: "disabled" },
+    ],
+  });
+});
+`;
+  }
+
+  return `
+app.get("/resource", dnaPrice("1000", pay), (_req, res) => {
+  res.json({ ok: true, result: "paid resource payload" });
+});
+
+app.post("/inference", dnaPrice("5000", pay), (req, res) => {
+  res.json({
+    ok: true,
+    result: "paid inference output",
+    inputHash: crypto.createHash("sha256").update(JSON.stringify(req.body ?? {})).digest("hex"),
+  });
+});
+`;
+}
+
+function paidAgentIndexSource(template: AgentTemplate): string {
+  return `import crypto from "node:crypto";
+import { readFile } from "node:fs/promises";
+import express from "express";
+import { createSignedManifest } from "dna-x402/market/manifest";
+import { dnaPrice, dnaSeller } from "dna-x402/seller";
+
+const app = express();
+app.use(express.json());
+
+const recipient = process.env.RECIPIENT ?? "YOUR_SOLANA_WALLET_ADDRESS";
+const ownerPubkey = process.env.OWNER_PUBKEY ?? recipient;
+const port = Number(process.env.PORT ?? 3000);
+const trustedLocalNetting = process.env.DNA_TRUSTED_LOCAL_NETTING === "1";
+const settlement = trustedLocalNetting
+  ? ["transfer", "stream", "netting"] as Array<"transfer" | "stream" | "netting">
+  : ["transfer", "stream"] as Array<"transfer" | "stream" | "netting">;
+
+const pay = dnaSeller(app, {
+  recipient,
+  settlement,
+  solanaRpcUrl: process.env.SOLANA_RPC_URL,
+  unsafeUnverifiedNettingEnabled: trustedLocalNetting,
+});
+
+async function runtimeManifest() {
+  const raw = await readFile(new URL("./manifest.json", import.meta.url), "utf8");
+  const manifest = JSON.parse(raw);
+  manifest.ownerPubkey = ownerPubkey;
+  return manifest;
+}
+
+app.get("/", async (_req, res) => {
+  const manifest = await runtimeManifest();
+  res.json({
+    service: manifest.name,
+    shopId: manifest.shopId,
+    manifest: "/.well-known/dna-x402/manifest.json",
+    signedManifest: "/market/signed-manifest",
+  });
+});
+
+app.get("/.well-known/dna-x402/manifest.json", async (_req, res) => {
+  res.json(await runtimeManifest());
+});
+
+app.get("/market/signed-manifest", async (_req, res) => {
+  if (!process.env.OWNER_SECRET_BASE58) {
+    res.status(412).json({
+      ok: false,
+      error: "OWNER_SECRET_BASE58_REQUIRED",
+      message: "Set OWNER_SECRET_BASE58 to publish a signed marketplace manifest.",
+    });
+    return;
+  }
+  res.json(createSignedManifest(await runtimeManifest(), process.env.OWNER_SECRET_BASE58));
+});
+${paidEndpointSource(template)}
+app.listen(port, () => {
+  console.log(\`${agentTemplateTitle(template)} listening on http://127.0.0.1:\${port}\`);
+});
+`;
+}
+
+function restrictedAgentIndexSource(): string {
+  return `import { readFile } from "node:fs/promises";
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+const port = Number(process.env.PORT ?? 3000);
+const complianceUnlocked = process.env.RESTRICTED_MARKET_COMPLIANCE_UNLOCKED === "1";
+
+async function runtimeManifest() {
+  const raw = await readFile(new URL("./manifest.json", import.meta.url), "utf8");
+  return JSON.parse(raw);
+}
+
+app.get("/", (_req, res) => {
+  res.json({
+    service: "Restricted Market Compliance Shell",
+    enabled: false,
+    complianceUnlocked,
+    manifest: "/.well-known/dna-x402/manifest.json",
+  });
+});
+
+app.get("/.well-known/dna-x402/manifest.json", async (_req, res) => {
+  res.json(await runtimeManifest());
+});
+
+app.get("/restricted/status", (_req, res) => {
+  res.status(451).json({
+    ok: false,
+    error: "RESTRICTED_MARKET_DISABLED",
+    message: "Betting, wagering, odds, and gambling flows are blocked in the public marketplace by default.",
+    requiredBeforeActivation: [
+      "jurisdiction-specific legal approval",
+      "licensing review",
+      "age and location controls",
+      "AML/KYC and responsible-use controls",
+      "separate compliance-gated product boundary",
+    ],
+  });
+});
+
+app.post("/restricted/quote", (_req, res) => {
+  res.status(451).json({
+    ok: false,
+    error: "RESTRICTED_MARKET_DISABLED",
+    message: "No live restricted-market quotes are issued by this starter.",
+  });
+});
+
+app.listen(port, () => {
+  console.log(\`Restricted market shell listening on http://127.0.0.1:\${port}\`);
+});
+`;
+}
+
+function agentIndexSource(template: AgentTemplate): string {
+  return template === "restricted-market"
+    ? restrictedAgentIndexSource()
+    : paidAgentIndexSource(template);
+}
+
+function signManifestSource(): string {
+  return `import { readFile, writeFile } from "node:fs/promises";
+import { createSignedManifest } from "dna-x402/market/manifest";
+
+const ownerSecret = process.env.OWNER_SECRET_BASE58;
+if (!ownerSecret) {
+  throw new Error("OWNER_SECRET_BASE58 is required");
+}
+
+const raw = await readFile(new URL("./manifest.json", import.meta.url), "utf8");
+const manifest = JSON.parse(raw);
+if (process.env.OWNER_PUBKEY) {
+  manifest.ownerPubkey = process.env.OWNER_PUBKEY;
+}
+
+const signed = createSignedManifest(manifest, ownerSecret);
+await writeFile(new URL("./signed-manifest.json", import.meta.url), \`\${JSON.stringify(signed, null, 2)}\\n\`);
+console.log("Wrote signed-manifest.json");
+`;
+}
+
+function agentReadmeSource(template: AgentTemplate): string {
+  const title = agentTemplateTitle(template);
+  const restricted = template === "restricted-market";
+  return [
+    `# ${title}`,
+    "",
+    "## Run",
+    "1. Copy `.env.example` to `.env` and set `RECIPIENT` plus `OWNER_PUBKEY`.",
+    "2. Run `npm install`.",
+    "3. Run `npm run dev`.",
+    "4. Open `http://127.0.0.1:3000/.well-known/dna-x402/manifest.json`.",
+    "",
+    "## Publish",
+    "Set `OWNER_SECRET_BASE58` only in a local shell, then run:",
+    "",
+    "```sh",
+    "npm run sign-manifest",
+    "```",
+    "",
+    restricted
+      ? "This template is intentionally not a live betting product. It returns HTTP 451 for restricted market routes and is expected to be blocked by public marketplace policy."
+      : "This template is safe-category by default and exposes paid x402 endpoints with transfer and stream settlement. Enable local netting only in controlled development.",
+    "",
+    "## Production Notes",
+    "- Use mainnet RPC with rate-limit headroom.",
+    "- Keep owner signing secrets out of source control.",
+    "- Verify signed receipts before granting durable access.",
+    "- Do not enable restricted or regulated categories without separate legal and operational controls.",
+    "",
+  ].join("\n");
+}
+
 async function installDependencies(targetDir: string, io: CliIo): Promise<void> {
   io.stdout(`Installing dependencies in ${targetDir} ...`);
   await new Promise<void>((resolve, reject) => {
-    const child = spawn("npm", ["install"], {
+    const npm = npmCommand(["install"]);
+    const child = spawn(npm.command, npm.args, {
       cwd: targetDir,
       stdio: "inherit",
       shell: false,
@@ -303,11 +848,16 @@ async function installDependencies(targetDir: string, io: CliIo): Promise<void> 
   });
 }
 
-async function scaffoldProject(kind: "buyer" | "seller", args: string[], io: CliIo): Promise<number> {
+async function scaffoldProject(kind: ScaffoldKind, args: string[], io: CliIo): Promise<number> {
   const force = hasFlag(args, "--force");
   const install = !hasFlag(args, "--no-install");
-  const targetArg = args.find((arg) => !arg.startsWith("-"));
-  const defaultName = kind === "seller" ? "dna-x402-seller" : "dna-x402-buyer";
+  const template = kind === "agent" ? parseAgentTemplate(args) : undefined;
+  const targetArg = positionalArgs(args)[0];
+  const defaultName = kind === "seller"
+    ? "dna-x402-seller"
+    : kind === "buyer"
+      ? "dna-x402-buyer"
+      : "dna-x402-agent";
   const targetDir = path.resolve(process.cwd(), targetArg ?? defaultName);
   await ensureScaffoldDir(targetDir, force);
   const packageSpec = await packCurrentPackage(targetDir);
@@ -316,10 +866,20 @@ async function scaffoldProject(kind: "buyer" | "seller", args: string[], io: Cli
     await writeFile(path.join(targetDir, "package.json"), sellerPackageJson(packageSpec, path.basename(targetDir)));
     await writeFile(path.join(targetDir, "index.ts"), sellerIndexSource());
     await writeFile(path.join(targetDir, ".env.example"), sellerEnvExample());
-  } else {
+  } else if (kind === "buyer") {
     await writeFile(path.join(targetDir, "package.json"), buyerPackageJson(packageSpec, path.basename(targetDir)));
     await writeFile(path.join(targetDir, "index.ts"), buyerIndexSource());
     await writeFile(path.join(targetDir, ".env.example"), buyerEnvExample());
+  } else {
+    if (!template) {
+      throw new Error("Agent template resolution failed.");
+    }
+    await writeFile(path.join(targetDir, "package.json"), agentPackageJson(packageSpec, path.basename(targetDir)));
+    await writeFile(path.join(targetDir, "index.ts"), agentIndexSource(template));
+    await writeFile(path.join(targetDir, "manifest.json"), `${JSON.stringify(agentManifest(template), null, 2)}\n`);
+    await writeFile(path.join(targetDir, "sign-manifest.ts"), signManifestSource());
+    await writeFile(path.join(targetDir, ".env.example"), agentEnvExample(template));
+    await writeFile(path.join(targetDir, "README.md"), agentReadmeSource(template));
   }
 
   io.stdout(`Scaffolded ${kind} starter in ${targetDir}`);
@@ -371,7 +931,7 @@ export async function runCli(argv: string[], io: CliIo = DEFAULT_IO): Promise<nu
     return runDemoCommand(subcommand, rest, io);
   }
 
-  if (command === "init" && (subcommand === "buyer" || subcommand === "seller")) {
+  if (command === "init" && (subcommand === "buyer" || subcommand === "seller" || subcommand === "agent")) {
     return scaffoldProject(subcommand, rest, io);
   }
 

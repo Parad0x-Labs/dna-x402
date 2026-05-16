@@ -60,6 +60,29 @@ describe("market safety policy", () => {
     expect(res.body.matched_keyword).toBe("vpn");
   });
 
+  it("blocks public wagering and gambling marketplace listings", async () => {
+    const { app } = createX402App(baseConfig, {
+      paymentVerifier: new FakeVerifier(),
+      receiptSigner: ReceiptSigner.generate(),
+    });
+
+    for (const [shopId, description, expectedKeyword] of [
+      ["shop-sports-betting", "sports betting odds automation", "sports betting"],
+      ["shop-event-contracts", "sports event contract market maker", "event contract"],
+      ["shop-casino", "casino poker and roulette bot", "casino"],
+    ] as const) {
+      const res = await request(app).post("/market/shops").send(makeSignedShop({
+        shopId,
+        capability: "market_tool",
+        description,
+        category: "workflow_tool",
+      })).expect(422);
+      expect(res.body.error).toBe("POLICY_BLOCKED");
+      expect(res.body.reason).toBe("denylist_match");
+      expect(res.body.matched_keyword).toBe(expectedKeyword);
+    }
+  });
+
   it("blocks publish for unsafe category", async () => {
     const { app } = createX402App(baseConfig, {
       paymentVerifier: new FakeVerifier(),

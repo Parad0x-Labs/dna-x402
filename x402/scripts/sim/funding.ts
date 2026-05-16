@@ -11,11 +11,10 @@ import {
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import {
-  TOKEN_PROGRAM_ID,
   getOrCreateAssociatedTokenAccount,
   createMint,
   mintTo,
-} from "@solana/spl-token";
+} from "./splTokenLite.js";
 import { EphemeralAgentWallet } from "./walletFactory.js";
 import { withRpcRetry } from "./retry.js";
 
@@ -47,11 +46,18 @@ export function resolveFunderKeypairPath(): string {
   if (envPath && fs.existsSync(envPath)) {
     return envPath;
   }
-  const fallback = path.join(process.env.HOME ?? "", ".config", "solana", "devnet-deployer.json");
-  if (fs.existsSync(fallback)) {
-    return fallback;
+  const workspaceFallbacks = [
+    path.resolve(process.cwd(), "test-mainnet", "keys", "devnet", "deployer.json"),
+    path.resolve(process.cwd(), "test-mainnet", "keys", "devnet", "funder.json"),
+  ];
+  for (const fallback of workspaceFallbacks) {
+    if (fs.existsSync(fallback)) {
+      return fallback;
+    }
   }
-  throw new Error("missing GAUNTLET_FUNDER_KEYPAIR and default ~/.config/solana/devnet-deployer.json not found");
+  throw new Error(
+    "missing GAUNTLET_FUNDER_KEYPAIR. Run `node test-mainnet/bootstrap-keys.mjs --cluster devnet` and fund x402/test-mainnet/keys/devnet/deployer.json.",
+  );
 }
 
 async function lamportsFor(connection: Connection, pubkey: PublicKey, commitment: Commitment): Promise<bigint> {
@@ -118,6 +124,61 @@ export async function snapshotSolBalances(params: {
   return rows;
 }
 
+export async function drainSolBalances(params: {
+  connection: Connection;
+  wallets: EphemeralAgentWallet[];
+  recipient: PublicKey;
+  reserveLamports?: bigint;
+  commitment?: Commitment;
+}): Promise<Array<{ agentId: string; pubkey: string; drainedLamports: string; signature?: string; error?: string }>> {
+  const commitment = params.commitment ?? "confirmed";
+  const reserveLamports = params.reserveLamports ?? 5_000n;
+  const rows: Array<{ agentId: string; pubkey: string; drainedLamports: string; signature?: string; error?: string }> = [];
+  for (const wallet of params.wallets) {
+    const balance = await lamportsFor(params.connection, wallet.pubkey, commitment);
+    if (balance <= reserveLamports) {
+      rows.push({
+        agentId: wallet.agentId,
+        pubkey: wallet.pubkey.toBase58(),
+        drainedLamports: "0",
+      });
+      continue;
+    }
+
+    const lamports = balance - reserveLamports;
+    try {
+      const tx = new Transaction().add(SystemProgram.transfer({
+        fromPubkey: wallet.pubkey,
+        toPubkey: params.recipient,
+        lamports: Number(lamports),
+      }));
+      const signature = await withRpcRetry(`drainSol:${wallet.agentId}`, () => sendAndConfirmTransaction(
+        params.connection,
+        tx,
+        [wallet.keypair],
+        {
+          commitment,
+          preflightCommitment: commitment,
+        },
+      ));
+      rows.push({
+        agentId: wallet.agentId,
+        pubkey: wallet.pubkey.toBase58(),
+        drainedLamports: lamports.toString(10),
+        signature,
+      });
+    } catch (error) {
+      rows.push({
+        agentId: wallet.agentId,
+        pubkey: wallet.pubkey.toBase58(),
+        drainedLamports: "0",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return rows;
+}
+
 export async function createGauntletMintAndFund(params: {
   connection: Connection;
   funder: Keypair;
@@ -138,9 +199,7 @@ export async function createGauntletMintAndFund(params: {
     params.funder.publicKey,
     null,
     params.decimals,
-    undefined,
-    { commitment, preflightCommitment: commitment },
-    TOKEN_PROGRAM_ID,
+    commitment,
   ));
 
   const recipientAtaAccount = await withRpcRetry("getOrCreateATA:recipient", () => getOrCreateAssociatedTokenAccount(
@@ -148,10 +207,7 @@ export async function createGauntletMintAndFund(params: {
     params.funder,
     mint,
     params.recipientOwner,
-    false,
     commitment,
-    { commitment, preflightCommitment: commitment },
-    TOKEN_PROGRAM_ID,
   ));
 
   const walletAtas = new Map<string, PublicKey>();
@@ -161,10 +217,7 @@ export async function createGauntletMintAndFund(params: {
       params.funder,
       mint,
       wallet.pubkey,
-      false,
       commitment,
-      { commitment, preflightCommitment: commitment },
-      TOKEN_PROGRAM_ID,
     ));
     walletAtas.set(wallet.agentId, ata.address);
 
@@ -174,10 +227,8 @@ export async function createGauntletMintAndFund(params: {
       mint,
       ata.address,
       params.funder,
-      Number(params.amountPerWalletAtomic),
-      [],
-      { commitment, preflightCommitment: commitment },
-      TOKEN_PROGRAM_ID,
+      params.amountPerWalletAtomic,
+      commitment,
     ));
   }
 
@@ -206,10 +257,7 @@ export async function fundExistingMint(params: {
     params.funder,
     params.mint,
     params.recipientOwner,
-    false,
     commitment,
-    { commitment, preflightCommitment: commitment },
-    TOKEN_PROGRAM_ID,
   ));
   const walletAtas = new Map<string, PublicKey>();
   for (const wallet of params.wallets) {
@@ -218,10 +266,7 @@ export async function fundExistingMint(params: {
       params.funder,
       params.mint,
       wallet.pubkey,
-      false,
       commitment,
-      { commitment, preflightCommitment: commitment },
-      TOKEN_PROGRAM_ID,
     ));
     walletAtas.set(wallet.agentId, ata.address);
     await withRpcRetry(`mintTo-existing:${wallet.agentId}`, () => mintTo(
@@ -230,10 +275,8 @@ export async function fundExistingMint(params: {
       params.mint,
       ata.address,
       params.funder,
-      Number(params.amountPerWalletAtomic),
-      [],
-      { commitment, preflightCommitment: commitment },
-      TOKEN_PROGRAM_ID,
+      params.amountPerWalletAtomic,
+      commitment,
     ));
   }
   return {

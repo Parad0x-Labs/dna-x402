@@ -7,6 +7,14 @@
     "site-agent:build": "npm --prefix site-agent run build",
     "site-agent:preview": "npm --prefix site-agent run preview -- --host --port 4174",
     "site-agent:test": "npm --prefix site-agent run test",
-    "site-agent:proof:sync": "npm --prefix site-agent run proof:sync"
+    "site-agent:proof:sync": "npm --prefix site-agent run proof:sync",
+    "mayhem:x402": "npm --prefix x402 run mayhem:x402",
+    "mayhem:x402:sandbox": "npm --prefix x402 run mayhem:x402:sandbox",
+    "mayhem:x402:server": "npm --prefix x402 run mayhem:x402:server",
+    "db:migrate": "npm --prefix x402 run db:migrate",
+    "db:health": "npm --prefix x402 run db:health",
+    "db:backup:test:postgres": "npm --prefix x402 run db:backup:test:postgres",
+    "acceptance:builder": "npm --prefix x402 run acceptance:builder",
+    "acceptance:agents": "npm --prefix x402 run acceptance:agents"
   }
 }

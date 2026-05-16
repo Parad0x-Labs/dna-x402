@@ -18,6 +18,7 @@ export function makeSignedShop(params: {
   settlementModes?: ShopManifest["endpoints"][number]["settlementModes"];
   maxLatencyMs?: number;
   availabilityTarget?: number;
+  builder?: ShopManifest["builder"];
 }): SignedShopManifest {
   const kp = nacl.sign.keyPair();
   const ownerPubkey = bs58.encode(kp.publicKey);
@@ -30,6 +31,7 @@ export function makeSignedShop(params: {
     ...(params.description ? { description: params.description } : {}),
     category: params.category ?? "ai_inference",
     ownerPubkey,
+    ...(params.builder ? { builder: params.builder } : {}),
     endpoints: [
       {
         endpointId: params.endpointId ?? `${params.shopId}-endpoint`,

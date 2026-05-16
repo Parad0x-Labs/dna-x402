@@ -1,0 +1,12 @@
+[package]
+name = "dna-x402-client"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Native Rust verification helpers for DNA x402 receipts and market quotes."
+
+[dependencies]
+bs58 = "0.5"
+ed25519-dalek = "2"
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.10"

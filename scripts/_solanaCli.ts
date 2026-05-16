@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
@@ -25,8 +24,11 @@ export function toSol(lamports: bigint): string {
 }
 
 export function runSolana(args: string[], cwd = process.cwd()): CliRunResult {
-  const cmd = `solana ${args.join(" ")}`;
-  const result = spawnSync("solana", args, {
+  const configured = process.env.SOLANA_CLI_PATH;
+  const workspaceSolana = path.resolve(cwd, ".tools", "solana-v1.18.26", "solana-release", "bin", process.platform === "win32" ? "solana.exe" : "solana");
+  const command = configured ?? (fs.existsSync(workspaceSolana) ? workspaceSolana : "solana");
+  const cmd = `${command} ${args.join(" ")}`;
+  const result = spawnSync(command, args, {
     cwd,
     encoding: "utf8",
   });
@@ -162,10 +164,14 @@ export function parsePositiveInt(value: string | undefined, fallback: number): n
 export function stageFileToTemp(sourcePath: string, suffix = ""): string {
   const sourceName = path.basename(sourcePath).replace(/[^a-zA-Z0-9._-]/g, "_");
   const digest = crypto.createHash("sha256").update(sourcePath).digest("hex").slice(0, 12);
-  const stageDir = path.join(os.tmpdir(), "dnp-deploy-stage");
+  const stageDir = path.resolve(process.env.DNA_X402_TMP_DIR ?? path.join(process.cwd(), ".tools", "tmp", "dnp-deploy-stage"));
   fs.mkdirSync(stageDir, { recursive: true });
   const targetPath = path.join(stageDir, `${sourceName}.${digest}${suffix}`);
   fs.copyFileSync(sourcePath, targetPath);
+  const relative = path.relative(process.cwd(), targetPath);
+  if (relative && !relative.startsWith("..") && !path.isAbsolute(relative)) {
+    return relative;
+  }
   return targetPath;
 }
 

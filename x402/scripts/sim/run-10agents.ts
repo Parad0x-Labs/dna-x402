@@ -108,6 +108,10 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
+function deterministicSignature(label: string): string {
+  return bs58.encode(crypto.createHash("sha512").update(label).digest());
+}
+
 function mulberry32(seed: number): () => number {
   let t = seed >>> 0;
   return () => {
@@ -854,7 +858,7 @@ async function scenarioFailureInjection(context: SimulationContext, seed: number
 
     if (draw < 0.2) {
       const underpay = await verifySplTransferProof(underpayConnection, {
-        txSignature: `underpay-${seed}-${i}`,
+        txSignature: deterministicSignature(`underpay-${seed}-${i}`),
         expectedMint: "usdc-mint",
         expectedRecipient: "recipient-wallet",
         minAmountAtomic: "100",
@@ -879,7 +883,7 @@ async function scenarioFailureInjection(context: SimulationContext, seed: number
 
     if (draw < 0.25) {
       const wrongRecipient = await verifySplTransferProof(wrongRecipientConnection, {
-        txSignature: `wrong-recipient-${seed}-${i}`,
+        txSignature: deterministicSignature(`wrong-recipient-${seed}-${i}`),
         expectedMint: "usdc-mint",
         expectedRecipient: "recipient-wallet",
         minAmountAtomic: "100",
@@ -1060,7 +1064,7 @@ export async function runTenAgentSimulation(options: {
     ],
   };
 
-  const repoRoot = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..", "..");
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
   const outPath = options.outPath
     ?? path.join(repoRoot, "reports", `sim-10agents-${new Date().toISOString().replace(/[:]/g, "-")}.json`);
 

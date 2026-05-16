@@ -1,0 +1,21 @@
+{
+  "name": "dna-x402-seller-paid-api-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
+    "test": "vitest run test/acceptance.test.ts"
+  },
+  "dependencies": {
+    "dark-null-protocol-workspace": "file:../..",
+    "dna-x402": "file:../../x402",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.6"
+  }
+}

@@ -3,7 +3,17 @@
   "version": "1.1.0",
   "type": "module",
   "description": "DNA Payment Rail — x402 SDK and CLI for AI agent buyers and sellers on Solana.",
-  "keywords": ["ai", "agents", "payments", "solana", "usdc", "micropayments", "x402", "dna", "machine-to-machine"],
+  "keywords": [
+    "ai",
+    "agents",
+    "payments",
+    "solana",
+    "usdc",
+    "micropayments",
+    "x402",
+    "dna",
+    "machine-to-machine"
+  ],
   "license": "MIT",
   "author": "Parad0x Labs",
   "repository": {
@@ -33,6 +43,10 @@
     "./paywall": "./dist/sdk/paywall.js",
     "./webhook": "./dist/sdk/webhook.js",
     "./audit": "./dist/logging/audit.js",
+    "./market/manifest": {
+      "types": "./dist/market/manifest.d.ts",
+      "default": "./dist/market/manifest.js"
+    },
     "./types": "./dist/types.js",
     "./bridge/liquefy": "./dist/bridge/liquefy/adapter.js"
   },
@@ -56,6 +70,7 @@
     "demo:buyer": "tsx src/cli.ts demo buyer",
     "init:seller": "tsx src/cli.ts init seller",
     "init:buyer": "tsx src/cli.ts init buyer",
+    "init:agent": "tsx src/cli.ts init agent",
     "dev": "tsx watch src/server.ts",
     "dev:market": "MARKET_ALLOW_DEV_INGEST=1 tsx watch src/server.ts",
     "dev:marketplace": "tsx watch src/marketplace/main.ts",
@@ -67,6 +82,7 @@
     "deploy:buffers:close": "tsx ../scripts/close-buffers.ts",
     "deploy:estimate": "tsx ../scripts/estimate-deploy-cost.ts",
     "deploy:preflight": "tsx scripts/deploy/preflight-authority.ts",
+    "production:evidence": "tsx scripts/deploy/production-evidence.ts",
     "deploy:receipt-anchor": "bash ../scripts/deploy/deploy-receipt-anchor.sh",
     "bench:txsize": "tsx scripts/bench/txsize-report.ts",
     "bench:compute": "tsx scripts/bench/profile-flows.ts",
@@ -75,12 +91,33 @@
     "sim:10agents": "tsx scripts/sim/run-10agents.ts",
     "sim:20agents": "tsx scripts/sim/run-20agents-gauntlet.ts",
     "sim:soak": "tsx scripts/sim/soak-10agents.ts",
+    "proof:bootstrap-keys": "node test-mainnet/bootstrap-keys.mjs",
+    "proof:mainnet:smoke": "node test-mainnet/run-tests.mjs",
+    "proof:mainnet:mayhem": "node test-mainnet/mayhem-50.mjs",
+    "proof:mainnet:recover": "node test-mainnet/recover-burners.mjs",
+    "drill:solana-usdc": "tsx scripts/drill/solana-usdc-private-drill.ts",
+    "proof:devnet:polyglot": "tsx scripts/sim/run-polyglot-devnet-proof.ts",
     "gauntlet:devnet:20": "tsx scripts/sim/run-20agents-gauntlet.ts --cluster devnet --agents 20 --duration-ms 120000",
     "audit:full": "tsx scripts/audit/run-full-audit.ts",
     "audit:programmable": "tsx scripts/audit/run-programmability-audit.ts",
     "audit:prod": "tsx scripts/audit/run-prod-audit.ts",
+    "mayhem:x402": "npm run mayhem:x402:sandbox && npm run mayhem:x402:server",
+    "mayhem:x402:sandbox": "tsx scripts/mayhem/x402-mayhem.ts",
+    "mayhem:x402:server": "tsx scripts/mayhem/x402-server-mayhem.ts",
+    "db:migrate": "tsx scripts/db/migrate.ts",
+    "db:reset": "tsx scripts/db/reset.ts",
+    "db:seed:sandbox": "tsx scripts/db/seed-sandbox.ts",
+    "db:health": "tsx scripts/db/health.ts",
+    "db:backup": "tsx scripts/db/backup.ts",
+    "db:restore": "tsx scripts/db/restore.ts",
+    "db:backup:test": "tsx scripts/db/backup-test.ts",
+    "db:backup:test:postgres": "tsx scripts/db/backup-postgres-test.ts",
+    "monitoring:test:telegram": "tsx scripts/monitoring/test-telegram-alert.ts",
+    "monitoring:telegram:status": "tsx scripts/monitoring/send-telegram-status.ts",
     "publish:proof-bundle": "tsx scripts/publish-proof-bundle.ts",
     "security:scan": "tsx scripts/security/scan-secrets.ts",
+    "acceptance:builder": "vitest run tests/builder.launch-pack.test.ts",
+    "acceptance:agents": "tsx ../examples/agent-wallet-client-ts/test/acceptance.test.ts && tsx ../examples/paper-polymarket-agent-ts/test/acceptance.test.ts && tsx ../examples/copy-settings-ts/test/acceptance.test.ts && tsx ../examples/alpha-monetization-ts/test/acceptance.test.ts && tsx ../examples/copied-lot-ledger-ts/test/acceptance.test.ts",
     "site:build": "npm --prefix ../site run build",
     "site-agent:dev": "npm --prefix ../site-agent run dev",
     "site-agent:build": "npm --prefix ../site-agent run build",
@@ -88,6 +125,9 @@
     "alt:extend": "tsx scripts/alt/extend-alt.ts",
     "alt:show": "tsx scripts/alt/show-alt.ts",
     "test": "vitest run",
+    "test:polyglot": "vitest run tests/polyglot-agents.test.ts",
+    "test:sdk:python": "python -m unittest discover -s sdk/python/tests",
+    "test:sdk:rust": "cargo test --manifest-path sdk/rust/dna-x402-client/Cargo.toml",
     "test:guard": "vitest run tests/guard*.test.ts tests/liquefy.bridge.test.ts",
     "test:market": "vitest run tests/market*.test.ts",
     "test:wow": "vitest run tests/market*.test.ts tests/openapi.import.test.ts",
@@ -99,15 +139,23 @@
   "overrides": {
     "bn.js": "^5.2.3"
   },
+  "peerDependencies": {
+    "@streamflow/stream": ">=11 <13"
+  },
+  "peerDependenciesMeta": {
+    "@streamflow/stream": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@solana/spl-token": "^0.4.14",
-    "@solana/web3.js": "^1.95.4",
-    "@streamflow/stream": "^11.0.0",
+    "@solana/web3.js": "^1.98.4",
+    "@types/pg": "^8.20.0",
     "bn.js": "^5.2.3",
     "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "express": "^5.2.1",
+    "pg": "^8.20.0",
     "tweetnacl": "^1.0.3",
     "zod": "^3.24.1"
   },
@@ -120,7 +168,7 @@
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.6"
   },
   "engines": {
     "node": ">=18"

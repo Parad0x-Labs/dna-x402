@@ -1,3 +1,5 @@
+import type { FeeCollectionStatus, FeeLine, FeeWaterfallV2, SplitPaymentProofRequirement } from "./fees/waterfall.js";
+
 export type AtomicAmount = string;
 
 export type SettlementMode = "transfer" | "stream" | "netting";
@@ -65,6 +67,7 @@ export interface Quote {
   expiresAt: string;
   settlement: SettlementMode[];
   memoHash: string;
+  feeWaterfallV2?: FeeWaterfallV2;
 }
 
 export interface CompetitiveQuote {
@@ -134,6 +137,24 @@ export interface ReceiptPayload {
   settledOnchain: boolean;
   txSignature?: string;
   streamId?: string;
+  splitPaymentProofs?: Array<{
+    feeLineId: string;
+    kind: string;
+    recipient: string;
+    amount: AtomicAmount;
+    token: string;
+    settlement: SettlementMode;
+    txSignature?: string;
+    streamId?: string;
+  }>;
+  feeWaterfallHash?: string;
+  feeLines?: FeeLine[];
+  feeCollectionSummary?: {
+    dnaPlatformFeeStatus?: FeeCollectionStatus;
+    builderFeeStatus?: FeeCollectionStatus;
+    affiliateFeeStatus?: FeeCollectionStatus;
+    alphaFeeStatus?: FeeCollectionStatus;
+  };
   createdAt: string;
 }
 
@@ -155,6 +176,34 @@ export interface QuoteResponse {
   quoteId: string;
   feeAtomic: AtomicAmount;
   totalAtomic: AtomicAmount;
+  feeWaterfall?: {
+    mode: "display_only" | "seller_accrual";
+    platformFeeBps: number;
+    platformFeeAtomic: AtomicAmount;
+    platformRecipient: string;
+    collected: false;
+    note: string;
+  };
+  feeWaterfallV2?: FeeWaterfallV2;
+}
+
+export interface RealChainFeeAccrualRecord {
+  id: string;
+  quoteId: string;
+  commitId: string;
+  receiptId: string;
+  resource: string;
+  payerCommitment32B: string;
+  amountAtomic: AtomicAmount;
+  platformFeeBps: number;
+  platformFeeAtomic: AtomicAmount;
+  platformRecipient: string;
+  settlement: SettlementMode;
+  txSignature?: string;
+  createdAt: string;
+  collected: false;
+  status: "ACCRUED_NOT_COLLECTED";
+  note: string;
 }
 
 export interface PaymentAccept {
@@ -170,6 +219,7 @@ export interface PaymentRequirements {
   version: "x402-dnp-v1";
   quote: QuoteResponse;
   accepts: PaymentAccept[];
+  splitPaymentRequirements?: SplitPaymentProofRequirement[];
   recommendedMode: SettlementMode;
   commitEndpoint: string;
   finalizeEndpoint: string;

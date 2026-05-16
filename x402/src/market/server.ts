@@ -14,6 +14,8 @@ import { importMcpTools } from "./import/mcp.js";
 import { importOpenApiSpec } from "./import/openapi.js";
 import { MarketOrders } from "./orders.js";
 import { findMatchedDenylistKeyword, isSafeCategory } from "./policy.js";
+import { PolicyAuditEvent, PolicyDecision } from "../policy/types.js";
+import { PolicyEngine } from "../policy/engine.js";
 import { QuoteBook } from "./quotes.js";
 import { ReputationEngine } from "./reputation.js";
 import { MarketRegistry } from "./registry.js";
@@ -34,6 +36,7 @@ interface CreateMarketDeps {
   eventBus?: MarketEventBus;
   analytics?: MarketAnalytics;
   reputation?: ReputationEngine;
+  policyEngine?: PolicyEngine;
   snapshotPath?: string;
   orderPollIntervalMs?: number;
   pauseMarket?: boolean;
@@ -53,6 +56,8 @@ export interface MarketContext {
   eventBus: MarketEventBus;
   analytics: MarketAnalytics;
   reputation: ReputationEngine;
+  policyEngine: PolicyEngine;
+  policyAuditEvents: PolicyAuditEvent[];
   signerPublicKey: string;
   orderPollTimer?: NodeJS.Timeout;
   pauseMarket: boolean;
@@ -175,6 +180,10 @@ function policyBlocked(error: {
   };
 }
 
+function policyDecisionBlocked(decision: PolicyDecision): boolean {
+  return !["ALLOW", "ALLOW_WITH_LIMITS"].includes(decision.state);
+}
+
 export function createMarketRouter(deps: CreateMarketDeps = {}): { router: express.Router; context: MarketContext } {
   const now = deps.now ?? (() => new Date());
   const signer = deps.signer ?? ReceiptSigner.generate();
@@ -204,8 +213,12 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   );
   const orders = deps.orders ?? new MarketOrders(quoteBook, now);
   const analytics = deps.analytics ?? new MarketAnalytics(storage, registry, quoteBook, now);
-  const pauseMarket = deps.pauseMarket ?? false;
-  const pauseOrders = deps.pauseOrders ?? false;
+  const policyEngine = deps.policyEngine ?? new PolicyEngine({ now });
+  const policyAuditEvents: PolicyAuditEvent[] = [];
+  const pauseState = {
+    market: deps.pauseMarket ?? false,
+    orders: deps.pauseOrders ?? false,
+  };
   const bundleExecutor = deps.bundleExecutor ?? new BundleExecutor(bundles, quoteBook, {
     now,
     recordEvent: (event) => recordEvent(event),
@@ -285,7 +298,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   router.use(cors());
   router.use(express.json());
   router.use((req, res, next) => {
-    if (!pauseMarket) {
+    if (!pauseState.market) {
       next();
       return;
     }
@@ -329,10 +342,45 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
         }));
         return;
       }
+      const decision = policyEngine.decide({
+        actor: {
+          sellerWallet: signed.manifest.ownerPubkey,
+          jurisdictionFlags: [],
+        },
+        listing: {
+          listingId: signed.manifest.shopId,
+          manifestHash: signed.manifestHash,
+          category: signed.manifest.category,
+          capabilityTags: signed.manifest.endpoints.flatMap((endpoint) => endpoint.capabilityTags),
+          riskTier: "LOW",
+          physicalGoods: false,
+          regulatedGoods: false,
+          publicMarketplace: true,
+        },
+        transaction: {
+          action: "PUBLISH",
+        },
+        system: {
+          emergencyPaused: false,
+          marketplacePaused: pauseState.market,
+          finalizePaused: false,
+          policyVersion: "policy-v1",
+        },
+      });
+      policyAuditEvents.push(policyEngine.auditEvent(decision));
+      if (policyDecisionBlocked(decision)) {
+        res.status(422).json({
+          ok: false,
+          error: "POLICY_DECISION_BLOCKED",
+          decision,
+        });
+        return;
+      }
       registry.register(signed);
       res.status(201).json({
         ok: true,
         shopId: signed.manifest.shopId,
+        policyDecisionId: decision.decisionId,
         seller_defined: true,
         verifiable: {
           receipt: true,
@@ -418,6 +466,21 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     });
   });
 
+  router.get("/shops/:shopId/versions", (req, res) => {
+    const versions = registry.versions(req.params.shopId).map((signed, index) => ({
+      version: index + 1,
+      manifestHash: signed.manifestHash,
+      publishedAt: signed.publishedAt,
+      endpointCount: signed.manifest.endpoints.length,
+      category: signed.manifest.category,
+    }));
+    if (versions.length === 0) {
+      res.status(404).json({ error: "shop not found" });
+      return;
+    }
+    res.json({ shopId: req.params.shopId, versions });
+  });
+
   router.get("/search", (req, res) => {
     const parsed = searchQuerySchema.safeParse(req.query);
     if (!parsed.success) {
@@ -492,6 +555,37 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
       maxLatencyMs: parsed.data.maxLatencyMs,
       limit: parsed.data.limit,
       mint: parsed.data.mint,
+    }).filter((quote) => {
+      const shop = registry.get(quote.shopId);
+      const endpoint = shop?.endpoints.find((item) => item.endpointId === quote.endpointId);
+      const decision = policyEngine.decide({
+        actor: {
+          jurisdictionFlags: [],
+        },
+        listing: {
+          listingId: quote.shopId,
+          category: shop?.category ?? "UNKNOWN",
+          capabilityTags: endpoint?.capabilityTags ?? quote.capabilityTags,
+          riskTier: "LOW",
+          physicalGoods: false,
+          regulatedGoods: false,
+          publicMarketplace: true,
+        },
+        transaction: {
+          action: "QUOTE",
+          amount: quote.price,
+          token: quote.mint,
+          settlementMode: quote.settlementModes[0],
+        },
+        system: {
+          emergencyPaused: false,
+          marketplacePaused: pauseState.market,
+          finalizePaused: false,
+          policyVersion: "policy-v1",
+        },
+      });
+      policyAuditEvents.push(policyEngine.auditEvent(decision));
+      return !policyDecisionBlocked(decision);
     });
 
     for (const quote of quotes) {
@@ -507,6 +601,10 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
 
     const labeledQuotes = quotes.map((quote) => ({
       ...quote,
+      policy: {
+        version: "policy-v1",
+        checked: true,
+      },
       trust: getShopTrust(quote.shopId),
       seller_defined: true,
       verifiable: {
@@ -607,7 +705,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   router.post("/orders", (req, res) => {
-    if (pauseOrders) {
+    if (pauseState.orders) {
       res.status(503).json({ ok: false, error: "orders_paused", message: "Order routes are paused (PAUSE_ORDERS)." });
       return;
     }
@@ -631,7 +729,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   router.get("/orders", (_req, res) => {
-    if (pauseOrders) {
+    if (pauseState.orders) {
       res.status(503).json({ ok: false, error: "orders_paused", message: "Order routes are paused (PAUSE_ORDERS)." });
       return;
     }
@@ -639,7 +737,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   router.get("/orders/:id", (req, res) => {
-    if (pauseOrders) {
+    if (pauseState.orders) {
       res.status(503).json({ ok: false, error: "orders_paused", message: "Order routes are paused (PAUSE_ORDERS)." });
       return;
     }
@@ -659,7 +757,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   router.post("/orders/:id/cancel", (req, res) => {
-    if (pauseOrders) {
+    if (pauseState.orders) {
       res.status(503).json({ ok: false, error: "orders_paused", message: "Order routes are paused (PAUSE_ORDERS)." });
       return;
     }
@@ -679,7 +777,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   router.post("/orders/poll", (_req, res) => {
-    if (pauseOrders) {
+    if (pauseState.orders) {
       res.status(503).json({ ok: false, error: "orders_paused", message: "Order routes are paused (PAUSE_ORDERS)." });
       return;
     }
@@ -799,6 +897,19 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     }
     if (!parsed.data.ownerPubkey && !parsed.data.shopId) {
       res.status(400).json({ error: "ownerPubkey or shopId is required" });
+      return;
+    }
+
+    const requesterOwner = req.header("x-dna-seller-owner");
+    const adminView = req.header("x-dna-admin-view") === "1";
+    const requestedShop = parsed.data.shopId ? registry.get(parsed.data.shopId, true) : undefined;
+    const effectiveOwner = parsed.data.ownerPubkey ?? requestedShop?.ownerPubkey;
+    if (!adminView && (!requesterOwner || !effectiveOwner || requesterOwner !== effectiveOwner)) {
+      res.status(403).json({
+        ok: false,
+        error: "raw_graph_access_denied",
+        message: "Seller analytics require seller owner proof or an audited admin path.",
+      });
       return;
     }
 
@@ -947,7 +1058,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
   });
 
   const pollMs = deps.orderPollIntervalMs ?? 5_000;
-  const orderPollTimer = pauseOrders ? undefined : setInterval(() => {
+  const orderPollTimer = pauseState.orders ? undefined : setInterval(() => {
     const executed = orders.poll();
     handleExecutedOrders(executed);
   }, Math.max(1_000, pollMs));
@@ -964,10 +1075,22 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     eventBus,
     analytics,
     reputation,
+    policyEngine,
+    policyAuditEvents,
     signerPublicKey: signer.signerPublicKey,
     orderPollTimer,
-    pauseMarket,
-    pauseOrders,
+    get pauseMarket() {
+      return pauseState.market;
+    },
+    set pauseMarket(value: boolean) {
+      pauseState.market = value;
+    },
+    get pauseOrders() {
+      return pauseState.orders;
+    },
+    set pauseOrders(value: boolean) {
+      pauseState.orders = value;
+    },
     recordEvent,
   };
 

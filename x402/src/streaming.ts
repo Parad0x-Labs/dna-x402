@@ -1,19 +1,76 @@
+import { createRequire } from "node:module";
 import BN from "bn.js";
-import {
-  ICluster,
-  type ICreateResult,
-  type ICreateStreamData,
-  type ICreateStreamExt,
-  type IGetOneData,
-  type ITopUpData,
-  type ITopUpStreamExt,
-  type ITransactionResult,
-  SolanaStreamClient,
-  type Stream,
-} from "@streamflow/stream";
+
+const require = createRequire(import.meta.url);
+
+export type StreamCluster = unknown;
+
+interface CreateStreamData {
+  recipient: string;
+  tokenId: string;
+  amount: BN;
+  start: number;
+  period: number;
+  cliff: number;
+  cliffAmount: BN;
+  amountPerPeriod: BN;
+  name: string;
+  canTopup: boolean;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  withdrawalFrequency: number;
+}
+
+interface CreateStreamExt {
+  sender: unknown;
+  isNative: boolean;
+}
+
+interface CreateStreamResult {
+  metadataId: string;
+  txId: string;
+}
+
+interface TopupStreamData {
+  id: string;
+  amount: BN;
+}
+
+interface TopupStreamExt {
+  invoker: unknown;
+  isNative: boolean;
+}
+
+interface TransactionResult {
+  txId: string;
+}
+
+interface GetOneData {
+  id: string;
+}
+
+interface StreamRecord {
+  sender: string;
+  recipient: string;
+  mint: string;
+  depositedAmount: { toString(radix?: number): string };
+  withdrawnAmount: { toString(radix?: number): string };
+  canTopup: boolean;
+  closed: boolean;
+}
+
+interface StreamflowModule {
+  ICluster?: {
+    Devnet?: StreamCluster;
+  };
+  SolanaStreamClient: new (clusterUrl: string, cluster?: StreamCluster) => StreamClientLike;
+}
 
 export interface CreateStreamParams {
-  sender: ICreateStreamExt["sender"];
+  sender: unknown;
   recipient: string;
   mint: string;
   amountAtomic: string;
@@ -24,7 +81,7 @@ export interface CreateStreamParams {
 }
 
 export interface TopupStreamParams {
-  invoker: ITopUpStreamExt["invoker"];
+  invoker: unknown;
   streamId: string;
   amountAtomic: string;
 }
@@ -41,9 +98,9 @@ export interface StreamState {
 }
 
 export interface StreamClientLike {
-  create(data: ICreateStreamData, extParams: ICreateStreamExt): Promise<ICreateResult>;
-  topup(data: ITopUpData, extParams: ITopUpStreamExt): Promise<ITransactionResult>;
-  getOne(data: IGetOneData): Promise<Stream>;
+  create(data: CreateStreamData, extParams: CreateStreamExt): Promise<CreateStreamResult>;
+  topup(data: TopupStreamData, extParams: TopupStreamExt): Promise<TransactionResult>;
+  getOne(data: GetOneData): Promise<StreamRecord>;
 }
 
 function parseAtomic(value: string): bigint {
@@ -53,15 +110,25 @@ function parseAtomic(value: string): bigint {
   return BigInt(value);
 }
 
+function loadStreamflowModule(): StreamflowModule {
+  try {
+    return require("@streamflow/stream") as StreamflowModule;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`@streamflow/stream is optional. Install it or pass a StreamClientLike client. Cause: ${message}`);
+  }
+}
+
 export class StreamingService {
   private readonly client: StreamClientLike;
 
-  constructor(params: { clusterUrl: string; cluster?: ICluster; client?: StreamClientLike }) {
+  constructor(params: { clusterUrl: string; cluster?: StreamCluster; client?: StreamClientLike }) {
     if (params.client) {
       this.client = params.client;
       return;
     }
-    this.client = new SolanaStreamClient(params.clusterUrl, params.cluster ?? ICluster.Devnet);
+    const streamflow = loadStreamflowModule();
+    this.client = new streamflow.SolanaStreamClient(params.clusterUrl, params.cluster ?? streamflow.ICluster?.Devnet);
   }
 
   async createStream(params: CreateStreamParams): Promise<{ streamId: string; txId: string }> {
@@ -74,7 +141,7 @@ export class StreamingService {
     const amountPerPeriod = totalAmount / BigInt(periods);
     const cliffAmount = totalAmount % BigInt(periods);
 
-    const data: ICreateStreamData = {
+    const data: CreateStreamData = {
       recipient: params.recipient,
       tokenId: params.mint,
       amount: new BN(totalAmount.toString()),

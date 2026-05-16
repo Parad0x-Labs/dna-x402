@@ -8,15 +8,30 @@ export type AuditEventKind =
   | "PAYMENT_VERIFIED"
   | "PAYMENT_REJECTED"
   | "RECEIPT_ISSUED"
+  | "RECEIPT_BLOCKED"
   | "RECEIPT_ANCHORED"
   | "NETTING_FLUSH"
   | "WEBHOOK_SENT"
+  | "WEBHOOK_RECEIVED"
+  | "WEBHOOK_REPLAY_REJECTED"
   | "WEBHOOK_FAILED"
   | "RATE_LIMITED"
   | "PAUSE_ACTIVATED"
   | "PAUSE_DEACTIVATED"
   | "SHOP_REGISTERED"
   | "SHOP_DISABLED"
+  | "GOVERNANCE_ACTION"
+  | "ADMIN_ACTION"
+  | "AGENT_WALLET_REGISTERED"
+  | "PAPER_AGENT_ACCOUNT_CREATED"
+  | "PAPER_TRADE_RECORDED"
+  | "AGENT_PROFILE_UPDATED"
+  | "ALPHA_MONETIZATION_UPDATED"
+  | "COPY_SETTINGS_CREATED"
+  | "COPY_SETTINGS_UPDATED"
+  | "COPY_SETTINGS_PAUSED"
+  | "COPY_DECISION_EVALUATED"
+  | "COPIED_LOT_FINALIZED"
   | "CONFIG_LOADED"
   | "SERVER_STARTED"
   | "SERVER_STOPPED"
@@ -156,7 +171,9 @@ export class AuditLogger {
         case "PAYMENT_REJECTED": paymentsRejected++; break;
         case "RECEIPT_ISSUED": receiptsIssued++; break;
         case "RECEIPT_ANCHORED": receiptsAnchored++; break;
-        case "WEBHOOK_SENT": webhooksSent++; break;
+        case "WEBHOOK_SENT":
+        case "WEBHOOK_RECEIVED": webhooksSent++; break;
+        case "WEBHOOK_REPLAY_REJECTED":
         case "WEBHOOK_FAILED": webhooksFailed++; break;
         case "RATE_LIMITED": rateLimited++; break;
       }

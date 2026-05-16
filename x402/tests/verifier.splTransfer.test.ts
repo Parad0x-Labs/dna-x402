@@ -53,6 +53,60 @@ describe("strict SPL transfer verifier", () => {
     expect(verified.amountObservedAtomic).toBe("2000");
   });
 
+  it("requires an allowlisted signer when real-chain drill signer allowlist is configured", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        return { value: { err: null } };
+      },
+      async getParsedTransaction() {
+        return {
+          slot: 123,
+          blockTime: Math.floor(Date.now() / 1000),
+          meta: {
+            err: null,
+            preTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "1000" } },
+            ],
+            postTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "3000" } },
+            ],
+          },
+          transaction: {
+            message: {
+              accountKeys: [
+                { pubkey: "buyer-wallet-1", signer: true },
+                { pubkey: "recipient-wallet", signer: false },
+              ],
+              instructions: [],
+            },
+          },
+        };
+      },
+      async getBlockTime() {
+        return Math.floor(Date.now() / 1000);
+      },
+    };
+
+    const accepted = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1500",
+      allowedSignerWallets: ["buyer-wallet-1"],
+    });
+    expect(accepted.ok).toBe(true);
+
+    const rejected = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1500",
+      allowedSignerWallets: ["other-wallet"],
+    });
+    expect(rejected.ok).toBe(false);
+    expect(rejected.error).toContain("not allowlisted");
+  });
+
   it("rejects wrong recipient/mint or underpayment", async () => {
     const connection: any = {
       async getSignatureStatus() {

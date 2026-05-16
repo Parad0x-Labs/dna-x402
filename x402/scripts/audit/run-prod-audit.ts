@@ -39,20 +39,76 @@ function runCommand(cwd: string, name: string, command: string, args: string[]):
   };
 }
 
-function runUsersPathCheck(repoRoot: string): CheckResult {
-  const absoluteUsersNeedle = `${path.sep}Users${path.sep}`;
-  const grepArgs = ["grep", "-n", absoluteUsersNeedle];
-  const result = spawnSync("git", grepArgs, {
+function npmArgs(args: string[]): { command: string; args: string[] } {
+  if (process.env.npm_execpath) {
+    return { command: process.execPath, args: [process.env.npm_execpath, ...args] };
+  }
+  return { command: process.platform === "win32" ? "npm.cmd" : "npm", args };
+}
+
+function runNpm(cwd: string, name: string, args: string[]): CheckResult {
+  const resolved = npmArgs(args);
+  return runCommand(cwd, name, resolved.command, resolved.args);
+}
+
+function trackedFiles(repoRoot: string): string[] {
+  const result = spawnSync("git", ["ls-files"], {
     cwd: repoRoot,
     env: process.env,
     encoding: "utf8",
   });
+  if ((result.status ?? 1) !== 0) {
+    throw new Error(result.stderr || "git ls-files failed");
+  }
+  return (result.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
 
-  if (result.status === 1) {
+function looksTextual(filePath: string): boolean {
+  const extension = path.extname(filePath).toLowerCase();
+  return ![
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".ico",
+    ".wasm",
+    ".zip",
+    ".gz",
+    ".tgz",
+    ".bz2",
+    ".exe",
+    ".dll",
+    ".so",
+    ".dylib",
+  ].includes(extension);
+}
+
+function runUsersPathCheck(repoRoot: string): CheckResult {
+  const findings: string[] = [];
+  for (const relPath of trackedFiles(repoRoot)) {
+    const absolute = path.join(repoRoot, relPath);
+    if (!looksTextual(absolute)) {
+      continue;
+    }
+    try {
+      const text = fs.readFileSync(absolute, "utf8");
+      const lines = text.split(/\r?\n/);
+      for (let i = 0; i < lines.length; i += 1) {
+        if (/\/Users\//.test(lines[i]) || /[A-Za-z]:\\Users\\/.test(lines[i])) {
+          findings.push(`${relPath}:${i + 1}:${lines[i].trim().slice(0, 160)}`);
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  if (findings.length === 0) {
     return {
       name: "no_absolute_users_paths",
       ok: true,
-      command: `git ${grepArgs.join(" ")}`,
+      command: "git ls-files + node path scan",
       details: "no tracked absolute user-home paths found",
       stdout: "",
       stderr: "",
@@ -62,10 +118,10 @@ function runUsersPathCheck(repoRoot: string): CheckResult {
   return {
     name: "no_absolute_users_paths",
     ok: false,
-    command: `git ${grepArgs.join(" ")}`,
+    command: "git ls-files + node path scan",
     details: "tracked files still contain absolute user-home paths",
-    stdout: result.stdout ?? "",
-    stderr: result.stderr ?? "",
+    stdout: findings.join("\n"),
+    stderr: "",
   };
 }
 
@@ -108,9 +164,14 @@ function main(): void {
   const checks: CheckResult[] = [];
 
   checks.push(runRequiredFilesCheck(repoRoot));
-  checks.push(runCommand(x402Dir, "security_scan", "npm", ["run", "security:scan"]));
+  checks.push(runNpm(x402Dir, "build", ["run", "build"]));
+  checks.push(runNpm(x402Dir, "security_scan", ["run", "security:scan"]));
   checks.push(runUsersPathCheck(repoRoot));
-  checks.push(runCommand(x402Dir, "dx_security_tests", "npx", [
+  checks.push(runNpm(x402Dir, "prod_dependency_audit", ["audit", "--omit", "dev", "--audit-level=high"]));
+  checks.push(runNpm(x402Dir, "full_dependency_audit", ["audit", "--audit-level=high"]));
+  checks.push(runNpm(x402Dir, "dx_security_tests", [
+    "exec",
+    "--",
     "vitest",
     "run",
     "tests/x402.errors.test.ts",
@@ -119,6 +180,9 @@ function main(): void {
     "tests/receipt.binding.test.ts",
     "tests/logging.redact.test.ts",
   ]));
+  checks.push(runNpm(x402Dir, "site_agent_build", ["--prefix", "../site-agent", "run", "build"]));
+  checks.push(runNpm(x402Dir, "site_agent_prod_dependency_audit", ["--prefix", "../site-agent", "audit", "--omit", "dev", "--audit-level=high"]));
+  checks.push(runNpm(x402Dir, "site_agent_full_dependency_audit", ["--prefix", "../site-agent", "audit", "--audit-level=high"]));
 
   const overallOk = checks.every((check) => check.ok);
   const report: ProdAuditReport = {

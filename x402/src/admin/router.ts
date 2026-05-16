@@ -1,9 +1,9 @@
 import express from "express";
-import crypto from "node:crypto";
 import type { X402AppContext } from "../server.js";
 import type { AuditLogger } from "../logging/audit.js";
 import type { X402Config } from "../config.js";
 import { toAtomicString } from "../feePolicy.js";
+import { adminAuth } from "./auth.js";
 
 export interface AdminRouterDeps {
   context: X402AppContext;
@@ -12,27 +12,12 @@ export interface AdminRouterDeps {
   adminSecret?: string;
 }
 
-function adminAuth(secret?: string) {
-  return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-    if (!secret) {
-      next();
-      return;
-    }
-    const token = req.header("x-admin-token") ?? req.query.adminToken;
-    if (token !== secret) {
-      res.status(403).json({ error: "forbidden", message: "Invalid admin token" });
-      return;
-    }
-    next();
-  };
-}
-
 export function createAdminRouter(deps: AdminRouterDeps): express.Router {
   const { context, auditLog, config, adminSecret } = deps;
   const router = express.Router();
   const startedAt = new Date().toISOString();
 
-  router.use(adminAuth(adminSecret));
+  router.use(adminAuth({ secret: adminSecret, allowInsecure: config.allowInsecure }));
 
   router.get("/overview", (_req, res) => {
     const quotesCount = context.quotes.size;
@@ -119,6 +104,126 @@ export function createAdminRouter(deps: AdminRouterDeps): express.Router {
     res.send(auditLog.exportNdjson(since));
   });
 
+  router.get("/x402/policy", (req, res) => {
+    const state = req.query.state as string | undefined;
+    const action = req.query.action as string | undefined;
+    const entries = context.market.policyAuditEvents
+      .filter((event) => (state ? event.state === state : true))
+      .filter((event) => (action ? event.reasonCodes.some((reason) => reason.includes(action)) : true));
+    res.json({ count: entries.length, entries });
+  });
+
+  router.get("/x402/audit", (req, res) => {
+    const kind = req.query.kind as string | undefined;
+    const since = req.query.since as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 200;
+    res.json({ entries: auditLog.query({ kind: kind as any, since, limit }) });
+  });
+
+  router.get("/x402/denylist", (_req, res) => {
+    res.json({ entries: context.governance.listDenylistEntries() });
+  });
+
+  router.post("/x402/denylist", (req, res) => {
+    try {
+      const body = req.body ?? {};
+      const entry = context.governance.addDenylistEntry({
+        subjectType: body.subjectType,
+        subjectValue: body.subjectValue,
+        reasonCode: body.reasonCode,
+        evidenceRefs: Array.isArray(body.evidenceRefs) ? body.evidenceRefs : [],
+        severity: body.severity,
+        createdBy: body.createdBy ?? body.actorId ?? "admin",
+        expiresAt: body.expiresAt,
+      });
+      auditLog.record({ kind: "GOVERNANCE_ACTION", meta: { action: "denylist.create", entryId: entry.entryId, subjectType: entry.subjectType } });
+      res.status(201).json({ ok: true, entry });
+    } catch (error) {
+      res.status(400).json({ ok: false, error: (error as Error).message });
+    }
+  });
+
+  router.post("/x402/denylist/:entryId/revoke", (req, res) => {
+    try {
+      const entry = context.governance.updateDenylistStatus(req.params.entryId, "REVOKED", req.body?.actorId ?? "admin");
+      auditLog.record({ kind: "GOVERNANCE_ACTION", meta: { action: "denylist.revoke", entryId: entry.entryId } });
+      res.json({ ok: true, entry });
+    } catch (error) {
+      res.status(404).json({ ok: false, error: (error as Error).message });
+    }
+  });
+
+  router.get("/x402/appeals", (_req, res) => {
+    res.json({ appeals: context.governance.listAppeals() });
+  });
+
+  router.post("/x402/appeals", (req, res) => {
+    try {
+      const body = req.body ?? {};
+      const appeal = context.governance.openAppeal({
+        subjectType: body.subjectType,
+        subjectId: body.subjectId,
+        policyDecisionId: body.policyDecisionId,
+        reason: body.reason,
+        evidenceRefs: Array.isArray(body.evidenceRefs) ? body.evidenceRefs : [],
+      });
+      auditLog.record({ kind: "GOVERNANCE_ACTION", meta: { action: "appeal.open", appealId: appeal.appealId } });
+      res.status(201).json({ ok: true, appeal });
+    } catch (error) {
+      res.status(400).json({ ok: false, error: (error as Error).message });
+    }
+  });
+
+  router.post("/x402/appeals/:appealId/resolve", (req, res) => {
+    try {
+      const body = req.body ?? {};
+      const appeal = context.governance.resolveAppeal(
+        req.params.appealId,
+        body.reviewer ?? "admin",
+        Boolean(body.approved),
+        body.resolutionReason ?? "resolved",
+        ["appeal_reviewer"],
+      );
+      auditLog.record({ kind: "GOVERNANCE_ACTION", meta: { action: "appeal.resolve", appealId: appeal.appealId, status: appeal.status } });
+      res.json({ ok: true, appeal });
+    } catch (error) {
+      res.status(400).json({ ok: false, error: (error as Error).message });
+    }
+  });
+
+  router.get("/x402/emergency", (_req, res) => {
+    res.json({
+      state: context.emergencyPause.snapshot(),
+      history: context.emergencyPause.history(),
+    });
+  });
+
+  router.post("/x402/emergency", async (req, res) => {
+    try {
+      const body = req.body ?? {};
+      const state = await context.emergencyPause.setFlag({
+        flag: body.flag,
+        enabled: Boolean(body.enabled),
+        reason: body.reason,
+        actorId: body.actorId,
+      });
+      if (body.flag === "marketplacePaused") {
+        context.market.pauseMarket = Boolean(body.enabled);
+      }
+      if (body.flag === "sellerListingUpdatesPaused") {
+        context.market.pauseMarket = Boolean(body.enabled);
+      }
+      auditLog.record({
+        kind: body.enabled ? "PAUSE_ACTIVATED" : "PAUSE_DEACTIVATED",
+        actor: body.actorId,
+        meta: { flag: body.flag, reason: body.reason },
+      });
+      res.json({ ok: true, state });
+    } catch (error) {
+      res.status(400).json({ ok: false, error: (error as Error).message });
+    }
+  });
+
   router.get("/receipts", (_req, res) => {
     const entries = Array.from(context.receipts.values()).map((r) => ({
       receiptId: r.payload.receiptId,
@@ -190,8 +295,37 @@ export function createAdminRouter(deps: AdminRouterDeps): express.Router {
   router.post("/market/shops/:shopId/disable", (req, res) => {
     const { shopId } = req.params;
     context.market.registry.disable(shopId);
-    auditLog.record({ kind: "SHOP_DISABLED", shopId });
+    auditLog.record({ kind: "SHOP_DISABLED", shopId, meta: { action: "listing.disable", actorId: req.body?.actorId ?? req.header("x-admin-actor") ?? "admin" } });
     res.json({ ok: true, shopId, disabled: true });
+  });
+
+  router.post("/market/shops/:shopId/restore", (req, res) => {
+    const { shopId } = req.params;
+    const existing = context.market.registry.getSigned(shopId, true);
+    if (!existing) {
+      res.status(404).json({ ok: false, error: "shop_not_found" });
+      return;
+    }
+    context.market.registry.enable(shopId);
+    auditLog.record({
+      kind: "ADMIN_ACTION",
+      shopId,
+      meta: {
+        action: "listing.restore",
+        actorId: req.body?.actorId ?? req.header("x-admin-actor") ?? "admin",
+        reason: req.body?.reason ?? "restore requested",
+      },
+    });
+    res.json({ ok: true, shopId, disabled: false });
+  });
+
+  router.get("/market/events/raw", (req, res) => {
+    auditLog.record({
+      kind: "ADMIN_ACTION",
+      actor: req.header("x-admin-actor") ?? "admin",
+      meta: { action: "market.events.raw.read" },
+    });
+    res.json({ events: context.market.storage.all() });
   });
 
   router.get("/replay-store", (_req, res) => {

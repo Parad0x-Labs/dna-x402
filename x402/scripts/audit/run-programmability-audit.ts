@@ -132,6 +132,15 @@ interface PrimitiveRuntimeResult {
   notes: string[];
 }
 
+const AUDIT_ADMIN_SECRET = process.env.ADMIN_SECRET ?? "local-programmability-audit-admin-secret";
+
+function adminJsonHeaders(): Record<string, string> {
+  return {
+    "content-type": "application/json",
+    "x-admin-token": AUDIT_ADMIN_SECRET,
+  };
+}
+
 function parseFlagValue(args: string[], flag: string): string | undefined {
   const i = args.findIndex((arg) => arg === flag);
   if (i === -1 || i + 1 >= args.length) {
@@ -144,8 +153,44 @@ function hasFlag(args: string[], flag: string): boolean {
   return args.includes(flag);
 }
 
+function npmCommand(args: string[]): { command: string; args: string[] } {
+  if (process.env.npm_execpath) {
+    return { command: process.execPath, args: [process.env.npm_execpath, ...args] };
+  }
+  return { command: process.platform === "win32" ? "npm.cmd" : "npm", args };
+}
+
+function solanaCommand(args: string[], cwd: string): { command: string; args: string[] } {
+  const configured = process.env.SOLANA_CLI_PATH;
+  if (configured) {
+    return { command: configured, args };
+  }
+  const candidateRoots = [cwd, path.resolve(cwd, "..")];
+  for (const root of candidateRoots) {
+    const workspaceSolana = path.resolve(root, ".tools", "solana-v1.18.26", "solana-release", "bin", process.platform === "win32" ? "solana.exe" : "solana");
+    if (fs.existsSync(workspaceSolana)) {
+      return { command: workspaceSolana, args };
+    }
+  }
+  return { command: "solana", args };
+}
+
+function resolveToolCommand(command: string, args: string[], cwd: string): { command: string; args: string[] } {
+  if (command === "node") {
+    return { command: process.execPath, args };
+  }
+  if (command === "npm") {
+    return npmCommand(args);
+  }
+  if (command === "solana") {
+    return solanaCommand(args, cwd);
+  }
+  return { command, args };
+}
+
 function runCommand(command: string, args: string[], cwd: string): { status: number; stdout: string; stderr: string } {
-  const out = spawnSync(command, args, {
+  const resolved = resolveToolCommand(command, args, cwd);
+  const out = spawnSync(resolved.command, resolved.args, {
     cwd,
     encoding: "utf8",
     env: process.env,
@@ -588,7 +633,7 @@ async function runPrimitiveFlow(
 
     const flush = await fetch(`${baseUrl}/settlements/flush`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: adminJsonHeaders(),
       body: JSON.stringify({ nowMs: Date.now() + 3600_000 }),
     });
     const flushJson = await flush.json() as {
@@ -876,8 +921,14 @@ async function main(): Promise<void> {
   );
 
   const base = loadConfig();
-  const fallbackKeypairPath = path.join(process.env.HOME ?? "", ".config", "solana", "devnet-deployer.json");
-  const autoKeypairPath = base.anchoringKeypairPath ?? (fs.existsSync(fallbackKeypairPath) ? fallbackKeypairPath : undefined);
+  const workspaceKeypairPath = path.resolve(repoRoot, "x402", "test-mainnet", "keys", "devnet", "anchoring.json");
+  const workspaceDeployerPath = path.resolve(repoRoot, "x402", "test-mainnet", "keys", "devnet", "deployer.json");
+  const autoKeypairPath = base.anchoringKeypairPath
+    ?? (fs.existsSync(workspaceKeypairPath)
+      ? workspaceKeypairPath
+      : fs.existsSync(workspaceDeployerPath)
+        ? workspaceDeployerPath
+        : undefined);
   const autoProgramId = base.receiptAnchorProgramId ?? process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF";
   const anchoringEnabled = Boolean(autoProgramId && autoKeypairPath);
   const baseConfig: X402Config = {
@@ -893,6 +944,7 @@ async function main(): Promise<void> {
     anchoringBatchSize: 1,
     anchoringFlushIntervalMs: 1_000,
     anchoringSignatureLogPath: path.resolve(repoRoot, "reports", "anchor_tx_sigs.txt"),
+    adminSecret: base.adminSecret ?? AUDIT_ADMIN_SECRET,
   };
 
   let baseUrl = baseUrlArg;

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
 import { NettingLedger } from "../src/nettingLedger.js";
@@ -514,7 +515,7 @@ async function main(): Promise<void> {
   const onlyIndex = onlyIndexRaw !== undefined ? Number.parseInt(onlyIndexRaw, 10) : undefined;
   const failFast = hasFlag(argv, "--fail-fast");
 
-  const repoRoot = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..");
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const outPath = parseFlagValue(argv, "--out")
     ?? path.join(repoRoot, "reports", `sim-1005-${new Date().toISOString().replace(/[:]/g, "-")}.json`);
 

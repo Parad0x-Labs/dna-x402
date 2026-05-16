@@ -18,8 +18,8 @@ describe("stdout logging runtime defaults", () => {
   });
 
   it("keeps stdout logs enabled by default in non-test runtimes", () => {
-    expect(shouldEmitStdoutLogs({} as NodeJS.ProcessEnv)).toBe(true);
-    expect(shouldEmitStdoutLogs({ NODE_ENV: "production" } as NodeJS.ProcessEnv)).toBe(true);
+    expect(shouldEmitStdoutLogs({} as NodeJS.ProcessEnv, ["node", "dist/server.js"])).toBe(true);
+    expect(shouldEmitStdoutLogs({ NODE_ENV: "production" } as NodeJS.ProcessEnv, ["node", "dist/server.js"])).toBe(true);
   });
 
   it("suppresses helper logging when stdout logging is disabled", () => {

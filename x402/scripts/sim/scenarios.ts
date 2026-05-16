@@ -6,7 +6,7 @@ import {
   createTransferCheckedInstruction,
   getOrCreateAssociatedTokenAccount,
   mintTo,
-} from "@solana/spl-token";
+} from "./splTokenLite.js";
 import { createSignedManifest } from "../../src/market/manifest.js";
 import { createSignedBundleManifest } from "../../src/market/bundles.js";
 import { parseAtomic } from "../../src/feePolicy.js";
@@ -100,9 +100,7 @@ async function ensureAta(
     funder,
     mint,
     owner,
-    false,
     "confirmed",
-    { commitment: "confirmed", preflightCommitment: "confirmed" },
   ));
   return ata.address;
 }
@@ -125,7 +123,7 @@ export async function transferToken(params: {
     params.mint,
     params.recipientAta,
     params.owner.publicKey,
-    Number(params.amountAtomic),
+    params.amountAtomic,
     params.mintDecimals,
   ));
   const signature = await withRpcRetry("sendAndConfirmTransaction:transfer", () => sendAndConfirmTransaction(
@@ -613,6 +611,7 @@ export async function createWrongMint(params: {
     params.funder.publicKey,
     null,
     params.decimals,
+    "confirmed",
   ));
   const buyerAta = await withRpcRetry("getOrCreateATA:wrongMintBuyer", () => getOrCreateAssociatedTokenAccount(
     params.connection,
@@ -626,7 +625,7 @@ export async function createWrongMint(params: {
     wrongMint,
     buyerAta.address,
     params.funder,
-    Number(params.amountAtomic + 1_000n),
+    params.amountAtomic + 1_000n,
   ));
   await ensureAta(params.connection, params.funder, wrongMint, params.recipientOwner);
   return { wrongMint };

@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-interface Finding {
+export interface Finding {
   file: string;
   line: number;
   reason: string;
@@ -17,8 +18,16 @@ const LINE_PATTERNS: Array<{ regex: RegExp; reason: string }> = [
     reason: "env-style secret assignment",
   },
   {
-    regex: /\b(secret_key|mnemonic)\b/i,
-    reason: "secret keyword",
+    regex: /\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/,
+    reason: "GitHub token",
+  },
+  {
+    regex: /\b\d{8,12}:[A-Za-z0-9_-]{30,}\b/,
+    reason: "Telegram bot token",
+  },
+  {
+    regex: /\b(secret_key|private_key|privateKey|seed_phrase|seedPhrase|wallet_dump|walletDump|mnemonic)\b\s*[:=]\s*["'`](?!forbidden|redacted|must-never-touch-backend|word word word|redacted words)[^"'`]{32,}["'`]/i,
+    reason: "secret-like field assignment",
   },
   {
     regex: /-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----/,
@@ -27,6 +36,10 @@ const LINE_PATTERNS: Array<{ regex: RegExp; reason: string }> = [
   {
     regex: /\/Users\//,
     reason: "absolute user path",
+  },
+  {
+    regex: /\b[A-Za-z]:\\Users\\/,
+    reason: "absolute Windows user path",
   },
   {
     regex: /\[\s*(\d{1,3}\s*,\s*){40,}\d{1,3}\s*\]/,
@@ -49,6 +62,7 @@ const SCANNER_FILES = [
 function isIgnoredExample(file: string): boolean {
   return file.endsWith(".env.example")
     || file.endsWith(".example")
+    || file.startsWith("examples/")
     || file.includes("/examples/")
     || file.includes("/fixtures/")
     || SCANNER_FILES.some((s) => file.endsWith(s))
@@ -61,14 +75,7 @@ function hasForbiddenEnvFilename(file: string): boolean {
   return base === ".env" || base === ".env.local" || base === ".env.production";
 }
 
-function scanFile(repoRoot: string, relPath: string): Finding[] {
-  const absolute = path.join(repoRoot, relPath);
-  const stats = fs.statSync(absolute);
-  if (!stats.isFile() || stats.size > MAX_BYTES) {
-    return [];
-  }
-
-  const raw = fs.readFileSync(absolute, "utf8");
+export function scanTextForFindings(relPath: string, raw: string): Finding[] {
   const lines = raw.split(/\r?\n/);
   const findings: Finding[] = [];
 
@@ -87,6 +94,16 @@ function scanFile(repoRoot: string, relPath: string): Finding[] {
   }
 
   return findings;
+}
+
+function scanFile(repoRoot: string, relPath: string): Finding[] {
+  const absolute = path.join(repoRoot, relPath);
+  const stats = fs.statSync(absolute);
+  if (!stats.isFile() || stats.size > MAX_BYTES) {
+    return [];
+  }
+
+  return scanTextForFindings(relPath, fs.readFileSync(absolute, "utf8"));
 }
 
 function main(): void {
@@ -135,4 +152,6 @@ function main(): void {
   console.log("Secret scan passed: no tracked env files or inline secret assignments found.");
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}

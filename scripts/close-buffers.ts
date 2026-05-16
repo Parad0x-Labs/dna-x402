@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   getAddress,
   getBalanceLamports,
@@ -63,7 +64,7 @@ function main(): void {
     return;
   }
 
-  const scriptDir = path.dirname(decodeURIComponent(new URL(import.meta.url).pathname));
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
   const repoRoot = path.resolve(scriptDir, "..");
 
   const cluster = parseFlagValue(argv, "--cluster") ?? "devnet";
@@ -91,7 +92,14 @@ function main(): void {
     args.push("--authority", stagedAuthority);
   }
 
-  const result = dryRun
+  const result = beforeBuffers.length === 0
+    ? {
+      status: 0,
+      stdout: "no buffers to close",
+      stderr: "",
+      cmd: `solana ${args.join(" ")}`,
+    }
+    : dryRun
     ? {
       status: 0,
       stdout: "dry-run: close buffers skipped",

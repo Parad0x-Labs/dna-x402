@@ -1,0 +1,119 @@
+groups:
+  - name: dna-x402-production-safety
+    rules:
+      - alert: X402FinalizeRejectionSpike
+        expr: increase(x402_finalize_rejected_total[5m]) > 25
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 finalize rejection spike
+          description: Finalize rejections rose above the expected safety baseline.
+
+      - alert: X402VerifierErrorSpike
+        expr: increase(x402_verifier_errors_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 verifier error spike
+          description: Payment verifier errors need operator review.
+
+      - alert: X402DbErrorSpike
+        expr: increase(x402_db_errors_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: x402 database errors detected
+          description: DB errors can break persistence, replay protection, pause state, or receipts.
+
+      - alert: X402WebhookReplaySpike
+        expr: increase(x402_webhook_replays_rejected_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 webhook replay spike
+          description: Multiple webhook replays were rejected.
+
+      - alert: X402PiiBlock
+        expr: increase(x402_pii_blocks_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: x402 immutable PII block occurred
+          description: Raw PII attempted to enter immutable receipt, proof, audit, or webhook log.
+
+      - alert: X402EmergencyPauseActive
+        expr: x402_emergency_pause_active == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: x402 emergency pause is active
+          description: Operator pause is active; new quotes/finalizes may be blocked by design.
+
+      - alert: X402AdminActionBurst
+        expr: increase(x402_admin_actions_total[10m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 admin action burst
+          description: Admin/governance actions exceeded normal operating rate.
+
+      - alert: X402PolicyBlockSpike
+        expr: increase(x402_policy_blocks_total[10m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 policy block spike
+          description: Policy blocks spiked and may indicate attack traffic or bad listing rollout.
+
+      - alert: X402TaxProfileBacklog
+        expr: x402_tax_profiles_missing_total > 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 seller tax profile backlog
+          description: Sellers missing tax profile state need operational review before public scale.
+
+      - alert: X402SettlementUnavailable
+        expr: increase(x402_settlement_unavailable_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: x402 settlement unavailable
+          description: Settlement route health degraded or chain availability changed.
+
+      - alert: X402ReceiptSigningFailure
+        expr: increase(x402_receipts_issued_total[15m]) == 0 and increase(x402_finalize_success_total[15m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: x402 receipt signing failure suspected
+          description: Finalization succeeded without corresponding receipt issuance.
+
+      - alert: X402BackupFailure
+        expr: absent(x402_backup_last_success_timestamp_seconds)
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: x402 backup success metric missing
+          description: Backup/restore monitoring must publish a success timestamp before production.
+
+      - alert: X402RestoreDrillFailure
+        expr: absent(x402_restore_drill_success) or x402_restore_drill_success == 0
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: x402 restore drill failure
+          description: Restore drill failed or has not been proven in the monitored environment.

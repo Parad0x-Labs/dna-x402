@@ -1,0 +1,75 @@
+{
+  "name": "dna-x402-public-beta",
+  "status": "PUBLIC_BETA_PILOT",
+  "api": {
+    "baseUrl": "https://beta.dnax402.app",
+    "version": "v1",
+    "health": "/health",
+    "metrics": "/metrics"
+  },
+  "sdk": {
+    "package": "dna-x402",
+    "recommendedRuntime": "node>=20"
+  },
+  "publicBeta": {
+    "gateRef": "PUBLIC_BETA_AGENT_PILOT_2026",
+    "agentCreation": true,
+    "paperAgents": true,
+    "publicAgentProfiles": true,
+    "copySettings": true,
+    "alphaMonetization": true,
+    "lowRiskLivePayments": true,
+    "requiresClientSignature": true,
+    "maxTxUsd": 25,
+    "maxDailySpendUsd": 250,
+    "maxDailyLossUsd": 50,
+    "maxOpenExposureUsd": 100
+  },
+  "settlement": {
+    "enabledMode": "capped_low_risk_solana_usdc",
+    "defaultChain": "solana",
+    "token": "USDC",
+    "publicBetaMoneyMovement": "open_with_caps",
+    "backendSigning": false,
+    "backendCustody": false
+  },
+  "fees": {
+    "dnaPlatformFeeBps": 10,
+    "dnaPlatformFeeMode": "display_accrual_or_gated_direct_split",
+    "builderFeeMode": "display_or_accrual_only",
+    "directSplitCollection": "separate_gate_required",
+    "autoSweep": false,
+    "backendCustody": false,
+    "hiddenFees": false
+  },
+  "gates": {
+    "unattendedSigning": false,
+    "backendPrivateKeys": false,
+    "publicNetting": false,
+    "physicalGoods": false,
+    "highRiskCategories": false,
+    "polymarketLiveMovement": false,
+    "broadMultiChainSettlement": false
+  },
+  "builderBeta": {
+    "allowedUseCases": [
+      "paid_api",
+      "paid_agent",
+      "data_feed",
+      "tool_endpoint"
+    ],
+    "requiresVisibleFeeWaterfall": true,
+    "requiresReceiptVerification": true
+  },
+  "webhooks": {
+    "signedPayloads": true,
+    "replayProtection": true,
+    "testReceiverProductionExposure": false
+  },
+  "notes": [
+    "This config is for Public Beta Pilot builder and agent integration.",
+    "It is not approval for unlimited permissionless production.",
+    "Secrets, API keys, wallet private keys, and bot tokens must come from local/server secret storage and never from this file.",
+    "Backend custody, backend signing, hidden fees, and auto-sweep are never allowed."
+  ]
+}

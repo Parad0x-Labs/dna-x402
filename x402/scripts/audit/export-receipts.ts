@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { ReceiptSigner, verifySignedReceipt } from "../../src/receipts.js";
 
 interface ReceiptCheck {
@@ -38,7 +39,7 @@ async function main(): Promise<void> {
     throw new Error("--sample must be >= 10");
   }
 
-  const x402Root = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..");
+  const x402Root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const outPath = parseFlagValue(argv, "--out") ?? path.join(x402Root, "audit_out", "receipts_sample.json");
 
   const signer = ReceiptSigner.generate();

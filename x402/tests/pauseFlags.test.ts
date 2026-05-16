@@ -96,4 +96,185 @@ describe("pause flags", () => {
     }).expect(503);
     expect(pausedOrders.body.error).toBe("market_paused");
   });
+
+  it("blocks quotes and finalize through centralized runtime gates", async () => {
+    const { app } = createX402App(
+      {
+        ...baseConfig,
+        runtimeGates: {
+          prodMoney: false,
+          polymarketLive: false,
+          publicNetting: false,
+          physicalGoods: false,
+          highRiskCategories: false,
+          multiChainSettlement: false,
+          unattendedSigning: false,
+          backendKeyCustody: false,
+          publicMarketplace: false,
+          webhookDelivery: false,
+          finalize: false,
+          quotes: false,
+          webhookReceiverTest: false,
+          checklistRefs: {},
+        },
+      },
+      {
+        paymentVerifier: new FakeVerifier(),
+        receiptSigner: ReceiptSigner.generate(),
+      },
+    );
+
+    const quote = await request(app).get("/quote").expect(503);
+    expect(quote.body.error).toBe("quote_gate_disabled");
+
+    const first = await request(app).get("/resource").expect(402);
+    const quoteId: string = first.body.paymentRequirements.quote.quoteId;
+    const commit = await request(app)
+      .post("/commit")
+      .send({
+        quoteId,
+        payerCommitment32B: "0x" + "56".repeat(32),
+      })
+      .expect(201);
+
+    const finalize = await request(app)
+      .post("/finalize")
+      .send({
+        commitId: commit.body.commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-runtime-gate-123456789012345678901234567890",
+        },
+      })
+      .expect(503);
+    expect(finalize.body.error.code).toBe("X402_PAUSED");
+    expect(finalize.body.error.cause).toBe("X402_ENABLE_FINALIZE is disabled.");
+  });
+
+  it("shows display-only 10 bps real-chain drill fee without collecting it", async () => {
+    const { app } = createX402App(
+      {
+        ...baseConfig,
+        feePolicy: {
+          ...baseConfig.feePolicy,
+          feeBps: 0,
+        },
+        realChainDrill: {
+          enabled: true,
+          allowedSigners: ["buyer-wallet-1"],
+          maxTxAtomic: "100000",
+          dailyCapAtomic: "500000",
+          feeMode: "display_only",
+          platformFeeBps: 10,
+          platformRecipient: "treasury-wallet",
+        },
+      },
+      {
+        paymentVerifier: new FakeVerifier(),
+        receiptSigner: ReceiptSigner.generate(),
+      },
+    );
+
+    const quote = await request(app)
+      .get("/quote")
+      .query({ resource: "/resource", amountAtomic: "10000" })
+      .expect(200);
+
+    expect(quote.body.amount).toBe("10000");
+    expect(quote.body.feeAtomic).toBe("0");
+    expect(quote.body.totalAtomic).toBe("10000");
+    expect(quote.body.feeWaterfall).toMatchObject({
+      mode: "display_only",
+      platformFeeBps: 10,
+      platformFeeAtomic: "10",
+      platformRecipient: "treasury-wallet",
+      collected: false,
+    });
+
+    await request(app)
+      .get("/quote")
+      .query({ resource: "/resource", amountAtomic: "100001" })
+      .expect(403);
+  });
+
+  it("records non-custodial seller-accrual fees without collecting or sweeping", async () => {
+    const { app } = createX402App(
+      {
+        ...baseConfig,
+        allowInsecure: true,
+        feePolicy: {
+          ...baseConfig.feePolicy,
+          feeBps: 0,
+        },
+        realChainDrill: {
+          enabled: true,
+          allowedSigners: ["buyer-wallet-1"],
+          maxTxAtomic: "100000",
+          dailyCapAtomic: "500000",
+          feeMode: "seller_accrual",
+          platformFeeBps: 10,
+          platformRecipient: "treasury-wallet",
+        },
+      },
+      {
+        paymentVerifier: new FakeVerifier(),
+        receiptSigner: ReceiptSigner.generate(),
+      },
+    );
+
+    const quote = await request(app)
+      .get("/quote")
+      .query({ resource: "/resource", amountAtomic: "50000" })
+      .expect(200);
+
+    expect(quote.body.feeWaterfall).toMatchObject({
+      mode: "seller_accrual",
+      platformFeeAtomic: "50",
+      collected: false,
+    });
+
+    const commit = await request(app)
+      .post("/commit")
+      .send({
+        quoteId: quote.body.quoteId,
+        payerCommitment32B: "0x" + "57".repeat(32),
+      })
+      .expect(201);
+
+    const finalized = await request(app)
+      .post("/finalize")
+      .send({
+        commitId: commit.body.commitId,
+        paymentProof: {
+          settlement: "transfer",
+          txSignature: "tx-ok-accrual-123456789012345678901234567890",
+        },
+      })
+      .expect(200);
+
+    expect(finalized.body.feeAccrual).toMatchObject({
+      status: "ACCRUED_NOT_COLLECTED",
+      platformFeeAtomic: "50",
+      platformFeeBps: 10,
+      platformRecipient: "treasury-wallet",
+      collected: false,
+    });
+
+    const accruals = await request(app).get("/drill/fee-accruals").expect(200);
+    expect(accruals.body.summary).toMatchObject({
+      enabled: true,
+      mode: "seller_accrual",
+      collected: false,
+      count: 1,
+      totalPlatformFeeAtomic: "50",
+    });
+    expect(accruals.body.accruals[0]).toMatchObject({
+      quoteId: quote.body.quoteId,
+      commitId: commit.body.commitId,
+      receiptId: finalized.body.receiptId,
+      platformFeeAtomic: "50",
+      status: "ACCRUED_NOT_COLLECTED",
+      collected: false,
+    });
+  });
 });

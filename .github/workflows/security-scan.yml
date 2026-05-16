@@ -1,4 +1,4 @@
-name: security-scan
+name: mainnet-readiness
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  scan:
+  node:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -15,12 +15,56 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
-          cache-dependency-path: x402/package-lock.json
+          cache-dependency-path: |
+            x402/package-lock.json
+            site-agent/package-lock.json
 
-      - name: Install
+      - name: Install x402
         run: npm --prefix x402 ci
 
+      - name: Install site-agent
+        run: npm --prefix site-agent ci
+
+      - name: Build x402
+        run: npm --prefix x402 run build
+
+      - name: Test x402
+        run: npm --prefix x402 test
+
+      - name: Audit x402 production dependencies
+        run: npm --prefix x402 audit --omit dev --audit-level=high
+
+      - name: Audit x402 full dependency tree
+        run: npm --prefix x402 audit --audit-level=high
+
       - name: Secret and path scan
-        run: ./scripts/ci/secret-scan.sh
+        run: npm --prefix x402 run security:scan
+
+      - name: Build site-agent
+        run: npm --prefix site-agent run build
+
+      - name: Audit site-agent production dependencies
+        run: npm --prefix site-agent audit --omit dev --audit-level=high
+
+      - name: Audit site-agent full dependency tree
+        run: npm --prefix site-agent audit --audit-level=high
+
+      - name: Install Playwright browser
+        run: npm --prefix site-agent exec -- playwright install --with-deps chromium
+
+      - name: Test site-agent
+        run: npm --prefix site-agent test -- --reporter=line
+
+  receipt-anchor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Test receipt anchor program
+        run: cargo test --manifest-path programs/receipt_anchor/Cargo.toml

@@ -5,8 +5,15 @@ import express from "express";
 import cors from "cors";
 import { z } from "zod";
 import { Connection } from "@solana/web3.js";
-import { X402Config, X402GuardConfig, loadConfig } from "./config.js";
-import { calculateFeeAtomic, calculateTotalAtomic, parseAtomic, shouldUseNetting, toAtomicString } from "./feePolicy.js";
+import {
+  X402Config,
+  X402GuardConfig,
+  assertMainnetReadiness,
+  assertRuntimeGateConfig,
+  loadConfig,
+  runtimeGatesForConfig,
+} from "./config.js";
+import { calculateFeeAtomic, parseAtomic, shouldUseNetting, toAtomicString } from "./feePolicy.js";
 import { NettingLedger } from "./nettingLedger.js";
 import { PaymentVerifier, SolanaPaymentVerifier } from "./paymentVerifier.js";
 import {
@@ -30,9 +37,39 @@ import { X402Error, X402ErrorCode } from "./x402/errors.js";
 import { logError, logRequestHeaders } from "./logging/logger.js";
 import { AuditLogger } from "./logging/audit.js";
 import { WebhookService } from "./sdk/webhook.js";
+import { SignedWebhookEnvelope, verifyWebhookSignatureAndTimestamp } from "./webhooks/signed.js";
+import { assertImmutableRecordSafe } from "./privacy/immutableGuard.js";
+import { EmergencyPauseController } from "./emergency/state.js";
+import { GovernanceService } from "./governance/service.js";
 import { createAdminRouter } from "./admin/router.js";
+import { adminAuth } from "./admin/auth.js";
 import { createDnaGuard, DnaGuardController } from "./sdk/guard.js";
 import { createFileBackedDnaGuardLedger } from "./guard/storage.js";
+import { renderX402Metrics } from "./monitoring/metrics.js";
+import { alertmanagerWebhookPayloadSchema, relayAlertmanagerToTelegram } from "./monitoring/telegramAlert.js";
+import { PostgresDbClient } from "./db/connection.js";
+import { createPostgresCommerceRepositories } from "./db/repositories.js";
+import {
+  BuilderFeeConfig,
+  BuilderProfile,
+  FeeAccrualRecord,
+  FeeWaterfallV2,
+  SplitPaymentProofRequirement,
+  buildSplitPaymentRequirements,
+  buildFeeWaterfallV2,
+  createFeeAccrualRecords,
+  validateSplitFinalizeRequest,
+} from "./fees/waterfall.js";
+import {
+  AgentTradingError,
+  AgentTradingRepositories,
+  AgentTradingService,
+  AgentWalletRegistrationInput,
+  CopyDecisionInput,
+  CopySettings,
+  PaperTradeInput,
+  SourceAgentAction,
+} from "./agents/trading.js";
 import {
   CommitRecord,
   PaymentAccept,
@@ -40,6 +77,7 @@ import {
   PaymentRequirements,
   Quote,
   QuoteResponse,
+  RealChainFeeAccrualRecord,
   ReceiptPayload,
   SettlementMode,
   SignedReceipt,
@@ -55,6 +93,26 @@ interface CreateAppDeps {
   auditLog?: AuditLogger;
   webhookService?: WebhookService;
   guard?: DnaGuardController;
+  emergencyPause?: EmergencyPauseController;
+  governance?: GovernanceService;
+  webhookReplayClaimStore?: WebhookReplayClaimStore;
+  feeLedgerStore?: FeeLedgerStore;
+  agentTrading?: AgentTradingService;
+}
+
+interface WebhookReplayClaimInput {
+  idempotencyKey: string;
+  event: string;
+  timestamp: string;
+}
+
+interface WebhookReplayClaimStore {
+  claim(input: WebhookReplayClaimInput): Promise<boolean>;
+}
+
+interface FeeLedgerStore {
+  recordWaterfall(waterfall: FeeWaterfallV2): Promise<void>;
+  recordAccrual(accrual: FeeAccrualRecord): Promise<void>;
 }
 
 export interface X402AppContext {
@@ -69,12 +127,25 @@ export interface X402AppContext {
   config: X402Config;
   auditLog: AuditLogger;
   webhookService: WebhookService;
+  webhookReplayClaimStore: WebhookReplayClaimStore;
+  realChainFeeAccruals: RealChainFeeAccrualRecord[];
+  feeAccruals: FeeAccrualRecord[];
+  observedAgentIds: Set<string>;
+  agentTrading: AgentTradingService;
   guard?: DnaGuardController;
+  emergencyPause: EmergencyPauseController;
+  governance: GovernanceService;
 }
 
 const quoteQuerySchema = z.object({
   resource: z.string().min(1).default("/resource"),
   amountAtomic: z.string().regex(/^\d+$/).optional(),
+  builderId: z.string().min(1).optional(),
+  builderFeeBps: z.coerce.number().int().min(0).max(10_000).optional(),
+  builderRecipient: z.string().min(1).optional(),
+  builderStatus: z.enum(["ACTIVE", "REVIEW_REQUIRED", "SUSPENDED", "DISABLED"]).optional(),
+  builderFeeMode: z.enum(["display_only", "builder_accrual", "direct_split"]).optional(),
+  builderFeeHidden: z.enum(["true", "false"]).optional(),
 });
 
 const commitBodySchema = z.object({
@@ -101,9 +172,143 @@ const paymentProofSchema = z.discriminatedUnion("settlement", [
   }),
 ]);
 
+const splitPaymentProofSchema = z.object({
+  feeLineId: z.string().min(1),
+  paymentProof: paymentProofSchema,
+});
+
 const finalizeBodySchema = z.object({
   commitId: z.string().uuid(),
-  paymentProof: paymentProofSchema,
+  paymentProof: paymentProofSchema.optional(),
+  splitPaymentProofs: z.array(splitPaymentProofSchema).min(1).optional(),
+});
+
+const agentWalletRegistrationSchema = z.object({
+  ownerWallet: z.string().min(1),
+  publicKey: z.string().min(1),
+  chain: z.enum(["SOLANA", "POLYMARKET_POLYGON", "EVM", "OTHER"]),
+  keyStorage: z.enum(["LOCAL_ENCRYPTED", "USER_EXPORTED", "SESSION_ONLY", "EXTERNAL_WALLET"]).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+}).passthrough();
+
+const paperTradeSchema = z.object({
+  marketId: z.string().min(1),
+  side: z.enum(["YES", "NO", "BUY", "SELL"]),
+  amountAtomic: z.string().regex(/^\d+$/),
+  priceBps: z.number().int().min(0).max(10_000).optional(),
+  realizedPnlAtomic: z.string().regex(/^-?\d+$/).optional(),
+  unrealizedPnlAtomic: z.string().regex(/^-?\d+$/).optional(),
+});
+
+const profilePatchSchema = z.object({
+  visibility: z.enum(["PRIVATE", "PUBLIC"]).optional(),
+  modeBadge: z.enum(["PAPER", "LIVE_VERIFIED", "MIXED", "UNVERIFIED"]).optional(),
+  totalPnlAtomic: z.string().regex(/^-?\d+$/).optional(),
+  roiBps: z.number().int().optional(),
+  winRateBps: z.number().int().min(0).max(10_000).optional(),
+  averageEntryPriceBps: z.number().int().min(0).max(10_000).optional(),
+  medianEntryPriceBps: z.number().int().min(0).max(10_000).optional(),
+  totalVolumeAtomic: z.string().regex(/^\d+$/).optional(),
+  tradeCount: z.number().int().min(0).optional(),
+  resolvedTradeCount: z.number().int().min(0).optional(),
+  averageBetSizeAtomic: z.string().regex(/^\d+$/).optional(),
+  maxDrawdownBps: z.number().int().min(0).max(10_000).optional(),
+  copiedFollowerProfitAtomic: z.string().regex(/^\d+$/).optional(),
+  copiedFollowerLossAtomic: z.string().regex(/^\d+$/).optional(),
+  copiedVolumeAtomic: z.string().regex(/^\d+$/).optional(),
+  followerCount: z.number().int().min(0).optional(),
+  last30dPnlAtomic: z.string().regex(/^-?\d+$/).optional(),
+  last30dRoiBps: z.number().int().optional(),
+  badges: z.array(z.string()).optional(),
+});
+
+const alphaMonetizationSchema = z.object({
+  enabled: z.boolean(),
+  successFeeBps: z.number().int(),
+  mode: z.enum(["DISPLAY_ONLY", "ACCRUAL", "DIRECT_SPLIT_GATED"]).optional(),
+});
+
+const copySettingsSchema = z.object({
+  copySettingsId: z.string().min(1).optional(),
+  followerAgentId: z.string().min(1),
+  sourceAgentId: z.string().min(1),
+  enabled: z.boolean().optional(),
+  mode: z.enum(["WATCH_ONLY", "PAPER_COPY", "USER_CONFIRMED_COPY", "AUTO_COPY_PUBLIC_BETA"]).optional(),
+  copyBuys: z.boolean().optional(),
+  copySells: z.boolean().optional(),
+  copyExits: z.boolean().optional(),
+  minEntryPriceBps: z.number().int().min(0).max(10_000).optional(),
+  maxEntryPriceBps: z.number().int().min(0).max(10_000).optional(),
+  maxBetSizeAtomic: z.string().regex(/^\d+$/).optional(),
+  maxDailySpendAtomic: z.string().regex(/^\d+$/).optional(),
+  maxOpenExposureAtomic: z.string().regex(/^\d+$/).optional(),
+  maxDailyLossAtomic: z.string().regex(/^\d+$/).optional(),
+  useSourceExitRules: z.boolean().optional(),
+  customTakeProfitBps: z.number().int().min(0).max(100_000).optional(),
+  customStopLossBps: z.number().int().min(0).max(100_000).optional(),
+  allowedMarketIds: z.array(z.string()).optional(),
+  blockedMarketIds: z.array(z.string()).optional(),
+  allowedCategories: z.array(z.string()).optional(),
+  blockedCategories: z.array(z.string()).optional(),
+  maxSlippageBps: z.number().int().min(0).max(10_000).optional(),
+  maxPriceDriftBps: z.number().int().min(0).max(10_000).optional(),
+  requireApprovalAboveAtomic: z.string().regex(/^\d+$/).optional(),
+  requireApprovalAlways: z.boolean().optional(),
+  stopCopyAfterDrawdownBps: z.number().int().min(0).max(10_000).optional(),
+  expiresAt: z.string().datetime().optional(),
+});
+
+const sourceAgentActionSchema = z.object({
+  sourceActionId: z.string().min(1),
+  sourceAgentId: z.string().min(1),
+  actionType: z.enum(["BUY", "SELL", "EXIT"]),
+  marketId: z.string().min(1),
+  category: z.string().optional(),
+  side: z.enum(["YES", "NO", "BUY", "SELL"]),
+  entryPriceBps: z.number().int().min(0).max(10_000),
+  sizeAtomic: z.string().regex(/^\d+$/),
+  slippageBps: z.number().int().min(0).max(10_000).optional(),
+  priceDriftBps: z.number().int().min(0).max(10_000).optional(),
+  sourceAgentAllowed: z.boolean().optional(),
+});
+
+const copyDecisionSchema = z.object({
+  copySettingsId: z.string().min(1).optional(),
+  settings: copySettingsSchema.extend({
+    copySettingsId: z.string().min(1),
+    enabled: z.boolean(),
+    mode: z.enum(["WATCH_ONLY", "PAPER_COPY", "USER_CONFIRMED_COPY", "AUTO_COPY_PUBLIC_BETA"]),
+    copyBuys: z.boolean(),
+    copySells: z.boolean(),
+    copyExits: z.boolean(),
+    maxBetSizeAtomic: z.string().regex(/^\d+$/),
+    maxDailySpendAtomic: z.string().regex(/^\d+$/),
+    maxOpenExposureAtomic: z.string().regex(/^\d+$/),
+    useSourceExitRules: z.boolean(),
+    requireApprovalAlways: z.boolean(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  }).optional(),
+  sourceAction: sourceAgentActionSchema,
+  currentDailySpendAtomic: z.string().regex(/^\d+$/).optional(),
+  currentOpenExposureAtomic: z.string().regex(/^\d+$/).optional(),
+  currentDailyLossAtomic: z.string().regex(/^\d+$/).optional(),
+  emergencyPaused: z.boolean().optional(),
+  liveCopyGateAllowed: z.boolean().optional(),
+  createLot: z.boolean().optional(),
+});
+
+const copiedLotFinalizeSchema = z.object({
+  realizedPnlAtomic: z.string().regex(/^-?\d+$/),
+  finalized: z.boolean().optional(),
+});
+
+const signedWebhookEnvelopeSchema = z.object({
+  idempotencyKey: z.string().min(1),
+  event: z.string().min(1),
+  timestamp: z.string().datetime(),
+  payload: z.record(z.string(), z.unknown()),
+  signature: z.string().min(64).max(256),
 });
 
 const flushSchema = z.object({
@@ -141,7 +346,59 @@ function hashHex(input: string): string {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
 
-function toQuoteResponse(quote: Quote): QuoteResponse {
+function timingSafeEqualString(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function bearerToken(header: string | undefined): string | undefined {
+  if (!header) {
+    return undefined;
+  }
+  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  return match?.[1];
+}
+
+function realChainDrillPlatformFee(quote: Quote, config: X402Config): {
+  mode: "display_only" | "seller_accrual";
+  platformFeeBps: number;
+  platformFeeAtomic: string;
+  platformRecipient: string;
+} | undefined {
+  const drill = config.realChainDrill;
+  if (!drill?.enabled || drill.feeMode === "none" || drill.feeMode === "direct_split" || !drill.platformRecipient) {
+    return undefined;
+  }
+
+  const platformFeeAtomic = (parseAtomic(quote.amountAtomic) * BigInt(drill.platformFeeBps)) / 10_000n;
+  return {
+    mode: drill.feeMode,
+    platformFeeBps: drill.platformFeeBps,
+    platformFeeAtomic: toAtomicString(platformFeeAtomic),
+    platformRecipient: drill.platformRecipient,
+  };
+}
+
+function realChainDrillFeeDisclosure(quote: Quote, config: X402Config): QuoteResponse["feeWaterfall"] {
+  const fee = realChainDrillPlatformFee(quote, config);
+  if (!fee) {
+    return undefined;
+  }
+
+  return {
+    ...fee,
+    collected: false,
+    note: fee.mode === "display_only"
+      ? "Displayed for drill only; not collected in this payment."
+      : "Recorded as seller payable ledger only; not auto-collected.",
+  };
+}
+
+function toQuoteResponse(quote: Quote, config: X402Config): QuoteResponse {
   return {
     quoteId: quote.quoteId,
     amount: quote.amountAtomic,
@@ -152,6 +409,8 @@ function toQuoteResponse(quote: Quote): QuoteResponse {
     memoHash: quote.memoHash,
     feeAtomic: quote.feeAtomic,
     totalAtomic: quote.totalAtomic,
+    feeWaterfall: realChainDrillFeeDisclosure(quote, config),
+    feeWaterfallV2: quote.feeWaterfallV2,
   };
 }
 
@@ -185,11 +444,21 @@ function buildAcceptModes(quote: Quote, config: X402Config): PaymentAccept[] {
   }));
 }
 
+function splitPaymentRequirementsForQuote(quote: Quote, config: X402Config): SplitPaymentProofRequirement[] | undefined {
+  if (!quote.feeWaterfallV2 || !config.builderMonetization?.directSplitFeesEnabled || !config.builderMonetization.directSplitGateRef) {
+    return undefined;
+  }
+  const requirements = buildSplitPaymentRequirements(quote.feeWaterfallV2, "solana");
+  return requirements.length > 0 ? requirements : undefined;
+}
+
 function buildPaymentRequirements(quote: Quote, baseUrl: string, config: X402Config): PaymentRequirements {
+  const splitPaymentRequirements = splitPaymentRequirementsForQuote(quote, config);
   return {
     version: "x402-dnp-v1",
-    quote: toQuoteResponse(quote),
+    quote: toQuoteResponse(quote, config),
     accepts: buildAcceptModes(quote, config),
+    splitPaymentRequirements,
     recommendedMode: chooseRecommendedMode(quote, config),
     commitEndpoint: `${baseUrl}/commit`,
     finalizeEndpoint: `${baseUrl}/finalize`,
@@ -373,6 +642,16 @@ function createFixedWindowRateLimiter(maxRequests: number, windowMs: number) {
   };
 }
 
+function createGlobalProofReplayKey(input: { shopId: string; proofId: string; settlement: "transfer" | "stream" }): string {
+  return createReplayKey({
+    shopId: input.shopId,
+    txSig: `${input.settlement}:${input.proofId}`,
+    amountAtomic: "*",
+    recipient: "*",
+    mint: "*",
+  });
+}
+
 function resolveGuardConfig(config: X402Config): X402GuardConfig {
   return config.dnaGuard ?? {
     enabled: false,
@@ -405,17 +684,120 @@ function hasGuardSpendCeilings(config: X402GuardConfig): boolean {
   );
 }
 
+function isDuplicatePersistenceError(error: unknown): boolean {
+  const maybeCode = (error as { code?: string }).code;
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return maybeCode === "23505" || message.includes("duplicate") || message.includes("unique");
+}
+
+function createWebhookReplayClaimStore(config: X402Config): WebhookReplayClaimStore {
+  const memoryReplay = new Set<string>();
+  const databaseUrl = config.databaseUrl;
+  const usePostgres = (config.repositoryMode ?? "").toLowerCase() === "postgres" && Boolean(databaseUrl);
+  if (!usePostgres || !databaseUrl) {
+    return {
+      async claim(input) {
+        if (memoryReplay.has(input.idempotencyKey)) {
+          return false;
+        }
+        memoryReplay.add(input.idempotencyKey);
+        return true;
+      },
+    };
+  }
+
+  const db = new PostgresDbClient({ connectionString: databaseUrl });
+  const repositories = createPostgresCommerceRepositories(db);
+  return {
+    async claim(input) {
+      try {
+        await repositories.webhook_replay_keys.append(input.idempotencyKey, {
+          idempotencyKey: input.idempotencyKey,
+          event: input.event,
+          timestamp: input.timestamp,
+          claimedAt: new Date().toISOString(),
+        }, { actorId: "webhook-receiver" });
+        return true;
+      } catch (error) {
+        if (isDuplicatePersistenceError(error)) {
+          return false;
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+function createFeeLedgerStore(config: X402Config): FeeLedgerStore {
+  const databaseUrl = config.databaseUrl;
+  const usePostgres = (config.repositoryMode ?? "").toLowerCase() === "postgres" && Boolean(databaseUrl);
+  if (!usePostgres || !databaseUrl) {
+    return {
+      async recordWaterfall() {},
+      async recordAccrual() {},
+    };
+  }
+
+  const db = new PostgresDbClient({ connectionString: databaseUrl });
+  const repositories = createPostgresCommerceRepositories(db);
+  async function appendImmutable(table: "fee_waterfalls" | "fee_accruals", id: string, payload: unknown): Promise<void> {
+    try {
+      await repositories[table].append(id, payload, { actorId: "fee-ledger" });
+    } catch (error) {
+      if (isDuplicatePersistenceError(error)) {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  return {
+    async recordWaterfall(waterfall) {
+      await appendImmutable("fee_waterfalls", waterfall.feeWaterfallHash, waterfall);
+    },
+    async recordAccrual(accrual) {
+      await appendImmutable("fee_accruals", accrual.id, accrual);
+    },
+  };
+}
+
+function createAgentTradingRepositories(config: X402Config): AgentTradingRepositories | undefined {
+  const databaseUrl = config.databaseUrl;
+  const usePostgres = (config.repositoryMode ?? "").toLowerCase() === "postgres" && Boolean(databaseUrl);
+  if (!usePostgres || !databaseUrl) {
+    return undefined;
+  }
+
+  const db = new PostgresDbClient({ connectionString: databaseUrl });
+  const repositories = createPostgresCommerceRepositories(db);
+  return {
+    agentWallets: repositories.agent_wallets as AgentTradingRepositories["agentWallets"],
+    paperAgentAccounts: repositories.paper_agent_accounts as AgentTradingRepositories["paperAgentAccounts"],
+    agentProfiles: repositories.agent_profiles as AgentTradingRepositories["agentProfiles"],
+    alphaMonetizationConfigs: repositories.alpha_monetization_configs as AgentTradingRepositories["alphaMonetizationConfigs"],
+    copySettings: repositories.copy_settings as AgentTradingRepositories["copySettings"],
+    copyDecisions: repositories.copy_decisions as AgentTradingRepositories["copyDecisions"],
+    copiedLots: repositories.copied_lots as AgentTradingRepositories["copiedLots"],
+    alphaFeeAccruals: repositories.alpha_fee_accruals as AgentTradingRepositories["alphaFeeAccruals"],
+    agentActionLedgers: repositories.agent_action_ledgers as AgentTradingRepositories["agentActionLedgers"],
+  };
+}
+
 export function createX402App(config: X402Config = loadConfig(), deps: CreateAppDeps = {}): {
   app: express.Express;
   context: X402AppContext;
 } {
+  assertRuntimeGateConfig(config);
+  const runtimeGates = runtimeGatesForConfig(config);
   const app = express();
   const now = deps.now ?? (() => new Date());
   const guardConfig = resolveGuardConfig(config);
+  const feeLedgerStore = deps.feeLedgerStore ?? createFeeLedgerStore(config);
 
   const connection = new Connection(config.solanaRpcUrl, "confirmed");
   const paymentVerifier = deps.paymentVerifier ?? new SolanaPaymentVerifier(connection, {
     allowUnverifiedNetting: config.unsafeUnverifiedNettingEnabled,
+    allowedSignerWallets: config.realChainDrill?.enabled ? config.realChainDrill.allowedSigners : undefined,
   });
   const receiptSigner = deps.receiptSigner ?? (config.receiptSigningSecret
     ? ReceiptSigner.fromBase58Secret(config.receiptSigningSecret)
@@ -439,6 +821,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
     },
   });
+  const webhookReplayClaimStore = deps.webhookReplayClaimStore ?? createWebhookReplayClaimStore(config);
   const guard = deps.guard ?? (guardConfig.enabled
     ? createDnaGuard({
       auditLog,
@@ -449,10 +832,13 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       }),
     })
     : undefined);
+  const emergencyPause = deps.emergencyPause ?? new EmergencyPauseController(undefined, undefined, now);
+  const governance = deps.governance ?? new GovernanceService(now);
+  const agentTrading = deps.agentTrading ?? new AgentTradingService(now, createAgentTradingRepositories(config));
   const { router: marketRouter, context: market } = createMarketRouter({
     now,
     signer: receiptSigner,
-    pauseMarket: config.pauseMarket,
+    pauseMarket: config.pauseMarket || emergencyPause.isPaused("marketplacePaused"),
     pauseOrders: config.pauseOrders,
     disabledShops: config.disabledShops,
     autoDisableReportThreshold: config.autoDisableReportThreshold,
@@ -461,6 +847,11 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const quotes = new Map<string, Quote>();
   const commits = new Map<string, CommitRecord>();
   const receipts = new Map<string, SignedReceipt>();
+  const realChainFeeAccruals: RealChainFeeAccrualRecord[] = [];
+  const feeAccruals: FeeAccrualRecord[] = [];
+  const observedAgentIds = new Set<string>();
+  const realChainDrillUsage = { dayKey: "", finalizedAtomic: 0n };
+  const publicBetaLiveUsage = { dayKey: "", finalizedAtomic: 0n };
 
   const context: X402AppContext = {
     quotes,
@@ -474,7 +865,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     config,
     auditLog,
     webhookService,
+    webhookReplayClaimStore,
+    realChainFeeAccruals,
+    feeAccruals,
+    observedAgentIds,
+    agentTrading,
     guard,
+    emergencyPause,
+    governance,
   };
   const auditFixturesEnabled = Boolean(config.auditFixtures) && isDevnetCluster(config);
   if (config.gauntletMode && !isDevnetCluster(config)) {
@@ -511,7 +909,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       meta?: Record<string, unknown>;
     },
   ): void {
-    const actor = input.req ? guardActorFromRequest(input.req) : undefined;
+    const actor = input.req ? observeGuardActor(input.req) : undefined;
     auditLog.record({
       kind,
       traceId: input.req?.traceId,
@@ -523,6 +921,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       errorMessage: input.reason,
       meta: input.meta,
     });
+  }
+
+  function observeGuardActor(req: express.Request): ReturnType<typeof guardActorFromRequest> {
+    const actor = guardActorFromRequest(req);
+    if (actor.agentId) {
+      observedAgentIds.add(actor.agentId);
+    }
+    return actor;
   }
 
   function enforceGuardSpend(
@@ -541,7 +947,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     const endpointId = endpointIdForResource(input.resource);
     try {
       const decision = guard.ledger.checkSpend(
-        guardActorFromRequest(req),
+        observeGuardActor(req),
         input.amountAtomic,
         guardConfig.spendCeilings,
         now(),
@@ -703,9 +1109,179 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     return DEFAULT_RESOURCE_PRICING[resource] ?? DEFAULT_RESOURCE_PRICING["/resource"];
   }
 
+  function usesCanonicalDirectSplitFees(): boolean {
+    return Boolean(
+      config.builderMonetization?.directSplitFeesEnabled
+      && config.builderMonetization.directSplitGateRef
+      && config.builderMonetization.platformFeeMode === "direct_split",
+    );
+  }
+
+  function calculateLegacyFeeForQuote(amountAtomic: bigint): bigint {
+    return usesCanonicalDirectSplitFees() ? 0n : calculateFeeAtomic(config.feePolicy, amountAtomic);
+  }
+
   function getTotalAtomicForResource(resource: string, explicitAtomic?: string): string {
     const amountAtomic = getAmountForResource(resource, explicitAtomic);
-    return toAtomicString(calculateTotalAtomic(config.feePolicy, amountAtomic));
+    return toAtomicString(amountAtomic + calculateLegacyFeeForQuote(amountAtomic));
+  }
+
+  function realChainDrillAmountAllowed(amountAtomic: string): { ok: true } | { ok: false; reason: string } {
+    const drill = config.realChainDrill;
+    if (!drill?.enabled) {
+      return { ok: true };
+    }
+    if (drill.maxTxAtomic && parseAtomic(amountAtomic) > parseAtomic(drill.maxTxAtomic)) {
+      return { ok: false, reason: "real-chain drill max transaction cap exceeded" };
+    }
+    if (drill.dailyCapAtomic && parseAtomic(amountAtomic) > parseAtomic(drill.dailyCapAtomic)) {
+      return { ok: false, reason: "real-chain drill daily cap exceeded" };
+    }
+    return { ok: true };
+  }
+
+  function publicBetaUsdToAtomic(valueUsd: number): bigint {
+    return BigInt(Math.floor(valueUsd * 1_000_000));
+  }
+
+  function publicBetaLiveAmountAllowed(amountAtomic: string): { ok: true } | { ok: false; reason: string } {
+    const beta = config.publicBeta;
+    if (!beta?.enabled || !beta.liveLowRisk) {
+      return { ok: true };
+    }
+    if (parseAtomic(amountAtomic) > publicBetaUsdToAtomic(beta.maxTxUsd)) {
+      return { ok: false, reason: "Public Beta max transaction cap exceeded" };
+    }
+    return { ok: true };
+  }
+
+  function publicBetaLiveFinalizeAllowed(amountAtomic: string): { ok: true } | { ok: false; reason: string } {
+    const beta = config.publicBeta;
+    if (!beta?.enabled || !beta.liveLowRisk) {
+      return { ok: true };
+    }
+    const dayKey = now().toISOString().slice(0, 10);
+    if (publicBetaLiveUsage.dayKey !== dayKey) {
+      publicBetaLiveUsage.dayKey = dayKey;
+      publicBetaLiveUsage.finalizedAtomic = 0n;
+    }
+    const nextTotal = publicBetaLiveUsage.finalizedAtomic + parseAtomic(amountAtomic);
+    if (nextTotal > publicBetaUsdToAtomic(beta.maxDailySpendUsd)) {
+      return { ok: false, reason: "Public Beta cumulative daily spend cap exceeded" };
+    }
+    return { ok: true };
+  }
+
+  function recordPublicBetaLiveFinalize(amountAtomic: string): void {
+    const beta = config.publicBeta;
+    if (!beta?.enabled || !beta.liveLowRisk) {
+      return;
+    }
+    const dayKey = now().toISOString().slice(0, 10);
+    if (publicBetaLiveUsage.dayKey !== dayKey) {
+      publicBetaLiveUsage.dayKey = dayKey;
+      publicBetaLiveUsage.finalizedAtomic = 0n;
+    }
+    publicBetaLiveUsage.finalizedAtomic += parseAtomic(amountAtomic);
+  }
+
+  function realChainDrillFinalizeAllowed(amountAtomic: string): { ok: true } | { ok: false; reason: string } {
+    const drill = config.realChainDrill;
+    if (!drill?.enabled || !drill.dailyCapAtomic) {
+      return { ok: true };
+    }
+    const dayKey = now().toISOString().slice(0, 10);
+    if (realChainDrillUsage.dayKey !== dayKey) {
+      realChainDrillUsage.dayKey = dayKey;
+      realChainDrillUsage.finalizedAtomic = 0n;
+    }
+    const nextTotal = realChainDrillUsage.finalizedAtomic + parseAtomic(amountAtomic);
+    if (nextTotal > parseAtomic(drill.dailyCapAtomic)) {
+      return { ok: false, reason: "real-chain drill cumulative daily cap exceeded" };
+    }
+    return { ok: true };
+  }
+
+  function recordRealChainDrillFinalize(amountAtomic: string): void {
+    if (!config.realChainDrill?.enabled) {
+      return;
+    }
+    const dayKey = now().toISOString().slice(0, 10);
+    if (realChainDrillUsage.dayKey !== dayKey) {
+      realChainDrillUsage.dayKey = dayKey;
+      realChainDrillUsage.finalizedAtomic = 0n;
+    }
+    realChainDrillUsage.finalizedAtomic += parseAtomic(amountAtomic);
+  }
+
+  function realChainFeeAccrualSummary(): {
+    enabled: boolean;
+    mode: string;
+    collected: false;
+    count: number;
+    totalPlatformFeeAtomic: string;
+    byRecipient: Array<{ recipient: string; totalPlatformFeeAtomic: string; count: number }>;
+  } {
+    const byRecipient = new Map<string, { total: bigint; count: number }>();
+    let total = 0n;
+    for (const item of realChainFeeAccruals) {
+      const amount = parseAtomic(item.platformFeeAtomic);
+      total += amount;
+      const current = byRecipient.get(item.platformRecipient) ?? { total: 0n, count: 0 };
+      current.total += amount;
+      current.count += 1;
+      byRecipient.set(item.platformRecipient, current);
+    }
+
+    return {
+      enabled: Boolean(config.realChainDrill?.enabled),
+      mode: config.realChainDrill?.feeMode ?? "none",
+      collected: false,
+      count: realChainFeeAccruals.length,
+      totalPlatformFeeAtomic: toAtomicString(total),
+      byRecipient: Array.from(byRecipient.entries()).map(([recipient, entry]) => ({
+        recipient,
+        totalPlatformFeeAtomic: toAtomicString(entry.total),
+        count: entry.count,
+      })),
+    };
+  }
+
+  function recordRealChainFeeAccrual(params: {
+    quote: Quote;
+    commit: CommitRecord;
+    receipt: SignedReceipt;
+    paymentProof: PaymentProof;
+    verification: { txSignature?: string };
+  }): RealChainFeeAccrualRecord | undefined {
+    if (config.realChainDrill?.feeMode !== "seller_accrual") {
+      return undefined;
+    }
+    const fee = realChainDrillPlatformFee(params.quote, config);
+    if (!fee || fee.mode !== "seller_accrual") {
+      return undefined;
+    }
+    const record: RealChainFeeAccrualRecord = {
+      id: crypto.randomUUID(),
+      quoteId: params.quote.quoteId,
+      commitId: params.commit.commitId,
+      receiptId: params.receipt.payload.receiptId,
+      resource: params.quote.resource,
+      payerCommitment32B: params.commit.payerCommitment32B,
+      amountAtomic: params.quote.amountAtomic,
+      platformFeeBps: fee.platformFeeBps,
+      platformFeeAtomic: fee.platformFeeAtomic,
+      platformRecipient: fee.platformRecipient,
+      settlement: params.paymentProof.settlement,
+      txSignature: params.verification.txSignature,
+      createdAt: now().toISOString(),
+      collected: false,
+      status: "ACCRUED_NOT_COLLECTED",
+      note: "Non-custodial drill accrual only. No auto-sweep, backend custody, or hidden fee collection.",
+    };
+    assertImmutableRecordSafe("PROOF_RECORD", record);
+    realChainFeeAccruals.push(record);
+    return record;
   }
 
   async function verifyPaymentForQuote(quote: Quote, paymentProof: PaymentProof): Promise<{
@@ -748,16 +1324,351 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
   }
 
-  function issueQuote(resource: string, amountAtomicOverride?: string): Quote {
+  function directSplitX402Code(message: string): X402ErrorCode {
+    const normalized = message.toLowerCase();
+    if (normalized.includes("replay") || normalized.includes("reused")) {
+      return X402ErrorCode.X402_REPLAY_DETECTED;
+    }
+    if (normalized.includes("underpay")) {
+      return X402ErrorCode.X402_UNDERPAY;
+    }
+    if (normalized.includes("wrong token") || normalized.includes("wrong mint")) {
+      return X402ErrorCode.X402_WRONG_MINT;
+    }
+    if (normalized.includes("wrong recipient")) {
+      return X402ErrorCode.X402_WRONG_RECIPIENT;
+    }
+    if (normalized.includes("different quote") || normalized.includes("tamper")) {
+      return X402ErrorCode.X402_REQUIRED_PROOF_MISMATCH;
+    }
+    return X402ErrorCode.X402_PROOF_INVALID;
+  }
+
+  function quoteForSplitRequirement(quote: Quote, requirement: SplitPaymentProofRequirement): Quote {
+    return {
+      quoteId: quote.quoteId,
+      resource: quote.resource,
+      amountAtomic: requirement.amount,
+      feeAtomic: "0",
+      totalAtomic: requirement.amount,
+      mint: quote.mint,
+      recipient: requirement.recipient,
+      expiresAt: quote.expiresAt,
+      settlement: ["transfer"],
+      memoHash: hashHex(`${quote.memoHash}:${requirement.feeLineId}:${requirement.recipient}:${requirement.amount}`),
+    };
+  }
+
+  async function verifyDirectSplitProofs(
+    req: express.Request,
+    res: express.Response,
+    commit: CommitRecord,
+    quote: Quote,
+    splitPaymentProofs: Array<{ feeLineId: string; paymentProof: PaymentProof }>,
+  ): Promise<{
+    ok: true;
+    primaryPaymentProof: PaymentProof;
+    primaryVerification: { settledOnchain: boolean; txSignature?: string; streamId?: string };
+    receiptProofs: ReceiptPayload["splitPaymentProofs"];
+  } | { ok: false }> {
+    const waterfall = quote.feeWaterfallV2;
+    const builderConfig = config.builderMonetization;
+    const requirements = splitPaymentRequirementsForQuote(quote, config) ?? [];
+    if (!waterfall || !builderConfig?.directSplitFeesEnabled || !builderConfig.directSplitGateRef || requirements.length === 0) {
+      sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+        cause: "direct split fee gate disabled",
+      }), {
+        dialectDetected: "generic",
+      });
+      return { ok: false };
+    }
+
+    const byFeeLine = new Map<string, PaymentProof>();
+    for (const item of splitPaymentProofs) {
+      if (byFeeLine.has(item.feeLineId)) {
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          cause: "proof reused across fee lines",
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+      byFeeLine.set(item.feeLineId, item.paymentProof);
+    }
+
+    const proofResults: Array<{
+      feeLineId: string;
+      chain: string;
+      token: string;
+      recipient: string;
+      amount: string;
+      replayed?: boolean;
+      quoteId?: string;
+    }> = [];
+    const receiptProofs: NonNullable<ReceiptPayload["splitPaymentProofs"]> = [];
+    const replayKeys: Array<{ global: string; scoped: string; proofId: string }> = [];
+    const seenProofIds = new Set<string>();
+    let primaryPaymentProof: PaymentProof | undefined;
+    let primaryVerification: { settledOnchain: boolean; txSignature?: string; streamId?: string } | undefined;
+
+    for (const requirement of requirements) {
+      const paymentProof = byFeeLine.get(requirement.feeLineId);
+      if (!paymentProof) {
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_MISSING_PAYMENT_PROOF, {
+          cause: `missing ${requirement.kind} proof`,
+          details: { feeLineId: requirement.feeLineId, kind: requirement.kind },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+      if (paymentProof.settlement !== "transfer") {
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+          cause: "direct split currently requires transfer proofs for each fee line",
+          details: { feeLineId: requirement.feeLineId, settlement: paymentProof.settlement },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+
+      const lineQuote = quoteForSplitRequirement(quote, requirement);
+      const verification = await verifyPaymentForQuote(lineQuote, paymentProof);
+      if (!verification.ok) {
+        commit.status = "failed";
+        commits.set(commit.commitId, commit);
+        sendX402Error(req, res, new X402Error(verifierErrorCode(verification), {
+          cause: verification.error ?? `${requirement.kind} proof rejected`,
+          details: { feeLineId: requirement.feeLineId, kind: requirement.kind },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+      if (!verification.txSignature) {
+        commit.status = "failed";
+        commits.set(commit.commitId, commit);
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+          cause: "verified direct split transfer is missing canonical txSignature",
+          details: { feeLineId: requirement.feeLineId, kind: requirement.kind },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+      if (seenProofIds.has(verification.txSignature)) {
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          cause: "proof reused across fee lines",
+          details: { feeLineId: requirement.feeLineId, kind: requirement.kind },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+      seenProofIds.add(verification.txSignature);
+
+      const globalReplayKey = createGlobalProofReplayKey({
+        shopId: CORE_SHOP_ID,
+        proofId: verification.txSignature,
+        settlement: "transfer",
+      });
+      const scopedReplayKey = createReplayKey({
+        shopId: CORE_SHOP_ID,
+        txSig: verification.txSignature,
+        amountAtomic: requirement.amount,
+        recipient: requirement.recipient,
+        mint: quote.mint,
+      });
+      replayKeys.push({ global: globalReplayKey, scoped: scopedReplayKey, proofId: verification.txSignature });
+      proofResults.push({
+        feeLineId: requirement.feeLineId,
+        chain: requirement.chain,
+        token: requirement.token,
+        recipient: requirement.recipient,
+        amount: paymentProof.amountAtomic ?? requirement.amount,
+        quoteId: quote.quoteId,
+      });
+      receiptProofs.push({
+        feeLineId: requirement.feeLineId,
+        kind: requirement.kind,
+        recipient: requirement.recipient,
+        amount: requirement.amount,
+        token: requirement.token,
+        settlement: paymentProof.settlement,
+        txSignature: verification.txSignature,
+      });
+      if (requirement.kind === "PROVIDER_AMOUNT" || !primaryPaymentProof) {
+        primaryPaymentProof = paymentProof;
+        primaryVerification = {
+          settledOnchain: verification.settledOnchain,
+          txSignature: verification.txSignature,
+        };
+      }
+    }
+
+    for (const replay of replayKeys) {
+      if (replayStore.has(replay.global, now().getTime()) || replayStore.has(replay.scoped, now().getTime())) {
+        recordGuardReplay(req, quote.resource, "x402_direct_split_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          details: { settlement: "transfer", proofId: replay.proofId },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+    }
+
+    try {
+      validateSplitFinalizeRequest({
+        waterfall,
+        request: {
+          quoteId: quote.quoteId,
+          commitId: commit.commitId,
+          proofs: splitPaymentProofs.map((item) => ({ feeLineId: item.feeLineId, proof: item.paymentProof })),
+        },
+        chain: "solana",
+        directSplitEnabled: builderConfig.directSplitFeesEnabled,
+        gateRef: builderConfig.directSplitGateRef,
+        proofResults,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "direct split proof validation failed";
+      sendX402Error(req, res, new X402Error(directSplitX402Code(message), {
+        cause: message,
+      }), {
+        dialectDetected: "generic",
+      });
+      return { ok: false };
+    }
+
+    for (const replay of replayKeys) {
+      if (!replayStore.consume(replay.global, now().getTime()) || !replayStore.consume(replay.scoped, now().getTime())) {
+        recordGuardReplay(req, quote.resource, "x402_direct_split_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          details: { settlement: "transfer", proofId: replay.proofId },
+        }), {
+          dialectDetected: "generic",
+        });
+        return { ok: false };
+      }
+    }
+
+    if (!primaryPaymentProof || !primaryVerification) {
+      sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
+        cause: "direct split produced no primary provider proof",
+      }), {
+        dialectDetected: "generic",
+      });
+      return { ok: false };
+    }
+
+    return {
+      ok: true,
+      primaryPaymentProof,
+      primaryVerification,
+      receiptProofs,
+    };
+  }
+
+  function builderFeeFromQuery(input: z.infer<typeof quoteQuerySchema>): {
+    builderProfile?: BuilderProfile;
+    builderFee?: BuilderFeeConfig;
+  } {
+    if (!input.builderId && input.builderFeeBps === undefined && !input.builderRecipient) {
+      return {};
+    }
+    const builderConfig = config.builderMonetization;
+    if (!builderConfig?.builderFeesEnabled) {
+      throw new Error("BUILDER_FEES_DISABLED");
+    }
+    if (input.builderFeeHidden === "true") {
+      throw new Error("BUILDER_FEE_HIDDEN");
+    }
+    if (!input.builderId) {
+      throw new Error("BUILDER_PROFILE_MISSING");
+    }
+    if (!input.builderRecipient) {
+      throw new Error("BUILDER_FEE_RECIPIENT_MISSING");
+    }
+    const feeBps = input.builderFeeBps ?? 0;
+    if (feeBps > builderConfig.builderFeeMaxBps) {
+      throw new Error("BUILDER_FEE_EXCEEDS_CAP");
+    }
+    const status = input.builderStatus ?? "ACTIVE";
+    const nowIso = now().toISOString();
+    const profile: BuilderProfile = {
+      builderId: input.builderId,
+      displayName: input.builderId,
+      slug: input.builderId.toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
+      ownerWallet: input.builderRecipient,
+      treasuryWallet: input.builderRecipient,
+      verifiedStatus: "UNVERIFIED",
+      allowedFeeBpsMax: builderConfig.builderFeeMaxBps,
+      defaultFeeBps: feeBps,
+      status,
+      policyStrikeCount: 0,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    const builderFee: BuilderFeeConfig = {
+      builderId: input.builderId,
+      enabled: true,
+      feeBps,
+      recipient: input.builderRecipient,
+      token: config.defaultCurrency,
+      mode: input.builderFeeMode ?? builderConfig.builderFeeDefaultMode,
+      capBps: builderConfig.builderFeeMaxBps,
+      refundBehavior: "REFUND_PRO_RATA",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    return { builderProfile: profile, builderFee };
+  }
+
+  function buildQuoteFeeWaterfallV2(
+    quote: Omit<Quote, "feeWaterfallV2">,
+    builderInput: { builderProfile?: BuilderProfile; builderFee?: BuilderFeeConfig } = {},
+  ): FeeWaterfallV2 | undefined {
+    const builderConfig = config.builderMonetization;
+    if (!builderConfig) {
+      return undefined;
+    }
+    const hasPlatform = Boolean(builderConfig.platformTreasury && builderConfig.platformFeeMode !== "off" && builderConfig.platformFeeBps > 0);
+    const hasBuilder = Boolean(builderInput.builderFee?.enabled);
+    if (!hasPlatform && !hasBuilder) {
+      return undefined;
+    }
+    return buildFeeWaterfallV2({
+      quoteId: quote.quoteId,
+      grossAmount: quote.totalAtomic,
+      token: config.defaultCurrency,
+      decimals: 6,
+      providerRecipient: quote.recipient,
+      platformFeeBps: hasPlatform ? builderConfig.platformFeeBps : 0,
+      platformRecipient: hasPlatform ? builderConfig.platformTreasury : undefined,
+      platformMode: builderConfig.platformFeeMode,
+      builderProfile: builderInput.builderProfile,
+      builderFee: builderInput.builderFee,
+      noDoubleChargeScope: quote.quoteId,
+      directSplitEnabled: builderConfig.directSplitFeesEnabled,
+      createdAt: now().toISOString(),
+    });
+  }
+
+  function issueQuote(
+    resource: string,
+    amountAtomicOverride?: string,
+    builderInput: { builderProfile?: BuilderProfile; builderFee?: BuilderFeeConfig } = {},
+  ): Quote {
     const issuedAt = now();
     const quoteId = crypto.randomUUID();
     const amountAtomic = getAmountForResource(resource, amountAtomicOverride);
-    const feeAtomic = calculateFeeAtomic(config.feePolicy, amountAtomic);
-    const totalAtomic = calculateTotalAtomic(config.feePolicy, amountAtomic);
+    const feeAtomic = calculateLegacyFeeForQuote(amountAtomic);
+    const totalAtomic = amountAtomic + feeAtomic;
     const expiresAt = new Date(issuedAt.getTime() + config.quoteTtlSeconds * 1000).toISOString();
     const memoHash = hashHex(`${quoteId}:${resource}:${toAtomicString(totalAtomic)}:${expiresAt}`);
 
-    const quote: Quote = {
+    const quoteBase: Omit<Quote, "feeWaterfallV2"> = {
       quoteId,
       resource,
       amountAtomic: toAtomicString(amountAtomic),
@@ -768,6 +1679,11 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       expiresAt,
       settlement: config.unsafeUnverifiedNettingEnabled ? ["transfer", "stream", "netting"] : ["transfer", "stream"],
       memoHash,
+    };
+    const feeWaterfallV2 = buildQuoteFeeWaterfallV2(quoteBase, builderInput);
+    const quote: Quote = {
+      ...quoteBase,
+      feeWaterfallV2,
     };
 
     quotes.set(quoteId, quote);
@@ -787,8 +1703,23 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     quote: Quote,
     paymentProof: PaymentProof,
     verification: { settledOnchain: boolean; txSignature?: string; streamId?: string },
-    binding: { requestId: string; requestDigest: string; responseDigest: string; shopId?: string },
+    binding: {
+      requestId: string;
+      requestDigest: string;
+      responseDigest: string;
+      shopId?: string;
+      splitPaymentProofs?: ReceiptPayload["splitPaymentProofs"];
+    },
   ): SignedReceipt {
+    const feeLines = quote.feeWaterfallV2?.lines;
+    const feeCollectionSummary = quote.feeWaterfallV2
+      ? {
+        dnaPlatformFeeStatus: quote.feeWaterfallV2.lines.find((line) => line.kind === "DNA_PLATFORM_FEE")?.collectionStatus,
+        builderFeeStatus: quote.feeWaterfallV2.lines.find((line) => line.kind === "BUILDER_FEE")?.collectionStatus,
+        affiliateFeeStatus: quote.feeWaterfallV2.lines.find((line) => line.kind === "AFFILIATE_FEE")?.collectionStatus,
+        alphaFeeStatus: quote.feeWaterfallV2.lines.find((line) => line.kind === "ALPHA_SUCCESS_FEE")?.collectionStatus,
+      }
+      : undefined;
     const payload: ReceiptPayload = {
       receiptId: crypto.randomUUID(),
       quoteId: quote.quoteId,
@@ -808,10 +1739,16 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       settledOnchain: verification.settledOnchain,
       txSignature: verification.txSignature,
       streamId: verification.streamId,
+      splitPaymentProofs: binding.splitPaymentProofs,
+      feeWaterfallHash: quote.feeWaterfallV2?.feeWaterfallHash,
+      feeLines,
+      feeCollectionSummary,
       createdAt: now().toISOString(),
     };
 
+    assertImmutableRecordSafe("RECEIPT", payload);
     const signed = receiptSigner.sign(payload);
+    assertImmutableRecordSafe("PROOF_RECORD", signed);
     receipts.set(payload.receiptId, signed);
     return signed;
   }
@@ -1019,6 +1956,21 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
 
     if (paymentProof.settlement === "transfer" && verification.txSignature) {
+      const globalReplayKey = createGlobalProofReplayKey({
+        shopId: CORE_SHOP_ID,
+        proofId: verification.txSignature,
+        settlement: "transfer",
+      });
+      if (!replayStore.consume(globalReplayKey, now().getTime())) {
+        recordGuardReplay(req, resource, "x402_global_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
+          dialectDetected: normalized.style,
+          paymentRequired: normalized.required,
+          paymentProof: proof,
+        });
+        return { handled: true };
+      }
+
       const compatProofReplayId = proof.txSig
         ?? verification.txSignature
         ?? `compat-proof:${hashHex(JSON.stringify(proof))}`;
@@ -1083,7 +2035,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       shopId: CORE_SHOP_ID,
     });
     const receiptValid = verifySignedReceipt(receipt);
-    guard?.ledger.commitSpend(guardActorFromRequest(req), quote.totalAtomic, now());
+    guard?.ledger.commitSpend(observeGuardActor(req), quote.totalAtomic, now());
     recordGuardReceiptVerification(req, resource, receipt.payload.receiptId, receiptValid, receiptValid ? undefined : "receipt_signature_invalid");
     recordGuardDelivery(resource, 0, 200, receipt.payload.receiptId, receiptValid);
 
@@ -1146,7 +2098,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       (req as express.Request & { rawBody?: string }).rawBody = buf.toString("utf8");
     },
   }));
-  app.use(requireHttpsMiddleware({ allowInsecure: config.allowInsecure ?? true }));
+  app.use(requireHttpsMiddleware({ allowInsecure: config.allowInsecure ?? false }));
   app.use("/market", marketRouter);
 
   const adminRouter = createAdminRouter({
@@ -1166,6 +2118,31 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     recipient: config.paymentRecipient,
     anchoringEnabled: config.anchoringEnabled,
   }});
+
+  function sendAgentError(res: express.Response, error: unknown): void {
+    if (error instanceof AgentTradingError) {
+      res.status(error.status).json({ ok: false, error: error.code, message: error.message });
+      return;
+    }
+    res.status(500).json({ ok: false, error: "agent_control_plane_failed", message: error instanceof Error ? error.message : String(error) });
+  }
+
+  function requirePublicBetaFeature(
+    res: express.Response,
+    feature: "agentCreation" | "paperAgents" | "publicAgentProfiles" | "copySettings" | "alphaMonetization",
+    label: string,
+  ): boolean {
+    const beta = config.publicBeta;
+    if (beta?.enabled && beta[feature]) {
+      return true;
+    }
+    res.status(404).json({
+      ok: false,
+      error: "PUBLIC_BETA_FEATURE_UNAVAILABLE",
+      message: `${label} is not in beta scope for this deployment.`,
+    });
+    return false;
+  }
 
   app.get("/health", (_req, res) => {
     res.json({
@@ -1230,6 +2207,443 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       },
       signer: receiptSigner.signerPublicKey,
     });
+  });
+
+  app.get("/health/db", (_req, res) => {
+    const configured = Boolean(config.databaseUrl);
+    res.status(configured ? 200 : 503).json({
+      ok: configured,
+      configured,
+      message: configured ? "database configuration present" : "DATABASE_URL is not configured",
+    });
+  });
+
+  app.get("/health/policy", (_req, res) => {
+    res.json({
+      ok: true,
+      policyVersion: config.policyVersion ?? "policy-v1",
+      auditEvents: market.policyAuditEvents.length,
+    });
+  });
+
+  app.get("/health/verifier", (_req, res) => {
+    res.json({
+      ok: true,
+      liveMoneyMovementEnabled: Boolean(config.liveMoneyMovementEnabled),
+      settlementVerifier: "configured",
+    });
+  });
+
+  app.get("/health/settlement", (_req, res) => {
+    res.json({
+      ok: true,
+      defaultCurrency: config.defaultCurrency,
+      mint: config.usdcMint,
+      liveMoneyMovementEnabled: Boolean(config.liveMoneyMovementEnabled),
+      publicNettingEnabled: Boolean(config.publicNettingEnabled),
+    });
+  });
+
+  app.get("/health/webhooks", (_req, res) => {
+    res.json({
+      ok: Boolean(config.webhookSigningSecret),
+      configured: Boolean(config.webhookSigningSecret),
+    });
+  });
+
+  app.get("/health/queue", (_req, res) => {
+    res.json({
+      ok: true,
+      anchoringPending: context.anchoringQueue?.getPendingCount() ?? 0,
+    });
+  });
+
+  app.get("/health/receipts", (_req, res) => {
+    res.json({
+      ok: true,
+      receipts: receipts.size,
+      signer: receiptSigner.signerPublicKey,
+    });
+  });
+
+  app.post("/v1/agents/:agentId/wallets/register", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent wallet registration")) return;
+    const parsed = agentWalletRegistrationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_wallet_registration", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const wallet = await agentTrading.registerWallet(req.params.agentId, parsed.data as AgentWalletRegistrationInput);
+      observedAgentIds.add(req.params.agentId);
+      auditLog.record({
+        kind: "AGENT_WALLET_REGISTERED",
+        meta: {
+          agentId: req.params.agentId,
+          ownerWallet: wallet.ownerWallet,
+          publicKey: wallet.publicKey,
+          custodyModel: wallet.custodyModel,
+          backendHasPrivateKey: wallet.backendHasPrivateKey,
+        },
+      });
+      res.status(201).json({ ok: true, wallet });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.get("/v1/agents/:agentId/wallets", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "agentCreation", "Agent wallets")) return;
+    res.json({ ok: true, wallets: await agentTrading.listWallets(req.params.agentId) });
+  });
+
+  app.post("/v1/agents/:agentId/paper-account", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "paperAgents", "Paper agents")) return;
+    const account = await agentTrading.createPaperAccount(req.params.agentId);
+    observedAgentIds.add(req.params.agentId);
+    auditLog.record({ kind: "PAPER_AGENT_ACCOUNT_CREATED", meta: { agentId: req.params.agentId } });
+    res.status(201).json({ ok: true, account, badge: "PAPER" });
+  });
+
+  app.get("/v1/agents/:agentId/paper-account", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "paperAgents", "Paper agents")) return;
+    const account = await agentTrading.getPaperAccount(req.params.agentId);
+    if (!account) {
+      res.status(404).json({ ok: false, error: "paper_account_not_found" });
+      return;
+    }
+    res.json({ ok: true, account, badge: "PAPER" });
+  });
+
+  app.post("/v1/agents/:agentId/paper-trades", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "paperAgents", "Paper trading")) return;
+    const parsed = paperTradeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_paper_trade", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await agentTrading.recordPaperTrade(req.params.agentId, parsed.data as PaperTradeInput);
+      observedAgentIds.add(req.params.agentId);
+      auditLog.record({
+        kind: "PAPER_TRADE_RECORDED",
+        meta: { agentId: req.params.agentId, marketId: result.event.marketId, amountAtomic: result.event.amountAtomic },
+      });
+      res.status(201).json({ ok: true, ...result, realSettlement: false, token: "PAPER_USDC" });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.get("/v1/agents/:agentId/profile", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "publicAgentProfiles", "Agent profiles")) return;
+    res.json({ ok: true, profile: await agentTrading.profile(req.params.agentId) });
+  });
+
+  app.patch("/v1/agents/:agentId/profile", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "publicAgentProfiles", "Agent profiles")) return;
+    const parsed = profilePatchSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_agent_profile_patch", details: parsed.error.flatten() });
+      return;
+    }
+    const profile = await agentTrading.updateProfile(req.params.agentId, parsed.data);
+    observedAgentIds.add(req.params.agentId);
+    auditLog.record({ kind: "AGENT_PROFILE_UPDATED", meta: { agentId: req.params.agentId, visibility: profile.visibility } });
+    res.json({ ok: true, profile });
+  });
+
+  app.get("/v1/leaderboard", async (_req, res) => {
+    if (!requirePublicBetaFeature(res, "publicAgentProfiles", "Agent leaderboard")) return;
+    res.json({ ok: true, agents: await agentTrading.leaderboard() });
+  });
+
+  app.post("/v1/agents/:agentId/monetization", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "alphaMonetization", "Alpha monetization")) return;
+    const parsed = alphaMonetizationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_alpha_monetization", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const monetization = await agentTrading.setMonetization(req.params.agentId, parsed.data);
+      observedAgentIds.add(req.params.agentId);
+      auditLog.record({
+        kind: "ALPHA_MONETIZATION_UPDATED",
+        meta: { agentId: req.params.agentId, enabled: monetization.enabled, successFeeBps: monetization.successFeeBps, mode: monetization.mode },
+      });
+      res.json({ ok: true, monetization });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.get("/v1/agents/:agentId/monetization", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "alphaMonetization", "Alpha monetization")) return;
+    res.json({ ok: true, monetization: await agentTrading.getMonetization(req.params.agentId) ?? null });
+  });
+
+  app.post("/v1/copy/settings", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copy settings")) return;
+    const parsed = copySettingsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_copy_settings", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const settings = await agentTrading.createCopySettings(parsed.data);
+      observedAgentIds.add(settings.followerAgentId);
+      observedAgentIds.add(settings.sourceAgentId);
+      auditLog.record({
+        kind: "COPY_SETTINGS_CREATED",
+        meta: { copySettingsId: settings.copySettingsId, followerAgentId: settings.followerAgentId, sourceAgentId: settings.sourceAgentId, mode: settings.mode },
+      });
+      res.status(201).json({ ok: true, settings });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.get("/v1/copy/settings/:copySettingsId", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copy settings")) return;
+    const settings = await agentTrading.getCopySettings(req.params.copySettingsId);
+    if (!settings) {
+      res.status(404).json({ ok: false, error: "copy_settings_not_found" });
+      return;
+    }
+    res.json({ ok: true, settings });
+  });
+
+  app.patch("/v1/copy/settings/:copySettingsId", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copy settings")) return;
+    const parsed = copySettingsSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_copy_settings_patch", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const settings = await agentTrading.updateCopySettings(req.params.copySettingsId, parsed.data as Partial<CopySettings>);
+      auditLog.record({ kind: "COPY_SETTINGS_UPDATED", meta: { copySettingsId: settings.copySettingsId, enabled: settings.enabled, mode: settings.mode } });
+      res.json({ ok: true, settings });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.post("/v1/copy/settings/:copySettingsId/pause", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copy settings")) return;
+    try {
+      const settings = await agentTrading.pauseCopySettings(req.params.copySettingsId);
+      auditLog.record({ kind: "COPY_SETTINGS_PAUSED", meta: { copySettingsId: settings.copySettingsId } });
+      res.json({ ok: true, settings });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.post("/v1/copy/decide", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copy decisions")) return;
+    const parsed = copyDecisionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_copy_decision_input", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await agentTrading.decide({
+        ...(parsed.data as CopyDecisionInput),
+        emergencyPaused: parsed.data.emergencyPaused
+          ?? (context.emergencyPause.isPaused("marketplacePaused") || context.emergencyPause.isPaused("finalizePaused")),
+      });
+      auditLog.record({
+        kind: "COPY_DECISION_EVALUATED",
+        meta: {
+          decision: result.decision.decision,
+          reasonCodes: result.decision.reasonCodes,
+          sourceAgentId: parsed.data.sourceAction.sourceAgentId,
+          copiedLotId: result.copiedLot?.copiedLotId,
+        },
+      });
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.get("/v1/copy/lots/:copiedLotId", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copied lots")) return;
+    const lot = await agentTrading.getCopiedLot(req.params.copiedLotId);
+    if (!lot) {
+      res.status(404).json({ ok: false, error: "copied_lot_not_found" });
+      return;
+    }
+    res.json({ ok: true, lot });
+  });
+
+  app.get("/v1/agents/:agentId/copied-lots", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copied lots")) return;
+    res.json({ ok: true, lots: await agentTrading.listCopiedLots(req.params.agentId) });
+  });
+
+  app.post("/v1/copy/lots/:copiedLotId/finalize", async (req, res) => {
+    if (!requirePublicBetaFeature(res, "copySettings", "Copied lot finalization")) return;
+    const parsed = copiedLotFinalizeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_copied_lot_finalize", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await agentTrading.finalizeCopiedLot(req.params.copiedLotId, parsed.data);
+      auditLog.record({
+        kind: "COPIED_LOT_FINALIZED",
+        meta: {
+          copiedLotId: result.lot.copiedLotId,
+          status: result.lot.status,
+          realizedPnlAtomic: result.lot.realizedPnlAtomic,
+          alphaFeeAccrualId: result.alphaFeeAccrual?.accrualId,
+        },
+      });
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
+  app.get("/metrics", (_req, res) => {
+    res.setHeader("content-type", "text/plain; version=0.0.4; charset=utf-8");
+    res.send(renderX402Metrics(context, auditLog));
+  });
+
+  app.post("/internal/alerts/telegram", async (req, res) => {
+    const telegram = config.telegramAlerts;
+    if (!telegram?.enabled) {
+      res.status(404).json({ ok: false, error: "not_found" });
+      return;
+    }
+
+    const expectedSecret = telegram.relaySecret;
+    const providedSecret = req.header("x-alert-relay-secret") ?? bearerToken(req.header("authorization"));
+    if (!expectedSecret || !providedSecret || !timingSafeEqualString(expectedSecret, providedSecret)) {
+      res.status(403).json({ ok: false, error: "alert_relay_forbidden" });
+      return;
+    }
+
+    if (!telegram.botToken || !telegram.chatId) {
+      res.status(503).json({ ok: false, error: "telegram_alert_route_not_configured" });
+      return;
+    }
+
+    const parsed = alertmanagerWebhookPayloadSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_alertmanager_payload", details: parsed.error.flatten() });
+      return;
+    }
+
+    try {
+      assertImmutableRecordSafe("WEBHOOK_IMMUTABLE_LOG", {
+        channel: "telegram",
+        receiver: parsed.data.receiver,
+        status: parsed.data.status,
+        alerts: parsed.data.alerts,
+      });
+      const result = await relayAlertmanagerToTelegram({
+        config: {
+          botToken: telegram.botToken,
+          chatId: telegram.chatId,
+          parseMode: telegram.parseMode,
+          environment: config.nodeEnv ?? "staging",
+        },
+        payload: parsed.data,
+      });
+      auditLog.record({
+        kind: result.ok ? "WEBHOOK_SENT" : "WEBHOOK_FAILED",
+        meta: {
+          channel: "telegram",
+          delivered: result.delivered.map((item) => item.alertName),
+          failed: result.failed.map((item) => item.alertName),
+        },
+      });
+      res.status(result.ok ? 202 : 502).json({
+        ok: result.ok,
+        channel: "telegram",
+        delivered: result.delivered,
+        failed: result.failed,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "telegram alert relay failed";
+      auditLog.record({
+        kind: "WEBHOOK_FAILED",
+        meta: { channel: "telegram", reason: message },
+      });
+      const status = message.includes("PII") || message.includes("immutable") ? 400 : 502;
+      res.status(status).json({ ok: false, error: "telegram_alert_relay_failed", reason: message });
+    }
+  });
+
+  app.post("/v1/webhooks/receiver-test", async (req, res) => {
+    const receiverEnabled = runtimeGates.webhookReceiverTest
+      && (config.nodeEnv ?? "development").toLowerCase() !== "production"
+      && !runtimeGates.prodMoney;
+    if (!receiverEnabled) {
+      res.status(404).json({ ok: false, error: "not_found" });
+      return;
+    }
+
+    if (!config.webhookSigningSecret) {
+      res.status(503).json({ ok: false, error: "webhook_signing_secret_missing" });
+      return;
+    }
+
+    const parsed = signedWebhookEnvelopeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_webhook_envelope", details: parsed.error.flatten() });
+      return;
+    }
+
+    const envelope = parsed.data as SignedWebhookEnvelope;
+    const immutableLogPayload = {
+      idempotencyKey: envelope.idempotencyKey,
+      event: envelope.event,
+      timestamp: envelope.timestamp,
+      payload: envelope.payload,
+    };
+
+    try {
+      assertImmutableRecordSafe("WEBHOOK_IMMUTABLE_LOG", immutableLogPayload);
+      verifyWebhookSignatureAndTimestamp(config.webhookSigningSecret, envelope, now());
+      const claimed = await webhookReplayClaimStore.claim({
+        idempotencyKey: envelope.idempotencyKey,
+        event: envelope.event,
+        timestamp: envelope.timestamp,
+      });
+      if (!claimed) {
+        auditLog.record({
+          kind: "WEBHOOK_REPLAY_REJECTED",
+          meta: { idempotencyKey: envelope.idempotencyKey, event: envelope.event },
+        });
+        res.status(409).json({ ok: false, error: "duplicate_webhook_rejected" });
+        return;
+      }
+
+      auditLog.record({
+        kind: "WEBHOOK_RECEIVED",
+        meta: { idempotencyKey: envelope.idempotencyKey, event: envelope.event },
+      });
+      res.status(202).json({ ok: true, idempotencyKey: envelope.idempotencyKey });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "webhook rejected";
+      auditLog.record({
+        kind: message.includes("duplicate") ? "WEBHOOK_REPLAY_REJECTED" : "WEBHOOK_FAILED",
+        meta: { idempotencyKey: envelope.idempotencyKey, event: envelope.event, reason: message },
+      });
+      const status = message.includes("signature")
+        ? 401
+        : message.includes("timestamp")
+          ? 400
+          : message.includes("PII") || message.includes("immutable")
+            ? 400
+            : 422;
+      res.status(status).json({ ok: false, error: "webhook_rejected", reason: message });
+    }
   });
 
   app.get("/status", (_req, res) => {
@@ -1318,6 +2732,26 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     res.json(report);
   });
 
+  app.get("/drill/fee-accruals", adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }), (_req, res) => {
+    if (!config.realChainDrill?.enabled) {
+      res.status(404).json({ ok: false, error: "real_chain_drill_disabled" });
+      return;
+    }
+    res.json({
+      ok: true,
+      summary: realChainFeeAccrualSummary(),
+      accruals: realChainFeeAccruals,
+    });
+  });
+
+  app.get("/admin/x402/fee-accruals", adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }), (_req, res) => {
+    res.json({
+      ok: true,
+      count: feeAccruals.length,
+      accruals: feeAccruals,
+    });
+  });
+
   app.get("/market/anchoring/status", (_req, res) => {
     const status = context.anchoringQueue?.getStatus();
     res.json({
@@ -1343,6 +2777,24 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   });
 
   app.get("/quote", (req, res) => {
+    if (!runtimeGates.quotes) {
+      res.status(503).json({
+        ok: false,
+        error: "quote_gate_disabled",
+        message: "Quote creation is disabled by runtime gate config.",
+      });
+      return;
+    }
+
+    if (context.emergencyPause.isPaused("quotePaused")) {
+      res.status(503).json({
+        ok: false,
+        error: "quote_paused",
+        message: "Quote creation is paused by emergency controls.",
+      });
+      return;
+    }
+
     const parsed = quoteQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.flatten() });
@@ -1357,8 +2809,32 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return;
     }
 
-    const quote = issueQuote(parsed.data.resource, parsed.data.amountAtomic);
-    res.json(toQuoteResponse(quote));
+    let builderInput: { builderProfile?: BuilderProfile; builderFee?: BuilderFeeConfig };
+    try {
+      builderInput = builderFeeFromQuery(parsed.data);
+    } catch (error) {
+      res.status(422).json({ ok: false, error: "builder_fee_policy_rejected", reasonCode: (error as Error).message });
+      return;
+    }
+
+    let quote: Quote;
+    try {
+      quote = issueQuote(parsed.data.resource, parsed.data.amountAtomic, builderInput);
+    } catch (error) {
+      res.status(422).json({ ok: false, error: "fee_waterfall_rejected", reasonCode: (error as Error).message });
+      return;
+    }
+    const drillAmount = realChainDrillAmountAllowed(quote.totalAtomic);
+    if (!drillAmount.ok) {
+      res.status(403).json({ ok: false, error: "real_chain_drill_cap_exceeded", message: drillAmount.reason });
+      return;
+    }
+    const betaAmount = publicBetaLiveAmountAllowed(quote.totalAtomic);
+    if (!betaAmount.ok) {
+      res.status(403).json({ ok: false, error: "public_beta_cap_exceeded", message: betaAmount.reason });
+      return;
+    }
+    res.json(toQuoteResponse(quote, config));
   });
 
   app.post("/commit", (req, res) => {
@@ -1409,10 +2885,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   });
 
   app.post("/finalize", async (req, res) => {
-    if (config.pauseFinalize) {
+    if (!runtimeGates.finalize || config.pauseFinalize || context.emergencyPause.isPaused("finalizePaused")) {
       sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PAUSED, {
         message: "Finalize route is paused by server policy.",
-        cause: "PAUSE_FINALIZE is enabled.",
+        cause: !runtimeGates.finalize
+          ? "X402_ENABLE_FINALIZE is disabled."
+          : config.pauseFinalize
+            ? "PAUSE_FINALIZE is enabled."
+            : "Emergency finalize pause is enabled.",
       }));
       return;
     }
@@ -1440,17 +2920,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return;
     }
 
-    if (!quote.settlement.includes(parsed.data.paymentProof.settlement)) {
-      res.status(400).json({ ok: false, error: `Unsupported settlement mode: ${parsed.data.paymentProof.settlement}` });
+    const drillAmount = realChainDrillAmountAllowed(quote.totalAtomic);
+    if (!drillAmount.ok) {
+      res.status(403).json({ ok: false, error: "real_chain_drill_cap_exceeded", message: drillAmount.reason });
       return;
     }
-
-    if (parsed.data.paymentProof.settlement === "netting" && !config.unsafeUnverifiedNettingEnabled) {
-      res.status(422).json({
-        ok: false,
-        error: "netting_disabled",
-        message: "Unsigned netting is disabled. Enable UNSAFE_UNVERIFIED_NETTING_ENABLED only for trusted bilateral settlement.",
-      });
+    const betaAmount = publicBetaLiveAmountAllowed(quote.totalAtomic);
+    if (!betaAmount.ok) {
+      res.status(403).json({ ok: false, error: "public_beta_cap_exceeded", message: betaAmount.reason });
       return;
     }
 
@@ -1462,8 +2939,60 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       }
     }
 
-    const paymentProof = parsed.data.paymentProof as PaymentProof;
-    const verification = await verifyPaymentForQuote(quote, paymentProof);
+    const directSplitRequirements = splitPaymentRequirementsForQuote(quote, config) ?? [];
+    const directSplitRequired = directSplitRequirements.length > 0;
+    if (directSplitRequired) {
+      if (!parsed.data.splitPaymentProofs?.length) {
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_MISSING_PAYMENT_PROOF, {
+          cause: "direct split finalize requires splitPaymentProofs for provider and DNA fee lines",
+        }), {
+          dialectDetected: "generic",
+        });
+        return;
+      }
+    } else if (!parsed.data.paymentProof) {
+      res.status(400).json({ error: "Missing or invalid paymentProof" });
+      return;
+    }
+
+    if (!directSplitRequired && parsed.data.paymentProof && !quote.settlement.includes(parsed.data.paymentProof.settlement)) {
+      res.status(400).json({ ok: false, error: `Unsupported settlement mode: ${parsed.data.paymentProof.settlement}` });
+      return;
+    }
+
+    if (!directSplitRequired && parsed.data.paymentProof?.settlement === "netting" && !config.unsafeUnverifiedNettingEnabled) {
+      res.status(422).json({
+        ok: false,
+        error: "netting_disabled",
+        message: "Unsigned netting is disabled. Enable UNSAFE_UNVERIFIED_NETTING_ENABLED only for trusted bilateral settlement.",
+      });
+      return;
+    }
+
+    const drillFinalize = realChainDrillFinalizeAllowed(quote.totalAtomic);
+    if (!drillFinalize.ok) {
+      res.status(403).json({ ok: false, error: "real_chain_drill_cap_exceeded", message: drillFinalize.reason });
+      return;
+    }
+    const betaFinalize = publicBetaLiveFinalizeAllowed(quote.totalAtomic);
+    if (!betaFinalize.ok) {
+      res.status(403).json({ ok: false, error: "public_beta_daily_cap_exceeded", message: betaFinalize.reason });
+      return;
+    }
+
+    const directSplitVerification = directSplitRequired
+      ? await verifyDirectSplitProofs(req, res, commit, quote, parsed.data.splitPaymentProofs ?? [])
+      : undefined;
+    if (directSplitVerification && !directSplitVerification.ok) {
+      return;
+    }
+
+    const paymentProof = directSplitVerification?.ok
+      ? directSplitVerification.primaryPaymentProof
+      : parsed.data.paymentProof as PaymentProof;
+    const verification = directSplitVerification?.ok
+      ? { ok: true, ...directSplitVerification.primaryVerification }
+      : await verifyPaymentForQuote(quote, paymentProof);
     if (!verification.ok) {
       commit.status = "failed";
       commits.set(commit.commitId, commit);
@@ -1474,7 +3003,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
       return;
     }
-    if (paymentProof.settlement === "transfer" && !verification.txSignature) {
+    if (!directSplitRequired && paymentProof.settlement === "transfer" && !verification.txSignature) {
       commit.status = "failed";
       commits.set(commit.commitId, commit);
       sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
@@ -1484,7 +3013,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
       return;
     }
-    if (paymentProof.settlement === "stream" && !verification.streamId) {
+    if (!directSplitRequired && paymentProof.settlement === "stream" && !verification.streamId) {
       commit.status = "failed";
       commits.set(commit.commitId, commit);
       sendX402Error(req, res, new X402Error(X402ErrorCode.X402_PROOF_INVALID, {
@@ -1495,7 +3024,23 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return;
     }
 
-    if (paymentProof.settlement === "transfer" && verification.txSignature) {
+    if (!directSplitRequired && paymentProof.settlement === "transfer" && verification.txSignature) {
+      const globalReplayKey = createGlobalProofReplayKey({
+        shopId: CORE_SHOP_ID,
+        proofId: verification.txSignature,
+        settlement: "transfer",
+      });
+      if (!replayStore.consume(globalReplayKey, now().getTime())) {
+        recordGuardReplay(req, quote.resource, "x402_global_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          details: { settlement: paymentProof.settlement },
+        }), {
+          dialectDetected: "generic",
+          missing: [],
+        });
+        return;
+      }
+
       const replayKey = createReplayKey({
         shopId: CORE_SHOP_ID,
         txSig: verification.txSignature,
@@ -1514,7 +3059,23 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         return;
       }
     }
-    if (paymentProof.settlement === "stream" && verification.streamId) {
+    if (!directSplitRequired && paymentProof.settlement === "stream" && verification.streamId) {
+      const globalReplayKey = createGlobalProofReplayKey({
+        shopId: CORE_SHOP_ID,
+        proofId: verification.streamId,
+        settlement: "stream",
+      });
+      if (!replayStore.consume(globalReplayKey, now().getTime())) {
+        recordGuardReplay(req, quote.resource, "x402_global_replay_detected");
+        sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
+          details: { settlement: paymentProof.settlement },
+        }), {
+          dialectDetected: "generic",
+          missing: [],
+        });
+        return;
+      }
+
       const replayKey = createReplayKey({
         shopId: CORE_SHOP_ID,
         txSig: `stream:${verification.streamId}`,
@@ -1534,7 +3095,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       }
     }
 
-    if (paymentProof.settlement === "netting") {
+    if (!directSplitRequired && paymentProof.settlement === "netting") {
       nettingLedger.add({
         payerCommitment32B: commit.payerCommitment32B,
         providerId: quote.recipient,
@@ -1546,17 +3107,67 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       });
     }
 
-    const signedReceipt = buildReceipt(commit, quote, paymentProof, verification, {
-      requestId: commit.commitId,
-      requestDigest: computeRequestDigest({
-        method: "GET",
-        path: quote.resource,
-      }),
-      responseDigest: fulfilledResponseDigest(quote.resource),
-      shopId: CORE_SHOP_ID,
-    });
+    let signedReceipt: SignedReceipt;
+    try {
+      signedReceipt = buildReceipt(commit, quote, paymentProof, verification, {
+        requestId: commit.commitId,
+        requestDigest: computeRequestDigest({
+          method: "GET",
+          path: quote.resource,
+        }),
+        responseDigest: fulfilledResponseDigest(quote.resource),
+        shopId: CORE_SHOP_ID,
+        splitPaymentProofs: directSplitVerification?.ok ? directSplitVerification.receiptProofs : undefined,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("PII_FORBIDDEN")) {
+        commit.status = "failed";
+        commits.set(commit.commitId, commit);
+        auditLog.record({
+          kind: "RECEIPT_BLOCKED",
+          traceId: req.traceId,
+          quoteId: quote.quoteId,
+          commitId: commit.commitId,
+          settlement: paymentProof.settlement,
+          amountAtomic: quote.totalAtomic,
+          mint: quote.mint,
+        });
+        res.status(400).json({
+          ok: false,
+          error: "immutable_record_blocked",
+          message: "Immutable receipt/proof payload contains raw personal or secret-like data.",
+        });
+        return;
+      }
+      throw error;
+    }
     const receiptValid = verifySignedReceipt(signedReceipt);
-    guard?.ledger.commitSpend(guardActorFromRequest(req), quote.totalAtomic, now());
+    guard?.ledger.commitSpend(observeGuardActor(req), quote.totalAtomic, now());
+    recordRealChainDrillFinalize(quote.totalAtomic);
+    recordPublicBetaLiveFinalize(quote.totalAtomic);
+    const feeAccrual = recordRealChainFeeAccrual({
+      quote,
+      commit,
+      receipt: signedReceipt,
+      paymentProof,
+      verification,
+    });
+    const canonicalFeeAccruals = quote.feeWaterfallV2
+      ? createFeeAccrualRecords(quote.feeWaterfallV2, {
+        commitId: commit.commitId,
+        receiptId: signedReceipt.payload.receiptId,
+        createdAt: now().toISOString(),
+      })
+      : [];
+    if (quote.feeWaterfallV2) {
+      assertImmutableRecordSafe("PROOF_RECORD", quote.feeWaterfallV2);
+      await feeLedgerStore.recordWaterfall(quote.feeWaterfallV2);
+    }
+    for (const accrual of canonicalFeeAccruals) {
+      assertImmutableRecordSafe("PROOF_RECORD", accrual);
+      feeAccruals.push(accrual);
+      await feeLedgerStore.recordAccrual(accrual);
+    }
     recordGuardReceiptVerification(req, quote.resource, signedReceipt.payload.receiptId, receiptValid, receiptValid ? undefined : "receipt_signature_invalid");
     recordMarketEvent({
       type: "PAYMENT_VERIFIED",
@@ -1615,6 +3226,36 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     res.json({
       ok: true,
       receiptId: signedReceipt.payload.receiptId,
+      feeAccrual: feeAccrual
+        ? {
+          id: feeAccrual.id,
+          status: feeAccrual.status,
+          platformFeeAtomic: feeAccrual.platformFeeAtomic,
+          platformFeeBps: feeAccrual.platformFeeBps,
+          platformRecipient: feeAccrual.platformRecipient,
+          collected: feeAccrual.collected,
+        }
+        : undefined,
+      feeAccruals: canonicalFeeAccruals.length > 0
+        ? canonicalFeeAccruals.map((item) => ({
+          id: item.id,
+          feeKind: item.feeKind,
+          amount: item.amount,
+          recipient: item.recipient,
+          status: item.status,
+        }))
+        : undefined,
+      splitPaymentResults: directSplitVerification?.ok
+        ? directSplitVerification.receiptProofs?.map((item) => ({
+          feeLineId: item.feeLineId,
+          kind: item.kind,
+          recipient: item.recipient,
+          amount: item.amount,
+          token: item.token,
+          settlement: item.settlement,
+          txSignature: item.txSignature,
+        }))
+        : undefined,
       accessTokenOrResult: {
         commitId: commit.commitId,
         resource: quote.resource,
@@ -1644,7 +3285,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     res.json({ ok: true, anchored });
   });
 
-  app.post("/settlements/flush", (req, res) => {
+  app.post("/settlements/flush", adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }), (req, res) => {
     const parsed = flushSchema.safeParse(req.body ?? {});
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.flatten() });
@@ -2066,6 +3707,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 }
 
 export async function startServer(config: X402Config = loadConfig()): Promise<void> {
+  assertMainnetReadiness(config);
   const { app, context } = createX402App(config);
   await new Promise<void>((resolve) => {
     app.listen(config.port, () => {

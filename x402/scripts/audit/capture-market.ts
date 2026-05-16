@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import request from "supertest";
 import { createX402App } from "../../src/server.js";
 import { X402Config } from "../../src/config.js";
@@ -231,7 +232,7 @@ async function runLocalCapture(outDir: string): Promise<void> {
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  const x402Root = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..");
+  const x402Root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const outDir = parseFlagValue(argv, "--out-dir") ?? path.join(x402Root, "audit_out");
   await runLocalCapture(outDir);
 }

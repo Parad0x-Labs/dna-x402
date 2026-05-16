@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 import {
   Connection,
   Keypair,
@@ -86,7 +87,7 @@ async function createDevnetPaymentSignature(params: {
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  const x402Root = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..");
+  const x402Root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const outDir = parseFlagValue(argv, "--out-dir") ?? path.join(x402Root, "audit_out");
   const baseUrl = parseFlagValue(argv, "--base-url") ?? process.env.DEVNET_X402_BASE_URL ?? null;
   const withTxSignature = hasFlag(argv, "--with-tx-signature");

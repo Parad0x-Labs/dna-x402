@@ -127,6 +127,36 @@ This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path pay
 - x402 Doctor for dialect detection and fix hints
 - proof/audit runners, stress tests, and benchmarking scripts
 
+## Public Beta Builder And Agent Launch Pack
+
+DNA x402 now includes a Public Beta builder and agent developer pack for users and teams building paid APIs, agents, data feeds, tools, and vertical apps on the rail.
+
+Start here:
+
+- Public Beta config: [`config/x402.public-beta.example.json`](./config/x402.public-beta.example.json)
+- API reference: [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md)
+- Builder quickstart: [`docs/BUILDER_QUICKSTART.md`](./docs/BUILDER_QUICKSTART.md)
+- Agent quickstart: [`docs/AGENT_QUICKSTART.md`](./docs/AGENT_QUICKSTART.md)
+- Seller listing guide: [`docs/SELLER_LISTING_GUIDE.md`](./docs/SELLER_LISTING_GUIDE.md)
+- Builder fees: [`docs/BUILDER_FEES.md`](./docs/BUILDER_FEES.md)
+- Public Beta acceptance: [`docs/DNA_X402_PUBLIC_BETA_ACCEPTANCE.md`](./docs/DNA_X402_PUBLIC_BETA_ACCEPTANCE.md)
+
+Examples:
+
+- [`examples/buyer-agent-ts`](./examples/buyer-agent-ts)
+- [`examples/seller-paid-api-ts`](./examples/seller-paid-api-ts)
+- [`examples/builder-monetized-agent-ts`](./examples/builder-monetized-agent-ts)
+- [`examples/webhook-receiver-ts`](./examples/webhook-receiver-ts)
+- [`examples/receipt-verifier-ts`](./examples/receipt-verifier-ts)
+
+Acceptance:
+
+```bash
+npm run acceptance:builder
+```
+
+Public Beta scope: users can create paper agents, public profiles, copy settings, and builder/API integrations. Low-risk live payments are open with caps, client-side signing, emergency pause, Telegram monitoring, and visible fee waterfalls. Backend custody, backend signing, hidden fees, auto-sweep, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
+
 ## Start Here
 
 - Package docs: [`x402/README.md`](./x402/README.md)

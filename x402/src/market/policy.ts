@@ -29,13 +29,21 @@ export const DENYLIST_KEYWORDS = [
   "drm",
   "ddos",
   "botnet",
+  "sports betting",
   "betting",
   "wager",
   "odds",
+  "bookmaker",
+  "gambling",
   "prediction market",
+  "event contract",
   "binary options",
   "sportsbook",
   "casino",
+  "lottery",
+  "poker",
+  "roulette",
+  "slot machine",
 ] as const;
 
 export type SafeCategory = (typeof SAFE_CATEGORIES)[number];

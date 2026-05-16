@@ -1,0 +1,16 @@
+route:
+  receiver: x402-telegram-relay
+  group_by: ["alertname", "severity"]
+  group_wait: 5s
+  group_interval: 1m
+  repeat_interval: 30m
+
+receivers:
+  - name: x402-telegram-relay
+    webhook_configs:
+      - url: http://127.0.0.1:8080/internal/alerts/telegram
+        send_resolved: false
+        http_config:
+          authorization:
+            type: Bearer
+            credentials_file: G:/DNA x402/.runtime/monitoring/secrets/telegram-relay-secret.txt

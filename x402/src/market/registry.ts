@@ -30,6 +30,7 @@ function baseEndpointPriceAtomic(endpoint: ShopEndpoint): bigint {
 
 export class MarketRegistry {
   private readonly manifests = new Map<string, SignedShopManifest>();
+  private readonly manifestVersions = new Map<string, SignedShopManifest[]>();
   private readonly disabledShops = new Set<string>();
 
   register(signedManifest: SignedShopManifest): ShopManifest {
@@ -37,6 +38,9 @@ export class MarketRegistry {
       throw new Error("Invalid manifest signature");
     }
     this.manifests.set(signedManifest.manifest.shopId, signedManifest);
+    const versions = this.manifestVersions.get(signedManifest.manifest.shopId) ?? [];
+    versions.push(signedManifest);
+    this.manifestVersions.set(signedManifest.manifest.shopId, versions);
     return signedManifest.manifest;
   }
 
@@ -90,6 +94,10 @@ export class MarketRegistry {
       return undefined;
     }
     return signed;
+  }
+
+  versions(shopId: string): SignedShopManifest[] {
+    return [...(this.manifestVersions.get(shopId) ?? [])];
   }
 
   search(query: MarketSearchQuery = {}): RegistrySearchResult[] {

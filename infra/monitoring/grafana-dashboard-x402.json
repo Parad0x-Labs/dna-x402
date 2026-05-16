@@ -1,0 +1,69 @@
+{
+  "title": "DNA x402 Production Safety",
+  "uid": "dna-x402-safety",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "tags": ["dna-x402", "commerce", "safety"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Emergency Pause Active",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "x402_emergency_pause_active", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Finalize Success vs Rejected",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "increase(x402_finalize_success_total[5m])", "legendFormat": "success", "refId": "A" },
+        { "expr": "increase(x402_finalize_rejected_total[5m])", "legendFormat": "rejected", "refId": "B" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Policy Blocks / Reviews",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "increase(x402_policy_blocks_total[5m])", "legendFormat": "blocks", "refId": "A" },
+        { "expr": "increase(x402_policy_reviews_total[5m])", "legendFormat": "reviews", "refId": "B" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Webhook Replay Rejections",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [{ "expr": "increase(x402_webhook_replays_rejected_total[5m])", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Immutable PII Blocks",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "increase(x402_pii_blocks_total[24h])", "refId": "A" }]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "DB / Verifier / Settlement Errors",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "increase(x402_db_errors_total[5m])", "legendFormat": "db", "refId": "A" },
+        { "expr": "increase(x402_verifier_errors_total[5m])", "legendFormat": "verifier", "refId": "B" },
+        { "expr": "increase(x402_settlement_unavailable_total[5m])", "legendFormat": "settlement", "refId": "C" }
+      ]
+    }
+  ]
+}

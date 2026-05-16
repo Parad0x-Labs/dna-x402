@@ -12,6 +12,7 @@ export interface SolanaPaymentVerifierOptions {
   streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
   allowUnverifiedNetting?: boolean;
+  allowedSignerWallets?: string[];
   rpcCache?: {
     statusTtlMs?: number;
     parsedTxTtlMs?: number;
@@ -87,6 +88,7 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
         expectedRecipient: quote.recipient,
         minAmountAtomic: effectiveMinAmount,
         maxAgeSeconds: this.options.maxTransferProofAgeSeconds ?? 900,
+        allowedSignerWallets: this.options.allowedSignerWallets,
       });
     } catch (error) {
       const cause = extractRpcErrorMessage(error);

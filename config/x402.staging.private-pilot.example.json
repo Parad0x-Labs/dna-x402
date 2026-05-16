@@ -1,0 +1,60 @@
+{
+  "name": "dna-x402-private-pilot-staging",
+  "status": "PRIVATE_PILOT_ONLY",
+  "api": {
+    "baseUrl": "https://staging.dnax402.app",
+    "version": "v1",
+    "health": "/health",
+    "metrics": "/metrics"
+  },
+  "sdk": {
+    "package": "dna-x402",
+    "recommendedRuntime": "node>=20"
+  },
+  "settlement": {
+    "enabledMode": "sandbox_or_allowlisted_solana_usdc",
+    "defaultChain": "solana",
+    "token": "USDC",
+    "mainnetDrillScope": "allowlisted_dust_only",
+    "publicProductionMoneyMovement": false
+  },
+  "fees": {
+    "dnaPlatformFeeBps": 10,
+    "dnaPlatformFeeMode": "display_or_accrual_only",
+    "builderFeeMode": "display_or_accrual_only",
+    "directSplitCollection": false,
+    "autoSweep": false,
+    "backendCustody": false
+  },
+  "gates": {
+    "publicMarketplace": false,
+    "unattendedSigning": false,
+    "backendPrivateKeys": false,
+    "publicNetting": false,
+    "physicalGoods": false,
+    "highRiskCategories": false,
+    "polymarketLiveMovement": false,
+    "broadMultiChainSettlement": false
+  },
+  "builderPilot": {
+    "allowedUseCases": [
+      "paid_api",
+      "paid_agent",
+      "data_feed",
+      "tool_endpoint"
+    ],
+    "requiresAllowlist": true,
+    "requiresVisibleFeeWaterfall": true,
+    "requiresReceiptVerification": true
+  },
+  "webhooks": {
+    "signedPayloads": true,
+    "replayProtection": true,
+    "testReceiverProductionExposure": false
+  },
+  "notes": [
+    "This config is for private pilot builder integration only.",
+    "Do not use it as public production approval.",
+    "Secrets, API keys, wallet private keys, and bot tokens must come from local/server secret storage and never from this file."
+  ]
+}

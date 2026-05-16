@@ -1,6 +1,5 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
-import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import { runCli } from "../src/cli.js";
 import { startDemoSeller } from "../src/demo/seller.js";
@@ -17,7 +16,9 @@ afterEach(async () => {
 });
 
 function makeTempDir(prefix: string): string {
-  const dir = mkdtempSync(path.join(tmpdir(), prefix));
+  const tmpRoot = path.resolve(process.cwd(), "..", "reports", "test-tmp");
+  mkdirSync(tmpRoot, { recursive: true });
+  const dir = mkdtempSync(path.join(tmpRoot, prefix));
   cleanupPaths.push(dir);
   return dir;
 }
@@ -33,7 +34,7 @@ describe("dna-x402 cli", () => {
     expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("dnaSeller");
     expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("DNA_TRUSTED_LOCAL_NETTING");
     expect(readFileSync(path.join(targetDir, "package.json"), "utf8")).toContain("\"dna-x402\": \"file:./vendor/");
-  });
+  }, 30_000);
 
   it("scaffolds a buyer starter without installing dependencies", async () => {
     const targetDir = makeTempDir("dna-x402-buyer-");
@@ -44,6 +45,36 @@ describe("dna-x402 cli", () => {
     expect(existsSync(path.join(targetDir, "vendor"))).toBe(true);
     expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("fetchWith402");
     expect(readFileSync(path.join(targetDir, "package.json"), "utf8")).toContain("\"dna-x402\": \"file:./vendor/");
+  }, 30_000);
+
+  it("scaffolds a marketplace agent starter without installing dependencies", async () => {
+    const targetDir = makeTempDir("dna-x402-marketplace-agent-");
+    const exitCode = await runCli(["init", "agent", targetDir, "--template", "marketplace", "--no-install"]);
+    expect(exitCode).toBe(0);
+    expect(existsSync(path.join(targetDir, "package.json"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "index.ts"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "manifest.json"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "sign-manifest.ts"))).toBe(true);
+    expect(existsSync(path.join(targetDir, "vendor"))).toBe(true);
+    expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("/marketplace/search");
+    expect(readFileSync(path.join(targetDir, "manifest.json"), "utf8")).toContain("marketplace-agent");
+    expect(readFileSync(path.join(targetDir, "package.json"), "utf8")).toContain("\"sign-manifest\"");
+  }, 30_000);
+
+  it("maps betting aliases to a restricted compliance shell", async () => {
+    const targetDir = makeTempDir("dna-x402-restricted-agent-");
+    const exitCode = await runCli(["init", "agent", targetDir, "--template", "betting", "--no-install"]);
+    expect(exitCode).toBe(0);
+    expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("RESTRICTED_MARKET_DISABLED");
+    expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).not.toContain("dnaPrice");
+    expect(readFileSync(path.join(targetDir, "manifest.json"), "utf8")).toContain("restricted-market-shell");
+  }, 30_000);
+
+  it("rejects an invalid agent template", async () => {
+    const targetDir = makeTempDir("dna-x402-invalid-agent-");
+    await expect(runCli(["init", "agent", targetDir, "--template", "casino-live", "--no-install"])).rejects.toThrow(
+      "Invalid --template: casino-live. Expected service, marketplace, auction, trading, or restricted-market.",
+    );
   });
 
   it("runs the demo buyer command against a live demo seller", async () => {

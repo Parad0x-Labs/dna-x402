@@ -13,6 +13,7 @@ export interface SplTransferVerificationInput {
   minAmountAtomic: string;
   maxAgeSeconds?: number;
   nowMs?: number;
+  allowedSignerWallets?: string[];
 }
 
 export interface SplTransferVerificationResult {
@@ -104,6 +105,20 @@ function parsedTransferSignal(ix: ParsedInstruction): { destination?: string; mi
   return { destination, mint };
 }
 
+function transactionSignerPubkeys(tx: Awaited<ReturnType<Connection["getParsedTransaction"]>>): string[] {
+  const accountKeys = tx?.transaction.message.accountKeys ?? [];
+  return accountKeys
+    .filter((key: unknown) => Boolean((key as { signer?: boolean }).signer))
+    .map((key: unknown) => {
+      const pubkey = (key as { pubkey?: { toBase58?: () => string } | string }).pubkey;
+      if (typeof pubkey === "string") {
+        return pubkey;
+      }
+      return pubkey?.toBase58?.() ?? "";
+    })
+    .filter(Boolean);
+}
+
 function looksLikeValidSolanaSignature(signature: string): boolean {
   return /^[1-9A-HJ-NP-Za-km-z]{32,88}$/.test(signature);
 }
@@ -188,6 +203,26 @@ export async function verifySplTransferProof(
       errorCode: "PAYMENT_INVALID",
       retryable: false,
     };
+  }
+
+  if (input.allowedSignerWallets && input.allowedSignerWallets.length > 0) {
+    const allowed = new Set(input.allowedSignerWallets);
+    const signers = transactionSignerPubkeys(tx);
+    if (!signers.some((signer) => allowed.has(signer))) {
+      return {
+        ok: false,
+        settledOnchain: false,
+        slot: tx.slot,
+        blockTime: tx.blockTime,
+        error: "transaction signer is not allowlisted for real-chain drill",
+        errorCode: "PAYMENT_INVALID",
+        retryable: false,
+        details: {
+          signerCount: signers.length,
+          allowedSignerCount: input.allowedSignerWallets.length,
+        },
+      };
+    }
   }
 
   const minAmount = parseAtomic(input.minAmountAtomic);

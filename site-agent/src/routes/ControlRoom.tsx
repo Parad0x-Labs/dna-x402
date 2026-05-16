@@ -1,12 +1,11 @@
 import React, { useMemo, useRef, useState } from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
 import { AgentApiClient, parsePaymentRequirements } from "../lib/api";
 import { payQuoteViaSplTransfer } from "../lib/payments";
 import { usePolling } from "../lib/polling";
 import { verifySignedReceipt } from "../lib/receipt";
 import { clusterRpc, explorerClusterParam, loadRuntimeConfig, saveRuntimeConfig } from "../lib/runtimeConfig";
+import { WalletMultiButton, useWallet } from "../lib/wallet";
 import {
   AnchoredReceiptResponse,
   ControlLog,

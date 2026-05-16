@@ -26,6 +26,11 @@ const endpointSchema = z.object({
   proofPolicy: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
+const builderSchema = z.object({
+  builderId: z.string().min(1),
+  feeConfigId: z.string().min(1).optional(),
+});
+
 export const manifestSchema = z.object({
   manifestVersion: z.literal("market-v1").default("market-v1"),
   shopId: z.string().min(1),
@@ -33,6 +38,7 @@ export const manifestSchema = z.object({
   description: z.string().min(1).optional(),
   category: z.string().min(1).optional(),
   ownerPubkey: z.string().min(32),
+  builder: builderSchema.optional(),
   endpoints: z.array(endpointSchema).min(1),
 });
 

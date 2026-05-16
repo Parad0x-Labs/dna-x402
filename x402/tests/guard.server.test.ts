@@ -104,10 +104,12 @@ async function invoke(handler: RequestHandler, req: Request, res: Response): Pro
 }
 
 function routeHandler(container: Express | Router, method: "get" | "post", pathName: string): RequestHandler {
-  const stack = (container as Express & {
+  const router = (container as Express & {
     _router?: { stack: Array<any> };
+    router?: { stack: Array<any> };
     stack?: Array<any>;
-  })._router?.stack ?? (container as Router & { stack?: Array<any> }).stack ?? [];
+  })._router ?? (container as Express & { router?: { stack: Array<any> } }).router ?? container;
+  const stack = (router as Router & { stack?: Array<any> }).stack ?? [];
   const layer = stack.find((entry) => entry.route?.path === pathName && entry.route.methods?.[method]);
   if (!layer?.route?.stack?.[0]?.handle) {
     throw new Error(`Route not found: ${method.toUpperCase()} ${pathName}`);

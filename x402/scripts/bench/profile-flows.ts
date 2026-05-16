@@ -43,9 +43,14 @@ function resolveDefaultPayerKeypairPath(): string | undefined {
   if (fromEnv && fs.existsSync(fromEnv)) {
     return fromEnv;
   }
-  const solanaConfigDefault = path.join(process.env.HOME ?? "", ".config", "solana", "devnet-deployer.json");
-  if (fs.existsSync(solanaConfigDefault)) {
-    return solanaConfigDefault;
+  const workspaceDefaults = [
+    path.resolve(process.cwd(), "test-mainnet", "keys", "devnet", "anchoring.json"),
+    path.resolve(process.cwd(), "test-mainnet", "keys", "devnet", "deployer.json"),
+  ];
+  for (const candidate of workspaceDefaults) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
   }
   return undefined;
 }

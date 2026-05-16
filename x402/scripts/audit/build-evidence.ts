@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 interface EvidencePaths {
   env: string;
@@ -92,7 +93,7 @@ function makeReportBlock(data: {
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  const x402Root = path.resolve(path.dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", "..");
+  const x402Root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const outDir = parseFlagValue(argv, "--out-dir") ?? path.join(x402Root, "audit_out");
 
   const paths: EvidencePaths = {
