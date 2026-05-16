@@ -22,8 +22,10 @@ The GitHub export was pushed through these visible repo commits:
 | `6385712` | Fixed GitHub Actions Rust toolchain setup for the receipt-anchor job. |
 | `7e6e92b` | Tracked the site Polymarket proof data required by the frontend build. |
 | `628e47c` | Fixed README SVG card text overflow in the architecture and proof cards. |
+| `ce957d6` | Added the GitHub export internal audit packet. |
+| `44ec6f7` | Added the x402 backend Agent Builder compiler, endpoints, SDK/CLI helpers, docs, tests, and migration. |
 
-This document and the final README header-card tightening are part of the follow-up internal audit export.
+Additional audit-cleanup commits may exist after this table; this document records the Public Beta export snapshot through `44ec6f7` plus the current consistency cleanup.
 
 ## Exported Top-Level Surfaces
 
@@ -53,7 +55,9 @@ These tracked docs are included in the private GitHub export:
 - `docs/DEPLOY_RAILWAY.md`
 - `docs/DEVNET_DEPLOY.md`
 - `docs/DNA_X402_ADMIN_ACTION_RUNBOOK.md`
+- `docs/DNA_X402_AGENT_BUILDER.md`
 - `docs/DNA_X402_AGENT_PERMISSIONS.md`
+- `docs/DNA_X402_AGENT_RECIPES.md`
 - `docs/DNA_X402_AGENT_WALLET_MODEL.md`
 - `docs/DNA_X402_ALPHA_MONETIZATION.md`
 - `docs/DNA_X402_ARCHITECTURE_UPGRADE_PLAN.md`
@@ -164,9 +168,10 @@ Each example includes a README, `.env.example`, TypeScript source, package metad
 The export includes documentation and reports covering:
 
 - Public Beta scope and acceptance.
+- Prompt-to-Agent and Guided Agent Builder backend support, including drafts, templates, cloneable recipes, risk summaries, and policy rejection for unsafe prompts.
 - Builder Developer Launch Pack.
 - Builder fee waterfall and non-custodial accrual model.
-- Direct split 10 bps private-pilot proof path.
+- Public Beta direct split 10 bps dust proof path.
 - Private mainnet Solana USDC dust proof and direct-split drill evidence.
 - Live Postgres migration, health, concurrency, backup, restore, webhook replay-after-restart, and Sybil relist proof.
 - Agent/copy Postgres durability for wallets, paper accounts, profiles, alpha configs, copy settings, copied lots, alpha accruals, and action ledgers.
@@ -174,13 +179,39 @@ The export includes documentation and reports covering:
 - Production launch approval framework, still fail-closed until production facts and approvals are complete.
 - Counsel review bundle and live-gate checklists.
 
+## Contabo Public Beta Route Evidence
+
+The tracked audit packets record the Contabo Public Beta route evidence:
+
+- `https://parad0xlabs.com/x402/health` is live.
+- Public `/x402/metrics` is blocked.
+- Raw public `8080` access is blocked.
+- Local metrics remain available for collectors.
+- `dna-x402.service` runs from `/opt/dna-x402-next`.
+- The scheduled `pg_dump` timer is enabled.
+- The Contabo route is Public Beta only. It is not unlimited permissionless production approval.
+
+## Agent/Copy Durability Evidence
+
+The tracked audit packets record the agent/copy durability gate as passed on Contabo PostgreSQL 16:
+
+- `002_agent_copy_durability.sql` was applied non-destructively.
+- Agent wallets survive restart/restore.
+- Paper accounts survive restart/restore.
+- Agent profiles survive restart/restore.
+- Alpha monetization configs survive restart/restore.
+- Copy settings survive restart/restore.
+- Copied lots survive restart/restore.
+- Alpha fee accruals survive restart/restore.
+- Agent action ledgers survive restart/restore.
+
 ## Validation Snapshot
 
 The export path was validated with cumulative local checks before the GitHub push:
 
 | Check | Result |
 |---|---|
-| `npm --prefix x402 test` | Passed: 346 passed, 7 skipped at export time. |
+| `npm --prefix x402 test` | Passed: 351 passed, 8 skipped after the Agent Builder backend pack. |
 | `npm --prefix x402 run typecheck:x402` | Passed. |
 | `npm run mayhem:x402` | Passed. |
 | `npm run mayhem:x402:server` | Passed during server mayhem passes before export. |
@@ -195,7 +226,7 @@ The export path was validated with cumulative local checks before the GitHub pus
 | `npm --prefix site-agent audit --audit-level=high` | Passed. |
 | `git diff --check` | Passed at export time. |
 
-GitHub Actions `mainnet-readiness` passed after the README overflow fixes on commit `628e47c`.
+GitHub Actions `mainnet-readiness` passed after the README overflow fixes on commit `628e47c` and again after the Agent Builder backend pack on commit `44ec6f7`.
 
 ## GitHub Actions Coverage
 
@@ -260,7 +291,7 @@ Backend custody, backend signing, hidden fees, unrestricted autonomous live trad
 
 ## Remaining Gate Items
 
-Before broader production expansion:
+Before broader production expansion / permissionless production:
 
 - production deployment evidence must be filled with real production API/docs URLs and provider facts;
 - production Postgres proof must be run against the production/staging-production DB;
@@ -282,4 +313,3 @@ Root-level runtime directories intentionally remain ignored:
 - `/data/`
 - `reports/`
 - `.tools/`
-
