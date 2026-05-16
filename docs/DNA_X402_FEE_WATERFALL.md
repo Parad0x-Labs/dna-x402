@@ -38,8 +38,8 @@ Fee math must be canonical. No endpoint should hide fee logic.
 - DNA platform fee is first-class and cannot be overridden by builder or affiliate fees.
 - Builder fees are visible in quotes and receipt-bound through `feeWaterfallHash`.
 - Builder fees can run in `display_only` or `builder_accrual` mode for Public Beta.
-- DNA 10 bps direct split collection is implemented and real-mainnet dust-tested for approved Public Beta flows only. Finalize requires provider and DNA treasury proofs before receipt issuance.
-- Public direct split collection remains gated until counsel review, public-production backup operators, and explicit live-gate approval are complete.
+- DNA 10 bps direct split collection is implemented and real-mainnet dust-tested for approved Public Beta live paid flows. Finalize requires provider and DNA treasury proofs before receipt issuance.
+- Public Beta live paid Solana USDC flows must use DNA direct split; display/accrual DNA fee modes are for demos or explicitly non-live environments.
 - Legacy `FEE_BPS`, `BASE_FEE_ATOMIC`, and `MIN_FEE_ATOMIC` must be zero when canonical direct split platform fees are enabled; hidden legacy fee stacking is rejected.
 - Dust amounts that cannot represent required bps fees fail closed instead of silently dropping the fee.
 - Polymarket V1 keeps builder fee `0 bps`.

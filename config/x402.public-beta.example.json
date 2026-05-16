@@ -35,9 +35,11 @@
   },
   "fees": {
     "dnaPlatformFeeBps": 10,
-    "dnaPlatformFeeMode": "display_accrual_or_gated_direct_split",
+    "dnaPlatformFeeMode": "direct_split_required_for_live_paid_flows",
     "builderFeeMode": "display_or_accrual_only",
-    "directSplitCollection": "separate_gate_required",
+    "directSplitCollection": "required_for_live_paid_solana_usdc_flows",
+    "directSplitGateRequired": true,
+    "dnaTreasuryProofRequiredForFinalize": true,
     "autoSweep": false,
     "backendCustody": false,
     "hiddenFees": false

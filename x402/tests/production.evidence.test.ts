@@ -66,14 +66,20 @@ describe("production evidence collector", () => {
       X402_RELEASE_VERSION: "2026.05.15",
       X402_RELEASE_APPROVER: "Saulius",
       X402_LAUNCH_SCOPE: "Public Low-Risk Builder/API Pilot",
-      X402_ENABLE_DIRECT_SPLIT_FEES: "0",
+      X402_ENABLE_DIRECT_SPLIT_FEES: "1",
+      X402_DIRECT_SPLIT_GATE_REF: "PUBLIC_BETA_DIRECT_SPLIT_2026",
       X402_ENABLE_UNATTENDED_SIGNING: "0",
       X402_ENABLE_BACKEND_KEY_CUSTODY: "0",
       X402_ENABLE_PUBLIC_NETTING: "0",
       X402_ENABLE_PHYSICAL_GOODS: "0",
       X402_ENABLE_HIGH_RISK_CATEGORIES: "0",
       X402_ENABLE_POLYMARKET_LIVE: "0",
-      X402_PLATFORM_FEE_MODE: "display_only",
+      X402_PLATFORM_FEE_MODE: "direct_split",
+      X402_PLATFORM_FEE_BPS: "10",
+      X402_PLATFORM_FEE_TREASURY: "dna-treasury",
+      FEE_BPS: "0",
+      BASE_FEE_ATOMIC: "0",
+      MIN_FEE_ATOMIC: "0",
     }, "2026-05-15T00:00:00.000Z");
 
     expect(report.status).toBe("PASS");

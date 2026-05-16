@@ -122,10 +122,29 @@ describe("agent wallets, copy controls, and alpha monetization", () => {
     };
     const publicBetaConfig: X402Config = {
       ...baseConfig,
+      feePolicy: {
+        ...baseConfig.feePolicy,
+        feeBps: 0,
+        baseFeeAtomic: 0n,
+        minFeeAtomic: 0n,
+      },
+      builderMonetization: {
+        platformFeeBps: 10,
+        platformFeeMode: "direct_split",
+        platformTreasury: "dna-treasury-public-beta",
+        builderFeesEnabled: true,
+        builderFeeDefaultMode: "display_only",
+        builderFeeMaxBps: 500,
+        affiliateFeesEnabled: false,
+        affiliateFeeMaxBps: 200,
+        directSplitFeesEnabled: true,
+        directSplitGateRef: "PUBLIC_BETA_DIRECT_SPLIT_TEST",
+        autoSweepRequested: false,
+      },
       publicBeta: {
         ...baseConfig.publicBeta!,
         liveLowRisk: true,
-        maxTxUsd: 0.000001,
+        maxTxUsd: 0.001,
         maxDailySpendUsd: 1,
       },
       telegramAlerts: {
@@ -148,7 +167,7 @@ describe("agent wallets, copy controls, and alpha monetization", () => {
 
     await request(app)
       .get("/quote")
-      .query({ resource: "/resource", amountAtomic: "2" })
+      .query({ resource: "/resource", amountAtomic: "2000" })
       .expect(403)
       .expect((res) => {
         expect(res.body.error).toBe("public_beta_cap_exceeded");
@@ -175,10 +194,35 @@ describe("agent wallets, copy controls, and alpha monetization", () => {
         .post("/commit")
         .send({ quoteId: quote.body.quoteId, payerCommitment32B: `0x${suffix.repeat(64)}` })
         .expect(201);
+      const requiredLines = quote.body.feeWaterfallV2.lines.filter((line: any) => line.requiredForFinalize);
+      const provider = requiredLines.find((line: any) => line.kind === "PROVIDER_AMOUNT");
+      const dna = requiredLines.find((line: any) => line.kind === "DNA_PLATFORM_FEE");
+      expect(provider).toBeTruthy();
+      expect(dna).toBeTruthy();
       const expectedStatus = suffix === "a" ? 200 : 403;
       await request(cappedDaily.app)
         .post("/finalize")
-        .send({ commitId: commit.body.commitId, paymentProof: { settlement: "transfer", txSignature: `tx-ok-beta-${suffix}-123456789012345678901234` } })
+        .send({
+          commitId: commit.body.commitId,
+          splitPaymentProofs: [
+            {
+              feeLineId: provider.id,
+              paymentProof: {
+                settlement: "transfer",
+                txSignature: `tx-ok-beta-provider-${suffix}-123456789012345678901234`,
+                amountAtomic: provider.amount,
+              },
+            },
+            {
+              feeLineId: dna.id,
+              paymentProof: {
+                settlement: "transfer",
+                txSignature: `tx-ok-beta-dna-${suffix}-123456789012345678901234`,
+                amountAtomic: dna.amount,
+              },
+            },
+          ],
+        })
         .expect(expectedStatus);
     }
   });

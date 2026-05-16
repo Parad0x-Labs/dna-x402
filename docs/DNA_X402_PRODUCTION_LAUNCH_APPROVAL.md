@@ -145,6 +145,7 @@ Allowed only after approval:
 - builder-monetized APIs in `display_only` or non-custodial accrual mode
 - allowlisted or reviewed builders
 - Solana USDC only
+- DNA 10 bps direct split required for live paid Solana USDC flows
 - quote, commit, finalize, receipt, paid retry
 - visible fee waterfall
 - receipt verification
@@ -153,7 +154,7 @@ Allowed only after approval:
 
 Still blocked:
 
-- public direct fee collection unless the direct split gate is separately approved
+- live paid fee collection that does not require both provider and DNA treasury proofs
 - auto-sweep
 - backend custody
 - hidden fees
@@ -179,7 +180,8 @@ HELIUS_RPC=<production-helius-rpc>
 
 X402_ENABLE_PROD_MONEY=0
 X402_ENABLE_PUBLIC_MARKETPLACE=0
-X402_ENABLE_DIRECT_SPLIT_FEES=0
+X402_ENABLE_DIRECT_SPLIT_FEES=1
+X402_DIRECT_SPLIT_GATE_REF=PUBLIC_BETA_DIRECT_SPLIT_2026
 X402_ENABLE_UNATTENDED_SIGNING=0
 X402_ENABLE_BACKEND_KEY_CUSTODY=0
 X402_ENABLE_PUBLIC_NETTING=0
@@ -187,17 +189,22 @@ X402_ENABLE_PHYSICAL_GOODS=0
 X402_ENABLE_HIGH_RISK_CATEGORIES=0
 X402_ENABLE_POLYMARKET_LIVE=0
 
-X402_PLATFORM_FEE_MODE=display_only
+X402_PLATFORM_FEE_MODE=direct_split
 X402_PLATFORM_FEE_BPS=10
+X402_PLATFORM_FEE_TREASURY=<dna-treasury-usdc-wallet>
 X402_ENABLE_BUILDER_FEES=1
 X402_BUILDER_FEE_DEFAULT_MODE=display_only
+
+FEE_BPS=0
+BASE_FEE_ATOMIC=0
+MIN_FEE_ATOMIC=0
 
 X402_ALERT_TELEGRAM_ENABLED=1
 X402_ALERT_TELEGRAM_BOT_TOKEN=<secret>
 X402_ALERT_TELEGRAM_CHAT_ID=<secret>
 ```
 
-Production boot must reject backend private key custody, unattended signing, auto-sweep, hidden fee collection, and direct split collection without a gate reference.
+Production boot must reject backend private key custody, unattended signing, auto-sweep, hidden fee collection, live paid flows without direct split, direct split collection without a gate reference, and legacy fee stacking when canonical direct split platform fees are enabled.
 
 ## Production Database Proof
 
@@ -321,13 +328,14 @@ Required fields before changing approval:
 
 ## Direct Split Fee Gate
 
-Public 10 bps collection and public builder fee collection remain blocked until direct split is approved.
+Public Beta live paid Solana USDC flows require DNA 10 bps direct split collection. Public builder fee direct collection remains blocked until separately approved; builder fees stay display/accrual unless the builder direct split gate is explicitly approved.
 
-Private-pilot DNA 10 bps direct split is implemented behind `X402_ENABLE_DIRECT_SPLIT_FEES=1` and `X402_DIRECT_SPLIT_GATE_REF`. A Public Beta Solana USDC direct split dust proof passed on 2026-05-16 with separate provider and DNA treasury SPL transfers, receipt-bound split proofs, and replay/underpay/wrong-treasury rejection. Production approval still requires the narrow launch gate, counsel constraints, public-production backup operators, production monitoring, and final production dust drill evidence.
+DNA 10 bps direct split is implemented behind `X402_ENABLE_DIRECT_SPLIT_FEES=1`, `X402_PLATFORM_FEE_MODE=direct_split`, and `X402_DIRECT_SPLIT_GATE_REF`. A Public Beta Solana USDC direct split dust proof passed on 2026-05-16 with separate provider and DNA treasury SPL transfers, receipt-bound split proofs, and replay/underpay/wrong-treasury rejection. Live paid beta finalize must require both provider and DNA treasury proofs. Broader production approval still requires counsel constraints, public-production backup operators, production monitoring, and final production dust drill evidence.
 
-If direct split is not approved:
+If direct split is not configured, live paid Public Beta flows must not start:
 
 ```bash
+X402_ENABLE_PUBLIC_BETA_LIVE_LOW_RISK=0
 X402_PLATFORM_FEE_MODE=display_only
 X402_BUILDER_FEE_DEFAULT_MODE=display_only
 X402_ENABLE_DIRECT_SPLIT_FEES=0

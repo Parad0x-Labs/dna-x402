@@ -10,7 +10,7 @@ Unapproved public direct collection status: `not in beta scope yet`.
 
 - `display_only`
 - `builder_accrual`
-- DNA platform fee `direct_split` for approved capped low-risk beta flows only
+- DNA platform fee `direct_split` is required for approved capped live paid beta flows
 
 ## Not In Beta Scope Yet
 
@@ -32,7 +32,7 @@ Every fee line is visible and receipt-bound:
 
 ## Direct Split
 
-Direct split collection is implemented for gated Public Beta fee lines. Finalize requires every required payment proof before issuing a receipt.
+Direct split collection is implemented for gated Public Beta fee lines. Live paid Solana USDC beta flows must include the DNA 10 bps fee line, and finalize requires every required payment proof before issuing a receipt.
 
 Current approved Public Beta direct split scope:
 

@@ -288,7 +288,7 @@ Checks passed:
 
 Classification:
 
-This proves gated Public Beta direct split collection for low-risk, allowlisted, dust-size Solana USDC flows. It does not approve public direct fee collection, public production launch, direct builder fee collection, auto-sweep, backend custody, Polymarket live movement, public netting, physical goods, or high-risk categories.
+This proves gated Public Beta direct split collection for low-risk, allowlisted, dust-size Solana USDC flows. Live paid Solana USDC beta flows require this provider-plus-DNA-treasury proof model. It does not approve unlimited permissionless production, direct builder fee collection, auto-sweep, backend custody, Polymarket live movement, public netting, physical goods, or high-risk categories.
 
 ## Helius RPC Patch Accepted
 
@@ -374,7 +374,7 @@ Updated post-drill status:
 
 Updated direct split post-drill status:
 
-> Private staging Solana USDC direct split dust proof passed. DNA x402 collected the gated 10 bps DNA treasury fee through a separate buyer-signed SPL transfer and issued a receipt only after both provider and DNA treasury proofs verified. Public direct fee collection remains blocked pending counsel review, public-production backup operators, explicit direct split fee gate approval, and production launch approval.
+> Historical private-staging Solana USDC direct split dust proof passed and is now accepted as Public Beta direct split technical evidence. DNA x402 collected the gated 10 bps DNA treasury fee through a separate buyer-signed SPL transfer and issued a receipt only after both provider and DNA treasury proofs verified. Broader permissionless direct fee collection remains blocked pending counsel review, public-production backup operators, expanded fee gate approval, and production launch approval.
 
 ## Current Verdict
 

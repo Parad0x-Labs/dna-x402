@@ -94,7 +94,7 @@ describe("builder developer launch pack", () => {
     expect(config.settlement?.publicBetaMoneyMovement).toBe("open_with_caps");
     expect(config.settlement?.backendSigning).toBe(false);
     expect(config.settlement?.backendCustody).toBe(false);
-    expect(config.fees?.directSplitCollection).toBe("separate_gate_required");
+    expect(config.fees?.directSplitCollection).toBe("required_for_live_paid_solana_usdc_flows");
     expect(config.fees?.autoSweep).toBe(false);
     expect(config.fees?.backendCustody).toBe(false);
     expect(config.fees?.hiddenFees).toBe(false);
@@ -136,7 +136,7 @@ describe("builder developer launch pack", () => {
     expect(builderExample).not.toContain("autoSweep");
 
     const acceptance = read("docs/DNA_X402_PUBLIC_BETA_ACCEPTANCE.md");
-    expect(acceptance).toContain("public direct fee collection");
+    expect(acceptance).toContain("live paid Public Beta fee collection");
     expect(acceptance).toContain("direct split fee gate approval");
   });
 });

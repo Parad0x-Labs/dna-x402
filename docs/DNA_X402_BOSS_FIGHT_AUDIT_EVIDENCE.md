@@ -397,7 +397,7 @@ Required before public production:
 
 ## Final Audit Language
 
-DNA x402 has passed private mainnet dust-size Solana USDC technical chain proof, Public Beta Solana USDC direct split 10 bps dust proof, live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local monitoring collector/dashboard/alert-route proof, external Telegram human-route proof, and Public Beta primary operator assignment. It is still not public production ready until counsel review, backup operators, explicit direct split fee gate approval for public collection, and explicit live-gate approvals are complete.
+DNA x402 has passed private mainnet dust-size Solana USDC technical chain proof, Public Beta Solana USDC direct split 10 bps dust proof, live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local monitoring collector/dashboard/alert-route proof, external Telegram human-route proof, and Public Beta primary operator assignment. It is ready for capped Public Beta live paid flows that require DNA direct split. It is still not broad permissionless production ready until counsel review, backup operators, expanded fee gate approvals, and explicit expanded live-gate approvals are complete.
 # Agent/Copy Postgres Durability Gate
 
 Status: `PASSED_CONTABO_POSTGRES_16_PUBLIC_BETA_DB`

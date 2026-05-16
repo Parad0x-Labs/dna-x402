@@ -41,7 +41,6 @@ const REQUIRED_FIELDS: Array<{ name: string; env: string }> = [
 ];
 
 const DANGEROUS_FLAGS = [
-  "X402_ENABLE_DIRECT_SPLIT_FEES",
   "X402_ENABLE_UNATTENDED_SIGNING",
   "X402_ENABLE_BACKEND_KEY_CUSTODY",
   "X402_ENABLE_PUBLIC_NETTING",
@@ -167,19 +166,65 @@ export function buildProductionEvidenceReport(
     }
   }
 
-  if (clean(env.X402_PLATFORM_FEE_MODE) && !["display_only", "seller_accrual"].includes(clean(env.X402_PLATFORM_FEE_MODE)!)) {
-    blockers.push("X402_PLATFORM_FEE_MODE must be display_only or seller_accrual before direct split approval.");
+  const platformFeeMode = clean(env.X402_PLATFORM_FEE_MODE);
+  if (!isTruthy(env.X402_ENABLE_DIRECT_SPLIT_FEES)) {
+    blockers.push("X402_ENABLE_DIRECT_SPLIT_FEES=1 is required for Public Beta live paid fee collection.");
+    checks.push({
+      name: "direct_split_enabled",
+      status: "BLOCKED",
+      detail: "direct split is disabled",
+    });
+  } else {
+    checks.push({ name: "direct_split_enabled", status: "PASS", detail: "direct split enabled for live paid flows." });
+  }
+
+  if (!clean(env.X402_DIRECT_SPLIT_GATE_REF)) {
+    blockers.push("X402_DIRECT_SPLIT_GATE_REF is required for Public Beta live paid fee collection.");
+    checks.push({ name: "direct_split_gate_ref", status: "BLOCKED", detail: "gate reference missing." });
+  } else {
+    checks.push({ name: "direct_split_gate_ref", status: "PASS", detail: "direct split gate reference present." });
+  }
+
+  if (platformFeeMode !== "direct_split") {
+    blockers.push("X402_PLATFORM_FEE_MODE=direct_split is required for Public Beta live paid fee collection.");
     checks.push({
       name: "platform_fee_mode",
       status: "BLOCKED",
-      detail: `unsupported mode ${env.X402_PLATFORM_FEE_MODE}`,
+      detail: platformFeeMode ? `unsupported mode ${platformFeeMode}` : "missing",
     });
   } else {
     checks.push({
       name: "platform_fee_mode",
       status: "PASS",
-      detail: clean(env.X402_PLATFORM_FEE_MODE) ?? "unset defaults to safe mode",
+      detail: "direct_split",
     });
+  }
+
+  if (clean(env.X402_PLATFORM_FEE_BPS) !== "10") {
+    blockers.push("X402_PLATFORM_FEE_BPS=10 is required for Public Beta live paid fee collection.");
+    checks.push({
+      name: "platform_fee_bps",
+      status: "BLOCKED",
+      detail: clean(env.X402_PLATFORM_FEE_BPS) ?? "missing",
+    });
+  } else {
+    checks.push({ name: "platform_fee_bps", status: "PASS", detail: "10 bps" });
+  }
+
+  if (!clean(env.X402_PLATFORM_FEE_TREASURY)) {
+    blockers.push("X402_PLATFORM_FEE_TREASURY is required for Public Beta live paid fee collection.");
+    checks.push({ name: "platform_fee_treasury", status: "BLOCKED", detail: "treasury recipient missing." });
+  } else {
+    checks.push({ name: "platform_fee_treasury", status: "PASS", detail: "treasury recipient configured with value redacted." });
+  }
+
+  const legacyFeeEnabled = [env.FEE_BPS, env.BASE_FEE_ATOMIC, env.MIN_FEE_ATOMIC]
+    .some((value) => clean(value) !== undefined && clean(value) !== "0");
+  if (legacyFeeEnabled) {
+    blockers.push("FEE_BPS, BASE_FEE_ATOMIC, and MIN_FEE_ATOMIC must be zero when direct split platform fees are enabled.");
+    checks.push({ name: "legacy_fee_stack", status: "BLOCKED", detail: "legacy fee stack is non-zero." });
+  } else {
+    checks.push({ name: "legacy_fee_stack", status: "PASS", detail: "legacy fee stack disabled." });
   }
 
   return {

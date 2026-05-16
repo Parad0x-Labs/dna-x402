@@ -17,7 +17,7 @@ X402_STAGING_API_URL=http://127.0.0.1:4021
 ## Safety Rules
 
 - Public Beta is open for agents, builder APIs, paper trading, copy controls, profiles, and low-risk capped live payments.
-- Direct split fee collection requires the direct split beta gate.
+- Live paid Solana USDC beta flows require direct split after the direct split beta gate is configured.
 - Builder fees are allowed in Public Beta as visible display-only or non-custodial accrual lines.
 - Backend private keys, backend signing, unattended signing, auto-sweep, and hidden fees are forbidden.
 - High-risk/regulated verticals are not in beta scope yet.
@@ -218,7 +218,7 @@ Builder fee quote parameters:
 - `builderRecipient`
 - `builderFeeMode=display_only|builder_accrual`
 
-Public Beta DNA direct split is available only behind `X402_ENABLE_DIRECT_SPLIT_FEES=1` and `X402_DIRECT_SPLIT_GATE_REF` with capped low-risk flows, Helius RPC, Telegram alerts, and client-side signing. Unapproved direct split collection is not in beta scope.
+Public Beta DNA direct split is required for live paid Solana USDC beta flows behind `X402_ENABLE_DIRECT_SPLIT_FEES=1`, `X402_PLATFORM_FEE_MODE=direct_split`, and `X402_DIRECT_SPLIT_GATE_REF` with capped low-risk flows, Helius RPC, Telegram alerts, and client-side signing. Unapproved live fee collection without DNA treasury proof is not in beta scope.
 
 ## Policy Errors
 

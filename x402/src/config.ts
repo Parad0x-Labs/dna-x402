@@ -736,6 +736,32 @@ export function validateRuntimeGateConfig(config: Partial<X402Config>): string[]
       if (!publicBeta.requireClientSignature) {
         issues.push("X402_PUBLIC_BETA_REQUIRE_CLIENT_SIGNATURE=1 is required for capped live beta flows.");
       }
+      if (!builder) {
+        issues.push("Builder monetization config is required for Public Beta live paid flows.");
+      } else {
+        if (!builder.directSplitFeesEnabled) {
+          issues.push("X402_ENABLE_DIRECT_SPLIT_FEES=1 is required for Public Beta live paid flows.");
+        }
+        if (builder.platformFeeMode !== "direct_split") {
+          issues.push("X402_PLATFORM_FEE_MODE=direct_split is required for Public Beta live paid flows.");
+        }
+        if (!builder.directSplitGateRef) {
+          issues.push("X402_DIRECT_SPLIT_GATE_REF is required for Public Beta live paid flows.");
+        }
+        if (!builder.platformTreasury) {
+          issues.push("X402_PLATFORM_FEE_TREASURY is required for Public Beta live paid flows.");
+        }
+        if (builder.platformFeeBps !== 10) {
+          issues.push("X402_PLATFORM_FEE_BPS must be exactly 10 for Public Beta live paid flows.");
+        }
+        if (config.feePolicy && (
+          config.feePolicy.baseFeeAtomic > 0n
+          || config.feePolicy.feeBps > 0
+          || config.feePolicy.minFeeAtomic > 0n
+        )) {
+          issues.push("Legacy FEE_BPS/BASE_FEE_ATOMIC/MIN_FEE_ATOMIC must be zero for Public Beta live paid direct split flows.");
+        }
+      }
       if (publicBeta.maxTxUsd > 25) {
         issues.push("X402_PUBLIC_BETA_MAX_TX_USD cannot exceed 25 without a new beta risk review.");
       }

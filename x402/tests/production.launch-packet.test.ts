@@ -51,7 +51,7 @@ describe("production launch packet", () => {
     expect(pilotSection).toContain("production Postgres migration/health/concurrency/backup passed with no skips");
     expect(pilotSection).toContain("public-production backup operators assigned");
     expect(pilotSection).toContain("external counsel response received");
-    expect(pilotSection).toContain("public direct fee collection unless the direct split gate is separately approved");
+    expect(pilotSection).toContain("live paid fee collection without DNA direct split provider and treasury proofs");
 
     for (const gate of [
       "Production Money Movement Gate",
