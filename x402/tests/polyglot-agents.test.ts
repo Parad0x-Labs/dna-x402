@@ -148,6 +148,9 @@ function rustEnv(): NodeJS.ProcessEnv {
   const cargoHome = path.resolve(repoRoot, ".tools", "rustup", "cargo");
   const rustupHome = path.resolve(repoRoot, ".tools", "rustup", "rustup-home");
   const rustBin = path.resolve(cargoHome, "bin");
+  if (!fs.existsSync(rustBin)) {
+    return { ...process.env };
+  }
   return {
     ...process.env,
     CARGO_HOME: cargoHome,

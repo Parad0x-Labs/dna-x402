@@ -21,6 +21,9 @@ jobs:
             x402/package-lock.json
             site-agent/package-lock.json
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install x402
         run: npm --prefix x402 ci
 
