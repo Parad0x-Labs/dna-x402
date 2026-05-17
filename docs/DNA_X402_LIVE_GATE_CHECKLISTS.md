@@ -106,8 +106,11 @@ Allowed:
 - direct split DNA 10 bps collection only through provider and DNA treasury proofs
 - buyer-visible fee waterfall before commit
 - receipt-bound fee waterfall and split proof summary
-- per-transaction cap: `100000` atomic USDC (`0.10 USDC`)
-- daily drill/pilot cap: `5000000` atomic USDC (`5 USDC`)
+- Public Beta per-transaction cap: `$200`
+- Public Beta daily spend cap: `$1,500`
+- Public Beta daily loss cap: `$300`
+- Public Beta open exposure cap: `$500`
+- historical direct split dust-drill cap: `100000` atomic USDC (`0.10 USDC`) per transaction and `5000000` atomic USDC (`5 USDC`) per day; drill caps are not the normal buyer-agent/service-agent payment ceiling
 - Telegram alert route watched by the primary operator
 - emergency pause available
 - HTTPS route only: `https://parad0xlabs.com/x402/`
@@ -146,7 +149,7 @@ Approval date: `2026-05-16`
 
 Approval: `APPROVED_SMALL_SCALE_OWNER_OPERATED_REAL_MONEY_PILOT`
 
-This approval is not counsel approval and not public production approval. If traction rises beyond the tiny caps or onboarding becomes public/permissionless, pause expansion until public-production backup operators, counsel review, PITR/managed backup policy, release tag, and explicit public live-gate approval are complete.
+This approval is not counsel approval and not unlimited permissionless production approval. If usage pressure exceeds the Public Beta caps, failures appear in monitoring, or onboarding expands into high-risk/regulated verticals, pause expansion until public-production backup operators, counsel review, PITR/managed backup policy, release tag, and explicit public live-gate approval are complete.
 
 ## Polymarket Live Movement Gate
 

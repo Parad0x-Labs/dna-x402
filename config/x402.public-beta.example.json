@@ -20,10 +20,10 @@
     "alphaMonetization": true,
     "lowRiskLivePayments": true,
     "requiresClientSignature": true,
-    "maxTxUsd": 25,
-    "maxDailySpendUsd": 250,
-    "maxDailyLossUsd": 50,
-    "maxOpenExposureUsd": 100
+    "maxTxUsd": 200,
+    "maxDailySpendUsd": 1500,
+    "maxDailyLossUsd": 300,
+    "maxOpenExposureUsd": 500
   },
   "settlement": {
     "enabledMode": "capped_low_risk_solana_usdc",

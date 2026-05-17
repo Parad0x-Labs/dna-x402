@@ -7,6 +7,12 @@ const DEFAULT_USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 const DEFAULT_DEVNET_PAYMENT_RECIPIENT = "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2";
 export const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const MIN_PRODUCTION_SECRET_LENGTH = 24;
+export const PUBLIC_BETA_RISK_CAPS_USD = {
+  maxTxUsd: 200,
+  maxDailySpendUsd: 1500,
+  maxDailyLossUsd: 300,
+  maxOpenExposureUsd: 500,
+} as const;
 
 const schema = z.object({
   NODE_ENV: z.string().default("development"),
@@ -112,10 +118,10 @@ const schema = z.object({
   X402_PUBLIC_BETA_REQUIRE_CLIENT_SIGNATURE: z.string().optional(),
   X402_PUBLIC_BETA_BACKEND_SIGNING: z.string().optional(),
   X402_PUBLIC_BETA_BACKEND_CUSTODY: z.string().optional(),
-  X402_PUBLIC_BETA_MAX_TX_USD: z.coerce.number().positive().default(25),
-  X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD: z.coerce.number().positive().default(250),
-  X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: z.coerce.number().positive().default(50),
-  X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: z.coerce.number().positive().default(100),
+  X402_PUBLIC_BETA_MAX_TX_USD: z.coerce.number().positive().default(PUBLIC_BETA_RISK_CAPS_USD.maxTxUsd),
+  X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD: z.coerce.number().positive().default(PUBLIC_BETA_RISK_CAPS_USD.maxDailySpendUsd),
+  X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: z.coerce.number().positive().default(PUBLIC_BETA_RISK_CAPS_USD.maxDailyLossUsd),
+  X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: z.coerce.number().positive().default(PUBLIC_BETA_RISK_CAPS_USD.maxOpenExposureUsd),
   X402_PROD_MONEY_CHECKLIST_REF: z.string().optional(),
   X402_POLYMARKET_LIVE_CHECKLIST_REF: z.string().optional(),
   X402_PUBLIC_NETTING_CHECKLIST_REF: z.string().optional(),
@@ -762,17 +768,17 @@ export function validateRuntimeGateConfig(config: Partial<X402Config>): string[]
           issues.push("Legacy FEE_BPS/BASE_FEE_ATOMIC/MIN_FEE_ATOMIC must be zero for Public Beta live paid direct split flows.");
         }
       }
-      if (publicBeta.maxTxUsd > 25) {
-        issues.push("X402_PUBLIC_BETA_MAX_TX_USD cannot exceed 25 without a new beta risk review.");
+      if (publicBeta.maxTxUsd > PUBLIC_BETA_RISK_CAPS_USD.maxTxUsd) {
+        issues.push(`X402_PUBLIC_BETA_MAX_TX_USD cannot exceed ${PUBLIC_BETA_RISK_CAPS_USD.maxTxUsd} without a new beta risk review.`);
       }
-      if (publicBeta.maxDailySpendUsd > 250) {
-        issues.push("X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD cannot exceed 250 without a new beta risk review.");
+      if (publicBeta.maxDailySpendUsd > PUBLIC_BETA_RISK_CAPS_USD.maxDailySpendUsd) {
+        issues.push(`X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD cannot exceed ${PUBLIC_BETA_RISK_CAPS_USD.maxDailySpendUsd} without a new beta risk review.`);
       }
-      if (publicBeta.maxDailyLossUsd > 50) {
-        issues.push("X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD cannot exceed 50 without a new beta risk review.");
+      if (publicBeta.maxDailyLossUsd > PUBLIC_BETA_RISK_CAPS_USD.maxDailyLossUsd) {
+        issues.push(`X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD cannot exceed ${PUBLIC_BETA_RISK_CAPS_USD.maxDailyLossUsd} without a new beta risk review.`);
       }
-      if (publicBeta.maxOpenExposureUsd > 100) {
-        issues.push("X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD cannot exceed 100 without a new beta risk review.");
+      if (publicBeta.maxOpenExposureUsd > PUBLIC_BETA_RISK_CAPS_USD.maxOpenExposureUsd) {
+        issues.push(`X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD cannot exceed ${PUBLIC_BETA_RISK_CAPS_USD.maxOpenExposureUsd} without a new beta risk review.`);
       }
       if (!config.telegramAlerts?.enabled) {
         issues.push("Telegram alerts must be enabled before Public Beta capped live flows.");

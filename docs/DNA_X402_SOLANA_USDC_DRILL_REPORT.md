@@ -6,6 +6,8 @@ This report is the required evidence packet for a private, allowlisted, dust-siz
 
 Historical note: the original strict Solana USDC drill was run under the older private-staging label. Current product launch label is Public Beta. Historical drill status remains valid as technical evidence, not unlimited public production approval.
 
+Cap note: the `0.10 USDC` per-transaction and `1-5 USDC` daily limits in this report were historical dust-drill safety caps for proving mainnet behavior. They are not the normal Public Beta buyer-agent/service-agent payment ceiling.
+
 ## Drill Statement
 
 This was a private staging drill, not public production launch.
@@ -115,6 +117,8 @@ Not allowed:
 - Daily total cap: `1-5 USDC`
 - Max wallets: `2-5` internal wallets
 - Max duration: `1-2` days
+
+These values applied only to the strict Solana USDC drill. Public Beta low-risk live payment caps are configured separately through `X402_PUBLIC_BETA_MAX_TX_USD`, `X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD`, `X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD`, and `X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD`.
 
 ## Preconditions
 

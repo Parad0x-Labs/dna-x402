@@ -391,10 +391,10 @@ describe("DNA Guard config", () => {
       liveLowRisk: false,
       backendSigning: false,
       backendCustody: false,
-      maxTxUsd: 25,
-      maxDailySpendUsd: 250,
-      maxDailyLossUsd: 50,
-      maxOpenExposureUsd: 100,
+      maxTxUsd: 200,
+      maxDailySpendUsd: 1500,
+      maxDailyLossUsd: 300,
+      maxOpenExposureUsd: 500,
     });
 
     const unsafe = loadConfig({
@@ -435,10 +435,10 @@ describe("DNA Guard config", () => {
       X402_ENABLE_PUBLIC_BETA: "1",
       X402_PUBLIC_BETA_GATE_REF: "PUBLIC_BETA_AGENT_PILOT_2026",
       X402_ENABLE_PUBLIC_BETA_LIVE_LOW_RISK: "1",
-      X402_PUBLIC_BETA_MAX_TX_USD: "50",
-      X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD: "500",
-      X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: "100",
-      X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: "250",
+      X402_PUBLIC_BETA_MAX_TX_USD: "201",
+      X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD: "1501",
+      X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: "301",
+      X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: "501",
       X402_ENABLE_POLYMARKET_LIVE: "1",
     });
     expect(validateRuntimeGateConfig(unsafe)).toEqual(expect.arrayContaining([
@@ -448,10 +448,10 @@ describe("DNA Guard config", () => {
       "X402_DIRECT_SPLIT_GATE_REF is required for Public Beta live paid flows.",
       "X402_PLATFORM_FEE_TREASURY is required for Public Beta live paid flows.",
       "Legacy FEE_BPS/BASE_FEE_ATOMIC/MIN_FEE_ATOMIC must be zero for Public Beta live paid direct split flows.",
-      "X402_PUBLIC_BETA_MAX_TX_USD cannot exceed 25 without a new beta risk review.",
-      "X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD cannot exceed 250 without a new beta risk review.",
-      "X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD cannot exceed 50 without a new beta risk review.",
-      "X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD cannot exceed 100 without a new beta risk review.",
+      "X402_PUBLIC_BETA_MAX_TX_USD cannot exceed 200 without a new beta risk review.",
+      "X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD cannot exceed 1500 without a new beta risk review.",
+      "X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD cannot exceed 300 without a new beta risk review.",
+      "X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD cannot exceed 500 without a new beta risk review.",
       "Telegram alerts must be enabled before Public Beta capped live flows.",
       "Dangerous runtime gates must remain disabled for Public Beta capped live flows.",
     ]));
@@ -466,10 +466,10 @@ describe("DNA Guard config", () => {
       X402_ENABLE_ALPHA_MONETIZATION: "1",
       X402_ENABLE_PUBLIC_BETA_LIVE_LOW_RISK: "1",
       X402_PUBLIC_BETA_REQUIRE_CLIENT_SIGNATURE: "1",
-      X402_PUBLIC_BETA_MAX_TX_USD: "25",
-      X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD: "250",
-      X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: "50",
-      X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: "100",
+      X402_PUBLIC_BETA_MAX_TX_USD: "200",
+      X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD: "1500",
+      X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: "300",
+      X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: "500",
       X402_ENABLE_DIRECT_SPLIT_FEES: "1",
       X402_DIRECT_SPLIT_GATE_REF: "PUBLIC_BETA_DIRECT_SPLIT_2026",
       X402_PLATFORM_FEE_MODE: "direct_split",
@@ -487,10 +487,10 @@ describe("DNA Guard config", () => {
     expect(safe.publicBeta).toMatchObject({
       liveLowRisk: true,
       requireClientSignature: true,
-      maxTxUsd: 25,
-      maxDailySpendUsd: 250,
-      maxDailyLossUsd: 50,
-      maxOpenExposureUsd: 100,
+      maxTxUsd: 200,
+      maxDailySpendUsd: 1500,
+      maxDailyLossUsd: 300,
+      maxOpenExposureUsd: 500,
     });
   });
 });

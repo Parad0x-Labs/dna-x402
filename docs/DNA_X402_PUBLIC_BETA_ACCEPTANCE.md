@@ -27,21 +27,23 @@ Allowed only with hard caps and monitoring:
 - Solana USDC
 - manual client-side signing
 - DNA 10 bps direct split is required for live paid Solana USDC beta flows once the direct split beta gate is enabled
-- small per-transaction cap
-- small daily spend/loss/exposure caps
+- capped per-transaction live payment ceiling
+- capped daily spend/loss/exposure ceilings
 - Telegram monitoring
 - emergency pause
 - no backend keys
 - no backend signing
 
-Suggested defaults:
+Public Beta live payment defaults:
 
 ```env
-X402_PUBLIC_BETA_MAX_TX_USD=25
-X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD=250
-X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD=50
-X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD=100
+X402_PUBLIC_BETA_MAX_TX_USD=200
+X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD=1500
+X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD=300
+X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD=500
 ```
+
+These are Public Beta product caps for low-risk paid API/tool/data-feed flows and copy-risk accounting. The older `0.10 USDC` per-transaction and `5 USDC` daily values were historical real-chain dust-drill safety caps only; they are not the normal buyer-agent/service-agent payment ceiling.
 
 ## Not In Beta Scope Yet
 
@@ -79,10 +81,10 @@ X402_PUBLIC_BETA_REQUIRE_CLIENT_SIGNATURE=1
 X402_PUBLIC_BETA_BACKEND_SIGNING=0
 X402_PUBLIC_BETA_BACKEND_CUSTODY=0
 
-X402_PUBLIC_BETA_MAX_TX_USD=25
-X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD=250
-X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD=50
-X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD=100
+X402_PUBLIC_BETA_MAX_TX_USD=200
+X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD=1500
+X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD=300
+X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD=500
 
 X402_ENABLE_BACKEND_KEY_CUSTODY=0
 X402_ENABLE_UNATTENDED_SIGNING=0

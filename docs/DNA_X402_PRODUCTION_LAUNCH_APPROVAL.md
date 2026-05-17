@@ -114,8 +114,11 @@ Scope:
 - Solana USDC only
 - manual wallet signing only
 - direct split DNA 10 bps collection through provider and DNA treasury proofs
-- per-transaction cap: `100000` atomic USDC (`0.10 USDC`)
-- daily cap: `5000000` atomic USDC (`5 USDC`)
+- Public Beta per-transaction cap: `$200`
+- Public Beta daily spend cap: `$1,500`
+- Public Beta daily loss cap: `$300`
+- Public Beta open exposure cap: `$500`
+- historical direct split dust-drill cap: `100000` atomic USDC (`0.10 USDC`) per transaction and `5000000` atomic USDC (`5 USDC`) per day; drill caps are not the normal buyer-agent/service-agent payment ceiling
 - Telegram route watched by the primary operator
 - emergency pause available
 
@@ -131,7 +134,7 @@ Not approved:
 - broad multi-chain settlement
 - scale beyond the configured caps
 
-If usage approaches the caps, onboarding expands beyond allowlisted users, or failures appear in monitoring, pause expansion and complete the remaining public-production gates before continuing.
+If usage pressure exceeds the Public Beta caps, onboarding expands into high-risk/regulated verticals, or failures appear in monitoring, pause expansion and complete the remaining public-production gates before continuing.
 
 ## Proposed First Launch Scope
 

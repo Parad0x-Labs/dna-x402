@@ -42,10 +42,10 @@ const baseConfig: X402Config = {
     requireClientSignature: true,
     backendSigning: false,
     backendCustody: false,
-    maxTxUsd: 25,
-    maxDailySpendUsd: 250,
-    maxDailyLossUsd: 50,
-    maxOpenExposureUsd: 100,
+    maxTxUsd: 200,
+    maxDailySpendUsd: 1500,
+    maxDailyLossUsd: 300,
+    maxOpenExposureUsd: 500,
   },
 };
 
