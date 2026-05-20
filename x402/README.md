@@ -54,6 +54,23 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
   - `POLYMARKET_API_KEY` -> `POLYMARKET_BUILDER_API_KEY`
   - `POLYMARKET_API_SECRET` -> `POLYMARKET_BUILDER_SECRET`
   - `POLYMARKET_API_PASSPHRASE` -> `POLYMARKET_BUILDER_PASSPHRASE`
+- **Runtime non-regression rules**:
+  - Keep shared builder credentials for attribution/API auth.
+  - Keep per-user signer/deposit wallet context for every order.
+  - Do not allow backend custody or backend signing.
+  - Do not skip `/v1/polymarket/live/order-precheck` before live submit.
+
+### Multi-User Ledger Runtime (Website Agents)
+- Users can scale to large concurrent agent counts under one platform builder integration, while balances remain per-user in ledger state.
+- Funding path:
+  1. User funds agent wallet.
+  2. User does one cash-in transfer to platform ledger.
+  3. Tips and bets run gasless against internal ledger balance.
+  4. User cashes out back to wallet when needed.
+- Required properties:
+  - Per-user ledger segregation and audit trail
+  - Explicit user-owned wallet flow
+  - No backend private-key custody/signing
 
 ### Infrastructure
 - **Audit logging**: NDJSON corporate-grade audit trail for every payment event
