@@ -891,9 +891,6 @@ export function validateMainnetReadiness(config: X402Config): string[] {
   if (gates.prodMoney) {
     issues.push("LIVE_MONEY_MOVEMENT_ENABLED remains gated and must be disabled.");
   }
-  if (gates.polymarketLive) {
-    issues.push("POLYMARKET_LIVE_MOVEMENT_ENABLED remains gated and must be disabled.");
-  }
   if (gates.publicNetting) {
     issues.push("PUBLIC_NETTING_ENABLED remains gated and must be disabled.");
   }

@@ -60,6 +60,9 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
   - Keep per-user signer/deposit wallet context for every order.
   - Do not allow backend custody or backend signing.
   - Do not skip `/v1/polymarket/live/order-precheck` before live submit.
+  - Production gate lock: keep `X402_ENABLE_POLYMARKET_LIVE=1` with checklist ref
+    `X402_POLYMARKET_LIVE_CHECKLIST_REF=docs/DNA_X402_POLYMARKET_LIVE_CONSTITUTION.md#live-gate-lock`.
+  - Do not switch back to paper/signal-only gate state unless explicitly requested by `sls_0x`.
 
 ### Multi-User Ledger Runtime (Website Agents)
 - Users can scale to large concurrent agent counts under one platform builder integration, while balances remain per-user in ledger state.

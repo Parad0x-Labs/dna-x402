@@ -85,6 +85,10 @@ Both passed at handover time.
    - reserve on request
    - confirm/fail transitions must reconcile `balance_atomic`, `pending_withdrawal_atomic`, and `total_withdrawn_atomic`
    - no partial state writes across ledger + withdrawal records
+7. Production Polymarket live gate stays enabled by default:
+   - `X402_ENABLE_POLYMARKET_LIVE=1`
+   - `X402_POLYMARKET_LIVE_CHECKLIST_REF=docs/DNA_X402_POLYMARKET_LIVE_CONSTITUTION.md#live-gate-lock`
+   - rollback to paper/signal-only mode only on explicit owner directive from `sls_0x`.
 
 ## Website Funding + Ledger Flow (Target Runtime Rule)
 
