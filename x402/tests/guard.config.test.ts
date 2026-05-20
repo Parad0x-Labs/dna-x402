@@ -130,7 +130,6 @@ describe("DNA Guard config", () => {
 
     expect(validateMainnetReadiness(config)).toEqual(expect.arrayContaining([
       "LIVE_MONEY_MOVEMENT_ENABLED remains gated and must be disabled.",
-      "POLYMARKET_LIVE_MOVEMENT_ENABLED remains gated and must be disabled.",
       "PUBLIC_NETTING_ENABLED remains gated and must be disabled.",
       "PUBLIC_PHYSICAL_GOODS_ENABLED remains gated and must be disabled.",
       "PUBLIC_HIGH_RISK_CATEGORIES_ENABLED remains gated and must be disabled.",
@@ -186,6 +185,23 @@ describe("DNA Guard config", () => {
 
     expect(validateRuntimeGateConfig(referenced)).not.toContain(
       "X402_PROD_MONEY_CHECKLIST_REF is required before enabling prodMoney in production-like config.",
+    );
+
+    const polymarketMissingRef = loadConfig({
+      NODE_ENV: "production",
+      X402_ENABLE_POLYMARKET_LIVE: "1",
+    });
+    expect(validateRuntimeGateConfig(polymarketMissingRef)).toContain(
+      "X402_POLYMARKET_LIVE_CHECKLIST_REF is required before enabling polymarketLive in production-like config.",
+    );
+
+    const polymarketWithRef = loadConfig({
+      NODE_ENV: "production",
+      X402_ENABLE_POLYMARKET_LIVE: "1",
+      X402_POLYMARKET_LIVE_CHECKLIST_REF: "docs/DNA_X402_POLYMARKET_LIVE_CONSTITUTION.md#live-gate-lock",
+    });
+    expect(validateRuntimeGateConfig(polymarketWithRef)).not.toContain(
+      "X402_POLYMARKET_LIVE_CHECKLIST_REF is required before enabling polymarketLive in production-like config.",
     );
   });
 

@@ -146,6 +146,18 @@ const schema = z.object({
   DNA_GUARD_WALLET_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
   DNA_GUARD_AGENT_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
   DNA_GUARD_API_KEY_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  NULL_TIP_MINT: z.string().optional(),
+  NULL_TIP_VAULT_ADDRESS: z.string().optional(),
+  NULL_TIP_SYMBOL: z.string().default("NULL"),
+  NULL_TIP_DECIMALS: z.coerce.number().int().min(0).max(18).default(6),
+  NULL_TIP_SESSION_SECRET: z.string().optional(),
+  NULL_TIP_MAX_SEND_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  NULL_TIP_MAX_WITHDRAW_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  NULL_TIP_WITHDRAW_MODE: z.enum(["manual", "webhook", "mock"]).default("manual"),
+  NULL_TIP_WITHDRAW_WEBHOOK_URL: z.string().url().optional(),
+  NULL_TIP_WITHDRAW_WEBHOOK_SECRET: z.string().optional(),
+  NULL_TIP_WITHDRAW_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(12_000),
+  NULL_TIP_WITHDRAW_AUTO_PROCESS: z.string().optional(),
 });
 
 type ParsedEnv = z.infer<typeof schema>;
@@ -250,6 +262,21 @@ export interface TelegramAlertRouteConfig {
   statusMetricsUrl: string;
 }
 
+export interface NullTipConfig {
+  tokenMint: string;
+  vaultAddress?: string;
+  tokenSymbol: string;
+  decimals: number;
+  sessionSecret?: string;
+  maxSendAtomic?: string;
+  maxWithdrawAtomic?: string;
+  withdrawMode: "manual" | "webhook" | "mock";
+  withdrawWebhookUrl?: string;
+  withdrawWebhookSecret?: string;
+  withdrawTimeoutMs: number;
+  withdrawAutoProcess: boolean;
+}
+
 export interface X402Config {
   nodeEnv?: string;
   cluster?: string;
@@ -314,6 +341,7 @@ export interface X402Config {
   builderMonetization?: BuilderMonetizationConfig;
   publicBeta?: PublicBetaConfig;
   dnaGuard?: X402GuardConfig;
+  nullTips?: NullTipConfig;
 }
 
 function parseBooleanEnv(value: string | undefined, fallback = false): boolean {
@@ -574,6 +602,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
         agentAtomic: parsed.DNA_GUARD_AGENT_CEILING_ATOMIC,
         apiKeyAtomic: parsed.DNA_GUARD_API_KEY_CEILING_ATOMIC,
       },
+    },
+    nullTips: {
+      tokenMint: parsed.NULL_TIP_MINT ?? "NULL_MINT_NOT_CONFIGURED",
+      vaultAddress: parsed.NULL_TIP_VAULT_ADDRESS,
+      tokenSymbol: parsed.NULL_TIP_SYMBOL,
+      decimals: parsed.NULL_TIP_DECIMALS,
+      sessionSecret: parsed.NULL_TIP_SESSION_SECRET ?? parsed.ADMIN_SECRET ?? parsed.RECEIPT_SIGNING_SECRET,
+      maxSendAtomic: parsed.NULL_TIP_MAX_SEND_ATOMIC,
+      maxWithdrawAtomic: parsed.NULL_TIP_MAX_WITHDRAW_ATOMIC,
+      withdrawMode: parsed.NULL_TIP_WITHDRAW_MODE,
+      withdrawWebhookUrl: parsed.NULL_TIP_WITHDRAW_WEBHOOK_URL,
+      withdrawWebhookSecret: parsed.NULL_TIP_WITHDRAW_WEBHOOK_SECRET,
+      withdrawTimeoutMs: parsed.NULL_TIP_WITHDRAW_TIMEOUT_MS,
+      withdrawAutoProcess: parseBooleanEnv(parsed.NULL_TIP_WITHDRAW_AUTO_PROCESS, true),
     },
   };
 }
@@ -848,9 +890,6 @@ export function validateMainnetReadiness(config: X402Config): string[] {
   }
   if (gates.prodMoney) {
     issues.push("LIVE_MONEY_MOVEMENT_ENABLED remains gated and must be disabled.");
-  }
-  if (gates.polymarketLive) {
-    issues.push("POLYMARKET_LIVE_MOVEMENT_ENABLED remains gated and must be disabled.");
   }
   if (gates.publicNetting) {
     issues.push("PUBLIC_NETTING_ENABLED remains gated and must be disabled.");
