@@ -67,6 +67,32 @@ Both passed at handover time.
 - Live execution is still gated by broader product/runtime policies and Phase 0 exit requirements.
 - This work does **not** enable backend signing or shared-funds custody.
 
+## Non-Regression Rules (Lock These)
+
+1. Keep the **shared builder account model** for Polymarket API credentials and attribution metadata.
+2. Keep the **per-user execution context** for order ownership and signer checks (`depositWallet`, `funder`, `signatureType`).
+3. Do not accept raw signer/private-key material from client payloads on live-order endpoints.
+4. Do not bypass `POST /v1/polymarket/live/order-precheck` before any live submit path.
+5. Any change to Polymarket live flow must keep these tests green:
+   - `tests/polymarket.phase0-env.test.ts`
+   - `tests/polymarket.live-order-precheck.test.ts`
+   - `tests/polymarket.trading-phase0.test.ts`
+   - `tests/guard.config.test.ts`
+
+## Website Funding + Ledger Flow (Target Runtime Rule)
+
+This is the runtime model to preserve for high-scale multi-user usage:
+
+1. User creates/connects agent wallet (user-owned key, not backend custody).
+2. User moves NULL/USDC from agent wallet to internal ledger with one explicit cash-in action.
+3. Tips and bets are debited from ledger instantly (gasless internal operations).
+4. Cash-out moves funds from ledger back to user wallet with a single cash-out action.
+5. Every movement is ledger-tracked per user/agent identity and auditable.
+
+Implementation note:
+- Keep UX one-path and low-friction (no copy/paste loops for normal cash-in/cash-out).
+- Keep backend custody/signing forbidden.
+
 ## Recommended Next Step
 
 1. Wire website agent runtime to call `POST /v1/polymarket/live/order-precheck` before any live submit attempt.
