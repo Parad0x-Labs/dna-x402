@@ -45,6 +45,16 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 - **25+ structured error codes**: Every error returns hints, trace IDs, docs URLs, and redacted payloads
 - **Trace IDs**: UUID per request via `X-TRACE-ID` header
 
+### Polymarket Multi-User Precheck
+- **Shared builder credentials, per-user signer model**: Server can keep shared builder headers/attribution credentials while each user order still requires a user-owned deposit wallet signer context (`POLY_1271` / signature type `3`)
+- **Live readiness endpoint**: `GET /v1/polymarket/live/readiness`
+- **Per-user order precheck endpoint**: `POST /v1/polymarket/live/order-precheck`
+- **Alias env support**:
+  - `POLY_BUILDER_CODE` -> `POLYMARKET_BUILDER_CODE`
+  - `POLYMARKET_API_KEY` -> `POLYMARKET_BUILDER_API_KEY`
+  - `POLYMARKET_API_SECRET` -> `POLYMARKET_BUILDER_SECRET`
+  - `POLYMARKET_API_PASSPHRASE` -> `POLYMARKET_BUILDER_PASSPHRASE`
+
 ### Infrastructure
 - **Audit logging**: NDJSON corporate-grade audit trail for every payment event
 - **Webhooks**: HMAC-signed async payment notifications with retry logic and exponential backoff

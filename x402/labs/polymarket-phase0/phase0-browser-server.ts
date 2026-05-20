@@ -4,7 +4,15 @@ import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { BuilderConfig } from "@polymarket/builder-signing-sdk";
 import { createServer } from "vite";
-import { LAB_DIR, REPO_ROOT, loadPhase0Env, optionalEnv, requireEnv } from "./phase0-env.js";
+import {
+  LAB_DIR,
+  REPO_ROOT,
+  assertPhase0BrowserEnvReady,
+  getPhase0EnvReadiness,
+  loadPhase0Env,
+  optionalEnv,
+  requireEnv,
+} from "./phase0-env.js";
 
 const nodeRequire = createRequire(import.meta.url);
 const bufferPolyfillPath = nodeRequire.resolve("buffer/");
@@ -106,6 +114,7 @@ function phase0Plugin(token: string, builderConfig: BuilderConfig) {
 
 async function main(): Promise<void> {
   const loadedEnvPath = loadPhase0Env();
+  assertPhase0BrowserEnvReady();
   if (process.env.POLYMARKET_PHASE0_ENVIRONMENT !== "safe") {
     throw new Error("Refusing browser harness unless POLYMARKET_PHASE0_ENVIRONMENT=safe.");
   }
@@ -142,6 +151,7 @@ async function main(): Promise<void> {
     plugins: [phase0Plugin(token, builderConfig)],
   });
   await server.listen();
+  const readiness = getPhase0EnvReadiness();
   console.log(JSON.stringify({
     ok: true,
     loadedEnvPath,
@@ -149,6 +159,12 @@ async function main(): Promise<void> {
     moneyMovement: "user-confirmed-browser-only",
     backendWalletSigning: "forbidden",
     backendBuilderHeaders: "local_lab_only",
+    readiness: {
+      browserHarnessReady: readiness.browserHarness.every((entry) => entry.present),
+      liveOrderFlowExtraMissing: readiness.liveOrderFlowExtras
+        .filter((entry) => !entry.present)
+        .map((entry) => entry.canonicalName),
+    },
   }, null, 2));
 }
 
