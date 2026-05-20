@@ -49,7 +49,7 @@ export class PostgresJsonRepository<T> implements DurableRepository<T> {
     const now = options.now ?? new Date();
     const result = await this.db.query<DbDurableRecord<T>>(
       `insert into ${this.table} (id, version, payload, actor_id, created_at, updated_at)
-       values ($1, 1, $2::jsonb, $3, $4, null)
+       values ($1, 1, $2::jsonb, $3, $4, $4)
        on conflict (id) do update
        set version = ${this.table}.version + 1,
            payload = excluded.payload,
@@ -65,7 +65,7 @@ export class PostgresJsonRepository<T> implements DurableRepository<T> {
     const now = options.now ?? new Date();
     const result = await this.db.query<DbDurableRecord<T>>(
       `insert into ${this.table} (id, version, payload, actor_id, created_at, updated_at)
-       values ($1, 1, $2::jsonb, $3, $4, null)
+       values ($1, 1, $2::jsonb, $3, $4, $4)
        returning id, version, payload, actor_id, created_at, updated_at`,
       [id, JSON.stringify(payload), options.actorId, now],
     );
