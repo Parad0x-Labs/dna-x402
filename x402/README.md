@@ -49,6 +49,7 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 - **Shared builder credentials, per-user signer model**: Server can keep shared builder headers/attribution credentials while each user order still requires a user-owned deposit wallet signer context (`POLY_1271` / signature type `3`)
 - **Live readiness endpoint**: `GET /api/polymarket/live/readiness` or `GET /v1/polymarket/live/readiness`
 - **Per-user order precheck endpoint**: `POST /api/polymarket/live/order-precheck` or `POST /v1/polymarket/live/order-precheck`
+- **Live signed-order relay endpoint (gate-protected)**: `POST /api/polymarket/live/submit` or `POST /v1/polymarket/live/submit`
 - **Alias env support**:
   - `POLY_BUILDER_CODE` -> `POLYMARKET_BUILDER_CODE`
   - `POLYMARKET_API_KEY` -> `POLYMARKET_BUILDER_API_KEY`
@@ -89,6 +90,11 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
   - `GET /api/tips/account/:ownerWallet/status`
   - `GET /v1/tips/account/:ownerWallet/status`
 - **Response shape**: `{ ok, ownerWallet, hasTipAccount, canReceiveTips }`
+- **Cash-out automation runtime**:
+  - `NULL_TIP_WITHDRAW_MODE=manual|webhook|mock`
+  - `NULL_TIP_WITHDRAW_AUTO_PROCESS=1|0`
+  - automation processor endpoint: `POST /api|/v1/admin/tips/withdrawals/process`
+  - user status feed endpoint: `GET /api|/v1/tips/withdrawals`
 
 ## Install
 

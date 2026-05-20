@@ -69,6 +69,9 @@ const baseConfig: X402Config = {
     sessionSecret: "tip-ledger-session-secret-123456",
     maxSendAtomic: "1000000000",
     maxWithdrawAtomic: "1000000000",
+    withdrawMode: "manual",
+    withdrawTimeoutMs: 12_000,
+    withdrawAutoProcess: true,
   },
 };
 
@@ -324,6 +327,64 @@ describe("NULL tip ledger", () => {
       .expect((res) => {
         expect(res.body.error).toBe("TIP_WITHDRAWALS_PAUSED");
       });
+  });
+
+  it("allows honest zero reconciliation when liability is zero", async () => {
+    const { app } = makeApp();
+
+    await request(app)
+      .post("/api/admin/tips/reconcile")
+      .set("x-admin-token", baseConfig.adminSecret!)
+      .send({ vaultBalanceAtomic: "0" })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.ok).toBe(true);
+        expect(res.body.liabilityAtomic).toBe("0");
+        expect(res.body.vaultBalanceAtomic).toBe("0");
+        expect(res.body.withdrawalsPaused).toBe(false);
+      });
+  });
+
+  it("auto-processes withdrawals in mock mode without manual review queue", async () => {
+    const mockConfig: X402Config = {
+      ...baseConfig,
+      nullTips: {
+        ...baseConfig.nullTips!,
+        withdrawMode: "mock",
+        withdrawAutoProcess: true,
+      },
+    };
+    const { app } = createX402App(mockConfig, {
+      receiptSigner: ReceiptSigner.generate(),
+      paymentVerifier: new NullDepositVerifier(nullMint, nullVault),
+    });
+    const wallet = Keypair.generate();
+    const token = await sessionToken(app, wallet);
+
+    await request(app)
+      .post("/api/admin/tips/adjust")
+      .set("x-admin-token", mockConfig.adminSecret!)
+      .send({
+        ownerWallet: wallet.publicKey.toBase58(),
+        direction: "credit",
+        amountAtomic: "100000",
+        reason: "seed withdrawal balance for automation",
+      })
+      .expect(200);
+
+    const withdrawal = await request(app)
+      .post("/api/tips/withdraw")
+      .set("authorization", `Bearer ${token}`)
+      .send({
+        recipientWallet: wallet.publicKey.toBase58(),
+        amountAtomic: "25000",
+      })
+      .expect(200);
+    expect(withdrawal.body.status).toBe("CONFIRMED");
+    expect(withdrawal.body.account.balanceAtomic).toBe("75000");
+    expect(withdrawal.body.account.pendingWithdrawalAtomic).toBe("0");
+    expect(withdrawal.body.account.totalWithdrawnAtomic).toBe("25000");
+    expect(withdrawal.body.withdrawal?.txSignature).toContain("mock-null-withdraw-");
   });
 
   it("rejects private-key shaped payloads on tip mutation routes", async () => {

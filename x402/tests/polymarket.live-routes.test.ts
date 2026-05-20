@@ -72,4 +72,24 @@ describe("polymarket live route aliases", () => {
         expect(res.body.error).toBe("invalid_polymarket_order_precheck");
       });
   });
+
+  it("keeps live submit closed when polymarket live gate is disabled", async () => {
+    const { app } = makeApp();
+
+    await request(app)
+      .post("/api/polymarket/live/submit")
+      .send({})
+      .expect(403)
+      .expect((res) => {
+        expect(res.body.error).toBe("POLYMARKET_LIVE_GATE_CLOSED");
+      });
+
+    await request(app)
+      .post("/v1/polymarket/live/submit")
+      .send({})
+      .expect(403)
+      .expect((res) => {
+        expect(res.body.error).toBe("POLYMARKET_LIVE_GATE_CLOSED");
+      });
+  });
 });

@@ -12,6 +12,8 @@ export type TipLedgerEventType =
   | "tip_sent"
   | "tip_received"
   | "withdrawal_requested"
+  | "withdrawal_completed"
+  | "withdrawal_failed"
   | "admin_adjustment"
   | "reconciliation";
 
@@ -25,6 +27,11 @@ export interface NullTipLedgerConfig {
   sessionSecret?: string;
   sessionTtlSeconds: number;
   depositIntentTtlSeconds: number;
+  withdrawMode: "manual" | "webhook" | "mock";
+  withdrawWebhookUrl?: string;
+  withdrawWebhookSecret?: string;
+  withdrawTimeoutMs: number;
+  withdrawAutoProcess: boolean;
 }
 
 export interface TipAccount {
@@ -55,6 +62,45 @@ export interface TipLedgerRecord {
   memo?: string;
   metadata?: Record<string, unknown>;
   createdAt: string;
+}
+
+export type TipWithdrawalStatus =
+  | "PENDING_MANUAL_REVIEW"
+  | "PENDING_DISPATCH"
+  | "DISPATCHING"
+  | "SUBMITTED"
+  | "CONFIRMED"
+  | "FAILED";
+
+export interface TipWithdrawal {
+  id: string;
+  ownerWallet: string;
+  recipientWallet: string;
+  amountAtomic: string;
+  tokenMint: string;
+  status: TipWithdrawalStatus;
+  txSignature?: string;
+  providerReference?: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+  processedAt?: string;
+}
+
+interface TipWithdrawalDispatchResult {
+  status: "confirmed" | "submitted" | "failed" | "retry";
+  txSignature?: string;
+  providerReference?: string;
+  errorMessage?: string;
+}
+
+export interface TipWithdrawalProcessSummary {
+  processed: number;
+  confirmed: number;
+  submitted: number;
+  failed: number;
+  retry: number;
+  withdrawals: TipWithdrawal[];
 }
 
 export interface TipDepositIntent {
@@ -100,6 +146,7 @@ const DEFAULT_TOKEN_MINT = "NULL_MINT_NOT_CONFIGURED";
 const DEFAULT_TOKEN_SYMBOL = "NULL";
 const DEFAULT_DECIMALS = 6;
 const ZERO = "0";
+const DEFAULT_WITHDRAW_TIMEOUT_MS = 12_000;
 
 function nowIso(now: () => Date): string {
   return now().toISOString();
@@ -116,6 +163,17 @@ function assertAtomic(value: string, field = "amountAtomic"): bigint {
   const amount = BigInt(value);
   if (amount <= 0n) {
     throw new TipLedgerError("TIP_INVALID_AMOUNT", `${field} must be greater than zero.`);
+  }
+  return amount;
+}
+
+function assertNonNegativeAtomic(value: string, field = "amountAtomic"): bigint {
+  if (!/^\d+$/.test(value)) {
+    throw new TipLedgerError("TIP_INVALID_AMOUNT", `${field} must be a raw unsigned integer amount.`);
+  }
+  const amount = BigInt(value);
+  if (amount < 0n) {
+    throw new TipLedgerError("TIP_INVALID_AMOUNT", `${field} must be greater than or equal to zero.`);
   }
   return amount;
 }
@@ -200,6 +258,23 @@ function mapIntentRow(row: Record<string, unknown>): TipDepositIntent {
   };
 }
 
+function mapWithdrawalRow(row: Record<string, unknown>): TipWithdrawal {
+  return {
+    id: String(row.id),
+    ownerWallet: String(row.owner_wallet),
+    recipientWallet: String(row.recipient_wallet),
+    amountAtomic: String(row.amount_atomic),
+    tokenMint: String(row.token_mint),
+    status: row.status as TipWithdrawalStatus,
+    txSignature: row.tx_signature ? String(row.tx_signature) : undefined,
+    providerReference: row.provider_reference ? String(row.provider_reference) : undefined,
+    errorMessage: row.error_message ? String(row.error_message) : undefined,
+    createdAt: new Date(row.created_at as string | Date).toISOString(),
+    updatedAt: new Date(row.updated_at as string | Date).toISOString(),
+    processedAt: row.processed_at ? new Date(row.processed_at as string | Date).toISOString() : undefined,
+  };
+}
+
 export function createDefaultTipConfig(input: Partial<NullTipLedgerConfig> = {}): NullTipLedgerConfig {
   return {
     tokenMint: input.tokenMint ?? DEFAULT_TOKEN_MINT,
@@ -211,6 +286,11 @@ export function createDefaultTipConfig(input: Partial<NullTipLedgerConfig> = {})
     sessionSecret: input.sessionSecret,
     sessionTtlSeconds: input.sessionTtlSeconds ?? 86_400,
     depositIntentTtlSeconds: input.depositIntentTtlSeconds ?? 3_600,
+    withdrawMode: input.withdrawMode ?? "manual",
+    withdrawWebhookUrl: input.withdrawWebhookUrl,
+    withdrawWebhookSecret: input.withdrawWebhookSecret,
+    withdrawTimeoutMs: input.withdrawTimeoutMs ?? DEFAULT_WITHDRAW_TIMEOUT_MS,
+    withdrawAutoProcess: input.withdrawAutoProcess ?? true,
   };
 }
 
@@ -318,6 +398,7 @@ export class NullTipLedgerService {
   private readonly memoryAccounts = new Map<string, TipAccount>();
   private readonly memoryLedger: TipLedgerRecord[] = [];
   private readonly memoryIntents = new Map<string, TipDepositIntent>();
+  private readonly memoryWithdrawals = new Map<string, TipWithdrawal>();
   private memoryWithdrawalsPaused = false;
   readonly sessions: TipSessionService;
 
@@ -644,7 +725,7 @@ export class NullTipLedgerService {
     ownerWallet: string;
     recipientWallet: string;
     amountAtomic: string;
-  }): Promise<{ withdrawalId: string; account: TipAccount; ledger: TipLedgerRecord }> {
+  }): Promise<{ withdrawalId: string; account: TipAccount; ledger: TipLedgerRecord; withdrawal: TipWithdrawal }> {
     const ownerWallet = sanitizeWallet(input.ownerWallet, "ownerWallet");
     const recipientWallet = sanitizeWallet(input.recipientWallet, "recipientWallet");
     const amount = assertAtomic(input.amountAtomic);
@@ -655,9 +736,10 @@ export class NullTipLedgerService {
       throw new TipLedgerError("TIP_WITHDRAWALS_PAUSED", "Withdrawals are paused until vault reconciliation is green.", 503);
     }
     const withdrawalId = uuid();
+    const initialStatus: TipWithdrawalStatus = this.config.withdrawMode === "manual" ? "PENDING_MANUAL_REVIEW" : "PENDING_DISPATCH";
 
     if (this.db?.transaction) {
-      return this.db.transaction(async (tx) => {
+      const created = await this.db.transaction(async (tx) => {
         await this.ensureAccount(ownerWallet, tx);
         const locked = await tx.query<Record<string, unknown>>(
           "select * from tip_accounts where owner_wallet = $1 for update",
@@ -682,12 +764,28 @@ export class NullTipLedgerService {
           ownerWallet,
           counterpartyWallet: recipientWallet,
           amountAtomic: input.amountAtomic,
-          status: "PENDING_MANUAL_REVIEW",
+          status: initialStatus,
           withdrawalId,
-          metadata: { recipientWallet },
+          metadata: { recipientWallet, mode: this.config.withdrawMode },
         }, tx);
-        return { withdrawalId, account: mapAccountRow(updated.rows[0]), ledger };
+        const withdrawal = await this.insertWithdrawal({
+          id: withdrawalId,
+          ownerWallet,
+          recipientWallet,
+          amountAtomic: input.amountAtomic,
+          status: initialStatus,
+        }, tx);
+        return { withdrawalId, account: mapAccountRow(updated.rows[0]), ledger, withdrawal };
       });
+      if (initialStatus !== "PENDING_MANUAL_REVIEW" && this.config.withdrawAutoProcess) {
+        await this.processPendingWithdrawals({ limit: 1, withdrawalIds: [withdrawalId] });
+        const account = await this.ensureAccount(ownerWallet);
+        const withdrawal = await this.getWithdrawal(withdrawalId);
+        if (withdrawal) {
+          return { ...created, account, withdrawal };
+        }
+      }
+      return created;
     }
 
     const account = await this.ensureAccount(ownerWallet);
@@ -702,11 +800,441 @@ export class NullTipLedgerService {
       ownerWallet,
       counterpartyWallet: recipientWallet,
       amountAtomic: input.amountAtomic,
-      status: "PENDING_MANUAL_REVIEW",
+      status: initialStatus,
       withdrawalId,
-      metadata: { recipientWallet },
+      metadata: { recipientWallet, mode: this.config.withdrawMode },
     });
-    return { withdrawalId, account, ledger };
+    const withdrawal: TipWithdrawal = {
+      id: withdrawalId,
+      ownerWallet,
+      recipientWallet,
+      amountAtomic: input.amountAtomic,
+      tokenMint: this.config.tokenMint,
+      status: initialStatus,
+      createdAt: account.updatedAt,
+      updatedAt: account.updatedAt,
+    };
+    this.memoryWithdrawals.set(withdrawalId, withdrawal);
+    if (initialStatus !== "PENDING_MANUAL_REVIEW" && this.config.withdrawAutoProcess) {
+      await this.processPendingWithdrawals({ limit: 1, withdrawalIds: [withdrawalId] });
+      const refreshedAccount = await this.ensureAccount(ownerWallet);
+      const refreshedWithdrawal = await this.getWithdrawal(withdrawalId);
+      return { withdrawalId, account: refreshedAccount, ledger, withdrawal: refreshedWithdrawal ?? withdrawal };
+    }
+    return { withdrawalId, account, ledger, withdrawal };
+  }
+
+  async processPendingWithdrawals(options: { limit?: number; withdrawalIds?: string[] } = {}): Promise<TipWithdrawalProcessSummary> {
+    const limit = Math.min(Math.max(options.limit ?? 20, 1), 200);
+    const pending = await this.listWithdrawals({
+      statuses: ["PENDING_DISPATCH"],
+      limit,
+      withdrawalIds: options.withdrawalIds,
+    });
+    let processed = 0;
+    let confirmed = 0;
+    let submitted = 0;
+    let failed = 0;
+    let retry = 0;
+    const withdrawals: TipWithdrawal[] = [];
+    for (const item of pending) {
+      const result = await this.processSingleWithdrawal(item.id);
+      if (!result) continue;
+      processed += 1;
+      withdrawals.push(result);
+      if (result.status === "CONFIRMED") confirmed += 1;
+      else if (result.status === "SUBMITTED") submitted += 1;
+      else if (result.status === "FAILED") failed += 1;
+      else if (result.status === "PENDING_DISPATCH") retry += 1;
+    }
+    return { processed, confirmed, submitted, failed, retry, withdrawals };
+  }
+
+  async listWithdrawals(options: {
+    ownerWallet?: string;
+    statuses?: TipWithdrawalStatus[];
+    limit?: number;
+    withdrawalIds?: string[];
+  } = {}): Promise<TipWithdrawal[]> {
+    const limit = Math.min(Math.max(options.limit ?? 100, 1), 500);
+    const statuses = options.statuses && options.statuses.length ? options.statuses : undefined;
+    if (this.db) {
+      const conditions: string[] = [];
+      const values: unknown[] = [];
+      if (options.ownerWallet) {
+        values.push(sanitizeWallet(options.ownerWallet, "ownerWallet"));
+        conditions.push(`owner_wallet = $${values.length}`);
+      }
+      if (statuses) {
+        values.push(statuses);
+        conditions.push(`status = any($${values.length}::text[])`);
+      }
+      if (options.withdrawalIds?.length) {
+        values.push(options.withdrawalIds);
+        conditions.push(`id = any($${values.length}::text[])`);
+      }
+      values.push(limit);
+      const where = conditions.length ? `where ${conditions.join(" and ")}` : "";
+      const query = `select * from tip_withdrawals ${where} order by created_at desc, id desc limit $${values.length}`;
+      const result = await this.db.query<Record<string, unknown>>(query, values);
+      return result.rows.map(mapWithdrawalRow);
+    }
+    let items = [...this.memoryWithdrawals.values()];
+    if (options.ownerWallet) {
+      const ownerWallet = sanitizeWallet(options.ownerWallet, "ownerWallet");
+      items = items.filter((item) => item.ownerWallet === ownerWallet);
+    }
+    if (statuses) {
+      const allowed = new Set(statuses);
+      items = items.filter((item) => allowed.has(item.status));
+    }
+    if (options.withdrawalIds?.length) {
+      const allowedIds = new Set(options.withdrawalIds);
+      items = items.filter((item) => allowedIds.has(item.id));
+    }
+    return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit);
+  }
+
+  private async processSingleWithdrawal(withdrawalId: string): Promise<TipWithdrawal | undefined> {
+    const current = await this.getWithdrawal(withdrawalId);
+    if (!current || current.status !== "PENDING_DISPATCH") {
+      return current;
+    }
+
+    await this.updateWithdrawalStatus(withdrawalId, "DISPATCHING");
+    const dispatch = await this.dispatchWithdrawal(current);
+    if (dispatch.status === "retry") {
+      await this.updateWithdrawalStatus(withdrawalId, "PENDING_DISPATCH", { errorMessage: dispatch.errorMessage });
+      return this.getWithdrawal(withdrawalId);
+    }
+    if (dispatch.status === "submitted") {
+      await this.updateWithdrawalStatus(withdrawalId, "SUBMITTED", {
+        providerReference: dispatch.providerReference,
+        txSignature: dispatch.txSignature,
+      });
+      return this.getWithdrawal(withdrawalId);
+    }
+    if (dispatch.status === "confirmed") {
+      await this.completeWithdrawal(withdrawalId, dispatch.txSignature, dispatch.providerReference);
+      return this.getWithdrawal(withdrawalId);
+    }
+    await this.failWithdrawal(withdrawalId, dispatch.errorMessage ?? "withdrawal_dispatch_failed");
+    return this.getWithdrawal(withdrawalId);
+  }
+
+  async completeWithdrawal(withdrawalId: string, txSignature?: string, providerReference?: string): Promise<TipWithdrawal> {
+    const timestamp = nowIso(this.now);
+    if (this.db?.transaction) {
+      return this.db.transaction(async (tx) => {
+        const withdrawal = await this.getWithdrawal(withdrawalId, tx, true);
+        if (!withdrawal) {
+          throw new TipLedgerError("TIP_WITHDRAWAL_NOT_FOUND", "Withdrawal was not found.", 404);
+        }
+        if (withdrawal.status === "CONFIRMED") {
+          return withdrawal;
+        }
+        if (!["DISPATCHING", "SUBMITTED", "PENDING_DISPATCH"].includes(withdrawal.status)) {
+          throw new TipLedgerError("TIP_WITHDRAWAL_STATE_INVALID", `Cannot complete withdrawal from status ${withdrawal.status}.`, 409);
+        }
+        await tx.query(
+          `update tip_accounts
+           set pending_withdrawal_atomic = pending_withdrawal_atomic - $2::numeric,
+               total_withdrawn_atomic = total_withdrawn_atomic + $2::numeric,
+               version = version + 1,
+               updated_at = $3
+           where owner_wallet = $1`,
+          [withdrawal.ownerWallet, withdrawal.amountAtomic, timestamp],
+        );
+        await tx.query(
+          `update tip_withdrawals
+           set status = 'CONFIRMED',
+               tx_signature = coalesce($2, tx_signature),
+               provider_reference = coalesce($3, provider_reference),
+               error_message = null,
+               processed_at = $4,
+               updated_at = $4
+           where id = $1`,
+          [withdrawalId, txSignature ?? null, providerReference ?? null, timestamp],
+        );
+        await this.insertLedger({
+          eventType: "withdrawal_completed",
+          ownerWallet: withdrawal.ownerWallet,
+          counterpartyWallet: withdrawal.recipientWallet,
+          amountAtomic: withdrawal.amountAtomic,
+          status: "CONFIRMED",
+          txSignature: txSignature ?? undefined,
+          withdrawalId: withdrawal.id,
+          metadata: { providerReference: providerReference ?? null },
+        }, tx);
+        const confirmed = await this.getWithdrawal(withdrawalId, tx);
+        if (!confirmed) {
+          throw new TipLedgerError("TIP_WITHDRAWAL_NOT_FOUND", "Withdrawal update failed.", 500);
+        }
+        return confirmed;
+      });
+    }
+
+    const withdrawal = this.memoryWithdrawals.get(withdrawalId);
+    if (!withdrawal) {
+      throw new TipLedgerError("TIP_WITHDRAWAL_NOT_FOUND", "Withdrawal was not found.", 404);
+    }
+    if (withdrawal.status === "CONFIRMED") {
+      return withdrawal;
+    }
+    if (!["DISPATCHING", "SUBMITTED", "PENDING_DISPATCH"].includes(withdrawal.status)) {
+      throw new TipLedgerError("TIP_WITHDRAWAL_STATE_INVALID", `Cannot complete withdrawal from status ${withdrawal.status}.`, 409);
+    }
+    const account = await this.ensureAccount(withdrawal.ownerWallet);
+    account.pendingWithdrawalAtomic = subAtomic(account.pendingWithdrawalAtomic, withdrawal.amountAtomic);
+    account.totalWithdrawnAtomic = addAtomic(account.totalWithdrawnAtomic, withdrawal.amountAtomic);
+    account.updatedAt = timestamp;
+    withdrawal.status = "CONFIRMED";
+    withdrawal.txSignature = txSignature ?? withdrawal.txSignature;
+    withdrawal.providerReference = providerReference ?? withdrawal.providerReference;
+    withdrawal.errorMessage = undefined;
+    withdrawal.updatedAt = timestamp;
+    withdrawal.processedAt = timestamp;
+    this.pushMemoryLedger({
+      eventType: "withdrawal_completed",
+      ownerWallet: withdrawal.ownerWallet,
+      counterpartyWallet: withdrawal.recipientWallet,
+      amountAtomic: withdrawal.amountAtomic,
+      status: "CONFIRMED",
+      txSignature: withdrawal.txSignature,
+      withdrawalId: withdrawal.id,
+      metadata: { providerReference: withdrawal.providerReference ?? null },
+    });
+    return withdrawal;
+  }
+
+  async failWithdrawal(withdrawalId: string, errorMessage: string): Promise<TipWithdrawal> {
+    const timestamp = nowIso(this.now);
+    if (this.db?.transaction) {
+      return this.db.transaction(async (tx) => {
+        const withdrawal = await this.getWithdrawal(withdrawalId, tx, true);
+        if (!withdrawal) {
+          throw new TipLedgerError("TIP_WITHDRAWAL_NOT_FOUND", "Withdrawal was not found.", 404);
+        }
+        if (withdrawal.status === "FAILED") {
+          return withdrawal;
+        }
+        if (!["DISPATCHING", "PENDING_DISPATCH"].includes(withdrawal.status)) {
+          throw new TipLedgerError("TIP_WITHDRAWAL_STATE_INVALID", `Cannot fail withdrawal from status ${withdrawal.status}.`, 409);
+        }
+        await tx.query(
+          `update tip_accounts
+           set balance_atomic = balance_atomic + $2::numeric,
+               pending_withdrawal_atomic = pending_withdrawal_atomic - $2::numeric,
+               version = version + 1,
+               updated_at = $3
+           where owner_wallet = $1`,
+          [withdrawal.ownerWallet, withdrawal.amountAtomic, timestamp],
+        );
+        await tx.query(
+          `update tip_withdrawals
+           set status = 'FAILED',
+               error_message = $2,
+               processed_at = $3,
+               updated_at = $3
+           where id = $1`,
+          [withdrawalId, errorMessage, timestamp],
+        );
+        await this.insertLedger({
+          eventType: "withdrawal_failed",
+          ownerWallet: withdrawal.ownerWallet,
+          counterpartyWallet: withdrawal.recipientWallet,
+          amountAtomic: withdrawal.amountAtomic,
+          status: "FAILED",
+          withdrawalId: withdrawal.id,
+          metadata: { reason: errorMessage, revertedToAvailable: true },
+        }, tx);
+        const failed = await this.getWithdrawal(withdrawalId, tx);
+        if (!failed) {
+          throw new TipLedgerError("TIP_WITHDRAWAL_NOT_FOUND", "Withdrawal update failed.", 500);
+        }
+        return failed;
+      });
+    }
+
+    const withdrawal = this.memoryWithdrawals.get(withdrawalId);
+    if (!withdrawal) {
+      throw new TipLedgerError("TIP_WITHDRAWAL_NOT_FOUND", "Withdrawal was not found.", 404);
+    }
+    if (withdrawal.status === "FAILED") {
+      return withdrawal;
+    }
+    if (!["DISPATCHING", "PENDING_DISPATCH"].includes(withdrawal.status)) {
+      throw new TipLedgerError("TIP_WITHDRAWAL_STATE_INVALID", `Cannot fail withdrawal from status ${withdrawal.status}.`, 409);
+    }
+    const account = await this.ensureAccount(withdrawal.ownerWallet);
+    account.balanceAtomic = addAtomic(account.balanceAtomic, withdrawal.amountAtomic);
+    account.pendingWithdrawalAtomic = subAtomic(account.pendingWithdrawalAtomic, withdrawal.amountAtomic);
+    account.updatedAt = timestamp;
+    withdrawal.status = "FAILED";
+    withdrawal.errorMessage = errorMessage;
+    withdrawal.updatedAt = timestamp;
+    withdrawal.processedAt = timestamp;
+    this.pushMemoryLedger({
+      eventType: "withdrawal_failed",
+      ownerWallet: withdrawal.ownerWallet,
+      counterpartyWallet: withdrawal.recipientWallet,
+      amountAtomic: withdrawal.amountAtomic,
+      status: "FAILED",
+      withdrawalId: withdrawal.id,
+      metadata: { reason: errorMessage, revertedToAvailable: true },
+    });
+    return withdrawal;
+  }
+
+  private async dispatchWithdrawal(withdrawal: TipWithdrawal): Promise<TipWithdrawalDispatchResult> {
+    if (this.config.withdrawMode === "mock") {
+      return {
+        status: "confirmed",
+        txSignature: `mock-null-withdraw-${withdrawal.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 24)}`,
+      };
+    }
+    if (this.config.withdrawMode === "manual") {
+      return { status: "retry", errorMessage: "withdraw_mode_manual" };
+    }
+    if (!this.config.withdrawWebhookUrl) {
+      return { status: "retry", errorMessage: "withdraw_webhook_url_missing" };
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.config.withdrawTimeoutMs);
+    try {
+      const response = await fetch(this.config.withdrawWebhookUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(this.config.withdrawWebhookSecret ? { "x-tip-withdraw-secret": this.config.withdrawWebhookSecret } : {}),
+        },
+        body: JSON.stringify({
+          withdrawalId: withdrawal.id,
+          ownerWallet: withdrawal.ownerWallet,
+          recipientWallet: withdrawal.recipientWallet,
+          amountAtomic: withdrawal.amountAtomic,
+          tokenMint: withdrawal.tokenMint,
+        }),
+        signal: controller.signal,
+      });
+      const payload = await response.json().catch(() => ({} as Record<string, unknown>));
+      if (!response.ok) {
+        return {
+          status: "retry",
+          errorMessage: typeof payload.error === "string" ? payload.error : `withdraw_dispatch_http_${response.status}`,
+        };
+      }
+      const statusRaw = String(payload.status ?? "").toLowerCase();
+      if (statusRaw === "confirmed") {
+        const txSignature = String(payload.txSignature ?? payload.tx_signature ?? "").trim();
+        if (!txSignature) {
+          return { status: "retry", errorMessage: "withdraw_dispatch_confirmed_missing_tx_signature" };
+        }
+        return {
+          status: "confirmed",
+          txSignature,
+          providerReference: typeof payload.providerReference === "string" ? payload.providerReference : undefined,
+        };
+      }
+      if (statusRaw === "submitted") {
+        return {
+          status: "submitted",
+          txSignature: typeof payload.txSignature === "string" ? payload.txSignature : undefined,
+          providerReference: typeof payload.providerReference === "string" ? payload.providerReference : undefined,
+        };
+      }
+      if (statusRaw === "failed") {
+        return {
+          status: "failed",
+          errorMessage: typeof payload.error === "string" ? payload.error : "withdraw_dispatch_failed",
+          providerReference: typeof payload.providerReference === "string" ? payload.providerReference : undefined,
+        };
+      }
+      return {
+        status: "retry",
+        errorMessage: typeof payload.error === "string" ? payload.error : "withdraw_dispatch_unknown_status",
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "withdraw_dispatch_error";
+      return { status: "retry", errorMessage: message };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private async getWithdrawal(withdrawalId: string, db: DbClient | undefined = this.db, lock = false): Promise<TipWithdrawal | undefined> {
+    if (db) {
+      const result = await db.query<Record<string, unknown>>(
+        `select * from tip_withdrawals where id = $1 ${lock ? "for update" : ""} limit 1`,
+        [withdrawalId],
+      );
+      return result.rows[0] ? mapWithdrawalRow(result.rows[0]) : undefined;
+    }
+    return this.memoryWithdrawals.get(withdrawalId);
+  }
+
+  private async updateWithdrawalStatus(
+    withdrawalId: string,
+    status: TipWithdrawalStatus,
+    input: { txSignature?: string; providerReference?: string; errorMessage?: string } = {},
+  ): Promise<void> {
+    const timestamp = nowIso(this.now);
+    if (this.db) {
+      await this.db.query(
+        `update tip_withdrawals
+         set status = $2,
+             tx_signature = coalesce($3, tx_signature),
+             provider_reference = coalesce($4, provider_reference),
+             error_message = $5,
+             updated_at = $6
+         where id = $1`,
+        [withdrawalId, status, input.txSignature ?? null, input.providerReference ?? null, input.errorMessage ?? null, timestamp],
+      );
+      return;
+    }
+    const current = this.memoryWithdrawals.get(withdrawalId);
+    if (!current) return;
+    current.status = status;
+    current.txSignature = input.txSignature ?? current.txSignature;
+    current.providerReference = input.providerReference ?? current.providerReference;
+    current.errorMessage = input.errorMessage ?? current.errorMessage;
+    current.updatedAt = timestamp;
+  }
+
+  private async insertWithdrawal(
+    input: {
+      id: string;
+      ownerWallet: string;
+      recipientWallet: string;
+      amountAtomic: string;
+      status: TipWithdrawalStatus;
+    },
+    db: DbClient | undefined = this.db,
+  ): Promise<TipWithdrawal> {
+    const timestamp = nowIso(this.now);
+    if (db) {
+      const result = await db.query<Record<string, unknown>>(
+        `insert into tip_withdrawals
+         (id, owner_wallet, recipient_wallet, amount_atomic, token_mint, status, created_at, updated_at)
+         values ($1, $2, $3, $4::numeric, $5, $6, $7, $7)
+         returning *`,
+        [input.id, input.ownerWallet, input.recipientWallet, input.amountAtomic, this.config.tokenMint, input.status, timestamp],
+      );
+      return mapWithdrawalRow(result.rows[0]);
+    }
+    const item: TipWithdrawal = {
+      id: input.id,
+      ownerWallet: input.ownerWallet,
+      recipientWallet: input.recipientWallet,
+      amountAtomic: input.amountAtomic,
+      tokenMint: this.config.tokenMint,
+      status: input.status,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    this.memoryWithdrawals.set(item.id, item);
+    return item;
   }
 
   async adminAdjust(input: {
@@ -796,7 +1324,7 @@ export class NullTipLedgerService {
     vaultBalanceAtomic: string;
     withdrawalsPaused: boolean;
   }> {
-    assertAtomic(input.vaultBalanceAtomic, "vaultBalanceAtomic");
+    assertNonNegativeAtomic(input.vaultBalanceAtomic, "vaultBalanceAtomic");
     const liabilityAtomic = await this.liabilityAtomic();
     const ok = BigInt(input.vaultBalanceAtomic) >= BigInt(liabilityAtomic);
     await this.setWithdrawalsPaused(!ok, ok ? "vault_reconciliation_green" : "vault_balance_below_internal_liability", input.actorId);

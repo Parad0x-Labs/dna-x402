@@ -41,6 +41,7 @@ Added endpoints:
 
 - `GET /v1/polymarket/live/readiness`
 - `POST /v1/polymarket/live/order-precheck`
+- `POST /v1/polymarket/live/submit` (gate-protected signed-order relay)
 
 4. **Exports + docs**
 - [index.ts](/G:/DNA x402/x402/src/index.ts) exports `./polymarket/live.js`
@@ -64,6 +65,7 @@ Both passed at handover time.
 
 - Builder credentials can be resolved from legacy and alias env names.
 - Server now supports per-user precheck API for live order envelopes.
+- Server now supports a gate-protected live submit relay (`/api|/v1/polymarket/live/submit`) for already-signed user orders.
 - Live execution is still gated by broader product/runtime policies and Phase 0 exit requirements.
 - This work does **not** enable backend signing or shared-funds custody.
 
@@ -79,6 +81,10 @@ Both passed at handover time.
    - `tests/polymarket.live-routes.test.ts`
    - `tests/polymarket.trading-phase0.test.ts`
    - `tests/guard.config.test.ts`
+6. Tip cash-out automation must keep per-user accounting atomic:
+   - reserve on request
+   - confirm/fail transitions must reconcile `balance_atomic`, `pending_withdrawal_atomic`, and `total_withdrawn_atomic`
+   - no partial state writes across ledger + withdrawal records
 
 ## Website Funding + Ledger Flow (Target Runtime Rule)
 
@@ -117,8 +123,25 @@ Response:
 
 This prevents UI-level guesswork and keeps server-side enforcement aligned with frontend state.
 
+## Tip Cash-Out Automation
+
+New runtime knobs:
+
+- `NULL_TIP_WITHDRAW_MODE=manual|webhook|mock`
+- `NULL_TIP_WITHDRAW_AUTO_PROCESS=1|0`
+- `NULL_TIP_WITHDRAW_WEBHOOK_URL=...` (required for `webhook`)
+- `NULL_TIP_WITHDRAW_WEBHOOK_SECRET=...` (optional)
+- `NULL_TIP_WITHDRAW_TIMEOUT_MS=...`
+
+Automation endpoints:
+
+- user: `POST /api|/v1/tips/withdraw`
+- user status: `GET /api|/v1/tips/withdrawals`
+- admin processor: `POST /api|/v1/admin/tips/withdrawals/process`
+- admin force-confirm: `POST /api|/v1/admin/tips/withdrawals/confirm`
+
 ## Recommended Next Step
 
-1. Wire website agent runtime to call `POST /v1/polymarket/live/order-precheck` before any live submit attempt.
-2. Pass per-user `depositWallet`, `funder`, `signatureType`, and session-signer availability into precheck.
-3. Keep builder credentials shared on server, but keep order signing per-user.
+1. Wire website agent runtime to call `POST /v1/polymarket/live/submit` after passing `/order-precheck`.
+2. Pass per-user `depositWallet`, `funder`, `signatureType`, session-signer availability, and signed order envelope.
+3. For NULL tips, move production from `manual` to `webhook` withdrawal mode after payout worker endpoint is verified on staging.

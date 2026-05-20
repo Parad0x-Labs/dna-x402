@@ -20,6 +20,8 @@ const LIVE_ORDER_EXTRA_KEYS = [
   "DEPOSIT_WALLET_ADDRESS",
 ] as const;
 
+const DEFAULT_CLOB_BASE_URL = "https://clob.polymarket.com";
+
 type BuilderEnvKey = typeof BUILDER_ENV_KEYS[number];
 
 function acceptedNames(name: string): string[] {
@@ -119,6 +121,33 @@ export interface PolymarketUserOrderPrecheckResult {
   mode: "PER_USER_DEPOSIT_WALLET_SIGNER";
 }
 
+export interface PolymarketOrderRelayAuthHeaders {
+  apiKey: string;
+  passphrase: string;
+  address: string;
+  signature: string;
+  timestamp: string;
+}
+
+export interface PolymarketSignedOrderSubmitInput {
+  precheck: PolymarketUserOrderPrecheckInput;
+  signedOrder: Record<string, unknown>;
+  owner: string;
+  auth: PolymarketOrderRelayAuthHeaders;
+  orderType?: "GTC" | "FOK" | "GTD" | "FAK";
+  deferExec?: boolean;
+  postOnly?: boolean;
+  clobBaseUrl?: string;
+}
+
+export interface PolymarketSignedOrderRelayResult {
+  ok: boolean;
+  status: number;
+  precheck: PolymarketUserOrderPrecheckResult;
+  responseBody: unknown;
+  submittedUrl: string;
+}
+
 export function precheckPolymarketUserOrder(
   input: PolymarketUserOrderPrecheckInput,
   env: NodeJS.ProcessEnv = process.env,
@@ -149,5 +178,58 @@ export function precheckPolymarketUserOrder(
     builderCredentialsReady: builderReadiness.ready,
     builderCodeSource,
     mode: "PER_USER_DEPOSIT_WALLET_SIGNER",
+  };
+}
+
+function normalizeClobBaseUrl(input?: string, env: NodeJS.ProcessEnv = process.env): string {
+  const raw = (input ?? env.POLYMARKET_CLOB_BASE_URL ?? DEFAULT_CLOB_BASE_URL).trim();
+  return raw.endsWith("/") ? raw.slice(0, -1) : raw;
+}
+
+export async function relayPolymarketSignedOrder(
+  input: PolymarketSignedOrderSubmitInput,
+  env: NodeJS.ProcessEnv = process.env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<PolymarketSignedOrderRelayResult> {
+  assertBackendRelayOnly(input.precheck);
+  assertBackendRelayOnly(input.signedOrder);
+  const precheck = precheckPolymarketUserOrder(input.precheck, env);
+  if (!precheck.ok) {
+    return {
+      ok: false,
+      status: 422,
+      precheck,
+      responseBody: { ok: false, error: "polymarket_precheck_failed", errors: precheck.errors },
+      submittedUrl: `${normalizeClobBaseUrl(input.clobBaseUrl, env)}/order`,
+    };
+  }
+
+  const url = `${normalizeClobBaseUrl(input.clobBaseUrl, env)}/order`;
+  const body = {
+    order: input.signedOrder,
+    owner: input.owner,
+    orderType: input.orderType ?? "GTC",
+    deferExec: Boolean(input.deferExec),
+    postOnly: Boolean(input.postOnly),
+  };
+  const response = await fetchImpl(url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "POLY_API_KEY": input.auth.apiKey,
+      "POLY_PASSPHRASE": input.auth.passphrase,
+      "POLY_ADDRESS": input.auth.address,
+      "POLY_SIGNATURE": input.auth.signature,
+      "POLY_TIMESTAMP": input.auth.timestamp,
+    },
+    body: JSON.stringify(body),
+  });
+  const responseBody = await response.json().catch(() => ({}));
+  return {
+    ok: response.ok,
+    status: response.status,
+    precheck,
+    responseBody,
+    submittedUrl: url,
   };
 }

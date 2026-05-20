@@ -72,6 +72,7 @@ import {
   assertNoBackendPrivateKeyPayload,
 } from "./agents/trading.js";
 import {
+  relayPolymarketSignedOrder,
   precheckPolymarketUserOrder,
   resolvePolymarketLiveReadiness,
 } from "./polymarket/live.js";
@@ -373,6 +374,23 @@ const polymarketOrderPrecheckSchema = z.object({
   riskControls: polymarketRiskControlsSchema.optional(),
 }).passthrough();
 
+const polymarketOrderSubmitSchema = z.object({
+  precheck: polymarketOrderPrecheckSchema,
+  signedOrder: z.record(z.string(), z.unknown()),
+  owner: z.string().min(1),
+  auth: z.object({
+    apiKey: z.string().min(1),
+    passphrase: z.string().min(1),
+    address: z.string().min(1),
+    signature: z.string().min(1),
+    timestamp: z.string().min(1),
+  }),
+  orderType: z.enum(["GTC", "FOK", "GTD", "FAK"]).optional(),
+  deferExec: z.boolean().optional(),
+  postOnly: z.boolean().optional(),
+  clobBaseUrl: z.string().url().optional(),
+}).passthrough();
+
 const agentBuilderRequestSchema = z.object({
   inputMode: z.enum(["PROMPT", "GUIDED", "TEMPLATE", "CLONE"]),
   prompt: z.string().max(4000).optional(),
@@ -547,6 +565,17 @@ const tipAdminReconcileSchema = z.object({
 const tipAdminPauseSchema = z.object({
   paused: z.boolean(),
   reason: z.string().min(8).max(500),
+}).passthrough();
+
+const tipAdminWithdrawProcessSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  withdrawalIds: z.array(z.string().uuid()).max(200).optional(),
+}).passthrough();
+
+const tipAdminWithdrawConfirmSchema = z.object({
+  withdrawalId: z.string().uuid(),
+  txSignature: z.string().min(32).optional(),
+  providerReference: z.string().max(256).optional(),
 }).passthrough();
 
 const flushSchema = z.object({
@@ -1051,6 +1080,11 @@ function createNullTipLedger(config: X402Config, now: () => Date): NullTipLedger
     sessionSecret: config.nullTips?.sessionSecret,
     maxSendAtomic: config.nullTips?.maxSendAtomic,
     maxWithdrawAtomic: config.nullTips?.maxWithdrawAtomic,
+    withdrawMode: config.nullTips?.withdrawMode,
+    withdrawWebhookUrl: config.nullTips?.withdrawWebhookUrl,
+    withdrawWebhookSecret: config.nullTips?.withdrawWebhookSecret,
+    withdrawTimeoutMs: config.nullTips?.withdrawTimeoutMs,
+    withdrawAutoProcess: config.nullTips?.withdrawAutoProcess,
   }), now, db);
 }
 
@@ -2556,6 +2590,44 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
   });
 
+  app.post(["/api/polymarket/live/submit", "/v1/polymarket/live/submit"], async (req, res) => {
+    if (!runtimeGates.polymarketLive) {
+      res.status(403).json({
+        ok: false,
+        error: "POLYMARKET_LIVE_GATE_CLOSED",
+        message: "Polymarket live submit is not enabled in runtime gates.",
+      });
+      return;
+    }
+    const parsed = polymarketOrderSubmitSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_polymarket_order_submit", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      assertNoBackendPrivateKeyPayload(parsed.data);
+      const relay = await relayPolymarketSignedOrder(parsed.data, process.env);
+      if (!relay.ok) {
+        res.status(relay.status).json({
+          ok: false,
+          error: "polymarket_order_submit_failed",
+          precheck: relay.precheck,
+          upstream: relay.responseBody,
+          submittedUrl: relay.submittedUrl,
+        });
+        return;
+      }
+      res.status(200).json({
+        ok: true,
+        precheck: relay.precheck,
+        upstream: relay.responseBody,
+        submittedUrl: relay.submittedUrl,
+      });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
+  });
+
   app.get("/health/db", (_req, res) => {
     const configured = Boolean(config.databaseUrl);
     res.status(configured ? 200 : 503).json({
@@ -2622,6 +2694,8 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       vaultAddress: config.nullTips?.vaultAddress ?? null,
       vaultConfigured: tipLedger.configuredForDeposits(),
       withdrawalsPaused: await tipLedger.withdrawalsPaused(),
+      withdrawalMode: config.nullTips?.withdrawMode ?? "manual",
+      withdrawalAutoProcess: Boolean(config.nullTips?.withdrawAutoProcess),
       model: "custodial_internal_ledger",
       security: {
         backendPrivateKeys: false,
@@ -2786,7 +2860,9 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         recipientWallet: parsed.data.recipientWallet,
         amountAtomic: parsed.data.amountAtomic,
       });
-      res.status(202).json({ ok: true, ...result, status: "PENDING_MANUAL_REVIEW" });
+      const status = result.withdrawal.status;
+      const httpStatus = status === "CONFIRMED" ? 200 : 202;
+      res.status(httpStatus).json({ ok: true, ...result, status });
     } catch (error) {
       sendTipError(res, error);
     }
@@ -2798,6 +2874,27 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       const limit = Number.parseInt(String(req.query.limit ?? "50"), 10);
       const ledger = await tipLedger.listLedger(ownerWallet, Number.isFinite(limit) ? limit : 50);
       res.json({ ok: true, ledger });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.get(["/api/tips/withdrawals", "/v1/tips/withdrawals"], async (req, res) => {
+    try {
+      const ownerWallet = requireTipOwner(req);
+      const limit = Number.parseInt(String(req.query.limit ?? "50"), 10);
+      const statuses = String(req.query.statuses ?? "")
+        .split(",")
+        .map((item) => item.trim().toUpperCase())
+        .filter(Boolean) as Array<
+          "PENDING_MANUAL_REVIEW" | "PENDING_DISPATCH" | "DISPATCHING" | "SUBMITTED" | "CONFIRMED" | "FAILED"
+        >;
+      const withdrawals = await tipLedger.listWithdrawals({
+        ownerWallet,
+        limit: Number.isFinite(limit) ? limit : 50,
+        statuses: statuses.length ? statuses : undefined,
+      });
+      res.json({ ok: true, withdrawals });
     } catch (error) {
       sendTipError(res, error);
     }
@@ -2914,6 +3011,49 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       try {
         await tipLedger.setWithdrawalsPaused(parsed.data.paused, parsed.data.reason, req.header("x-admin-actor") ?? "admin");
         res.json({ ok: true, withdrawalsPaused: parsed.data.paused });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
+
+  app.post(
+    ["/api/admin/tips/withdrawals/process", "/v1/admin/tips/withdrawals/process"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminWithdrawProcessSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_withdraw_process", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        const summary = await tipLedger.processPendingWithdrawals({
+          limit: parsed.data.limit,
+          withdrawalIds: parsed.data.withdrawalIds,
+        });
+        res.json({ ok: true, ...summary });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
+
+  app.post(
+    ["/api/admin/tips/withdrawals/confirm", "/v1/admin/tips/withdrawals/confirm"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminWithdrawConfirmSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_withdraw_confirm", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        const withdrawal = await tipLedger.completeWithdrawal(
+          parsed.data.withdrawalId,
+          parsed.data.txSignature,
+          parsed.data.providerReference,
+        );
+        res.json({ ok: true, withdrawal });
       } catch (error) {
         sendTipError(res, error);
       }

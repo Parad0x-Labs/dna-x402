@@ -153,6 +153,11 @@ const schema = z.object({
   NULL_TIP_SESSION_SECRET: z.string().optional(),
   NULL_TIP_MAX_SEND_ATOMIC: z.string().regex(/^\d+$/).optional(),
   NULL_TIP_MAX_WITHDRAW_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  NULL_TIP_WITHDRAW_MODE: z.enum(["manual", "webhook", "mock"]).default("manual"),
+  NULL_TIP_WITHDRAW_WEBHOOK_URL: z.string().url().optional(),
+  NULL_TIP_WITHDRAW_WEBHOOK_SECRET: z.string().optional(),
+  NULL_TIP_WITHDRAW_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(12_000),
+  NULL_TIP_WITHDRAW_AUTO_PROCESS: z.string().optional(),
 });
 
 type ParsedEnv = z.infer<typeof schema>;
@@ -265,6 +270,11 @@ export interface NullTipConfig {
   sessionSecret?: string;
   maxSendAtomic?: string;
   maxWithdrawAtomic?: string;
+  withdrawMode: "manual" | "webhook" | "mock";
+  withdrawWebhookUrl?: string;
+  withdrawWebhookSecret?: string;
+  withdrawTimeoutMs: number;
+  withdrawAutoProcess: boolean;
 }
 
 export interface X402Config {
@@ -601,6 +611,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
       sessionSecret: parsed.NULL_TIP_SESSION_SECRET ?? parsed.ADMIN_SECRET ?? parsed.RECEIPT_SIGNING_SECRET,
       maxSendAtomic: parsed.NULL_TIP_MAX_SEND_ATOMIC,
       maxWithdrawAtomic: parsed.NULL_TIP_MAX_WITHDRAW_ATOMIC,
+      withdrawMode: parsed.NULL_TIP_WITHDRAW_MODE,
+      withdrawWebhookUrl: parsed.NULL_TIP_WITHDRAW_WEBHOOK_URL,
+      withdrawWebhookSecret: parsed.NULL_TIP_WITHDRAW_WEBHOOK_SECRET,
+      withdrawTimeoutMs: parsed.NULL_TIP_WITHDRAW_TIMEOUT_MS,
+      withdrawAutoProcess: parseBooleanEnv(parsed.NULL_TIP_WITHDRAW_AUTO_PROCESS, true),
     },
   };
 }

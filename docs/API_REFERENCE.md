@@ -293,6 +293,11 @@ Per-order precheck:
 - `POST /api/polymarket/live/order-precheck`
 - `POST /v1/polymarket/live/order-precheck`
 
+Live signed-order relay (gate-protected):
+
+- `POST /api/polymarket/live/submit`
+- `POST /v1/polymarket/live/submit`
+
 Notes:
 
 - Shared builder credentials are server-side metadata only.
@@ -320,6 +325,28 @@ Response:
 ```
 
 Server enforcement matches this status: non-enrolled recipients are rejected with `TIP_RECIPIENT_NOT_ENROLLED`.
+
+## NULL Tip Withdrawals
+
+User withdrawal request:
+
+- `POST /api/tips/withdraw`
+- `POST /v1/tips/withdraw`
+
+User withdrawal status feed:
+
+- `GET /api/tips/withdrawals`
+- `GET /v1/tips/withdrawals`
+
+Admin automation hooks:
+
+- `POST /api/admin/tips/withdrawals/process`
+- `POST /v1/admin/tips/withdrawals/process`
+- `POST /api/admin/tips/withdrawals/confirm`
+- `POST /v1/admin/tips/withdrawals/confirm`
+
+`NULL_TIP_WITHDRAW_MODE=manual` keeps review-first queue.
+`NULL_TIP_WITHDRAW_MODE=webhook|mock` enables automation path (`PENDING_DISPATCH -> DISPATCHING -> SUBMITTED/CONFIRMED/FAILED`).
 
 ## Paper Agents
 
