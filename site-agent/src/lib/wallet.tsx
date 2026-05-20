@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { Buffer } from "buffer/";
+import bs58 from "bs58";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 
 globalThis.Buffer = globalThis.Buffer ?? Buffer;
@@ -15,6 +16,7 @@ interface InjectedWalletProvider {
     options?: { skipPreflight?: boolean; preflightCommitment?: string },
   ) => Promise<string | { signature: string }>;
   signTransaction?: (transaction: Transaction) => Promise<Transaction>;
+  signMessage?: (message: Uint8Array, display?: "utf8" | "hex") => Promise<Uint8Array | { signature: Uint8Array }>;
 }
 
 declare global {
@@ -36,6 +38,7 @@ export interface BrowserWalletState {
     connection: Connection,
     options?: { skipPreflight?: boolean; preflightCommitment?: string },
   ) => Promise<string>;
+  signMessage: (message: string) => Promise<string>;
 }
 
 const WalletContext = createContext<BrowserWalletState | null>(null);
@@ -103,6 +106,19 @@ export const BrowserWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     throw new Error(`${detected.name} does not expose a transaction signing API.`);
   }, [providerInfo]);
 
+  const signMessage = useCallback<BrowserWalletState["signMessage"]>(async (message) => {
+    const detected = providerInfo ?? detectProvider();
+    if (!detected) {
+      throw new Error("Install Phantom or Solflare to sign wallet sessions.");
+    }
+    if (!detected.provider.signMessage) {
+      throw new Error(`${detected.name} does not expose a message signing API.`);
+    }
+    const result = await detected.provider.signMessage(new TextEncoder().encode(message), "utf8");
+    const signature = result instanceof Uint8Array ? result : result.signature;
+    return bs58.encode(signature);
+  }, [providerInfo]);
+
   const value = useMemo<BrowserWalletState>(() => ({
     connected: Boolean(publicKey),
     connecting,
@@ -111,7 +127,8 @@ export const BrowserWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     connect,
     disconnect,
     sendTransaction,
-  }), [connect, connecting, disconnect, providerInfo?.name, publicKey, sendTransaction]);
+    signMessage,
+  }), [connect, connecting, disconnect, providerInfo?.name, publicKey, signMessage, sendTransaction]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };

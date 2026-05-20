@@ -2,6 +2,7 @@ export * from "./config.js";
 export * from "./feePolicy.js";
 export * from "./fees/waterfall.js";
 export * from "./agents/builder/compiler.js";
+export * from "./agents/degen.js";
 export {
   AgentTradingError,
   AgentTradingService,
@@ -35,6 +36,7 @@ export * from "./polymarket/agents.js";
 export * from "./polymarket/bridge.js";
 export * from "./polymarket/copyLedger.js";
 export * from "./polymarket/fees.js";
+export * from "./polymarket/live.js";
 export * from "./polymarket/phase0.js";
 export * from "./polymarket/security.js";
 export * from "./polymarket/trading.js";

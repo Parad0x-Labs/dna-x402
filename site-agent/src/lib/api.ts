@@ -11,6 +11,14 @@ import {
   ResourceResponse,
   SettlementMode,
   SignedReceipt,
+  TipBalanceResponse,
+  TipAccountStatusResponse,
+  TipChallengeResponse,
+  TipConfigResponse,
+  TipDepositIntentResponse,
+  TipLedgerResponse,
+  TipMutationResponse,
+  TipSessionResponse,
 } from "./types";
 
 function normalizeBaseUrl(value: string): string {
@@ -45,6 +53,17 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     throw new Error(`${response.status} ${response.statusText}: ${error}`);
   }
   return body as T;
+}
+
+function jsonPost(body: unknown, headers: Record<string, string> = {}): RequestInit {
+  return {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(body),
+  };
 }
 
 export class AgentApiClient {
@@ -153,6 +172,78 @@ export class AgentApiClient {
 
   async anchoringReceipt(receiptId: string): Promise<AnchoredReceiptResponse> {
     return fetchJson<AnchoredReceiptResponse>(`${this.baseUrl}/anchoring/receipt/${encodeURIComponent(receiptId)}`);
+  }
+
+  async tipConfig(): Promise<TipConfigResponse> {
+    return fetchJson<TipConfigResponse>(`${this.baseUrl}/api/tips/config`);
+  }
+
+  async tipChallenge(ownerWallet: string): Promise<TipChallengeResponse> {
+    return fetchJson<TipChallengeResponse>(`${this.baseUrl}/api/tips/session/challenge`, jsonPost({ ownerWallet }));
+  }
+
+  async tipVerifySession(input: {
+    ownerWallet: string;
+    challengeId: string;
+    signature: string;
+  }): Promise<TipSessionResponse> {
+    return fetchJson<TipSessionResponse>(`${this.baseUrl}/api/tips/session/verify`, jsonPost(input));
+  }
+
+  async tipBalance(token: string): Promise<TipBalanceResponse> {
+    return fetchJson<TipBalanceResponse>(`${this.baseUrl}/api/tips/balance`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+  }
+
+  async tipAccountStatus(ownerWallet: string): Promise<TipAccountStatusResponse> {
+    const wallet = encodeURIComponent(ownerWallet.trim());
+    return fetchJson<TipAccountStatusResponse>(`${this.baseUrl}/api/tips/account-status?wallet=${wallet}`);
+  }
+
+  async tipDepositIntent(token: string, amountAtomic?: string): Promise<TipDepositIntentResponse> {
+    return fetchJson<TipDepositIntentResponse>(
+      `${this.baseUrl}/api/tips/deposit-intent`,
+      jsonPost({ amountAtomic: amountAtomic || undefined }, { authorization: `Bearer ${token}` }),
+    );
+  }
+
+  async tipConfirmDeposit(token: string, input: {
+    depositIntentId: string;
+    txSignature: string;
+    amountAtomic: string;
+  }): Promise<TipMutationResponse> {
+    return fetchJson<TipMutationResponse>(
+      `${this.baseUrl}/api/tips/deposit-confirm`,
+      jsonPost(input, { authorization: `Bearer ${token}` }),
+    );
+  }
+
+  async tipSend(token: string, input: {
+    toOwnerWallet: string;
+    amountAtomic: string;
+    memo?: string;
+  }): Promise<TipMutationResponse> {
+    return fetchJson<TipMutationResponse>(
+      `${this.baseUrl}/api/tips/send`,
+      jsonPost(input, { authorization: `Bearer ${token}` }),
+    );
+  }
+
+  async tipWithdraw(token: string, input: {
+    recipientWallet: string;
+    amountAtomic: string;
+  }): Promise<TipMutationResponse> {
+    return fetchJson<TipMutationResponse>(
+      `${this.baseUrl}/api/tips/withdraw`,
+      jsonPost(input, { authorization: `Bearer ${token}` }),
+    );
+  }
+
+  async tipLedger(token: string): Promise<TipLedgerResponse> {
+    return fetchJson<TipLedgerResponse>(`${this.baseUrl}/api/tips/ledger`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
   }
 }
 

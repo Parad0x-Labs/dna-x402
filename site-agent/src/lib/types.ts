@@ -45,6 +45,12 @@ export interface HealthResponse {
     anchored?: number;
     recentSignatures?: string[];
   };
+  tips?: {
+    tokenSymbol?: string | null;
+    tokenMint?: string | null;
+    vaultConfigured?: boolean;
+    vaultAddress?: string | null;
+  };
 }
 
 export interface RankedMetric {
@@ -193,6 +199,112 @@ export interface AnchoredReceiptResponse {
     bucketPda: string;
     anchoredAt: string;
   };
+}
+
+export interface TipAccount {
+  ownerWallet: string;
+  tokenMint: string;
+  balanceAtomic: string;
+  pendingWithdrawalAtomic: string;
+  totalDepositedAtomic: string;
+  totalSentAtomic: string;
+  totalReceivedAtomic: string;
+  totalWithdrawnAtomic: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TipLedgerRecord {
+  id: string;
+  eventType: string;
+  ownerWallet: string;
+  counterpartyWallet?: string;
+  amountAtomic: string;
+  tokenMint: string;
+  status: string;
+  txSignature?: string;
+  depositIntentId?: string;
+  withdrawalId?: string;
+  transferId?: string;
+  memo?: string;
+  createdAt: string;
+}
+
+export interface TipConfigResponse {
+  ok: boolean;
+  tokenSymbol: string;
+  tokenMint: string | null;
+  decimals: number;
+  vaultAddress: string | null;
+  vaultConfigured: boolean;
+  withdrawalsPaused: boolean;
+}
+
+export interface TipChallengeResponse {
+  ok: boolean;
+  challenge: {
+    challengeId: string;
+    ownerWallet: string;
+    message: string;
+    expiresAt: string;
+  };
+}
+
+export interface TipSessionResponse {
+  ok: boolean;
+  token: string;
+  ownerWallet: string;
+}
+
+export interface TipBalanceResponse {
+  ok: boolean;
+  account: TipAccount;
+}
+
+export interface TipDepositIntentResponse {
+  ok: boolean;
+  intent: {
+    intentId: string;
+    ownerWallet: string;
+    amountAtomic?: string;
+    tokenMint: string;
+    vaultAddress?: string;
+    memo: string;
+    status: string;
+    expiresAt: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  configured: boolean;
+  instructions: {
+    tokenSymbol: string;
+    tokenMint: string | null;
+    vaultAddress: string | null;
+    memo: string;
+  };
+}
+
+export interface TipMutationResponse {
+  ok: boolean;
+  account?: TipAccount;
+  sender?: TipAccount;
+  recipient?: TipAccount;
+  transferId?: string;
+  withdrawalId?: string;
+  ledger?: TipLedgerRecord[];
+  status?: string;
+}
+
+export interface TipLedgerResponse {
+  ok: boolean;
+  ledger: TipLedgerRecord[];
+}
+
+export interface TipAccountStatusResponse {
+  ok: boolean;
+  ownerWallet: string;
+  hasTipAccount: boolean;
+  canReceiveTips: boolean;
 }
 
 export type LogChannel = "health" | "market" | "anchoring" | "demo";

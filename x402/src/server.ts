@@ -69,7 +69,12 @@ import {
   CopySettings,
   PaperTradeInput,
   SourceAgentAction,
+  assertNoBackendPrivateKeyPayload,
 } from "./agents/trading.js";
+import {
+  precheckPolymarketUserOrder,
+  resolvePolymarketLiveReadiness,
+} from "./polymarket/live.js";
 import {
   AgentBuilderError,
   AgentBuilderRepositories,
@@ -77,6 +82,11 @@ import {
   AgentBuilderService,
   AgentConfigDraft,
 } from "./agents/builder/compiler.js";
+import {
+  NullTipLedgerService,
+  TipLedgerError,
+  createDefaultTipConfig,
+} from "./tips/ledger.js";
 import {
   CommitRecord,
   PaymentAccept,
@@ -106,6 +116,7 @@ interface CreateAppDeps {
   feeLedgerStore?: FeeLedgerStore;
   agentTrading?: AgentTradingService;
   agentBuilder?: AgentBuilderService;
+  tipLedger?: NullTipLedgerService;
 }
 
 interface WebhookReplayClaimInput {
@@ -141,6 +152,7 @@ export interface X402AppContext {
   observedAgentIds: Set<string>;
   agentTrading: AgentTradingService;
   agentBuilder: AgentBuilderService;
+  tipLedger: NullTipLedgerService;
   guard?: DnaGuardController;
   emergencyPause: EmergencyPauseController;
   governance: GovernanceService;
@@ -312,6 +324,55 @@ const copiedLotFinalizeSchema = z.object({
   finalized: z.boolean().optional(),
 });
 
+const polymarketRiskControlsSchema = z.object({
+  tradeSizePusd: z.number(),
+  projectedDailySpendPusd: z.number(),
+  projectedDailyLossPusd: z.number(),
+  projectedMarketExposurePusd: z.number(),
+  projectedOpenOrders: z.number().int(),
+  estimatedSlippageBps: z.number().int(),
+  marketCategory: z.string(),
+  dryRun: z.boolean(),
+  manualApprovalRequired: z.boolean(),
+  manualApprovalGranted: z.boolean(),
+  maxTradeSizePusd: z.number(),
+  maxDailySpendPusd: z.number(),
+  maxDailyLossPusd: z.number(),
+  maxMarketExposurePusd: z.number(),
+  maxOpenOrders: z.number().int(),
+  maxSlippageBps: z.number().int(),
+  categoryBlacklist: z.array(z.string()),
+});
+
+const polymarketOrderPrecheckSchema = z.object({
+  agentId: z.string().min(1),
+  ownerWallet: z.string().min(1),
+  depositWallet: z.string().min(1),
+  funder: z.string().min(1),
+  signatureType: z.union([z.literal(3), z.literal("POLY_1271"), z.number(), z.string()]),
+  complianceAllowed: z.boolean(),
+  marketActive: z.boolean(),
+  orderbookEnabled: z.boolean(),
+  tokenId: z.string().min(1).optional(),
+  side: z.enum(["YES", "NO"]).optional(),
+  price: z.number(),
+  size: z.number(),
+  tickSize: z.number(),
+  minSize: z.number(),
+  negRiskKnown: z.boolean(),
+  pUsdAvailable: z.number(),
+  allowanceApproved: z.boolean(),
+  orderbookFresh: z.boolean(),
+  duplicateRetrySafe: z.boolean(),
+  rateLimitAllowed: z.boolean(),
+  maxSlippageBps: z.number().int(),
+  estimatedSlippageBps: z.number().int(),
+  riskControlsPassed: z.boolean(),
+  activeLocalSignerAvailable: z.boolean(),
+  builderCode: z.string().min(1).optional(),
+  riskControls: polymarketRiskControlsSchema.optional(),
+}).passthrough();
+
 const agentBuilderRequestSchema = z.object({
   inputMode: z.enum(["PROMPT", "GUIDED", "TEMPLATE", "CLONE"]),
   prompt: z.string().max(4000).optional(),
@@ -427,6 +488,66 @@ const signedWebhookEnvelopeSchema = z.object({
   payload: z.record(z.string(), z.unknown()),
   signature: z.string().min(64).max(256),
 });
+
+const tipSessionChallengeSchema = z.object({
+  ownerWallet: z.string().min(32).max(64),
+});
+
+const tipSessionVerifySchema = z.object({
+  ownerWallet: z.string().min(32).max(64),
+  challengeId: z.string().uuid(),
+  signature: z.string().min(32).max(256),
+});
+
+const tipAmountSchema = z.string().regex(/^\d+$/);
+
+const tipDepositIntentSchema = z.object({
+  amountAtomic: tipAmountSchema.optional(),
+}).passthrough();
+
+const tipDepositConfirmSchema = z.object({
+  depositIntentId: z.string().uuid(),
+  txSignature: z.string().min(32),
+  amountAtomic: tipAmountSchema,
+}).passthrough();
+
+const tipSendSchema = z.object({
+  toOwnerWallet: z.string().min(32).max(64),
+  amountAtomic: tipAmountSchema,
+  memo: z.string().max(240).optional(),
+}).passthrough();
+
+const tipAdminAccountSchema = z.object({
+  ownerWallet: z.string().min(32).max(64),
+}).passthrough();
+
+const tipAdminSendSchema = z.object({
+  fromOwnerWallet: z.string().min(32).max(64),
+  toOwnerWallet: z.string().min(32).max(64),
+  amountAtomic: tipAmountSchema,
+  memo: z.string().max(240).optional(),
+}).passthrough();
+
+const tipWithdrawSchema = z.object({
+  recipientWallet: z.string().min(32).max(64),
+  amountAtomic: tipAmountSchema,
+}).passthrough();
+
+const tipAdminAdjustSchema = z.object({
+  ownerWallet: z.string().min(32).max(64),
+  amountAtomic: tipAmountSchema,
+  direction: z.enum(["credit", "debit"]),
+  reason: z.string().min(8).max(500),
+}).passthrough();
+
+const tipAdminReconcileSchema = z.object({
+  vaultBalanceAtomic: tipAmountSchema,
+}).passthrough();
+
+const tipAdminPauseSchema = z.object({
+  paused: z.boolean(),
+  reason: z.string().min(8).max(500),
+}).passthrough();
 
 const flushSchema = z.object({
   nowMs: z.number().int().positive().optional(),
@@ -916,6 +1037,23 @@ function createAgentBuilderRepositories(config: X402Config): AgentBuilderReposit
   };
 }
 
+function createNullTipLedger(config: X402Config, now: () => Date): NullTipLedgerService {
+  const databaseUrl = config.databaseUrl;
+  const usePostgres = (config.repositoryMode ?? "").toLowerCase() === "postgres" && Boolean(databaseUrl);
+  const db = usePostgres && databaseUrl
+    ? new PostgresDbClient({ connectionString: databaseUrl })
+    : undefined;
+  return new NullTipLedgerService(createDefaultTipConfig({
+    tokenMint: config.nullTips?.tokenMint,
+    vaultAddress: config.nullTips?.vaultAddress,
+    tokenSymbol: config.nullTips?.tokenSymbol,
+    decimals: config.nullTips?.decimals,
+    sessionSecret: config.nullTips?.sessionSecret,
+    maxSendAtomic: config.nullTips?.maxSendAtomic,
+    maxWithdrawAtomic: config.nullTips?.maxWithdrawAtomic,
+  }), now, db);
+}
+
 export function createX402App(config: X402Config = loadConfig(), deps: CreateAppDeps = {}): {
   app: express.Express;
   context: X402AppContext;
@@ -969,6 +1107,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const governance = deps.governance ?? new GovernanceService(now);
   const agentTrading = deps.agentTrading ?? new AgentTradingService(now, createAgentTradingRepositories(config));
   const agentBuilder = deps.agentBuilder ?? new AgentBuilderService(now, createAgentBuilderRepositories(config));
+  const tipLedger = deps.tipLedger ?? createNullTipLedger(config, now);
   const { router: marketRouter, context: market } = createMarketRouter({
     now,
     signer: receiptSigner,
@@ -1005,6 +1144,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     observedAgentIds,
     agentTrading,
     agentBuilder,
+    tipLedger,
     guard,
     emergencyPause,
     governance,
@@ -2270,6 +2410,23 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     res.status(500).json({ ok: false, error: "agent_builder_failed", message: error instanceof Error ? error.message : String(error) });
   }
 
+  function sendTipError(res: express.Response, error: unknown): void {
+    if (error instanceof TipLedgerError) {
+      res.status(error.status).json({ ok: false, error: error.code, message: error.message, details: error.details });
+      return;
+    }
+    if (error instanceof AgentTradingError) {
+      res.status(error.status).json({ ok: false, error: error.code, message: error.message });
+      return;
+    }
+    res.status(500).json({ ok: false, error: "tip_ledger_failed", message: error instanceof Error ? error.message : String(error) });
+  }
+
+  function requireTipOwner(req: express.Request): string {
+    const token = bearerToken(req.header("authorization"));
+    return tipLedger.sessions.verifyToken(token).ownerWallet;
+  }
+
   function requirePublicBetaFeature(
     res: express.Response,
     feature: "agentCreation" | "paperAgents" | "publicAgentProfiles" | "copySettings" | "alphaMonetization",
@@ -2348,8 +2505,55 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         orders: config.pauseOrders,
         finalize: config.pauseFinalize,
       },
+      tips: {
+        tokenSymbol: config.nullTips?.tokenSymbol ?? "NULL",
+        tokenMint: config.nullTips?.tokenMint ?? null,
+        vaultConfigured: tipLedger.configuredForDeposits(),
+        vaultAddress: config.nullTips?.vaultAddress ?? null,
+      },
       signer: receiptSigner.signerPublicKey,
     });
+  });
+
+  app.get(["/api/polymarket/live/readiness", "/v1/polymarket/live/readiness"], (_req, res) => {
+    const readiness = resolvePolymarketLiveReadiness(process.env);
+    res.json({
+      ok: true,
+      mode: readiness.mode,
+      builderCredentialsReady: readiness.builder.ready,
+      builderCredentials: readiness.builder.entries.map((entry) => ({
+        canonicalName: entry.canonicalName,
+        present: entry.present,
+        sourceName: entry.sourceName,
+      })),
+      liveOrderExtraEnv: readiness.liveOrderExtras.map((entry) => ({
+        canonicalName: entry.canonicalName,
+        present: entry.present,
+      })),
+      notes: readiness.notes,
+    });
+  });
+
+  app.post(["/api/polymarket/live/order-precheck", "/v1/polymarket/live/order-precheck"], (req, res) => {
+    const parsed = polymarketOrderPrecheckSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_polymarket_order_precheck", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      assertNoBackendPrivateKeyPayload(parsed.data);
+      const precheck = precheckPolymarketUserOrder(parsed.data, process.env);
+      const status = precheck.ok ? 200 : 422;
+      res.status(status).json({
+        ok: precheck.ok,
+        mode: precheck.mode,
+        builderCredentialsReady: precheck.builderCredentialsReady,
+        builderCodeSource: precheck.builderCodeSource,
+        errors: precheck.errors,
+      });
+    } catch (error) {
+      sendAgentError(res, error);
+    }
   });
 
   app.get("/health/db", (_req, res) => {
@@ -2408,6 +2612,313 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       signer: receiptSigner.signerPublicKey,
     });
   });
+
+  app.get(["/api/tips/config", "/v1/tips/config"], async (_req, res) => {
+    res.json({
+      ok: true,
+      tokenSymbol: config.nullTips?.tokenSymbol ?? "NULL",
+      tokenMint: config.nullTips?.tokenMint ?? null,
+      decimals: config.nullTips?.decimals ?? 6,
+      vaultAddress: config.nullTips?.vaultAddress ?? null,
+      vaultConfigured: tipLedger.configuredForDeposits(),
+      withdrawalsPaused: await tipLedger.withdrawalsPaused(),
+      model: "custodial_internal_ledger",
+      security: {
+        backendPrivateKeys: false,
+        backendUserKeys: false,
+        senderChosenByClient: false,
+        walletSessionRequired: true,
+      },
+    });
+  });
+
+  app.post(["/api/tips/session/challenge", "/v1/tips/session/challenge"], (req, res) => {
+    const parsed = tipSessionChallengeSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_tip_session_challenge", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const challenge = tipLedger.sessions.createChallenge(parsed.data.ownerWallet);
+      res.status(201).json({ ok: true, challenge });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.post(["/api/tips/session/verify", "/v1/tips/session/verify"], async (req, res) => {
+    const parsed = tipSessionVerifySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_tip_session_verify", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const token = tipLedger.sessions.verifyChallenge(parsed.data);
+      await tipLedger.ensureWalletAccount(parsed.data.ownerWallet);
+      res.json({ ok: true, token, ownerWallet: parsed.data.ownerWallet });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.get(["/api/tips/account-status", "/v1/tips/account-status"], async (req, res) => {
+    const ownerWallet = String(req.query.ownerWallet ?? req.query.wallet ?? "").trim();
+    if (!ownerWallet) {
+      res.status(400).json({ ok: false, error: "invalid_tip_account_status", message: "ownerWallet query param is required." });
+      return;
+    }
+    try {
+      const hasTipAccount = await tipLedger.hasAccount(ownerWallet);
+      res.json({ ok: true, ownerWallet, hasTipAccount, canReceiveTips: hasTipAccount });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.get(["/api/tips/account/:ownerWallet/status", "/v1/tips/account/:ownerWallet/status"], async (req, res) => {
+    const ownerWallet = String(req.params.ownerWallet ?? "").trim();
+    if (!ownerWallet) {
+      res.status(400).json({ ok: false, error: "invalid_tip_account_status", message: "ownerWallet path param is required." });
+      return;
+    }
+    try {
+      const hasTipAccount = await tipLedger.hasAccount(ownerWallet);
+      res.json({ ok: true, ownerWallet, hasTipAccount, canReceiveTips: hasTipAccount });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.get(["/api/tips/balance", "/v1/tips/balance"], async (req, res) => {
+    try {
+      const ownerWallet = requireTipOwner(req);
+      const account = await tipLedger.getBalance(ownerWallet);
+      res.json({ ok: true, account });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.post(["/api/tips/deposit-intent", "/v1/tips/deposit-intent"], async (req, res) => {
+    const parsed = tipDepositIntentSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_tip_deposit_intent", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      assertNoBackendPrivateKeyPayload(req.body);
+      const ownerWallet = requireTipOwner(req);
+      const intent = await tipLedger.createDepositIntent(ownerWallet, parsed.data.amountAtomic);
+      res.status(201).json({
+        ok: true,
+        intent,
+        configured: tipLedger.configuredForDeposits(),
+        instructions: {
+          tokenSymbol: config.nullTips?.tokenSymbol ?? "NULL",
+          tokenMint: config.nullTips?.tokenMint ?? null,
+          vaultAddress: config.nullTips?.vaultAddress ?? null,
+          memo: intent.memo,
+        },
+      });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.post(["/api/tips/deposit-confirm", "/v1/tips/deposit-confirm"], async (req, res) => {
+    const parsed = tipDepositConfirmSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_tip_deposit_confirm", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      assertNoBackendPrivateKeyPayload(req.body);
+      const ownerWallet = requireTipOwner(req);
+      const result = await tipLedger.confirmDeposit({
+        ownerWallet,
+        depositIntentId: parsed.data.depositIntentId,
+        txSignature: parsed.data.txSignature,
+        amountAtomic: parsed.data.amountAtomic,
+        paymentVerifier,
+      });
+      res.json({ ok: true, ...result });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.post(["/api/tips/send", "/v1/tips/send"], async (req, res) => {
+    const parsed = tipSendSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_tip_send", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      assertNoBackendPrivateKeyPayload(req.body);
+      const fromOwnerWallet = requireTipOwner(req);
+      const result = await tipLedger.sendTip({
+        fromOwnerWallet,
+        toOwnerWallet: parsed.data.toOwnerWallet,
+        amountAtomic: parsed.data.amountAtomic,
+        memo: parsed.data.memo,
+      });
+      auditLog.record({
+        kind: "NULL_TIP_SENT",
+        meta: { transferId: result.transferId, fromOwnerWallet, toOwnerWallet: parsed.data.toOwnerWallet, amountAtomic: parsed.data.amountAtomic },
+      });
+      res.status(201).json({ ok: true, ...result });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.post(["/api/tips/withdraw", "/v1/tips/withdraw"], async (req, res) => {
+    const parsed = tipWithdrawSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ ok: false, error: "invalid_tip_withdraw", details: parsed.error.flatten() });
+      return;
+    }
+    try {
+      assertNoBackendPrivateKeyPayload(req.body);
+      const ownerWallet = requireTipOwner(req);
+      const result = await tipLedger.requestWithdrawal({
+        ownerWallet,
+        recipientWallet: parsed.data.recipientWallet,
+        amountAtomic: parsed.data.amountAtomic,
+      });
+      res.status(202).json({ ok: true, ...result, status: "PENDING_MANUAL_REVIEW" });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.get(["/api/tips/ledger", "/v1/tips/ledger"], async (req, res) => {
+    try {
+      const ownerWallet = requireTipOwner(req);
+      const limit = Number.parseInt(String(req.query.limit ?? "50"), 10);
+      const ledger = await tipLedger.listLedger(ownerWallet, Number.isFinite(limit) ? limit : 50);
+      res.json({ ok: true, ledger });
+    } catch (error) {
+      sendTipError(res, error);
+    }
+  });
+
+  app.post(
+    ["/api/admin/tips/send", "/v1/admin/tips/send"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminSendSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_send", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        assertNoBackendPrivateKeyPayload(req.body);
+        const result = await tipLedger.sendTip({
+          fromOwnerWallet: parsed.data.fromOwnerWallet,
+          toOwnerWallet: parsed.data.toOwnerWallet,
+          amountAtomic: parsed.data.amountAtomic,
+          memo: parsed.data.memo,
+        });
+        auditLog.record({
+          kind: "NULL_TIP_SENT",
+          meta: {
+            transferId: result.transferId,
+            fromOwnerWallet: parsed.data.fromOwnerWallet,
+            toOwnerWallet: parsed.data.toOwnerWallet,
+            amountAtomic: parsed.data.amountAtomic,
+            actor: req.header("x-admin-actor") ?? "admin",
+          },
+        });
+        res.status(201).json({
+          ok: true,
+          ...result,
+          tokenSymbol: config.nullTips?.tokenSymbol ?? "NULL",
+          decimals: config.nullTips?.decimals ?? 6,
+        });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
+
+  app.get(
+    ["/api/admin/tips/account", "/v1/admin/tips/account"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminAccountSchema.safeParse(req.query ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_account", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        const account = await tipLedger.getBalance(parsed.data.ownerWallet);
+        res.json({
+          ok: true,
+          account,
+          tokenSymbol: config.nullTips?.tokenSymbol ?? "NULL",
+          decimals: config.nullTips?.decimals ?? 6,
+        });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
+
+  app.post(
+    ["/api/admin/tips/adjust", "/v1/admin/tips/adjust"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminAdjustSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_adjust", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        assertNoBackendPrivateKeyPayload(req.body);
+        const result = await tipLedger.adminAdjust({ ...parsed.data, actorId: req.header("x-admin-actor") ?? "admin" });
+        res.json({ ok: true, ...result });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
+
+  app.post(
+    ["/api/admin/tips/reconcile", "/v1/admin/tips/reconcile"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminReconcileSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_reconcile", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        const result = await tipLedger.reconcile({ vaultBalanceAtomic: parsed.data.vaultBalanceAtomic, actorId: req.header("x-admin-actor") ?? "admin" });
+        res.json({ success: true, ...result });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
+
+  app.post(
+    ["/api/admin/tips/pause", "/v1/admin/tips/pause"],
+    adminAuth({ secret: config.adminSecret, allowInsecure: config.allowInsecure }),
+    async (req, res) => {
+      const parsed = tipAdminPauseSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ ok: false, error: "invalid_tip_admin_pause", details: parsed.error.flatten() });
+        return;
+      }
+      try {
+        await tipLedger.setWithdrawalsPaused(parsed.data.paused, parsed.data.reason, req.header("x-admin-actor") ?? "admin");
+        res.json({ ok: true, withdrawalsPaused: parsed.data.paused });
+      } catch (error) {
+        sendTipError(res, error);
+      }
+    },
+  );
 
   app.post("/v1/agent-builder/draft", async (req, res) => {
     if (!requirePublicBetaFeature(res, "agentCreation", "Agent Builder")) return;

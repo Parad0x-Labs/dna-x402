@@ -47,8 +47,8 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 
 ### Polymarket Multi-User Precheck
 - **Shared builder credentials, per-user signer model**: Server can keep shared builder headers/attribution credentials while each user order still requires a user-owned deposit wallet signer context (`POLY_1271` / signature type `3`)
-- **Live readiness endpoint**: `GET /v1/polymarket/live/readiness`
-- **Per-user order precheck endpoint**: `POST /v1/polymarket/live/order-precheck`
+- **Live readiness endpoint**: `GET /api/polymarket/live/readiness` or `GET /v1/polymarket/live/readiness`
+- **Per-user order precheck endpoint**: `POST /api/polymarket/live/order-precheck` or `POST /v1/polymarket/live/order-precheck`
 - **Alias env support**:
   - `POLY_BUILDER_CODE` -> `POLYMARKET_BUILDER_CODE`
   - `POLYMARKET_API_KEY` -> `POLYMARKET_BUILDER_API_KEY`
@@ -80,6 +80,15 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 - **Admin API**: Full observability — audit export, receipt inspection, pause controls, replay store stats
 - **Liquefy bridge**: Archive payment data into verified `.null` vaults with live sidecar streaming
 - **Benchmarking suite**: Compute profiling, transaction size analysis, soak test thresholds
+
+### NULL Tip Account Eligibility
+- **Recipient enrollment required**: a wallet must open Tips and complete wallet-session enrollment before it can receive in-app NULL tips.
+- **Gift-icon / chat gating endpoint**:
+  - `GET /api/tips/account-status?wallet=<ownerWallet>`
+  - `GET /v1/tips/account-status?wallet=<ownerWallet>`
+  - `GET /api/tips/account/:ownerWallet/status`
+  - `GET /v1/tips/account/:ownerWallet/status`
+- **Response shape**: `{ ok, ownerWallet, hasTipAccount, canReceiveTips }`
 
 ## Install
 

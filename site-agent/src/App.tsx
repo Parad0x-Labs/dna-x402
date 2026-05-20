@@ -12,6 +12,7 @@ const ControlRoom = React.lazy(() => import('./routes/ControlRoomWallet').then((
 const Marketplace = React.lazy(() => import('./routes/Marketplace').then((module) => ({ default: module.Marketplace })));
 const PolymarketAgent = React.lazy(() => import('./routes/PolymarketAgentWallet').then((module) => ({ default: module.PolymarketAgentWallet })));
 const PolymarketAlphaProfile = React.lazy(() => import('./routes/PolymarketAlphaProfile').then((module) => ({ default: module.PolymarketAlphaProfile })));
+const NullTips = React.lazy(() => import('./routes/NullTipsWallet').then((module) => ({ default: module.NullTipsWallet })));
 
 export const App: React.FC = () => {
   const location = useLocation();
@@ -29,6 +30,7 @@ export const App: React.FC = () => {
             <Link to="/proof">Proof</Link>
             <Link to="/start">Create Agents</Link>
             <Link to="/programmable-payments">Programmable Payments</Link>
+            <Link to="/tips">NULL Tips</Link>
             <Link to="/polymarket">Polymarket Agent</Link>
           </nav>
         </>
@@ -42,6 +44,7 @@ export const App: React.FC = () => {
             <Route path="/proof" element={<Proof />} />
             <Route path="/start" element={<Start />} />
             <Route path="/programmable-payments" element={<ProgrammablePayments />} />
+            <Route path="/tips" element={<NullTips />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/polymarket" element={<PolymarketAgent />} />
             <Route path="/polymarket/:slug" element={<PolymarketAlphaProfile />} />

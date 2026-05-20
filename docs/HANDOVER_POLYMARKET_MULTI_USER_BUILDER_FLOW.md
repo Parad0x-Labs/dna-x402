@@ -76,6 +76,7 @@ Both passed at handover time.
 5. Any change to Polymarket live flow must keep these tests green:
    - `tests/polymarket.phase0-env.test.ts`
    - `tests/polymarket.live-order-precheck.test.ts`
+   - `tests/polymarket.live-routes.test.ts`
    - `tests/polymarket.trading-phase0.test.ts`
    - `tests/guard.config.test.ts`
 
@@ -92,6 +93,29 @@ This is the runtime model to preserve for high-scale multi-user usage:
 Implementation note:
 - Keep UX one-path and low-friction (no copy/paste loops for normal cash-in/cash-out).
 - Keep backend custody/signing forbidden.
+- Recipient tip eligibility is explicit: a wallet must enroll Tip account first; sender cannot tip to non-enrolled wallets.
+
+## Tip Account Eligibility API (for gift-icon gating)
+
+For chat/room UI that needs to gray out gift buttons:
+
+- `GET /api/tips/account-status?wallet=<ownerWallet>`
+- `GET /v1/tips/account-status?wallet=<ownerWallet>`
+- `GET /api/tips/account/:ownerWallet/status`
+- `GET /v1/tips/account/:ownerWallet/status`
+
+Response:
+
+```json
+{
+  "ok": true,
+  "ownerWallet": "<wallet>",
+  "hasTipAccount": false,
+  "canReceiveTips": false
+}
+```
+
+This prevents UI-level guesswork and keeps server-side enforcement aligned with frontend state.
 
 ## Recommended Next Step
 

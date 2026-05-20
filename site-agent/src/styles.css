@@ -2164,6 +2164,117 @@ a {
   gap: 16px;
 }
 
+.tips-page {
+  display: grid;
+  gap: 16px;
+}
+
+.tips-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.tips-hero h2 {
+  margin: 6px 0;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1;
+}
+
+.tips-wallet {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tips-balance-card {
+  display: grid;
+  gap: 10px;
+}
+
+.tips-balance-row,
+.tips-intent-box,
+.tips-ledger-row {
+  border: 1px solid rgba(44, 82, 106, 0.75);
+  border-radius: 7px;
+  background: rgba(2, 9, 15, 0.58);
+}
+
+.tips-balance-row {
+  display: grid;
+  gap: 4px;
+  padding: 11px;
+}
+
+.tips-balance-row span,
+.tips-balance-row small,
+.tips-ledger-row small,
+.tips-ledger-row time {
+  color: var(--muted);
+}
+
+.tips-balance-row strong {
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.tips-balance-row.live strong {
+  color: var(--ok);
+}
+
+.tips-intent-box {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.tips-intent-box span {
+  color: var(--muted);
+}
+
+.tips-intent-box strong,
+.tips-intent-box code {
+  overflow-wrap: anywhere;
+}
+
+.tips-ledger {
+  display: grid;
+  gap: 10px;
+}
+
+.tips-ledger-table {
+  display: grid;
+  gap: 8px;
+}
+
+.tips-ledger-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(110px, 0.7fr) minmax(90px, 0.5fr) minmax(110px, 0.7fr) minmax(150px, 0.9fr);
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+}
+
+.tips-ledger-row span {
+  color: #8df3c4;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.tips-ledger-row strong {
+  overflow-wrap: anywhere;
+}
+
 .mp-topbar,
 .mp-panel,
 .mp-toolbar {
@@ -2459,5 +2570,17 @@ a {
   .mp-wizard,
   .mp-control-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .tips-hero,
+  .tips-grid,
+  .tips-ledger-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tips-wallet {
+    justify-content: flex-start;
   }
 }

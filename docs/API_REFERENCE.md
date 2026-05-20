@@ -279,6 +279,48 @@ List wallets:
 
 `GET /v1/agents/:agentId/wallets`
 
+These endpoints are feature-gated and require Public Beta agent creation to be enabled in runtime config (`X402_ENABLE_PUBLIC_BETA=1` and `X402_ENABLE_AGENT_CREATION=1`).
+
+## Polymarket Live Precheck
+
+Readiness:
+
+- `GET /api/polymarket/live/readiness`
+- `GET /v1/polymarket/live/readiness`
+
+Per-order precheck:
+
+- `POST /api/polymarket/live/order-precheck`
+- `POST /v1/polymarket/live/order-precheck`
+
+Notes:
+
+- Shared builder credentials are server-side metadata only.
+- Every order still requires per-user deposit-wallet signer semantics.
+- Backend signing and backend custody are forbidden.
+
+## NULL Tip Account Status (Gift Icon Gating)
+
+Use these before enabling tip actions in chat UI:
+
+- `GET /api/tips/account-status?wallet=<ownerWallet>`
+- `GET /v1/tips/account-status?wallet=<ownerWallet>`
+- `GET /api/tips/account/:ownerWallet/status`
+- `GET /v1/tips/account/:ownerWallet/status`
+
+Response:
+
+```json
+{
+  "ok": true,
+  "ownerWallet": "wallet",
+  "hasTipAccount": true,
+  "canReceiveTips": true
+}
+```
+
+Server enforcement matches this status: non-enrolled recipients are rejected with `TIP_RECIPIENT_NOT_ENROLLED`.
+
 ## Paper Agents
 
 Create paper account:
