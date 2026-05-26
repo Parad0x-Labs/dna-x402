@@ -123,6 +123,23 @@ members = [
     "crates/ritual-blink-gateway",
     # DARK_NULL_FRONTIER_EDGE_V1 — demo binary exercising all 6 frontier crates
     "crates/dark-frontier-demo",
+    # BETTING_ALPHA — sealed pick wall, copy sniper trap, hint ladder, proofboard, fee rebate, alpha receipts
+    "crates/sealed-pick-x402-wall",
+    "crates/copy-sniper-tax-trap",
+    "crates/hint-ladder-market",
+    "crates/betting-proofboard",
+    "crates/fee-rebate-for-solvers",
+    "crates/betting-alpha-receipts",
+    # NEW_DEGEN_PRIMITIVES_V1
+    "crates/fee-weather-market",
+    "crates/ritual-mev-insurance",
+    "crates/token-arcade-factory",
+    "crates/rent-graveyard-index",
+    "crates/blink-work-board",
+    "crates/shape-subscription",
+    "crates/p-token-roi-bot",
+    "crates/confidential-amount-watch",
+    "crates/nulla-betting-edge-demo",
 ]
 resolver = "2"
 

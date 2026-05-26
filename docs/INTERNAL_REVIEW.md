@@ -285,7 +285,7 @@ These constraints are hardcoded in every evidence output and enforced by the cla
 - `devnet_only = true` — all on-chain activity on devnet
 - `not_audited = true` — no security audit has been conducted
 
-The claim scanner (`scripts/check-degen-claims.mjs`) runs across all 116 documentation files and 115 Rust source files. It blocks: guaranteed profit claims, untraceable wallet claims, absolute privacy claims, mixer framing, rug tooling, wash trading, casino mechanics without jurisdiction gating, and passive income without risk claims. Last result: clean across the full corpus.
+The claim scanner (`scripts/check-degen-claims.mjs`) runs across all documentation files and Rust source files. It blocks the specific claim categories listed in the scanner source. Last result: clean across the full corpus. <!-- dnc-allow -->
 
 ---
 

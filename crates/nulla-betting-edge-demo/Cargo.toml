@@ -1,0 +1,18 @@
+[package]
+name = "nulla-betting-edge-demo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "nulla_betting_edge_demo"
+path = "src/bin/nulla_betting_edge_demo.rs"
+
+[dependencies]
+sealed-pick-x402-wall  = { path = "../sealed-pick-x402-wall" }
+copy-sniper-tax-trap   = { path = "../copy-sniper-tax-trap" }
+hint-ladder-market     = { path = "../hint-ladder-market" }
+betting-proofboard     = { path = "../betting-proofboard" }
+fee-rebate-for-solvers = { path = "../fee-rebate-for-solvers" }
+betting-alpha-receipts = { path = "../betting-alpha-receipts" }
+sha2                   = { workspace = true }
+serde_json             = { workspace = true }
