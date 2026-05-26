@@ -1,0 +1,12 @@
+[package]
+name = "dark-nullifier-epoch-manager"
+version = "0.1.0"
+edition = "2021"
+description = "Manages nullifier submission lifecycle: epoch detection, bank init, insert, replay guard"
+
+[dependencies]
+dark-x402-nullifier-bridge = { path = "../dark-x402-nullifier-bridge" }
+dark-nullifier-banks       = { path = "../../programs/dark_nullifier_banks", features = ["no-entrypoint"] }
+sha2                       = "0.10"
+serde                      = { version = "1", features = ["derive"] }
+solana-program             = "=1.18.26"

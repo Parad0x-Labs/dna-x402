@@ -1553,6 +1553,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-nullifier-epoch-manager"
+version = "0.1.0"
+dependencies = [
+ "dark-nullifier-banks",
+ "dark-x402-nullifier-bridge",
+ "serde",
+ "sha2 0.10.9",
+ "solana-program",
+]
+
+[[package]]
 name = "dark-nullifier-record"
 version = "0.1.0"
 dependencies = [
