@@ -37,7 +37,7 @@ Send these documents together:
 - Persistent Sybil relist passed under live Postgres mode.
 - Local Prometheus/Grafana/Alertmanager monitoring route passed.
 - External Telegram human alert delivery passed for test, emergency pause, PII block, and backup failure alerts.
-- Public Beta primary operator roles are assigned to Saulius.
+- Public Beta primary operator roles are assigned to sls_0x.
 
 ## Still Blocked
 

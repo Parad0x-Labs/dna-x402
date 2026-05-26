@@ -83,7 +83,10 @@ mod tests {
             daily_close_accounts: 10_000,
         };
         let report = compute_roi(&input);
-        assert!(report.migration_recommended, "high volume should recommend migration");
+        assert!(
+            report.migration_recommended,
+            "high volume should recommend migration"
+        );
     }
 
     #[test]

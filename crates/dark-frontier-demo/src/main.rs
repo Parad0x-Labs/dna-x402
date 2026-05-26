@@ -6,31 +6,30 @@
 //! NOT_PRODUCTION — devnet design-only. mainnet_ready = false.
 
 use dark_alpha_receipts::{
-    create_session_hash, create_trade_commitment, create_pnl_commitment,
-    create_paid_reveal, chain_receipt, verify_reveal_integrity,
-};
-use dark_swarm_capsule::{
-    create_capsule, SwarmRole, SwarmCaps, CustodyAttestation, LivenessConfig,
-    check_freshness, detect_conflict, rank_capsules,
+    chain_receipt, create_paid_reveal, create_pnl_commitment, create_session_hash,
+    create_trade_commitment, verify_reveal_integrity,
 };
 use dark_compressed_leaves::{
-    create_commitment_leaf, create_nullifier_leaf, create_receipt_head_leaf,
-    compute_state_tree_root, estimate_rent_savings, LEAF_SCHEMA_VERSION,
-};
-use dark_meme_risk::{
-    compute_risk_score, score_to_risk_band, build_risk_report, create_risk_receipt,
-    assert_no_raw_token, mock_on_chain_data_from_hash,
+    compute_state_tree_root, create_commitment_leaf, create_nullifier_leaf,
+    create_receipt_head_leaf, estimate_rent_savings, LEAF_SCHEMA_VERSION,
 };
 use dark_fee_optimizer::{
-    p_token_fee_profiles, estimate_deployment_cost, batch_receipt_savings,
-    p_token_cu_savings_ratio, sol_saved_per_million_transfers,
-    COMPRESSED_LEAF_LAMPORTS, FULL_ACCOUNT_RENT_LAMPORTS,
+    batch_receipt_savings, estimate_deployment_cost, p_token_cu_savings_ratio,
+    p_token_fee_profiles, sol_saved_per_million_transfers, COMPRESSED_LEAF_LAMPORTS,
+    FULL_ACCOUNT_RENT_LAMPORTS,
+};
+use dark_meme_risk::{
+    assert_no_raw_token, build_risk_report, compute_risk_score, create_risk_receipt,
+    mock_on_chain_data_from_hash, score_to_risk_band,
+};
+use dark_swarm_capsule::{
+    check_freshness, create_capsule, detect_conflict, rank_capsules, CustodyAttestation,
+    LivenessConfig, SwarmCaps, SwarmRole,
 };
 use ritual_blink_gateway::{
-    build_blink_get_response, create_x402_intent, build_ceremony_layout,
-    compute_hook_verdict, verify_hook_verdict, create_blink_receipt,
-    HOOK_VERDICT_PREFIX, DARK_RITUAL_HOOK_PROGRAM, RITUAL_MINT,
-    BLINK_SCHEMA_VERSION,
+    build_blink_get_response, build_ceremony_layout, compute_hook_verdict, create_blink_receipt,
+    create_x402_intent, verify_hook_verdict, BLINK_SCHEMA_VERSION, DARK_RITUAL_HOOK_PROGRAM,
+    HOOK_VERDICT_PREFIX, RITUAL_MINT,
 };
 
 use serde_json::{json, Value};
@@ -41,12 +40,12 @@ fn to_hex(b: &[u8]) -> String {
 
 // ─── 1. ALPHA RECEIPTS ───────────────────────────────────────────────────────
 fn run_alpha_receipts() -> Value {
-    let session_salt   = [0x11u8; 32];
-    let wallet_bytes   = [0x22u8; 32];
-    let session_hash   = create_session_hash(&session_salt, &wallet_bytes, 7);
+    let session_salt = [0x11u8; 32];
+    let wallet_bytes = [0x22u8; 32];
+    let session_hash = create_session_hash(&session_salt, &wallet_bytes, 7);
 
-    let token_hash   = [0xABu8; 32];
-    let slot_hash    = [0x01u8; 32];
+    let token_hash = [0xABu8; 32];
+    let slot_hash = [0x01u8; 32];
 
     let trade = create_trade_commitment(
         &session_hash,
@@ -59,9 +58,9 @@ fn run_alpha_receipts() -> Value {
 
     let pnl = create_pnl_commitment(
         &session_hash,
-        7,       // epoch
-        15_000,  // +150% in bps
-        3,       // 3 trades
+        7,      // epoch
+        15_000, // +150% in bps
+        3,      // 3 trades
         1_748_300_100,
     );
 
@@ -78,7 +77,10 @@ fn run_alpha_receipts() -> Value {
     let chain2 = chain_receipt(Some(&chain1), &pnl.commitment_hash);
 
     // Verify reveal integrity
-    let integrity_ok = reveal.as_ref().map(|r| verify_reveal_integrity(&trade, r)).unwrap_or(false);
+    let integrity_ok = reveal
+        .as_ref()
+        .map(|r| verify_reveal_integrity(&trade, r))
+        .unwrap_or(false);
 
     json!({
         "primitive": "dark-alpha-receipts",
@@ -136,7 +138,8 @@ fn run_swarm_capsule() -> Value {
         liveness.clone(),
         clean_custody.clone(),
         1_748_300_000,
-    ).expect("clean custody succeeds");
+    )
+    .expect("clean custody succeeds");
 
     let capsule2 = create_capsule(
         SwarmRole::Relayer,
@@ -150,7 +153,8 @@ fn run_swarm_capsule() -> Value {
         liveness.clone(),
         clean_custody.clone(),
         1_748_300_000,
-    ).expect("deterministic");
+    )
+    .expect("deterministic");
 
     // Dirty custody should fail
     let dirty = CustodyAttestation {
@@ -159,29 +163,55 @@ fn run_swarm_capsule() -> Value {
         user_spending_keys_present: false,
     };
     let forbidden = create_capsule(
-        SwarmRole::Prover, "bad", [0u8;32], [0u8;32],
-        "bad-svc", "devnet", caps.clone(), [0u8;32],
-        liveness.clone(), dirty, 1_748_300_000,
+        SwarmRole::Prover,
+        "bad",
+        [0u8; 32],
+        [0u8; 32],
+        "bad-svc",
+        "devnet",
+        caps.clone(),
+        [0u8; 32],
+        liveness.clone(),
+        dirty,
+        1_748_300_000,
     );
 
     // Freshness
-    let fresh_ok  = check_freshness(&capsule1, 1_748_300_000 + 1800, 3600).is_ok();
+    let fresh_ok = check_freshness(&capsule1, 1_748_300_000 + 1800, 3600).is_ok();
     let stale_err = check_freshness(&capsule1, 1_748_300_000 + 3601, 3600).is_err();
 
     // Conflict detection
     let conflict_cap = create_capsule(
-        SwarmRole::Relayer, "different-commit", [0xAAu8;32], [0xBBu8;32],
-        "dark-null-relayer-0", "devnet", caps.clone(), [0xCCu8;32],
-        liveness.clone(), clean_custody.clone(), 1_748_300_001,
-    ).expect("ok");
+        SwarmRole::Relayer,
+        "different-commit",
+        [0xAAu8; 32],
+        [0xBBu8; 32],
+        "dark-null-relayer-0",
+        "devnet",
+        caps.clone(),
+        [0xCCu8; 32],
+        liveness.clone(),
+        clean_custody.clone(),
+        1_748_300_001,
+    )
+    .expect("ok");
     let conflict = detect_conflict(&capsule1, &conflict_cap);
 
     // Ranking
     let newer_cap = create_capsule(
-        SwarmRole::Relayer, "newer-commit", [0xAAu8;32], [0xBBu8;32],
-        "relayer-b", "devnet", caps.clone(), [0xCCu8;32],
-        liveness.clone(), clean_custody.clone(), 1_748_301_000,
-    ).expect("ok");
+        SwarmRole::Relayer,
+        "newer-commit",
+        [0xAAu8; 32],
+        [0xBBu8; 32],
+        "relayer-b",
+        "devnet",
+        caps.clone(),
+        [0xCCu8; 32],
+        liveness.clone(),
+        clean_custody.clone(),
+        1_748_301_000,
+    )
+    .expect("ok");
     let winner = rank_capsules(&capsule1, &newer_cap, 1_748_302_000);
 
     json!({
@@ -212,24 +242,24 @@ fn run_swarm_capsule() -> Value {
 // ─── 3. COMPRESSED LEAVES ────────────────────────────────────────────────────
 fn run_compressed_leaves() -> Value {
     let commitment = [0x11u8; 32];
-    let nullifier  = [0x22u8; 32];
-    let receipt_h  = [0x33u8; 32];
-    let prev       = [0x44u8; 32];
-    let epoch      = 42u32;
-    let slot       = 464_000_000u64;
+    let nullifier = [0x22u8; 32];
+    let receipt_h = [0x33u8; 32];
+    let prev = [0x44u8; 32];
+    let epoch = 42u32;
+    let slot = 464_000_000u64;
 
     let c_leaf = create_commitment_leaf(&commitment, epoch, slot);
-    let n_leaf  = create_nullifier_leaf(&nullifier, epoch, slot);
-    let r_leaf  = create_receipt_head_leaf(&receipt_h, Some(&prev), epoch, slot);
+    let n_leaf = create_nullifier_leaf(&nullifier, epoch, slot);
+    let r_leaf = create_receipt_head_leaf(&receipt_h, Some(&prev), epoch, slot);
 
     // compute_state_tree_root takes &[[u8;32]] — extract leaf_hash from each CompressedLeaf
     let leaf_hashes = vec![c_leaf.leaf_hash, n_leaf.leaf_hash, r_leaf.leaf_hash];
-    let root   = compute_state_tree_root(&leaf_hashes);
+    let root = compute_state_tree_root(&leaf_hashes);
 
     // estimate_rent_savings returns (compressed_lamports, full_lamports, savings_lamports)
-    let (c100, f100, s100)     = estimate_rent_savings(100);
-    let (c1k, f1k, s1k)       = estimate_rent_savings(1000);
-    let (c10k, f10k, s10k)    = estimate_rent_savings(10_000);
+    let (c100, f100, s100) = estimate_rent_savings(100);
+    let (c1k, f1k, s1k) = estimate_rent_savings(1000);
+    let (c10k, f10k, s10k) = estimate_rent_savings(10_000);
 
     let savings_pct_100 = (s100 as f64 / f100 as f64) * 100.0;
 
@@ -285,10 +315,10 @@ fn run_meme_risk() -> Value {
         h.finalize().into()
     };
 
-    let on_chain   = mock_on_chain_data_from_hash(&token_hash);
-    let score      = compute_risk_score(&on_chain);
-    let band       = score_to_risk_band(score);
-    let report     = build_risk_report(&token_hash, &on_chain, 464_000_000);
+    let on_chain = mock_on_chain_data_from_hash(&token_hash);
+    let score = compute_risk_score(&on_chain);
+    let band = score_to_risk_band(score);
+    let report = build_risk_report(&token_hash, &on_chain, 464_000_000);
 
     let x402_receipt_hash = [0x42u8; 32];
     let receipt = create_risk_receipt(&report, &x402_receipt_hash);
@@ -299,7 +329,8 @@ fn run_meme_risk() -> Value {
         "score_hash_hex": to_hex(&receipt.score_hash),
         "epoch_slot":     receipt.epoch_slot,
         "risk_band":      format!("{:?}", receipt.risk_band)
-    }).to_string();
+    })
+    .to_string();
 
     // Check that the RAW mint bytes do NOT appear in the receipt JSON
     // (only token_hash = SHA256(raw_mint) appears, so this must pass)
@@ -333,14 +364,20 @@ fn run_meme_risk() -> Value {
 
 // ─── 5. FEE OPTIMIZER ────────────────────────────────────────────────────────
 fn run_fee_optimizer() -> Value {
-    let profiles   = p_token_fee_profiles();
-    let ratio      = p_token_cu_savings_ratio();
-    let sol_saved  = sol_saved_per_million_transfers();
-    let deploy     = estimate_deployment_cost(10_000, 50_000);
-    let batch      = batch_receipt_savings(500);
+    let profiles = p_token_fee_profiles();
+    let ratio = p_token_cu_savings_ratio();
+    let sol_saved = sol_saved_per_million_transfers();
+    let deploy = estimate_deployment_cost(10_000, 50_000);
+    let batch = batch_receipt_savings(500);
 
-    let transfer_profile  = profiles.iter().find(|p| p.instruction == "Transfer").unwrap();
-    let checked_profile   = profiles.iter().find(|p| p.instruction == "TransferChecked").unwrap();
+    let transfer_profile = profiles
+        .iter()
+        .find(|p| p.instruction == "Transfer")
+        .unwrap();
+    let checked_profile = profiles
+        .iter()
+        .find(|p| p.instruction == "TransferChecked")
+        .unwrap();
 
     json!({
         "primitive": "dark-fee-optimizer",
@@ -381,15 +418,15 @@ fn run_fee_optimizer() -> Value {
     })
 }
 
-// ─── 6. RITUAL BLINK GATEWAY (THE MOONSHOT) ──────────────────────────────────
+// ─── 6. RITUAL BLINK GATEWAY (THE FRONTIER EDGE) ──────────────────────────────────
 fn run_ritual_blink_gateway() -> Value {
-    let payer_bytes  = [0x55u8; 32];
-    let tx_sig       = [0x66u8; 32];
-    let mint_bytes   = [0x77u8; 32];
-    let nonce        = [0x88u8; 32];
+    let payer_bytes = [0x55u8; 32];
+    let tx_sig = [0x66u8; 32];
+    let mint_bytes = [0x77u8; 32];
+    let nonce = [0x88u8; 32];
     let resource_hash = [0xAAu8; 32];
-    let slot         = 464_996_215u64;
-    let now          = 1_748_300_000u64;
+    let slot = 464_996_215u64;
+    let now = 1_748_300_000u64;
 
     // Blink GET metadata
     let blink_get = build_blink_get_response("dark-null-trader-42", 7, 1_000_000);
@@ -409,13 +446,18 @@ fn run_ritual_blink_gateway() -> Value {
 
     // Chain a second receipt
     let receipt2 = create_blink_receipt(
-        &intent, &verdict, &payer_bytes, &tx_sig,
-        slot + 1, Some(receipt.receipt_hash), now + 1,
+        &intent,
+        &verdict,
+        &payer_bytes,
+        &tx_sig,
+        slot + 1,
+        Some(receipt.receipt_hash),
+        now + 1,
     );
 
     json!({
         "primitive": "ritual-blink-gateway",
-        "description": "THE MOONSHOT — First-ever atomic combination of: Solana Actions/Blinks + x402 payment-required + ritual grammar + Token-2022 Transfer Hook + 33-byte HookVerdict receipt. All in one Solana transaction from a tweet-embedded link.",
+        "description": "THE FRONTIER EDGE — First-ever atomic combination of: Solana Actions/Blinks + x402 payment-required + ritual grammar + Token-2022 Transfer Hook + 33-byte HookVerdict receipt. All in one Solana transaction from a tweet-embedded link.",
         "why_this_is_new": "No existing Solana project combines Blinks (tweet-embeddable tx links) + x402 (HTTP 402 payment gate) + ritual grammar (ordered instruction validation) + Token-2022 Transfer Hook (per-transfer CPI) + HookVerdict capsule (tamper-evident 33-byte return data) in one atomic transaction. This is the first spec for that combination.",
         "daily_use_case": "An alpha-trader shares a Blink link in a tweet. Anyone who clicks hits a Dark Null gateway: (1) x402 fee payment required, (2) transaction MUST contain 5 ritual steps in order, (3) Token-2022 hook fires and emits HookVerdict capsule, (4) receipt chain proves all steps atomically. All from one Phantom wallet click.",
         "ceremony_layout": {
@@ -455,12 +497,12 @@ fn run_ritual_blink_gateway() -> Value {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 fn main() {
-    let alpha    = run_alpha_receipts();
-    let swarm    = run_swarm_capsule();
-    let leaves   = run_compressed_leaves();
-    let meme     = run_meme_risk();
-    let fee      = run_fee_optimizer();
-    let moonshot = run_ritual_blink_gateway();
+    let alpha = run_alpha_receipts();
+    let swarm = run_swarm_capsule();
+    let leaves = run_compressed_leaves();
+    let meme = run_meme_risk();
+    let fee = run_fee_optimizer();
+    let frontier_edge = run_ritual_blink_gateway();
 
     let evidence = json!({
         "mission": "DARK_NULL_FRONTIER_EDGE_V1",
@@ -481,7 +523,7 @@ fn main() {
             "dark-compressed-leaves": leaves,
             "dark-meme-risk":         meme,
             "dark-fee-optimizer":     fee,
-            "ritual-blink-gateway":   moonshot
+            "ritual-blink-gateway":   frontier_edge
         },
         "frontier_edge_summary": {
             "anti_copytrading": "Private alpha with x402 paywall — commitment hashes published, raw trades hidden until paid reveal",
@@ -489,7 +531,7 @@ fn main() {
             "zk_compression":   "99.8% rent savings for nullifier sets and receipt trees (2,000 vs 890,880 lamports per leaf)",
             "meme_risk_oracle": "Private hash-only risk query — token identity never exposed; MemeTrans 4-signal weighted scoring",
             "fee_optimizer":    "P-token 98.2% CU reduction + ZK Compression = Dark Null routing is the cheapest path on Solana",
-            "moonshot":         "Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule — one click, one tweet, fully atomic"
+            "frontier edge":         "Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule — one click, one tweet, fully atomic"
         },
         "what_is_genuinely_new": [
             "First private trade receipt protocol on Solana where copycats get nothing without paying",
@@ -510,5 +552,5 @@ fn main() {
     eprintln!("\n✅  FRONTIER_EDGE_DEMO.json written → {}", out_path);
     eprintln!("✅  807 tests passing, 0 failed");
     eprintln!("✅  6 frontier edge crates exercised");
-    eprintln!("✅  MOONSHOT: ritual-blink-gateway spec proven");
+    eprintln!("✅  FRONTIER EDGE: ritual-blink-gateway spec proven");
 }

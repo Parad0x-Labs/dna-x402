@@ -104,7 +104,10 @@ mod tests {
     #[test]
     fn test_readiness_is_available_with_restrictions() {
         let r = check_confidential_transfer_readiness();
-        assert_eq!(r.status, ConfidentialTransferStatus::AvailableWithRestrictions);
+        assert_eq!(
+            r.status,
+            ConfidentialTransferStatus::AvailableWithRestrictions
+        );
     }
 
     #[test]
@@ -117,7 +120,10 @@ mod tests {
     #[test]
     fn test_production_claim_blocked() {
         let guard = guard_live_claim("Ready for production use");
-        assert!(guard.blocked, "claim containing 'production' should be blocked");
+        assert!(
+            guard.blocked,
+            "claim containing 'production' should be blocked"
+        );
     }
 
     #[test]
@@ -134,7 +140,13 @@ mod tests {
     #[test]
     fn test_matrix_has_entries() {
         let matrix = build_compatibility_matrix();
-        assert!(!matrix.entries.is_empty(), "matrix should have at least one entry");
-        assert!(matrix.entries.len() >= 3, "matrix should have at least 3 entries");
+        assert!(
+            !matrix.entries.is_empty(),
+            "matrix should have at least one entry"
+        );
+        assert!(
+            matrix.entries.len() >= 3,
+            "matrix should have at least 3 entries"
+        );
     }
 }

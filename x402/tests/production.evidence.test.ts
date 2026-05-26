@@ -35,7 +35,7 @@ describe("production evidence collector", () => {
       X402_PRODUCTION_EMERGENCY_PAUSE_ROUTE: "https://api.example.com/admin/x402/emergency",
       X402_PRODUCTION_ROLLBACK_PLAN: "redeploy previous release and keep receipts readable",
       X402_RELEASE_VERSION: "2026.05.15",
-      X402_RELEASE_APPROVER: "Saulius",
+      X402_RELEASE_APPROVER: "sls_0x",
       X402_LAUNCH_SCOPE: "Public Low-Risk Builder/API Pilot",
       X402_ENABLE_BACKEND_KEY_CUSTODY: "1",
     }, "2026-05-15T00:00:00.000Z");
@@ -64,7 +64,7 @@ describe("production evidence collector", () => {
       X402_PRODUCTION_EMERGENCY_PAUSE_ROUTE: "https://api.example.com/admin/x402/emergency",
       X402_PRODUCTION_ROLLBACK_PLAN: "redeploy previous release and keep receipts readable",
       X402_RELEASE_VERSION: "2026.05.15",
-      X402_RELEASE_APPROVER: "Saulius",
+      X402_RELEASE_APPROVER: "sls_0x",
       X402_LAUNCH_SCOPE: "Public Low-Risk Builder/API Pilot",
       X402_ENABLE_DIRECT_SPLIT_FEES: "1",
       X402_DIRECT_SPLIT_GATE_REF: "PUBLIC_BETA_DIRECT_SPLIT_2026",

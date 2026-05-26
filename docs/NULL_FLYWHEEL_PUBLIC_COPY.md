@@ -81,7 +81,7 @@ Only through on-chain governance. There are no admin keys or multisig overrides 
 
 The RewardsVault is a program-controlled account. No individual wallet can withdraw from it. Distributions are handled by a separate reward distribution program with its own governance process.
 
-**Is this audited?**
+**External review status**
 
 No. This is a devnet design. No security audit has been performed. Do not treat this as production-ready software.
 

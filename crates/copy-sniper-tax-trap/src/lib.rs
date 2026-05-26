@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SubscriberCredential {
@@ -43,7 +43,10 @@ pub fn build_credential(subscriber_pubkey: &[u8; 32], season: u8) -> SubscriberC
         h.update([season]);
         h.finalize().into()
     };
-    SubscriberCredential { subscriber_hash, credential_hash }
+    SubscriberCredential {
+        subscriber_hash,
+        credential_hash,
+    }
 }
 
 pub fn is_valid_subscriber(candidate: &[u8; 32], credential: &SubscriberCredential) -> bool {
@@ -144,7 +147,10 @@ mod tests {
         let sniper_hash = [2u8; 32];
         let decoy = create_decoy_reveal(&pick_hash, &sniper_hash, 5000);
         let real_side_commitment = [3u8; 32];
-        assert!(decoy_cannot_verify_against_real(&decoy, &real_side_commitment));
+        assert!(decoy_cannot_verify_against_real(
+            &decoy,
+            &real_side_commitment
+        ));
     }
 
     #[test]

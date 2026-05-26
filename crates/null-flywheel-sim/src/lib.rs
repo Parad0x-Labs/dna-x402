@@ -18,7 +18,10 @@ mod tests {
     #[test]
     fn test_destination_rewards_vault_not_burn() {
         let config = null_flywheel_core::FlywheelConfig::default();
-        assert_eq!(config.destination, null_flywheel_core::DestinationPolicy::RewardsVault);
+        assert_eq!(
+            config.destination,
+            null_flywheel_core::DestinationPolicy::RewardsVault
+        );
     }
 
     #[test]

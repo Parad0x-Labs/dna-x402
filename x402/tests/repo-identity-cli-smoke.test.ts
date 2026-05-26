@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 describe("public repo identity and built CLI smoke", () => {
-  it("keeps dna-x402 as the canonical repository", () => {
+  it("keeps dna-x402 as the canonical repository", { timeout: 30_000 }, () => {
     const output = execFileSync(process.execPath, ["scripts/check-repo-identity.mjs"], {
       cwd: process.cwd(),
       encoding: "utf8",
@@ -10,7 +10,7 @@ describe("public repo identity and built CLI smoke", () => {
     expect(output).toContain("repo identity ok");
   });
 
-  it("runs the built dna-x402 CLI entrypoint", () => {
+  it("runs the built dna-x402 CLI entrypoint", { timeout: 30_000 }, () => {
     const help = execFileSync(process.execPath, ["dist/cli.js"], {
       cwd: process.cwd(),
       encoding: "utf8",

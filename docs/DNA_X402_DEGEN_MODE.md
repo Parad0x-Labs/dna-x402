@@ -108,7 +108,7 @@ Backend signing remains unavailable. Backend custody remains unavailable.
 
 Initial SDK templates:
 
-- `fresh-pair-goblin`
+- `fresh-pair-scout`
 - `copy-the-chad-safe`
 - `rug-radar-signal`
 - `paper-ape-lab`

@@ -108,11 +108,11 @@ fn main() {
 
     // Write evidence JSON
     let json = serde_json::to_string_pretty(&demo).expect("serialize json");
-    std::fs::create_dir_all("dist/true-alien").expect("create dist/true-alien");
-    std::fs::write("dist/true-alien/ROGUE_STEAL_ATTEMPT_DEMO.json", &json)
+    std::fs::create_dir_all("dist/true-frontier").expect("create dist/true-frontier");
+    std::fs::write("dist/true-frontier/ROGUE_STEAL_ATTEMPT_DEMO.json", &json)
         .expect("write ROGUE_STEAL_ATTEMPT_DEMO.json");
 
-    println!("  Evidence written -> dist/true-alien/ROGUE_STEAL_ATTEMPT_DEMO.json");
+    println!("  Evidence written -> dist/true-frontier/ROGUE_STEAL_ATTEMPT_DEMO.json");
     println!("  mainnet_ready    : {}", demo.mainnet_ready);
     println!("  production_claim : {}", demo.production_claim);
     println!("  agent_had_key    : {}", demo.agent_had_private_key);

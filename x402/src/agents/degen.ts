@@ -372,8 +372,8 @@ export function getDegenExecutionAdapter(venue: ExecutionVenue): DegenExecutionA
 
 export const DEGEN_AGENT_TEMPLATES: DegenAgentTemplate[] = [
   {
-    slug: "fresh-pair-goblin",
-    name: "Fresh Pair Goblin",
+    slug: "fresh-pair-scout",
+    name: "Fresh Pair Scout",
     category: "fresh-pair",
     degenPitch: "Watch fresh Solana pairs without handing anyone your keys.",
     whatItDoes: ["Tracks new token/pair noise", "Flags liquidity, volume, age, holder, and creator-wallet risk", "Creates signal or user-confirmed intents only"],
@@ -384,7 +384,7 @@ export const DEGEN_AGENT_TEMPLATES: DegenAgentTemplate[] = [
     backendSigning: false,
     receiptBehavior: { receiptRequired: true, bindsRiskConfig: true, bindsTradeIntent: true },
     rejectedAlgoatPatterns: ["no PumpPortal API-key execution", "no browser localStorage private key", "no auto-buy by default"],
-    cursorPrompt: "Build a Fresh Pair Goblin agent that watches Solana launches, scores risk, emits paid alerts, and never stores private keys.",
+    cursorPrompt: "Build a Fresh Pair Scout agent that watches Solana launches, scores risk, emits paid alerts, and never stores private keys.",
   },
   {
     slug: "copy-the-chad-safe",

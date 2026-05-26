@@ -301,7 +301,12 @@ mod tests {
 
     #[test]
     fn test_state_tree_root_deterministic() {
-        let leaves = vec![dummy_hash(10), dummy_hash(11), dummy_hash(12), dummy_hash(13)];
+        let leaves = vec![
+            dummy_hash(10),
+            dummy_hash(11),
+            dummy_hash(12),
+            dummy_hash(13),
+        ];
         let root_a = compute_state_tree_root(&leaves);
         let root_b = compute_state_tree_root(&leaves);
         assert_eq!(root_a.root, root_b.root);
@@ -324,7 +329,10 @@ mod tests {
         let leaf = create_nullifier_leaf(&n, 1, 500);
         let existing = vec![leaf];
         let result = check_duplicate_nullifier(&n, &existing);
-        assert!(matches!(result, Err(CompressedLeavesError::DuplicateNullifier)));
+        assert!(matches!(
+            result,
+            Err(CompressedLeavesError::DuplicateNullifier)
+        ));
     }
 
     #[test]
@@ -373,7 +381,11 @@ mod tests {
             path_bits: vec![true, false],
         };
         let result = verify_mock_inclusion(&proof, &tree_root.root);
-        assert!(result.is_ok(), "inclusion proof should verify: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "inclusion proof should verify: {:?}",
+            result
+        );
     }
 
     #[test]

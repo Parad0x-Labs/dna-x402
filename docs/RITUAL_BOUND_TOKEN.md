@@ -79,7 +79,7 @@ A well-formed transaction with all five ceremony instructions passes every check
 
 - **Devnet only**: all program IDs and accounts referenced here are devnet
 - **Not ZK**: no zero-knowledge proofs, ritual hashes are transparent on-chain
-- **Not audited**: no security audit has been performed
+- **External review pending**: independent security review has not been completed
 - **mainnet_ready: false** — hardcoded in all evidence outputs
 - **production_claim: false** — hardcoded in all evidence outputs
 - **agent_had_private_key: false** — the demo agent uses a deterministic test key; no mainnet keys are generated or stored

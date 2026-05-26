@@ -25,7 +25,7 @@ npm --prefix x402 run init:agent -- .\reports\agent-lab\strategy-agent --templat
 Quote absolute Windows paths that contain spaces:
 
 ```powershell
-npm --prefix x402 run init:agent -- "G:\DNA x402\reports\agent-lab\service-agent" --template service --no-install
+npm --prefix x402 run init:agent -- "<repo-root>\reports\agent-lab\service-agent" --template service --no-install
 ```
 
 Each starter includes:

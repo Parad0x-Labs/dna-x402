@@ -1264,23 +1264,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dark-alien-final-demo"
-version = "0.1.0"
-dependencies = [
- "caveat-engine",
- "dark-batch-auditor-core",
- "dark-bonsol-adapter",
- "dark-compression-core",
- "dark-proof-core",
- "dark-proof-receipts",
- "dark-session-netting",
- "dark-x402-core",
- "serde",
- "serde_json",
- "sha2 0.10.9",
-]
-
-[[package]]
 name = "dark-alpha-receipts"
 version = "0.1.0"
 dependencies = [
@@ -1288,6 +1271,15 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "thiserror",
+]
+
+[[package]]
+name = "dark-atomic-swap"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -1300,9 +1292,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-blind-auction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-blink-intent"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-bn254-circuit"
+version = "0.1.0"
+dependencies = [
+ "dark-poseidon-bn254",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-bn254-gate"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
+name = "dark-bn254-proof-gen"
+version = "0.1.0"
+dependencies = [
+ "dark-bn254-circuit",
+ "dark-poseidon-bn254",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -1342,6 +1372,15 @@ dependencies = [
  "solana-sdk",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "dark-compliance-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -1385,6 +1424,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-confidential-transfer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-epoch-transition"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-fee-optimizer"
 version = "0.1.0"
 dependencies = [
@@ -1403,6 +1460,23 @@ dependencies = [
  "dark-meme-risk",
  "dark-swarm-capsule",
  "ritual-blink-gateway",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-frontier-final-demo"
+version = "0.1.0"
+dependencies = [
+ "caveat-engine",
+ "dark-batch-auditor-core",
+ "dark-bonsol-adapter",
+ "dark-compression-core",
+ "dark-proof-core",
+ "dark-proof-receipts",
+ "dark-session-netting",
+ "dark-x402-core",
+ "serde",
  "serde_json",
  "sha2 0.10.9",
 ]
@@ -1443,6 +1517,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-merkle-accumulator"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-module-abi"
 version = "0.1.0"
 dependencies = [
@@ -1461,10 +1544,54 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-nullifier-record"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
+name = "dark-poseidon-bn254"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-poseidon-tree"
 version = "0.1.0"
 dependencies = [
  "dark-hash-core",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-privacy-layer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-lottery"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-order-book"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
 ]
 
@@ -1489,6 +1616,24 @@ name = "dark-proof-receipts"
 version = "0.1.0"
 dependencies = [
  "dark-proof-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-receipt-chain"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-recursive-proof"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -1554,6 +1699,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-shielded-pool"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-swarm-capsule"
 version = "0.1.0"
 dependencies = [
@@ -1564,9 +1718,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-time-capsule"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-tip-notes"
 version = "0.1.0"
 dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-validator-set"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
 ]
 
@@ -1608,6 +1780,15 @@ name = "dark-x402-server-mock"
 version = "0.1.0"
 dependencies = [
  "dark-x402-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-membership"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -1702,7 +1883,7 @@ dependencies = [
  "degen-scoreboard",
  "fee-cashback-receipts",
  "no-deploy-token-launcher",
- "rent-goblin-swarm",
+ "rent-sweeper-swarm",
  "ritual-puzzle-market",
  "scratch-slot-leasing",
  "serde",
@@ -4244,15 +4425,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rent-goblin-swarm"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "sha2 0.10.9",
-]
-
-[[package]]
 name = "rent-graveyard-index"
 version = "0.1.0"
 dependencies = [
@@ -4261,6 +4433,15 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "thiserror",
+]
+
+[[package]]
+name = "rent-sweeper-swarm"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -7265,7 +7446,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "true-alien-devnet-demo"
+name = "true-frontier-devnet-demo"
 version = "0.1.0"
 dependencies = [
  "agent-flight-recorder",

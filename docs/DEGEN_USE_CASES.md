@@ -18,7 +18,7 @@ All Dark Null primitives organized by degen use case.
 | dark-meme-risk | Wash-trade and rug risk scoring model (live oracle endpoint not yet deployed) | Score a token before aping — hash-only, no raw mint in receipt | Aping a zero-liquidity wash rug |
 | dark-fee-optimizer | P-token + compression fee savings model (live routing not yet wired) | Project CU and rent savings before committing to a route | Paying legacy CU rates on bulk ops |
 | ritual-blink-gateway | Payment-gated Blink transaction | Embed a paid action in a tweet link | Free-riders on ritual state transitions |
-| rent-goblin-swarm | Sweep zombie accounts for rent | Wake up idle wallets and recover lamports | Lamports locked in dead accounts |
+| rent-sweeper-swarm | Sweep zombie accounts for rent | Wake up idle wallets and recover lamports | Lamports locked in dead accounts |
 | bounty-blink-jobs | Blink-based micro-bounty board | Post or claim a task for 0.001 SOL | Unpaid off-chain handshake coordination |
 | cold-route-fee-sniper | Scan cold routes for fee arbitrage | Find underpriced routes before bots | Paying market rate on every hop |
 | no-deploy-token-launcher | Launch tokens without redeployment | New token, no new program deploy | Paying 2–5 SOL deploy cost per token |
@@ -110,8 +110,8 @@ All Dark Null primitives organized by degen use case.
 
 ## The 13 Degen Swarm Economy Use Cases
 
-### rent-goblin-swarm
-You've been on Solana for two years and you have 47 accounts with dust balances and zero activity. Each holds ~0.002 SOL in rent. The rent-goblin-swarm scans your wallet graph, identifies all closeable accounts, batches the close instructions, and sweeps the lamports back to your main wallet. One command, one transaction bundle, you recover 0.094 SOL you forgot existed. Run it monthly as a maintenance sweep.
+### rent-sweeper-swarm
+You've been on Solana for two years and you have 47 accounts with dust balances and zero activity. Each holds ~0.002 SOL in rent. The rent-sweeper-swarm scans your wallet graph, identifies all closeable accounts, batches the close instructions, and sweeps the lamports back to your main wallet. One command, one transaction bundle, you recover 0.094 SOL you forgot existed. Run it monthly as a maintenance sweep.
 
 ### bounty-blink-jobs
 You need someone to write a specific Anchor instruction test. You don't want to post on Upwork. You create a Blink-based bounty: task hash, reward amount, acceptance criteria hash. Post the Blink URL to CT. First person to submit a valid solution (verified on-chain against the criteria hash) claims the SOL. No escrow service. No off-chain handshake. The Blink link is the job board and the payment system.
@@ -159,7 +159,7 @@ End-to-end integration demo harness that spins up all major Dark Null primitives
 - **Aping a rug because you didn't check** → use `dark-meme-risk` first (costs 0.001 SOL)
 - **Relayers censoring your transactions** → use `dark-swarm-capsule` for sealed relayer selection
 - **Running backend servers to gate contract access** → use `ritual-blink-gateway`
-- **Lamports rotting in zombie accounts** → use `rent-goblin-swarm`
+- **Lamports rotting in zombie accounts** → use `rent-sweeper-swarm`
 - **Off-chain handshake drama for micro-tasks** → use `bounty-blink-jobs`
 - **Paying 2–5 SOL every time you launch an experiment token** → use `no-deploy-token-launcher`
 - **Permanent rent for temporary compute** → use `scratch-slot-leasing`
@@ -186,11 +186,11 @@ Dark Null is NOT rug tooling. There are no features for creating fake liquidity,
 
 Dark Null is NOT a wash-trading feature. Useful chaff is protocol overhead for privacy properties — it is not a wash-trade mechanism and cannot be used to fake volume.
 
-Dark Null does NOT run a casino. Any use case involving VRF or random outcomes requires an audited VRF source. There are no guaranteed-win mechanics anywhere in the system.
+Dark Null does NOT run a casino. Any use case involving VRF or random outcomes requires a review-grade VRF source. There are no guaranteed-win mechanics anywhere in the system.
 
 Dark Null is NOT sybil-farm infrastructure. Nothing in this system is designed to generate fake wallet activity, fake holder counts, or fake engagement.
 
-Dark Null does NOT have audited code. Everything here is devnet design. mainnet_ready = false. No security audit has been completed. Do not use for real funds.
+Dark Null degen primitives require live evidence gates before real-fund use. Treat design-only primitives as public beta research until deployment evidence, review evidence, and operator controls are complete.
 
 ---
 

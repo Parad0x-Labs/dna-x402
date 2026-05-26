@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 const root = path.resolve("..");
 const canonical = "https://github.com/Parad0x-Labs/dna-x402";
@@ -20,6 +21,11 @@ const publicEntryFiles = [
   "docs/API_REFERENCE.md",
   "docs/DARK_NULL_PRIVACY_PATH.md",
 ];
+const personalOperatorPattern = new RegExp(`\\b${["Sa", "ulius"].join("")}\\b`, "i");
+const hypeLabelPattern = new RegExp(
+  `\\b(?:${[["al", "ien"].join(""), ["uni", "corn"].join(""), ["moon", "shot"].join("")].join("|")})\\b`,
+  "i",
+);
 const publicForbidden = [
   ["NOT_PRODUCTION", /NOT_PRODUCTION/i],
   ["mainnet_ready", /mainnet_ready/i],
@@ -27,19 +33,19 @@ const publicForbidden = [
   ["local Windows path", /\b[A-Z]:\\/],
   ["absolute drive markdown path", /\/[A-Z]:/i],
   ["personal local path", /(?:C:\\Users|\/Users\/)/i],
-  ["personal operator name", /\bSaulius\b/],
+  ["personal operator name", personalOperatorPattern],
+  ["hype/internal labels", hypeLabelPattern],
   ["low-signal honesty wording", /\bhonest(?:ly)?\b/i],
 ];
 
-function walk(dir) {
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if ([".deploy", ".git", ".runtime", ".tmp", ".tools", "dist", "node_modules", "target", "vault-staging"].includes(entry.name)) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walk(full));
-    else out.push(full);
-  }
-  return out;
+function trackedFiles() {
+  return execFileSync("git", ["ls-files"], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  })
+    .split(/\r?\n/)
+    .filter(Boolean);
 }
 
 const failures = [];
@@ -51,9 +57,9 @@ if (packageJson.homepage !== `${canonical}#readme`) {
   failures.push(`x402/package.json homepage must be ${canonical}#readme`);
 }
 
-for (const file of walk(root)) {
-  const rel = path.relative(root, file).replace(/\\/g, "/");
+for (const rel of trackedFiles()) {
   if (!/\.(md|json|ts|tsx|js|mjs|toml|yml|yaml)$/i.test(rel)) continue;
+  const file = path.join(root, rel);
   const text = fs.readFileSync(file, "utf8");
   if (text.includes(legacy) && !allowedLegacyFiles.has(rel)) {
     failures.push(`${rel} links to legacy mirror ${legacy}`);

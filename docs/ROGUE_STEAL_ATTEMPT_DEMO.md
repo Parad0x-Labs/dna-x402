@@ -147,7 +147,7 @@ cargo run -p rogue-agent-demo-core --bin rogue_steal_attempt_demo
 node scripts/run-rogue-steal-demo.mjs
 ```
 
-Output: `dist/true-alien/ROGUE_STEAL_ATTEMPT_DEMO.json`
+Output: `dist/true-frontier/ROGUE_STEAL_ATTEMPT_DEMO.json`
 
 Key fields:
 ```json

@@ -1,0 +1,12 @@
+[package]
+name = "dark-compute-receipt"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+dark-wasm-compute = { path = "../dark-wasm-compute" }
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

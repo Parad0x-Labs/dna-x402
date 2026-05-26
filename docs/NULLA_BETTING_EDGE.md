@@ -244,7 +244,7 @@ Checks the readiness of the Token-2022 Confidential Transfer extension. NOT clai
 ## What Is NOT This
 
 - Not a sportsbook. No pooled bets. No odds-making. No guaranteed returns.
-- Not a casino. No house edge products. No random outcome mechanics without audited VRF.
+- Not a casino. No house edge products. No random outcome mechanics without review-grade VRF.
 - Not a copy-trade tool. The sniper trap is defensive — it reveals nothing real to bots.
 - Not a financial advisor. Picks are analyst output. Past sealed picks do not predict future results.
 - Not production. devnet only. No audit. mainnet_ready = false.

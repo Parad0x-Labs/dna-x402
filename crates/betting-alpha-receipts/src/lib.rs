@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BettingSession {
@@ -131,7 +131,10 @@ pub fn create_betting_reveal(
 }
 
 pub fn assert_raw_market_absent(reveal_json: &str, raw_market_bytes: &[u8]) -> bool {
-    let hex: String = raw_market_bytes.iter().map(|b| format!("{:02x}", b)).collect();
+    let hex: String = raw_market_bytes
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     !reveal_json.contains(&hex)
 }
 
@@ -168,7 +171,14 @@ mod tests {
     }
 
     fn make_commitment(session: &BettingSession) -> MarketCommitment {
-        create_market_commitment(session, b"nfl-2024-week1-chiefs-bills", 0, 75, &[3u8; 32], 500)
+        create_market_commitment(
+            session,
+            b"nfl-2024-week1-chiefs-bills",
+            0,
+            75,
+            &[3u8; 32],
+            500,
+        )
     }
 
     fn subscriber() -> [u8; 32] {
@@ -187,13 +197,34 @@ mod tests {
         let session = make_session();
         let c1 = make_commitment(&session);
         // Change side_byte
-        let c2 = create_market_commitment(&session, b"nfl-2024-week1-chiefs-bills", 1, 75, &[3u8; 32], 500);
+        let c2 = create_market_commitment(
+            &session,
+            b"nfl-2024-week1-chiefs-bills",
+            1,
+            75,
+            &[3u8; 32],
+            500,
+        );
         assert_ne!(c1.commitment_hash, c2.commitment_hash);
         // Change confidence_byte
-        let c3 = create_market_commitment(&session, b"nfl-2024-week1-chiefs-bills", 0, 80, &[3u8; 32], 500);
+        let c3 = create_market_commitment(
+            &session,
+            b"nfl-2024-week1-chiefs-bills",
+            0,
+            80,
+            &[3u8; 32],
+            500,
+        );
         assert_ne!(c1.commitment_hash, c3.commitment_hash);
         // Change event_start_slot
-        let c4 = create_market_commitment(&session, b"nfl-2024-week1-chiefs-bills", 0, 75, &[3u8; 32], 600);
+        let c4 = create_market_commitment(
+            &session,
+            b"nfl-2024-week1-chiefs-bills",
+            0,
+            75,
+            &[3u8; 32],
+            600,
+        );
         assert_ne!(c1.commitment_hash, c4.commitment_hash);
     }
 

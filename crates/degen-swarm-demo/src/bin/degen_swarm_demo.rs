@@ -12,9 +12,9 @@ fn main() {
     println!("  Paid useful noise.");
     println!();
     println!(
-        "  [RENT GOBLIN]     {} targets, {:.6} SOL reclaimable",
-        evidence.primitives.rent_goblin.targets,
-        evidence.primitives.rent_goblin.reclaimable_lamports as f64 / 1_000_000_000.0
+        "  [RENT SWEEPER]     {} targets, {:.6} SOL reclaimable",
+        evidence.primitives.rent_sweeper.targets,
+        evidence.primitives.rent_sweeper.reclaimable_lamports as f64 / 1_000_000_000.0
     );
     println!(
         "  [BOUNTY BLINKS]   {} jobs completed, {} lamports earned",

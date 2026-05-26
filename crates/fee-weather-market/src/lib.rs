@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FogGrade {
@@ -85,9 +85,11 @@ pub fn score_route_weather(route_hash: &[u8; 32], accounts: Vec<AccountHeat>) ->
 }
 
 pub fn select_coldest_route(routes: Vec<RouteWeather>) -> Option<RouteWeather> {
-    routes
-        .into_iter()
-        .min_by(|a, b| a.composite_heat.partial_cmp(&b.composite_heat).unwrap_or(std::cmp::Ordering::Equal))
+    routes.into_iter().min_by(|a, b| {
+        a.composite_heat
+            .partial_cmp(&b.composite_heat)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    })
 }
 
 pub fn mint_savings_receipt(hot_fee: u64, cold_fee: u64) -> SavingsReceipt {
@@ -135,7 +137,11 @@ mod tests {
     #[test]
     fn test_cold_account_scores_low() {
         let heat = score_account_heat(&dummy_hash(1), 100, 10_000);
-        assert!(heat.heat_index < 0.25, "expected low heat, got {}", heat.heat_index);
+        assert!(
+            heat.heat_index < 0.25,
+            "expected low heat, got {}",
+            heat.heat_index
+        );
     }
 
     #[test]
@@ -146,8 +152,8 @@ mod tests {
 
     #[test]
     fn test_composite_heat_is_average() {
-        let h1 = score_account_heat(&dummy_hash(1), 250, 1_000);  // 0.25
-        let h2 = score_account_heat(&dummy_hash(2), 750, 1_000);  // 0.75
+        let h1 = score_account_heat(&dummy_hash(1), 250, 1_000); // 0.25
+        let h2 = score_account_heat(&dummy_hash(2), 750, 1_000); // 0.75
         let route = score_route_weather(&dummy_hash(99), vec![h1, h2]);
         let expected = 0.5f32;
         assert!(

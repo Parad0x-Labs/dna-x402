@@ -1,0 +1,8 @@
+[package]
+name = "dark-bn254-circuit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dark-poseidon-bn254 = { path = "../dark-poseidon-bn254" }
+sha2 = { workspace = true }

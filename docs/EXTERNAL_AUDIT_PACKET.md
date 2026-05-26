@@ -28,13 +28,13 @@ This packet is the handoff scope for an independent security review before broad
 
 ## Local Commands
 
-Run from `G:\DNA x402` with G-local caches and tool paths.
+Run from `<repo-root>` with G-local caches and tool paths.
 
 ```powershell
-$env:npm_config_cache='G:\DNA x402\.npm-cache'
-$env:CARGO_HOME='G:\DNA x402\.tools\rustup\cargo'
-$env:RUSTUP_HOME='G:\DNA x402\.tools\rustup\rustup-home'
-$env:PATH='G:\DNA x402\.tools\rustup\cargo\bin;' + $env:PATH
+$env:npm_config_cache='<repo-root>\.npm-cache'
+$env:CARGO_HOME='<repo-root>\.tools\rustup\cargo'
+$env:RUSTUP_HOME='<repo-root>\.tools\rustup\rustup-home'
+$env:PATH='<repo-root>\.tools\rustup\cargo\bin;' + $env:PATH
 
 git diff --check
 npm --prefix x402 run build
@@ -67,7 +67,7 @@ Latest mainnet mayhem evidence should include:
 Current local report location:
 
 ```text
-G:\DNA x402\reports\mainnet-readiness-20260514\live-mayhem-run-3
+<repo-root>\reports\mainnet-readiness-20260514\live-mayhem-run-3
 ```
 
 ## Devnet Blocker
@@ -81,8 +81,8 @@ The devnet gate requires devnet SOL in:
 If the public faucet is rate-limited, fund this key manually and rerun:
 
 ```powershell
-$env:GAUNTLET_FUNDER_KEYPAIR='G:\DNA x402\x402\test-mainnet\keys\devnet\deployer.json'
-npm --prefix x402 run gauntlet:devnet:20 -- --out "G:\DNA x402\reports\devnet-gauntlet-20"
+$env:GAUNTLET_FUNDER_KEYPAIR='<repo-root>\x402\test-mainnet\keys\devnet\deployer.json'
+npm --prefix x402 run gauntlet:devnet:20 -- --out "<repo-root>\reports\devnet-gauntlet-20"
 ```
 
 ## Acceptance Standard

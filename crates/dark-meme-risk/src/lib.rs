@@ -231,13 +231,22 @@ pub fn verify_risk_receipt(receipt: &RiskReceipt) -> Result<(), MemeRiskError> {
 
 /// Checks that no raw token mint bytes appear in the receipt JSON (safety check).
 /// Encodes token_mint_bytes as a hex string and searches for it.
-pub fn assert_no_raw_token(receipt_json: &str, token_mint_bytes: &[u8; 32]) -> Result<(), MemeRiskError> {
-    let hex_str: String = token_mint_bytes.iter().map(|b| format!("{:02x}", b)).collect();
+pub fn assert_no_raw_token(
+    receipt_json: &str,
+    token_mint_bytes: &[u8; 32],
+) -> Result<(), MemeRiskError> {
+    let hex_str: String = token_mint_bytes
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     if receipt_json.contains(&hex_str) {
         return Err(MemeRiskError::RawTokenLeaked);
     }
     // Also check upper-case hex
-    let hex_upper: String = token_mint_bytes.iter().map(|b| format!("{:02X}", b)).collect();
+    let hex_upper: String = token_mint_bytes
+        .iter()
+        .map(|b| format!("{:02X}", b))
+        .collect();
     if receipt_json.contains(&hex_upper) {
         return Err(MemeRiskError::RawTokenLeaked);
     }
@@ -309,7 +318,11 @@ mod tests {
     #[test]
     fn test_risk_score_critical_for_concentrated_dev() {
         let score = compute_risk_score(&concentrated_dev_data());
-        assert!(score >= 76, "expected Critical band but got score {}", score);
+        assert!(
+            score >= 76,
+            "expected Critical band but got score {}",
+            score
+        );
     }
 
     #[test]
@@ -372,8 +385,16 @@ mod tests {
         let receipt = create_risk_receipt(&report, &xh);
 
         // Serialize receipt fields to JSON manually (no raw token_mint should appear)
-        let token_hash_hex: String = receipt.token_hash.iter().map(|b| format!("{:02x}", b)).collect();
-        let score_hash_hex: String = receipt.score_hash.iter().map(|b| format!("{:02x}", b)).collect();
+        let token_hash_hex: String = receipt
+            .token_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        let score_hash_hex: String = receipt
+            .score_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
         let json = serde_json::json!({
             "token_hash": token_hash_hex,
             "score_hash": score_hash_hex,
@@ -383,7 +404,10 @@ mod tests {
 
         // Ensure raw token_mint hex does not appear
         let result = assert_no_raw_token(&json_str, &token_mint);
-        assert!(result.is_ok(), "raw token mint should not appear in receipt JSON");
+        assert!(
+            result.is_ok(),
+            "raw token mint should not appear in receipt JSON"
+        );
     }
 
     #[test]
@@ -391,7 +415,10 @@ mod tests {
         let th = dummy_hash(30);
         let d1 = mock_on_chain_data_from_hash(&th);
         let d2 = mock_on_chain_data_from_hash(&th);
-        assert_eq!(d1.dev_wallet_concentration_pct, d2.dev_wallet_concentration_pct);
+        assert_eq!(
+            d1.dev_wallet_concentration_pct,
+            d2.dev_wallet_concentration_pct
+        );
         assert_eq!(d1.bundle_snipe_count, d2.bundle_snipe_count);
         assert_eq!(d1.wash_trade_loop_count, d2.wash_trade_loop_count);
     }
@@ -415,7 +442,11 @@ mod tests {
         };
         let score = compute_risk_score(&data);
         // wash_trade at max (1.0) * 30 = 30, plus small dev/lp contributions
-        assert!(score >= 30, "high wash trade should raise score above 30, got {}", score);
+        assert!(
+            score >= 30,
+            "high wash trade should raise score above 30, got {}",
+            score
+        );
         let band = score_to_risk_band(score);
         assert!(
             band == RiskBand::Medium || band == RiskBand::High || band == RiskBand::Critical,

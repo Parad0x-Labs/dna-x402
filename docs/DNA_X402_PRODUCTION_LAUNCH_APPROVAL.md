@@ -28,7 +28,7 @@ Current decision: DNA x402 is not approved for public production launch until th
 | Rollback plan | restore previous systemd unit and archived `/opt/dna-x402` deployment from `/root/dna-x402-backups`; revert Nginx `/x402/` block from timestamped backup | `DOCUMENTED_BASIC_ROLLBACK` |
 | Release commit | `contabo-preflight` deployment bundle, not a tagged release commit | `BLOCKED_RELEASE_TAG_REQUIRED` |
 | Release version | `dna-x402@1.1.0` | `PASSED_PUBLIC_BETA` |
-| Release approver | `Saulius` | `PUBLIC_BETA_ASSIGNED_PUBLIC_BACKUP_REQUIRED` |
+| Release approver | `sls_0x` | `PUBLIC_BETA_ASSIGNED_PUBLIC_BACKUP_REQUIRED` |
 | Launch date | `PENDING_PUBLIC_APPROVAL` | `BLOCKED` |
 | Launch scope | `Public Beta Agent/API Pilot` | `PUBLIC_BETA_OPEN_LIMITED_SCOPE; PUBLIC_PRODUCTION_APPROVAL_PENDING` |
 

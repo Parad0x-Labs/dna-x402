@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "dark-agent-payment-sdk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+agent-shielded-capsule = { path = "../agent-shielded-capsule" }
+dark-private-x402     = { path = "../dark-private-x402" }
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rand = "0.8"

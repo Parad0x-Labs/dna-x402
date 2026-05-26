@@ -11,11 +11,11 @@ Boss 4 local monitoring wiring has been exercised with G-local tooling:
 - Grafana `v13.0.1+security-01`
 - local operator webhook receiver on `127.0.0.1:19094`
 
-Tooling, runtime data, and evidence were kept under `G:\DNA x402`:
+Tooling, runtime data, and evidence were kept under `<repo-root>`:
 
-- tools: `G:\DNA x402\.tools\monitoring`
-- runtime: `G:\DNA x402\.runtime\monitoring`
-- evidence: `G:\DNA x402\reports\monitoring\2026-05-15T15-43-16-634+03-00`
+- tools: `<repo-root>\.tools\monitoring`
+- runtime: `<repo-root>\.runtime\monitoring`
+- evidence: `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00`
 
 This proves collector, dashboard, rule loading, alert delivery to a local operator route, and external Telegram delivery to the private `DNA x402 Ops Alerts` group. The Telegram evidence proves a real human/operator route. Named production operators and live-gate approvals are still separate blockers.
 
@@ -37,7 +37,7 @@ This proves collector, dashboard, rule loading, alert delivery to a local operat
 | Backup failure alert delivered or simulated | `PASSED_SYNTHETIC_ROUTE_DRILL` | `X402BackupFailure` delivered through Alertmanager using drill rule. |
 | Restore drill failure alert delivered or simulated | `PASSED_SYNTHETIC_ROUTE_DRILL` | `X402RestoreDrillFailure` delivered through Alertmanager using drill rule. |
 | Settlement unavailable alert delivered or simulated | `PASSED_SYNTHETIC_ROUTE_DRILL` | `X402SettlementUnavailable` delivered through Alertmanager using drill rule. |
-| External human/operator channel | `PASSED_EXTERNAL_TELEGRAM_ROUTE` | `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json` records `PASSED_EXTERNAL_HUMAN_ROUTE`; `X402MonitoringRouteTest`, `X402EmergencyPauseActive`, `X402PiiBlock`, and `X402BackupFailure` reached the private Telegram group and were human-confirmed. |
+| External human/operator channel | `PASSED_EXTERNAL_TELEGRAM_ROUTE` | `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json` records `PASSED_EXTERNAL_HUMAN_ROUTE`; `X402MonitoringRouteTest`, `X402EmergencyPauseActive`, `X402PiiBlock`, and `X402BackupFailure` reached the private Telegram group and were human-confirmed. |
 
 ## What Was Actually Proved
 
@@ -78,7 +78,7 @@ Chat ID: redacted in reports
 
 Report:
 
-- `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
+- `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
 
 Delivered and human-confirmed:
 
@@ -105,7 +105,7 @@ Regression coverage was tightened in server mayhem so the webhook PII block path
 
 Primary summary:
 
-- `G:\DNA x402\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
+- `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
 
 Key evidence:
 
@@ -140,7 +140,7 @@ The selected external route is Telegram:
 - protected internal relay route: `POST /internal/alerts/telegram`
 - drill script: `npm --prefix x402 run monitoring:test:telegram`
 - Alertmanager example: `infra/monitoring/alertmanager-telegram-relay.example.yml`
-- report folder pattern: `G:\DNA x402\reports\monitoring\<timestamp>-telegram-route`
+- report folder pattern: `<repo-root>\reports\monitoring\<timestamp>-telegram-route`
 
 Required local/server secret env values:
 

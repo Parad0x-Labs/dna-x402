@@ -21,8 +21,8 @@ Phantom EVM is supported for the current Polymarket Agent V1 browser-local signi
 
 ## Snapshot Files
 
-- `G:\DNA x402\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`
-- `G:\DNA x402\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json`
+- `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`
+- `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json`
 
 ## Remaining Blockers
 

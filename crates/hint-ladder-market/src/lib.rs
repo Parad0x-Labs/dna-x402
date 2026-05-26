@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HintTier {
@@ -54,7 +54,12 @@ pub fn create_hint_tier(
         h.update(clue_content_hash);
         h.finalize().into()
     };
-    HintTier { tier, price_lamports, clue_hash, reveal_after_slot }
+    HintTier {
+        tier,
+        price_lamports,
+        clue_hash,
+        reveal_after_slot,
+    }
 }
 
 pub fn purchase_hint(
@@ -153,7 +158,10 @@ mod tests {
 
     #[test]
     fn test_pot_grows_with_purchases() {
-        let mut pot = HintPot { total_lamports: 0, hint_count: 0 };
+        let mut pot = HintPot {
+            total_lamports: 0,
+            hint_count: 0,
+        };
         grow_pot(&mut pot, 500);
         grow_pot(&mut pot, 300);
         assert_eq!(pot.total_lamports, 800);

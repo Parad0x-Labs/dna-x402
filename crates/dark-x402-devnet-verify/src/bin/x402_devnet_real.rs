@@ -8,7 +8,7 @@
 //   3. Transfers 1_000_000 lamports to a generated test recipient
 //   4. Verifies the tx via DevnetPaymentVerifier (real RPC fetch + balance delta check)
 //   5. Mints a DarkX402Receipt (is_mock=false)
-//   6. Writes dist/alien-final/evidence/x402_devnet_real.json
+//   6. Writes dist/frontier-final/evidence/x402_devnet_real.json
 //
 // Usage:
 //   cargo run -p dark-x402-devnet-verify --bin x402_devnet_real
@@ -185,7 +185,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|e| format!("Evidence validation failed: {}", e))?;
 
     // ── Write evidence file ───────────────────────────────────────────────────
-    let evidence_dir = "dist/alien-final/evidence";
+    let evidence_dir = "dist/frontier-final/evidence";
     std::fs::create_dir_all(evidence_dir)?;
     let evidence_path = format!("{}/x402_devnet_real.json", evidence_dir);
     let json = serde_json::to_string_pretty(&evidence)?;
@@ -202,7 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("mainnet_ready:{}", evidence.mainnet_ready);
 
     println!("\nTo check x402 evidence in the mainnet gate:");
-    println!("  node scripts/check-mainnet-alien-final.mjs");
+    println!("  node scripts/check-mainnet-frontier-final.mjs");
     println!("\nNOT_PRODUCTION: devnet only — no mainnet, no audit, no custody.");
 
     Ok(())

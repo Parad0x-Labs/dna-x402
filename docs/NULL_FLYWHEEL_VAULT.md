@@ -301,7 +301,7 @@ cargo run --bin null-flywheel-sim -- --dry-run
 
 > **NOT_PRODUCTION — devnet design only — no audit — mainnet_ready = false**
 >
-> This document describes a system that has not been audited, has not been deployed to mainnet, and has not been reviewed for legal compliance in any jurisdiction. Nothing in this document constitutes financial advice, an offer of securities, a promise of returns, or a representation about token value. The NULL Flywheel Vault is a fee-routing mechanism for community rewards. It is not a financial product.
+> This document describes a system that has not completed external security review, has not been deployed to mainnet, and has not been reviewed for legal compliance in any jurisdiction. Nothing in this document constitutes financial advice, an offer of securities, a promise of returns, or a representation about token value. The NULL Flywheel Vault is a fee-routing mechanism for community rewards. It is not a financial product.
 >
 > NULL mint: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`
 >

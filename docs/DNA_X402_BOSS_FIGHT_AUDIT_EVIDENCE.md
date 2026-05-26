@@ -24,15 +24,15 @@ No public production money movement, public fee collection, unattended signing, 
 
 | Boss / Proof | Evidence Type | Status | Primary Artifact | What It Proves | What It Does Not Prove |
 | --- | --- | --- | --- | --- | --- |
-| Private Solana USDC dust proof | Mainnet transaction + signed receipt | `PASSED` | `G:\DNA x402\reports\solana-usdc-drill\2026-05-15T10-56-38-257Z.json` | Allowlisted Solana USDC payment can finalize, issue a receipt, unlock paid retry, reject replay/different-quote/underpay/wrong-recipient/wrong-mint/non-allowlisted signer, and record 10 bps as non-custodial accrual. | Public launch, public marketplace, public fee collection, auto-sweep, backend custody, or production readiness. |
+| Private Solana USDC dust proof | Mainnet transaction + signed receipt | `PASSED` | `<repo-root>\reports\solana-usdc-drill\2026-05-15T10-56-38-257Z.json` | Allowlisted Solana USDC payment can finalize, issue a receipt, unlock paid retry, reject replay/different-quote/underpay/wrong-recipient/wrong-mint/non-allowlisted signer, and record 10 bps as non-custodial accrual. | Public launch, public marketplace, public fee collection, auto-sweep, backend custody, or production readiness. |
 | Boss 1: Live Postgres migration/concurrency/backup | Live database drill | `PASSED_G_LOCAL_POSTGRES_18` | `docs/DNA_X402_DATABASE_SCHEMA.md`, `docs/DNA_X402_MIGRATION_RUNBOOK.md`, `docs/DNA_X402_BACKUP_RESTORE_RUNBOOK.md` | Real PostgreSQL migration, health, concurrency, native `pg_dump`/`psql` restore, critical state survival. | Docker Compose proof on this workstation, managed Postgres proof, or public production ops. |
 | Boss 2: Webhook replay after restart | Server mayhem with Postgres adapter | `PASSED_G_LOCAL_POSTGRES_18` | `npm run mayhem:x402:server` with `X402_REPOSITORY_MODE=postgres` | Webhook idempotency key survives restart and replay is rejected from persisted state. | External webhook provider integration or public webhook delivery. |
 | Boss 3: Persistent Sybil relist | Live Postgres test | `PASSED_G_LOCAL_POSTGRES_18` | `x402/tests/db/postgres-sybil-relist.test.ts` | Seller cannot regain clean trust by changing slug/linking a new wallet/relisting similar capability after persisted strikes and clustered risk. | Perfect Sybil resistance against all future adversaries. It proves current persisted controls, not identity impossibility. |
-| Boss 4: Monitoring routing | Local collector/dashboard/alert route + external Telegram delivery | `PASSED_LOCAL_STACK_AND_EXTERNAL_TELEGRAM_ROUTE` | `G:\DNA x402\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`, `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json` | Prometheus scrapes `/metrics`, Grafana dashboard imports, alert rules load, Alertmanager delivers alerts to a local operator webhook, emergency pause and PII block alerts fire from real app metrics, and required Telegram alerts reached the private ops group with human confirmation. | Named operator staffing, legal approval, or live-gate approval. |
+| Boss 4: Monitoring routing | Local collector/dashboard/alert route + external Telegram delivery | `PASSED_LOCAL_STACK_AND_EXTERNAL_TELEGRAM_ROUTE` | `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`, `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json` | Prometheus scrapes `/metrics`, Grafana dashboard imports, alert rules load, Alertmanager delivers alerts to a local operator webhook, emergency pause and PII block alerts fire from real app metrics, and required Telegram alerts reached the private ops group with human confirmation. | Named operator staffing, legal approval, or live-gate approval. |
 | Builder monetization gate | Unit tests + server mayhem + live Postgres refresh | `PASSED_G_LOCAL_POSTGRES_18_DISPLAY_AND_ACCRUAL_ONLY` | `x402/src/fees/waterfall.ts`, `docs/DNA_X402_BUILDER_MONETIZATION.md`, `npm run mayhem:x402:server`, `npm --prefix x402 run db:backup:test:postgres` | Builder fee lines are visible in quote, DNA fee remains first-class, builder caps/statuses are enforced, accrual records are receipt-bound, `fee_accruals` exists, and builder accrual survives repository restart and native backup/restore. | Public direct collection, auto-sweep, backend custody, or public 10 bps collection. |
-| DNA 10 bps direct split Public Beta gate | HTTP finalize tests + server mayhem + mainnet dust split | `PUBLIC_BETA_DIRECT_SPLIT_DUST_PROOF_PASSED` | `x402/tests/serverFlow.test.ts`, `x402/scripts/mayhem/x402-server-mayhem.ts`, `G:\DNA x402\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json` | Approved Public Beta direct split required seller/provider and DNA treasury payment proofs before receipt issuance; real mainnet provider and DNA treasury SPL transfers verified; missing DNA proof, wrong treasury recipient, underpaid treasury proof, and proof replay failed safely; receipt binds `feeWaterfallHash`, fee lines, collection status, and split payment proof summaries. | Public direct collection, public production launch, counsel approval, direct builder fee collection, or direct split without allowlists/caps/Helius/Telegram/gate reference. |
+| DNA 10 bps direct split Public Beta gate | HTTP finalize tests + server mayhem + mainnet dust split | `PUBLIC_BETA_DIRECT_SPLIT_DUST_PROOF_PASSED` | `x402/tests/serverFlow.test.ts`, `x402/scripts/mayhem/x402-server-mayhem.ts`, `<repo-root>\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json` | Approved Public Beta direct split required seller/provider and DNA treasury payment proofs before receipt issuance; real mainnet provider and DNA treasury SPL transfers verified; missing DNA proof, wrong treasury recipient, underpaid treasury proof, and proof replay failed safely; receipt binds `feeWaterfallHash`, fee lines, collection status, and split payment proof summaries. | Public direct collection, public production launch, counsel approval, direct builder fee collection, or direct split without allowlists/caps/Helius/Telegram/gate reference. |
 | Contabo small-scale real-money pilot deployment | VPS deployment + Cloudflare/Nginx route + firewall hardening + scheduled backup + sequential regression | `APPROVED_SMALL_SCALE_OWNER_OPERATED_REAL_MONEY_PILOT` | `https://parad0xlabs.com/x402/health`, `docs/DNA_X402_PRODUCTION_LAUNCH_APPROVAL.md` | x402 runs from `/opt/dna-x402-next` under systemd, old `/opt/dna-x402` was archived, public HTTPS `/x402/health` reaches the app, public `/x402/metrics` is blocked, raw public `8080` is blocked, local metrics remain available, scheduled daily `pg_dump` timer passed, DB migrate/health/server mayhem/backup drill passed sequentially on the VPS, and Telegram alert drill passed from the server. | Counsel approval, public-production backup operator staffing, managed PITR/failover, final tagged release approval, public permissionless marketplace, or public direct split gate approval beyond the tiny allowlisted pilot caps. |
-| Polymarket Phase 0 browser-local proof | Browser-local signing fixture | `PASSED_SIGN_ONLY_AND_WALLET_CREATE` | `G:\DNA x402\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`, `G:\DNA x402\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json` | Browser-local Phantom EVM owner signer can produce a `POLY_1271` no-submit order fixture with `signatureType = 3`, builder code attached, and no mismatches; deposit wallet deployment call reported success. | Polymarket production trading, hosted automation, backend signing, pUSD transfer, copy trading, withdrawals, or public launch. |
+| Polymarket Phase 0 browser-local proof | Browser-local signing fixture | `PASSED_SIGN_ONLY_AND_WALLET_CREATE` | `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`, `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json` | Browser-local Phantom EVM owner signer can produce a `POLY_1271` no-submit order fixture with `signatureType = 3`, builder code attached, and no mismatches; deposit wallet deployment call reported success. | Polymarket production trading, hosted automation, backend signing, pUSD transfer, copy trading, withdrawals, or public launch. |
 | Archival 50-agent mainnet mayhem | Mainnet transaction report | `ARCHIVAL_PRIOR_PROOF` | `x402/test-mainnet/MAYHEM_50_REPORT.md` | Historical report shows 50 agents, 80 total trades, 20 real USDC transfer txs, 80/80 receipt anchors, 0 failed tests at the time of that run. | Current production readiness. Treat as archival context unless re-run under current gates and current infra. |
 
 ## Live Mainnet Solana USDC Dust Proof
@@ -108,7 +108,7 @@ Public Solana RPC rate-limited the drill with `429 Too Many Requests`. Helius RP
 
 Classification: Public Beta direct split technical chain proof, not public production approval.
 
-Report path: `G:\DNA x402\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json`
+Report path: `<repo-root>\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json`
 
 Network: `mainnet-beta`
 
@@ -256,14 +256,14 @@ Classification: local observability route proof.
 
 Evidence:
 
-- `G:\DNA x402\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
+- `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
 - `docs/DNA_X402_MONITORING_WIRING_EVIDENCE.md`
 - protected Telegram relay: `POST /internal/alerts/telegram`
 - Telegram drill script: `npm --prefix x402 run monitoring:test:telegram`
 - Telegram 30-minute status script: `npm --prefix x402 run monitoring:telegram:status -- --period=30m`
 - Telegram daily status script: `npm --prefix x402 run monitoring:telegram:status -- --period=24h`
-- Telegram report pattern: `G:\DNA x402\reports\monitoring\<timestamp>-telegram-route`
-- external Telegram proof: `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
+- Telegram report pattern: `<repo-root>\reports\monitoring\<timestamp>-telegram-route`
+- external Telegram proof: `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
 
 Tools:
 
@@ -303,8 +303,8 @@ Classification: vertical integration proof, no production money movement.
 
 Evidence:
 
-- `G:\DNA x402\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`
-- `G:\DNA x402\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json`
+- `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`
+- `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json`
 
 What it proves:
 

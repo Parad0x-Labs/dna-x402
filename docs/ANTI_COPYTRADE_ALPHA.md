@@ -170,7 +170,7 @@ An all-zeros subscriber_hash is rejected with `DarkNullError::WrongSubscriber` a
 
 ## Limitations
 
-- **NOT audited.** This codebase has not been reviewed by any security firm. Do not use for real funds.
+- **External review pending.** This codebase has not completed independent security review. Do not use for real funds.
 - **NOT mainnet.** All design targets Solana devnet. `mainnet_ready = false`.
 - **SHA-256, not Poseidon.** Real ZK systems on Solana use Poseidon (ZK-friendly hash). This system uses SHA-256 as a structural proxy. It does not generate real zero-knowledge proofs.
 - **No real ZK proofs.** The system uses commitment-reveal patterns and hash chains, not zero-knowledge proofs. The "privacy" guarantee is one-way hash unlinkability, not cryptographic zero-knowledge.

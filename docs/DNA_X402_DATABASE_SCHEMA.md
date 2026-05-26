@@ -80,7 +80,7 @@ docker compose -f docker-compose.postgres.yml down
 
 Executed on 2026-05-15 against a temporary G-local PostgreSQL 18 instance:
 
-- data directory: `G:\DNA x402\.runtime\postgres-drill-18-data`
+- data directory: `<repo-root>\.runtime\postgres-drill-18-data`
 - host: `127.0.0.1`
 - port: `55432`
 - database: `x402_local`

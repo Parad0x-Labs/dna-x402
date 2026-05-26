@@ -36,7 +36,7 @@ DNA x402 is a programmable commerce rail:
 - Persistent Sybil relist test passed under live Postgres mode.
 - Local Prometheus/Grafana/Alertmanager monitoring route passed.
 - External Telegram human alert delivery passed for test, emergency pause, PII block, and backup failure alerts.
-- Private-pilot primary operator assignment is complete with Saulius assigned to all primary roles; public-production backup operators remain pending.
+- Private-pilot primary operator assignment is complete with sls_0x assigned to all primary roles; public-production backup operators remain pending.
 
 ## Compliance Hooks
 

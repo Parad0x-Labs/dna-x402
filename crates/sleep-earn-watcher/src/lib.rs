@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum WatcherJobKind {
-    RentGoblin,
+    RentSweeper,
     ChaffMarket,
     RitualPuzzle,
     AlphaReveal,
@@ -78,7 +78,7 @@ mod tests {
     fn default_config() -> WatcherConfig {
         WatcherConfig {
             max_sol_float_lamports: 1_000_000_000,
-            allowed_kinds: vec![WatcherJobKind::RentGoblin, WatcherJobKind::ChaffMarket],
+            allowed_kinds: vec![WatcherJobKind::RentSweeper, WatcherJobKind::ChaffMarket],
             min_reward_lamports: 1_000,
             max_tx_per_hour: 10,
             dry_run: false,
@@ -98,7 +98,7 @@ mod tests {
     fn test_unprofitable_job_skipped() {
         let config = default_config();
         let jobs = vec![
-            make_job(WatcherJobKind::RentGoblin, 500, 1000), // cost > reward
+            make_job(WatcherJobKind::RentSweeper, 500, 1000), // cost > reward
         ];
         let result = scan_jobs(jobs, &config);
         assert!(result.is_empty());
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn test_rate_limit_enforced() {
         let jobs: Vec<WatcherJob> = (0..20)
-            .map(|i| make_job(WatcherJobKind::RentGoblin, 5_000, 100))
+            .map(|i| make_job(WatcherJobKind::RentSweeper, 5_000, 100))
             .collect();
         let limited = enforce_rate_limit(jobs, 5);
         assert_eq!(limited.len(), 5);
@@ -115,14 +115,14 @@ mod tests {
 
     #[test]
     fn test_kind_filter_works() {
-        let config = default_config(); // only RentGoblin + ChaffMarket
+        let config = default_config(); // only RentSweeper + ChaffMarket
         let jobs = vec![
-            make_job(WatcherJobKind::RentGoblin, 5_000, 100),
+            make_job(WatcherJobKind::RentSweeper, 5_000, 100),
             make_job(WatcherJobKind::RitualPuzzle, 5_000, 100), // not in allowed
         ];
         let result = scan_jobs(jobs, &config);
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].kind, WatcherJobKind::RentGoblin);
+        assert_eq!(result[0].kind, WatcherJobKind::RentSweeper);
     }
 
     #[test]
@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn test_profit_estimate_correct() {
         let jobs = vec![
-            make_job(WatcherJobKind::RentGoblin, 5_000, 500),
+            make_job(WatcherJobKind::RentSweeper, 5_000, 500),
             make_job(WatcherJobKind::ChaffMarket, 3_000, 200),
         ];
         let profit = estimate_profit(&jobs);

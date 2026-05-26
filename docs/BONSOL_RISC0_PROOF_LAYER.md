@@ -55,10 +55,10 @@ bonsol execute --input <input_file>
 ## Evidence Before Claiming Integration
 
 To claim "Bonsol integrated":
-→ `dist/alien-final/evidence/bonsol_real.json` must exist with real tx sig
+→ `dist/frontier-final/evidence/bonsol_real.json` must exist with real tx sig
 
 To claim "RISC Zero integrated":
-→ `dist/alien-final/evidence/risc0_real.json` must exist with receipt hash
+→ `dist/frontier-final/evidence/risc0_real.json` must exist with receipt hash
 
 **Current public wording allowed:**
 "Verifiable batch-auditor interface exists with typed adapters for Bonsol and RISC Zero.

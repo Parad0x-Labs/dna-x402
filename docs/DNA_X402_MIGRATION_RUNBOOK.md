@@ -38,7 +38,7 @@ $env:X402_REPOSITORY_MODE="postgres"
 $env:X402_DATABASE_URL="postgres://x402:x402_local@127.0.0.1:55432/x402_local"
 $env:X402_PSQL_BIN="C:\Program Files\PostgreSQL\18\bin\psql.exe"
 $env:X402_PG_DUMP_BIN="C:\Program Files\PostgreSQL\18\bin\pg_dump.exe"
-$env:X402_DB_BACKUP_DIR="G:\DNA x402\.runtime\postgres-backups"
+$env:X402_DB_BACKUP_DIR="<repo-root>\.runtime\postgres-backups"
 ```
 
 Passed:

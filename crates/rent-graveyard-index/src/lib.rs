@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CloseabilityStatus {
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_grave_score_increases_with_idle_time() {
-        let s1 = score_grave(0, 100_000, 200_000);   // 100k idle slots
+        let s1 = score_grave(0, 100_000, 200_000); // 100k idle slots
         let s2 = score_grave(0, 100_000, 1_200_000); // 1.1M idle slots
         assert!(s2 > s1, "more idle time should yield higher score");
     }
@@ -115,9 +115,16 @@ mod tests {
 
     #[test]
     fn test_closeable_only_in_recoverable() {
-        let closeable = create_grave_entry(&dummy_hash(1), 10_000, 0, 0, CloseabilityStatus::Closeable);
+        let closeable =
+            create_grave_entry(&dummy_hash(1), 10_000, 0, 0, CloseabilityStatus::Closeable);
         let locked = create_grave_entry(&dummy_hash(2), 20_000, 0, 0, CloseabilityStatus::Locked);
-        let maybe = create_grave_entry(&dummy_hash(3), 30_000, 0, 0, CloseabilityStatus::MaybeCloseable);
+        let maybe = create_grave_entry(
+            &dummy_hash(3),
+            30_000,
+            0,
+            0,
+            CloseabilityStatus::MaybeCloseable,
+        );
         let total = total_recoverable(&[closeable, locked, maybe]);
         assert_eq!(total, 10_000, "only Closeable entries should count");
     }
@@ -127,7 +134,10 @@ mod tests {
         let g1 = create_grave_entry(&dummy_hash(1), 1_000, 0, 0, CloseabilityStatus::Closeable);
         let g2 = create_grave_entry(&dummy_hash(2), 9_000, 0, 0, CloseabilityStatus::Closeable);
         let ranked = rank_graves(vec![g1, g2]);
-        assert!(ranked[0].grave_score >= ranked[1].grave_score, "first should be highest score");
+        assert!(
+            ranked[0].grave_score >= ranked[1].grave_score,
+            "first should be highest score"
+        );
     }
 
     #[test]

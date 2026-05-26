@@ -196,7 +196,7 @@ node scripts/run-rogue-wow-demo.mjs
 open packages/rogue-agent-demo/index.html
 ```
 
-Output: `dist/true-alien/ROGUE_WOW_DEMO.json`
+Output: `dist/true-frontier/ROGUE_WOW_DEMO.json`
 
 ---
 

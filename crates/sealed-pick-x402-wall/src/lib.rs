@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PickSide {
@@ -58,19 +58,19 @@ pub enum PickError {
 
 fn side_byte(side: &PickSide) -> u8 {
     match side {
-        PickSide::Home  => 0,
-        PickSide::Away  => 1,
-        PickSide::Draw  => 2,
-        PickSide::Over  => 3,
+        PickSide::Home => 0,
+        PickSide::Away => 1,
+        PickSide::Draw => 2,
+        PickSide::Over => 3,
         PickSide::Under => 4,
     }
 }
 
 fn confidence_byte(c: &ConfidenceBucket) -> u8 {
     match c {
-        ConfidenceBucket::Low      => 0,
-        ConfidenceBucket::Medium   => 1,
-        ConfidenceBucket::High     => 2,
+        ConfidenceBucket::Low => 0,
+        ConfidenceBucket::Medium => 1,
+        ConfidenceBucket::High => 2,
         ConfidenceBucket::VeryHigh => 3,
     }
 }
@@ -222,10 +222,10 @@ pub fn verify_reveal_matches_commitment(pick: &SealedPick, reveal: &PaidPickReve
 
 pub fn raw_side_absent_from_commitment(commitment_json: &str, side: PickSide) -> bool {
     let side_str = match side {
-        PickSide::Home  => "Home",
-        PickSide::Away  => "Away",
-        PickSide::Draw  => "Draw",
-        PickSide::Over  => "Over",
+        PickSide::Home => "Home",
+        PickSide::Away => "Away",
+        PickSide::Draw => "Draw",
+        PickSide::Over => "Over",
         PickSide::Under => "Under",
     };
     !commitment_json.contains(side_str)
@@ -238,7 +238,15 @@ mod tests {
     fn dummy_pick(side: PickSide) -> SealedPick {
         let odds = [1u8; 32];
         let model = [2u8; 32];
-        create_sealed_pick(b"market-001", side, ConfidenceBucket::High, &odds, &model, 100, 500)
+        create_sealed_pick(
+            b"market-001",
+            side,
+            ConfidenceBucket::High,
+            &odds,
+            &model,
+            100,
+            500,
+        )
     }
 
     fn nonzero_payment() -> [u8; 32] {
@@ -275,7 +283,8 @@ mod tests {
         assert_eq!(reveal.subscriber_hash, expected_sub_hash);
         // A different subscriber produces a different hash
         let other_sub = [10u8; 32];
-        let reveal2 = create_paid_reveal(&pick, &other_sub, &payment, PickSide::Home, 100, false).unwrap();
+        let reveal2 =
+            create_paid_reveal(&pick, &other_sub, &payment, PickSide::Home, 100, false).unwrap();
         assert_ne!(reveal.subscriber_hash, reveal2.subscriber_hash);
     }
 
@@ -313,8 +322,24 @@ mod tests {
         let odds = [1u8; 32];
         let model_a = [2u8; 32];
         let model_b = [3u8; 32];
-        let pick_a = create_sealed_pick(b"market-001", PickSide::Home, ConfidenceBucket::High, &odds, &model_a, 100, 500);
-        let pick_b = create_sealed_pick(b"market-001", PickSide::Home, ConfidenceBucket::High, &odds, &model_b, 100, 500);
+        let pick_a = create_sealed_pick(
+            b"market-001",
+            PickSide::Home,
+            ConfidenceBucket::High,
+            &odds,
+            &model_a,
+            100,
+            500,
+        );
+        let pick_b = create_sealed_pick(
+            b"market-001",
+            PickSide::Home,
+            ConfidenceBucket::High,
+            &odds,
+            &model_b,
+            100,
+            500,
+        );
         assert_ne!(pick_a.side_commitment, pick_b.side_commitment);
     }
 

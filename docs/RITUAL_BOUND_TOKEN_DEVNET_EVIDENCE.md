@@ -210,7 +210,7 @@ The CPI drain scenario requires deploying a second Solana program (an "attacker"
 
 - **Devnet only**: all program IDs and accounts referenced here are devnet. No mainnet keys have been generated.
 - **Not ZK**: no zero-knowledge proofs are used; ritual hashes and all ceremony details are visible on-chain
-- **Not audited**: no security audit has been performed on any component
+- **External review pending**: independent security review has not been completed for any component
 - **mainnet_ready: false** — hardcoded in all evidence outputs
 - **production_claim: false** — hardcoded in all evidence outputs
 - **agent_had_private_key: false** — the demo uses a funded devnet test wallet; no mainnet keys

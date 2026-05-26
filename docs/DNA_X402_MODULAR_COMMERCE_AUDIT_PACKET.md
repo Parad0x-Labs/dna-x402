@@ -88,7 +88,7 @@ Hardening added in this cycle:
 Remaining hard external gate:
 
 - external Telegram human-route delivery is passed; Public Beta primary operator assignment is complete.
-- operator assignment document exists at `docs/DNA_X402_OPERATOR_ASSIGNMENTS.md`; Saulius is assigned to all Public Beta primary roles, while public-production backup operators remain `TBD`.
+- operator assignment document exists at `docs/DNA_X402_OPERATOR_ASSIGNMENTS.md`; sls_0x is assigned to all Public Beta primary roles, while public-production backup operators remain `TBD`.
 - counsel review bundle exists at `docs/DNA_X402_COUNSEL_REVIEW_BUNDLE.md`; submission status remains `PREPARED_NOT_EXTERNALLY_SENT_FROM_REPO` until it is actually sent externally.
 - Docker Compose execution is still not claimed because Docker is unavailable on this workstation; the accepted local proof used a separate G-local PostgreSQL 18 instance on port `55432`.
 - no further product feature work should be prioritized until counsel review and public-production backup operator assignments have been completed.
@@ -674,13 +674,13 @@ Boss 4 local monitoring drill:
 - Prometheus target `dna-x402-local`: `health: up`
 - App-derived alerts delivered: `X402EmergencyPauseActive`, `X402PiiBlock`
 - Synthetic route alerts delivered: `X402DbErrorSpike`, `X402BackupFailure`, `X402RestoreDrillFailure`, `X402VerifierErrorSpike`, `X402WebhookReplaySpike`, `X402AdminActionBurst`, `X402SettlementUnavailable`
-- Evidence summary: `G:\DNA x402\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
+- Evidence summary: `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
 - External Telegram route: passed with human-confirmed delivery
 - Telegram evidence command: `npm --prefix x402 run monitoring:test:telegram`
 - Telegram 30-minute status command: `npm --prefix x402 run monitoring:telegram:status -- --period=30m`
 - Telegram daily status command: `npm --prefix x402 run monitoring:telegram:status -- --period=24h`
-- Telegram report folder pattern: `G:\DNA x402\reports\monitoring\<timestamp>-telegram-route`
-- External Telegram evidence: `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
+- Telegram report folder pattern: `<repo-root>\reports\monitoring\<timestamp>-telegram-route`
+- External Telegram evidence: `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
 - External human/on-call route status: `PASSED_EXTERNAL_HUMAN_ROUTE`; private Telegram group received test, emergency pause, PII block, and backup failure alerts with human confirmation
 - Telegram command safety: commands disabled by default; if enabled later, owner/admin user IDs and allowed chat IDs are required
 

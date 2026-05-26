@@ -29,13 +29,13 @@ Route status: `PASSED_EXTERNAL_TELEGRAM_ROUTE`
 
 Evidence:
 
-- `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
+- `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
 
 Do not record bot tokens, private chat IDs, phone numbers, or private credentials in this file.
 
 ## Incident Commander
 
-Name: Saulius
+Name: sls_0x
 
 Contact: Telegram `@PlugMeHabibi` / `DNA x402 Ops Alerts`
 
@@ -51,7 +51,7 @@ Responsibilities:
 
 ## Emergency Pause Operator
 
-Name: Saulius
+Name: sls_0x
 
 Wallet/account: primary operator account, final wallet/account reference kept outside this public repo
 
@@ -69,7 +69,7 @@ Responsibilities:
 
 ## Monitoring / On-Call Operator
 
-Name: Saulius
+Name: sls_0x
 
 Alert channel: `DNA x402 Ops Alerts`
 
@@ -87,7 +87,7 @@ Responsibilities:
 
 ## Database / Backup Operator
 
-Name: Saulius / technical helper if available
+Name: sls_0x / technical helper if available
 
 Contact: Telegram `@PlugMeHabibi` / `DNA x402 Ops Alerts`
 
@@ -103,7 +103,7 @@ Responsibilities:
 
 ## Legal / Compliance Owner
 
-Name: Saulius
+Name: sls_0x
 
 Contact: Telegram `@PlugMeHabibi`
 
@@ -119,7 +119,7 @@ Responsibilities:
 
 ## Security / Custody Reviewer
 
-Name: Saulius / technical helper if available
+Name: sls_0x / technical helper if available
 
 Contact: Telegram `@PlugMeHabibi` / `DNA x402 Ops Alerts`
 
@@ -135,7 +135,7 @@ Responsibilities:
 
 ## Release Approver
 
-Name: Saulius
+Name: sls_0x
 
 Contact: Telegram `@PlugMeHabibi`
 
@@ -151,7 +151,7 @@ Responsibilities:
 
 ## Direct Split Fee Gate Owner
 
-Name: Saulius
+Name: sls_0x
 
 Contact: Telegram `@PlugMeHabibi`
 

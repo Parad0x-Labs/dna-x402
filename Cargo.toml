@@ -1,4 +1,4 @@
-﻿[workspace]
+[workspace]
 members = [
     "programs/receipt_anchor",
     "programs/dark_nullifier_banks",
@@ -47,27 +47,27 @@ members = [
     "crates/model-output-receipts",
     "crates/public-puzzle-generator",
     "crates/telegram-command-receipts",
-    # ALIEN_FINAL_BOSS — Phase 1 (Poseidon / hash parity)
+    # FRONTIER_FINAL — Phase 1 (Poseidon / hash parity)
     "crates/dark-hash-core",
-    # ALIEN_FINAL_BOSS — Phase 2 (ZK proof scaffold)
+    # FRONTIER_FINAL — Phase 2 (ZK proof scaffold)
     "crates/dark-proof-core",
     "crates/dark-proof-receipts",
     "programs/dark_proof_gate_lite",
-    # ALIEN_FINAL_BOSS — Phase 3 (Bonsol / RISC0)
+    # FRONTIER_FINAL — Phase 3 (Bonsol / RISC0)
     "crates/dark-batch-auditor-core",
     "crates/dark-bonsol-adapter",
     "crates/dark-risc0-adapter",
-    # ALIEN_FINAL_BOSS — Phase 4 (x402 flow)
+    # FRONTIER_FINAL — Phase 4 (x402 flow)
     "crates/dark-x402-core",
     "crates/dark-x402-server-mock",
     "crates/dark-x402-client-mock",
     "crates/dark-x402-devnet-verify",
-    # ALIEN_FINAL_BOSS — Phase 5 (ZK compression)
+    # FRONTIER_FINAL — Phase 5 (ZK compression)
     "crates/dark-compression-core",
     "crates/dark-compressed-receipt-ledger",
-    # ALIEN_FINAL_BOSS — Phase 8 (demo)
-    "crates/dark-alien-final-demo",
-    # TRUE_ALIEN_PRIMITIVES — 10 new Dark Null product primitives
+    # FRONTIER_FINAL — Phase 8 (demo)
+    "crates/dark-frontier-final-demo",
+    # TRUE_FRONTIER_PRIMITIVES — 10 new Dark Null product primitives
     "crates/agent-permission-notes",
     "crates/spend-shadows",
     "crates/agent-flight-recorder",
@@ -78,8 +78,8 @@ members = [
     "crates/onchain-puzzle-compiler",
     "crates/no-custody-attestation",
     "crates/roadmap-commitments",
-    # TRUE_ALIEN_DEVNET_DEMO — devnet unicorn demo
-    "crates/true-alien-devnet-demo",
+    # TRUE_FRONTIER_DEVNET_DEMO — devnet frontier demo
+    "crates/true-frontier-devnet-demo",
     # DARK_NULL_PUBLIC_WOW_DEMO — clickable public demo "AI agent spent without a wallet"
     "crates/rogue-agent-demo-core",
     # DARK_NULL_TRANSACTION_RITUAL_VM_V1
@@ -100,7 +100,7 @@ members = [
     "crates/ritual-memo-capsule",
     "crates/ritual-bound-token-demo",
     # DARK_NULL_DEGEN_SWARM_ECONOMY_V1
-    "crates/rent-goblin-swarm",
+    "crates/rent-sweeper-swarm",
     "crates/bounty-blink-jobs",
     "crates/cold-route-fee-sniper",
     "crates/no-deploy-token-launcher",
@@ -119,7 +119,7 @@ members = [
     "crates/dark-compressed-leaves",
     "crates/dark-meme-risk",
     "crates/dark-fee-optimizer",
-    # MOONSHOT — ritual-blink-gateway: Blinks + x402 + Token-2022 Hook + HookVerdict receipt
+    # FRONTIER EDGE — ritual-blink-gateway: Blinks + x402 + Token-2022 Hook + HookVerdict receipt
     "crates/ritual-blink-gateway",
     # DARK_NULL_FRONTIER_EDGE_V1 — demo binary exercising all 6 frontier crates
     "crates/dark-frontier-demo",
@@ -140,7 +140,7 @@ members = [
     "crates/p-token-roi-bot",
     "crates/confidential-amount-watch",
     "crates/nulla-betting-edge-demo",
-    # NULL_FLYWHEEL_VAULT_V1 — premium-fee conversion → rewards vault
+    # NULL_FLYWHEEL_VAULT_V1 — premium-fee conversion ? rewards vault
     "crates/null-flywheel-core",
     # NULL_FLYWHEEL_VAULT_V1 — execution receipts for public auditability
     "crates/null-flywheel-receipts",
@@ -148,6 +148,32 @@ members = [
     "crates/null-flywheel-randomizer",
     # NULL_FLYWHEEL_VAULT_V1 — simulation demo binary
     "crates/null-flywheel-sim",
+    # DARK_ZK_PRIMITIVES_V1 — on-chain BN254 Groth16 (Phase 1)
+    "crates/dark-poseidon-bn254",
+    "crates/dark-bn254-circuit",
+    # DARK_ZK_PRIMITIVES_V1 — Phase 2 (proof bundle generator + on-chain gate)
+    "crates/dark-bn254-proof-gen",
+    "programs/dark_bn254_gate",
+    # DARK_ZK_PRIMITIVES_V1 — Phase 3 (on-chain nullifier recorder)
+    "programs/dark_nullifier_record",
+    # WAVE_14_BATCH_1 — privacy primitives
+    "crates/dark-atomic-swap",
+    "crates/dark-time-capsule",
+    "crates/dark-merkle-accumulator",
+    "crates/dark-private-order-book",
+    "crates/dark-receipt-chain",
+    # WAVE_14_BATCH_2 — advanced privacy primitives
+    "crates/dark-validator-set",
+    "crates/dark-blind-auction",
+    "crates/dark-recursive-proof",
+    "crates/dark-confidential-transfer",
+    "crates/dark-zkp-membership",
+    # WAVE_15_BATCH_1 — epoch, privacy layer, shielded pool, lottery, compliance
+    "crates/dark-epoch-transition",
+    "crates/dark-privacy-layer",
+    "crates/dark-shielded-pool",
+    "crates/dark-private-lottery",
+    "crates/dark-compliance-proof",
 ]
 resolver = "2"
 

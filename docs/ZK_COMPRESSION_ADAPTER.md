@@ -51,7 +51,7 @@ Per the `CostComparison` struct in `dark-compressed-receipt-ledger`:
 ## Required Evidence Before Claiming ZK Compression
 
 To claim "ZK Compression live":
-→ `dist/alien-final/evidence/zk_compression_real.json` must exist with:
+→ `dist/frontier-final/evidence/zk_compression_real.json` must exist with:
   - Light Protocol program ID
   - On-chain compressed tree address
   - Proof of leaf insertion tx sig

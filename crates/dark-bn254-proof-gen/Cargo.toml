@@ -1,0 +1,14 @@
+[package]
+name = "dark-bn254-proof-gen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dark-poseidon-bn254 = { path = "../dark-poseidon-bn254" }
+dark-bn254-circuit   = { path = "../dark-bn254-circuit" }
+sha2                 = { workspace = true }
+serde               = { workspace = true }
+serde_json          = { workspace = true }
+
+[dev-dependencies]
+dark-poseidon-bn254 = { path = "../dark-poseidon-bn254" }

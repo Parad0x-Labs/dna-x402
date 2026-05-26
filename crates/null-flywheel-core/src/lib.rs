@@ -159,9 +159,7 @@ pub fn compute_event_hash(source: &SourceKind, gross_lamports: u64, epoch: u64) 
 
 /// Multiply `gross_lamports` by `allocation_bps / 10_000`.
 pub fn compute_allocation(config: &FlywheelConfig, gross_lamports: u64) -> AllocationResult {
-    let allocated = gross_lamports
-        .saturating_mul(config.allocation_bps)
-        / 10_000;
+    let allocated = gross_lamports.saturating_mul(config.allocation_bps) / 10_000;
     let remaining = gross_lamports.saturating_sub(allocated);
     AllocationResult {
         allocated_lamports: allocated,
@@ -185,11 +183,7 @@ pub fn add_fee_event(
 pub fn accumulated_balance(events: &[PremiumFeeEvent], config: &FlywheelConfig) -> u64 {
     events
         .iter()
-        .map(|e| {
-            e.gross_lamports
-                .saturating_mul(config.allocation_bps)
-                / 10_000
-        })
+        .map(|e| e.gross_lamports.saturating_mul(config.allocation_bps) / 10_000)
         .fold(0u64, |acc, x| acc.saturating_add(x))
 }
 
@@ -199,19 +193,11 @@ pub fn threshold_met(events: &[PremiumFeeEvent], config: &FlywheelConfig) -> boo
 }
 
 /// `max_daily_lamports` minus the sum of allocations for events in `epoch`.
-pub fn daily_cap_remaining(
-    events: &[PremiumFeeEvent],
-    config: &FlywheelConfig,
-    epoch: u64,
-) -> u64 {
+pub fn daily_cap_remaining(events: &[PremiumFeeEvent], config: &FlywheelConfig, epoch: u64) -> u64 {
     let used: u64 = events
         .iter()
         .filter(|e| e.epoch == epoch)
-        .map(|e| {
-            e.gross_lamports
-                .saturating_mul(config.allocation_bps)
-                / 10_000
-        })
+        .map(|e| e.gross_lamports.saturating_mul(config.allocation_bps) / 10_000)
         .fold(0u64, |acc, x| acc.saturating_add(x));
     config.max_daily_lamports.saturating_sub(used)
 }
@@ -382,8 +368,7 @@ mod tests {
     // 9. validate_destination_policy(BurnVaultDisabledByDefault) → Err(BurnVaultDisabled)
     #[test]
     fn test_burn_vault_disabled_by_default() {
-        let result =
-            validate_destination_policy(&DestinationPolicy::BurnVaultDisabledByDefault);
+        let result = validate_destination_policy(&DestinationPolicy::BurnVaultDisabledByDefault);
         assert_eq!(result, Err(FlywheelError::BurnVaultDisabled));
     }
 }

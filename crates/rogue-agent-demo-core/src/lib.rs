@@ -330,7 +330,7 @@ pub fn build_wow_demo() -> RogueWowDemo {
     let puzzle = compile_puzzle(&puzzle_input).expect("puzzle compile ROGUE");
     let shard_path: Vec<u8> = puzzle.shard_targets.iter().map(|t| t.shard_byte).collect();
 
-    // Solscan links from the live devnet run (TRUE_ALIEN_DEVNET_DEMO.json)
+    // Solscan links from the live devnet run (TRUE_FRONTIER_DEVNET_DEMO.json)
     let solscan_links = vec![
         "https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet".to_string(),
         "https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet".to_string(),

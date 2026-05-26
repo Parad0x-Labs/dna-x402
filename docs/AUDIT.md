@@ -1,6 +1,6 @@
 # Dark Null Solana Programs — Auditor Reference
 
-**Codebase:** `G:\DNA x402` / branch `codex/mainnet-hardening`
+**Codebase:** `<repo-root>` / branch `codex/mainnet-hardening`
 **Stack:** Solana 1.18.26 (pinned), Rust, `no_std`-compatible programs, Cargo workspace
 **Reviewed by:** _[Auditor name]_
 **Audit date:** _[Date]_

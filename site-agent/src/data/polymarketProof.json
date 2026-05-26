@@ -14,7 +14,7 @@
     "mismatches": [],
     "noOrderPosted": true,
     "noPusdTransfer": true,
-    "snapshotPath": "G:\\DNA x402\\reports\\polymarket-phase0\\2026-05-14T21-10-18-000Z-browser-local.json"
+    "snapshotPath": "<repo-root>\\reports\\polymarket-phase0\\2026-05-14T21-10-18-000Z-browser-local.json"
   },
   "walletCreate": {
     "ok": true,
@@ -23,7 +23,7 @@
     "depositWalletHash": "3ef3669d70fe272503c2de33ab9c469bd2c7ea42cc4ce1e3eb6b1bcb80b0b5fd",
     "transactionHashPresent": true,
     "noPusdTransfer": true,
-    "snapshotPath": "G:\\DNA x402\\reports\\polymarket-phase0\\2026-05-14T21-10-43-546Z-browser-local.json"
+    "snapshotPath": "<repo-root>\\reports\\polymarket-phase0\\2026-05-14T21-10-43-546Z-browser-local.json"
   },
   "accountingModel": {
     "ok": true,

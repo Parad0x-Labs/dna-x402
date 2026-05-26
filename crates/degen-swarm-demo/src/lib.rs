@@ -9,7 +9,7 @@ use degen_scoreboard::{
 };
 use fee_cashback_receipts::mint_cashback_receipt;
 use no_deploy_token_launcher::{compile_launch_plan, TokenExtension};
-use rent_goblin_swarm::{build_sweep_plan, scan_mock_targets, sort_by_highest_bounty};
+use rent_sweeper_swarm::{build_sweep_plan, scan_mock_targets, sort_by_highest_bounty};
 use ritual_puzzle_market::{
     build_correct_solution, create_puzzle_job, submit_solution, PuzzleMethod,
 };
@@ -38,7 +38,7 @@ pub struct DemoEvidence {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DemoPrimitives {
-    pub rent_goblin: RentGoblinSummary,
+    pub rent_sweeper: RentSweeperSummary,
     pub bounty_blinks: BountyBlinkSummary,
     pub cold_route: ColdRouteSummary,
     pub token_launcher: TokenLauncherSummary,
@@ -53,7 +53,7 @@ pub struct DemoPrimitives {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RentGoblinSummary {
+pub struct RentSweeperSummary {
     pub targets: usize,
     pub reclaimable_lamports: u64,
     pub bounty_lamports: u64,
@@ -140,11 +140,11 @@ fn hex8(bytes: &[u8; 32]) -> String {
 pub fn run_demo() -> DemoEvidence {
     let current_slot = 200_000u64;
 
-    // 1. Rent goblin
+    // 1. Rent sweeper
     let mut targets = scan_mock_targets(current_slot);
     sort_by_highest_bounty(&mut targets);
     let plan = build_sweep_plan(targets, current_slot);
-    let rent_goblin = RentGoblinSummary {
+    let rent_sweeper = RentSweeperSummary {
         targets: plan.targets.len(),
         reclaimable_lamports: plan.total_reclaimable_lamports,
         bounty_lamports: plan.total_bounty_lamports,
@@ -309,7 +309,7 @@ pub fn run_demo() -> DemoEvidence {
     let watcher_config = WatcherConfig {
         max_sol_float_lamports: 500_000_000,
         allowed_kinds: vec![
-            WatcherJobKind::RentGoblin,
+            WatcherJobKind::RentSweeper,
             WatcherJobKind::ChaffMarket,
             WatcherJobKind::RitualPuzzle,
         ],
@@ -320,7 +320,7 @@ pub fn run_demo() -> DemoEvidence {
     let available_jobs = vec![
         WatcherJob {
             job_hash: sha256_label(b"wjob1"),
-            kind: WatcherJobKind::RentGoblin,
+            kind: WatcherJobKind::RentSweeper,
             estimated_reward_lamports: 5_000,
             estimated_cost_lamports: 200,
         },
@@ -393,7 +393,7 @@ pub fn run_demo() -> DemoEvidence {
     };
 
     // Totals
-    let money_saved_lamports = rent_goblin.reclaimable_lamports
+    let money_saved_lamports = rent_sweeper.reclaimable_lamports
         + cold_route.savings_lamports
         + scratch_leasing.rent_saved
         + fee_cashback.savings;
@@ -411,7 +411,7 @@ pub fn run_demo() -> DemoEvidence {
         money_earned_lamports,
         jobs_completed: 12,
         primitives: DemoPrimitives {
-            rent_goblin,
+            rent_sweeper,
             bounty_blinks,
             cold_route,
             token_launcher,

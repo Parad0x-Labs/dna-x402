@@ -9,7 +9,7 @@
  *   node scripts/run-rogue-steal-demo.mjs
  *
  * Output:
- *   dist/true-alien/ROGUE_STEAL_ATTEMPT_DEMO.json
+ *   dist/true-frontier/ROGUE_STEAL_ATTEMPT_DEMO.json
  */
 
 import { execSync } from 'child_process';
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
-const outPath = join(root, 'dist', 'true-alien', 'ROGUE_STEAL_ATTEMPT_DEMO.json');
+const outPath = join(root, 'dist', 'true-frontier', 'ROGUE_STEAL_ATTEMPT_DEMO.json');
 
 console.log();
 console.log('  DARK NULL — ROGUE TRIED TO STEAL DEMO');

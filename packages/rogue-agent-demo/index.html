@@ -643,7 +643,7 @@ let villainPlaying = false;
 
 async function loadDemo() {
   try {
-    const resp = await fetch('../../dist/true-alien/ROGUE_WOW_DEMO.json');
+    const resp = await fetch('../../dist/true-frontier/ROGUE_WOW_DEMO.json');
     if (!resp.ok) throw new Error('not found');
     D = await resp.json();
   } catch(_) { D = OFFLINE_DATA; }
@@ -653,7 +653,7 @@ async function loadDemo() {
 
 async function loadStealDemo() {
   try {
-    const resp = await fetch('../../dist/true-alien/ROGUE_STEAL_ATTEMPT_DEMO.json');
+    const resp = await fetch('../../dist/true-frontier/ROGUE_STEAL_ATTEMPT_DEMO.json');
     if (!resp.ok) throw new Error('not found');
     SD = await resp.json();
   } catch(_) { SD = OFFLINE_STEAL_DATA; }

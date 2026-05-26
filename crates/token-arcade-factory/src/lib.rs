@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenExtension {
@@ -49,8 +49,12 @@ pub fn check_compatibility(extensions: &[TokenExtension]) -> Result<(), Compatib
 pub fn extensions_for_template(template: &TemplateKind) -> Vec<TokenExtension> {
     match template {
         TemplateKind::MemeWithFee => vec![TokenExtension::TransferFee, TokenExtension::Metadata],
-        TemplateKind::HuntWithHook => vec![TokenExtension::TransferHook, TokenExtension::MemoTransfer],
-        TemplateKind::SoulboundBadge => vec![TokenExtension::NonTransferable, TokenExtension::Metadata],
+        TemplateKind::HuntWithHook => {
+            vec![TokenExtension::TransferHook, TokenExtension::MemoTransfer]
+        }
+        TemplateKind::SoulboundBadge => {
+            vec![TokenExtension::NonTransferable, TokenExtension::Metadata]
+        }
         TemplateKind::HintPass => vec![TokenExtension::TransferHook, TokenExtension::TransferFee],
         TemplateKind::RitualBound => vec![
             TokenExtension::TransferHook,
@@ -82,10 +86,8 @@ const CUSTOM_PROGRAM_COST: u64 = 3_000_000_000;
 pub fn estimate_launch(template: TemplateKind) -> LaunchEstimate {
     let extensions = extensions_for_template(&template);
     let compatible = check_compatibility(&extensions).is_ok();
-    let estimated_rent_lamports =
-        BASE_MINT_RENT + PER_EXTENSION_RENT * extensions.len() as u64;
-    let deploy_cost_saved_lamports =
-        CUSTOM_PROGRAM_COST.saturating_sub(estimated_rent_lamports);
+    let estimated_rent_lamports = BASE_MINT_RENT + PER_EXTENSION_RENT * extensions.len() as u64;
+    let deploy_cost_saved_lamports = CUSTOM_PROGRAM_COST.saturating_sub(estimated_rent_lamports);
     let hash = template_hash(&template);
 
     LaunchEstimate {

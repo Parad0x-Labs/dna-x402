@@ -44,8 +44,8 @@ related_repo:
   privacy_settlement: https://github.com/Parad0x-Labs/Dark-Null-Protocol
   dark_null_privacy_path: docs/DARK_NULL_PRIVACY_PATH.md
   frontier_primitives: docs/DARK_NULL_FRONTIER.md
-  alien_tek_research: docs/DARK_NULL_ALIEN_TEK.md
-  solana_alien_tek: docs/SOLANA_ALIEN_TEK.md
+  frontier_research: docs/DARK_NULL_FRONTIER_RESEARCH.md
+  solana_frontier_research: docs/SOLANA_FRONTIER_RESEARCH.md
   degen_use_cases: docs/DEGEN_USE_CASES.md
   anti_copytrade_alpha: docs/ANTI_COPYTRADE_ALPHA.md
   fee_saving_primitives: docs/FEE_SAVING_SOLANA_PRIMITIVES.md
@@ -197,7 +197,7 @@ Six frontier-edge primitives built for on-chain degen survival:
 | `dark-compressed-leaves` | ZK Compression leaf schema — Light Protocol v2 adapter design (integration planned, not live) | Projected: 10,000 receipts for 0.02 SOL vs 8.9 SOL full accounts |
 | `dark-meme-risk` | Hash-only memecoin risk scoring model (live oracle endpoint not deployed) | Score a token before aping - no raw mint in any receipt |
 | `dark-fee-optimizer` | P-token (SIMD-0266) + ZK Compression savings model (live routing not wired) | Projected: 50k transfers/day at 98% fewer compute units |
-| `ritual-blink-gateway` | **MOONSHOT** — Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule, ONE atomic tx | Embed a payment-gated ritual transaction in a tweet link |
+| `ritual-blink-gateway` | **FRONTIER EDGE** — Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule, ONE atomic tx | Embed a payment-gated ritual transaction in a tweet link |
 
 Full doc: [`docs/DEGEN_USE_CASES.md`](./docs/DEGEN_USE_CASES.md)
 Fee savings: [`docs/FEE_SAVING_SOLANA_PRIMITIVES.md`](./docs/FEE_SAVING_SOLANA_PRIMITIVES.md)
@@ -248,13 +248,13 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 - [`docs/DARK_NULL_PRIVACY_PATH.md`](./docs/DARK_NULL_PRIVACY_PATH.md)
 - [`x402/test-mainnet/`](./x402/test-mainnet)
 
-## Alien Tek Research
+## Frontier Research
 
 Deep research across five threads: forgotten e-cash (Chaum 1982, GNU Taler deployed in a Swiss bank), cryptographic holy grails (Diamond iO from PSE 2025, witness encryption now practical for algebraic statements), proof aggregation (SnarkPack in Filecoin production — 819 Groth16 proofs → 2KB, no circuit rebuild), MPC primitives (Snowblind threshold blind signatures where even full signer collusion can't link issuance to spending), and UTXO privacy systems (FCMP++ on Monero Q1 2026 — 100M+ anonymity set, the biggest privacy advance in blockchain history that nobody outside Monero knows about).
 
 The single most underappreciated finding: every deployed ZK payment system has an access pattern leak — your Merkle path fetch tells the full node which leaf you're proving. Piano PIR (2024, IEEE S&P) is at 12ms + 220KB per nullifier check. The fix exists. Zero deployments.
 
-[`docs/DARK_NULL_ALIEN_TEK.md`](./docs/DARK_NULL_ALIEN_TEK.md)
+[`docs/DARK_NULL_FRONTIER_RESEARCH.md`](./docs/DARK_NULL_FRONTIER_RESEARCH.md)
 
 ## Dark Null Privacy Path
 

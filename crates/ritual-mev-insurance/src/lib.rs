@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RouteClass {
@@ -158,7 +158,7 @@ mod tests {
         let t = make_ticket();
         let report = LandingReport {
             ticket_hash: t.ticket_hash,
-            landed_slot: 150, // within range
+            landed_slot: 150,         // within range
             actual_slippage_bps: 100, // exceeds 50
         };
         let result = evaluate_claim(&t, &report);

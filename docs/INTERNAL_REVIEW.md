@@ -144,7 +144,7 @@ Before committing engineering time to a P-token migration, a team calls the fee 
 
 ---
 
-### 2.6 Ritual Blink Gateway — The Moonshot
+### 2.6 Ritual Blink Gateway — Frontier Edge
 
 **What it is**
 
@@ -201,7 +201,7 @@ The word DARKNULL was encoded on Solana devnet by submitting nullifiers to shard
 | U (85) | 85 | [63LQ8u…](https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet) |
 | E (69) | 69 | [5Dd58Q…](https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6eb7rdiNpuzaQ?cluster=devnet) |
 
-### True Alien Primitive Hashes (devnet-confirmed)
+### True Frontier Primitive Hashes (devnet-confirmed)
 
 Ten primitives proven end-to-end on devnet. These are output hashes from live runs — not mocked values.
 
@@ -223,7 +223,7 @@ Thirteen additional primitives solving daily operational problems. All tested. A
 
 | Primitive | Problem it solves | Real use |
 |---|---|---|
-| Rent Goblin Swarm | Lamports locked in dead accounts nobody closes | One command scans wallet history, closes all zero-activity accounts, sweeps rent back |
+| Rent Sweeper Swarm | Lamports locked in dead accounts nobody closes | One command scans wallet history, closes all zero-activity accounts, sweeps rent back |
 | Bounty Blink Jobs | No trustless micro-task market exists on-chain | Post a task hash and SOL reward as a Blink URL. First valid solution claims it. No escrow service |
 | Cold Route Fee Sniper | DEX aggregators optimise for output, not fees | Scans for routes with low recent utilisation. Saves 5–15 basis points on large swaps |
 | No-Deploy Token Launcher | New token = 2–5 SOL program deployment cost | Factory pattern: new token = new mint PDA from existing program. 0.01 SOL instead of 5 SOL |
@@ -285,7 +285,7 @@ These constraints are hardcoded in every evidence output and enforced by the cla
 - `production_claim = false` — not a production system
 - `agent_had_private_key = false` — demo runs use funded devnet test wallet only
 - `devnet_only = true` — all on-chain activity on devnet
-- `not_audited = true` — no security audit has been conducted
+- `external_review_complete = false` — independent security review is still pending
 
 The claim scanner (`scripts/check-degen-claims.mjs`) runs across all documentation files and Rust source files. It blocks the specific claim categories listed in the scanner source. Last result: clean across the full corpus. <!-- dnc-allow -->
 

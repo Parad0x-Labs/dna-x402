@@ -20,8 +20,8 @@ Postgres mode:
 $env:X402_DB_DRIVER="postgres"
 $env:X402_REPOSITORY_MODE="postgres"
 $env:X402_DATABASE_URL="postgres://x402:x402_local@localhost:5432/x402_local"
-npm --prefix x402 run db:backup -- --out G:\DNA x402\reports\db\x402.pgsql
-npm --prefix x402 run db:restore -- G:\DNA x402\reports\db\x402.pgsql
+npm --prefix x402 run db:backup -- --out <repo-root>\reports\db\x402.pgsql
+npm --prefix x402 run db:restore -- <repo-root>\reports\db\x402.pgsql
 npm --prefix x402 run db:backup:test:postgres
 ```
 
@@ -51,7 +51,7 @@ Config:
 $env:X402_DATABASE_URL="postgres://x402:x402_local@127.0.0.1:55432/x402_local"
 $env:X402_PSQL_BIN="C:\Program Files\PostgreSQL\18\bin\psql.exe"
 $env:X402_PG_DUMP_BIN="C:\Program Files\PostgreSQL\18\bin\pg_dump.exe"
-$env:X402_DB_BACKUP_DIR="G:\DNA x402\.runtime\postgres-backups"
+$env:X402_DB_BACKUP_DIR="<repo-root>\.runtime\postgres-backups"
 ```
 
 Command:
@@ -62,14 +62,14 @@ npm --prefix x402 run db:backup:test:postgres
 
 Result:
 
-- backup file created under `G:\DNA x402\x402\.runtime\postgres-backups`
+- backup file created under `<repo-root>\x402\.runtime\postgres-backups`
 - restore succeeded
 - critical seller, listing, policy, strike, denylist, appeal, tax, privacy, agent spend, fee, receipt, webhook replay, and emergency pause records survived restore
 
 Latest observed backup path:
 
 ```txt
-G:\DNA x402\x402\.runtime\postgres-backups\dna-x402-postgres-2026-05-15T12-12-47-862Z.sql
+<repo-root>\x402\.runtime\postgres-backups\dna-x402-postgres-2026-05-15T12-12-47-862Z.sql
 ```
 
 Limitation: this proves native `pg_dump`/`psql` restore on live Postgres. It does not prove Docker Compose because Docker is unavailable on this workstation.

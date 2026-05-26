@@ -106,12 +106,12 @@ This binary:
 3. Sends 1_000_000 lamports to a generated test recipient
 4. Verifies via `DevnetPaymentVerifier` (RPC balance delta check)
 5. Mints `DarkX402Receipt` with `is_mock=false`
-6. Writes evidence to `dist/alien-final/evidence/x402_devnet_real.json`
+6. Writes evidence to `dist/frontier-final/evidence/x402_devnet_real.json`
 
 ### Evidence file path
 
 ```
-dist/alien-final/evidence/x402_devnet_real.json
+dist/frontier-final/evidence/x402_devnet_real.json
 ```
 
 Schema:

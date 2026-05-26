@@ -143,7 +143,7 @@ Evidence:
 - scheduled backup service `dna-x402-postgres-backup.service` passed
 - timer `dna-x402-postgres-backup.timer` enabled
 
-Owner: `Saulius`
+Owner: `sls_0x`
 
 Approval date: `2026-05-16`
 

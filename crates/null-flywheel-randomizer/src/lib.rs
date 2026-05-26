@@ -1,15 +1,15 @@
-﻿// NULL_FLYWHEEL_VAULT_V1 — commit-reveal schedule randomizer
+// NULL_FLYWHEEL_VAULT_V1 — commit-reveal schedule randomizer
 // NOT_PRODUCTION — devnet design only — no audit — mainnet_ready = false
 
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone)]
 pub struct ScheduleCommitment {
-    pub commitment_hash: [u8; 32],  // SHA256("flywheel-sched-v1" || seed || epoch.to_le || window_slots.to_le)
+    pub commitment_hash: [u8; 32], // SHA256("flywheel-sched-v1" || seed || epoch.to_le || window_slots.to_le)
     pub epoch: u64,
-    pub window_slots: u64,          // how many slots wide the execution window is
+    pub window_slots: u64, // how many slots wide the execution window is
     pub committed_at_slot: u64,
-    pub reveal_after_slot: u64,     // committed_at_slot + window_slots
+    pub reveal_after_slot: u64, // committed_at_slot + window_slots
 }
 
 #[derive(Debug, Clone)]
@@ -17,15 +17,15 @@ pub struct ScheduleReveal {
     pub seed: [u8; 32],
     pub epoch: u64,
     pub revealed_at_slot: u64,
-    pub scheduled_slot: u64,        // computed from seed
+    pub scheduled_slot: u64, // computed from seed
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ScheduleError {
-    TooEarlyToReveal,      // revealed_at_slot < reveal_after_slot
-    SeedMismatch,          // recomputed commitment != stored commitment
-    EpochMismatch,         // reveal epoch != commitment epoch
-    InvalidWindow,         // window_slots == 0
+    TooEarlyToReveal, // revealed_at_slot < reveal_after_slot
+    SeedMismatch,     // recomputed commitment != stored commitment
+    EpochMismatch,    // reveal epoch != commitment epoch
+    InvalidWindow,    // window_slots == 0
 }
 
 /// Create a commitment for a future schedule.
@@ -170,7 +170,10 @@ mod tests {
         assert_eq!(commitment.epoch, epoch);
         assert_eq!(commitment.window_slots, window_slots);
         assert_eq!(commitment.committed_at_slot, committed_at_slot);
-        assert_eq!(commitment.reveal_after_slot, committed_at_slot + window_slots);
+        assert_eq!(
+            commitment.reveal_after_slot,
+            committed_at_slot + window_slots
+        );
 
         let reveal = reveal_schedule(&commitment, &seed, epoch, commitment.reveal_after_slot)
             .expect("reveal should succeed");
@@ -200,7 +203,10 @@ mod tests {
 
         assert_eq!(err, ScheduleError::TooEarlyToReveal);
         assert!(reject_early_reveal(&commitment, early_slot));
-        assert!(!reject_early_reveal(&commitment, commitment.reveal_after_slot));
+        assert!(!reject_early_reveal(
+            &commitment,
+            commitment.reveal_after_slot
+        ));
     }
 
     #[test]
@@ -233,8 +239,13 @@ mod tests {
         let commitment = commit_next_schedule(&seed, epoch, window_slots, committed_at_slot)
             .expect("commit should succeed");
 
-        let err = reveal_schedule(&commitment, &seed, wrong_epoch, commitment.reveal_after_slot)
-            .expect_err("should reject epoch mismatch");
+        let err = reveal_schedule(
+            &commitment,
+            &seed,
+            wrong_epoch,
+            commitment.reveal_after_slot,
+        )
+        .expect_err("should reject epoch mismatch");
 
         assert_eq!(err, ScheduleError::EpochMismatch);
     }

@@ -224,8 +224,8 @@ Passed locally:
 Evidence:
 
 - `docs/DNA_X402_MONITORING_WIRING_EVIDENCE.md`
-- `G:\DNA x402\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
-- `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
+- `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`
+- `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
 
 Post-Boss-4 regression checks passed:
 
@@ -250,8 +250,8 @@ Telegram external route:
 - script: `npm --prefix x402 run monitoring:test:telegram`
 - 30-minute status script: `npm --prefix x402 run monitoring:telegram:status -- --period=30m`
 - daily status script: `npm --prefix x402 run monitoring:telegram:status -- --period=24h`
-- evidence pattern: `G:\DNA x402\reports\monitoring\<timestamp>-telegram-route`
-- passed evidence: `G:\DNA x402\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
+- evidence pattern: `<repo-root>\reports\monitoring\<timestamp>-telegram-route`
+- passed evidence: `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json`
 
 `X402MonitoringRouteTest`, `X402EmergencyPauseActive`, `X402PiiBlock`, and `X402BackupFailure` were delivered to Telegram and human-confirmed.
 
@@ -265,7 +265,7 @@ Operator assignment file:
 
 - `docs/DNA_X402_OPERATOR_ASSIGNMENTS.md`
 
-Private-pilot primary roles are assigned to Saulius:
+Private-pilot primary roles are assigned to sls_0x:
 
 - incident commander
 - emergency pause operator

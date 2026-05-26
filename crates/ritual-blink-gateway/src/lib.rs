@@ -87,7 +87,7 @@ pub struct X402PaymentIntent {
     pub intent_hash: [u8; 32],
     pub resource_hash: [u8; 32],
     pub price_lamports: u64,
-    pub payer_hash: [u8; 32],  // SHA256(payer_pubkey), NOT raw pubkey
+    pub payer_hash: [u8; 32], // SHA256(payer_pubkey), NOT raw pubkey
     pub nonce: [u8; 32],
     pub created_at_unix: u64,
 }
@@ -98,15 +98,15 @@ pub struct RitualCeremonyLayout {
     pub instruction_names: Vec<String>,
     pub x402_intent_hash: [u8; 32],
     pub ritual_type: u8,
-    pub memo_content: String,  // 64-char hex of intent_hash
+    pub memo_content: String, // 64-char hex of intent_hash
     pub hook_program: String,
     pub ritual_gate_program: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct HookVerdictCapsule {
-    pub verdict_byte: u8,       // 0x01 = accepted
-    pub hook_hash: [u8; 32],    // SHA256("dark_null_v1_hook_verdict" || mint || amount)
+    pub verdict_byte: u8,          // 0x01 = accepted
+    pub hook_hash: [u8; 32],       // SHA256("dark_null_v1_hook_verdict" || mint || amount)
     pub capsule_bytes_hex: String, // hex of [verdict_byte][hook_hash] — 66 chars
     pub mint: String,
     pub amount: u64,
@@ -207,13 +207,7 @@ pub fn create_x402_intent(
 
     let intent_hash = sha256_domain(
         b"dark-null-x402-intent-v1",
-        &[
-            resource_hash,
-            &price_le,
-            &payer_hash,
-            nonce,
-            &ts_le,
-        ],
+        &[resource_hash, &price_le, &payer_hash, nonce, &ts_le],
     );
 
     X402PaymentIntent {
@@ -258,10 +252,7 @@ pub fn build_ceremony_layout(
 /// capsule_bytes[0] = 0x01, capsule_bytes[1..33] = hook_hash
 pub fn compute_hook_verdict(mint_bytes: &[u8; 32], amount: u64) -> HookVerdictCapsule {
     let amount_le = amount.to_le_bytes();
-    let hook_hash = sha256_domain(
-        b"dark_null_v1_hook_verdict",
-        &[mint_bytes, &amount_le],
-    );
+    let hook_hash = sha256_domain(b"dark_null_v1_hook_verdict", &[mint_bytes, &amount_le]);
 
     let mut raw = [0u8; 33];
     raw[0] = HOOK_VERDICT_PREFIX; // 0x01
@@ -294,10 +285,7 @@ pub fn verify_hook_verdict(
 
     // Recompute and compare hook_hash
     let amount_le = amount.to_le_bytes();
-    let expected_hash = sha256_domain(
-        b"dark_null_v1_hook_verdict",
-        &[mint_bytes, &amount_le],
-    );
+    let expected_hash = sha256_domain(b"dark_null_v1_hook_verdict", &[mint_bytes, &amount_le]);
 
     if capsule.hook_hash != expected_hash {
         return Err(RitualBlinkError::InvalidHookVerdict);
@@ -401,10 +389,7 @@ pub fn chain_blink_receipt(
 
 /// Generates a stubbed BlinkPostResponse (in production would return base64 Solana tx).
 /// Includes ceremony description and confirms x402 intent hash is in memo.
-pub fn build_blink_post_response(
-    ceremony: &RitualCeremonyLayout,
-    slot: u64,
-) -> BlinkPostResponse {
+pub fn build_blink_post_response(ceremony: &RitualCeremonyLayout, slot: u64) -> BlinkPostResponse {
     // In production this would be a base64-encoded serialized Solana transaction.
     // Here we produce a deterministic stub that encodes key ceremony metadata.
     let stub_payload = format!(
@@ -423,8 +408,7 @@ pub fn build_blink_post_response(
         x402 intent hash bound in SplMemo: {}. \
         HookVerdict capsule will be emitted on-chain upon confirmation. \
         devnet only — not audited.",
-        ceremony.instruction_count,
-        ceremony.memo_content,
+        ceremony.instruction_count, ceremony.memo_content,
     );
 
     BlinkPostResponse {
@@ -449,9 +433,7 @@ pub fn verify_payer_match(
 }
 
 /// Checks ceremony layout has exactly 5 instructions with correct names.
-pub fn validate_ceremony_layout(
-    layout: &RitualCeremonyLayout,
-) -> Result<(), RitualBlinkError> {
+pub fn validate_ceremony_layout(layout: &RitualCeremonyLayout) -> Result<(), RitualBlinkError> {
     if layout.instruction_count != 5 || layout.instruction_names.len() != 5 {
         return Err(RitualBlinkError::InvalidCeremonyLayout);
     }
@@ -470,7 +452,10 @@ pub fn validate_ceremony_layout(
         }
     }
 
-    if !layout.instruction_names.contains(&"VerifyRitualShape".to_string()) {
+    if !layout
+        .instruction_names
+        .contains(&"VerifyRitualShape".to_string())
+    {
         return Err(RitualBlinkError::MissingRitualGate);
     }
 
@@ -798,7 +783,10 @@ mod tests {
         assert_eq!(summary["network"], "devnet");
         assert!(summary["components_combined"].is_array());
         assert_eq!(summary["components_combined"].as_array().unwrap().len(), 6);
-        assert!(!summary["receipt"]["receipt_hash"].as_str().unwrap().is_empty());
+        assert!(!summary["receipt"]["receipt_hash"]
+            .as_str()
+            .unwrap()
+            .is_empty());
         assert_eq!(summary["chain"]["chain_length"], 1);
     }
 
@@ -890,7 +878,10 @@ mod tests {
         // Step 11: generate evidence summary and verify chain integrity
         let evidence = generate_evidence_summary(&receipt2, &chain2);
         assert_eq!(evidence["chain"]["chain_length"], 2);
-        assert!(!evidence["receipt"]["receipt_hash"].as_str().unwrap().is_empty());
+        assert!(!evidence["receipt"]["receipt_hash"]
+            .as_str()
+            .unwrap()
+            .is_empty());
 
         // Step 12: build blink post response
         let post_resp = build_blink_post_response(&ceremony, slot);
@@ -901,7 +892,7 @@ mod tests {
     }
 }
 
-// MOONSHOT EVIDENCE:
+// FRONTIER EDGE EVIDENCE:
 // This crate is the first implementation combining:
 // 1. Solana Actions/Blinks (live production standard, Phantom-native)
 // 2. x402 V2 payment binding (35M+ Solana transactions on x402 as of March 2026)

@@ -28,9 +28,6 @@ export function assertWorkspacePath(filePath) {
   if (resolved !== WORKSPACE_ROOT && !resolved.startsWith(root)) {
     throw new Error(`path escapes workspace: ${resolved}`);
   }
-  if (process.platform === "win32" && !resolved.toLowerCase().startsWith("g:\\dna x402\\")) {
-    throw new Error(`path must stay on G:\\DNA x402: ${resolved}`);
-  }
   return resolved;
 }
 

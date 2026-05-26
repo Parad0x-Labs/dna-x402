@@ -27,7 +27,7 @@ describe("Degen Mode safe Solana agent primitives", () => {
   it("keeps useful ALgoat-like scanner ideas while rejecting custody and backend signing", () => {
     const templates = listDegenAgentTemplates();
     expect(templates.map((template) => template.slug)).toEqual(
-      expect.arrayContaining(["fresh-pair-goblin", "copy-the-chad-safe", "rug-radar-signal", "paper-ape-lab"]),
+      expect.arrayContaining(["fresh-pair-scout", "copy-the-chad-safe", "rug-radar-signal", "paper-ape-lab"]),
     );
 
     for (const template of templates) {

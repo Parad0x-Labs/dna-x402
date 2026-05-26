@@ -1,4 +1,4 @@
-﻿# DEGEN SWARM DEMO — ELI5
+# DEGEN SWARM DEMO — ELI5
 
 > Dark Null turns chain garbage into paid jobs.
 
@@ -13,7 +13,7 @@ The **Degen Swarm Economy** is a set of 12 on-chain primitives that turn protoco
 **You can earn by cleaning expired ghosts.**
 Solana accounts that have expired (scratch slots, chaff accounts, empty token accounts) still hold rent.
 A keeper — anyone with a bot — can close them and earn a bounty from the reclaimed lamports.
-The Rent Goblin Swarm crate finds these targets and builds a sweep plan.
+The Rent Sweeper Swarm crate finds these targets and builds a sweep plan.
 
 **You can save by routing through colder writable accounts.**
 Every Solana transaction needs writable accounts. Hot accounts (used by everyone) inflate priority fees.
@@ -41,7 +41,7 @@ The message itself is never stored on-chain — only its hash. CASH was the firs
 
 | Crate | What it does |
 |---|---|
-| `rent-goblin-swarm` | Find and sweep expired accounts for bounties |
+| `rent-sweeper-swarm` | Find and sweep expired accounts for bounties |
 | `bounty-blink-jobs` | Keeper tasks as clickable Blinks |
 | `cold-route-fee-sniper` | Choose cheapest writable-account routes |
 | `no-deploy-token-launcher` | Token-2022 launch plans, no custom program needed |

@@ -416,7 +416,7 @@ impl StrictX402Server {
 
 // ─── Evidence schema ──────────────────────────────────────────────────────────
 
-/// JSON schema written to `dist/alien-final/evidence/x402_devnet_real.json`.
+/// JSON schema written to `dist/frontier-final/evidence/x402_devnet_real.json`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct X402DevnetEvidenceJson {
     pub commit: String,

@@ -10,18 +10,17 @@
 // 6. Produce redacted public receipt
 // Output: dist/null-flywheel/NULL_FLYWHEEL_SIM.json
 
-use sha2::{Sha256, Digest};
-use std::fs;
 use null_flywheel_core::{
-    FlywheelConfig, PremiumFeeEvent, SourceKind,
-    compute_allocation, add_fee_event, accumulated_balance, threshold_met,
-    daily_cap_remaining, plan_execution, split_into_chunks,
+    accumulated_balance, add_fee_event, compute_allocation, daily_cap_remaining, plan_execution,
+    split_into_chunks, threshold_met, FlywheelConfig, PremiumFeeEvent, SourceKind,
 };
 use null_flywheel_randomizer::{commit_next_schedule, reveal_schedule, verify_schedule};
 use null_flywheel_receipts::{
-    build_fee_source_root, build_execution_receipt, verify_execution_receipt,
-    redacted_public_receipt,
+    build_execution_receipt, build_fee_source_root, redacted_public_receipt,
+    verify_execution_receipt,
 };
+use sha2::{Digest, Sha256};
+use std::fs;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -49,9 +48,9 @@ fn main() {
     //   Production values: min ~$50, max_single ~$250, max_daily ~$1000.
     // -----------------------------------------------------------------------
     let mut config = FlywheelConfig::default();
-    config.min_execution_lamports = 1_000_000;  // 0.001 SOL for sim
-    config.max_single_lamports    = 5_000_000;  // 0.005 SOL for sim
-    config.max_daily_lamports     = 20_000_000; // 0.02  SOL for sim
+    config.min_execution_lamports = 1_000_000; // 0.001 SOL for sim
+    config.max_single_lamports = 5_000_000; // 0.005 SOL for sim
+    config.max_daily_lamports = 20_000_000; // 0.02  SOL for sim
 
     let epoch: u64 = 42;
 
@@ -62,13 +61,13 @@ fn main() {
     //   Hint tier gross:       500_000 lamports × 5 bps =   250 lamports each
     //   Totals: 1_000_000 + 125_000 + 25_000 = 1_150_000 lamports allocated
     // -----------------------------------------------------------------------
-    let signal_gross:  u64 = 2_000_000;
-    let risk_gross:    u64 = 1_000_000;
-    let hint_gross:    u64 =   500_000;
+    let signal_gross: u64 = 2_000_000;
+    let risk_gross: u64 = 1_000_000;
+    let hint_gross: u64 = 500_000;
 
     let signal_count: usize = 1000;
-    let risk_count:   usize =  250;
-    let hint_count:   usize =  100;
+    let risk_count: usize = 250;
+    let hint_count: usize = 100;
 
     let mut events: Vec<PremiumFeeEvent> = Vec::new();
 
@@ -95,27 +94,27 @@ fn main() {
     }
 
     let total_events = events.len();
-    let balance      = accumulated_balance(&events, &config);
+    let balance = accumulated_balance(&events, &config);
     let threshold_ok = threshold_met(&events, &config);
-    let cap_left     = daily_cap_remaining(&events, &config, epoch);
+    let cap_left = daily_cap_remaining(&events, &config, epoch);
 
     // Per-kind allocation sanity
     let signal_alloc_each = compute_allocation(&config, signal_gross).allocated_lamports;
-    let risk_alloc_each   = compute_allocation(&config, risk_gross).allocated_lamports;
-    let hint_alloc_each   = compute_allocation(&config, hint_gross).allocated_lamports;
+    let risk_alloc_each = compute_allocation(&config, risk_gross).allocated_lamports;
+    let hint_alloc_each = compute_allocation(&config, hint_gross).allocated_lamports;
 
     let signal_alloc_total = signal_alloc_each * signal_count as u64;
-    let risk_alloc_total   = risk_alloc_each   * risk_count   as u64;
-    let hint_alloc_total   = hint_alloc_each   * hint_count   as u64;
+    let risk_alloc_total = risk_alloc_each * risk_count as u64;
+    let hint_alloc_total = hint_alloc_each * hint_count as u64;
 
     // -----------------------------------------------------------------------
     // Step 2 — Commit randomized schedule
     // -----------------------------------------------------------------------
     let seed = h(b"sim-seed", b"epoch-42-schedule");
 
-    let window_slots      = 10_000u64;
+    let window_slots = 10_000u64;
     let committed_at_slot = 400_000_000u64;
-    let revealed_at_slot  = 400_015_000u64; // > reveal_after_slot (400_010_000)
+    let revealed_at_slot = 400_015_000u64; // > reveal_after_slot (400_010_000)
 
     let commitment = commit_next_schedule(&seed, epoch, window_slots, committed_at_slot)
         .expect("commit_next_schedule must succeed");
@@ -133,14 +132,10 @@ fn main() {
     // -----------------------------------------------------------------------
     let epoch_used: u64 = 0; // fresh epoch for sim
 
-    let plan = plan_execution(&config, balance, epoch_used)
-        .expect("plan_execution must succeed");
+    let plan = plan_execution(&config, balance, epoch_used).expect("plan_execution must succeed");
 
-    let chunks_json: Vec<serde_json::Value> = plan
-        .chunks
-        .iter()
-        .map(|c| serde_json::json!(c))
-        .collect();
+    let chunks_json: Vec<serde_json::Value> =
+        plan.chunks.iter().map(|c| serde_json::json!(c)).collect();
 
     // Also demonstrate split_into_chunks directly
     let raw_chunks = split_into_chunks(balance, config.max_single_lamports);
@@ -148,11 +143,7 @@ fn main() {
     // -----------------------------------------------------------------------
     // Step 5 — Build fee source root (first 10 event hashes as sample)
     // -----------------------------------------------------------------------
-    let sample_hashes: Vec<[u8; 32]> = events
-        .iter()
-        .take(10)
-        .map(|e| e.event_hash)
-        .collect();
+    let sample_hashes: Vec<[u8; 32]> = events.iter().take(10).map(|e| e.event_hash).collect();
 
     let fee_source = build_fee_source_root(&sample_hashes, epoch);
 
@@ -284,15 +275,12 @@ fn main() {
     // Step 9 — Write output
     // -----------------------------------------------------------------------
     let out_dir = "dist/null-flywheel";
-    fs::create_dir_all(out_dir)
-        .expect("failed to create dist/null-flywheel directory");
+    fs::create_dir_all(out_dir).expect("failed to create dist/null-flywheel directory");
 
     let out_path = format!("{}/NULL_FLYWHEEL_SIM.json", out_dir);
-    let json_str = serde_json::to_string_pretty(&output)
-        .expect("failed to serialize output JSON");
+    let json_str = serde_json::to_string_pretty(&output).expect("failed to serialize output JSON");
 
-    fs::write(&out_path, &json_str)
-        .expect("failed to write NULL_FLYWHEEL_SIM.json");
+    fs::write(&out_path, &json_str).expect("failed to write NULL_FLYWHEEL_SIM.json");
 
     println!("NULL_FLYWHEEL_SIM complete → {}", out_path);
     println!("  total_events:           {}", total_events);
@@ -300,7 +288,10 @@ fn main() {
     println!("  threshold_met:          {}", threshold_ok);
     println!("  schedule_verified:      {}", schedule_verified);
     println!("  receipt_valid:          {}", receipt_valid);
-    println!("  all_steps_proven:       {}", threshold_ok && schedule_verified && receipt_valid);
+    println!(
+        "  all_steps_proven:       {}",
+        threshold_ok && schedule_verified && receipt_valid
+    );
     println!("  mainnet_ready:          false");
     println!("  production_claim:       false");
 }

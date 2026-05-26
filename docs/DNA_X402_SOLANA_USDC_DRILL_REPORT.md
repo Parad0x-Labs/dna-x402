@@ -43,7 +43,7 @@ Fill these before staging starts:
 | Seller/recipient wallet | `ETdR88B6ZVeBu3L5fNAmj9PbXEifSEQjASAx9w4YtCbb` |
 | Treasury public wallet | `8fWzmPQhRMnkZo6k26XaywAFgbhHF6FRyTnBwZ6P3N9u` |
 | Pause/operator wallet | Public Beta operator assigned; final wallet/account reference kept outside public repo |
-| Emergency contact | `DNA x402 Ops Alerts` / Saulius |
+| Emergency contact | `DNA x402 Ops Alerts` / sls_0x |
 | Staging URL | `127.0.0.1` ephemeral private drill server |
 | Solana cluster | `mainnet-beta` |
 | RPC URL | `https://api.mainnet-beta.solana.com` for completed strict proof; use `HELIUS_RPC` or `HELIUS_API_KEY` for any longer mainnet drill. |
@@ -134,7 +134,7 @@ These values applied only to the strict Solana USDC drill. Public Beta low-risk 
 | Allowlisted wallets configured | `PASSED` | Buyer signer allowlist enforced. Non-allowlisted signer proof rejected in strict report. |
 | Low-risk listing category | `PASSED` | Used core `/resource` paid API sandbox listing only. |
 | Receipt verification works | `LOCAL_PASSED` | Receipt tests and paid retry tests pass. |
-| Rollback/pause operator assigned | `ASSIGNED_PUBLIC_BETA` | Saulius assigned as Public Beta emergency pause operator in `docs/DNA_X402_OPERATOR_ASSIGNMENTS.md`; public-production backup remains pending. |
+| Rollback/pause operator assigned | `ASSIGNED_PUBLIC_BETA` | sls_0x assigned as Public Beta emergency pause operator in `docs/DNA_X402_OPERATOR_ASSIGNMENTS.md`; public-production backup remains pending. |
 
 ## Required Runtime Config
 
@@ -211,7 +211,7 @@ Notes:
 | Seller allowlisted wallet | `ETdR88B6ZVeBu3L5fNAmj9PbXEifSEQjASAx9w4YtCbb` |
 | Treasury public wallet | `8fWzmPQhRMnkZo6k26XaywAFgbhHF6FRyTnBwZ6P3N9u` |
 | Pause/operator wallet | `Public Beta operator assigned; final wallet/account reference kept outside public repo` |
-| Emergency pause contact | `DNA x402 Ops Alerts / Saulius` |
+| Emergency pause contact | `DNA x402 Ops Alerts / sls_0x` |
 | Recipient wallet | `ETdR88B6ZVeBu3L5fNAmj9PbXEifSEQjASAx9w4YtCbb` |
 | Amount | `50000` atomic USDC (`0.05 USDC`) |
 | Max transaction amount | `100000` atomic USDC (`0.10 USDC`) |
@@ -224,7 +224,7 @@ Notes:
 | Receipt verification result | `PASSED` |
 | Paid retry result | `PASSED` |
 | Emergency pause result | `Covered by server mayhem; not toggled during live dust transfer run.` |
-| Audit export path | `G:\DNA x402\reports\solana-usdc-drill\2026-05-15T10-56-38-257Z.json` |
+| Audit export path | `<repo-root>\reports\solana-usdc-drill\2026-05-15T10-56-38-257Z.json` |
 | Screenshots/log snippets | `See report JSON and tx links below.` |
 | Failures and fixes | First run had RPC-rate-limited semantic negative checks; runner was tightened to retry RPC-limited checks until exact semantic errors were proven. |
 
@@ -239,7 +239,7 @@ Notes:
 
 Latest strict report:
 
-- Report path: `G:\DNA x402\reports\solana-usdc-drill\2026-05-15T10-56-38-257Z.json`
+- Report path: `<repo-root>\reports\solana-usdc-drill\2026-05-15T10-56-38-257Z.json`
 - Valid payment tx: `https://solscan.io/tx/5iDsqW4FnkocW9Tak2M1u47nMJZpy9Z1yYdv3YjQnVdcWZ2PY2cZGxqevmGzbUQ2TwWmab9pix6tMPcWZ9qZsQcA`
 - Non-allowlisted signer tx: `https://solscan.io/tx/47LrLGdArv1KcRSd1iduQ9zEYXB6PD24ZDD1Tc3Y2Y5taJtpEmdvLNWHkCJ2LN4gqyqDp5DAD97jmtiwCfGeNf8f`
 - Receipt ID: `d3c34b07-2b19-411f-8c6e-0d04aa77c1f9`
@@ -262,7 +262,7 @@ Status: `PUBLIC_BETA_DIRECT_SPLIT_DUST_PROOF_PASSED`
 
 Latest direct split report:
 
-- Report path: `G:\DNA x402\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json`
+- Report path: `<repo-root>\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json`
 - RPC source: `HELIUS_API_KEY`
 - RPC high-throughput: `true`
 - Buyer wallet: `CmGCjBZLqHZzeBk8nTxe4CgrJcXLJz3BBvAEMni3qezv`

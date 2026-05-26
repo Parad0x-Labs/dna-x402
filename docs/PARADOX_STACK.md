@@ -7,7 +7,7 @@
 | [`dna-x402`](https://github.com/Parad0x-Labs/dna-x402) | fast payment rail | x402 payment flows, paid APIs, signed receipts, anchoring | privacy settlement protocol |
 | [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) | privacy settlement protocol | optimistic-ZK settlement, challengeable privacy flows | machine-speed x402 hot path |
 | [`liquefy-openclaw-integration`](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) | compression + audit layer | trace vaults, verified restore, audit trails, agent data protection | payment rail or settlement protocol |
-| **Dark Null Solana Alien Tek** (this repo) | SVM-native privacy primitives | sharded nullifier banks, ALT fog, compressed receipts, receipt-spend notes, Jito bundle cloak, leader-aware routing, ephemeral PDA chaff | full ZK settlement (Dark Null Protocol) |
+| **Dark Null Solana Frontier Research** (this repo) | SVM-native privacy primitives | sharded nullifier banks, ALT fog, compressed receipts, receipt-spend notes, Jito bundle cloak, leader-aware routing, ephemeral PDA chaff | full ZK settlement (Dark Null Protocol) |
 
 ## Fast Routing Guide
 
@@ -15,7 +15,7 @@
 - Choose **Dark Null Protocol** for privacy-sensitive settlement with a different latency profile.
 - Choose **Liquefy** for compression, auditability, and verified recovery of AI/agent artifacts.
 
-## Alien Tek Research
+## Frontier Research
 
 Deep research across forgotten e-cash, cryptographic holy grails, proof aggregation, MPC primitives, and UTXO privacy systems. Key findings:
 
@@ -26,9 +26,9 @@ Deep research across forgotten e-cash, cryptographic holy grails, proof aggregat
 - **Snowblind** — CRYPTO 2023, threshold blind signatures in pairing-free groups with statistical blindness even if all signers collude.
 - **Penumbra ZSwap** — threshold homomorphic flow encryption for private DEX batch clearing, no individual order ever revealed. Most sophisticated private DEX on any PoS chain.
 
-[`docs/DARK_NULL_ALIEN_TEK.md`](./docs/DARK_NULL_ALIEN_TEK.md) — cryptographic primitive citations and precedence order.
+[`docs/DARK_NULL_FRONTIER_RESEARCH.md`](./docs/DARK_NULL_FRONTIER_RESEARCH.md) — cryptographic primitive citations and precedence order.
 
-[`docs/SOLANA_ALIEN_TEK.md`](./docs/SOLANA_ALIEN_TEK.md) — Solana-native implementations: ALT fog, sharded nullifier banks, compressed receipts, receipt-spend notes, relay router, bundle cloak, chaff, swarm capsule, sealed fee quotes.
+[`docs/SOLANA_FRONTIER_RESEARCH.md`](./docs/SOLANA_FRONTIER_RESEARCH.md) — Solana-native implementations: ALT fog, sharded nullifier banks, compressed receipts, receipt-spend notes, relay router, bundle cloak, chaff, swarm capsule, sealed fee quotes.
 
 ## Frontier Convergence
 

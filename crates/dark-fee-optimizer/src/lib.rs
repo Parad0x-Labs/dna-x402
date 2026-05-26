@@ -177,9 +177,8 @@ pub fn estimate_deployment_cost(
 /// Batched: 1 Merkle root commit per RECEIPTS_PER_CHECKPOINT receipts.
 pub fn batch_receipt_savings(receipt_count: u64) -> BatchReceiptSaving {
     let on_chain_writes_naive = receipt_count;
-    let on_chain_writes_batched = receipt_count
-        .saturating_add(RECEIPTS_PER_CHECKPOINT - 1)
-        / RECEIPTS_PER_CHECKPOINT;
+    let on_chain_writes_batched =
+        receipt_count.saturating_add(RECEIPTS_PER_CHECKPOINT - 1) / RECEIPTS_PER_CHECKPOINT;
     let saves_writes = on_chain_writes_naive.saturating_sub(on_chain_writes_batched);
     let saves_lamports = saves_writes.saturating_mul(BASE_FEE_LAMPORTS);
     BatchReceiptSaving {
@@ -193,8 +192,7 @@ pub fn batch_receipt_savings(receipt_count: u64) -> BatchReceiptSaving {
 
 /// Returns total CU savings ratio for p-token on TransferChecked (~0.982).
 pub fn p_token_cu_savings_ratio() -> f32 {
-    let saved = SPL_TOKEN_TRANSFER_CHECKED_CU_LEGACY
-        .saturating_sub(P_TOKEN_TRANSFER_CHECKED_CU);
+    let saved = SPL_TOKEN_TRANSFER_CHECKED_CU_LEGACY.saturating_sub(P_TOKEN_TRANSFER_CHECKED_CU);
     saved as f32 / SPL_TOKEN_TRANSFER_CHECKED_CU_LEGACY as f32
 }
 
@@ -202,8 +200,8 @@ pub fn p_token_cu_savings_ratio() -> f32 {
 /// Uses a simple model: each transfer saves (legacy_cu - p_token_cu) * lamports_per_cu.
 /// We approximate 1 lamport per CU for priority-fee estimation.
 pub fn sol_saved_per_million_transfers() -> u64 {
-    let cu_saved_per_transfer = SPL_TOKEN_TRANSFER_CHECKED_CU_LEGACY
-        .saturating_sub(P_TOKEN_TRANSFER_CHECKED_CU);
+    let cu_saved_per_transfer =
+        SPL_TOKEN_TRANSFER_CHECKED_CU_LEGACY.saturating_sub(P_TOKEN_TRANSFER_CHECKED_CU);
     // 1 lamport per CU is a rough upper bound for priority fees;
     // even at this conservative estimate, savings are substantial.
     cu_saved_per_transfer.saturating_mul(1_000_000)
@@ -236,7 +234,11 @@ mod tests {
         assert!(!profiles.is_empty());
         assert_eq!(profiles.len(), 3);
         for p in &profiles {
-            assert!(p.cu_savings_pct > 90.0, "expected >90% savings for {}", p.instruction);
+            assert!(
+                p.cu_savings_pct > 90.0,
+                "expected >90% savings for {}",
+                p.instruction
+            );
         }
     }
 
