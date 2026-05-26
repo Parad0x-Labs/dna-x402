@@ -1,0 +1,17 @@
+[package]
+name = "dark-x402-e2e-demo"
+version = "0.1.0"
+edition = "2021"
+description = "End-to-end demo: HTTP 402 payment → receipt → BN254 nullifier → dark_nullifier_banks submission"
+
+[[bin]]
+name = "x402-e2e-demo"
+path  = "src/main.rs"
+
+[dependencies]
+dark-x402-core             = { path = "../dark-x402-core" }
+dark-x402-nullifier-bridge = { path = "../dark-x402-nullifier-bridge" }
+dark-groth16-core          = { path = "../dark-groth16-core" }
+sha2                       = "0.10"
+solana-program             = "=1.18.26"
+hex                        = "0.4"
