@@ -1,0 +1,13 @@
+[package]
+name = "cold-route-fee-sniper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "cold_route_fee_sniper"
+path = "src/lib.rs"
+
+[dependencies]
+sha2 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

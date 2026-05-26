@@ -1,0 +1,145 @@
+[workspace]
+members = [
+    "programs/receipt_anchor",
+    "programs/dark_nullifier_banks",
+    "programs/dark_compressed_receipts",
+    "programs/dark_chaff",
+    "programs/dark_scratch",
+    "crates/alt-fog-router",
+    "crates/dark-poseidon-tree",
+    "crates/receipt-spend",
+    "crates/dark-relay-router",
+    "crates/dark-bundle-cloak",
+    "crates/swarm-capsule",
+    "crates/sealed-fee-quotes",
+    "crates/state-tier-router",
+    "crates/rent-blast-radius",
+    "crates/receipt-rollup-lite",
+    "crates/dark-macaroons",
+    "crates/ghost-spl-ledger",
+    "crates/lock-scheduler",
+    "crates/shape-pool",
+    "crates/compute-coupon",
+    "crates/useful-chaff-planner",
+    "crates/intent-capsule",
+    "crates/dark-module-abi",
+    "crates/dark-capability-registry",
+    "crates/caveat-engine",
+    "crates/dark-session-netting",
+    "crates/account-fee-heatmap",
+    "crates/nullifier-bank-planner",
+    "crates/compute-coupon-market",
+    "crates/alt-fog-vault",
+    "crates/poison-receipts",
+    "crates/copy-sniper-sim",
+    "crates/strategy-cloak-delay",
+    "crates/alpha-leak-meter",
+    "crates/agent-kill-switch",
+    "crates/dark-blink-intent",
+    "crates/rent-bounty-hunter",
+    "crates/session-loss-fuse",
+    "crates/degen-api-meter",
+    "crates/dark-tip-notes",
+    "crates/pvp-prediction-receipts",
+    "crates/dark-gift-notes",
+    "crates/dispute-receipt-oracle",
+    "crates/feature-commit-reveal",
+    "crates/model-output-receipts",
+    "crates/public-puzzle-generator",
+    "crates/telegram-command-receipts",
+    # ALIEN_FINAL_BOSS — Phase 1 (Poseidon / hash parity)
+    "crates/dark-hash-core",
+    # ALIEN_FINAL_BOSS — Phase 2 (ZK proof scaffold)
+    "crates/dark-proof-core",
+    "crates/dark-proof-receipts",
+    "programs/dark_proof_gate_lite",
+    # ALIEN_FINAL_BOSS — Phase 3 (Bonsol / RISC0)
+    "crates/dark-batch-auditor-core",
+    "crates/dark-bonsol-adapter",
+    "crates/dark-risc0-adapter",
+    # ALIEN_FINAL_BOSS — Phase 4 (x402 flow)
+    "crates/dark-x402-core",
+    "crates/dark-x402-server-mock",
+    "crates/dark-x402-client-mock",
+    "crates/dark-x402-devnet-verify",
+    # ALIEN_FINAL_BOSS — Phase 5 (ZK compression)
+    "crates/dark-compression-core",
+    "crates/dark-compressed-receipt-ledger",
+    # ALIEN_FINAL_BOSS — Phase 8 (demo)
+    "crates/dark-alien-final-demo",
+    # TRUE_ALIEN_PRIMITIVES — 10 new Dark Null product primitives
+    "crates/agent-permission-notes",
+    "crates/spend-shadows",
+    "crates/agent-flight-recorder",
+    "crates/receipt-souls",
+    "crates/alpha-capsules",
+    "crates/chaff-economy",
+    "crates/session-note-channel",
+    "crates/onchain-puzzle-compiler",
+    "crates/no-custody-attestation",
+    "crates/roadmap-commitments",
+    # TRUE_ALIEN_DEVNET_DEMO — devnet unicorn demo
+    "crates/true-alien-devnet-demo",
+    # DARK_NULL_PUBLIC_WOW_DEMO — clickable public demo "AI agent spent without a wallet"
+    "crates/rogue-agent-demo-core",
+    # DARK_NULL_TRANSACTION_RITUAL_VM_V1
+    "crates/ritual-grammar",
+    "crates/ritual-proof-capsule",
+    "crates/ritual-shape-market",
+    "crates/cpi-firewall",
+    "crates/account-lock-alchemy",
+    "crates/rent-delta-proof",
+    "crates/ritual-compiler",
+    "programs/dark_ritual_gate",
+    "crates/ritual-vm-demo",
+    "crates/dark-ritual-gate-verify",
+    # DARK_NULL_RITUAL_BOUND_TOKEN_V1 — Token-2022 token with ritual bouncer
+    "programs/dark_ritual_transfer_hook",
+    "crates/ritual-token-factory",
+    "crates/ritual-precompile-braid",
+    "crates/ritual-memo-capsule",
+    "crates/ritual-bound-token-demo",
+    # DARK_NULL_DEGEN_SWARM_ECONOMY_V1
+    "crates/rent-goblin-swarm",
+    "crates/bounty-blink-jobs",
+    "crates/cold-route-fee-sniper",
+    "crates/no-deploy-token-launcher",
+    "crates/scratch-slot-leasing",
+    "crates/shape-pool-pass",
+    "crates/useful-chaff-market",
+    "crates/copy-sniper-trap-board",
+    "crates/ritual-puzzle-market",
+    "crates/fee-cashback-receipts",
+    "crates/sleep-earn-watcher",
+    "crates/degen-scoreboard",
+    "crates/degen-swarm-demo",
+    # DARK_NULL_FRONTIER_EDGE_V1 — frontier edge from research report
+    "crates/dark-alpha-receipts",
+    "crates/dark-swarm-capsule",
+    "crates/dark-compressed-leaves",
+    "crates/dark-meme-risk",
+    "crates/dark-fee-optimizer",
+    # MOONSHOT — ritual-blink-gateway: Blinks + x402 + Token-2022 Hook + HookVerdict receipt
+    "crates/ritual-blink-gateway",
+    # DARK_NULL_FRONTIER_EDGE_V1 — demo binary exercising all 6 frontier crates
+    "crates/dark-frontier-demo",
+]
+resolver = "2"
+
+[workspace.dependencies]
+solana-program      = "=1.18.26"
+solana-sdk          = "=1.18.26"
+solana-client       = "=1.18.26"
+solana-program-test = "=1.18.26"
+tokio               = { version = "1", features = ["full"] }
+serde               = { version = "1", features = ["derive"] }
+serde_json          = "1"
+ed25519-dalek       = "1"
+sha2                = "0.10"
+rand                = "0.8"
+reqwest             = { version = "0.12", features = ["json"] }
+thiserror           = "1.0"
+spl-token-2022      = { version = "3", features = ["no-entrypoint"] }
+spl-transfer-hook-interface = "0.6"
+spl-tlv-account-resolution  = "0.6"
+spl-memo            = "4"

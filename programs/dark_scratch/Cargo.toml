@@ -1,0 +1,21 @@
+[package]
+name    = "dark-scratch"
+version = "0.1.0"
+edition = "2021"
+description = "Scratch PDA lifecycle: create/close/cleanup ephemeral accounts with rent bounty."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default       = []
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+thiserror      = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }

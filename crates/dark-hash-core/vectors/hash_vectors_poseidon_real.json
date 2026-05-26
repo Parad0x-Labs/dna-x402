@@ -1,0 +1,11 @@
+{
+  "backend": "poseidon-real",
+  "description": "Real Poseidon syscall vectors",
+  "status": "BLOCKED",
+  "blockers": [
+    "Requires solana_program::poseidon::hashv",
+    "BPF syscall only — not available in host-side tests",
+    "Feature poseidon-real is intentionally not compiled in this workspace"
+  ],
+  "vectors": []
+}

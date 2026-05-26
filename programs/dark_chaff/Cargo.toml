@@ -1,0 +1,21 @@
+[package]
+name    = "dark-chaff"
+version = "0.1.0"
+edition = "2021"
+description = "Ephemeral PDA chaff: creates 3–7 fake intent PDAs around a real action to poison chain analysis, then closes them after the epoch."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default       = []
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+thiserror      = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }

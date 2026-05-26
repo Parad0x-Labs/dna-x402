@@ -1,0 +1,28 @@
+[package]
+name = "rogue-agent-demo-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rogue_agent_demo_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rogue_wow_demo"
+path = "src/bin/rogue_wow_demo.rs"
+
+[[bin]]
+name = "rogue_steal_attempt_demo"
+path = "src/bin/rogue_steal_attempt_demo.rs"
+
+[dependencies]
+agent-permission-notes  = { path = "../agent-permission-notes" }
+spend-shadows           = { path = "../spend-shadows" }
+agent-flight-recorder   = { path = "../agent-flight-recorder" }
+receipt-souls           = { path = "../receipt-souls" }
+session-note-channel    = { path = "../session-note-channel" }
+no-custody-attestation  = { path = "../no-custody-attestation" }
+onchain-puzzle-compiler = { path = "../onchain-puzzle-compiler" }
+sha2        = { workspace = true }
+serde       = { workspace = true }
+serde_json  = { workspace = true }

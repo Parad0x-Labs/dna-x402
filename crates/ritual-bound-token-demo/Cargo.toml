@@ -1,0 +1,25 @@
+[package]
+name = "ritual-bound-token-demo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ritual_bound_token_devnet"
+path = "src/bin/ritual_bound_token_devnet.rs"
+
+[[bin]]
+name = "ritual_bound_token_live"
+path = "src/bin/ritual_bound_token_live.rs"
+
+[dependencies]
+sha2                    = { workspace = true }
+serde                   = { workspace = true }
+serde_json              = { workspace = true }
+solana-sdk              = { workspace = true }
+solana-client           = { workspace = true }
+ed25519-dalek           = { workspace = true }
+spl-token-2022          = { workspace = true }
+spl-transfer-hook-interface = { workspace = true }
+ritual-memo-capsule     = { path = "../ritual-memo-capsule" }
+ritual-precompile-braid = { path = "../ritual-precompile-braid" }
+ritual-token-factory    = { path = "../ritual-token-factory" }

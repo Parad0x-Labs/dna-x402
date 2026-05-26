@@ -1,0 +1,21 @@
+[package]
+name    = "dark-compressed-receipts"
+version = "0.1.0"
+edition = "2021"
+description = "On-chain receipt root management and single-use nullifier redemption for Dark Null compressed receipt protocol."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default       = []
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+thiserror      = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }

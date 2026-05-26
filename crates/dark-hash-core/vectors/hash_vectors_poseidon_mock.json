@@ -1,0 +1,7 @@
+{
+  "backend": "poseidon-mock",
+  "description": "Deterministic mock Poseidon vectors (NOT real Poseidon — SHA-256 with POSEIDON_MOCK prefix)",
+  "blockers": ["Real Poseidon requires BPF syscall environment (solana_program::poseidon::hashv)"],
+  "status": "mock-only",
+  "vectors": []
+}

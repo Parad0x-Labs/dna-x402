@@ -1,0 +1,16 @@
+[package]
+name = "dark-ritual-gate-verify"
+version = "0.1.0"
+edition = "2021"
+description = "Devnet live call to dark_ritual_gate — NOT_PRODUCTION"
+
+[[bin]]
+name = "ritual_gate_devnet_call"
+path = "src/bin/ritual_gate_devnet_call.rs"
+
+[dependencies]
+solana-sdk    = { workspace = true }
+solana-client = "=1.18.26"
+sha2          = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }

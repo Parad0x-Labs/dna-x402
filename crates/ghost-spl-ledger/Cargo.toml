@@ -1,0 +1,10 @@
+[package]
+name    = "ghost-spl-ledger"
+version = "0.1.0"
+edition = "2021"
+description = "Virtual SPL token ledger: internal balances as commitments, materialized as real ATAs only at exit."
+
+[dependencies]
+sha2       = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }

@@ -1,0 +1,11 @@
+[package]
+name    = "swarm-capsule"
+version = "0.1.0"
+edition = "2021"
+description = "Signed relayer capability capsule. Each swarm node carries its own cryptographic passport: repo commit, config hash, role bitmap, fee caps, custody denial flags."
+
+[dependencies]
+ed25519-dalek = { workspace = true }
+sha2          = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }

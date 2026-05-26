@@ -4640,6 +4640,16 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
 export async function startServer(config: X402Config = loadConfig()): Promise<void> {
   assertMainnetReadiness(config);
   const { app, context } = createX402App(config);
+  const withdrawLoopMsRaw = Number(process.env.NULL_TIP_WITHDRAW_LOOP_MS || "7000");
+  const withdrawLoopMs = Number.isFinite(withdrawLoopMsRaw) ? Math.max(1_000, Math.min(60_000, Math.floor(withdrawLoopMsRaw))) : 7_000;
+  if (config.nullTips?.withdrawAutoProcess && config.nullTips.withdrawMode !== "manual") {
+    setInterval(() => {
+      context.tipLedger.processPendingWithdrawals({ limit: 25 }).catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(`tip_withdraw_auto_process_error: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }, withdrawLoopMs).unref();
+  }
   await new Promise<void>((resolve) => {
     app.listen(config.port, () => {
       // eslint-disable-next-line no-console

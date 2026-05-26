@@ -1,0 +1,29 @@
+﻿[package]
+name = "degen-swarm-demo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "degen_swarm_demo"
+path = "src/bin/degen_swarm_demo.rs"
+
+[dependencies]
+sha2 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rent-goblin-swarm      = { path = "../rent-goblin-swarm" }
+bounty-blink-jobs      = { path = "../bounty-blink-jobs" }
+cold-route-fee-sniper  = { path = "../cold-route-fee-sniper" }
+no-deploy-token-launcher = { path = "../no-deploy-token-launcher" }
+scratch-slot-leasing   = { path = "../scratch-slot-leasing" }
+shape-pool-pass        = { path = "../shape-pool-pass" }
+useful-chaff-market    = { path = "../useful-chaff-market" }
+copy-sniper-trap-board = { path = "../copy-sniper-trap-board" }
+ritual-puzzle-market   = { path = "../ritual-puzzle-market" }
+fee-cashback-receipts  = { path = "../fee-cashback-receipts" }
+sleep-earn-watcher     = { path = "../sleep-earn-watcher" }
+degen-scoreboard       = { path = "../degen-scoreboard" }
+
+[lib]
+name = "degen_swarm_demo"
+path = "src/lib.rs"

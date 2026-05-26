@@ -1,0 +1,16 @@
+[package]
+name = "dark-hash-core"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["sha256-fallback"]
+sha256-fallback = ["dep:sha2"]
+poseidon-mock = []
+# poseidon-real = ["dep:solana-poseidon"]  # blocked: requires BPF runtime
+
+[dependencies]
+sha2 = { version = "0.10", optional = true }
+
+[dev-dependencies]
+sha2 = "0.10"

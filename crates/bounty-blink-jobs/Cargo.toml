@@ -1,0 +1,13 @@
+[package]
+name = "bounty-blink-jobs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "bounty_blink_jobs"
+path = "src/lib.rs"
+
+[dependencies]
+sha2 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

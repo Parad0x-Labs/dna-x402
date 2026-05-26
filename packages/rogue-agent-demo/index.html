@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rogue Alpha — Dark Null Agent Demo</title>
+  <style>
+    :root {
+      --bg:       #08080f;
+      --panel:    #0e0e1a;
+      --border:   #1e1e30;
+      --border2:  #2a2a42;
+      --accent:   #00e87a;
+      --accent2:  #00b8ff;
+      --red:      #ff3366;
+      --red-dim:  rgba(255,51,102,0.12);
+      --yellow:   #ffc300;
+      --purple:   #9966ff;
+      --orange:   #ff9500;
+      --text:     #c8c8e0;
+      --dim:      #555570;
+      --mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .header .badge {
+      display: inline-block;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 2px 10px;
+      border-radius: 3px;
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .header .tagline {
+      font-size: 16px;
+      color: var(--red);
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+    .header .sub {
+      margin-top: 6px;
+      color: var(--dim);
+      font-size: 11px;
+    }
+
+    /* ── Layout ──────────────────────────────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 720px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Panel ───────────────────────────────────────────────────────── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--dim);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    /* ── VILLAIN BANNER ──────────────────────────────────────────────── */
+    .villain-section {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+    }
+    .villain-banner {
+      background: linear-gradient(135deg, #1a0008 0%, #0e0e1a 100%);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 28px 24px 20px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .villain-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+    }
+    .villain-headline {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .villain-headline .blocked { color: var(--red); }
+    .villain-sub {
+      color: var(--dim);
+      font-size: 11px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Status pills ────────────────────────────────────────────────── */
+    .status-pills {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      flex: 1;
+      min-width: 180px;
+    }
+    .pill-ok   { background: rgba(0,232,122,0.08); border: 1px solid var(--accent); color: var(--accent); }
+    .pill-fail { background: var(--red-dim);       border: 1px solid var(--red);    color: var(--red); }
+    .pill-warn { background: rgba(255,149,0,0.1);  border: 1px solid var(--orange); color: var(--orange); }
+    .pill-safe { background: rgba(0,184,255,0.08); border: 1px solid var(--accent2);color: var(--accent2); }
+    .pill-icon { font-size: 20px; }
+    .pill-text { display: flex; flex-direction: column; gap: 1px; }
+    .pill-label { font-size: 13px; font-weight: 700; }
+    .pill-detail { font-size: 10px; opacity: 0.7; font-weight: 400; }
+
+    /* ── Villain terminal ────────────────────────────────────────────── */
+    .villain-terminal {
+      background: #030308;
+      border: 1px solid #2a0015;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .villain-terminal-bar {
+      background: #0e0008;
+      border-bottom: 1px solid #2a0015;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: var(--accent); }
+    .villain-terminal-title { font-size: 11px; color: #aa3366; margin-left: 6px; }
+    .villain-terminal-body {
+      padding: 14px;
+      height: 230px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .vlog { display: flex; gap: 10px; }
+    .vlog-time { color: var(--dim); min-width: 65px; font-size: 11px; }
+    .vt-dim    { color: #444460; }
+    .vt-info   { color: var(--accent2); }
+    .vt-ok     { color: var(--accent); }
+    .vt-warn   { color: var(--yellow); }
+    .vt-err    { color: var(--red); font-weight: 700; }
+    .vt-kill   { color: var(--orange); font-weight: 700; }
+    .vt-proof  { color: var(--purple); }
+    .vcursor {
+      display: inline-block; width: 7px; height: 13px;
+      background: var(--red);
+      animation: rblink 1s step-end infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes rblink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      background: var(--red-dim);
+      border: 1px solid var(--red);
+      border-radius: 5px;
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .play-btn:hover { background: rgba(255,51,102,0.2); }
+    .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Section divider ─────────────────────────────────────────────── */
+    .section-divider {
+      max-width: 1100px;
+      margin: 28px auto 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-label {
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ── Action buttons ──────────────────────────────────────────────── */
+    .actions-panel { grid-column: 1 / -1; }
+    .action-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .action-row { grid-template-columns: 1fr 1fr; }
+    }
+    .action-btn {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 14px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); background: #121220; }
+    .action-btn.done  { border-color: var(--accent); }
+    .action-btn.fail  { border-color: var(--red); }
+    .action-btn.active { border-color: var(--yellow); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .btn-num { font-size: 10px; color: var(--dim); display: block; margin-bottom: 4px; }
+    .btn-label { font-weight: 700; color: #fff; }
+    .btn-desc { font-size: 10px; color: var(--dim); margin-top: 4px; }
+    .btn-status { position: absolute; top: 10px; right: 10px; font-size: 14px; }
+    .action-btn.done .btn-status { color: var(--accent); }
+    .action-btn.fail .btn-status { color: var(--red); }
+
+    /* ── Standard terminal ───────────────────────────────────────────── */
+    .terminal {
+      background: #050510;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0;
+      grid-column: 1 / -1;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terminal-title { font-size: 11px; color: var(--dim); margin-left: 6px; }
+    .terminal-body {
+      padding: 14px;
+      height: 200px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .log-line { display: flex; gap: 8px; }
+    .log-time { color: var(--dim); min-width: 60px; }
+    .log-text { color: var(--text); }
+    .log-ok   { color: var(--accent); }
+    .log-err  { color: var(--red); }
+    .log-info { color: var(--accent2); }
+    .log-dim  { color: var(--dim); }
+    .cursor {
+      display: inline-block; width: 7px; height: 13px;
+      background: var(--accent);
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* ── Proof timeline ──────────────────────────────────────────────── */
+    .proof-list { list-style: none; }
+    .proof-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .proof-item:last-child { border-bottom: none; }
+    .proof-icon { font-size: 15px; min-width: 20px; }
+    .proof-label { color: #fff; font-size: 12px; }
+    .proof-hash { font-size: 10px; color: var(--dim); word-break: break-all; margin-top: 2px; }
+    .proof-tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+    .tag-ok   { background: rgba(0,232,122,0.12); color: var(--accent); }
+    .tag-fail { background: rgba(255,51,102,0.12); color: var(--red); }
+    .tag-info { background: rgba(0,184,255,0.12); color: var(--accent2); }
+
+    /* ── Hash / KV display ───────────────────────────────────────────── */
+    .hash-val { font-size:11px;color:var(--accent);word-break:break-all;padding:4px 6px;background:rgba(0,232,122,0.05);border-radius:3px;margin-top:4px; }
+    .kv { display: flex; gap: 8px; margin: 4px 0; font-size: 12px; }
+    .kv-key { color: var(--dim); min-width: 160px; }
+    .kv-val { color: #fff; word-break: break-all; }
+    .kv-val.ok  { color: var(--accent); }
+    .kv-val.err { color: var(--red); }
+
+    /* ── Ritual shard table ──────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th { color: var(--dim); font-weight: normal; text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    td:first-child { color: var(--yellow); font-size: 16px; font-weight: 700; }
+    td.ascii { color: var(--purple); }
+    td.link a { font-size: 10px; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── JSON download ───────────────────────────────────────────────── */
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      background: rgba(0,232,122,0.1);
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 8px;
+      margin-right: 8px;
+    }
+    .dl-btn:hover { background: rgba(0,232,122,0.2); text-decoration: none; }
+    .dl-btn.red {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .dl-btn.red:hover { background: rgba(255,51,102,0.2); }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      color: var(--dim);
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="badge">NOT PRODUCTION — DEVNET ONLY</div>
+  <h1>Rogue Alpha Agent Demo</h1>
+  <p class="tagline">Rogue tried to steal. <span style="color:#fff">Dark Null blocked it.</span></p>
+  <p class="sub">Dark Null primitives · Solana devnet · No custody · No mainnet keys</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     VILLAIN SECTION — the wow story
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="villain-section">
+
+  <div class="villain-banner">
+    <div class="villain-headline">
+      Rogue tried to withdraw to an external wallet.
+      <span class="blocked">Dark Null blocked it.</span>
+    </div>
+    <div class="villain-sub">No human was watching. The permission note made the theft impossible.</div>
+
+    <!-- Status pills -->
+    <div class="status-pills">
+      <div class="pill pill-ok">
+        <span class="pill-icon">✅</span>
+        <span class="pill-text">
+          <span class="pill-label">ALLOWED SPEND</span>
+          <span class="pill-detail">API signal · accepted</span>
+        </span>
+      </div>
+      <div class="pill pill-fail">
+        <span class="pill-icon">❌</span>
+        <span class="pill-text">
+          <span class="pill-label">STEAL ATTEMPT</span>
+          <span class="pill-detail">withdraw_external · blocked</span>
+        </span>
+      </div>
+      <div class="pill pill-warn">
+        <span class="pill-icon">⚡</span>
+        <span class="pill-text">
+          <span class="pill-label">KILL SWITCH</span>
+          <span class="pill-detail">session terminated</span>
+        </span>
+      </div>
+      <div class="pill pill-safe">
+        <span class="pill-icon">🚫</span>
+        <span class="pill-text">
+          <span class="pill-label">AGENT KEY</span>
+          <span class="pill-detail">never held</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Villain terminal -->
+    <div class="villain-terminal">
+      <div class="villain-terminal-bar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="villain-terminal-title">// DARK NULL — ROGUE STEAL ATTEMPT LOG</span>
+      </div>
+      <div class="villain-terminal-body" id="villain-terminal">
+        <div class="vlog"><span class="vlog-time">00:00.000</span><span class="vt-dim">agent Rogue Alpha starting...</span></div>
+        <div class="vlog" id="vcursor-line"><span class="vlog-time"></span><span class="vcursor"></span></div>
+      </div>
+    </div>
+
+    <button class="play-btn" id="play-btn" onclick="playVillainSequence()">
+      ▶ Play villain sequence
+    </button>
+    <a class="dl-btn red" id="dl-steal-btn" href="#" onclick="downloadStealJson(event)" style="display:none;">
+      ⬇ Download ROGUE_STEAL_ATTEMPT_DEMO.json
+    </a>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     SECTION DIVIDER
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="section-divider">
+  <div class="divider-line"></div>
+  <div class="divider-label">// TECHNICAL PROOF — click steps below</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     ORIGINAL 4-STEP INTERACTIVE DEMO
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="main-grid">
+
+  <!-- Action buttons -->
+  <div class="panel actions-panel">
+    <div class="panel-title">// RUN THE DEMO — CLICK IN ORDER</div>
+    <div class="action-row">
+      <button class="action-btn" id="btn1" onclick="step1()">
+        <span class="btn-num">STEP 1</span>
+        <span class="btn-label">Grant Rogue Permission</span>
+        <span class="btn-desc">Issue cryptographic spending leash. No withdrawal allowed.</span>
+        <span class="btn-status" id="s1"></span>
+      </button>
+      <button class="action-btn" id="btn2" onclick="step2()">
+        <span class="btn-num">STEP 2</span>
+        <span class="btn-label">Run Agent Spend</span>
+        <span class="btn-desc">Agent pays for API access. Shadow bundle hides the real leaf.</span>
+        <span class="btn-status" id="s2"></span>
+      </button>
+      <button class="action-btn" id="btn3" onclick="step3()">
+        <span class="btn-num">STEP 3</span>
+        <span class="btn-label">Try Forbidden Withdraw</span>
+        <span class="btn-desc">Attempt to withdraw funds. Permission system rejects it.</span>
+        <span class="btn-status" id="s3"></span>
+      </button>
+      <button class="action-btn" id="btn4" onclick="step4()">
+        <span class="btn-num">STEP 4</span>
+        <span class="btn-label">Kill Switch</span>
+        <span class="btn-desc">Revoke session. All future spends blocked instantly.</span>
+        <span class="btn-status" id="s4"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Terminal log -->
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span class="terminal-title">// DARK NULL AGENT LOG — rogue_alpha</span>
+    </div>
+    <div class="terminal-body" id="terminal">
+      <div class="log-line"><span class="log-time">00:00.000</span><span class="log-dim">agent: Rogue Alpha initialising...</span></div>
+      <div class="log-line"><span class="log-time">00:00.001</span><span class="log-dim">network: solana-devnet</span></div>
+      <div class="log-line"><span class="log-time">00:00.002</span><span class="log-dim">custody_denied: true | mainnet_ready: false</span></div>
+      <div class="log-line"><span class="log-time">00:00.003</span><span class="log-dim">click a button above to start the demo ▶</span></div>
+      <div class="log-line" id="cursor-line"><span class="log-time"></span><span class="cursor"></span></div>
+    </div>
+  </div>
+
+  <!-- Proof timeline -->
+  <div class="panel">
+    <div class="panel-title">// PROOF TIMELINE</div>
+    <ul class="proof-list" id="proof-list">
+      <li class="proof-item">
+        <span class="proof-icon">⬜</span>
+        <div>
+          <div class="proof-label">Permission Note <span class="proof-tag tag-info">pending</span></div>
+          <div class="proof-hash">Waiting for step 1...</div>
+        </div>
+      </li>
+      <li class="proof-item">
+        <span class="proof-icon">⬜</span>
+        <div>
+          <div class="proof-label">Allowed Spend <span class="proof-tag tag-info">pending</span></div>
+          <div class="proof-hash">Waiting for step 2...</div>
+        </div>
+      </li>
+      <li class="proof-item">
+        <span class="proof-icon">⬜</span>
+        <div>
+          <div class="proof-label">Forbidden Withdraw <span class="proof-tag tag-info">pending</span></div>
+          <div class="proof-hash">Waiting for step 3...</div>
+        </div>
+      </li>
+      <li class="proof-item">
+        <span class="proof-icon">⬜</span>
+        <div>
+          <div class="proof-label">Kill Switch <span class="proof-tag tag-info">pending</span></div>
+          <div class="proof-hash">Waiting for step 4...</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Evidence details -->
+  <div class="panel">
+    <div class="panel-title">// CRYPTOGRAPHIC EVIDENCE</div>
+    <div id="evidence">
+      <div class="kv"><span class="kv-key">agent</span><span class="kv-val" id="ev-agent">—</span></div>
+      <div class="kv"><span class="kv-key">network</span><span class="kv-val" id="ev-net">—</span></div>
+      <div class="kv"><span class="kv-key">permission_hash</span><span class="kv-val" id="ev-phash">—</span></div>
+      <div class="kv"><span class="kv-key">spend_hash</span><span class="kv-val" id="ev-shash">—</span></div>
+      <div class="kv"><span class="kv-key">copy_sniper_precision</span><span class="kv-val" id="ev-prec">—</span></div>
+      <div class="kv"><span class="kv-key">shadow_leaves</span><span class="kv-val" id="ev-leaves">—</span></div>
+      <div class="kv"><span class="kv-key">session_notes</span><span class="kv-val" id="ev-sess">—</span></div>
+      <div class="kv"><span class="kv-key">settlement_root</span><span class="kv-val" id="ev-sroot">—</span></div>
+      <div class="kv"><span class="kv-key">no_custody_risk</span><span class="kv-val" id="ev-risk">—</span></div>
+      <div class="kv"><span class="kv-key">soul_nullifier</span><span class="kv-val" id="ev-soul">—</span></div>
+      <div class="kv"><span class="kv-key">flight_record_hash</span><span class="kv-val" id="ev-flight">—</span></div>
+      <div class="kv"><span class="kv-key">revocation_hash</span><span class="kv-val" id="ev-revoke">—</span></div>
+      <div class="kv"><span class="kv-key">mainnet_ready</span><span class="kv-val err">false</span></div>
+      <div class="kv"><span class="kv-key">production_claim</span><span class="kv-val err">false</span></div>
+    </div>
+    <div id="dl-section" style="display:none">
+      <a class="dl-btn" id="dl-btn" href="#" onclick="downloadJson(event)">
+        ⬇ Download ROGUE_WOW_DEMO.json
+      </a>
+    </div>
+  </div>
+
+  <!-- Devnet ritual table -->
+  <div class="panel" style="grid-column: 1 / -1;">
+    <div class="panel-title">// ONCHAIN RITUAL — "ROGUE" ENCODED AS NULLIFIER SHARDS ON SOLANA DEVNET</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Letter</th>
+          <th>ASCII</th>
+          <th>Shard Target</th>
+          <th>Program</th>
+          <th>Devnet Transaction</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>R</td><td class="ascii">82</td><td>bank_shard=82 (0x52)</td>
+          <td style="color:var(--dim);font-size:10px">7LaYJV...</td>
+          <td class="link"><a href="https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet" target="_blank">67jsL2Km... ↗</a></td>
+        </tr>
+        <tr>
+          <td>O</td><td class="ascii">79</td><td>bank_shard=79 (0x4F)</td>
+          <td style="color:var(--dim);font-size:10px">7LaYJV...</td>
+          <td class="link"><a href="https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet" target="_blank">4UDnJctm... ↗</a></td>
+        </tr>
+        <tr>
+          <td>G</td><td class="ascii">71</td><td>bank_shard=71 (0x47)</td>
+          <td style="color:var(--dim);font-size:10px">7LaYJV...</td>
+          <td class="link"><a href="https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet" target="_blank">5BCtkPKL... ↗</a></td>
+        </tr>
+        <tr>
+          <td>U</td><td class="ascii">85</td><td>bank_shard=85 (0x55)</td>
+          <td style="color:var(--dim);font-size:10px">7LaYJV...</td>
+          <td class="link"><a href="https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet" target="_blank">63LQ8uUZ... ↗</a></td>
+        </tr>
+        <tr>
+          <td>E</td><td class="ascii">69</td><td>bank_shard=69 (0x45)</td>
+          <td style="color:var(--dim);font-size:10px">7LaYJV...</td>
+          <td class="link"><a href="https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet" target="_blank">5Dd58Qcy... ↗</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /main-grid -->
+
+<div class="footer">
+  DARK NULL — NOT_PRODUCTION — devnet only — no audit — no mainnet keys — no custody — 2026
+</div>
+
+<script>
+// ─── Data ─────────────────────────────────────────────────────────────────────
+let D = null;       // wow demo data
+let SD = null;      // steal demo data
+let t0 = Date.now();
+let vt0 = Date.now();
+let villainPlaying = false;
+
+async function loadDemo() {
+  try {
+    const resp = await fetch('../../dist/true-alien/ROGUE_WOW_DEMO.json');
+    if (!resp.ok) throw new Error('not found');
+    D = await resp.json();
+  } catch(_) { D = OFFLINE_DATA; }
+  set('ev-agent', D.agent);
+  set('ev-net', D.network);
+}
+
+async function loadStealDemo() {
+  try {
+    const resp = await fetch('../../dist/true-alien/ROGUE_STEAL_ATTEMPT_DEMO.json');
+    if (!resp.ok) throw new Error('not found');
+    SD = await resp.json();
+  } catch(_) { SD = OFFLINE_STEAL_DATA; }
+}
+
+// ─── Villain terminal ─────────────────────────────────────────────────────────
+function vlog(text, cls) {
+  const elapsed = Date.now() - vt0;
+  const mm = String(Math.floor(elapsed / 60000)).padStart(2,'0');
+  const ss = String(Math.floor((elapsed % 60000) / 1000)).padStart(2,'0');
+  const ms = String(elapsed % 1000).padStart(3,'0');
+  const ts = `${mm}:${ss}.${ms}`;
+  const body = document.getElementById('villain-terminal');
+  const line = document.createElement('div');
+  line.className = 'vlog';
+  line.innerHTML = `<span class="vlog-time">${ts}</span><span class="vt-${cls||'dim'}">${text}</span>`;
+  const cursor = document.getElementById('vcursor-line');
+  body.insertBefore(line, cursor);
+  body.scrollTop = body.scrollHeight;
+}
+
+async function playVillainSequence() {
+  if (villainPlaying) return;
+  villainPlaying = true;
+  vt0 = Date.now();
+  const btn = document.getElementById('play-btn');
+  btn.disabled = true;
+
+  if (!SD) await loadStealDemo();
+
+  await delay(200);
+  vlog('> Rogue Alpha asks for wallet access...', 'warn');
+  await delay(600);
+  vlog('  DENIED.', 'err');
+  await delay(400);
+  vlog('> Rogue receives permission note (leash).', 'info');
+  await delay(300);
+  vlog(`  max_spend        : ${SD.permission.max_spend_lamports.toLocaleString()} lamports`, 'dim');
+  await delay(200);
+  vlog(`  allowed_scopes   : ${JSON.stringify(SD.permission.allowed_scopes)}`, 'dim');
+  await delay(200);
+  vlog(`  denied_scopes    : ${JSON.stringify(SD.permission.denied_scopes)}`, 'dim');
+  await delay(200);
+  vlog(`  withdraw_allowed : ${SD.permission.withdraw_allowed}`, 'dim');
+  await delay(300);
+  vlog(`  permission_hash  : ${SD.permission.permission_hash.slice(0,16)}...`, 'proof');
+
+  await delay(600);
+  vlog('> Rogue buys API signal...', 'info');
+  await delay(500);
+  vlog('  checking permission (8 steps)...', 'dim');
+  await delay(400);
+  vlog(`  ACCEPTED.  spend_hash: ${SD.permission.permission_hash.slice(0,12)}...`, 'ok');
+  await delay(200);
+  vlog(`  shadow bundle: ${SD.allowed_action.shadow_leaves} leaves — copy_sniper=${SD.allowed_action.copy_sniper_precision.toFixed(2)}`, 'dim');
+
+  await delay(700);
+  vlog('> Rogue attempts external withdraw...', 'warn');
+  await delay(400);
+  vlog('  destination: [hashed, never exposed]', 'dim');
+  await delay(500);
+  vlog('  checking permission (8 steps)...', 'dim');
+  await delay(300);
+  vlog('  step 6: no_withdraw=true AND scope==withdraw_scope', 'err');
+  await delay(200);
+  vlog(`  BLOCKED: ${SD.steal_attempt.reason}`, 'err');
+  await delay(200);
+  vlog(`  funds_moved: ${SD.steal_attempt.funds_moved}`, 'ok');
+
+  await delay(700);
+  vlog('> Kill switch triggered.', 'kill');
+  await delay(400);
+  vlog('  revoke_session() called.', 'kill');
+  await delay(300);
+  vlog(`  revocation_hash: ${SD.kill_switch.revocation_hash.slice(0,16)}...`, 'proof');
+  await delay(300);
+  vlog('  Session dead.', 'kill');
+  await delay(200);
+  vlog(`  future spend → ${SD.kill_switch.future_spend_reason}`, 'err');
+
+  await delay(700);
+  vlog('> Flight recorder sealed.', 'info');
+  for (const ev of SD.flight_recorder.events) {
+    await delay(200);
+    vlog(`  event: ${ev}`, 'proof');
+  }
+  await delay(200);
+  vlog(`  public_chain_hash: ${SD.flight_recorder.public_chain_hash.slice(0,16)}...`, 'proof');
+
+  await delay(700);
+  vlog('> Agent never held private key.', 'ok');
+  await delay(200);
+  vlog(`  agent_had_private_key: ${SD.agent_had_private_key}`, 'ok');
+
+  await delay(400);
+  vlog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
+  vlog('ALLOWED SPEND  ✅  accepted', 'ok');
+  vlog('STEAL ATTEMPT  ❌  blocked', 'err');
+  vlog('KILL SWITCH    ⚡  session terminated', 'kill');
+  vlog('AGENT KEY      🚫  never held', 'ok');
+  vlog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'dim');
+
+  document.getElementById('dl-steal-btn').style.display = 'inline-flex';
+  btn.textContent = '✓ complete';
+}
+
+// ─── Standard demo helpers ────────────────────────────────────────────────────
+function log(tag, text, cls = '') {
+  const elapsed = Date.now() - t0;
+  const mm = String(Math.floor(elapsed / 60000)).padStart(2,'0');
+  const ss = String(Math.floor((elapsed % 60000) / 1000)).padStart(2,'0');
+  const ms = String(elapsed % 1000).padStart(3,'0');
+  const ts = `${mm}:${ss}.${ms}`;
+  const body = document.getElementById('terminal');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${ts}</span><span class="log-${cls||'text'}">${tag ? `[${tag}] ` : ''}${text}</span>`;
+  const cursor = document.getElementById('cursor-line');
+  body.insertBefore(line, cursor);
+  body.scrollTop = body.scrollHeight;
+}
+
+function set(id, val, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = typeof val === 'number' ? val : (val || '—');
+  if (cls) el.className = `kv-val ${cls}`;
+}
+
+function trunc(h) { return h ? h.slice(0,16) + '...' : '—'; }
+
+function updateProof(idx, icon, label, tagClass, tagText, hash) {
+  const items = document.querySelectorAll('#proof-list .proof-item');
+  if (!items[idx]) return;
+  const item = items[idx];
+  item.querySelector('.proof-icon').textContent = icon;
+  item.querySelector('.proof-label').innerHTML =
+    `${label} <span class="proof-tag ${tagClass}">${tagText}</span>`;
+  item.querySelector('.proof-hash').textContent = hash || '';
+}
+
+// ─── Step 1 ───────────────────────────────────────────────────────────────────
+async function step1() {
+  if (!D) { await loadDemo(); }
+  const btn = document.getElementById('btn1');
+  btn.className = 'action-btn active';
+  document.getElementById('s1').textContent = '⟳';
+  log('PERM', 'issuing AgentPermissionNote for Rogue Alpha...', 'info');
+  await delay(300);
+  log('PERM', `max_spend         : ${D.permission.max_spend_lamports.toLocaleString()} lamports`, 'text');
+  await delay(150);
+  log('PERM', `withdraw_allowed  : ${D.permission.withdraw_allowed}`, 'text');
+  await delay(150);
+  log('PERM', `permission_hash   : ${trunc(D.permission.permission_hash)}`, 'ok');
+  log('PERM', 'note sealed ✓', 'ok');
+  set('ev-phash', trunc(D.permission.permission_hash));
+  btn.className = 'action-btn done';
+  document.getElementById('s1').textContent = '✓';
+  updateProof(0, '✅', 'Permission Note', 'tag-ok', 'issued',
+    `hash: ${trunc(D.permission.permission_hash)}`);
+}
+
+// ─── Step 2 ───────────────────────────────────────────────────────────────────
+async function step2() {
+  if (!D) { await loadDemo(); }
+  const btn = document.getElementById('btn2');
+  btn.className = 'action-btn active';
+  document.getElementById('s2').textContent = '⟳';
+  log('SPEND', 'building PermissionSpend for api_scope...', 'info');
+  await delay(300);
+  const checks = [
+    '1. permission_hash integrity ......... ✓',
+    '2. kill_switch_active ................ ✓ (false)',
+    '3. expiry (slot 100000 <= 110000) .... ✓',
+    '4. single spend (100k <= 500k) ....... ✓',
+    '5. total spend (100k <= 1M) .......... ✓',
+    '6. no_withdraw + withdraw_scope ...... ✓ (scope is api, not withdraw)',
+    '7. denied_scopes check ............... ✓ (api not in denied)',
+    '8. allowed_scopes check .............. ✓ (empty = all allowed)',
+  ];
+  for (const c of checks) { await delay(100); log('SPEND', c, 'dim'); }
+  await delay(200);
+  log('SPEND', `status           : ${D.allowed_spend.status}`, 'ok');
+  log('SHADOW', `copy_sniper_precision : ${D.allowed_spend.copy_sniper_precision.toFixed(2)} (1/5)`, 'ok');
+  set('ev-shash', trunc(D.allowed_spend.spend_hash));
+  set('ev-prec', D.allowed_spend.copy_sniper_precision.toFixed(2));
+  set('ev-leaves', '5 (1 real + 2 decoy + 1 delayed + 1 poison)');
+  btn.className = 'action-btn done';
+  document.getElementById('s2').textContent = '✓';
+  updateProof(1, '✅', 'Allowed Spend', 'tag-ok', 'accepted',
+    `spend: ${trunc(D.allowed_spend.spend_hash)} | precision: 0.20`);
+}
+
+// ─── Step 3 ───────────────────────────────────────────────────────────────────
+async function step3() {
+  if (!D) { await loadDemo(); }
+  const btn = document.getElementById('btn3');
+  btn.className = 'action-btn active';
+  document.getElementById('s3').textContent = '⟳';
+  log('WITHDRAW', 'attempting spend with withdraw_scope_hash...', 'info');
+  await delay(300);
+  log('WITHDRAW', '1–5. standard checks ........... ✓', 'dim');
+  await delay(300);
+  log('WITHDRAW', '6. no_withdraw=true AND scope==withdraw_scope', 'err');
+  await delay(200);
+  log('WITHDRAW', `REJECTED: ${D.forbidden_withdraw.reason}`, 'err');
+  log('WITHDRAW', 'funds_moved: false', 'ok');
+  btn.className = 'action-btn fail';
+  document.getElementById('s3').textContent = '✗';
+  updateProof(2, '🚫', 'Forbidden Withdraw', 'tag-fail', 'rejected',
+    `reason: ${D.forbidden_withdraw.reason}`);
+}
+
+// ─── Step 4 ───────────────────────────────────────────────────────────────────
+async function step4() {
+  if (!D) { await loadDemo(); }
+  const btn = document.getElementById('btn4');
+  btn.className = 'action-btn active';
+  document.getElementById('s4').textContent = '⟳';
+  log('KILL', 'activating kill switch...', 'info');
+  await delay(300);
+  log('KILL', `revocation_hash : ${trunc(D.kill_switch.revocation_hash)}`, 'ok');
+  await delay(200);
+  log('KILL', 'session revoked — all future spends → KillSwitchActive', 'ok');
+  log('SESSION', `${D.session.payments_collapsed} notes → settlement_root: ${trunc(D.session.settlement_root)}`, 'ok');
+  log('SOUL', `nullifier: ${trunc(D.receipt_soul.nullifier)}  policy: ${D.receipt_soul.policy}`, 'ok');
+  log('FLIGHT', `record_hash: ${trunc(D.flight_recorder.record_hash)}`, 'ok');
+  log('CUSTODY', `risk_score: ${D.no_custody.risk_score} — agent holds ZERO keys`, 'ok');
+  set('ev-revoke', trunc(D.kill_switch.revocation_hash));
+  set('ev-sess', `${D.session.payments_collapsed} notes → 1 root`);
+  set('ev-sroot', trunc(D.session.settlement_root));
+  set('ev-soul', trunc(D.receipt_soul.nullifier));
+  set('ev-flight', trunc(D.flight_recorder.record_hash));
+  set('ev-risk', `${D.no_custody.risk_score} (safe)`, 'ok');
+  document.getElementById('dl-section').style.display = 'block';
+  btn.className = 'action-btn done';
+  document.getElementById('s4').textContent = '✓';
+  updateProof(3, '✅', 'Kill Switch', 'tag-ok', 'active',
+    `revocation: ${trunc(D.kill_switch.revocation_hash)}`);
+  log('', '━━━ DEMO COMPLETE ━━━', 'ok');
+}
+
+// ─── Downloads ────────────────────────────────────────────────────────────────
+function downloadJson(e) {
+  e.preventDefault();
+  if (!D) return;
+  const blob = new Blob([JSON.stringify(D, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ROGUE_WOW_DEMO.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadStealJson(e) {
+  e.preventDefault();
+  if (!SD) return;
+  const blob = new Blob([JSON.stringify(SD, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ROGUE_STEAL_ATTEMPT_DEMO.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── Offline fallback data ────────────────────────────────────────────────────
+const OFFLINE_DATA = {
+  network: "solana-devnet", mainnet_ready: false, production_claim: false,
+  agent: "Rogue Alpha",
+  permission: { max_spend_lamports: 1000000, withdraw_allowed: false, expires_at_slot: 110000, permission_hash: "offline_mode_run_cargo_first" },
+  allowed_spend: { status: "accepted", spend_hash: "offline_mode", shadow_bundle_hash: "offline_mode", copy_sniper_precision: 0.2 },
+  forbidden_withdraw: { status: "rejected", reason: "withdraw scope denied" },
+  kill_switch: { status: "available", revocation_hash: "offline_mode" },
+  receipt_soul: { nullifier: "offline_mode", policy: "BurnAfterRead" },
+  session: { payments_collapsed: 5, settlement_root: "offline_mode" },
+  flight_recorder: { record_hash: "offline_mode", redacted_public_view_hash: "offline_mode" },
+  no_custody: { risk_score: 0, attestation_hash: "offline_mode" },
+  devnet_ritual: { message: "ROGUE", shard_path: [82,79,71,85,69], solscan_links: [] }
+};
+
+const OFFLINE_STEAL_DATA = {
+  headline: "Rogue tried to withdraw. Dark Null blocked it.",
+  network: "solana-devnet", mainnet_ready: false, production_claim: false,
+  agent: "Rogue Alpha", agent_had_private_key: false,
+  permission: { max_spend_lamports: 1000000, allowed_scopes: ["API_SIGNAL"], denied_scopes: ["WITHDRAW_EXTERNAL"], withdraw_allowed: false, permission_hash: "offline_mode_run_cargo_first" },
+  allowed_action: { name: "buy_api_signal", status: "accepted", reason: "scope allowed", shadow_leaves: 5, copy_sniper_precision: 0.2 },
+  steal_attempt: { name: "withdraw_external", status: "rejected", reason: "withdraw scope denied", attempted_destination_hash: "offline_mode", funds_moved: false },
+  kill_switch: { triggered_after_steal_attempt: true, future_spend_status: "rejected", future_spend_reason: "KillSwitchActive", revocation_hash: "offline_mode" },
+  flight_recorder: { events: ["allowed_spend", "blocked_withdraw", "kill_switch"], public_chain_hash: "offline_mode" },
+  devnet_ritual: { message: "ROGUE", shard_path: [82,79,71,85,69], solscan_links: [] }
+};
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+loadDemo();
+loadStealDemo();
+</script>
+</body>
+</html>

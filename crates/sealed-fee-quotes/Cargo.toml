@@ -1,0 +1,8 @@
+[package]
+name    = "sealed-fee-quotes"
+version = "0.1.0"
+edition = "2021"
+description = "Commit-reveal private fee quote auction. Relayers commit quote hashes; wallet reveals only the selected quote; losers stay unlinkable."
+
+[dependencies]
+sha2 = { workspace = true }

@@ -1,0 +1,10 @@
+[package]
+name    = "receipt-rollup-lite"
+version = "0.1.0"
+edition = "2021"
+description = "Receipt rollup without a rollup: local Merkle tree of receipt notes, periodic checkpoint root, nullifier-based redeem-once."
+
+[dependencies]
+dark-poseidon-tree = { path = "../dark-poseidon-tree" }
+sha2  = { workspace = true }
+serde = { workspace = true }

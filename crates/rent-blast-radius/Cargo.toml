@@ -1,0 +1,7 @@
+[package]
+name    = "rent-blast-radius"
+version = "0.1.0"
+edition = "2021"
+description = "Estimates Solana rent-exempt deposit for account byte sizes and projects feature-level SOL cost at scale."
+
+[dependencies]

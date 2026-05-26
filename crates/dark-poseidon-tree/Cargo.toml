@@ -1,0 +1,9 @@
+[package]
+name    = "dark-poseidon-tree"
+version = "0.1.0"
+edition = "2021"
+description = "Domain-separated hash tree for Dark Null. SHA-256 off-chain; swap to Solana Poseidon syscall for on-chain circuit parity."
+
+[dependencies]
+sha2 = { workspace = true }
+dark-hash-core = { path = "../dark-hash-core", features = ["sha256-fallback"] }

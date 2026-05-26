@@ -1,0 +1,19 @@
+[package]
+name = "dark-x402-devnet-verify"
+version = "0.1.0"
+edition = "2021"
+description = "Devnet RPC payment verification for Dark Null x402 — NOT_PRODUCTION"
+
+[[bin]]
+name = "x402_devnet_real"
+path = "src/bin/x402_devnet_real.rs"
+
+[dependencies]
+dark-x402-core        = { path = "../dark-x402-core" }
+dark-x402-server-mock = { path = "../dark-x402-server-mock" }
+solana-sdk            = { workspace = true }
+solana-client         = "=1.18.26"
+solana-transaction-status = "=1.18.26"
+sha2                  = { workspace = true }
+serde                 = { workspace = true }
+serde_json            = { workspace = true }

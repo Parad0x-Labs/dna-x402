@@ -1,0 +1,12 @@
+[package]
+name    = "dark-bundle-cloak"
+version = "0.1.0"
+edition = "2021"
+description = "Jito bundle choreography for atomic private settlement. Injects decoy cleanup transactions and checks for direct wallet→withdraw fingerprints."
+
+[dependencies]
+solana-sdk = { workspace = true }
+rand       = { workspace = true }
+
+[dev-dependencies]
+rand = { workspace = true }

@@ -1,0 +1,7 @@
+[package]
+name    = "state-tier-router"
+version = "0.1.0"
+edition = "2021"
+description = "Classifies every Solana state object into the cheapest safe storage tier."
+
+[dependencies]

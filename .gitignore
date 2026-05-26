@@ -66,6 +66,12 @@ site-agent/test-results/
 # Solana program builds (large binaries)
 programs/*/target/
 
+# Cargo package cache — never commit registry cache
+.cargo-home/
+
+# Site exports / tarballs
+exports/
+
 # Legacy Dark Null privacy workspace kept local, not part of dna-x402 repo
 /circuits/
 /client/
@@ -75,8 +81,6 @@ programs/*/target/
 /tests/
 /tools/
 /wallet/
-/Cargo.toml
-/Cargo.lock
 /rust-toolchain.toml
 /AUTONOMOUS_DEPLOYMENT.md
 /BREAK_GLASS_MANUAL.md

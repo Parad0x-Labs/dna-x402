@@ -1,0 +1,9 @@
+[package]
+name    = "receipt-spend"
+version = "0.1.0"
+edition = "2021"
+description = "Private receipt-note protocol: note secret → commitment → nullifier → x402 scope-bound spend."
+
+[dependencies]
+dark-poseidon-tree = { path = "../dark-poseidon-tree" }
+sha2               = { workspace = true }

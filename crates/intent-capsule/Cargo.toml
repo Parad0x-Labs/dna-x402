@@ -1,0 +1,10 @@
+[package]
+name    = "intent-capsule"
+version = "0.1.0"
+edition = "2021"
+description = "Proof-carrying intent capsule: human-readable action bound to a canonical hash for wallet display and program verification."
+
+[dependencies]
+sha2       = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }

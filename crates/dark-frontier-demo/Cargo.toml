@@ -1,0 +1,18 @@
+[package]
+name = "dark-frontier-demo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "dark_frontier_demo"
+path = "src/main.rs"
+
+[dependencies]
+dark-alpha-receipts    = { path = "../dark-alpha-receipts" }
+dark-swarm-capsule     = { path = "../dark-swarm-capsule" }
+dark-compressed-leaves = { path = "../dark-compressed-leaves" }
+dark-meme-risk         = { path = "../dark-meme-risk" }
+dark-fee-optimizer     = { path = "../dark-fee-optimizer" }
+ritual-blink-gateway   = { path = "../ritual-blink-gateway" }
+serde_json             = { workspace = true }
+sha2                   = { workspace = true }

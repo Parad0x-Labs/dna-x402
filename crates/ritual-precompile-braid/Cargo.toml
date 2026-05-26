@@ -1,0 +1,10 @@
+[package]
+name = "ritual-precompile-braid"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sha2          = { workspace = true }
+serde         = { workspace = true }
+ed25519-dalek = { workspace = true }
+rand          = { workspace = true }

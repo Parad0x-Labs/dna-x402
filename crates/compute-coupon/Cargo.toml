@@ -1,0 +1,10 @@
+[package]
+name    = "compute-coupon"
+version = "0.1.0"
+edition = "2021"
+description = "Signed relay coupons — prepaid compute rights for private settlement. Holders redeem a coupon for one priority-fee-capped relay slot."
+
+[dependencies]
+sha2          = { workspace = true }
+serde         = { workspace = true }
+ed25519-dalek = { workspace = true }

@@ -1,0 +1,19 @@
+[package]
+name = "ritual-vm-demo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ritual_vm_demo"
+path = "src/bin/ritual_vm_demo.rs"
+
+[dependencies]
+ritual-compiler      = { path = "../ritual-compiler" }
+ritual-proof-capsule = { path = "../ritual-proof-capsule" }
+ritual-shape-market  = { path = "../ritual-shape-market" }
+cpi-firewall         = { path = "../cpi-firewall" }
+account-lock-alchemy = { path = "../account-lock-alchemy" }
+rent-delta-proof     = { path = "../rent-delta-proof" }
+sha2       = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }

@@ -1,0 +1,21 @@
+[package]
+name    = "dark-nullifier-banks"
+version = "0.1.0"
+edition = "2021"
+description = "Write-lock sharded nullifier storage for Dark Null. 256 shard accounts eliminate the hot-write bottleneck of a global nullifier PDA while giving each nullifier a privacy-aware routing path."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default        = []
+no-entrypoint  = []
+
+[dependencies]
+solana-program = { workspace = true }
+thiserror      = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }

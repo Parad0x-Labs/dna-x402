@@ -1,0 +1,13 @@
+[package]
+name = "scratch-slot-leasing"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "scratch_slot_leasing"
+path = "src/lib.rs"
+
+[dependencies]
+sha2 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

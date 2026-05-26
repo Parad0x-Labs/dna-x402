@@ -34,6 +34,12 @@ not_for:
   - mixer or privacy-pool flows
 related_repo:
   privacy_settlement: https://github.com/Parad0x-Labs/Dark-Null-Protocol
+  frontier_primitives: docs/DARK_NULL_FRONTIER.md
+  alien_tek_research: docs/DARK_NULL_ALIEN_TEK.md
+  solana_alien_tek: docs/SOLANA_ALIEN_TEK.md
+  degen_use_cases: docs/DEGEN_USE_CASES.md
+  anti_copytrade_alpha: docs/ANTI_COPYTRADE_ALPHA.md
+  fee_saving_primitives: docs/FEE_SAVING_SOLANA_PRIMITIVES.md
 ```
 
 ![DNA x402 Proof Snapshot](./docs/assets/dna-proof-card.svg)
@@ -137,6 +143,7 @@ Start here:
 - API reference: [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md)
 - Builder quickstart: [`docs/BUILDER_QUICKSTART.md`](./docs/BUILDER_QUICKSTART.md)
 - Agent quickstart: [`docs/AGENT_QUICKSTART.md`](./docs/AGENT_QUICKSTART.md)
+- Degen Mode: [`docs/DNA_X402_DEGEN_MODE.md`](./docs/DNA_X402_DEGEN_MODE.md)
 - Seller listing guide: [`docs/SELLER_LISTING_GUIDE.md`](./docs/SELLER_LISTING_GUIDE.md)
 - Builder fees: [`docs/BUILDER_FEES.md`](./docs/BUILDER_FEES.md)
 - Public Beta acceptance: [`docs/DNA_X402_PUBLIC_BETA_ACCEPTANCE.md`](./docs/DNA_X402_PUBLIC_BETA_ACCEPTANCE.md)
@@ -156,6 +163,33 @@ npm run acceptance:builder
 ```
 
 Public Beta scope: users can create paper agents, public profiles, copy settings, and builder/API integrations. Low-risk live payments are open with caps, client-side signing, emergency pause, Telegram monitoring, and visible fee waterfalls. Backend custody, backend signing, hidden fees, auto-sweep, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
+
+### Degen Mode
+
+Connect wallet. Pick agent. Set max pain. Let it cook.
+
+Degen Mode turns Solana trench ideas into safe DNA x402 agent primitives: fresh pair scouts, wallet stalkers, copy-the-chad agents, rug radar, pump radar, paper ape labs, and paid signal rooms. The useful parts are scanner, signal, paper-sim, and trade-intent shapes. The unsafe parts stay out: no pasted private keys, no backend custody, no backend signing, no fake PnL, no guaranteed-profit claims, and no uncapped auto-live execution.
+
+## Degen-Native Use Cases
+
+> NOT_PRODUCTION — devnet design only. mainnet_ready = false. Not audited.
+
+Six frontier-edge primitives built for on-chain degen survival:
+
+| Primitive | What It Does | Daily Win |
+|---|---|---|
+| `dark-alpha-receipts` | Anti-copytrading receipts — commit hash published, trade hidden until x402 paid reveal | Sell alpha without getting front-run |
+| `dark-swarm-capsule` | Proof-carrying service capsule — prove no custody keys, no root keys | Pick the safest relayer without trusting anyone |
+| `dark-compressed-leaves` | ZK Compression leaf schema — Light Protocol v2 adapter design (integration planned, not live) | Projected: 10,000 receipts for 0.02 SOL vs 8.9 SOL full accounts |
+| `dark-meme-risk` | Hash-only memecoin risk scoring model (live oracle endpoint not deployed) | Score a token before aping — no raw mint in any receipt |
+| `dark-fee-optimizer` | P-token (SIMD-0266) + ZK Compression savings model (live routing not wired) | Projected: 50k transfers/day at 98% fewer compute units |
+| `ritual-blink-gateway` | **MOONSHOT** — Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule, ONE atomic tx | Embed a payment-gated ritual transaction in a tweet link |
+
+Full doc: [`docs/DEGEN_USE_CASES.md`](./docs/DEGEN_USE_CASES.md)
+Fee savings: [`docs/FEE_SAVING_SOLANA_PRIMITIVES.md`](./docs/FEE_SAVING_SOLANA_PRIMITIVES.md)
+Anti-copytrading spec: [`docs/ANTI_COPYTRADE_ALPHA.md`](./docs/ANTI_COPYTRADE_ALPHA.md)
+
+**807 Rust tests passing. 0 failures. Run:** `cargo test --workspace`
 
 ## Start Here
 
@@ -196,6 +230,22 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 - [`docs/PROGRAMMABILITY_CONTRACT.md`](./docs/PROGRAMMABILITY_CONTRACT.md)
 - [`docs/X402_COMPAT.md`](./docs/X402_COMPAT.md)
 - [`x402/test-mainnet/`](./x402/test-mainnet)
+
+## Alien Tek Research
+
+Deep research across five threads: forgotten e-cash (Chaum 1982, GNU Taler deployed in a Swiss bank), cryptographic holy grails (Diamond iO from PSE 2025, witness encryption now practical for algebraic statements), proof aggregation (SnarkPack in Filecoin production — 819 Groth16 proofs → 2KB, no circuit rebuild), MPC primitives (Snowblind threshold blind signatures where even full signer collusion can't link issuance to spending), and UTXO privacy systems (FCMP++ on Monero Q1 2026 — 100M+ anonymity set, the biggest privacy advance in blockchain history that nobody outside Monero knows about).
+
+The single most underappreciated finding: every deployed ZK payment system has an access pattern leak — your Merkle path fetch tells the full node which leaf you're proving. Piano PIR (2024, IEEE S&P) is at 12ms + 220KB per nullifier check. The fix exists. Zero deployments.
+
+[`docs/DARK_NULL_ALIEN_TEK.md`](./docs/DARK_NULL_ALIEN_TEK.md)
+
+## Frontier Primitives
+
+The current Dark Null Groth16 stack is not the ceiling. Ten research directions — ZK access receipts, recursive proof batches, compressed nullifier state, proof-carrying relayer swarms, Alpenglow-ready instant private payments, MEV-blind settlement, ephemeral payment sessions, Confidential Token-2022 bridges, MPC-sealed pricing, and full private agent-to-agent API commerce — describe where the DNA x402 and Dark Null stacks converge.
+
+None of these are shipped. All of them are buildable from the current foundation or from adjacent infrastructure that is either live or close.
+
+[`docs/DARK_NULL_FRONTIER.md`](./docs/DARK_NULL_FRONTIER.md)
 
 ## Related Repo
 

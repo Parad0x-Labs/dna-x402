@@ -9,8 +9,7 @@ use solana_program::{
     program_pack::Pack,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction,
-    system_program,
+    system_instruction, system_program,
     sysvar::Sysvar,
 };
 
@@ -54,7 +53,8 @@ fn ensure_bucket_account<'a>(
         return Ok(bump);
     }
 
-    let system_program_info = maybe_system_program.ok_or(ReceiptAnchorError::MissingSystemProgram)?;
+    let system_program_info =
+        maybe_system_program.ok_or(ReceiptAnchorError::MissingSystemProgram)?;
     if *system_program_info.key != system_program::id() {
         return Err(ReceiptAnchorError::MissingSystemProgram.into());
     }
@@ -135,7 +135,11 @@ fn apply_batch(bucket: &mut AnchorBucket, batch: &AnchorV1Batch) -> Result<(), P
     Ok(())
 }
 
-pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
+pub fn process(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_data: &[u8],
+) -> ProgramResult {
     let instruction = ReceiptAnchorInstruction::unpack(instruction_data)?;
     let now_unix = Clock::get()?.unix_timestamp;
 
@@ -155,9 +159,9 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: 
     }
 
     let bucket_id = match &instruction {
-        ReceiptAnchorInstruction::AnchorSingle(single) => {
-            single.bucket_id.unwrap_or_else(|| bucket_id_from_unix(now_unix))
-        }
+        ReceiptAnchorInstruction::AnchorSingle(single) => single
+            .bucket_id
+            .unwrap_or_else(|| bucket_id_from_unix(now_unix)),
         ReceiptAnchorInstruction::AnchorBatch(_) => bucket_id_from_unix(now_unix),
     };
 
@@ -176,6 +180,10 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: 
         AnchorBucket::pack_into_slice(&bucket_state, &mut data);
     }
 
-    msg!("receipt_anchor ok bucket={} count={}", bucket.key, bucket_state.count);
+    msg!(
+        "receipt_anchor ok bucket={} count={}",
+        bucket.key,
+        bucket_state.count
+    );
     Ok(())
 }

@@ -1,0 +1,7 @@
+[package]
+name    = "lock-scheduler"
+version = "0.1.0"
+edition = "2021"
+description = "Predicts Solana write-lock conflicts and batches non-conflicting private actions."
+
+[dependencies]

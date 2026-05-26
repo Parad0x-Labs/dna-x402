@@ -1,0 +1,31 @@
+[package]
+name = "true-alien-devnet-demo"
+version = "0.1.0"
+edition = "2021"
+description = "True Alien Primitives devnet demo — NOT_PRODUCTION"
+
+[lib]
+name = "true_alien_devnet_demo"
+path = "src/lib.rs"
+
+[[bin]]
+name = "true_alien_devnet_demo"
+path = "src/bin/true_alien_devnet_demo.rs"
+
+[dependencies]
+agent-permission-notes       = { path = "../agent-permission-notes" }
+spend-shadows                = { path = "../spend-shadows" }
+agent-flight-recorder        = { path = "../agent-flight-recorder" }
+receipt-souls                = { path = "../receipt-souls" }
+alpha-capsules               = { path = "../alpha-capsules" }
+chaff-economy                = { path = "../chaff-economy" }
+session-note-channel         = { path = "../session-note-channel" }
+onchain-puzzle-compiler      = { path = "../onchain-puzzle-compiler" }
+no-custody-attestation       = { path = "../no-custody-attestation" }
+roadmap-commitments          = { path = "../roadmap-commitments" }
+solana-sdk                   = { workspace = true }
+solana-client                = "=1.18.26"
+sha2                         = { workspace = true }
+serde                        = { workspace = true }
+serde_json                   = { workspace = true }
+rand                         = { workspace = true }

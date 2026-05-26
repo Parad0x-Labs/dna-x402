@@ -2,6 +2,10 @@
   "name": "dark-null-protocol-workspace",
   "private": true,
   "version": "0.1.0",
+  "devDependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "tsx": "^4.19.0"
+  },
   "scripts": {
     "site-agent:dev": "npm --prefix site-agent run dev",
     "site-agent:build": "npm --prefix site-agent run build",
@@ -15,6 +19,7 @@
     "db:health": "npm --prefix x402 run db:health",
     "db:backup:test:postgres": "npm --prefix x402 run db:backup:test:postgres",
     "acceptance:builder": "npm --prefix x402 run acceptance:builder",
-    "acceptance:agents": "npm --prefix x402 run acceptance:agents"
+    "acceptance:agents": "npm --prefix x402 run acceptance:agents",
+    "acceptance:degen-mode": "npm --prefix x402 run acceptance:degen-mode"
   }
 }

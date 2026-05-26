@@ -1,0 +1,19 @@
+{
+  "backend": "sha256-domain",
+  "description": "Known SHA-256 domain-separated vectors for Dark Null",
+  "vectors": [
+    {
+      "domain": "dark_null_v1",
+      "inputs_hex": ["0000000000000000000000000000000000000000000000000000000000000000", "0000000000000000000000000000000000000000"],
+      "output_hex": "PLACEHOLDER_COMPUTE_AT_TEST_TIME",
+      "note": "v1 ritual formula — domain=dark_null_v1, nullifier=32 zeros, epoch_le64=8 zeros"
+    },
+    {
+      "domain": "dark_null_v1_commitment",
+      "inputs_hex": ["0000000000000000000000000000000000000000000000000000000000000000", "0000000000000000000000000000000000000000000000000000000000000000"],
+      "output_hex": "PLACEHOLDER_COMPUTE_AT_TEST_TIME",
+      "note": "v2 commitment domain, secret=zeros, additional_data=zeros"
+    }
+  ],
+  "note": "PLACEHOLDER values must be replaced by running: cargo test -p dark-hash-core -- --nocapture"
+}

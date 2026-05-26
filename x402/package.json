@@ -118,6 +118,7 @@
     "security:scan": "tsx scripts/security/scan-secrets.ts",
     "acceptance:builder": "vitest run tests/builder.launch-pack.test.ts",
     "acceptance:agents": "tsx ../examples/agent-wallet-client-ts/test/acceptance.test.ts && tsx ../examples/paper-polymarket-agent-ts/test/acceptance.test.ts && tsx ../examples/copy-settings-ts/test/acceptance.test.ts && tsx ../examples/alpha-monetization-ts/test/acceptance.test.ts && tsx ../examples/copied-lot-ledger-ts/test/acceptance.test.ts",
+    "acceptance:degen-mode": "vitest run tests/degen-mode.test.ts",
     "site:build": "npm --prefix ../site run build",
     "site-agent:dev": "npm --prefix ../site-agent run dev",
     "site-agent:build": "npm --prefix ../site-agent run build",

@@ -1,0 +1,22 @@
+[package]
+name    = "dark-relay-router"
+version = "0.1.0"
+edition = "2021"
+description = "Leader-aware private relay path scorer. Routes withdrawals based on upcoming leader schedule, SWQoS, Jito availability, and timing-correlation risk."
+
+[dependencies]
+solana-sdk = { workspace = true }
+rand       = { workspace = true }
+reqwest    = { workspace = true, optional = true }
+tokio      = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[features]
+# Enable to run live RPC integration tests against devnet.
+devnet-tests = ["reqwest", "tokio", "serde_json"]
+
+[dev-dependencies]
+rand    = { workspace = true }
+tokio   = { workspace = true }
+reqwest = { workspace = true }
+serde_json = { workspace = true }

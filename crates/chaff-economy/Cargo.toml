@@ -1,0 +1,10 @@
+[package]
+name = "chaff-economy"
+version = "0.1.0"
+edition = "2021"
+description = "Chaff transactions must do economically useful maintenance — privacy noise earns its cost"
+
+[dependencies]
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

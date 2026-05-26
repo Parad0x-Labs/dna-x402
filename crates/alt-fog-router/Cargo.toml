@@ -1,0 +1,12 @@
+[package]
+name    = "alt-fog-router"
+version = "0.1.0"
+edition = "2021"
+description = "Builds Solana v0 transactions with decoy ALT accounts injected to obscure the real account topology."
+
+[dependencies]
+solana-sdk = { workspace = true }
+rand       = { workspace = true }
+
+[dev-dependencies]
+rand = { workspace = true }

@@ -1,0 +1,13 @@
+[package]
+name = "dark-batch-guest"
+version = "0.1.0"
+edition = "2021"
+
+# NOTE: This crate is intentionally NOT added to the root workspace.
+# It is compiled separately as a RISC Zero zkVM guest ELF.
+#
+# When rzup is installed, add the following and build with:
+#   cargo +risc0 build --release
+#
+# [target.riscv32im-risc0-zkvm-elf.dependencies]
+# risc0-zkvm = { version = "1.x", default-features = false, features = ["std"] }

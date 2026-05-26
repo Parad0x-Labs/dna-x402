@@ -1,0 +1,16 @@
+[package]
+name    = "dark-macaroons"
+version = "0.1.0"
+edition = "2021"
+description = "Caveated spending credentials for no-custody agent wallets."
+
+[dependencies]
+sha2       = { workspace = true }
+hmac       = "0.12"
+digest     = "0.10"
+serde      = { workspace = true }
+serde_json = { workspace = true }
+
+[features]
+default = []
+legacy-macaroons = []  # test-only: accept old SHA256(key||msg) tokens — NOT production

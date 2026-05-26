@@ -1,0 +1,7 @@
+[package]
+name    = "useful-chaff-planner"
+version = "0.1.0"
+edition = "2021"
+description = "Plans chaff transactions that also perform useful on-chain maintenance, so privacy noise is never wasted compute."
+
+[dependencies]
