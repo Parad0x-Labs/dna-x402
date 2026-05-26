@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-private-dao-v2"
 version = "0.1.0"

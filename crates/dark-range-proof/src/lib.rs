@@ -80,11 +80,7 @@ fn xor_fold(commitments: &[[u8; 32]]) -> [u8; 32] {
 }
 
 /// Validate the common inputs shared by commit_value and prove_range.
-fn validate_inputs(
-    value: u64,
-    blinding: &[u8; 32],
-    bit_width: u8,
-) -> Result<u64, RangeError> {
+fn validate_inputs(value: u64, blinding: &[u8; 32], bit_width: u8) -> Result<u64, RangeError> {
     if bit_width == 0 {
         return Err(RangeError::BitWidthZero);
     }
@@ -251,7 +247,13 @@ mod tests {
     fn test_value_exceeds_range_rejected() {
         let b = blinding();
         let err = prove_range(256, &b, 8).unwrap_err();
-        assert_eq!(err, RangeError::ValueExceedsRange { value: 256, max: 255 });
+        assert_eq!(
+            err,
+            RangeError::ValueExceedsRange {
+                value: 256,
+                max: 255
+            }
+        );
     }
 
     /// 3. verify_range_proof returns true for a freshly generated proof.

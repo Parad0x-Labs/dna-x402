@@ -139,12 +139,16 @@ mod tests {
     use super::*;
 
     fn s(seed: u8) -> [u8; 32] {
-        let mut b = [0u8; 32]; b[0] = seed; b
+        let mut b = [0u8; 32];
+        b[0] = seed;
+        b
     }
 
     #[test]
     fn new_multisig_mainnet_ready_false() {
-        let s1 = s(0xAA); let s2 = s(0xBB); let s3 = s(0xCC);
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let s3 = s(0xCC);
         let setup = new_multisig(&[&s1, &s2, &s3], 2).unwrap();
         assert!(!setup.mainnet_ready);
         assert_eq!(setup.threshold, 2);
@@ -154,7 +158,9 @@ mod tests {
 
     #[test]
     fn approve_with_threshold_signers_succeeds() {
-        let s1 = s(0xAA); let s2 = s(0xBB); let s3 = s(0xCC);
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let s3 = s(0xCC);
         let setup = new_multisig(&[&s1, &s2, &s3], 2).unwrap();
         let approval = approve(&setup, &[&s1, &s2], b"test_message").unwrap();
         assert!(approval.approved);
@@ -164,7 +170,9 @@ mod tests {
 
     #[test]
     fn insufficient_approvals_is_rejected() {
-        let s1 = s(0xAA); let s2 = s(0xBB); let s3 = s(0xCC);
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let s3 = s(0xCC);
         let setup = new_multisig(&[&s1, &s2, &s3], 2).unwrap();
         let err = approve(&setup, &[&s1], b"test_message").unwrap_err();
         assert_eq!(err, MultisigError::InsufficientApprovals);
@@ -172,21 +180,24 @@ mod tests {
 
     #[test]
     fn zero_threshold_is_rejected() {
-        let s1 = s(0xAA); let s2 = s(0xBB);
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
         let err = new_multisig(&[&s1, &s2], 0).unwrap_err();
         assert_eq!(err, MultisigError::ZeroThreshold);
     }
 
     #[test]
     fn threshold_exceeds_signers_is_rejected() {
-        let s1 = s(0xAA); let s2 = s(0xBB);
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
         let err = new_multisig(&[&s1, &s2], 3).unwrap_err();
         assert_eq!(err, MultisigError::ThresholdExceedsSigners);
     }
 
     #[test]
     fn aggregate_hash_is_non_zero() {
-        let s1 = s(0xAA); let s2 = s(0xBB);
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
         let setup = new_multisig(&[&s1, &s2], 2).unwrap();
         let approval = approve(&setup, &[&s1, &s2], b"test_message").unwrap();
         assert_ne!(approval.aggregate_hash, [0u8; 32]);

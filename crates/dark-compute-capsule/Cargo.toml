@@ -3,8 +3,6 @@ name = "dark-compute-capsule"
 version = "0.1.0"
 edition = "2021"
 
-[workspace]
-
 [dependencies]
 dark-wasm-compute    = { path = "../dark-wasm-compute" }
 dark-compute-receipt = { path = "../dark-compute-receipt" }

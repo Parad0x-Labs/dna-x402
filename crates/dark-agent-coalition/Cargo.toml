@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-agent-coalition"
 version = "0.1.0"

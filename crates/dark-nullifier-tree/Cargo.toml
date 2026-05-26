@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-nullifier-tree"
 version = "0.1.0"

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -118,10 +118,10 @@ pub fn compute_ballot_root(ballot_xor: &[u8; 32], vote_count: u32) -> [u8; 32] {
 // ── API ────────────────────────────────────────────────────────────────────
 
 pub fn new_session(admin_secret: &[u8; 32], nonce: &[u8; 32]) -> VotingSession {
-    let session_id     = compute_session_id(admin_secret, nonce);
+    let session_id = compute_session_id(admin_secret, nonce);
     let yes_commitment = compute_yes_commitment(0);
-    let no_commitment  = compute_no_commitment(0);
-    let ballot_root    = compute_ballot_root(&[0u8; 32], 0);
+    let no_commitment = compute_no_commitment(0);
+    let ballot_root = compute_ballot_root(&[0u8; 32], 0);
     VotingSession {
         session_id,
         ballot_root,
@@ -153,10 +153,10 @@ pub fn cast_vote(
     if session.voter_hashes.contains(&voter_hash) {
         return Err(VoteError::DuplicateVoter);
     }
-    let choice_u8      = if choice { 1u8 } else { 0u8 };
+    let choice_u8 = if choice { 1u8 } else { 0u8 };
     let vote_commitment = compute_vote_commitment(&voter_hash, choice_u8, nonce);
-    let nullifier       = compute_ballot_nullifier(&voter_hash, &session.session_id);
-    let ballot_id       = compute_ballot_id(&vote_commitment, &nullifier);
+    let nullifier = compute_ballot_nullifier(&voter_hash, &session.session_id);
+    let ballot_id = compute_ballot_id(&vote_commitment, &nullifier);
 
     // Update running XOR
     for i in 0..32 {
@@ -172,7 +172,7 @@ pub fn cast_vote(
         session.no_count += 1;
     }
     session.yes_commitment = compute_yes_commitment(session.yes_count);
-    session.no_commitment  = compute_no_commitment(session.no_count);
+    session.no_commitment = compute_no_commitment(session.no_count);
 
     Ok(VoteBallot {
         ballot_id,
@@ -195,9 +195,15 @@ pub fn close_session(session: &mut VotingSession) -> Result<(), VoteError> {
 mod tests {
     use super::*;
 
-    fn admin() -> [u8; 32] { [0xaau8; 32] }
-    fn nonce(b: u8) -> [u8; 32] { [b; 32] }
-    fn voter(b: u8) -> [u8; 32] { [b; 32] }
+    fn admin() -> [u8; 32] {
+        [0xaau8; 32]
+    }
+    fn nonce(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
+    fn voter(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
 
     // Test 1: new_session + mainnet_ready=false
     #[test]
@@ -211,7 +217,7 @@ mod tests {
         assert_eq!(session.session_id, expected_id);
 
         let expected_yes = compute_yes_commitment(0);
-        let expected_no  = compute_no_commitment(0);
+        let expected_no = compute_no_commitment(0);
         assert_eq!(session.yes_commitment, expected_yes);
         assert_eq!(session.no_commitment, expected_no);
     }

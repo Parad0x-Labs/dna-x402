@@ -103,9 +103,7 @@ pub fn build_withdraw_instruction_data(
 /// Inverse of `build_withdraw_instruction_data`.
 ///
 /// Returns `(nullifier, merkle_root, amount, note_commitment)`.
-pub fn parse_withdraw_instruction_data(
-    data: &[u8; 104],
-) -> ([u8; 32], [u8; 32], u64, [u8; 32]) {
+pub fn parse_withdraw_instruction_data(data: &[u8; 104]) -> ([u8; 32], [u8; 32], u64, [u8; 32]) {
     let mut nullifier = [0u8; 32];
     let mut merkle_root = [0u8; 32];
     let mut amount_bytes = [0u8; 8];
@@ -155,23 +153,31 @@ mod tests {
     // 1. Same secret + slot always produces the same note commitment.
     #[test]
     fn test_create_note_from_secret_deterministic() {
-        let note_a = create_note_from_secret(&test_secret(), 500_000, &test_recipient(), test_slot());
-        let note_b = create_note_from_secret(&test_secret(), 500_000, &test_recipient(), test_slot());
-        assert_eq!(note_a.commitment, note_b.commitment, "same inputs must yield same commitment");
+        let note_a =
+            create_note_from_secret(&test_secret(), 500_000, &test_recipient(), test_slot());
+        let note_b =
+            create_note_from_secret(&test_secret(), 500_000, &test_recipient(), test_slot());
+        assert_eq!(
+            note_a.commitment, note_b.commitment,
+            "same inputs must yield same commitment"
+        );
     }
 
     // 2. Pack → unpack recovers all four fields exactly.
     #[test]
     fn test_withdrawal_data_roundtrip() {
-        let note = create_note_from_secret(&test_secret(), 1_000_000, &test_recipient(), test_slot());
+        let note =
+            create_note_from_secret(&test_secret(), 1_000_000, &test_recipient(), test_slot());
         let amount = 1_000_000u64;
         let root = test_root();
 
         let (nullifier, withdraw_root, _json) =
             generate_withdrawal_note_data(&note, &test_secret(), amount, &root).unwrap();
 
-        let packed = build_withdraw_instruction_data(&nullifier, &withdraw_root, amount, &note.commitment);
-        let (p_nullifier, p_root, p_amount, p_commitment) = parse_withdraw_instruction_data(&packed);
+        let packed =
+            build_withdraw_instruction_data(&nullifier, &withdraw_root, amount, &note.commitment);
+        let (p_nullifier, p_root, p_amount, p_commitment) =
+            parse_withdraw_instruction_data(&packed);
 
         assert_eq!(p_nullifier, nullifier);
         assert_eq!(p_root, withdraw_root);
@@ -201,7 +207,10 @@ mod tests {
             generate_withdrawal_note_data(&note, &secret, 250_000, &root).unwrap();
 
         let json_str = json.to_string();
-        let secret_hex = secret.iter().map(|b| format!("{:02x}", b)).collect::<String>();
+        let secret_hex = secret
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
 
         assert!(
             !json_str.contains(&secret_hex),

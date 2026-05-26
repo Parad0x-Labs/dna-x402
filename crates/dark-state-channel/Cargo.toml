@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-state-channel"
 version = "0.1.0"

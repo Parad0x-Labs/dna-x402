@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,10 +112,7 @@ fn compute_msg_hash(
 /// Errors:
 /// - ZeroSessionSecret: session_secret is all zeros
 /// - InsufficientParties: party_count < 2
-pub fn new_session(
-    session_secret: &[u8; 32],
-    party_count: u8,
-) -> Result<MpcSession, MpcError> {
+pub fn new_session(session_secret: &[u8; 32], party_count: u8) -> Result<MpcSession, MpcError> {
     if *session_secret == [0u8; 32] {
         return Err(MpcError::ZeroSessionSecret);
     }
@@ -183,7 +180,11 @@ pub fn advance_round(
 
 /// Public JSON record for the session.
 pub fn session_public_record(session: &MpcSession) -> String {
-    let sid_hex: String = session.session_id.iter().map(|b| format!("{:02x}", b)).collect();
+    let sid_hex: String = session
+        .session_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "session_id": sid_hex,
         "party_count": session.party_count,

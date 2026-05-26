@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -125,7 +125,14 @@ pub fn issue_badge(
     let holder_hash = hash_holder(holder_secret);
     let issuer_hash = hash_issuer(issuer_secret);
     let domain_hash = hash_domain(domain_bytes);
-    let badge_id = compute_badge_id(&holder_hash, &issuer_hash, &domain_hash, level, issued_at, expires_at);
+    let badge_id = compute_badge_id(
+        &holder_hash,
+        &issuer_hash,
+        &domain_hash,
+        level,
+        issued_at,
+        expires_at,
+    );
 
     Ok(ReputationBadge {
         badge_id,
@@ -239,13 +246,22 @@ mod tests {
         let badge = issue_badge(&issuer(), &holder(), DOMAIN, 3, ISSUED, EXPIRES)
             .expect("issue_badge should succeed");
 
-        assert!(!badge.mainnet_ready, "mainnet_ready must be false after issue");
+        assert!(
+            !badge.mainnet_ready,
+            "mainnet_ready must be false after issue"
+        );
 
         let presentation = present_badge(&badge, &holder(), &nonce(1), DOMAIN, ISSUED + 1000)
             .expect("present_badge should succeed");
 
-        assert!(!presentation.mainnet_ready, "mainnet_ready must be false after present");
-        assert!(verify_presentation(&badge, &presentation), "presentation should verify");
+        assert!(
+            !presentation.mainnet_ready,
+            "mainnet_ready must be false after present"
+        );
+        assert!(
+            verify_presentation(&badge, &presentation),
+            "presentation should verify"
+        );
     }
 
     #[test]
@@ -259,7 +275,10 @@ mod tests {
 
         assert_eq!(
             err,
-            BadgeError::BadgeExpired { expired_at: EXPIRES, current },
+            BadgeError::BadgeExpired {
+                expired_at: EXPIRES,
+                current
+            },
             "wrong error variant"
         );
     }
@@ -285,7 +304,10 @@ mod tests {
         let p2 = present_badge(&badge, &holder(), &nonce(2), DOMAIN, ISSUED + 1)
             .expect("present 2 should succeed");
 
-        assert_ne!(p1.pseudonym, p2.pseudonym, "pseudonyms must differ per nonce");
+        assert_ne!(
+            p1.pseudonym, p2.pseudonym,
+            "pseudonyms must differ per nonce"
+        );
     }
 
     #[test]
@@ -317,7 +339,8 @@ mod tests {
         );
 
         // Sanity-check the record is valid JSON and has expected keys
-        let v: serde_json::Value = serde_json::from_str(&record).expect("record must be valid JSON");
+        let v: serde_json::Value =
+            serde_json::from_str(&record).expect("record must be valid JSON");
         assert!(v.get("badge_id").is_some());
         assert!(v.get("domain_hash").is_some());
         assert!(v.get("level").is_some());

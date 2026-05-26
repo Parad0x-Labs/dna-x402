@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -30,14 +30,18 @@ pub enum BatchError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(bufs: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
     for b in bufs {
-        for i in 0..32 { acc[i] ^= b[i]; }
+        for i in 0..32 {
+            acc[i] ^= b[i];
+        }
     }
     acc
 }
@@ -49,7 +53,12 @@ fn hex32(b: &[u8; 32]) -> String {
 fn compute_batch_root(nullifiers: &[[u8; 32]], epoch: u64) -> [u8; 32] {
     let xor_null = xor_fold(nullifiers);
     let count = nullifiers.len() as u32;
-    sha256_multi(&[b"nbatch-root-v1", &xor_null, &count.to_le_bytes(), &epoch.to_le_bytes()])
+    sha256_multi(&[
+        b"nbatch-root-v1",
+        &xor_null,
+        &count.to_le_bytes(),
+        &epoch.to_le_bytes(),
+    ])
 }
 
 fn compute_batch_id(batch_root: &[u8; 32]) -> [u8; 32] {
@@ -94,7 +103,9 @@ pub fn submit_batch(batch: &mut NullifierBatch) -> Result<[u8; 32], BatchError> 
 
 pub fn verify_batch_integrity(batch: &NullifierBatch) -> bool {
     let expected_root = compute_batch_root(&batch.nullifiers, batch.epoch);
-    if expected_root != batch.batch_root { return false; }
+    if expected_root != batch.batch_root {
+        return false;
+    }
     let expected_id = compute_batch_id(&batch.batch_root);
     expected_id == batch.batch_id
 }
@@ -107,7 +118,8 @@ pub fn batch_public_record(batch: &NullifierBatch) -> String {
         "epoch": batch.epoch,
         "submitted": batch.submitted,
         "mainnet_ready": batch.mainnet_ready,
-    }).to_string()
+    })
+    .to_string()
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -116,7 +128,11 @@ pub fn batch_public_record(batch: &NullifierBatch) -> String {
 mod tests {
     use super::*;
 
-    fn null(b: u8) -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
+    fn null(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
 
     // Test 1: create + submit
     #[test]

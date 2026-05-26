@@ -1,0 +1,9 @@
+[package]
+name = "dark-private-airdrop"
+version = "0.1.0"
+edition = "2021"
+description = "Private Merkle airdrop - prove eligibility without revealing recipient list; nullifier prevents double-claim"
+
+[dependencies]
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }

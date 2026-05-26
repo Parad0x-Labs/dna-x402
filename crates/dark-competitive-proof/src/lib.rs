@@ -59,14 +59,46 @@ fn hex_encode(b: &[u8]) -> String {
 /// Generate the full competitive proof with all 8 hardcoded axes.
 pub fn generate_competitive_proof() -> CompetitiveProof {
     let axes: Vec<CompetitiveAxis> = vec![
-        CompetitiveAxis { name: "bn254_curve_support",      dna_score: 100, competitor_score: 30 },
-        CompetitiveAxis { name: "x402_payment_rail",        dna_score: 100, competitor_score:  0 },
-        CompetitiveAxis { name: "on_chain_verifier",        dna_score:  95, competitor_score: 20 },
-        CompetitiveAxis { name: "mpc_ceremony_complete",    dna_score:  90, competitor_score: 40 },
-        CompetitiveAxis { name: "proof_aggregation",        dna_score:  95, competitor_score: 10 },
-        CompetitiveAxis { name: "solana_native_nullifiers", dna_score: 100, competitor_score:  5 },
-        CompetitiveAxis { name: "privacy_primitives_count", dna_score: 100, competitor_score: 15 },
-        CompetitiveAxis { name: "zk_circuit_coverage",     dna_score:  90, competitor_score: 25 },
+        CompetitiveAxis {
+            name: "bn254_curve_support",
+            dna_score: 100,
+            competitor_score: 30,
+        },
+        CompetitiveAxis {
+            name: "x402_payment_rail",
+            dna_score: 100,
+            competitor_score: 0,
+        },
+        CompetitiveAxis {
+            name: "on_chain_verifier",
+            dna_score: 95,
+            competitor_score: 20,
+        },
+        CompetitiveAxis {
+            name: "mpc_ceremony_complete",
+            dna_score: 90,
+            competitor_score: 40,
+        },
+        CompetitiveAxis {
+            name: "proof_aggregation",
+            dna_score: 95,
+            competitor_score: 10,
+        },
+        CompetitiveAxis {
+            name: "solana_native_nullifiers",
+            dna_score: 100,
+            competitor_score: 5,
+        },
+        CompetitiveAxis {
+            name: "privacy_primitives_count",
+            dna_score: 100,
+            competitor_score: 15,
+        },
+        CompetitiveAxis {
+            name: "zk_circuit_coverage",
+            dna_score: 90,
+            competitor_score: 25,
+        },
     ];
 
     let n = axes.len() as u32;

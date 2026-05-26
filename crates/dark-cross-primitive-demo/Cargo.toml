@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-cross-primitive-demo"
 version = "0.1.0"

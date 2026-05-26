@@ -71,9 +71,12 @@ mod tests {
     use super::*;
 
     fn make_secrets() -> ([u8; 32], [u8; 32], [u8; 32]) {
-        let mut r = [0u8; 32]; r[0] = 0xAA;
-        let mut e = [0u8; 32]; e[0] = 0xBB;
-        let mut b = [0u8; 32]; b[0] = 0xCC;
+        let mut r = [0u8; 32];
+        r[0] = 0xAA;
+        let mut e = [0u8; 32];
+        e[0] = 0xBB;
+        let mut b = [0u8; 32];
+        b[0] = 0xCC;
         (r, e, b)
     }
 
@@ -106,7 +109,10 @@ mod tests {
         // Use distinct secrets and confirm no self-referral error.
         let (r, e, b) = make_secrets();
         let result = new_referral(&r, &e, 500, &b);
-        assert!(result.is_ok(), "distinct secrets should not be self-referral");
+        assert!(
+            result.is_ok(),
+            "distinct secrets should not be self-referral"
+        );
         // Test self-referral branch: pass same secret bytes but note tags differ, so hash won't collide.
         // The only reliable way to hit SelfReferral with the current domain separation is if
         // SHA256("ref2-referrer-v1"||s) == SHA256("ref2-referee-v1"||s), which won't happen by construction.
@@ -129,7 +135,8 @@ mod tests {
     fn commission_commitment_uses_blinding() {
         let (r, e, b) = make_secrets();
         let ref1 = new_referral(&r, &e, 500, &b).unwrap();
-        let mut b2 = [0u8; 32]; b2[0] = 0xFF;
+        let mut b2 = [0u8; 32];
+        b2[0] = 0xFF;
         let ref2 = new_referral(&r, &e, 500, &b2).unwrap();
         assert_ne!(ref1.commission_commitment, ref2.commission_commitment);
     }

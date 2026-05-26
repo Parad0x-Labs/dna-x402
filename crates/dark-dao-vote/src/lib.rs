@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -120,11 +120,7 @@ pub fn reveal_vote(
 /// Tally a slice of revealed votes.
 ///
 /// `tally_hash` = SHA256("tally-v1" || proposal_le || yes_le || no_le || abstain_le)
-pub fn tally_votes(
-    proposal_id: u64,
-    votes: &[RevealedVote],
-    reveal_slot_open: u64,
-) -> VoteTally {
+pub fn tally_votes(proposal_id: u64, votes: &[RevealedVote], reveal_slot_open: u64) -> VoteTally {
     let mut yes_count: u32 = 0;
     let mut no_count: u32 = 0;
     let mut abstain_count: u32 = 0;
@@ -220,7 +216,13 @@ mod tests {
         let commitment = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
         assert!(!commitment.mainnet_ready);
 
-        let revealed = reveal_vote(&commitment, VoteChoice::Yes, &NONCE_YES, REVEAL_SLOT, REVEAL_OPEN);
+        let revealed = reveal_vote(
+            &commitment,
+            VoteChoice::Yes,
+            &NONCE_YES,
+            REVEAL_SLOT,
+            REVEAL_OPEN,
+        );
         assert!(revealed.is_ok());
         let rv = revealed.unwrap();
         assert_eq!(rv.choice, VoteChoice::Yes);
@@ -235,7 +237,10 @@ mod tests {
         let result = reveal_vote(&commitment, VoteChoice::Yes, &NONCE_YES, 150, REVEAL_OPEN);
         assert_eq!(
             result.unwrap_err(),
-            VoteError::RevealBeforeWindow { open_at: REVEAL_OPEN, current: 150 }
+            VoteError::RevealBeforeWindow {
+                open_at: REVEAL_OPEN,
+                current: 150
+            }
         );
     }
 
@@ -243,7 +248,13 @@ mod tests {
     #[test]
     fn test_wrong_choice_fails() {
         let commitment = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
-        let result = reveal_vote(&commitment, VoteChoice::No, &NONCE_YES, REVEAL_SLOT, REVEAL_OPEN);
+        let result = reveal_vote(
+            &commitment,
+            VoteChoice::No,
+            &NONCE_YES,
+            REVEAL_SLOT,
+            REVEAL_OPEN,
+        );
         assert_eq!(result.unwrap_err(), VoteError::CommitmentMismatch);
     }
 

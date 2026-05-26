@@ -196,7 +196,11 @@ pub fn tally_votes(
 /// Produce a JSON public record for `tally`.  Contains aggregate counts and
 /// the tally hash, but **no** individual voter information.
 pub fn tally_public_record(tally: &TallyResult) -> String {
-    let tally_hash_hex: String = tally.tally_hash.iter().map(|b| format!("{b:02x}")).collect();
+    let tally_hash_hex: String = tally
+        .tally_hash
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
 
     serde_json::json!({
         "proposal_id": tally.proposal_id,
@@ -239,8 +243,10 @@ mod tests {
         let ballot_b = cast_ballot(&voter_secret(2), VoteChoice::Yes, pid, &nonce(20)).unwrap();
         let ballot_c = cast_ballot(&voter_secret(3), VoteChoice::No, pid, &nonce(30)).unwrap();
 
-        let rev_a = reveal_ballot(&ballot_a, &voter_secret(1), VoteChoice::Yes, &nonce(10)).unwrap();
-        let rev_b = reveal_ballot(&ballot_b, &voter_secret(2), VoteChoice::Yes, &nonce(20)).unwrap();
+        let rev_a =
+            reveal_ballot(&ballot_a, &voter_secret(1), VoteChoice::Yes, &nonce(10)).unwrap();
+        let rev_b =
+            reveal_ballot(&ballot_b, &voter_secret(2), VoteChoice::Yes, &nonce(20)).unwrap();
         let rev_c = reveal_ballot(&ballot_c, &voter_secret(3), VoteChoice::No, &nonce(30)).unwrap();
 
         let tally = tally_votes(&[rev_a, rev_b, rev_c], pid).unwrap();
@@ -259,8 +265,8 @@ mod tests {
         let pid = 7u64;
         let ballot = cast_ballot(&voter_secret(5), VoteChoice::Abstain, pid, &nonce(99)).unwrap();
 
-        let err = reveal_ballot(&ballot, &voter_secret(5), VoteChoice::Abstain, &nonce(1))
-            .unwrap_err();
+        let err =
+            reveal_ballot(&ballot, &voter_secret(5), VoteChoice::Abstain, &nonce(1)).unwrap_err();
         assert_eq!(err, TallyError::CommitmentMismatch);
     }
 

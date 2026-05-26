@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -118,7 +118,12 @@ fn compute_pi_c(pk_hash: &[u8; 32], pi_a: &[u8; 32], pi_b: &[u8; 32]) -> [u8; 32
 }
 
 /// proof_id = SHA256("snarkv2-id-v1" || pi_a || pi_b || pi_c || vk_hash)
-fn compute_proof_id(pi_a: &[u8; 32], pi_b: &[u8; 32], pi_c: &[u8; 32], vk_hash: &[u8; 32]) -> [u8; 32] {
+fn compute_proof_id(
+    pi_a: &[u8; 32],
+    pi_b: &[u8; 32],
+    pi_c: &[u8; 32],
+    vk_hash: &[u8; 32],
+) -> [u8; 32] {
     sha256_5(b"snarkv2-id-v1", pi_a, pi_b, pi_c, vk_hash)
 }
 
@@ -180,8 +185,16 @@ pub fn verify_snark_v2(
 
 /// Public JSON record: proof_id, public_inputs_hash, vk_hash, is_stub, mainnet_ready.
 pub fn snark_v2_public_record(proof: &SnarkV2Proof) -> String {
-    let pid_hex: String = proof.proof_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let pih_hex: String = proof.public_inputs_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let pid_hex: String = proof
+        .proof_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let pih_hex: String = proof
+        .public_inputs_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     let vkh_hex: String = proof.vk_hash.iter().map(|b| format!("{:02x}", b)).collect();
     serde_json::json!({
         "proof_id": pid_hex,

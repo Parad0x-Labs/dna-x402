@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -244,10 +244,7 @@ mod tests {
         // Provide only 2 of 3 shares
         let partial_shares = &shares[..2];
         let err = decrypt(&payload, partial_shares).unwrap_err();
-        assert_eq!(
-            err,
-            ThresholdError::InsufficientShares { need: 3, got: 2 }
-        );
+        assert_eq!(err, ThresholdError::InsufficientShares { need: 3, got: 2 });
     }
 
     #[test]

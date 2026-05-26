@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpendingAccount {
@@ -86,7 +86,11 @@ pub fn reset_epoch(account: &mut SpendingAccount, new_epoch: u64) {
 }
 
 pub fn account_public_record(account: &SpendingAccount) -> String {
-    let id_hex: String = account.account_id.iter().map(|b| format!("{:02x}", b)).collect();
+    let id_hex: String = account
+        .account_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "account_id": id_hex,
         "cumulative_spend": account.cumulative_spend,
@@ -122,7 +126,13 @@ mod tests {
     fn test_cap_exceeded_rejected() {
         let mut acct = new_account(test_id(), 100, 1).unwrap();
         let err = record_spend(&mut acct, 101).unwrap_err();
-        assert_eq!(err, SpendError::CapExceeded { cap: 100, attempted: 101 });
+        assert_eq!(
+            err,
+            SpendError::CapExceeded {
+                cap: 100,
+                attempted: 101
+            }
+        );
     }
 
     #[test]
@@ -151,7 +161,13 @@ mod tests {
         assert_eq!(acct.cumulative_spend, 600_000);
         // one more that would exceed should fail
         let err = record_spend(&mut acct, 500_000).unwrap_err();
-        assert_eq!(err, SpendError::CapExceeded { cap: 1_000_000, attempted: 1_100_000 });
+        assert_eq!(
+            err,
+            SpendError::CapExceeded {
+                cap: 1_000_000,
+                attempted: 1_100_000
+            }
+        );
     }
 
     #[test]

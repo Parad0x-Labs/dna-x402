@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -13,7 +13,7 @@ pub enum FeeStatus {
 impl FeeStatus {
     fn as_str(&self) -> &'static str {
         match self {
-            FeeStatus::Pending  => "Pending",
+            FeeStatus::Pending => "Pending",
             FeeStatus::Released => "Released",
             FeeStatus::Refunded => "Refunded",
         }
@@ -64,7 +64,12 @@ fn compute_service_hash(service_bytes: &[u8]) -> [u8; 32] {
     sha256(&d)
 }
 
-fn compute_escrow_id(payer_hash: &[u8; 32], fee_amount: u64, service_hash: &[u8; 32], nonce: &[u8; 32]) -> [u8; 32] {
+fn compute_escrow_id(
+    payer_hash: &[u8; 32],
+    fee_amount: u64,
+    service_hash: &[u8; 32],
+    nonce: &[u8; 32],
+) -> [u8; 32] {
     let mut d = Vec::new();
     d.extend_from_slice(b"fee-escrow-v1");
     d.extend_from_slice(payer_hash);
@@ -137,8 +142,16 @@ pub fn escrow_public_record(escrow: &FeeEscrow) -> String {
 mod tests {
     use super::*;
 
-    fn payer() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xab; s }
-    fn nonce() -> [u8; 32] { let mut n = [0u8; 32]; n[0] = 0x01; n }
+    fn payer() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xab;
+        s
+    }
+    fn nonce() -> [u8; 32] {
+        let mut n = [0u8; 32];
+        n[0] = 0x01;
+        n
+    }
 
     // Test 1: create + release happy path
     #[test]

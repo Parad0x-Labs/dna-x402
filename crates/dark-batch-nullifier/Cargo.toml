@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-batch-nullifier"
 version = "0.1.0"

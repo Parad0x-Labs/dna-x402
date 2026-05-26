@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -100,7 +100,8 @@ pub fn unseal_message(
     let shared_key = sha256_multi(&[b"mcapsule-shared-v1", &sender_hash, &recipient_key_hash]);
     let plaintext_hash = sha256_multi(&[b"mcapsule-plain-v1", message_bytes]);
     let message_commitment = sha256_multi(&[b"mcapsule-commit-v1", &plaintext_hash, nonce]);
-    let recomputed_ciphertext_hash = sha256_multi(&[b"mcapsule-cipher-v1", &shared_key, &message_commitment]);
+    let recomputed_ciphertext_hash =
+        sha256_multi(&[b"mcapsule-cipher-v1", &shared_key, &message_commitment]);
 
     let verified = recomputed_ciphertext_hash == capsule.ciphertext_hash;
 

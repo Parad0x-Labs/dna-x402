@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-merkle-proof"
 version = "0.1.0"

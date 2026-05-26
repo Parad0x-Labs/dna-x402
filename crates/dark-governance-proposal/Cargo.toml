@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-governance-proposal"
 version = "0.1.0"

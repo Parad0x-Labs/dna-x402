@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-proof-of-history"
 version = "0.1.0"

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,7 +29,9 @@ pub enum SovereignError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -130,8 +132,16 @@ pub fn update_domain(proof: &mut SovereignProof, domain_bytes: &[u8]) {
 /// Public JSON record: proof_id, domain_hash, issued_at, valid, mainnet_ready.
 /// Does NOT expose owner_hash or data.
 pub fn proof_public_record(proof: &SovereignProof) -> String {
-    let proof_id_hex: String = proof.proof_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let domain_hex: String = proof.domain_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let proof_id_hex: String = proof
+        .proof_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let domain_hex: String = proof
+        .domain_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "proof_id": proof_id_hex,
         "domain_hash": domain_hex,
@@ -150,8 +160,16 @@ pub fn proof_public_record(proof: &SovereignProof) -> String {
 mod tests {
     use super::*;
 
-    fn owner_secret() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xE1; s }
-    fn blinding() -> [u8; 32] { let mut b = [0u8; 32]; b[0] = 0xE2; b }
+    fn owner_secret() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xE1;
+        s
+    }
+    fn blinding() -> [u8; 32] {
+        let mut b = [0u8; 32];
+        b[0] = 0xE2;
+        b
+    }
 
     #[test]
     fn test_prove_and_verify() {
@@ -170,8 +188,10 @@ mod tests {
 
     #[test]
     fn test_different_domains_different_proof_ids() {
-        let p1 = prove_sovereignty(&owner_secret(), b"data", b"domain-alpha", &blinding(), 0).unwrap();
-        let p2 = prove_sovereignty(&owner_secret(), b"data", b"domain-beta", &blinding(), 0).unwrap();
+        let p1 =
+            prove_sovereignty(&owner_secret(), b"data", b"domain-alpha", &blinding(), 0).unwrap();
+        let p2 =
+            prove_sovereignty(&owner_secret(), b"data", b"domain-beta", &blinding(), 0).unwrap();
         assert_ne!(p1.proof_id, p2.proof_id);
     }
 
@@ -218,11 +238,25 @@ mod tests {
         let record = proof_public_record(&proof);
         let v: serde_json::Value = serde_json::from_str(&record).unwrap();
 
-        let owner_hex: String = proof.owner_hash.iter().map(|b| format!("{:02x}", b)).collect();
-        let data_commit_hex: String = proof.data_commitment.iter().map(|b| format!("{:02x}", b)).collect();
+        let owner_hex: String = proof
+            .owner_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        let data_commit_hex: String = proof
+            .data_commitment
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
 
-        assert!(!record.contains(&owner_hex), "owner_hash must not appear in public record");
-        assert!(!record.contains(&data_commit_hex), "data_commitment must not appear in public record");
+        assert!(
+            !record.contains(&owner_hex),
+            "owner_hash must not appear in public record"
+        );
+        assert!(
+            !record.contains(&data_commit_hex),
+            "data_commitment must not appear in public record"
+        );
         assert!(v.get("owner_hash").is_none());
         assert!(v.get("data_commitment").is_none());
         assert_eq!(v["mainnet_ready"], false);

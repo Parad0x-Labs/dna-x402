@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-shielded-vote"
 version = "0.1.0"

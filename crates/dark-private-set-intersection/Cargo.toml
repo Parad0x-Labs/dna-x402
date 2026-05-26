@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-private-set-intersection"
 version = "0.1.0"

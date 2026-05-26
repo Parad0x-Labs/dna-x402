@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LiquidityProof {
@@ -25,7 +25,11 @@ fn compute_reserve_commitment(actual_reserve: u64, blinding: &[u8; 32]) -> [u8; 
     hasher.finalize().into()
 }
 
-fn compute_proof_hash(pool_id: &[u8; 32], reserve_commitment: &[u8; 32], minimum_liquidity: u64) -> [u8; 32] {
+fn compute_proof_hash(
+    pool_id: &[u8; 32],
+    reserve_commitment: &[u8; 32],
+    minimum_liquidity: u64,
+) -> [u8; 32] {
     let mut hasher = Sha256::new();
     hasher.update(b"liq-proof-v1");
     hasher.update(pool_id);
@@ -75,8 +79,16 @@ pub fn verify_liquidity(proof: &LiquidityProof, actual_reserve: u64, blinding: &
 
 pub fn proof_public_record(proof: &LiquidityProof) -> String {
     let pool_hex: String = proof.pool_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let rc_hex: String = proof.reserve_commitment.iter().map(|b| format!("{:02x}", b)).collect();
-    let ph_hex: String = proof.proof_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let rc_hex: String = proof
+        .reserve_commitment
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let ph_hex: String = proof
+        .proof_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "pool_id": pool_hex,
         "reserve_commitment": rc_hex,
@@ -115,7 +127,13 @@ mod tests {
     #[test]
     fn test_insufficient_liquidity_rejected() {
         let err = prove_liquidity(pool_id(), 100, &blinding(), 200).unwrap_err();
-        assert_eq!(err, LiquidityError::InsufficientLiquidity { actual: 100, required: 200 });
+        assert_eq!(
+            err,
+            LiquidityError::InsufficientLiquidity {
+                actual: 100,
+                required: 200
+            }
+        );
     }
 
     #[test]

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -94,11 +94,11 @@ pub fn new_transfer(
     if amount == 0 {
         return Err(TransferError::ZeroAmount);
     }
-    let sender_commitment   = compute_sender_commitment(sender_secret, sender_blinding);
+    let sender_commitment = compute_sender_commitment(sender_secret, sender_blinding);
     let receiver_commitment = compute_receiver_commitment(receiver_secret, receiver_blinding);
-    let amount_commitment   = compute_amount_commitment(amount, amount_blinding);
-    let nullifier           = compute_nullifier(&sender_commitment, &amount_commitment);
-    let transfer_id         = compute_transfer_id(&sender_commitment, &receiver_commitment, &nullifier);
+    let amount_commitment = compute_amount_commitment(amount, amount_blinding);
+    let nullifier = compute_nullifier(&sender_commitment, &amount_commitment);
+    let transfer_id = compute_transfer_id(&sender_commitment, &receiver_commitment, &nullifier);
     Ok(PrivateTransfer {
         transfer_id,
         sender_commitment,
@@ -128,22 +128,31 @@ pub fn verify_transfer(transfer: &PrivateTransfer) -> bool {
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { [b; 32] }
-    fn blind(b: u8)  -> [u8; 32] { [b; 32] }
+    fn secret(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
+    fn blind(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
 
     // Test 1: new_transfer all fields correct + mainnet_ready=false
     #[test]
     fn test_new_transfer_fields_correct() {
         let t = new_transfer(
-            &secret(0xaa), &secret(0xbb), 1000,
-            &blind(0x01), &blind(0x02), &blind(0x03),
-        ).unwrap();
+            &secret(0xaa),
+            &secret(0xbb),
+            1000,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
         assert!(!t.mainnet_ready);
         assert!(!t.settled);
 
-        let sc  = compute_sender_commitment(&secret(0xaa), &blind(0x01));
-        let rc  = compute_receiver_commitment(&secret(0xbb), &blind(0x02));
-        let ac  = compute_amount_commitment(1000, &blind(0x03));
+        let sc = compute_sender_commitment(&secret(0xaa), &blind(0x01));
+        let rc = compute_receiver_commitment(&secret(0xbb), &blind(0x02));
+        let ac = compute_amount_commitment(1000, &blind(0x03));
         let nul = compute_nullifier(&sc, &ac);
         let tid = compute_transfer_id(&sc, &rc, &nul);
         assert_eq!(t.sender_commitment, sc);
@@ -158,9 +167,14 @@ mod tests {
     #[test]
     fn test_settle_sets_flag() {
         let mut t = new_transfer(
-            &secret(0xaa), &secret(0xbb), 500,
-            &blind(0x01), &blind(0x02), &blind(0x03),
-        ).unwrap();
+            &secret(0xaa),
+            &secret(0xbb),
+            500,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
         assert!(!t.settled);
         settle_transfer(&mut t).unwrap();
         assert!(t.settled);
@@ -170,9 +184,14 @@ mod tests {
     #[test]
     fn test_double_settle_rejected() {
         let mut t = new_transfer(
-            &secret(0xaa), &secret(0xbb), 500,
-            &blind(0x01), &blind(0x02), &blind(0x03),
-        ).unwrap();
+            &secret(0xaa),
+            &secret(0xbb),
+            500,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
         settle_transfer(&mut t).unwrap();
         let err = settle_transfer(&mut t).unwrap_err();
         assert_eq!(err, TransferError::AlreadySettled);
@@ -182,9 +201,14 @@ mod tests {
     #[test]
     fn test_zero_sender_rejected() {
         let err = new_transfer(
-            &[0u8; 32], &secret(0xbb), 500,
-            &blind(0x01), &blind(0x02), &blind(0x03),
-        ).unwrap_err();
+            &[0u8; 32],
+            &secret(0xbb),
+            500,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap_err();
         assert_eq!(err, TransferError::ZeroSenderSecret);
     }
 
@@ -192,9 +216,14 @@ mod tests {
     #[test]
     fn test_zero_amount_rejected() {
         let err = new_transfer(
-            &secret(0xaa), &secret(0xbb), 0,
-            &blind(0x01), &blind(0x02), &blind(0x03),
-        ).unwrap_err();
+            &secret(0xaa),
+            &secret(0xbb),
+            0,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap_err();
         assert_eq!(err, TransferError::ZeroAmount);
     }
 

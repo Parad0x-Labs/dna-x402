@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,9 @@ pub enum RewardError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -83,7 +85,10 @@ pub fn claim_reward(
     }
     let available = pool.total_rewards.saturating_sub(pool.distributed);
     if amount > available {
-        return Err(RewardError::InsufficientRewards { available, requested: amount });
+        return Err(RewardError::InsufficientRewards {
+            available,
+            requested: amount,
+        });
     }
     let staker_hash = sha256_multi(&[b"reward-staker-v1", staker_secret]);
     let claim_id = sha256_multi(&[
@@ -110,7 +115,8 @@ pub fn pool_public_record(pool: &RewardPool) -> String {
         "distributed": pool.distributed,
         "epoch": pool.epoch,
         "mainnet_ready": pool.mainnet_ready,
-    }).to_string()
+    })
+    .to_string()
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -119,7 +125,11 @@ pub fn pool_public_record(pool: &RewardPool) -> String {
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
+    fn secret(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
 
     // Test 1: create + claim
     #[test]
@@ -138,7 +148,13 @@ mod tests {
     fn test_insufficient_rewards_rejected() {
         let mut pool = create_pool(&secret(0x22), 500, 2).unwrap();
         let err = claim_reward(&mut pool, &secret(0xBB), 501).unwrap_err();
-        assert_eq!(err, RewardError::InsufficientRewards { available: 500, requested: 501 });
+        assert_eq!(
+            err,
+            RewardError::InsufficientRewards {
+                available: 500,
+                requested: 501
+            }
+        );
     }
 
     // Test 3: zero validator rejected

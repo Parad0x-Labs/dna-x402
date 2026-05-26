@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -147,9 +147,8 @@ mod tests {
         let claimer = secret(0x22);
         let bridge_secret = secret(0x33);
 
-        let mut deposit = create_deposit(
-            &depositor, 1000, b"solana", b"ethereum", &bridge_secret,
-        ).unwrap();
+        let mut deposit =
+            create_deposit(&depositor, 1000, b"solana", b"ethereum", &bridge_secret).unwrap();
         assert!(!deposit.claimed);
         assert!(!deposit.mainnet_ready);
 
@@ -165,9 +164,8 @@ mod tests {
         let bridge_secret = secret(0x55);
         let wrong_secret = secret(0x66);
 
-        let mut deposit = create_deposit(
-            &depositor, 500, b"solana", b"ethereum", &bridge_secret,
-        ).unwrap();
+        let mut deposit =
+            create_deposit(&depositor, 500, b"solana", b"ethereum", &bridge_secret).unwrap();
         let err = claim_deposit(&mut deposit, &depositor, &wrong_secret).unwrap_err();
         assert_eq!(err, BridgeError::WrongSecret);
     }
@@ -177,9 +175,8 @@ mod tests {
         let depositor = secret(0x77);
         let bridge_secret = secret(0x88);
 
-        let mut deposit = create_deposit(
-            &depositor, 100, b"solana", b"polygon", &bridge_secret,
-        ).unwrap();
+        let mut deposit =
+            create_deposit(&depositor, 100, b"solana", b"polygon", &bridge_secret).unwrap();
         claim_deposit(&mut deposit, &depositor, &bridge_secret).unwrap();
         let err = claim_deposit(&mut deposit, &depositor, &bridge_secret).unwrap_err();
         assert_eq!(err, BridgeError::AlreadyClaimed);
@@ -189,7 +186,8 @@ mod tests {
     fn test_same_chain_rejected() {
         let depositor = secret(0x99);
         let bridge_secret = secret(0xaa);
-        let err = create_deposit(&depositor, 100, b"solana", b"solana", &bridge_secret).unwrap_err();
+        let err =
+            create_deposit(&depositor, 100, b"solana", b"solana", &bridge_secret).unwrap_err();
         assert_eq!(err, BridgeError::SameChain);
     }
 
@@ -197,7 +195,8 @@ mod tests {
     fn test_zero_amount_rejected() {
         let depositor = secret(0xbb);
         let bridge_secret = secret(0xcc);
-        let err = create_deposit(&depositor, 0, b"solana", b"ethereum", &bridge_secret).unwrap_err();
+        let err =
+            create_deposit(&depositor, 0, b"solana", b"ethereum", &bridge_secret).unwrap_err();
         assert_eq!(err, BridgeError::ZeroAmount);
     }
 
@@ -205,9 +204,8 @@ mod tests {
     fn test_public_record_hides_depositor() {
         let depositor = secret(0xdd);
         let bridge_secret = secret(0xee);
-        let deposit = create_deposit(
-            &depositor, 250, b"solana", b"ethereum", &bridge_secret,
-        ).unwrap();
+        let deposit =
+            create_deposit(&depositor, 250, b"solana", b"ethereum", &bridge_secret).unwrap();
         let record = deposit_public_record(&deposit);
         let v: serde_json::Value = serde_json::from_str(&record).unwrap();
         assert!(v["deposit_id"].is_string());

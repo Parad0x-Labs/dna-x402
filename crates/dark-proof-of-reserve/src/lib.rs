@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,10 @@ pub fn prove_reserve(
         return Err(ReserveError::ZeroBlinding);
     }
     if reserves < liabilities {
-        return Err(ReserveError::ReservesInsufficient { reserves, liabilities });
+        return Err(ReserveError::ReservesInsufficient {
+            reserves,
+            liabilities,
+        });
     }
     let surplus = reserves - liabilities;
     let reserve_commitment = compute_reserve_commitment(reserves, reserve_blinding);
@@ -94,13 +97,7 @@ mod tests {
     use super::*;
 
     fn make_proof() -> ReserveProof {
-        prove_reserve(
-            1_000_000,
-            800_000,
-            &[0x01u8; 32],
-            &[0x02u8; 32],
-        )
-        .unwrap()
+        prove_reserve(1_000_000, 800_000, &[0x01u8; 32], &[0x02u8; 32]).unwrap()
     }
 
     fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
@@ -118,7 +115,11 @@ mod tests {
         assert!(proof.is_solvent);
         assert!(!proof.mainnet_ready);
         // Verify reserve_commitment formula
-        let expected_rc = sha256_multi(&[b"por-reserve-v1", &1_000_000u64.to_le_bytes(), &[0x01u8; 32]]);
+        let expected_rc = sha256_multi(&[
+            b"por-reserve-v1",
+            &1_000_000u64.to_le_bytes(),
+            &[0x01u8; 32],
+        ]);
         assert_eq!(proof.reserve_commitment, expected_rc);
     }
 
@@ -132,7 +133,10 @@ mod tests {
     fn reserves_less_than_liabilities_rejected() {
         let err = prove_reserve(500_000, 800_000, &[0x01u8; 32], &[0x02u8; 32]).unwrap_err();
         match err {
-            ReserveError::ReservesInsufficient { reserves, liabilities } => {
+            ReserveError::ReservesInsufficient {
+                reserves,
+                liabilities,
+            } => {
                 assert_eq!(reserves, 500_000);
                 assert_eq!(liabilities, 800_000);
             }

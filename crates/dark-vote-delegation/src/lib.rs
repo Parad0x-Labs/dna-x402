@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -113,7 +113,12 @@ pub fn create_delegation(
         return Err(DelegateError::SelfDelegation);
     }
     let scope_hash = compute_scope_hash(scope_bytes);
-    let delegate_id = compute_delegate_id(&delegator_hash, &delegatee_hash, &scope_hash, expires_at_unix);
+    let delegate_id = compute_delegate_id(
+        &delegator_hash,
+        &delegatee_hash,
+        &scope_hash,
+        expires_at_unix,
+    );
     Ok(Delegate {
         delegate_id,
         delegator_hash,
@@ -170,9 +175,19 @@ pub fn delegation_public_record(d: &Delegate) -> String {
 mod tests {
     use super::*;
 
-    fn delegator() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x11; s }
-    fn delegatee() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x22; s }
-    fn scope() -> &'static [u8] { b"governance-vote" }
+    fn delegator() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x11;
+        s
+    }
+    fn delegatee() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x22;
+        s
+    }
+    fn scope() -> &'static [u8] {
+        b"governance-vote"
+    }
 
     // Test 1: create + vote happy path
     #[test]
@@ -190,7 +205,13 @@ mod tests {
     fn test_expired_delegation_rejected() {
         let d = create_delegation(&delegator(), &delegatee(), scope(), 500).unwrap();
         let err = cast_delegated_vote(&d, false, 1000).unwrap_err();
-        assert_eq!(err, DelegateError::DelegationExpired { at: 500, current: 1000 });
+        assert_eq!(
+            err,
+            DelegateError::DelegationExpired {
+                at: 500,
+                current: 1000
+            }
+        );
     }
 
     // Test 3: revoked delegation rejected

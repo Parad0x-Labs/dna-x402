@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-proof-cascade"
 version = "0.1.0"

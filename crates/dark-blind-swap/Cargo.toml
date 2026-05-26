@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-blind-swap"
 version = "0.1.0"

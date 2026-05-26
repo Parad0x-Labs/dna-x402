@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone)]
 pub struct AgentCapability {
-    pub capability_hash: [u8; 32],   // SHA256(agent_id_hash || service_scope_hash || fee_cap_lamports.to_le || nonce)
+    pub capability_hash: [u8; 32], // SHA256(agent_id_hash || service_scope_hash || fee_cap_lamports.to_le || nonce)
     pub fee_cap_lamports: u64,
     pub expiry_slot: u64,
-    pub agent_id_hash: [u8; 32],     // SHA256 of agent ID — never raw
+    pub agent_id_hash: [u8; 32], // SHA256 of agent ID — never raw
     pub service_scope_hash: [u8; 32],
-    pub mainnet_ready: bool,          // always false
+    pub mainnet_ready: bool, // always false
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShieldedSpendProof {
-    pub spend_commitment: [u8; 32],  // commits to (capability_hash || amount || recipient_hash || nonce)
+    pub spend_commitment: [u8; 32], // commits to (capability_hash || amount || recipient_hash || nonce)
     pub receipt_hash: [u8; 32],
     pub amount_lamports: u64,
     pub slot: u64,
@@ -174,7 +174,13 @@ mod tests {
     }
 
     fn make_cap(fee_cap: u64, expiry: u64) -> AgentCapability {
-        create_capability(b"agent-007", b"solana-rpc", fee_cap, expiry, &sample_nonce())
+        create_capability(
+            b"agent-007",
+            b"solana-rpc",
+            fee_cap,
+            expiry,
+            &sample_nonce(),
+        )
     }
 
     #[test]

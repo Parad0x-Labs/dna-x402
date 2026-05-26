@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-privacy-stats-v2"
 version = "0.1.0"

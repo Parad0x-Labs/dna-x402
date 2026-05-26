@@ -4,13 +4,53 @@
 
 use sha2::{Digest, Sha256};
 
-pub use dark_private_x402::{PlainX402Payment, ShieldedPaymentReceipt};
+// ── Local payment types (self-contained) ─────────────────────────────────────
+
+/// Plain x402 payment record — buyer_hash is SHA256 of buyer identity, never raw.
+#[derive(Debug, Clone)]
+pub struct PlainX402Payment {
+    pub buyer_hash: [u8; 32],
+    pub amount_lamports: u64,
+    pub service_hash: [u8; 32],
+    pub payment_tx_hash: [u8; 32],
+    pub slot: u64,
+}
+
+/// Shielded receipt: commitment_hash hides buyer identity; receipt_hash is public anchor.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShieldedPaymentReceipt {
+    /// SHA256("receipt-v1" || payment_tx_hash || commitment_hash)
+    pub receipt_hash: [u8; 32],
+    /// SHA256("commitment-v1" || buyer_hash || amount_le8 || nonce)
+    pub commitment_hash: [u8; 32],
+}
+
+/// Issue a shielded receipt binding buyer commitment to an on-chain payment.
+fn issue_shielded_receipt(payment: &PlainX402Payment, nonce: &[u8; 32]) -> ShieldedPaymentReceipt {
+    let mut h = Sha256::new();
+    h.update(b"commitment-v1");
+    h.update(payment.buyer_hash);
+    h.update(payment.amount_lamports.to_le_bytes());
+    h.update(nonce);
+    let commitment_hash: [u8; 32] = h.finalize().into();
+
+    let mut h = Sha256::new();
+    h.update(b"receipt-v1");
+    h.update(payment.payment_tx_hash);
+    h.update(commitment_hash);
+    let receipt_hash: [u8; 32] = h.finalize().into();
+
+    ShieldedPaymentReceipt {
+        receipt_hash,
+        commitment_hash,
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct SignalListing {
-    pub signal_hash: [u8; 32],   // SHA256 of signal content
+    pub signal_hash: [u8; 32], // SHA256 of signal content
     pub price_lamports: u64,
-    pub seller_hash: [u8; 32],   // SHA256 of seller wallet — never raw
+    pub seller_hash: [u8; 32], // SHA256 of seller wallet — never raw
     pub expiry_slot: u64,
 }
 
@@ -18,7 +58,7 @@ pub struct SignalListing {
 pub struct AnonSignalPurchase {
     pub receipt: ShieldedPaymentReceipt,
     pub signal_hash: [u8; 32],
-    pub access_token: [u8; 32],  // SHA256(commitment_key.nonce || signal_hash) — unlocks the signal
+    pub access_token: [u8; 32], // SHA256(commitment_key.nonce || signal_hash) — unlocks the signal
     pub purchased_at_slot: u64,
 }
 
@@ -43,7 +83,7 @@ pub fn purchase_signal(
         return Err(SignalError::Underpaid);
     }
 
-    let receipt = dark_private_x402::issue_shielded_receipt(payment, nonce);
+    let receipt = issue_shielded_receipt(payment, nonce);
 
     // access_token = SHA256(nonce || signal_hash)
     let mut h = Sha256::new();
@@ -159,7 +199,11 @@ mod tests {
         let view = seller_sees_only_commitment(&purchase);
         let json_str = view.to_string();
 
-        let buyer_hex: String = payment.buyer_hash.iter().map(|b| format!("{:02x}", b)).collect();
+        let buyer_hex: String = payment
+            .buyer_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
         assert!(!json_str.contains(&buyer_hex));
 
         // Confirm expected fields present

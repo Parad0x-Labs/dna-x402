@@ -35,7 +35,10 @@ pub enum FeeCommitError {
     ZeroAmount,
     ExpiredCommitment,
     RevealMismatch,
-    PrematureReveal { earliest_slot: u64, current_slot: u64 },
+    PrematureReveal {
+        earliest_slot: u64,
+        current_slot: u64,
+    },
 }
 
 // ── Internal hash helper ────────────────────────────────────────────────────
@@ -134,10 +137,13 @@ mod tests {
     #[test]
     fn test_commit_reveal_happy_path() {
         let amount = 1_000_000u64;
-        let commitment = commit_fee(amount, &NONCE, EPOCH, EXPIRY)
-            .expect("commit_fee should succeed");
+        let commitment =
+            commit_fee(amount, &NONCE, EPOCH, EXPIRY).expect("commit_fee should succeed");
 
-        assert!(!commitment.mainnet_ready, "mainnet_ready must always be false");
+        assert!(
+            !commitment.mainnet_ready,
+            "mainnet_ready must always be false"
+        );
 
         let reveal = reveal_fee(&commitment, amount, &NONCE, EXPIRY)
             .expect("reveal_fee should succeed at expiry slot");

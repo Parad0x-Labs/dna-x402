@@ -188,39 +188,22 @@ mod tests {
     // 1. create_compliance_check + verify_subject: correct data → true
     #[test]
     fn test_create_and_verify_subject() {
-        let check = create_compliance_check(
-            ComplianceType::KycBasic,
-            SUBJECT,
-            true,
-            NOW,
-            FUTURE,
-        );
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
         assert!(verify_subject(&check, SUBJECT));
     }
 
     // 2. Different subject data → verify_subject returns false
     #[test]
     fn test_wrong_subject_fails_verify() {
-        let check = create_compliance_check(
-            ComplianceType::KycBasic,
-            SUBJECT,
-            true,
-            NOW,
-            FUTURE,
-        );
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
         assert!(!verify_subject(&check, b"bob@example.com"));
     }
 
     // 3. check_expired returns true when current_unix > expires_at_unix
     #[test]
     fn test_expired_check_detected() {
-        let check = create_compliance_check(
-            ComplianceType::AmlScreening,
-            SUBJECT,
-            true,
-            NOW,
-            FUTURE,
-        );
+        let check =
+            create_compliance_check(ComplianceType::AmlScreening, SUBJECT, true, NOW, FUTURE);
         // not expired at expiry timestamp itself
         assert!(!check_expired(&check, FUTURE));
         // expired one second later
@@ -230,13 +213,8 @@ mod tests {
     // 4. compliance_public_record must NOT contain the subject_hash hex
     #[test]
     fn test_public_record_hides_subject() {
-        let check = create_compliance_check(
-            ComplianceType::SanctionsCheck,
-            SUBJECT,
-            true,
-            NOW,
-            FUTURE,
-        );
+        let check =
+            create_compliance_check(ComplianceType::SanctionsCheck, SUBJECT, true, NOW, FUTURE);
         let subject_hash_hex = hex_encode(&check.subject_hash);
         let attestation = attest_compliance(check, ATTESTER);
         let record = compliance_public_record(&attestation);
@@ -254,13 +232,8 @@ mod tests {
     #[test]
     fn test_attestation_receipt_deterministic() {
         let make = || {
-            let check = create_compliance_check(
-                ComplianceType::KycEnhanced,
-                SUBJECT,
-                false,
-                NOW,
-                FUTURE,
-            );
+            let check =
+                create_compliance_check(ComplianceType::KycEnhanced, SUBJECT, false, NOW, FUTURE);
             attest_compliance(check, ATTESTER)
         };
         let a1 = make();

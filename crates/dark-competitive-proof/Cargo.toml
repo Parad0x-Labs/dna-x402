@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-competitive-proof"
 version = "0.1.0"

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoanOffer {
@@ -88,7 +88,12 @@ pub fn take_loan(
     }
     let borrower_hash = sha256(&[b"loan-borrower-v1", borrower_secret]);
     let borrowed_at_le = borrowed_at_unix.to_le_bytes();
-    let loan_id = sha256(&[b"loan-id-v1", &offer.offer_id, &borrower_hash, &borrowed_at_le]);
+    let loan_id = sha256(&[
+        b"loan-id-v1",
+        &offer.offer_id,
+        &borrower_hash,
+        &borrowed_at_le,
+    ]);
     let due_at_unix = borrowed_at_unix + offer.duration_unix;
     let repayment_amount = offer.principal + (offer.principal * offer.interest_bps as u64 / 10_000);
     let repayment_amount_le = repayment_amount.to_le_bytes();
@@ -138,9 +143,15 @@ fn hex_encode(b: [u8; 32]) -> String {
 mod tests {
     use super::*;
 
-    fn lender() -> [u8; 32] { [1u8; 32] }
-    fn borrower() -> [u8; 32] { [2u8; 32] }
-    fn collateral() -> &'static [u8] { b"SOL collateral" }
+    fn lender() -> [u8; 32] {
+        [1u8; 32]
+    }
+    fn borrower() -> [u8; 32] {
+        [2u8; 32]
+    }
+    fn collateral() -> &'static [u8] {
+        b"SOL collateral"
+    }
 
     #[test]
     fn test_create_take_repay_happy_path() {
@@ -196,11 +207,17 @@ mod tests {
         let sha256_fn = |data: &[&[u8]]| -> [u8; 32] {
             use sha2::{Digest, Sha256};
             let mut h = Sha256::new();
-            for d in data { h.update(d); }
+            for d in data {
+                h.update(d);
+            }
             h.finalize().into()
         };
         let expected_repayment_amount: u64 = 1000 + 3;
-        let expected_hash = sha256_fn(&[b"loan-repay-v1", &loan.loan_id, &expected_repayment_amount.to_le_bytes()]);
+        let expected_hash = sha256_fn(&[
+            b"loan-repay-v1",
+            &loan.loan_id,
+            &expected_repayment_amount.to_le_bytes(),
+        ]);
         assert_eq!(loan.repayment_hash, expected_hash);
     }
 

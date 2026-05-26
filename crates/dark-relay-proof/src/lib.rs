@@ -90,7 +90,7 @@ pub fn create_attestation(
         hop,
         prev_hash: *prev_hash,
         relayed_at_unix,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -108,7 +108,10 @@ pub fn new_relay_chain() -> RelayChain {
 ///
 /// Returns `RelayError::MaxHopsExceeded` if `chain.hop_count >= MAX_RELAY_HOPS`.
 /// Returns `RelayError::HopMismatch` if `attest.hop != chain.hop_count`.
-pub fn add_attestation(chain: &mut RelayChain, attest: &RelayAttestation) -> Result<(), RelayError> {
+pub fn add_attestation(
+    chain: &mut RelayChain,
+    attest: &RelayAttestation,
+) -> Result<(), RelayError> {
     if chain.hop_count >= MAX_RELAY_HOPS {
         return Err(RelayError::MaxHopsExceeded);
     }
@@ -197,9 +200,14 @@ mod tests {
 
         for hop in 0..3u8 {
             let secret = make_secret(hop + 1);
-            let attest =
-                create_attestation(&secret, message, &prev_hash, hop, 1_700_000_000 + hop as i64)
-                    .expect("attestation should succeed");
+            let attest = create_attestation(
+                &secret,
+                message,
+                &prev_hash,
+                hop,
+                1_700_000_000 + hop as i64,
+            )
+            .expect("attestation should succeed");
 
             assert!(verify_attestation(&attest), "attestation should verify");
             prev_hash = attest.attestation;
@@ -249,9 +257,8 @@ mod tests {
 
         for hop in 0..3u8 {
             let secret = make_secret(hop + 10);
-            let attest =
-                create_attestation(&secret, message, &prev_hash, hop, hop as i64)
-                    .expect("creation should succeed");
+            let attest = create_attestation(&secret, message, &prev_hash, hop, hop as i64)
+                .expect("creation should succeed");
             prev_hash = attest.attestation;
             add_attestation(&mut chain, &attest).expect("add should succeed");
 
@@ -275,12 +282,15 @@ mod tests {
 
         for hop in 0..2u8 {
             let secret = make_secret(hop + 20);
-            let attest =
-                create_attestation(&secret, message, &prev_hash, hop, hop as i64)
-                    .expect("creation should succeed");
+            let attest = create_attestation(&secret, message, &prev_hash, hop, hop as i64)
+                .expect("creation should succeed");
 
             // Collect the hex representation of each node_pubkey
-            let pk_hex: String = attest.node_pubkey.iter().map(|b| format!("{:02x}", b)).collect();
+            let pk_hex: String = attest
+                .node_pubkey
+                .iter()
+                .map(|b| format!("{:02x}", b))
+                .collect();
             node_pubkeys.push(pk_hex);
 
             prev_hash = attest.attestation;

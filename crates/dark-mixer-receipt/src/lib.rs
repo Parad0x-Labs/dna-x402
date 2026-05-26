@@ -3,16 +3,16 @@ use sha2::{Digest, Sha256};
 /// Fixed denominations in lamports.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Denomination {
-    One = 1_000_000_000,           // 1 SOL
-    Ten = 10_000_000_000,          // 10 SOL
-    Hundred = 100_000_000_000,     // 100 SOL
-    Thousand = 1_000_000_000_000,  // 1000 SOL
+    One = 1_000_000_000,          // 1 SOL
+    Ten = 10_000_000_000,         // 10 SOL
+    Hundred = 100_000_000_000,    // 100 SOL
+    Thousand = 1_000_000_000_000, // 1000 SOL
 }
 
 /// A private deposit note containing the commitment and denomination.
 #[derive(Debug, Clone)]
-pub struct MixerNote {
-    /// SHA256("mixer-note-v1" || denomination_le || secret)
+pub struct ShieldNote {
+    /// SHA256("shield-note-v1" || denomination_le || secret)
     pub note_commitment: [u8; 32],
     pub denomination: Denomination,
     pub mainnet_ready: bool,
@@ -20,8 +20,8 @@ pub struct MixerNote {
 
 /// A completed withdrawal record.
 #[derive(Debug, Clone)]
-pub struct MixerWithdrawal {
-    /// SHA256("mixer-null-v1" || note_commitment || pool_root)
+pub struct ShieldWithdrawal {
+    /// SHA256("shield-null-v1" || note_commitment || pool_root)
     pub nullifier: [u8; 32],
     pub denomination: Denomination,
     pub withdrawn_at_unix: i64,
@@ -30,16 +30,16 @@ pub struct MixerWithdrawal {
 
 /// On-chain anonymity pool state.
 #[derive(Debug)]
-pub struct MixerPool {
-    /// Current pool root: SHA256("mixer-pool-v1" || XOR-fold of all deposited note_commitments)
+pub struct ShieldPool {
+    /// Current pool root: SHA256("shield-pool-v1" || XOR-fold of all deposited note_commitments)
     pub pool_root: [u8; 32],
     pub note_count: u32,
     spent_nullifiers: Vec<[u8; 32]>,
 }
 
-/// Errors returned by mixer operations.
+/// Errors returned by shielded-pool operations.
 #[derive(Debug, PartialEq)]
-pub enum MixerError {
+pub enum ShieldError {
     AlreadySpent,
     NullifierMismatch,
     EmptyPool,
@@ -62,8 +62,8 @@ fn xor_into(target: &mut [u8; 32], src: &[u8; 32]) {
 // ── public API ────────────────────────────────────────────────────────────────
 
 /// Initialise an empty pool.
-pub fn new_pool() -> MixerPool {
-    MixerPool {
+pub fn new_pool() -> ShieldPool {
+    ShieldPool {
         pool_root: [0u8; 32],
         note_count: 0,
         spent_nullifiers: vec![],
@@ -72,18 +72,18 @@ pub fn new_pool() -> MixerPool {
 
 /// Derive a note commitment from a denomination and a 32-byte secret.
 ///
-/// commitment = SHA256("mixer-note-v1" || denomination_as_u64_le || secret)
-pub fn create_note(denomination: Denomination, secret: &[u8; 32]) -> MixerNote {
+/// commitment = SHA256("shield-note-v1" || denomination_as_u64_le || secret)
+pub fn create_note(denomination: Denomination, secret: &[u8; 32]) -> ShieldNote {
     let denom_le = (denomination.clone() as u64).to_le_bytes();
 
     let mut preimage = Vec::with_capacity(14 + 8 + 32);
-    preimage.extend_from_slice(b"mixer-note-v1");
+    preimage.extend_from_slice(b"shield-note-v1");
     preimage.extend_from_slice(&denom_le);
     preimage.extend_from_slice(secret);
 
     let note_commitment = sha256(&preimage);
 
-    MixerNote {
+    ShieldNote {
         note_commitment,
         denomination,
         mainnet_ready: false,
@@ -91,50 +91,50 @@ pub fn create_note(denomination: Denomination, secret: &[u8; 32]) -> MixerNote {
 }
 
 /// Deposit a note into the pool: XOR its commitment into the running pool_root,
-/// then recompute pool_root = SHA256("mixer-pool-v1" || xor_accumulator).
-pub fn deposit_note(pool: &mut MixerPool, note: &MixerNote) {
+/// then recompute pool_root = SHA256("shield-pool-v1" || xor_accumulator).
+pub fn deposit_note(pool: &mut ShieldPool, note: &ShieldNote) {
     // XOR-fold the new commitment into the accumulator stored in pool_root.
     xor_into(&mut pool.pool_root, &note.note_commitment);
 
     // Wrap with domain tag so the root is always a proper hash.
     let mut preimage = Vec::with_capacity(14 + 32);
-    preimage.extend_from_slice(b"mixer-pool-v1");
+    preimage.extend_from_slice(b"shield-pool-v1");
     preimage.extend_from_slice(&pool.pool_root);
     pool.pool_root = sha256(&preimage);
 
     pool.note_count += 1;
 }
 
-/// Attempt to withdraw a note.  Returns a `MixerWithdrawal` on success or a
-/// `MixerError` if the nullifier has already been spent or the commitment
+/// Attempt to withdraw a note.  Returns a `ShieldWithdrawal` on success or a
+/// `ShieldError` if the nullifier has already been spent or the commitment
 /// cannot be verified.
 pub fn withdraw_note(
-    pool: &mut MixerPool,
-    note: &MixerNote,
+    pool: &mut ShieldPool,
+    note: &ShieldNote,
     secret: &[u8; 32],
     current_unix: i64,
-) -> Result<MixerWithdrawal, MixerError> {
+) -> Result<ShieldWithdrawal, ShieldError> {
     // Re-derive the commitment from the claimed secret and denomination.
     let expected = create_note(note.denomination.clone(), secret);
     if expected.note_commitment != note.note_commitment {
-        return Err(MixerError::NullifierMismatch);
+        return Err(ShieldError::NullifierMismatch);
     }
 
-    // nullifier = SHA256("mixer-null-v1" || note_commitment || pool_root)
+    // nullifier = SHA256("shield-null-v1" || note_commitment || pool_root)
     let mut preimage = Vec::with_capacity(14 + 32 + 32);
-    preimage.extend_from_slice(b"mixer-null-v1");
+    preimage.extend_from_slice(b"shield-null-v1");
     preimage.extend_from_slice(&note.note_commitment);
     preimage.extend_from_slice(&pool.pool_root);
     let nullifier: [u8; 32] = sha256(&preimage);
 
     // Double-spend check.
     if pool.spent_nullifiers.contains(&nullifier) {
-        return Err(MixerError::AlreadySpent);
+        return Err(ShieldError::AlreadySpent);
     }
 
     pool.spent_nullifiers.push(nullifier);
 
-    Ok(MixerWithdrawal {
+    Ok(ShieldWithdrawal {
         nullifier,
         denomination: note.denomination.clone(),
         withdrawn_at_unix: current_unix,
@@ -143,8 +143,12 @@ pub fn withdraw_note(
 }
 
 /// Return a JSON string with public pool metadata (no secrets).
-pub fn pool_public_record(pool: &MixerPool) -> String {
-    let root_hex: String = pool.pool_root.iter().map(|b| format!("{:02x}", b)).collect();
+pub fn pool_public_record(pool: &ShieldPool) -> String {
+    let root_hex: String = pool
+        .pool_root
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "pool_root": root_hex,
         "note_count": pool.note_count,
@@ -208,7 +212,7 @@ mod tests {
 
         // Second attempt on the same pool2 state → AlreadySpent.
         let second = withdraw_note(&mut pool2, &note2, &s, 1);
-        assert_eq!(second.unwrap_err(), MixerError::AlreadySpent);
+        assert_eq!(second.unwrap_err(), ShieldError::AlreadySpent);
     }
 
     /// 3. pool_root changes after each deposit.

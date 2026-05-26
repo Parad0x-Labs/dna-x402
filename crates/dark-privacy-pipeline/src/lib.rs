@@ -61,10 +61,7 @@ fn hex_encode(b: &[u8]) -> String {
 // ── Public API ─────────────────────────────────────────────────────────────
 
 /// Create a new pipeline. Errors if secret or nonce is all-zero.
-pub fn new_pipeline(
-    secret: &[u8; 32],
-    nonce: &[u8; 32],
-) -> Result<PrivacyPipeline, PipelineError> {
+pub fn new_pipeline(secret: &[u8; 32], nonce: &[u8; 32]) -> Result<PrivacyPipeline, PipelineError> {
     if is_zero(secret) {
         return Err(PipelineError::SecretZero);
     }
@@ -164,7 +161,7 @@ mod tests {
     fn test_full_pipeline_completes() {
         let mut p = new_pipeline(&secret(), &nonce()).unwrap();
         add_step(&mut p, 1, b"note-commitment-data").unwrap();
-        add_step(&mut p, 2, b"mixer-deposit-data").unwrap();
+        add_step(&mut p, 2, b"shielded-deposit-data").unwrap();
         add_step(&mut p, 3, b"shielded-transfer-data").unwrap();
         add_step(&mut p, 4, b"nullifier-record-data").unwrap();
         assert_eq!(p.steps.len(), 4);

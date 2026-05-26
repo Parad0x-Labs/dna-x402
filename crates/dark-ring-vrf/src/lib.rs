@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +71,9 @@ pub fn build_ring(secrets: &[[u8; 32]]) -> Result<(VrfRing, Vec<RingMember>), Vr
 
     let members: Vec<RingMember> = secrets
         .iter()
-        .map(|s| RingMember { pubkey: derive_pubkey(s) })
+        .map(|s| RingMember {
+            pubkey: derive_pubkey(s),
+        })
         .collect();
 
     let ring_root = derive_ring_root(&members);
@@ -242,5 +244,103 @@ mod tests {
             "secret hex found in public record: {}",
             record
         );
+    }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_output_mainnet_ready_false() {
+        let secrets = [secret(1)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let out = vrf_evaluate(&ring, &members, &secrets[0], b"data").unwrap();
+        assert!(!out.mainnet_ready);
+    }
+
+    #[test]
+    fn test_single_member_ring_works() {
+        let s = secret(7);
+        let (ring, members) = build_ring(&[s]).unwrap();
+        assert_eq!(ring.member_count, 1);
+        let out = vrf_evaluate(&ring, &members, &s, b"solo").unwrap();
+        assert!(vrf_verify(&ring, &out, b"solo"));
+    }
+
+    #[test]
+    fn test_large_ring_works() {
+        let secrets: Vec<[u8; 32]> = (1..=20u8).map(secret).collect();
+        let (ring, members) = build_ring(&secrets).unwrap();
+        assert_eq!(ring.member_count, 20);
+        let out = vrf_evaluate(&ring, &members, &secrets[10], b"big-ring").unwrap();
+        assert!(vrf_verify(&ring, &out, b"big-ring"));
+    }
+
+    #[test]
+    fn test_different_ring_different_output_same_secret_and_input() {
+        let s = secret(1);
+        // Ring A has one extra member
+        let (ring_a, members_a) = build_ring(&[s, secret(2)]).unwrap();
+        let (ring_b, members_b) = build_ring(&[s, secret(3)]).unwrap();
+        let out_a = vrf_evaluate(&ring_a, &members_a, &s, b"common input").unwrap();
+        let out_b = vrf_evaluate(&ring_b, &members_b, &s, b"common input").unwrap();
+        assert_ne!(
+            out_a.output, out_b.output,
+            "different rings must produce different outputs"
+        );
+    }
+
+    #[test]
+    fn test_verify_fails_on_wrong_input() {
+        let secrets = [secret(1), secret(2)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let out = vrf_evaluate(&ring, &members, &secrets[0], b"right input").unwrap();
+        assert!(!vrf_verify(&ring, &out, b"wrong input"));
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_output() {
+        let secrets = [secret(1), secret(2)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let mut out = vrf_evaluate(&ring, &members, &secrets[0], b"data").unwrap();
+        out.output[0] ^= 0xFF; // tamper
+        assert!(!vrf_verify(&ring, &out, b"data"));
+    }
+
+    #[test]
+    fn test_empty_input_rejected() {
+        let secrets = [secret(1)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let err = vrf_evaluate(&ring, &members, &secrets[0], b"").unwrap_err();
+        assert_eq!(err, VrfError::EmptyInput);
+    }
+
+    #[test]
+    fn test_input_hash_matches_output_record() {
+        let secrets = [secret(5)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let out = vrf_evaluate(&ring, &members, &secrets[0], b"probe").unwrap();
+        // Re-derive input hash to ensure it matches stored value
+        let recomputed = sha256_tagged(b"vrf-input-v1", b"probe");
+        assert_eq!(out.input_hash, recomputed);
+    }
+
+    #[test]
+    fn test_public_record_has_all_expected_fields() {
+        let secrets = [secret(9)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let out = vrf_evaluate(&ring, &members, &secrets[0], b"record-test").unwrap();
+        let record = vrf_public_record(&out);
+        assert!(record.contains("output"));
+        assert!(record.contains("ring_root"));
+        assert!(record.contains("input_hash"));
+        assert!(record.contains("proof_hash"));
+        assert!(record.contains("mainnet_ready"));
+    }
+
+    #[test]
+    fn test_proof_hash_different_from_output() {
+        let secrets = [secret(3)];
+        let (ring, members) = build_ring(&secrets).unwrap();
+        let out = vrf_evaluate(&ring, &members, &secrets[0], b"hash-dist").unwrap();
+        assert_ne!(out.output, out.proof_hash);
     }
 }

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TxCapsule {
@@ -103,8 +103,16 @@ pub fn reveal_capsule(
 }
 
 pub fn capsule_public_record(capsule: &TxCapsule) -> String {
-    let capsule_id_hex: String = capsule.capsule_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let pc_hex: String = capsule.payload_commitment.iter().map(|b| format!("{:02x}", b)).collect();
+    let capsule_id_hex: String = capsule
+        .capsule_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let pc_hex: String = capsule
+        .payload_commitment
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "capsule_id": capsule_id_hex,
         "payload_commitment": pc_hex,

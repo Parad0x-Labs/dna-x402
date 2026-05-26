@@ -44,12 +44,7 @@ fn main() {
     // -----------------------------------------------------------------------
     // Step 1 — Create note commitment (deposit)
     // -----------------------------------------------------------------------
-    let note = dark_shielded_client::create_note_from_secret(
-        &secret,
-        value,
-        &recipient_hash,
-        slot,
-    );
+    let note = dark_shielded_client::create_note_from_secret(&secret, value, &recipient_hash, slot);
     steps_proven += 1;
     println!("✅ Step 1 — Note commitment created");
 
@@ -59,11 +54,7 @@ fn main() {
     // Build the circuit inputs: we need the nullifier derived from the note
     // commitment, the secret, and a merkle root (zero root for devnet demo).
     let merkle_root = [0u8; 32];
-    let nullifier = dark_poseidon_bn254::nullifier_hash(
-        &note.commitment,
-        &secret,
-        &merkle_root,
-    );
+    let nullifier = dark_poseidon_bn254::nullifier_hash(&note.commitment, &secret, &merkle_root);
 
     let circuit_inputs = dark_bn254_circuit::WithdrawCircuitInputs {
         merkle_root,
@@ -91,7 +82,10 @@ fn main() {
     let constraint_list = constraints.join(", ");
 
     steps_proven += 1;
-    println!("✅ Step 3 — Circuit constraints verified: [{}]", constraint_list);
+    println!(
+        "✅ Step 3 — Circuit constraints verified: [{}]",
+        constraint_list
+    );
 
     // -----------------------------------------------------------------------
     // Step 4 — Purchase alpha signal via shielded x402 payment
@@ -104,7 +98,7 @@ fn main() {
     };
 
     let buyer_hash = sha256_pair("buyer", "anon-trader");
-    let payment = dark_private_x402::PlainX402Payment {
+    let payment = dark_anon_signal::PlainX402Payment {
         buyer_hash,
         amount_lamports: 1_000_000,
         service_hash: sha256_pair("service", "nulla-signal-service"),
@@ -131,7 +125,10 @@ fn main() {
 
     // Confirm expected fields present, buyer absent
     let has_commitment_hash = seller_json_str.contains("commitment_hash");
-    assert!(has_commitment_hash, "seller view must contain commitment_hash");
+    assert!(
+        has_commitment_hash,
+        "seller view must contain commitment_hash"
+    );
     assert!(buyer_hidden, "seller view must not contain buyer_hash");
     // Also confirm "buyer_hash" key itself is absent from the seller view JSON
     assert!(
@@ -140,7 +137,10 @@ fn main() {
     );
 
     steps_proven += 1;
-    println!("✅ Step 5 — Buyer identity hidden from seller: {}", buyer_hidden);
+    println!(
+        "✅ Step 5 — Buyer identity hidden from seller: {}",
+        buyer_hidden
+    );
 
     // -----------------------------------------------------------------------
     // Step 6 — Compress note to 32-byte leaf

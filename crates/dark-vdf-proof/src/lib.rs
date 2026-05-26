@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,7 +85,11 @@ pub fn create_challenge(input_bytes: &[u8], difficulty: u32) -> Result<VdfChalle
 /// `mainnet_ready` is always `false`.
 pub fn compute_vdf(challenge: &VdfChallenge) -> VdfOutput {
     let output_hash = run_vdf_iterations(&challenge.challenge_hash, challenge.difficulty);
-    let proof_hash = hash_proof(&challenge.challenge_hash, &output_hash, challenge.difficulty);
+    let proof_hash = hash_proof(
+        &challenge.challenge_hash,
+        &output_hash,
+        challenge.difficulty,
+    );
     VdfOutput {
         output_hash,
         proof_hash,
@@ -103,7 +107,11 @@ pub fn verify_vdf(challenge: &VdfChallenge, output: &VdfOutput) -> bool {
     if expected_output != output.output_hash {
         return false;
     }
-    let expected_proof = hash_proof(&challenge.challenge_hash, &expected_output, challenge.difficulty);
+    let expected_proof = hash_proof(
+        &challenge.challenge_hash,
+        &expected_output,
+        challenge.difficulty,
+    );
     expected_proof == output.proof_hash
 }
 
@@ -135,7 +143,10 @@ mod tests {
     fn test_vdf_compute_verify_roundtrip() {
         let challenge = create_challenge(b"test-input", 3).expect("challenge creation failed");
         let output = compute_vdf(&challenge);
-        assert!(verify_vdf(&challenge, &output), "verify_vdf should return true for a fresh output");
+        assert!(
+            verify_vdf(&challenge, &output),
+            "verify_vdf should return true for a fresh output"
+        );
     }
 
     #[test]
@@ -144,7 +155,10 @@ mod tests {
         let c2 = create_challenge(b"same-input", 5).unwrap();
         let o1 = compute_vdf(&c1);
         let o2 = compute_vdf(&c2);
-        assert_eq!(o1.output_hash, o2.output_hash, "same challenge must produce the same output_hash");
+        assert_eq!(
+            o1.output_hash, o2.output_hash,
+            "same challenge must produce the same output_hash"
+        );
     }
 
     #[test]
@@ -179,11 +193,23 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&record).expect("must be valid JSON");
 
         // Required fields present
-        assert!(parsed.get("output_hash").is_some(), "output_hash must be present");
-        assert!(parsed.get("proof_hash").is_some(), "proof_hash must be present");
-        assert!(parsed.get("iterations").is_some(), "iterations must be present");
+        assert!(
+            parsed.get("output_hash").is_some(),
+            "output_hash must be present"
+        );
+        assert!(
+            parsed.get("proof_hash").is_some(),
+            "proof_hash must be present"
+        );
+        assert!(
+            parsed.get("iterations").is_some(),
+            "iterations must be present"
+        );
         assert!(parsed.get("verified").is_some(), "verified must be present");
-        assert!(parsed.get("mainnet_ready").is_some(), "mainnet_ready must be present");
+        assert!(
+            parsed.get("mainnet_ready").is_some(),
+            "mainnet_ready must be present"
+        );
 
         // mainnet_ready must always be false
         assert_eq!(

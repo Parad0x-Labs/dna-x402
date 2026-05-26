@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BulletproofStatement {
@@ -128,7 +128,10 @@ mod tests {
     fn test_8bit_range_proof() {
         let stmt = create_statement(200, &blinding(1), 8).unwrap();
         assert!(!stmt.mainnet_ready);
-        let witness = BulletproofWitness { value: 200, blinding: blinding(1) };
+        let witness = BulletproofWitness {
+            value: 200,
+            blinding: blinding(1),
+        };
         let proof = prove(&stmt, &witness).unwrap();
         assert!(!proof.mainnet_ready);
         assert!(verify(&proof));
@@ -137,7 +140,10 @@ mod tests {
     #[test]
     fn test_16bit_range_proof() {
         let stmt = create_statement(60000, &blinding(2), 16).unwrap();
-        let witness = BulletproofWitness { value: 60000, blinding: blinding(2) };
+        let witness = BulletproofWitness {
+            value: 60000,
+            blinding: blinding(2),
+        };
         let proof = prove(&stmt, &witness).unwrap();
         assert!(verify(&proof));
     }
@@ -158,7 +164,10 @@ mod tests {
     #[test]
     fn test_verify_passes() {
         let stmt = create_statement(1023, &blinding(5), 10).unwrap();
-        let witness = BulletproofWitness { value: 1023, blinding: blinding(5) };
+        let witness = BulletproofWitness {
+            value: 1023,
+            blinding: blinding(5),
+        };
         let proof = prove(&stmt, &witness).unwrap();
         assert!(verify(&proof));
         // Tampered proof should fail

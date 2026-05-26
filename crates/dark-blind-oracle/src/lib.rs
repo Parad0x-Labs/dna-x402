@@ -87,7 +87,10 @@ fn oracle_pubkey_from_secret(oracle_secret: &[u8; 32]) -> [u8; 32] {
 }
 
 fn oracle_sig_from_parts(oracle_pubkey: &[u8; 32], blinded_commitment: &[u8; 32]) -> [u8; 32] {
-    sha256_domain(DOM_SIGN, &[oracle_pubkey.as_ref(), blinded_commitment.as_ref()])
+    sha256_domain(
+        DOM_SIGN,
+        &[oracle_pubkey.as_ref(), blinded_commitment.as_ref()],
+    )
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
@@ -102,10 +105,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 /// without revealing the underlying content.
 ///
 /// Returns [`OracleError::BlindingFactorZero`] if `blinding_factor` is all zeros.
-pub fn blind_data(
-    data: &[u8],
-    blinding_factor: &[u8; 32],
-) -> Result<BlindedRequest, OracleError> {
+pub fn blind_data(data: &[u8], blinding_factor: &[u8; 32]) -> Result<BlindedRequest, OracleError> {
     if blinding_factor == &[0u8; 32] {
         return Err(OracleError::BlindingFactorZero);
     }
@@ -222,8 +222,8 @@ mod tests {
         assert!(!attestation.mainnet_ready);
         assert_eq!(attestation.blinded_commitment, request.blinded_commitment);
 
-        let unblinded = unblind_attestation(&attestation, data, &blinding)
-            .expect("unblind should succeed");
+        let unblinded =
+            unblind_attestation(&attestation, data, &blinding).expect("unblind should succeed");
         assert!(!unblinded.mainnet_ready);
         assert_eq!(unblinded.oracle_sig, attestation.oracle_sig);
         assert_eq!(unblinded.oracle_pubkey, attestation.oracle_pubkey);

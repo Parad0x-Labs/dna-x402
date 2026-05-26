@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-zkvm-bridge"
 version = "0.1.0"

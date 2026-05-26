@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -84,15 +84,25 @@ pub fn issue_credential_v2(
     let attr_commits: Vec<AttributeCommit> = attributes
         .iter()
         .map(|(attr_id, attr_value)| {
-            let commitment = sha256_multi(&[b"credv2-attr-v1", &[*attr_id], attr_value, &holder_hash]);
-            AttributeCommit { attr_id: *attr_id, commitment }
+            let commitment =
+                sha256_multi(&[b"credv2-attr-v1", &[*attr_id], attr_value, &holder_hash]);
+            AttributeCommit {
+                attr_id: *attr_id,
+                commitment,
+            }
         })
         .collect();
 
     let commitments: Vec<[u8; 32]> = attr_commits.iter().map(|a| a.commitment).collect();
     let xor_commits = xor_fold(&commitments);
     let issued_at_le = (issued_at as i64).to_le_bytes();
-    let cred_id = sha256_multi(&[b"credv2-id-v1", &holder_hash, &issuer_hash, &xor_commits, &issued_at_le]);
+    let cred_id = sha256_multi(&[
+        b"credv2-id-v1",
+        &holder_hash,
+        &issuer_hash,
+        &xor_commits,
+        &issued_at_le,
+    ]);
 
     Ok(CredentialV2 {
         cred_id,
@@ -121,7 +131,12 @@ pub fn prove_selective(
     }
 
     let xor_disclosed = xor_fold(&disclosed_commitments);
-    let proof_hash = sha256_multi(&[b"credv2-proof-v1", &cred.cred_id, &xor_disclosed, &holder_hash]);
+    let proof_hash = sha256_multi(&[
+        b"credv2-proof-v1",
+        &cred.cred_id,
+        &xor_disclosed,
+        &holder_hash,
+    ]);
     let proof_id = sha256_multi(&[b"credv2-proof-id-v1", &proof_hash]);
 
     Ok(SelectiveProof {

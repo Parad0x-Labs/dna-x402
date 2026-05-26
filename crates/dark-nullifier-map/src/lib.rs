@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 pub const EPOCH_WINDOW: u64 = 10;
 
@@ -55,8 +55,7 @@ pub fn insert_nullifier(
 
 pub fn check_nullifier(map: &NullifierMap, nullifier: &[u8; 32]) -> bool {
     map.entries.iter().any(|e| {
-        e.nullifier == *nullifier
-            && map.current_epoch.saturating_sub(e.epoch) < EPOCH_WINDOW
+        e.nullifier == *nullifier && map.current_epoch.saturating_sub(e.epoch) < EPOCH_WINDOW
     })
 }
 
@@ -144,8 +143,7 @@ mod tests {
         // advance 1 more — n1 now at diff == 10 >= EPOCH_WINDOW, n2 diff == 1
         advance_epoch(&mut map);
         // active count should be 1 (only n2)
-        let record: serde_json::Value =
-            serde_json::from_str(&map_public_record(&map)).unwrap();
+        let record: serde_json::Value = serde_json::from_str(&map_public_record(&map)).unwrap();
         assert_eq!(record["active_count"], 1);
     }
 
@@ -154,8 +152,7 @@ mod tests {
         let mut map = new_map(5);
         let n = make_nullifier(6);
         insert_nullifier(&mut map, n, 999).unwrap();
-        let record: serde_json::Value =
-            serde_json::from_str(&map_public_record(&map)).unwrap();
+        let record: serde_json::Value = serde_json::from_str(&map_public_record(&map)).unwrap();
         assert_eq!(record["current_epoch"], 5);
         assert_eq!(record["active_count"], 1);
         assert!(!record["mainnet_ready"].as_bool().unwrap());

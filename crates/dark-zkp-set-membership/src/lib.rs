@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -24,13 +24,19 @@ pub enum SetError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(hashes: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
-    for h in hashes { for i in 0..32 { acc[i] ^= h[i]; } }
+    for h in hashes {
+        for i in 0..32 {
+            acc[i] ^= h[i];
+        }
+    }
     acc
 }
 
@@ -113,7 +119,11 @@ pub fn set_public_record(proof: &SetMembershipProof) -> String {
 mod tests {
     use super::*;
 
-    fn blinding() -> [u8; 32] { let mut b = [0u8; 32]; b[0] = 0xab; b }
+    fn blinding() -> [u8; 32] {
+        let mut b = [0u8; 32];
+        b[0] = 0xab;
+        b
+    }
 
     // Test 1: new_proof + is_stub=true + mainnet_ready=false
     #[test]

@@ -94,7 +94,11 @@ fn build_path(leaves: &[[u8; 32]], leaf_index: usize) -> Vec<[u8; 32]> {
         // Sibling index
         let sibling_idx = if idx % 2 == 0 {
             // We are a left child; sibling is to the right (or us again if odd-out)
-            if idx + 1 < current.len() { idx + 1 } else { idx }
+            if idx + 1 < current.len() {
+                idx + 1
+            } else {
+                idx
+            }
         } else {
             idx - 1
         };
@@ -280,7 +284,10 @@ mod tests {
         let v: serde_json::Value = serde_json::from_str(&json_str).unwrap();
         assert!(v.get("root").is_some(), "missing 'root' field");
         assert!(v.get("leaf_count").is_some(), "missing 'leaf_count' field");
-        assert!(v.get("mainnet_ready").is_some(), "missing 'mainnet_ready' field");
+        assert!(
+            v.get("mainnet_ready").is_some(),
+            "missing 'mainnet_ready' field"
+        );
         // root must be a 64-char hex string (32 bytes).
         let root_hex = v["root"].as_str().unwrap();
         assert_eq!(root_hex.len(), 64);

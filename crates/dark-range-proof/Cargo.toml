@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-range-proof"
 version = "0.1.0"

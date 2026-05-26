@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,7 +36,9 @@ pub enum ScoreError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -125,10 +127,14 @@ pub fn attest_score(
     }
     if !score.passes_threshold {
         // We expose 0 for score/threshold since they're hidden — caller checks passes_threshold
-        return Err(ScoreError::ScoreBelowThreshold { score: 0, threshold: 0 });
+        return Err(ScoreError::ScoreBelowThreshold {
+            score: 0,
+            threshold: 0,
+        });
     }
     let attester_hash = compute_attester_hash(attester_secret);
-    let attestation_hash = compute_attestation_hash(&score.score_id, &attester_hash, score.passes_threshold);
+    let attestation_hash =
+        compute_attestation_hash(&score.score_id, &attester_hash, score.passes_threshold);
     let proof_id = compute_proof_id(&attestation_hash);
     Ok(ScoreProof {
         proof_id,
@@ -146,8 +152,16 @@ pub fn verify_score_proof(_score: &ReputationScore, proof: &ScoreProof) -> bool 
 /// Public JSON record: score_id, threshold_hash, passes_threshold, mainnet_ready.
 /// Does NOT expose subject_hash or score value.
 pub fn score_public_record(score: &ReputationScore) -> String {
-    let score_id_hex: String = score.score_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let threshold_hex: String = score.threshold_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let score_id_hex: String = score
+        .score_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let threshold_hex: String = score
+        .threshold_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "score_id": score_id_hex,
         "threshold_hash": threshold_hex,
@@ -165,9 +179,21 @@ pub fn score_public_record(score: &ReputationScore) -> String {
 mod tests {
     use super::*;
 
-    fn subject_secret() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xF1; s }
-    fn attester_secret() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xF2; s }
-    fn blinding() -> [u8; 32] { let mut b = [0u8; 32]; b[0] = 0xB1; b }
+    fn subject_secret() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xF1;
+        s
+    }
+    fn attester_secret() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xF2;
+        s
+    }
+    fn blinding() -> [u8; 32] {
+        let mut b = [0u8; 32];
+        b[0] = 0xB1;
+        b
+    }
 
     #[test]
     fn test_score_above_threshold_attest_succeeds() {
@@ -219,11 +245,25 @@ mod tests {
         let record = score_public_record(&score);
         let v: serde_json::Value = serde_json::from_str(&record).unwrap();
 
-        let subject_hex: String = score.subject_hash.iter().map(|b| format!("{:02x}", b)).collect();
-        let score_commit_hex: String = score.score_commitment.iter().map(|b| format!("{:02x}", b)).collect();
+        let subject_hex: String = score
+            .subject_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        let score_commit_hex: String = score
+            .score_commitment
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
 
-        assert!(!record.contains(&subject_hex), "subject_hash must not appear");
-        assert!(!record.contains(&score_commit_hex), "score_commitment must not appear");
+        assert!(
+            !record.contains(&subject_hex),
+            "subject_hash must not appear"
+        );
+        assert!(
+            !record.contains(&score_commit_hex),
+            "score_commitment must not appear"
+        );
         assert!(v.get("subject_hash").is_none());
         assert!(v.get("score_commitment").is_none());
         assert_eq!(v["mainnet_ready"], false);

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 fn sha256(data: &[u8]) -> [u8; 32] {
     let mut h = Sha256::new();
@@ -37,10 +37,7 @@ pub enum OTError {
     SecretEmpty,
 }
 
-pub fn prepare_choice(
-    receiver_secret: &[u8; 32],
-    bit: u8,
-) -> Result<OTChoice, OTError> {
+pub fn prepare_choice(receiver_secret: &[u8; 32], bit: u8) -> Result<OTChoice, OTError> {
     if receiver_secret == &[0u8; 32] {
         return Err(OTError::ReceiverSecretZero);
     }
@@ -217,5 +214,105 @@ mod tests {
         let recv = [11u8; 32];
         let result = prepare_choice(&recv, 2);
         assert_eq!(result, Err(OTError::InvalidBit));
+    }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_empty_secret_rejected() {
+        let (recv, send, _, _) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        let result = encrypt_secrets(&send, b"", b"s1", &choice);
+        assert_eq!(result, Err(OTError::SecretEmpty));
+        let result2 = encrypt_secrets(&send, b"s0", b"", &choice);
+        assert_eq!(result2, Err(OTError::SecretEmpty));
+    }
+
+    #[test]
+    fn test_choice_hash_differs_for_different_bits() {
+        let recv = [11u8; 32];
+        let c0 = prepare_choice(&recv, 0).unwrap();
+        let c1 = prepare_choice(&recv, 1).unwrap();
+        assert_ne!(c0.receiver_hash, c1.receiver_hash);
+    }
+
+    #[test]
+    fn test_choice_hash_differs_for_different_secrets() {
+        let r1 = [11u8; 32];
+        let r2 = [12u8; 32];
+        let c1 = prepare_choice(&r1, 0).unwrap();
+        let c2 = prepare_choice(&r2, 0).unwrap();
+        assert_ne!(c1.receiver_hash, c2.receiver_hash);
+    }
+
+    #[test]
+    fn test_ciphertext_deterministic() {
+        let (recv, send, s0, s1) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        let ct1 = encrypt_secrets(&send, s0, s1, &choice).unwrap();
+        let ct2 = encrypt_secrets(&send, s0, s1, &choice).unwrap();
+        assert_eq!(ct1.c0, ct2.c0);
+        assert_eq!(ct1.c1, ct2.c1);
+    }
+
+    #[test]
+    fn test_different_sender_secret_different_ciphertext() {
+        let (recv, _send, s0, s1) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        let ct1 = encrypt_secrets(&[22u8; 32], s0, s1, &choice).unwrap();
+        let ct2 = encrypt_secrets(&[33u8; 32], s0, s1, &choice).unwrap();
+        assert_ne!(ct1.c0, ct2.c0);
+    }
+
+    #[test]
+    fn test_different_messages_different_ciphertext() {
+        let (recv, send, _, _) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        let ct1 = encrypt_secrets(&send, b"message-A", b"message-B", &choice).unwrap();
+        let ct2 = encrypt_secrets(&send, b"message-X", b"message-Y", &choice).unwrap();
+        assert_ne!(ct1.c0, ct2.c0);
+    }
+
+    #[test]
+    fn test_c0_and_c1_always_different() {
+        let (recv, send, s0, s1) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        let ct = encrypt_secrets(&send, s0, s1, &choice).unwrap();
+        assert_ne!(ct.c0, ct.c1, "c0 and c1 must be distinct ciphertexts");
+    }
+
+    #[test]
+    fn test_decrypt_returns_selected_ciphertext_entry() {
+        // decrypt_choice is a selector: bit 0 → c0, bit 1 → c1
+        let (recv, send, s0, s1) = setup();
+        let choice0 = prepare_choice(&recv, 0).unwrap();
+        let ct = encrypt_secrets(&send, s0, s1, &choice0).unwrap();
+        let dec0 = decrypt_choice(&ct, &recv, 0).unwrap();
+        assert_eq!(dec0.secret, ct.c0.to_vec(), "bit=0 must return c0");
+
+        let choice1 = prepare_choice(&recv, 1).unwrap();
+        let ct1 = encrypt_secrets(&send, s0, s1, &choice1).unwrap();
+        let dec1 = decrypt_choice(&ct1, &recv, 1).unwrap();
+        assert_eq!(dec1.secret, ct1.c1.to_vec(), "bit=1 must return c1");
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let (recv, send, s0, s1) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        assert!(!choice.mainnet_ready);
+        let ct = encrypt_secrets(&send, s0, s1, &choice).unwrap();
+        assert!(!ct.mainnet_ready);
+        let dec = decrypt_choice(&ct, &recv, 0).unwrap();
+        assert!(!dec.mainnet_ready);
+    }
+
+    #[test]
+    fn test_decrypt_invalid_bit_rejected() {
+        let (recv, send, s0, s1) = setup();
+        let choice = prepare_choice(&recv, 0).unwrap();
+        let ct = encrypt_secrets(&send, s0, s1, &choice).unwrap();
+        let err = decrypt_choice(&ct, &recv, 2).unwrap_err();
+        assert_eq!(err, OTError::InvalidBit);
     }
 }

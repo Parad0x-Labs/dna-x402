@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -157,7 +157,10 @@ pub fn finalize_proposal(
     }
     let quorum = dao.member_count;
     if votes_cast < quorum {
-        return Err(DaoError::QuorumNotMet { need: quorum, got: votes_cast });
+        return Err(DaoError::QuorumNotMet {
+            need: quorum,
+            got: votes_cast,
+        });
     }
     proposal.vote_count = votes_cast;
     Ok(votes_cast >= quorum)

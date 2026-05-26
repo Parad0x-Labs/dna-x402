@@ -211,9 +211,7 @@ mod tests {
     fn test_quota_exhausted_rejected() {
         let mut cred = make_cred(2, 9999); // only 2 jobs allowed
 
-        let submit = |cred: &mut ComputeCredential| {
-            submit_gated_job(cred, make_spec(), 1)
-        };
+        let submit = |cred: &mut ComputeCredential| submit_gated_job(cred, make_spec(), 1);
 
         submit(&mut cred).unwrap(); // job 1
         submit(&mut cred).unwrap(); // job 2

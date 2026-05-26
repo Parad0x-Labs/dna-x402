@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -170,11 +170,15 @@ mod tests {
     use super::*;
 
     fn nonce() -> [u8; 32] {
-        let mut n = [0u8; 32]; n[0] = 0xaa; n
+        let mut n = [0u8; 32];
+        n[0] = 0xaa;
+        n
     }
 
     fn null(b: u8) -> [u8; 32] {
-        let mut n = [0u8; 32]; n[0] = b + 1; n
+        let mut n = [0u8; 32];
+        n[0] = b + 1;
+        n
     }
 
     // Test 1: insert + contains

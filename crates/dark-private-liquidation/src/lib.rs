@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -69,9 +69,15 @@ pub fn create_position(
     }
 
     let borrower_hash = sha256_multi(&[b"liq-borrower-v1", borrower_secret]);
-    let collateral_commitment = sha256_multi(&[b"liq-collateral-v1", &collateral.to_le_bytes(), blinding_c]);
+    let collateral_commitment =
+        sha256_multi(&[b"liq-collateral-v1", &collateral.to_le_bytes(), blinding_c]);
     let debt_commitment = sha256_multi(&[b"liq-debt-v1", &debt.to_le_bytes(), blinding_d]);
-    let position_id = sha256_multi(&[b"liq-pos-v1", &borrower_hash, &collateral_commitment, &debt_commitment]);
+    let position_id = sha256_multi(&[
+        b"liq-pos-v1",
+        &borrower_hash,
+        &collateral_commitment,
+        &debt_commitment,
+    ]);
 
     let health_factor = ((collateral as u128 * 100) / debt as u128) as u32;
     let liquidatable = health_factor < 100;
@@ -141,7 +147,8 @@ mod tests {
     #[test]
     fn test_liquidatable_position_created_and_liquidated() {
         // collateral=50, debt=100 → health_factor=50 < 100 → liquidatable
-        let mut pos = create_position(&secret(0x01), 50, 100, &secret(0x11), &secret(0x22)).unwrap();
+        let mut pos =
+            create_position(&secret(0x01), 50, 100, &secret(0x11), &secret(0x22)).unwrap();
         assert!(pos.liquidatable);
         assert_eq!(pos.health_factor, 50);
         assert!(!pos.mainnet_ready);
@@ -155,7 +162,8 @@ mod tests {
     #[test]
     fn test_non_liquidatable_rejected() {
         // collateral=200, debt=100 → health_factor=200 >= 100 → not liquidatable
-        let mut pos = create_position(&secret(0x02), 200, 100, &secret(0x44), &secret(0x55)).unwrap();
+        let mut pos =
+            create_position(&secret(0x02), 200, 100, &secret(0x44), &secret(0x55)).unwrap();
         assert!(!pos.liquidatable);
         let err = liquidate(&mut pos, &secret(0x66)).unwrap_err();
         assert_eq!(err, LiqError::NotLiquidatable);
@@ -163,7 +171,8 @@ mod tests {
 
     #[test]
     fn test_already_liquidated_rejected() {
-        let mut pos = create_position(&secret(0x03), 50, 100, &secret(0x77), &secret(0x88)).unwrap();
+        let mut pos =
+            create_position(&secret(0x03), 50, 100, &secret(0x77), &secret(0x88)).unwrap();
         assert!(pos.liquidatable);
         let _ = liquidate(&mut pos, &secret(0x99)).unwrap();
         let err = liquidate(&mut pos, &secret(0xaa)).unwrap_err();

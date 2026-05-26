@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 fn sha256(data: &[u8]) -> [u8; 32] {
     let mut h = Sha256::new();
@@ -41,10 +41,7 @@ pub fn new_accumulator() -> Accumulator {
     }
 }
 
-pub fn add_element(
-    acc: &mut Accumulator,
-    element: &[u8],
-) -> Result<[u8; 32], AccumulatorError> {
+pub fn add_element(acc: &mut Accumulator, element: &[u8]) -> Result<[u8; 32], AccumulatorError> {
     if element.is_empty() {
         return Err(AccumulatorError::EmptyElement);
     }
@@ -78,11 +75,7 @@ pub fn create_witness(acc: &Accumulator, element_hash: &[u8; 32]) -> MembershipW
     }
 }
 
-pub fn verify_membership(
-    acc: &Accumulator,
-    element: &[u8],
-    witness: &MembershipWitness,
-) -> bool {
+pub fn verify_membership(acc: &Accumulator, element: &[u8], witness: &MembershipWitness) -> bool {
     if element.is_empty() {
         return false;
     }
@@ -101,8 +94,7 @@ pub fn verify_membership(
     w_input.extend_from_slice(&element_hash);
     let expected_witness_hash = sha256(&w_input);
 
-    expected_witness_hash == witness.witness_hash
-        && acc.value == witness.accumulator_value
+    expected_witness_hash == witness.witness_hash && acc.value == witness.accumulator_value
 }
 
 #[cfg(test)]
@@ -164,9 +156,7 @@ mod tests {
     #[test]
     fn test_five_element_batch_all_verify() {
         let mut acc = new_accumulator();
-        let elements: Vec<&[u8]> = vec![
-            b"alpha", b"beta", b"gamma", b"delta", b"epsilon",
-        ];
+        let elements: Vec<&[u8]> = vec![b"alpha", b"beta", b"gamma", b"delta", b"epsilon"];
         let mut hashes = Vec::new();
         for &elem in &elements {
             let h = add_element(&mut acc, elem).unwrap();

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -92,7 +92,10 @@ pub fn submit_evidence(
 
 /// Renders a verdict on the evidence.
 /// verdict_id = SHA256("slash-verdict-v1" || evidence_id || [slashed as u8])
-pub fn render_verdict(evidence: &mut SlashEvidence, slashed: bool) -> Result<SlashVerdict, SlashError> {
+pub fn render_verdict(
+    evidence: &mut SlashEvidence,
+    slashed: bool,
+) -> Result<SlashVerdict, SlashError> {
     if evidence.verdicted {
         return Err(SlashError::AlreadyVerdicted);
     }

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -34,13 +34,19 @@ pub enum CredError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(hashes: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
-    for h in hashes { for i in 0..32 { acc[i] ^= h[i]; } }
+    for h in hashes {
+        for i in 0..32 {
+            acc[i] ^= h[i];
+        }
+    }
     acc
 }
 
@@ -67,11 +73,19 @@ fn compute_attr_root(attr_hashes: &[[u8; 32]], count: u32) -> [u8; 32] {
     sha256_multi(&[b"acred3-aroot-v1", &xored, &count.to_le_bytes()])
 }
 
-fn compute_cred_id(issuer_hash: &[u8; 32], holder_hash: &[u8; 32], attr_root: &[u8; 32]) -> [u8; 32] {
+fn compute_cred_id(
+    issuer_hash: &[u8; 32],
+    holder_hash: &[u8; 32],
+    attr_root: &[u8; 32],
+) -> [u8; 32] {
     sha256_multi(&[b"acred3-id-v1", issuer_hash, holder_hash, attr_root])
 }
 
-fn compute_disclosure_nullifier(holder_hash: &[u8; 32], cred_id: &[u8; 32], nonce: &[u8; 32]) -> [u8; 32] {
+fn compute_disclosure_nullifier(
+    holder_hash: &[u8; 32],
+    cred_id: &[u8; 32],
+    nonce: &[u8; 32],
+) -> [u8; 32] {
     sha256_multi(&[b"acred3-null-v1", holder_hash, cred_id, nonce])
 }
 
@@ -80,7 +94,11 @@ fn compute_disclosed_root(disclosed_hashes: &[[u8; 32]], count: u32) -> [u8; 32]
     sha256_multi(&[b"acred3-disc-v1", &xored, &count.to_le_bytes()])
 }
 
-fn compute_proof_id(cred_id: &[u8; 32], disclosed_root: &[u8; 32], nullifier: &[u8; 32]) -> [u8; 32] {
+fn compute_proof_id(
+    cred_id: &[u8; 32],
+    disclosed_root: &[u8; 32],
+    nullifier: &[u8; 32],
+) -> [u8; 32] {
     sha256_multi(&[b"acred3-proof-v1", cred_id, disclosed_root, nullifier])
 }
 
@@ -102,7 +120,10 @@ pub fn issue_credential(
     }
     let issuer_hash = compute_issuer_hash(issuer_secret);
     let holder_hash = compute_holder_hash(holder_secret);
-    let attr_hashes: Vec<[u8; 32]> = attributes.iter().map(|(n, v)| compute_attr_hash(n, v)).collect();
+    let attr_hashes: Vec<[u8; 32]> = attributes
+        .iter()
+        .map(|(n, v)| compute_attr_hash(n, v))
+        .collect();
     let attr_count = attr_hashes.len() as u32;
     let attr_root = compute_attr_root(&attr_hashes, attr_count);
     let cred_id = compute_cred_id(&issuer_hash, &holder_hash, &attr_root);
@@ -161,10 +182,26 @@ pub fn cred_public_record(cred: &AnonCredential) -> String {
 mod tests {
     use super::*;
 
-    fn issuer()  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x11; s }
-    fn holder()  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x22; s }
-    fn nonce1()  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x33; s }
-    fn nonce2()  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x44; s }
+    fn issuer() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x11;
+        s
+    }
+    fn holder() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x22;
+        s
+    }
+    fn nonce1() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x33;
+        s
+    }
+    fn nonce2() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x44;
+        s
+    }
 
     fn attrs() -> Vec<(&'static [u8], &'static [u8])> {
         vec![(b"age", b"30"), (b"country", b"US"), (b"verified", b"true")]

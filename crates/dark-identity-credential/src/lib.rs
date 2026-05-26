@@ -1,4 +1,4 @@
-﻿use sha2::{Digest, Sha256};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -135,7 +135,7 @@ pub fn issue_credential(
         attribute_bits,
         issued_at_unix,
         expires_at_unix,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -174,7 +174,7 @@ pub fn disclose_attribute(
         attribute,
         disclosure_proof,
         disclosed_at_unix: current_unix,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -193,8 +193,11 @@ pub fn verify_disclosure(credential: &Credential, disclosure: &AttributeDisclosu
     }
 
     // Recompute expected proof using the credential's stored holder_hash.
-    let expected =
-        compute_disclosure_proof(&credential.credential_id, attr_byte, &credential.holder_hash);
+    let expected = compute_disclosure_proof(
+        &credential.credential_id,
+        attr_byte,
+        &credential.holder_hash,
+    );
 
     expected == disclosure.disclosure_proof
 }
@@ -244,7 +247,7 @@ mod tests {
 
         assert_eq!(disclosure.credential_id, cred.credential_id);
         assert_eq!(disclosure.attribute, AttributeType::AgeOver18);
-        assert!(disclosure.mainnet_ready);
+        assert!(!disclosure.mainnet_ready);
     }
 
     // 2. Disclosing an attribute not present in the credential must fail.

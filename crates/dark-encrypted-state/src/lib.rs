@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StateCommitment {
@@ -75,7 +75,12 @@ pub fn transition_state(
     let from_hash = commitment.state_hash;
     let new_version = commitment.version + 1;
     let new_version_le = new_version.to_le_bytes();
-    let to_hash = sha256(&[b"state-hash-v1", &owner_hash, new_state_bytes, &new_version_le]);
+    let to_hash = sha256(&[
+        b"state-hash-v1",
+        &owner_hash,
+        new_state_bytes,
+        &new_version_le,
+    ]);
     let transition_hash = sha256(&[b"state-trans-v1", &from_hash, &to_hash, &new_version_le]);
 
     commitment.state_hash = to_hash;
@@ -109,8 +114,12 @@ fn hex_encode(b: [u8; 32]) -> String {
 mod tests {
     use super::*;
 
-    fn owner() -> [u8; 32] { [5u8; 32] }
-    fn nonce() -> [u8; 32] { [7u8; 32] }
+    fn owner() -> [u8; 32] {
+        [5u8; 32]
+    }
+    fn nonce() -> [u8; 32] {
+        [7u8; 32]
+    }
 
     #[test]
     fn test_create_transition_happy_path() {
@@ -128,7 +137,13 @@ mod tests {
     fn test_version_mismatch_rejected() {
         let mut c = new_state(&owner(), b"initial state", &nonce()).unwrap();
         let err = transition_state(&mut c, b"new state", &owner(), 99).unwrap_err();
-        assert_eq!(err, StateError::VersionMismatch { expected: 99, got: 0 });
+        assert_eq!(
+            err,
+            StateError::VersionMismatch {
+                expected: 99,
+                got: 0
+            }
+        );
     }
 
     #[test]

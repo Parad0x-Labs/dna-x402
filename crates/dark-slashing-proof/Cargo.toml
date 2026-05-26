@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-slashing-proof"
 version = "0.1.0"

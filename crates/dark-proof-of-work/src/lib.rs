@@ -119,11 +119,7 @@ pub fn solve_proof(
 
 /// Verify a work proof against a statement and secret.
 /// Recomputes work_hash; checks it matches proof.work_hash and satisfies difficulty.
-pub fn verify_work(
-    statement: &WorkStatement,
-    proof: &WorkProof,
-    secret: &[u8; 32],
-) -> bool {
+pub fn verify_work(statement: &WorkStatement, proof: &WorkProof, secret: &[u8; 32]) -> bool {
     let expected_hash = compute_work_hash(secret, proof.nonce);
     if expected_hash != proof.work_hash {
         return false;

@@ -54,11 +54,7 @@ fn bidder_hash_from_secret(bidder_secret: &[u8; 32]) -> [u8; 32] {
     h.finalize().into()
 }
 
-fn bid_commitment_from_parts(
-    bidder_hash: &[u8; 32],
-    amount: u64,
-    nonce: &[u8; 32],
-) -> [u8; 32] {
+fn bid_commitment_from_parts(bidder_hash: &[u8; 32], amount: u64, nonce: &[u8; 32]) -> [u8; 32] {
     let mut h = Sha256::new();
     h.update(b"bid-commit-v1");
     h.update(bidder_hash);
@@ -162,9 +158,7 @@ pub fn finalize_auction(
         .reduce(|best, bid| {
             if bid.amount > best.amount {
                 bid
-            } else if bid.amount == best.amount
-                && bid.committed_at_unix < best.committed_at_unix
-            {
+            } else if bid.amount == best.amount && bid.committed_at_unix < best.committed_at_unix {
                 bid
             } else {
                 best
@@ -264,13 +258,10 @@ mod tests {
         let nonce_late = make_nonce(2);
 
         // Both bid 500 but early bid comes first (lower timestamp).
-        let sealed_early =
-            commit_bid(&secret_early, 500, &nonce_early, auction_id, 900).unwrap();
-        let sealed_late =
-            commit_bid(&secret_late, 500, &nonce_late, auction_id, 901).unwrap();
+        let sealed_early = commit_bid(&secret_early, 500, &nonce_early, auction_id, 900).unwrap();
+        let sealed_late = commit_bid(&secret_late, 500, &nonce_late, auction_id, 901).unwrap();
 
-        let revealed_early =
-            reveal_bid(&sealed_early, &secret_early, 500, &nonce_early).unwrap();
+        let revealed_early = reveal_bid(&sealed_early, &secret_early, 500, &nonce_early).unwrap();
         let revealed_late = reveal_bid(&sealed_late, &secret_late, 500, &nonce_late).unwrap();
 
         // Pass late first so the tie-break logic is exercised regardless of slice order.

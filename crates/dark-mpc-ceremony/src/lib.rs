@@ -128,11 +128,7 @@ pub fn finalize_ceremony(state: &mut CeremonyState) -> Result<[u8; 32], Ceremony
     }
 
     // Collect and sort commitments for determinism.
-    let mut sorted: Vec<[u8; 32]> = state
-        .contributions
-        .iter()
-        .map(|c| c.commitment)
-        .collect();
+    let mut sorted: Vec<[u8; 32]> = state.contributions.iter().map(|c| c.commitment).collect();
     sorted.sort_unstable();
 
     // XOR-fold the sorted commitments into a single 32-byte value.

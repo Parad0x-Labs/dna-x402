@@ -87,11 +87,16 @@ pub fn create_zkvm_receipt(bundle: &ProofBundle, program_hash: &[u8; 32]) -> Zkv
 /// - Creates a `ZkvmExecutionReceipt` from the bundle.
 /// - `bridge_hash` = SHA256("bridge-v1" || proof_a[0..8] || seal_hash)
 /// - `compatible`  = true when receipt_version == 1.
-pub fn bridge_proof(bundle: ProofBundle, program_hash: &[u8; 32]) -> Result<BridgedProofReceipt, BridgeError> {
+pub fn bridge_proof(
+    bundle: ProofBundle,
+    program_hash: &[u8; 32],
+) -> Result<BridgedProofReceipt, BridgeError> {
     let receipt = create_zkvm_receipt(&bundle, program_hash);
 
     if receipt.receipt_version != 1 {
-        return Err(BridgeError::UnsupportedReceiptVersion(receipt.receipt_version));
+        return Err(BridgeError::UnsupportedReceiptVersion(
+            receipt.receipt_version,
+        ));
     }
 
     // bridge_hash links both proof systems via 8 proof_a bytes + full seal
@@ -172,8 +177,8 @@ pub fn bridge_description() -> Vec<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dark_bn254_proof_gen::generate_devnet_test_proof;
     use dark_bn254_circuit::WithdrawCircuitInputs;
+    use dark_bn254_proof_gen::generate_devnet_test_proof;
     use dark_poseidon_bn254::{note_commitment, nullifier_hash};
 
     fn valid_inputs() -> WithdrawCircuitInputs {
@@ -214,8 +219,10 @@ mod tests {
         let r1 = bridge_proof(make_bundle(), &ph).unwrap();
         let r2 = bridge_proof(make_bundle(), &ph).unwrap();
 
-        assert_eq!(r1.bridge_hash, r2.bridge_hash,
-            "identical inputs must yield identical bridge_hash");
+        assert_eq!(
+            r1.bridge_hash, r2.bridge_hash,
+            "identical inputs must yield identical bridge_hash"
+        );
         assert_eq!(r1.zkvm_receipt.seal_hash, r2.zkvm_receipt.seal_hash);
         assert_eq!(r1.zkvm_receipt.image_id, r2.zkvm_receipt.image_id);
     }
@@ -224,7 +231,10 @@ mod tests {
     #[test]
     fn test_verify_bridge_passes() {
         let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
-        assert!(verify_bridge(&receipt), "freshly bridged receipt must verify");
+        assert!(
+            verify_bridge(&receipt),
+            "freshly bridged receipt must verify"
+        );
         assert!(receipt.compatible);
     }
 
@@ -233,7 +243,10 @@ mod tests {
     fn test_tampered_receipt_fails() {
         let mut receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
         receipt.bridge_hash[0] ^= 0xFF; // flip a byte
-        assert!(!verify_bridge(&receipt), "tampered bridge_hash must not verify");
+        assert!(
+            !verify_bridge(&receipt),
+            "tampered bridge_hash must not verify"
+        );
     }
 
     /// Test 4: JSON output does not expose raw proof hex longer than 16 chars.
@@ -247,24 +260,50 @@ mod tests {
         let json = bridge_to_json(&receipt);
 
         // Raw proof bytes encoded as hex:
-        let raw_proof_a_hex: String = receipt.bn254_bundle.proof.proof_a
-            .iter().map(|b| format!("{:02x}", b)).collect();
-        let raw_proof_b_hex: String = receipt.bn254_bundle.proof.proof_b
-            .iter().map(|b| format!("{:02x}", b)).collect();
-        let raw_proof_c_hex: String = receipt.bn254_bundle.proof.proof_c
-            .iter().map(|b| format!("{:02x}", b)).collect();
+        let raw_proof_a_hex: String = receipt
+            .bn254_bundle
+            .proof
+            .proof_a
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        let raw_proof_b_hex: String = receipt
+            .bn254_bundle
+            .proof
+            .proof_b
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        let raw_proof_c_hex: String = receipt
+            .bn254_bundle
+            .proof
+            .proof_c
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
 
-        assert!(!json.contains(&raw_proof_a_hex),
-            "JSON must not contain raw proof_a hex");
-        assert!(!json.contains(&raw_proof_b_hex),
-            "JSON must not contain raw proof_b hex");
-        assert!(!json.contains(&raw_proof_c_hex),
-            "JSON must not contain raw proof_c hex");
+        assert!(
+            !json.contains(&raw_proof_a_hex),
+            "JSON must not contain raw proof_a hex"
+        );
+        assert!(
+            !json.contains(&raw_proof_b_hex),
+            "JSON must not contain raw proof_b hex"
+        );
+        assert!(
+            !json.contains(&raw_proof_c_hex),
+            "JSON must not contain raw proof_c hex"
+        );
 
         // Sanity: the bridge_hash (a derived 32-byte digest = 64 hex chars) IS present
-        let bridge_hex: String = receipt.bridge_hash
-            .iter().map(|b| format!("{:02x}", b)).collect();
-        assert!(json.contains(&bridge_hex),
-            "JSON must contain the bridge_hash hex");
+        let bridge_hex: String = receipt
+            .bridge_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        assert!(
+            json.contains(&bridge_hex),
+            "JSON must contain the bridge_hash hex"
+        );
     }
 }

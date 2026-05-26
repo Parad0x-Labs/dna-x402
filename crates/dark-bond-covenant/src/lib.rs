@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,7 +98,12 @@ pub fn issue_bond(
 
     let issuer_hash = sha256_issuer(issuer_secret);
     let beneficiary_hash = sha256_beneficiary(beneficiary_secret);
-    let covenant_hash = sha256_covenant(&issuer_hash, &beneficiary_hash, amount_lamports, maturity_unix);
+    let covenant_hash = sha256_covenant(
+        &issuer_hash,
+        &beneficiary_hash,
+        amount_lamports,
+        maturity_unix,
+    );
     let bond_id = sha256_bond_id(&covenant_hash, nonce);
 
     Ok(Bond {

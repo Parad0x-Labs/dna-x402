@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-timelock-vault"
 version = "0.1.0"

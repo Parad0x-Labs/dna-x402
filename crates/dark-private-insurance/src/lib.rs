@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -175,8 +175,16 @@ pub fn approve_claim(claim: &mut Claim) {
 /// Public JSON record: exposes policy_id, coverage_hash, premium, payout, active, mainnet_ready.
 /// Does NOT expose insured_hash.
 pub fn policy_public_record(policy: &InsurancePolicy) -> String {
-    let pid_hex: String = policy.policy_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let cov_hex: String = policy.coverage_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let pid_hex: String = policy
+        .policy_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let cov_hex: String = policy
+        .coverage_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "policy_id": pid_hex,
         "coverage_hash": cov_hex,
@@ -237,14 +245,8 @@ mod tests {
 
     #[test]
     fn test_inactive_policy_rejected() {
-        let mut policy = create_policy(
-            &insured_secret(),
-            b"coverage",
-            100,
-            1000,
-            &nonce(),
-        )
-        .unwrap();
+        let mut policy =
+            create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
         policy.active = false;
 
         let err = file_claim(&policy, &claimant_secret(), b"event").unwrap_err();
@@ -265,14 +267,8 @@ mod tests {
 
     #[test]
     fn test_claim_id_deterministic() {
-        let policy = create_policy(
-            &insured_secret(),
-            b"life-coverage",
-            200,
-            50_000,
-            &nonce(),
-        )
-        .unwrap();
+        let policy =
+            create_policy(&insured_secret(), b"life-coverage", 200, 50_000, &nonce()).unwrap();
 
         let c1 = file_claim(&policy, &claimant_secret(), b"death-event").unwrap();
         let c2 = file_claim(&policy, &claimant_secret(), b"death-event").unwrap();
@@ -281,20 +277,18 @@ mod tests {
 
     #[test]
     fn test_public_record_hides_insured() {
-        let policy = create_policy(
-            &insured_secret(),
-            b"health-coverage",
-            50,
-            5_000,
-            &nonce(),
-        )
-        .unwrap();
+        let policy =
+            create_policy(&insured_secret(), b"health-coverage", 50, 5_000, &nonce()).unwrap();
 
         let record = policy_public_record(&policy);
         let v: serde_json::Value = serde_json::from_str(&record).unwrap();
 
         // insured_hash must NOT appear in public record
-        let insured_hash_hex: String = policy.insured_hash.iter().map(|b| format!("{:02x}", b)).collect();
+        let insured_hash_hex: String = policy
+            .insured_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
         assert!(!record.contains(&insured_hash_hex));
 
         // Required fields

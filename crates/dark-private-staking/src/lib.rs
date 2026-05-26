@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,12 @@ fn compute_rewards_hash(staker_hash: &[u8; 32], amount: u64, locked_until_unix: 
     sha256(&d)
 }
 
-fn compute_position_id(staker_hash: &[u8; 32], amount: u64, locked_until_unix: i64, nonce: &[u8; 32]) -> [u8; 32] {
+fn compute_position_id(
+    staker_hash: &[u8; 32],
+    amount: u64,
+    locked_until_unix: i64,
+    nonce: &[u8; 32],
+) -> [u8; 32] {
     let mut d = Vec::new();
     d.extend_from_slice(b"stake-pos-v1");
     d.extend_from_slice(staker_hash);
@@ -128,11 +133,15 @@ mod tests {
     use super::*;
 
     fn secret() -> [u8; 32] {
-        let mut s = [0u8; 32]; s[0] = 0xab; s
+        let mut s = [0u8; 32];
+        s[0] = 0xab;
+        s
     }
 
     fn nonce() -> [u8; 32] {
-        let mut n = [0u8; 32]; n[0] = 0x01; n
+        let mut n = [0u8; 32];
+        n[0] = 0x01;
+        n
     }
 
     // Test 1: create + unstake happy path
@@ -151,7 +160,13 @@ mod tests {
     fn test_not_unlocked_rejected() {
         let mut pos = create_position(&secret(), 500, 1000, &nonce()).unwrap();
         let err = unstake(&mut pos, &secret(), 500).unwrap_err();
-        assert_eq!(err, StakeError::NotUnlocked { unlock_at: 1000, current: 500 });
+        assert_eq!(
+            err,
+            StakeError::NotUnlocked {
+                unlock_at: 1000,
+                current: 500
+            }
+        );
     }
 
     // Test 3: already unstaked rejected

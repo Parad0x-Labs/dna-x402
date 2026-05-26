@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -49,7 +49,12 @@ fn hex32(b: &[u8; 32]) -> String {
     b.iter().map(|x| format!("{:02x}", x)).collect()
 }
 
-fn compute_state_hash(channel_id: &[u8; 32], balance_a: u64, balance_b: u64, sequence: u32) -> [u8; 32] {
+fn compute_state_hash(
+    channel_id: &[u8; 32],
+    balance_a: u64,
+    balance_b: u64,
+    sequence: u32,
+) -> [u8; 32] {
     sha256_multi(&[
         b"schan-state-v1",
         channel_id,
@@ -111,7 +116,10 @@ pub fn update_channel(
     if !channel.open {
         return Err(ChannelError::ChannelClosed);
     }
-    let old_total = channel.balance_a.checked_add(channel.balance_b).unwrap_or(0);
+    let old_total = channel
+        .balance_a
+        .checked_add(channel.balance_b)
+        .unwrap_or(0);
     let new_total = new_balance_a.checked_add(new_balance_b).unwrap_or(u64::MAX);
     if new_total != old_total {
         return Err(ChannelError::BalanceSumMismatch);
@@ -120,7 +128,12 @@ pub fn update_channel(
     channel.sequence += 1;
     channel.balance_a = new_balance_a;
     channel.balance_b = new_balance_b;
-    channel.state_hash = compute_state_hash(&channel.channel_id, new_balance_a, new_balance_b, channel.sequence);
+    channel.state_hash = compute_state_hash(
+        &channel.channel_id,
+        new_balance_a,
+        new_balance_b,
+        channel.sequence,
+    );
 
     let update_id = sha256_multi(&[
         b"schan-update-v1",

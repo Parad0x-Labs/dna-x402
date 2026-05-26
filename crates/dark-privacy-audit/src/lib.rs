@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -32,7 +32,9 @@ pub enum AuditError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -64,7 +66,12 @@ pub fn log_event(trail: &mut AuditTrail, event_bytes: &[u8]) -> Result<AuditEven
     let prev_head = trail.head;
     let seq = trail.event_count;
     let event_hash = sha256_multi(&[b"audit2-event-v1", event_bytes]);
-    let event_id = sha256_multi(&[b"audit2-link-v1", &prev_head, &event_hash, &seq.to_le_bytes()]);
+    let event_id = sha256_multi(&[
+        b"audit2-link-v1",
+        &prev_head,
+        &event_hash,
+        &seq.to_le_bytes(),
+    ]);
     trail.head = event_id;
     trail.event_count += 1;
     Ok(AuditEvent {
@@ -79,15 +86,21 @@ pub fn log_event(trail: &mut AuditTrail, event_bytes: &[u8]) -> Result<AuditEven
 pub fn verify_trail(trail: &AuditTrail, events: &[AuditEvent]) -> bool {
     let mut head = trail.trail_id;
     for (i, event) in events.iter().enumerate() {
-        if event.seq != i as u32 { return false; }
-        if event.prev_head != head { return false; }
+        if event.seq != i as u32 {
+            return false;
+        }
+        if event.prev_head != head {
+            return false;
+        }
         let expected_id = sha256_multi(&[
             b"audit2-link-v1",
             &event.prev_head,
             &event.event_hash,
             &event.seq.to_le_bytes(),
         ]);
-        if expected_id != event.event_id { return false; }
+        if expected_id != event.event_id {
+            return false;
+        }
         head = event.event_id;
     }
     head == trail.head
@@ -99,7 +112,8 @@ pub fn trail_public_record(trail: &AuditTrail) -> String {
         "head": hex32(&trail.head),
         "event_count": trail.event_count,
         "mainnet_ready": trail.mainnet_ready,
-    }).to_string()
+    })
+    .to_string()
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -108,8 +122,16 @@ pub fn trail_public_record(trail: &AuditTrail) -> String {
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
-    fn nonce(b: u8)  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
+    fn secret(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
+    fn nonce(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
 
     // Test 1: new + log 3 events + verify
     #[test]

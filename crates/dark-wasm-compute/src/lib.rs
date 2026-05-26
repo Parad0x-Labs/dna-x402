@@ -20,7 +20,7 @@ pub struct WasmJobSpec {
 #[derive(Debug, Clone)]
 pub struct WasmExecutionResult {
     pub output_commitment: [u8; 32], // commitment to output bytes
-    pub output_hash: [u8; 32], // SHA256(output_bytes) — verifiable without revealing output
+    pub output_hash: [u8; 32],       // SHA256(output_bytes) — verifiable without revealing output
     pub instructions_used: u64,
     pub succeeded: bool,
     pub job_id: [u8; 32],
@@ -32,8 +32,8 @@ pub struct WasmExecutionResult {
 pub struct ComputeProof {
     pub job_spec_hash: [u8; 32], // SHA256 of entire WasmJobSpec
     pub result_hash: [u8; 32],   // SHA256 of entire WasmExecutionResult
-    pub proof_hash: [u8; 32], // SHA256("wasm-compute-proof-v1" || job_spec_hash || result_hash)
-    pub mainnet_ready: bool,  // always false
+    pub proof_hash: [u8; 32],    // SHA256("wasm-compute-proof-v1" || job_spec_hash || result_hash)
+    pub mainnet_ready: bool,     // always false
 }
 
 #[derive(Debug, Clone, PartialEq)]

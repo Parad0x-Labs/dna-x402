@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-bulletproof-range"
 version = "0.1.0"

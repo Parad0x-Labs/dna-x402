@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-secret-sharing"
 version = "0.1.0"

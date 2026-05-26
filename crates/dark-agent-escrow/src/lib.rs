@@ -226,7 +226,7 @@ mod tests {
     fn test_create_and_release_happy_path() {
         let created_at: i64 = 1_700_000_000;
         let expires_at: i64 = 1_700_086_400; // +1 day
-        let current: i64 = 1_700_043_200;    // mid-window
+        let current: i64 = 1_700_043_200; // mid-window
 
         let mut escrow = create_escrow(
             &payer_secret(),
@@ -241,13 +241,8 @@ mod tests {
         assert!(!escrow.mainnet_ready);
         assert_eq!(escrow.amount, 1_000_000);
 
-        let release = release_escrow(
-            &mut escrow,
-            &beneficiary_secret(),
-            condition(),
-            current,
-        )
-        .expect("release_escrow should succeed");
+        let release = release_escrow(&mut escrow, &beneficiary_secret(), condition(), current)
+            .expect("release_escrow should succeed");
 
         assert!(escrow.resolved);
         assert_eq!(release.amount, 1_000_000);
@@ -273,8 +268,13 @@ mod tests {
         )
         .unwrap();
 
-        release_escrow(&mut escrow, &beneficiary_secret(), condition(), 1_500_000_000)
-            .expect("first release should succeed");
+        release_escrow(
+            &mut escrow,
+            &beneficiary_secret(),
+            condition(),
+            1_500_000_000,
+        )
+        .expect("first release should succeed");
 
         let err = release_escrow(
             &mut escrow,
@@ -293,14 +293,8 @@ mod tests {
         let expires_at: i64 = 1_700_000_000;
         let current: i64 = 1_700_000_001; // one second past expiry
 
-        let mut escrow = create_escrow(
-            &payer_secret(),
-            999,
-            condition(),
-            1_699_000_000,
-            expires_at,
-        )
-        .unwrap();
+        let mut escrow =
+            create_escrow(&payer_secret(), 999, condition(), 1_699_000_000, expires_at).unwrap();
 
         let err = release_escrow(&mut escrow, &beneficiary_secret(), condition(), current)
             .expect_err("expired escrow should fail");
@@ -341,8 +335,14 @@ mod tests {
     // Test 5: zero amount returns ZeroAmount
     #[test]
     fn test_zero_amount_rejected() {
-        let err = create_escrow(&payer_secret(), 0, condition(), 1_000_000_000, 2_000_000_000)
-            .expect_err("zero amount should fail");
+        let err = create_escrow(
+            &payer_secret(),
+            0,
+            condition(),
+            1_000_000_000,
+            2_000_000_000,
+        )
+        .expect_err("zero amount should fail");
 
         assert_eq!(err, EscrowError::ZeroAmount);
     }

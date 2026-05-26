@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -35,13 +35,19 @@ pub enum DaoError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(hashes: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
-    for h in hashes { for i in 0..32 { acc[i] ^= h[i]; } }
+    for h in hashes {
+        for i in 0..32 {
+            acc[i] ^= h[i];
+        }
+    }
     acc
 }
 
@@ -76,7 +82,11 @@ fn compute_content_commitment(content: &[u8]) -> [u8; 32] {
     sha256_multi(&[b"dao2-content-v1", content])
 }
 
-fn compute_proposal_id(dao_id: &[u8; 32], proposer_hash: &[u8; 32], content_commit: &[u8; 32]) -> [u8; 32] {
+fn compute_proposal_id(
+    dao_id: &[u8; 32],
+    proposer_hash: &[u8; 32],
+    content_commit: &[u8; 32],
+) -> [u8; 32] {
     sha256_multi(&[b"dao2-prop-v1", dao_id, proposer_hash, content_commit])
 }
 
@@ -138,7 +148,11 @@ pub fn create_proposal(
     dao.proposal_count += 1;
     let new_root = compute_proposal_root(&[dao.proposal_root, proposal_id], dao.proposal_count);
     dao.proposal_root = new_root;
-    Ok(DaoProposal { proposal_id, proposer_hash, content_commitment })
+    Ok(DaoProposal {
+        proposal_id,
+        proposer_hash,
+        content_commitment,
+    })
 }
 
 pub fn dao_public_record(dao: &DaoV2) -> String {
@@ -157,9 +171,21 @@ pub fn dao_public_record(dao: &DaoV2) -> String {
 mod tests {
     use super::*;
 
-    fn founder() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xf1; s }
-    fn tblind()  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xf2; s }
-    fn member1() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xaa; s }
+    fn founder() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xf1;
+        s
+    }
+    fn tblind() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xf2;
+        s
+    }
+    fn member1() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xaa;
+        s
+    }
 
     // Test 1: new_dao + mainnet_ready=false
     #[test]

@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-zkp-set-membership"
 version = "0.1.0"

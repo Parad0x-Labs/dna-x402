@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-privacy-budget"
 version = "0.1.0"

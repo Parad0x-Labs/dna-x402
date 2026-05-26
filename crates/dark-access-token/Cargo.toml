@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-access-token"
 version = "0.1.0"

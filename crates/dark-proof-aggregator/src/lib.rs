@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -122,7 +122,9 @@ mod tests {
     use super::*;
 
     fn make_proof(seed: u8) -> [u8; 32] {
-        let mut p = [0u8; 32]; p[0] = seed; p
+        let mut p = [0u8; 32];
+        p[0] = seed;
+        p
     }
 
     // Test 1: aggregate 4 proofs + verify passes

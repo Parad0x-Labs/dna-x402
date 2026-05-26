@@ -234,16 +234,32 @@ mod tests {
     // 1. create_note then verify_note_commitment returns true
     #[test]
     fn test_note_commitment_verifies() {
-        let note = create_note(1_000_000, &test_randomness(), &test_recipient(), test_slot());
-        assert!(verify_note_commitment(&note), "fresh note commitment must verify");
+        let note = create_note(
+            1_000_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+        );
+        assert!(
+            verify_note_commitment(&note),
+            "fresh note commitment must verify"
+        );
     }
 
     // 2. Mutate note.value → verify_note_commitment returns false
     #[test]
     fn test_wrong_value_invalidates_commitment() {
-        let mut note = create_note(1_000_000, &test_randomness(), &test_recipient(), test_slot());
+        let mut note = create_note(
+            1_000_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+        );
         note.value += 1; // tamper
-        assert!(!verify_note_commitment(&note), "tampered value must invalidate commitment");
+        assert!(
+            !verify_note_commitment(&note),
+            "tampered value must invalidate commitment"
+        );
     }
 
     // 3. prepare_deposit increments total_deposited
@@ -253,8 +269,15 @@ mod tests {
         let mut commitments: Vec<[u8; 32]> = Vec::new();
 
         let value = 500_000_000u64;
-        prepare_deposit(&mut pool, value, &test_randomness(), &test_recipient(), test_slot(), &mut commitments)
-            .expect("deposit should succeed");
+        prepare_deposit(
+            &mut pool,
+            value,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .expect("deposit should succeed");
 
         assert_eq!(pool.total_deposited, value);
         assert_eq!(pool.note_count, 1);
@@ -268,17 +291,26 @@ mod tests {
         let mut commitments: Vec<[u8; 32]> = Vec::new();
 
         let note = prepare_deposit(
-            &mut pool, 1_000_000,
-            &test_randomness(), &test_recipient(), test_slot(),
+            &mut pool,
+            1_000_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
             &mut commitments,
-        ).unwrap();
+        )
+        .unwrap();
 
         let mut nullifier_records: Vec<NullifierRecord> = Vec::new();
 
         let (nullifier, _root) = prepare_withdrawal(
-            &mut pool, &note, &test_secret(), 1_000_000,
-            &nullifier_records, &commitments,
-        ).unwrap();
+            &mut pool,
+            &note,
+            &test_secret(),
+            1_000_000,
+            &nullifier_records,
+            &commitments,
+        )
+        .unwrap();
 
         // Caller would persist this record; we do so manually here.
         nullifier_records.push(NullifierRecord {
@@ -297,17 +329,26 @@ mod tests {
         let mut commitments: Vec<[u8; 32]> = Vec::new();
 
         let note = prepare_deposit(
-            &mut pool, 1_000_000,
-            &test_randomness(), &test_recipient(), test_slot(),
+            &mut pool,
+            1_000_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
             &mut commitments,
-        ).unwrap();
+        )
+        .unwrap();
 
         let mut nullifier_records: Vec<NullifierRecord> = Vec::new();
 
         let (nullifier, _root) = prepare_withdrawal(
-            &mut pool, &note, &test_secret(), 1_000_000,
-            &nullifier_records, &commitments,
-        ).unwrap();
+            &mut pool,
+            &note,
+            &test_secret(),
+            1_000_000,
+            &nullifier_records,
+            &commitments,
+        )
+        .unwrap();
 
         nullifier_records.push(NullifierRecord {
             nullifier,
@@ -317,8 +358,12 @@ mod tests {
 
         // Second attempt must fail.
         let result = prepare_withdrawal(
-            &mut pool, &note, &test_secret(), 1_000_000,
-            &nullifier_records, &commitments,
+            &mut pool,
+            &note,
+            &test_secret(),
+            1_000_000,
+            &nullifier_records,
+            &commitments,
         );
 
         assert_eq!(result, Err(PoolError::NullifierAlreadySpent));
@@ -328,6 +373,9 @@ mod tests {
     #[test]
     fn test_pool_mainnet_ready_always_false() {
         let pool = PoolState::default();
-        assert!(!pool.mainnet_ready, "mainnet_ready must always be false in devnet design");
+        assert!(
+            !pool.mainnet_ready,
+            "mainnet_ready must always be false in devnet design"
+        );
     }
 }

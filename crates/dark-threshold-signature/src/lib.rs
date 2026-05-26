@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -39,14 +39,18 @@ pub enum TSigError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(bufs: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
     for b in bufs {
-        for i in 0..32 { acc[i] ^= b[i]; }
+        for i in 0..32 {
+            acc[i] ^= b[i];
+        }
     }
     acc
 }
@@ -57,7 +61,11 @@ fn hex32(b: &[u8; 32]) -> String {
 
 // ── API ────────────────────────────────────────────────────────────────────
 
-pub fn generate_key(root_secret: &[u8; 32], n_shares: u8, threshold: u8) -> Result<ThresholdKey, TSigError> {
+pub fn generate_key(
+    root_secret: &[u8; 32],
+    n_shares: u8,
+    threshold: u8,
+) -> Result<ThresholdKey, TSigError> {
     if root_secret == &[0u8; 32] {
         return Err(TSigError::ZeroSecret);
     }
@@ -73,14 +81,23 @@ pub fn generate_key(root_secret: &[u8; 32], n_shares: u8, threshold: u8) -> Resu
     let shares: Vec<[u8; 32]> = (0..n_shares)
         .map(|i| sha256_multi(&[b"tsig-share-v1", &master_secret, &[i]]))
         .collect();
-    Ok(ThresholdKey { key_id, public_key, shares, threshold, mainnet_ready: false })
+    Ok(ThresholdKey {
+        key_id,
+        public_key,
+        shares,
+        threshold,
+        mainnet_ready: false,
+    })
 }
 
 pub fn partial_sign(key: &ThresholdKey, signer_index: u8, message_bytes: &[u8]) -> PartialSig {
     let message_hash = sha256_multi(&[b"tsig-msg-v1", message_bytes]);
     let share = &key.shares[signer_index as usize];
     let partial_hash = sha256_multi(&[b"tsig-partial-v1", &key.key_id, &message_hash, share]);
-    PartialSig { signer_index, partial_hash }
+    PartialSig {
+        signer_index,
+        partial_hash,
+    }
 }
 
 pub fn combine_sigs(
@@ -113,7 +130,9 @@ pub fn verify_tsig(key: &ThresholdKey, sig: &ThresholdSig, message_bytes: &[u8])
     // knowing which signers participated. Instead we verify sig_id and message_hash.
     // The public verification checks that the sig_id matches sig.aggregate and message matches.
     let message_hash = sha256_multi(&[b"tsig-msg-v1", message_bytes]);
-    if message_hash != sig.message_hash { return false; }
+    if message_hash != sig.message_hash {
+        return false;
+    }
     let expected_sig_id = sha256_multi(&[b"tsig-sig-id-v1", &sig.aggregate]);
     expected_sig_id == sig.sig_id
 }
@@ -124,7 +143,8 @@ pub fn key_public_record(key: &ThresholdKey) -> String {
         "threshold": key.threshold,
         "share_count": key.shares.len(),
         "mainnet_ready": key.mainnet_ready,
-    }).to_string()
+    })
+    .to_string()
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -133,7 +153,11 @@ pub fn key_public_record(key: &ThresholdKey) -> String {
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
+    fn secret(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
 
     // Test 1: generate + sign + verify (3 shares, threshold=2)
     #[test]

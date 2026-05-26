@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-private-crowdfund"
 version = "0.1.0"

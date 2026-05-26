@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-encrypted-state"
 version = "0.1.0"

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -153,13 +153,11 @@ mod tests {
     #[test]
     fn test_batch_commit_count() {
         let b1 = blinding();
-        let mut b2 = [0u8; 32]; b2[0] = 0xbb;
-        let mut b3 = [0u8; 32]; b3[0] = 0xcc;
-        let pairs: Vec<(&[u8], [u8; 32])> = vec![
-            (b"val1", b1),
-            (b"val2", b2),
-            (b"val3", b3),
-        ];
+        let mut b2 = [0u8; 32];
+        b2[0] = 0xbb;
+        let mut b3 = [0u8; 32];
+        b3[0] = 0xcc;
+        let pairs: Vec<(&[u8], [u8; 32])> = vec![(b"val1", b1), (b"val2", b2), (b"val3", b3)];
         let results = batch_commit(&pairs);
         assert_eq!(results.len(), 3);
         for r in &results {

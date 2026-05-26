@@ -34,7 +34,10 @@ pub fn new_params(secret: &[u8; 32]) -> Result<SchnorrParams, SchnorrError> {
         return Err(SchnorrError::ZeroSecret);
     }
     let pk = sha256_tagged(b"schnorr-pk-v1", &[secret]);
-    Ok(SchnorrParams { public_key_hash: pk, mainnet_ready: false })
+    Ok(SchnorrParams {
+        public_key_hash: pk,
+        mainnet_ready: false,
+    })
 }
 
 pub fn prove(
@@ -47,7 +50,10 @@ pub fn prove(
         return Err(SchnorrError::ZeroNonce);
     }
     let commit = sha256_tagged(b"schnorr-commit-v1", &[nonce]);
-    let challenge = sha256_tagged(b"schnorr-challenge-v1", &[&params.public_key_hash, &commit, message]);
+    let challenge = sha256_tagged(
+        b"schnorr-challenge-v1",
+        &[&params.public_key_hash, &commit, message],
+    );
     let response = sha256_tagged(b"schnorr-response-v1", &[secret, &challenge, nonce]);
     let proof_id = sha256_tagged(b"schnorr-proof-v1", &[&commit, &challenge, &response]);
     Ok(SchnorrProof {
@@ -69,9 +75,15 @@ pub fn verify(params: &SchnorrParams, proof: &SchnorrProof) -> bool {
 mod tests {
     use super::*;
 
-    fn secret() -> [u8; 32] { [0x01u8; 32] }
-    fn nonce() -> [u8; 32] { [0x02u8; 32] }
-    fn message() -> &'static [u8] { b"test message for schnorr proof" }
+    fn secret() -> [u8; 32] {
+        [0x01u8; 32]
+    }
+    fn nonce() -> [u8; 32] {
+        [0x02u8; 32]
+    }
+    fn message() -> &'static [u8] {
+        b"test message for schnorr proof"
+    }
 
     #[test]
     fn new_params_mainnet_ready_false_is_stub() {

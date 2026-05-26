@@ -49,7 +49,12 @@ pub fn relay_hash_fn(relay_secret: &[u8; 32]) -> [u8; 32] {
 }
 
 pub fn route_hop(prev_route: &[u8; 32], hop_idx: u8, rh: &[u8; 32]) -> [u8; 32] {
-    sha256_parts(&[b"relay-hop-v1", prev_route.as_ref(), &[hop_idx], rh.as_ref()])
+    sha256_parts(&[
+        b"relay-hop-v1",
+        prev_route.as_ref(),
+        &[hop_idx],
+        rh.as_ref(),
+    ])
 }
 
 pub fn packet_id_hash(pc: &[u8; 32], rc: &[u8; 32], hop_count: u8) -> [u8; 32] {
@@ -159,9 +164,7 @@ mod tests {
 
     #[test]
     fn too_many_hops_rejected() {
-        let secrets: Vec<[u8; 32]> = (1u8..=(MAX_HOPS + 1))
-            .map(|i| [i; 32])
-            .collect();
+        let secrets: Vec<[u8; 32]> = (1u8..=(MAX_HOPS + 1)).map(|i| [i; 32]).collect();
         let result = new_relay_packet(PAYLOAD, &secrets);
         assert_eq!(result.unwrap_err(), RelayError::TooManyHops);
     }

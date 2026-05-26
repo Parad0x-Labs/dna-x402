@@ -1,17 +1,66 @@
 // dark-agent-payment-sdk — glue crate wiring agent capability with shielded x402 payment.
-// Closes the loop between agent-shielded-capsule and dark-private-x402.
+// Closes the loop between agent-shielded-capsule and the receipt commitment scheme.
 // NOT_PRODUCTION — devnet design only — no audit — mainnet_ready = false
 
 use sha2::{Digest, Sha256};
 
 use agent_shielded_capsule::{
-    AgentCapability, CapsuleError, ShieldedSpendProof,
-    create_spend_proof,
+    create_spend_proof, AgentCapability, CapsuleError, ShieldedSpendProof,
 };
-use dark_private_x402::{
-    PlainX402Payment, ShieldedPaymentReceipt, ShieldedX402Error,
-    issue_shielded_receipt,
-};
+
+// ── Local payment types (self-contained, no external x402 stub dependency) ──
+
+/// Plain x402 payment record — buyer_hash is SHA256 of buyer identity, never raw.
+#[derive(Debug, Clone)]
+pub struct PlainX402Payment {
+    pub buyer_hash: [u8; 32],
+    pub amount_lamports: u64,
+    pub service_hash: [u8; 32],
+    pub payment_tx_hash: [u8; 32],
+    pub slot: u64,
+}
+
+/// Shielded receipt: commitment_hash hides buyer identity; receipt_hash is public anchor.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShieldedPaymentReceipt {
+    /// SHA256("receipt-v1" || payment_tx_hash || commitment_hash)
+    pub receipt_hash: [u8; 32],
+    /// SHA256("commitment-v1" || buyer_hash || amount_le8 || nonce) — hides buyer
+    pub commitment_hash: [u8; 32],
+}
+
+/// Error variants for shielded payment operations.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ShieldedX402Error {
+    InvalidPayment,
+    NonceMismatch,
+}
+
+/// Issue a shielded receipt: commitment hides buyer behind nonce.
+pub fn issue_shielded_receipt(
+    payment: &PlainX402Payment,
+    nonce: &[u8; 32],
+) -> ShieldedPaymentReceipt {
+    // commitment_hash = SHA256("commitment-v1" || buyer_hash || amount_le8 || nonce)
+    let mut h = Sha256::new();
+    h.update(b"commitment-v1");
+    h.update(payment.buyer_hash);
+    h.update(payment.amount_lamports.to_le_bytes());
+    h.update(nonce);
+    let commitment_hash: [u8; 32] = h.finalize().into();
+
+    // receipt_hash = SHA256("receipt-v1" || payment_tx_hash || commitment_hash)
+    let mut h = Sha256::new();
+    h.update(b"receipt-v1");
+    h.update(payment.payment_tx_hash);
+    h.update(commitment_hash);
+    let receipt_hash: [u8; 32] = h.finalize().into();
+
+    ShieldedPaymentReceipt {
+        receipt_hash,
+        commitment_hash,
+    }
+}
 
 // ── hex helper (no external hex crate) ─────────────────────────────────────
 
@@ -85,7 +134,7 @@ pub fn new_session(
     let spend_proof = create_spend_proof(
         &capability,
         payment.amount_lamports,
-        agent_secret,   // treated as recipient_hash — never stored raw
+        agent_secret, // treated as recipient_hash — never stored raw
         payment.slot,
         nonce,
     )
@@ -247,7 +296,10 @@ mod tests {
         let cap = make_capability(1_000_000);
         let payment = make_payment(200_000);
         let session = new_session(cap, payment, &AGENT_SECRET, &NONCE).unwrap();
-        assert!(verify_session(&session), "verify_session must return true for untampered session");
+        assert!(
+            verify_session(&session),
+            "verify_session must return true for untampered session"
+        );
     }
 
     // ── Test 6: verify_session fails after session_id mutation ────────────

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -209,7 +209,13 @@ mod tests {
         let t = ticket_for(&secret, epoch, 2, &domain);
         let err = record_spend(&mut ledger, t).unwrap_err();
         assert!(
-            matches!(err, RateLimitError::QuotaExceeded { limit: 2, attempted: 3 }),
+            matches!(
+                err,
+                RateLimitError::QuotaExceeded {
+                    limit: 2,
+                    attempted: 3
+                }
+            ),
             "expected QuotaExceeded, got {:?}",
             err
         );
@@ -243,7 +249,13 @@ mod tests {
         let t = ticket_for(&secret, 6, 0, &domain);
         let err = record_spend(&mut ledger, t).unwrap_err();
         assert!(
-            matches!(err, RateLimitError::WrongEpoch { expected: 5, got: 6 }),
+            matches!(
+                err,
+                RateLimitError::WrongEpoch {
+                    expected: 5,
+                    got: 6
+                }
+            ),
             "expected WrongEpoch, got {:?}",
             err
         );

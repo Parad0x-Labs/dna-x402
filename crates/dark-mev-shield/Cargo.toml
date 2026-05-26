@@ -1,0 +1,9 @@
+[package]
+name = "dark-mev-shield"
+version = "0.1.0"
+edition = "2021"
+description = "Anti-MEV time-locked commit-reveal with chaff — prevent sandwich attacks on committed trade intents"
+
+[dependencies]
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }

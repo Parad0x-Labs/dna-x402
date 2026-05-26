@@ -255,7 +255,10 @@ mod tests {
         remove_liquidity(&mut pool, &pos, &secret).expect("remove should succeed");
         assert_eq!(pool.position_count, 0);
         // After XOR-removing the only commitment the accumulator is all-zero again
-        assert_eq!(pool.pool_root, initial_root, "root must restore after remove");
+        assert_eq!(
+            pool.pool_root, initial_root,
+            "root must restore after remove"
+        );
     }
 
     // 2. A different lp_secret cannot remove the position
@@ -284,8 +287,8 @@ mod tests {
 
         let secret = make_secret(0x10);
         let nonce = make_nonce(0x03);
-        let pos = create_position(&secret, 100, 200, &nonce)
-            .expect("create_position should succeed");
+        let pos =
+            create_position(&secret, 100, 200, &nonce).expect("create_position should succeed");
 
         // Do NOT call add_liquidity
         let err = remove_liquidity(&mut pool, &pos, &secret)
@@ -331,8 +334,7 @@ mod tests {
 
         assert_eq!(pool.swap_count, 0);
 
-        let proof = execute_swap(&mut pool, 500, SwapDirection::AToB)
-            .expect("swap should succeed");
+        let proof = execute_swap(&mut pool, 500, SwapDirection::AToB).expect("swap should succeed");
 
         assert_eq!(pool.swap_count, 1);
         assert_eq!(proof.direction, SwapDirection::AToB);
@@ -354,9 +356,15 @@ mod tests {
 
         // The record must contain pool-level fields
         assert!(record.contains("pool_root"), "record must have pool_root");
-        assert!(record.contains("position_count"), "record must have position_count");
+        assert!(
+            record.contains("position_count"),
+            "record must have position_count"
+        );
         assert!(record.contains("swap_count"), "record must have swap_count");
-        assert!(record.contains("mainnet_ready"), "record must have mainnet_ready");
+        assert!(
+            record.contains("mainnet_ready"),
+            "record must have mainnet_ready"
+        );
 
         // The individual position commitment must NOT appear in the output
         let pos_hex: String = pos

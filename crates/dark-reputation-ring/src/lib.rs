@@ -82,7 +82,7 @@ pub fn create_member(member_secret: &[u8; 32]) -> Result<RingMember, RingError> 
     let public_key = sha256(&[b"ring-member-v1", member_secret.as_ref()]);
     Ok(RingMember {
         public_key,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -92,7 +92,7 @@ pub fn new_ring() -> ReputationRing {
         ring_root: [0u8; 32],
         member_count: 0,
         members: Vec::new(),
-        mainnet_ready: true,
+        mainnet_ready: false,
     }
 }
 
@@ -145,7 +145,7 @@ pub fn endorse(
         endorsement_hash,
         linkability_tag,
         ring_root: ring.ring_root,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -317,8 +317,14 @@ mod tests {
         let pk1_hex: String = m1.public_key.iter().map(|b| format!("{:02x}", b)).collect();
         let pk2_hex: String = m2.public_key.iter().map(|b| format!("{:02x}", b)).collect();
 
-        assert!(!record.contains(&pk1_hex), "record leaks member 1 public key");
-        assert!(!record.contains(&pk2_hex), "record leaks member 2 public key");
+        assert!(
+            !record.contains(&pk1_hex),
+            "record leaks member 1 public key"
+        );
+        assert!(
+            !record.contains(&pk2_hex),
+            "record leaks member 2 public key"
+        );
 
         // Sanity: ring_root IS present, member_count IS present.
         assert!(record.contains("ring_root"));

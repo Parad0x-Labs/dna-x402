@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -57,7 +57,12 @@ fn compute_metadata_hash(metadata_bytes: &[u8]) -> [u8; 32] {
     sha256(&d)
 }
 
-fn compute_token_id(owner_hash: &[u8; 32], metadata_hash: &[u8; 32], edition: u32, nonce: &[u8; 32]) -> [u8; 32] {
+fn compute_token_id(
+    owner_hash: &[u8; 32],
+    metadata_hash: &[u8; 32],
+    edition: u32,
+    nonce: &[u8; 32],
+) -> [u8; 32] {
     let mut d = Vec::new();
     d.extend_from_slice(b"nft-token-v1");
     d.extend_from_slice(owner_hash);
@@ -126,7 +131,12 @@ pub fn transfer_nft(
     let new_owner_hash = compute_owner_hash(new_owner_secret);
     let new_nonce = sha256(nft.nonce.as_slice()); // SHA256(old_nonce)
     let new_nonce_arr: [u8; 32] = new_nonce;
-    let new_token_id = compute_token_id(&new_owner_hash, &nft.metadata_hash, nft.edition, &new_nonce_arr);
+    let new_token_id = compute_token_id(
+        &new_owner_hash,
+        &nft.metadata_hash,
+        nft.edition,
+        &new_nonce_arr,
+    );
 
     let transfer = NftTransfer {
         from_hash,
@@ -163,13 +173,19 @@ mod tests {
     use super::*;
 
     fn owner_secret() -> [u8; 32] {
-        let mut s = [0u8; 32]; s[0] = 0x11; s
+        let mut s = [0u8; 32];
+        s[0] = 0x11;
+        s
     }
     fn new_owner_secret() -> [u8; 32] {
-        let mut s = [0u8; 32]; s[0] = 0x22; s
+        let mut s = [0u8; 32];
+        s[0] = 0x22;
+        s
     }
     fn nonce() -> [u8; 32] {
-        let mut n = [0u8; 32]; n[0] = 0xab; n
+        let mut n = [0u8; 32];
+        n[0] = 0xab;
+        n
     }
     const META: &[u8] = b"ipfs://bafyreib";
 

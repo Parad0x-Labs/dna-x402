@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,9 @@ pub enum OracleError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -99,7 +101,9 @@ pub fn submit_response(
 }
 
 pub fn verify_response(request: &OracleRequest, response: &OracleResponse) -> bool {
-    if response.request_id != request.request_id { return false; }
+    if response.request_id != request.request_id {
+        return false;
+    }
     let expected = sha256_multi(&[
         b"oracle2-resp-v1",
         &response.oracle_hash,
@@ -114,7 +118,8 @@ pub fn request_public_record(req: &OracleRequest) -> String {
         "request_id": hex32(&req.request_id),
         "blinded_query": hex32(&req.blinded_query),
         "mainnet_ready": req.mainnet_ready,
-    }).to_string()
+    })
+    .to_string()
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -123,8 +128,16 @@ pub fn request_public_record(req: &OracleRequest) -> String {
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
-    fn nonce(b: u8)  -> [u8; 32] { let mut s = [0u8; 32]; s[0] = b; s }
+    fn secret(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
+    fn nonce(b: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s
+    }
 
     // Test 1: request + respond + verify
     #[test]

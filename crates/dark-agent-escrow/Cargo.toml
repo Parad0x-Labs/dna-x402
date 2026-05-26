@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-agent-escrow"
 version = "0.1.0"

@@ -1,0 +1,9 @@
+[package]
+name = "dark-commitment-chain"
+version = "0.1.0"
+edition = "2021"
+description = "Hash-linked commitment chain for private balance proofs — audit without revealing amounts"
+
+[dependencies]
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }

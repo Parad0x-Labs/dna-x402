@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -19,7 +19,9 @@ pub struct ProtocolStatsV3 {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -82,21 +84,33 @@ mod tests {
     #[test]
     fn test_crate_count_at_least_190() {
         let stats = current_stats();
-        assert!(stats.crate_count >= 190, "crate_count {} < 190", stats.crate_count);
+        assert!(
+            stats.crate_count >= 190,
+            "crate_count {} < 190",
+            stats.crate_count
+        );
     }
 
     // Test 2: total_tests >= 1140
     #[test]
     fn test_total_tests_at_least_1140() {
         let stats = current_stats();
-        assert!(stats.total_tests >= 1140, "total_tests {} < 1140", stats.total_tests);
+        assert!(
+            stats.total_tests >= 1140,
+            "total_tests {} < 1140",
+            stats.total_tests
+        );
     }
 
     // Test 3: zk_proof_types >= 10
     #[test]
     fn test_zk_proof_types_at_least_10() {
         let stats = current_stats();
-        assert!(stats.zk_proof_types >= 10, "zk_proof_types {} < 10", stats.zk_proof_types);
+        assert!(
+            stats.zk_proof_types >= 10,
+            "zk_proof_types {} < 10",
+            stats.zk_proof_types
+        );
     }
 
     // Test 4: wave_count = 19

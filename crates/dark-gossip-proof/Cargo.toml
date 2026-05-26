@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-gossip-proof"
 version = "0.1.0"

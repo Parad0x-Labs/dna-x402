@@ -47,12 +47,13 @@
 
 use dark_merkle_accumulator::{new_accumulator, MerkleAcc};
 pub use dark_stealth_address::create_meta_address;
-use dark_stealth_address::{create_payment as stealth_create_payment,
-                           scan_payment as stealth_scan, StealthMetaAddress, StealthPayment,
-                           StealthSpendKey};
+use dark_stealth_address::{
+    create_payment as stealth_create_payment, scan_payment as stealth_scan, StealthMetaAddress,
+    StealthPayment, StealthSpendKey,
+};
 use dark_withdrawal_bundle::{
-    build_withdrawal, create_note, deposit_note, derive_note_secret, instruction_data,
-    NoteSecret, ShieldedNote, WithdrawalBundle, WithdrawalError,
+    build_withdrawal, create_note, deposit_note, derive_note_secret, instruction_data, NoteSecret,
+    ShieldedNote, WithdrawalBundle, WithdrawalError,
 };
 use sha2::{Digest, Sha256};
 
@@ -132,12 +133,12 @@ impl From<dark_merkle_accumulator::AccError> for PrivateX402Error {
 impl std::fmt::Display for PrivateX402Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ZeroSecret          => write!(f, "secret key is all-zero"),
-            Self::ZeroAmount          => write!(f, "amount is zero"),
+            Self::ZeroSecret => write!(f, "secret key is all-zero"),
+            Self::ZeroAmount => write!(f, "amount is zero"),
             Self::ZeroEphemeralSecret => write!(f, "ephemeral secret is all-zero"),
-            Self::StealthError(s)     => write!(f, "stealth error: {}", s),
-            Self::WithdrawalError(s)  => write!(f, "withdrawal error: {}", s),
-            Self::TreeFull            => write!(f, "Merkle tree is full"),
+            Self::StealthError(s) => write!(f, "stealth error: {}", s),
+            Self::WithdrawalError(s) => write!(f, "withdrawal error: {}", s),
+            Self::TreeFull => write!(f, "Merkle tree is full"),
         }
     }
 }
@@ -262,7 +263,7 @@ pub fn receive_private_payment(
     let maybe_key = stealth_scan(spend_secret, &envelope.stealth_payment)?;
     let spend_key = match maybe_key {
         Some(k) => k,
-        None    => return Ok(None),
+        None => return Ok(None),
     };
 
     // 2. Build withdrawal bundle from the shielded note
@@ -315,15 +316,24 @@ mod tests {
     use super::*;
 
     fn spend_secret(b: u8) -> [u8; 32] {
-        let mut s = [0u8; 32]; s[0] = b; s[1] = 0x01; s
+        let mut s = [0u8; 32];
+        s[0] = b;
+        s[1] = 0x01;
+        s
     }
 
     fn ephem_secret(b: u8) -> [u8; 32] {
-        let mut s = [0u8; 32]; s[0] = 0xEF; s[1] = b; s[2] = 0x01; s
+        let mut s = [0u8; 32];
+        s[0] = 0xEF;
+        s[1] = b;
+        s[2] = 0x01;
+        s
     }
 
     fn tree_nonce(b: u8) -> [u8; 32] {
-        let mut n = [0u8; 32]; n[0] = b; n
+        let mut n = [0u8; 32];
+        n[0] = b;
+        n
     }
 
     // ── Test 1: full roundtrip — send and receive ────────────────────────────
@@ -334,9 +344,13 @@ mod tests {
         let mut tree = new_commitment_tree(&tree_nonce(1));
 
         let envelope = send_private_payment(
-            &meta, &ephem_secret(1), 1_000_000,
-            "https://api.darknull.example/service/1", &mut tree,
-        ).unwrap();
+            &meta,
+            &ephem_secret(1),
+            1_000_000,
+            "https://api.darknull.example/service/1",
+            &mut tree,
+        )
+        .unwrap();
 
         let received = receive_private_payment(&alice_secret, &envelope, &tree)
             .unwrap()
@@ -350,17 +364,24 @@ mod tests {
     #[test]
     fn test_wrong_secret_cannot_receive() {
         let alice_secret = spend_secret(2);
-        let bob_secret   = spend_secret(99);
+        let bob_secret = spend_secret(99);
         let meta = create_meta_address(&alice_secret).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(2));
 
         let envelope = send_private_payment(
-            &meta, &ephem_secret(2), 500_000,
-            "https://api.darknull.example/service/2", &mut tree,
-        ).unwrap();
+            &meta,
+            &ephem_secret(2),
+            500_000,
+            "https://api.darknull.example/service/2",
+            &mut tree,
+        )
+        .unwrap();
 
         let result = receive_private_payment(&bob_secret, &envelope, &tree).unwrap();
-        assert!(result.is_none(), "Bob must not be able to claim Alice's payment");
+        assert!(
+            result.is_none(),
+            "Bob must not be able to claim Alice's payment"
+        );
     }
 
     // ── Test 3: gate instruction has correct 352-byte format ─────────────────
@@ -371,12 +392,17 @@ mod tests {
         let mut tree = new_commitment_tree(&tree_nonce(3));
 
         let envelope = send_private_payment(
-            &meta, &ephem_secret(3), 750_000,
-            "https://api.darknull.example/service/3", &mut tree,
-        ).unwrap();
+            &meta,
+            &ephem_secret(3),
+            750_000,
+            "https://api.darknull.example/service/3",
+            &mut tree,
+        )
+        .unwrap();
 
         let received = receive_private_payment(&alice_secret, &envelope, &tree)
-            .unwrap().unwrap();
+            .unwrap()
+            .unwrap();
 
         assert_eq!(received.gate_instruction.len(), 352);
         assert!(verify_gate_instruction_format(&received.gate_instruction));
@@ -390,17 +416,26 @@ mod tests {
         let mut tree = new_commitment_tree(&tree_nonce(4));
 
         let envelope = send_private_payment(
-            &meta, &ephem_secret(4), 250_000,
-            "https://api.darknull.example/service/4", &mut tree,
-        ).unwrap();
+            &meta,
+            &ephem_secret(4),
+            250_000,
+            "https://api.darknull.example/service/4",
+            &mut tree,
+        )
+        .unwrap();
 
         let received = receive_private_payment(&alice_secret, &envelope, &tree)
-            .unwrap().unwrap();
+            .unwrap()
+            .unwrap();
 
-        assert_eq!(received.gate_instruction[0], 0xDE,
-            "devnet proof must start with 0xDE");
-        assert_eq!(received.gate_instruction[1], 0xAD,
-            "devnet proof must have 0xAD as second byte");
+        assert_eq!(
+            received.gate_instruction[0], 0xDE,
+            "devnet proof must start with 0xDE"
+        );
+        assert_eq!(
+            received.gate_instruction[1], 0xAD,
+            "devnet proof must have 0xAD as second byte"
+        );
     }
 
     // ── Test 5: nullifier is non-zero and changes with different payments ────
@@ -410,16 +445,34 @@ mod tests {
         let meta = create_meta_address(&alice_secret).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(5));
 
-        let e1 = send_private_payment(&meta, &ephem_secret(0xA1), 100_000,
-            "https://api.darknull.example/svc/a", &mut tree).unwrap();
-        let e2 = send_private_payment(&meta, &ephem_secret(0xA2), 100_000,
-            "https://api.darknull.example/svc/b", &mut tree).unwrap();
+        let e1 = send_private_payment(
+            &meta,
+            &ephem_secret(0xA1),
+            100_000,
+            "https://api.darknull.example/svc/a",
+            &mut tree,
+        )
+        .unwrap();
+        let e2 = send_private_payment(
+            &meta,
+            &ephem_secret(0xA2),
+            100_000,
+            "https://api.darknull.example/svc/b",
+            &mut tree,
+        )
+        .unwrap();
 
-        let r1 = receive_private_payment(&alice_secret, &e1, &tree).unwrap().unwrap();
-        let r2 = receive_private_payment(&alice_secret, &e2, &tree).unwrap().unwrap();
+        let r1 = receive_private_payment(&alice_secret, &e1, &tree)
+            .unwrap()
+            .unwrap();
+        let r2 = receive_private_payment(&alice_secret, &e2, &tree)
+            .unwrap()
+            .unwrap();
 
-        assert_ne!(r1.withdrawal.nullifier, r2.withdrawal.nullifier,
-            "each payment must produce a unique nullifier");
+        assert_ne!(
+            r1.withdrawal.nullifier, r2.withdrawal.nullifier,
+            "each payment must produce a unique nullifier"
+        );
     }
 
     // ── Test 6: Merkle root in instruction matches tree root ────────────────
@@ -430,17 +483,24 @@ mod tests {
         let mut tree = new_commitment_tree(&tree_nonce(6));
 
         let envelope = send_private_payment(
-            &meta, &ephem_secret(6), 300_000,
-            "https://api.darknull.example/service/6", &mut tree,
-        ).unwrap();
+            &meta,
+            &ephem_secret(6),
+            300_000,
+            "https://api.darknull.example/service/6",
+            &mut tree,
+        )
+        .unwrap();
 
         let received = receive_private_payment(&alice_secret, &envelope, &tree)
-            .unwrap().unwrap();
+            .unwrap()
+            .unwrap();
 
         // Root in instruction data (bytes 256..288) must match tree root
         let ix_root: [u8; 32] = received.gate_instruction[256..288].try_into().unwrap();
-        assert_eq!(ix_root, tree.root,
-            "instruction Merkle root must match current tree root");
+        assert_eq!(
+            ix_root, tree.root,
+            "instruction Merkle root must match current tree root"
+        );
     }
 
     // ── Test 7: amount in instruction data is correct ────────────────────────
@@ -451,16 +511,19 @@ mod tests {
         let mut tree = new_commitment_tree(&tree_nonce(7));
 
         let envelope = send_private_payment(
-            &meta, &ephem_secret(7), 987_654,
-            "https://api.darknull.example/service/7", &mut tree,
-        ).unwrap();
+            &meta,
+            &ephem_secret(7),
+            987_654,
+            "https://api.darknull.example/service/7",
+            &mut tree,
+        )
+        .unwrap();
 
         let received = receive_private_payment(&alice_secret, &envelope, &tree)
-            .unwrap().unwrap();
+            .unwrap()
+            .unwrap();
 
-        let amount = u64::from_le_bytes(
-            received.gate_instruction[320..328].try_into().unwrap()
-        );
+        let amount = u64::from_le_bytes(received.gate_instruction[320..328].try_into().unwrap());
         assert_eq!(amount, 987_654u64);
     }
 
@@ -471,16 +534,40 @@ mod tests {
         let meta = create_meta_address(&alice_secret).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(8));
 
-        let e1 = send_private_payment(&meta, &ephem_secret(0xB1), 100_000,
-            "https://api.darknull.example/svc/1", &mut tree).unwrap();
-        let e2 = send_private_payment(&meta, &ephem_secret(0xB2), 200_000,
-            "https://api.darknull.example/svc/2", &mut tree).unwrap();
-        let e3 = send_private_payment(&meta, &ephem_secret(0xB3), 300_000,
-            "https://api.darknull.example/svc/3", &mut tree).unwrap();
+        let e1 = send_private_payment(
+            &meta,
+            &ephem_secret(0xB1),
+            100_000,
+            "https://api.darknull.example/svc/1",
+            &mut tree,
+        )
+        .unwrap();
+        let e2 = send_private_payment(
+            &meta,
+            &ephem_secret(0xB2),
+            200_000,
+            "https://api.darknull.example/svc/2",
+            &mut tree,
+        )
+        .unwrap();
+        let e3 = send_private_payment(
+            &meta,
+            &ephem_secret(0xB3),
+            300_000,
+            "https://api.darknull.example/svc/3",
+            &mut tree,
+        )
+        .unwrap();
 
-        let r1 = receive_private_payment(&alice_secret, &e1, &tree).unwrap().unwrap();
-        let r2 = receive_private_payment(&alice_secret, &e2, &tree).unwrap().unwrap();
-        let r3 = receive_private_payment(&alice_secret, &e3, &tree).unwrap().unwrap();
+        let r1 = receive_private_payment(&alice_secret, &e1, &tree)
+            .unwrap()
+            .unwrap();
+        let r2 = receive_private_payment(&alice_secret, &e2, &tree)
+            .unwrap()
+            .unwrap();
+        let r3 = receive_private_payment(&alice_secret, &e3, &tree)
+            .unwrap()
+            .unwrap();
 
         assert_eq!(r1.value, 100_000);
         assert_eq!(r2.value, 200_000);
@@ -494,8 +581,9 @@ mod tests {
     fn test_zero_amount_rejected() {
         let meta = create_meta_address(&spend_secret(9)).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(9));
-        let err = send_private_payment(&meta, &ephem_secret(9), 0,
-            "https://example.com", &mut tree).unwrap_err();
+        let err =
+            send_private_payment(&meta, &ephem_secret(9), 0, "https://example.com", &mut tree)
+                .unwrap_err();
         assert_eq!(err, PrivateX402Error::ZeroAmount);
     }
 
@@ -504,8 +592,14 @@ mod tests {
     fn test_zero_receive_secret_rejected() {
         let meta = create_meta_address(&spend_secret(10)).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(10));
-        let envelope = send_private_payment(&meta, &ephem_secret(10), 100_000,
-            "https://example.com", &mut tree).unwrap();
+        let envelope = send_private_payment(
+            &meta,
+            &ephem_secret(10),
+            100_000,
+            "https://example.com",
+            &mut tree,
+        )
+        .unwrap();
         let err = receive_private_payment(&[0u8; 32], &envelope, &tree).unwrap_err();
         assert_eq!(err, PrivateX402Error::ZeroSecret);
     }
@@ -529,13 +623,27 @@ mod tests {
         let mut tree1 = new_commitment_tree(&tree_nonce(0xC1));
         let mut tree2 = new_commitment_tree(&tree_nonce(0xC2));
 
-        let e1 = send_private_payment(&meta, &ephem, 100_000,
-            "https://api.darknull.example/svc/A", &mut tree1).unwrap();
-        let e2 = send_private_payment(&meta, &ephem, 100_000,
-            "https://api.darknull.example/svc/B", &mut tree2).unwrap();
+        let e1 = send_private_payment(
+            &meta,
+            &ephem,
+            100_000,
+            "https://api.darknull.example/svc/A",
+            &mut tree1,
+        )
+        .unwrap();
+        let e2 = send_private_payment(
+            &meta,
+            &ephem,
+            100_000,
+            "https://api.darknull.example/svc/B",
+            &mut tree2,
+        )
+        .unwrap();
 
-        assert_ne!(e1.note.commitment, e2.note.commitment,
-            "different service scopes must produce different note commitments");
+        assert_ne!(
+            e1.note.commitment, e2.note.commitment,
+            "different service scopes must produce different note commitments"
+        );
     }
 
     // ── Test 13: stealth payment fields are non-zero ─────────────────────────
@@ -543,8 +651,14 @@ mod tests {
     fn test_stealth_payment_fields_non_zero() {
         let meta = create_meta_address(&spend_secret(13)).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(13));
-        let envelope = send_private_payment(&meta, &ephem_secret(13), 50_000,
-            "https://api.darknull.example/service/13", &mut tree).unwrap();
+        let envelope = send_private_payment(
+            &meta,
+            &ephem_secret(13),
+            50_000,
+            "https://api.darknull.example/service/13",
+            &mut tree,
+        )
+        .unwrap();
 
         // Stealth address must be a real curve point (not zero)
         assert_ne!(envelope.stealth_payment.stealth_addr.x, [0u8; 32]);
@@ -559,11 +673,18 @@ mod tests {
         let meta = create_meta_address(&alice_secret).unwrap();
         let mut tree = new_commitment_tree(&tree_nonce(14));
 
-        let envelope = send_private_payment(&meta, &ephem_secret(14), 200_000,
-            "https://api.darknull.example/service/14", &mut tree).unwrap();
+        let envelope = send_private_payment(
+            &meta,
+            &ephem_secret(14),
+            200_000,
+            "https://api.darknull.example/service/14",
+            &mut tree,
+        )
+        .unwrap();
 
         let received = receive_private_payment(&alice_secret, &envelope, &tree)
-            .unwrap().unwrap();
+            .unwrap()
+            .unwrap();
 
         assert_ne!(received.spend_key.one_time_secret, [0u8; 32]);
         assert!(!received.spend_key.mainnet_ready);
@@ -573,14 +694,19 @@ mod tests {
     #[test]
     fn test_gate_instruction_format_validator() {
         let mut bad_ix = [0u8; 352];
-        assert!(!verify_gate_instruction_format(&bad_ix),
-            "all-zero instruction must fail format check");
+        assert!(
+            !verify_gate_instruction_format(&bad_ix),
+            "all-zero instruction must fail format check"
+        );
 
-        bad_ix[0] = 0xDE; bad_ix[1] = 0xAD;
+        bad_ix[0] = 0xDE;
+        bad_ix[1] = 0xAD;
         bad_ix[256] = 0x01; // non-zero root
         bad_ix[288] = 0x02; // non-zero nullifier
         bad_ix[320] = 0x03; // non-zero amount
-        assert!(verify_gate_instruction_format(&bad_ix),
-            "well-formed instruction must pass format check");
+        assert!(
+            verify_gate_instruction_format(&bad_ix),
+            "well-formed instruction must pass format check"
+        );
     }
 }

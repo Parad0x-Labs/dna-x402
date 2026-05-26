@@ -1,0 +1,11 @@
+[package]
+name = "dark-batch-stealth-scan"
+version = "0.1.0"
+edition = "2021"
+description = "O(1)-per-payment batch stealth address scanner — one ECDH per batch, not per payment"
+
+[dependencies]
+dark-stealth-address = { path = "../dark-stealth-address" }
+dark-groth16-core    = { path = "../dark-groth16-core" }
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }

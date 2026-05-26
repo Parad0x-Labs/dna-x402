@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Proposal {
@@ -95,7 +95,12 @@ pub fn cast_vote(
         return Err(GovError::DuplicateVoter);
     }
 
-    let vote_id = sha256(&[b"gov-vote-v1", &proposal.proposal_id, &voter_hash, &[choice as u8]]);
+    let vote_id = sha256(&[
+        b"gov-vote-v1",
+        &proposal.proposal_id,
+        &voter_hash,
+        &[choice as u8],
+    ]);
 
     // Update accumulators
     proposal.voted_voters.push(voter_hash);
@@ -145,9 +150,15 @@ fn hex_encode(b: [u8; 32]) -> String {
 mod tests {
     use super::*;
 
-    fn secret() -> [u8; 32] { [1u8; 32] }
-    fn nonce() -> [u8; 32] { [42u8; 32] }
-    fn content() -> &'static [u8] { b"Increase fee by 5bps" }
+    fn secret() -> [u8; 32] {
+        [1u8; 32]
+    }
+    fn nonce() -> [u8; 32] {
+        [42u8; 32]
+    }
+    fn content() -> &'static [u8] {
+        b"Increase fee by 5bps"
+    }
 
     #[test]
     fn test_create_vote_execute_happy_path() {

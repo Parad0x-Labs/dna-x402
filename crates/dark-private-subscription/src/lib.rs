@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -173,26 +173,12 @@ mod tests {
 
     #[test]
     fn end_before_start_rejected() {
-        let err = new_subscription(
-            &[0xbbu8; 32],
-            b"plan",
-            100,
-            &[0x01u8; 32],
-            2_000,
-            1_000,
-        )
-        .unwrap_err();
+        let err =
+            new_subscription(&[0xbbu8; 32], b"plan", 100, &[0x01u8; 32], 2_000, 1_000).unwrap_err();
         assert_eq!(err, SubError::EndBeforeStart);
         // Equal start/end also rejected
-        let err2 = new_subscription(
-            &[0xbbu8; 32],
-            b"plan",
-            100,
-            &[0x01u8; 32],
-            1_000,
-            1_000,
-        )
-        .unwrap_err();
+        let err2 =
+            new_subscription(&[0xbbu8; 32], b"plan", 100, &[0x01u8; 32], 1_000, 1_000).unwrap_err();
         assert_eq!(err2, SubError::EndBeforeStart);
     }
 

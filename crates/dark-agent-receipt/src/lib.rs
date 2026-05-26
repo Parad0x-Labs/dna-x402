@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentAction {
@@ -114,9 +114,21 @@ pub fn verify_receipt_chain(
 }
 
 pub fn action_public_record(receipt: &ActionReceipt) -> String {
-    let ah_hex: String = receipt.action_hash.iter().map(|b| format!("{:02x}", b)).collect();
-    let pah_hex: String = receipt.prev_action_hash.iter().map(|b| format!("{:02x}", b)).collect();
-    let rch_hex: String = receipt.receipt_chain_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let ah_hex: String = receipt
+        .action_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let pah_hex: String = receipt
+        .prev_action_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let rch_hex: String = receipt
+        .receipt_chain_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "action_hash": ah_hex,
         "prev_action_hash": pah_hex,

@@ -105,10 +105,7 @@ pub fn create_borrow(
     // borrow_id = SHA256("flash-borrow-v1" || amount_le || borrower_hash || slot_le)
     let amount_le = amount.to_le_bytes();
     let slot_le = slot.to_le_bytes();
-    let borrow_id = sha256_domain(
-        b"flash-borrow-v1",
-        &[&amount_le, &borrower_hash, &slot_le],
-    );
+    let borrow_id = sha256_domain(b"flash-borrow-v1", &[&amount_le, &borrower_hash, &slot_le]);
 
     Ok(FlashLoanBorrow {
         borrow_id,
@@ -141,8 +138,7 @@ pub fn repay_loan(
 
     // repayment_proof = SHA256("flash-repay-v1" || borrow_id || repaid_le)
     let repaid_le = repaid_amount.to_le_bytes();
-    let repayment_proof =
-        sha256_domain(b"flash-repay-v1", &[&borrow.borrow_id, &repaid_le]);
+    let repayment_proof = sha256_domain(b"flash-repay-v1", &[&borrow.borrow_id, &repaid_le]);
 
     Ok(FlashLoanRepayment {
         borrow_id: borrow.borrow_id,
@@ -220,21 +216,20 @@ mod tests {
         let fee_bps: u16 = 30; // 0.30 %
         let slot: u64 = 42;
 
-        let borrow = create_borrow(&secret, amount, fee_bps, slot)
-            .expect("create_borrow should succeed");
+        let borrow =
+            create_borrow(&secret, amount, fee_bps, slot).expect("create_borrow should succeed");
         assert_eq!(borrow.amount, amount);
         assert_eq!(borrow.fee_bps, fee_bps);
         assert!(!borrow.mainnet_ready);
 
         // Exact repayment: 1_000_000 + 300 = 1_000_300
         let required = amount + amount * fee_bps as u64 / 10_000;
-        let repayment = repay_loan(&borrow, required)
-            .expect("repay_loan should succeed with exact amount");
+        let repayment =
+            repay_loan(&borrow, required).expect("repay_loan should succeed with exact amount");
         assert_eq!(repayment.required_amount, required);
         assert!(!repayment.mainnet_ready);
 
-        let receipt = finalize_loan(&borrow, &repayment)
-            .expect("finalize_loan should succeed");
+        let receipt = finalize_loan(&borrow, &repayment).expect("finalize_loan should succeed");
         assert_eq!(receipt.borrow_id, borrow.borrow_id);
         assert_eq!(receipt.amount, amount);
         assert_eq!(receipt.fee_paid, required - amount);

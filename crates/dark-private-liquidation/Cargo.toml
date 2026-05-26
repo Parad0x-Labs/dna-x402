@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-private-liquidation"
 version = "0.1.0"

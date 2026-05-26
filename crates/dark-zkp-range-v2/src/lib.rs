@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -64,7 +64,12 @@ pub fn create_statement(min: u64, max: u64, bit_width: u8) -> Result<RangeStatem
     if bit_width > MAX_BIT_WIDTH {
         return Err(RangeError::BitWidthTooLarge);
     }
-    Ok(RangeStatement { min, max, bit_width, mainnet_ready: false })
+    Ok(RangeStatement {
+        min,
+        max,
+        bit_width,
+        mainnet_ready: false,
+    })
 }
 
 pub fn prove_range(
@@ -73,7 +78,11 @@ pub fn prove_range(
     blinding: &[u8; 32],
 ) -> Result<RangeProofV2, RangeError> {
     if value < stmt.min || value > stmt.max {
-        return Err(RangeError::ValueOutOfRange { value, min: stmt.min, max: stmt.max });
+        return Err(RangeError::ValueOutOfRange {
+            value,
+            min: stmt.min,
+            max: stmt.max,
+        });
     }
 
     let value_le = value.to_le_bytes();
@@ -89,7 +98,12 @@ pub fn prove_range(
         .collect();
 
     let xor_bits = xor_fold(&bit_commits);
-    let proof_hash = sha256_multi(&[b"rangev2-proof-v1", &commitment, &xor_bits, &[stmt.bit_width]]);
+    let proof_hash = sha256_multi(&[
+        b"rangev2-proof-v1",
+        &commitment,
+        &xor_bits,
+        &[stmt.bit_width],
+    ]);
     let proof_id = sha256_multi(&[b"rangev2-id-v1", &proof_hash]);
 
     Ok(RangeProofV2 {
@@ -127,7 +141,12 @@ pub fn verify_range_v2(
         .collect();
 
     let xor_bits = xor_fold(&bit_commits);
-    let expected_proof_hash = sha256_multi(&[b"rangev2-proof-v1", &commitment, &xor_bits, &[stmt.bit_width]]);
+    let expected_proof_hash = sha256_multi(&[
+        b"rangev2-proof-v1",
+        &commitment,
+        &xor_bits,
+        &[stmt.bit_width],
+    ]);
 
     expected_proof_hash == proof.proof_hash
 }
@@ -160,10 +179,24 @@ mod tests {
         let stmt = create_statement(10, 20, 8).unwrap();
         let bl = blinding(0x22);
         let err = prove_range(&stmt, 5, &bl).unwrap_err();
-        assert_eq!(err, RangeError::ValueOutOfRange { value: 5, min: 10, max: 20 });
+        assert_eq!(
+            err,
+            RangeError::ValueOutOfRange {
+                value: 5,
+                min: 10,
+                max: 20
+            }
+        );
 
         let err2 = prove_range(&stmt, 21, &bl).unwrap_err();
-        assert_eq!(err2, RangeError::ValueOutOfRange { value: 21, min: 10, max: 20 });
+        assert_eq!(
+            err2,
+            RangeError::ValueOutOfRange {
+                value: 21,
+                min: 10,
+                max: 20
+            }
+        );
     }
 
     #[test]

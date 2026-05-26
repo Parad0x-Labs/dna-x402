@@ -284,8 +284,14 @@ mod tests {
         let record = credential_public_record(&cred);
 
         // Must contain credential_id and attribute_hash
-        assert!(record.contains("credential_id"), "record should contain credential_id");
-        assert!(record.contains("attribute_hash"), "record should contain attribute_hash");
+        assert!(
+            record.contains("credential_id"),
+            "record should contain credential_id"
+        );
+        assert!(
+            record.contains("attribute_hash"),
+            "record should contain attribute_hash"
+        );
 
         // Must NOT contain issuer_hash key or its hex value
         assert!(

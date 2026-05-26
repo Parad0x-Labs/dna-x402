@@ -102,22 +102,13 @@ fn step_range_proof() -> bool {
     let value: u64 = 42;
     let blinding = sha256(b"range-blinding");
     // Commit to value
-    let commitment = sha256_multi(&[
-        b"range-commit-v1",
-        &value.to_le_bytes(),
-        &blinding,
-    ]);
+    let commitment = sha256_multi(&[b"range-commit-v1", &value.to_le_bytes(), &blinding]);
     // Prove each bit of value (8 bits for [0,255])
     let mut bit_commits = Vec::new();
     for bit_idx in 0u8..8 {
         let bit_val = ((value >> bit_idx) & 1) as u8;
         let bit_blind = sha256_multi(&[b"bit-blind-v1", &blinding, &[bit_idx]]);
-        let bc = sha256_multi(&[
-            b"bit-commit-v1",
-            &[bit_idx],
-            &[bit_val],
-            &bit_blind,
-        ]);
+        let bc = sha256_multi(&[b"bit-commit-v1", &[bit_idx], &[bit_val], &bit_blind]);
         bit_commits.push(bc);
     }
     let xor = xor_fold(&bit_commits);
@@ -239,7 +230,12 @@ fn step_payment_channel() -> bool {
     let settlement = sha256_multi(&[b"chan-settle-v1", &channel_id, &state2]);
     // Verify state chain
     let expected_s1 = sha256_multi(&[b"chan-state-v1", &channel_id, &1u64.to_le_bytes(), &state0]);
-    let expected_s2 = sha256_multi(&[b"chan-state-v1", &channel_id, &2u64.to_le_bytes(), &expected_s1]);
+    let expected_s2 = sha256_multi(&[
+        b"chan-state-v1",
+        &channel_id,
+        &2u64.to_le_bytes(),
+        &expected_s1,
+    ]);
     state1 == expected_s1 && state2 == expected_s2 && settlement != [0u8; 32]
 }
 
@@ -263,7 +259,8 @@ fn step_private_auction() -> bool {
     }
 
     let winner_hash = bid_hashes[winner_idx];
-    let auction_result = sha256_multi(&[b"auction-result-v1", &winner_hash, &max_bid.to_le_bytes()]);
+    let auction_result =
+        sha256_multi(&[b"auction-result-v1", &winner_hash, &max_bid.to_le_bytes()]);
 
     winner_idx == 1 && max_bid == 250 && auction_result != [0u8; 32]
 }
@@ -273,16 +270,16 @@ fn step_private_auction() -> bool {
 /// Run all 10 cross-primitive demo steps. Returns the full demo result.
 pub fn run_demo() -> Result<CrossPrimitiveDemo, DemoError> {
     let step_defs: &[(&'static str, fn() -> bool)] = &[
-        ("stealth_address",        step_stealth_address),
+        ("stealth_address", step_stealth_address),
         ("commitment_accumulator", step_commitment_accumulator),
-        ("range_proof",            step_range_proof),
-        ("merkle_proof",           step_merkle_proof),
-        ("blind_oracle",           step_blind_oracle),
-        ("secret_sharing",         step_secret_sharing),
-        ("sigma_proof",            step_sigma_proof),
-        ("vote_tally",             step_vote_tally),
-        ("payment_channel",        step_payment_channel),
-        ("private_auction",        step_private_auction),
+        ("range_proof", step_range_proof),
+        ("merkle_proof", step_merkle_proof),
+        ("blind_oracle", step_blind_oracle),
+        ("secret_sharing", step_secret_sharing),
+        ("sigma_proof", step_sigma_proof),
+        ("vote_tally", step_vote_tally),
+        ("payment_channel", step_payment_channel),
+        ("private_auction", step_private_auction),
     ];
 
     let mut steps: Vec<DemoStep> = Vec::new();

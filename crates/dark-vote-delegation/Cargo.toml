@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-vote-delegation"
 version = "0.1.0"

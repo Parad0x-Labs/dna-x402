@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,7 +38,9 @@ pub enum DidError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -144,11 +146,17 @@ pub fn prove_control(
 
 /// Verify a DID proof by recomputing challenge and response from stored did.controller_hash.
 pub fn verify_did_proof(did: &Did, proof: &DidProof) -> bool {
-    if did.revoked { return false; }
-    if did.did_id != proof.did_id { return false; }
+    if did.revoked {
+        return false;
+    }
+    if did.did_id != proof.did_id {
+        return false;
+    }
     // Recompute response_hash using the did's stored controller_hash
     let response_hash = compute_response_hash(&did.controller_hash, &proof.challenge_hash);
-    if response_hash != proof.response_hash { return false; }
+    if response_hash != proof.response_hash {
+        return false;
+    }
     // Recompute proof_id
     let proof_id = compute_proof_id(&did.did_id, &response_hash);
     proof_id == proof.proof_id
@@ -169,7 +177,11 @@ pub fn revoke_did(did: &mut Did) -> Result<(), DidError> {
 /// Does NOT expose controller_hash.
 pub fn did_public_record(did: &Did) -> String {
     let did_id_hex: String = did.did_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let doc_hex: String = did.document_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let doc_hex: String = did
+        .document_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "did_id": did_id_hex,
         "document_hash": doc_hex,
@@ -188,8 +200,16 @@ pub fn did_public_record(did: &Did) -> String {
 mod tests {
     use super::*;
 
-    fn controller_secret() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xCC; s }
-    fn nonce() -> [u8; 32] { let mut n = [0u8; 32]; n[0] = 0xDD; n }
+    fn controller_secret() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xCC;
+        s
+    }
+    fn nonce() -> [u8; 32] {
+        let mut n = [0u8; 32];
+        n[0] = 0xDD;
+        n
+    }
 
     #[test]
     fn test_create_prove_verify() {
@@ -240,8 +260,15 @@ mod tests {
         let record = did_public_record(&did);
         let v: serde_json::Value = serde_json::from_str(&record).unwrap();
 
-        let ctrl_hex: String = did.controller_hash.iter().map(|b| format!("{:02x}", b)).collect();
-        assert!(!record.contains(&ctrl_hex), "controller_hash must not appear in public record");
+        let ctrl_hex: String = did
+            .controller_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        assert!(
+            !record.contains(&ctrl_hex),
+            "controller_hash must not appear in public record"
+        );
         assert!(v.get("controller_hash").is_none());
         assert_eq!(v["mainnet_ready"], false);
         assert!(v["did_id"].is_string());

@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-credential-revocation"
 version = "0.1.0"

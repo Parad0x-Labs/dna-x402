@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -14,7 +14,7 @@ pub struct GameSession {
     pub b_commit: Option<[u8; 32]>,
     pub revealed_a: Option<[u8; 32]>,
     pub revealed_b: Option<[u8; 32]>,
-    pub winner: Option<u8>,  // 0 = player A, 1 = player B, None = draw
+    pub winner: Option<u8>, // 0 = player A, 1 = player B, None = draw
     pub mainnet_ready: bool,
 }
 
@@ -33,7 +33,9 @@ pub enum GameError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -180,11 +182,13 @@ pub fn reveal_choice(
 
 /// Public JSON record: session_id, committed_count, revealed_count, mainnet_ready.
 pub fn session_public_record(session: &GameSession) -> String {
-    let sid_hex: String = session.session_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let committed_count =
-        session.a_commit.is_some() as u8 + session.b_commit.is_some() as u8;
-    let revealed_count =
-        session.revealed_a.is_some() as u8 + session.revealed_b.is_some() as u8;
+    let sid_hex: String = session
+        .session_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let committed_count = session.a_commit.is_some() as u8 + session.b_commit.is_some() as u8;
+    let revealed_count = session.revealed_a.is_some() as u8 + session.revealed_b.is_some() as u8;
     serde_json::json!({
         "session_id": sid_hex,
         "committed_count": committed_count,
@@ -202,11 +206,31 @@ pub fn session_public_record(session: &GameSession) -> String {
 mod tests {
     use super::*;
 
-    fn secret_a() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xA1; s }
-    fn secret_b() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0xB2; s }
-    fn nonce() -> [u8; 32] { let mut n = [0u8; 32]; n[0] = 0xC3; n }
-    fn nonce_commit_a() -> [u8; 32] { let mut n = [0u8; 32]; n[0] = 0xD4; n }
-    fn nonce_commit_b() -> [u8; 32] { let mut n = [0u8; 32]; n[0] = 0xE5; n }
+    fn secret_a() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xA1;
+        s
+    }
+    fn secret_b() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0xB2;
+        s
+    }
+    fn nonce() -> [u8; 32] {
+        let mut n = [0u8; 32];
+        n[0] = 0xC3;
+        n
+    }
+    fn nonce_commit_a() -> [u8; 32] {
+        let mut n = [0u8; 32];
+        n[0] = 0xD4;
+        n
+    }
+    fn nonce_commit_b() -> [u8; 32] {
+        let mut n = [0u8; 32];
+        n[0] = 0xE5;
+        n
+    }
 
     #[test]
     fn test_new_commit_reveal_winner_determined() {
@@ -227,9 +251,13 @@ mod tests {
         assert_eq!(session.revealed_b, Some(choice_hash_b));
 
         // Winner should be determined (whichever choice_hash is larger)
-        let expected_winner = if choice_hash_a > choice_hash_b { Some(0u8) }
-                              else if choice_hash_b > choice_hash_a { Some(1u8) }
-                              else { None };
+        let expected_winner = if choice_hash_a > choice_hash_b {
+            Some(0u8)
+        } else if choice_hash_b > choice_hash_a {
+            Some(1u8)
+        } else {
+            None
+        };
         assert_eq!(session.winner, expected_winner);
     }
 
@@ -285,7 +313,11 @@ mod tests {
         assert_eq!(v["revealed_count"], 0);
         assert_eq!(v["mainnet_ready"], false);
         assert!(v["session_id"].is_string());
-        let sid_hex: String = session.session_id.iter().map(|b| format!("{:02x}", b)).collect();
+        let sid_hex: String = session
+            .session_id
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
         assert_eq!(v["session_id"], sid_hex);
     }
 }

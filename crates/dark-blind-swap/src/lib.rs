@@ -43,7 +43,12 @@ pub fn party_hash(secret: &[u8; 32]) -> [u8; 32] {
 }
 
 pub fn session_id_hash(a_hash: &[u8; 32], b_hash: &[u8; 32], nonce: &[u8; 32]) -> [u8; 32] {
-    sha256_parts(&[b"swap-session-v1", a_hash.as_ref(), b_hash.as_ref(), nonce.as_ref()])
+    sha256_parts(&[
+        b"swap-session-v1",
+        a_hash.as_ref(),
+        b_hash.as_ref(),
+        nonce.as_ref(),
+    ])
 }
 
 pub fn token_hash(token_id: &[u8]) -> [u8; 32] {

@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-note-commitment"
 version = "0.1.0"

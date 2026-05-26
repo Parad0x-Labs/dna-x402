@@ -76,9 +76,7 @@ pub fn track_note(ledger: &mut NoteLedger, note: &Note) -> Result<(), LedgerErro
         spent: false,
         nullifier: None,
     });
-    ledger.total_unspent = ledger
-        .total_unspent
-        .saturating_add(note.value);
+    ledger.total_unspent = ledger.total_unspent.saturating_add(note.value);
     Ok(())
 }
 
@@ -134,11 +132,7 @@ pub fn ledger_summary_json(ledger: &NoteLedger) -> String {
 ///
 /// Unspent entries (whose `nullifier` field is `None`) are excluded.
 pub fn portfolio_nullifier_set(ledger: &NoteLedger) -> Vec<[u8; 32]> {
-    ledger
-        .entries
-        .iter()
-        .filter_map(|e| e.nullifier)
-        .collect()
+    ledger.entries.iter().filter_map(|e| e.nullifier).collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -171,7 +165,10 @@ mod tests {
 
         mark_spent(&mut ledger, &note.commitment, dummy_nullifier(0xAA))
             .expect("mark_spent should succeed");
-        assert_eq!(ledger.total_unspent, 0, "total_unspent must be zero after spending sole note");
+        assert_eq!(
+            ledger.total_unspent, 0,
+            "total_unspent must be zero after spending sole note"
+        );
 
         assert!(!ledger.mainnet_ready, "mainnet_ready must remain false");
     }
@@ -257,7 +254,10 @@ mod tests {
 
         let set = portfolio_nullifier_set(&ledger);
         assert_eq!(set.len(), 1, "only one nullifier expected (one spent note)");
-        assert_eq!(set[0], nullifier_a, "returned nullifier must match the one stored");
+        assert_eq!(
+            set[0], nullifier_a,
+            "returned nullifier must match the one stored"
+        );
 
         // note_b is unspent — its nullifier is None and must not appear.
         assert!(

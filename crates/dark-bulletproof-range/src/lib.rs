@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -96,7 +96,11 @@ fn compute_inner_product_hash(a_hash: &[u8; 32], b_hash: &[u8; 32]) -> [u8; 32] 
 }
 
 /// proof_hash = SHA256("bp-proof-v1" || commitment || inner_product_hash || [bit_width])
-fn compute_proof_hash(commitment: &[u8; 32], inner_product_hash: &[u8; 32], bit_width: u8) -> [u8; 32] {
+fn compute_proof_hash(
+    commitment: &[u8; 32],
+    inner_product_hash: &[u8; 32],
+    bit_width: u8,
+) -> [u8; 32] {
     sha256_4(b"bp-proof-v1", commitment, inner_product_hash, &[bit_width])
 }
 
@@ -126,7 +130,11 @@ pub fn create_bp_range(
     if bit_width == 0 {
         return Err(BpError::BitWidthZero);
     }
-    let max = if bit_width >= 64 { u64::MAX } else { (1u64 << bit_width) - 1 };
+    let max = if bit_width >= 64 {
+        u64::MAX
+    } else {
+        (1u64 << bit_width) - 1
+    };
     if bit_width < 64 && value > max {
         return Err(BpError::ValueOutOfRange { value, max });
     }
@@ -177,9 +185,21 @@ pub fn verify_bp(proof: &BulletproofRange, value: u64, blinding: &[u8; 32]) -> b
 /// Public JSON record: exposes proof_id, commitment, inner_product_hash, mainnet_ready.
 /// Does NOT expose the blinding factor or value directly.
 pub fn bp_public_record(proof: &BulletproofRange) -> String {
-    let proof_id_hex: String = proof.proof_id.iter().map(|b| format!("{:02x}", b)).collect();
-    let commitment_hex: String = proof.commitment.iter().map(|b| format!("{:02x}", b)).collect();
-    let iph_hex: String = proof.inner_product_hash.iter().map(|b| format!("{:02x}", b)).collect();
+    let proof_id_hex: String = proof
+        .proof_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let commitment_hex: String = proof
+        .commitment
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let iph_hex: String = proof
+        .inner_product_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "proof_id": proof_id_hex,
         "commitment": commitment_hex,
@@ -216,7 +236,13 @@ mod tests {
     fn test_value_out_of_range_rejected() {
         // value=256 is out of range for bit_width=8 (max=255)
         let err = create_bp_range(256, 8, &blinding()).unwrap_err();
-        assert_eq!(err, BpError::ValueOutOfRange { value: 256, max: 255 });
+        assert_eq!(
+            err,
+            BpError::ValueOutOfRange {
+                value: 256,
+                max: 255
+            }
+        );
     }
 
     #[test]

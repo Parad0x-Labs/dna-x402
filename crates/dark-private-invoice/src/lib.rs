@@ -20,7 +20,9 @@ pub enum InvoiceError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -75,9 +77,15 @@ pub fn pay_invoice(invoice: &mut Invoice) -> Result<(), InvoiceError> {
 mod tests {
     use super::*;
 
-    fn issuer() -> [u8; 32] { [0x11u8; 32] }
-    fn recipient() -> [u8; 32] { [0x22u8; 32] }
-    fn blinding() -> [u8; 32] { [0x33u8; 32] }
+    fn issuer() -> [u8; 32] {
+        [0x11u8; 32]
+    }
+    fn recipient() -> [u8; 32] {
+        [0x22u8; 32]
+    }
+    fn blinding() -> [u8; 32] {
+        [0x33u8; 32]
+    }
 
     #[test]
     fn new_invoice_mainnet_ready_false() {

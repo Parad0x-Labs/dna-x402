@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-stealth-note"
 version = "0.1.0"

@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-proof-of-work"
 version = "0.1.0"

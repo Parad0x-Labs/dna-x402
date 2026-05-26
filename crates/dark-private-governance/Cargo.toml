@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-private-governance"
 version = "0.1.0"

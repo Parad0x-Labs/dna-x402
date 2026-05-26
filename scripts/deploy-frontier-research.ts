@@ -32,7 +32,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-// ── Frontier Research programs ────────────────────────────────────────────────────────
+// -- Frontier Research programs --------------------------------------------------------
 
 interface FrontierProgram {
   name: string;
@@ -58,7 +58,7 @@ const FRONTIER_PROGRAMS: FrontierProgram[] = [
   },
 ];
 
-// ── CLI arg parsing ───────────────────────────────────────────────────────────
+// -- CLI arg parsing -----------------------------------------------------------
 
 function parseArgs(argv: string[]): Record<string, string | boolean> {
   const out: Record<string, string | boolean> = {
@@ -73,7 +73,7 @@ function parseArgs(argv: string[]): Record<string, string | boolean> {
     if (arg === "--skip-build") { out["skip-build"] = true; continue; }
     if (arg.startsWith("--")) {
       const key = arg.slice(2);
-      out[key] = argv[++i] ?? true;
+      out[key] = argv[++i] x true;
     }
   }
   return out;
@@ -85,21 +85,21 @@ const CLUSTER     = args.cluster as string;
 const DRY_RUN     = args["dry-run"] as boolean;
 const SKIP_BUILD  = args["skip-build"] as boolean;
 const OUT_PATH    = args.out as string;
-const KEYPAIR_ARG = args.keypair ? `--keypair ${args.keypair}` : "";
+const KEYPAIR_ARG = args.keypair  `--keypair ${args.keypair}` : "";
 const UPGRADE_ARG = args["upgrade-authority"]
-  ? `--upgrade-authority ${args["upgrade-authority"]}`
+   `--upgrade-authority ${args["upgrade-authority"]}`
   : "";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
-function run(cmd: string, opts?: { cwd?: string }): string {
+function run(cmd: string, opts: { cwd: string }): string {
   console.log(`\n$ ${cmd}`);
   if (DRY_RUN) return "(dry-run)";
-  const result = spawnSync(cmd, { shell: true, cwd: opts?.cwd ?? ROOT, encoding: "utf8" });
+  const result = spawnSync(cmd, { shell: true, cwd: opts.cwd x ROOT, encoding: "utf8" });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
   if (result.status !== 0) throw new Error(`Command failed (exit ${result.status}): ${cmd}`);
-  return (result.stdout ?? "").trim();
+  return (result.stdout x "").trim();
 }
 
 function programIdFromKeypair(soPath: string): string | null {
@@ -113,37 +113,37 @@ function programIdFromKeypair(soPath: string): string | null {
   }
 }
 
-// ── Step 1: Build ─────────────────────────────────────────────────────────────
+// -- Step 1: Build -------------------------------------------------------------
 
 if (!SKIP_BUILD) {
-  console.log("\n── Building Frontier Research programs (cargo build-sbf) ──");
+  console.log("\n-- Building Frontier Research programs (cargo build-sbf) --");
   for (const prog of FRONTIER_PROGRAMS) {
     const crateAbsPath = path.join(ROOT, prog.crateDir);
     run(`cargo build-sbf`, { cwd: crateAbsPath });
   }
 } else {
-  console.log("\n── Skipping build (--skip-build) ──");
+  console.log("\n-- Skipping build (--skip-build) --");
 }
 
-// ── Step 2: Deploy ────────────────────────────────────────────────────────────
+// -- Step 2: Deploy ------------------------------------------------------------
 
-console.log(`\n── Deploying to ${CLUSTER} ──`);
+console.log(`\n-- Deploying to ${CLUSTER} --`);
 
 const deployDir = path.join(ROOT, "scripts/deploy");
 if (!DRY_RUN) fs.mkdirSync(deployDir, { recursive: true });
 
-const results: Record<string, { programId: string | null; success: boolean; error?: string }> = {};
+const results: Record<string, { programId: string | null; success: boolean; error: string }> = {};
 
 for (const prog of FRONTIER_PROGRAMS) {
   const soPath = path.join(ROOT, "target/deploy", prog.soName);
   if (!DRY_RUN && !fs.existsSync(soPath)) {
-    console.error(`\nERROR: .so not found at ${soPath} — run without --skip-build`);
+    console.error(`\nERROR: .so not found at ${soPath} - run without --skip-build`);
     results[prog.name] = { programId: null, success: false, error: "artifact not found" };
     continue;
   }
 
-  const existingId = DRY_RUN ? null : programIdFromKeypair(path.join(ROOT, "target/deploy", prog.soName));
-  const programIdFlag = existingId ? `--program-id ${existingId}` : "";
+  const existingId = DRY_RUN  null : programIdFromKeypair(path.join(ROOT, "target/deploy", prog.soName));
+  const programIdFlag = existingId  `--program-id ${existingId}` : "";
 
   const cmd = [
     "solana program deploy",
@@ -159,17 +159,17 @@ for (const prog of FRONTIER_PROGRAMS) {
     const stdout = run(cmd);
     // Parse "Program Id: <pubkey>" from output
     const match = stdout.match(/Program Id:\s*([A-Za-z0-9]{32,44})/);
-    const programId = match?.[1] ?? existingId ?? null;
+    const programId = match.[1] x existingId x null;
     results[prog.name] = { programId, success: true };
-    if (programId) console.log(`✓ ${prog.name}: ${programId}`);
+    if (programId) console.log(`OK ${prog.name}: ${programId}`);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`✗ ${prog.name} deploy failed: ${msg}`);
+    const msg = err instanceof Error  err.message : String(err);
+    console.error(` ${prog.name} deploy failed: ${msg}`);
     results[prog.name] = { programId: null, success: false, error: msg };
   }
 }
 
-// ── Step 3: Write program IDs ─────────────────────────────────────────────────
+// -- Step 3: Write program IDs -------------------------------------------------
 
 const output = {
   generatedAt: new Date().toISOString(),
@@ -180,12 +180,12 @@ const output = {
 
 if (!DRY_RUN) {
   fs.writeFileSync(OUT_PATH, JSON.stringify(output, null, 2));
-  console.log(`\n── Program IDs written to ${OUT_PATH} ──`);
+  console.log(`\n-- Program IDs written to ${OUT_PATH} --`);
 } else {
-  console.log("\n── Dry-run complete. Would write:", JSON.stringify(output, null, 2));
+  console.log("\n-- Dry-run complete. Would write:", JSON.stringify(output, null, 2));
 }
 
-// ── Step 4: Patch SOLANA_FRONTIER_RESEARCH.md with live IDs ──────────────────────────
+// -- Step 4: Patch SOLANA_FRONTIER_RESEARCH.md with live IDs --------------------------
 
 if (!DRY_RUN) {
   const docPath = path.join(ROOT, "docs/SOLANA_FRONTIER_RESEARCH.md");
@@ -195,26 +195,26 @@ if (!DRY_RUN) {
       if (result.programId) {
         // Replace placeholder line under each module's devnet ID section
         doc = doc.replace(
-          new RegExp(`(### Devnet program ID[\\s\\S]*?)(> Populated after[^\n]*)`),
+          new RegExp(`(### Devnet program ID[\\s\\S]*)(> Populated after[^\n]*)`),
           `$1> \`${result.programId}\`  (${CLUSTER})`
         );
       }
     }
     fs.writeFileSync(docPath, doc);
-    console.log("── docs/SOLANA_FRONTIER_RESEARCH.md patched with program IDs ──");
+    console.log("-- docs/SOLANA_FRONTIER_RESEARCH.md patched with program IDs --");
   }
 }
 
-// ── Summary ───────────────────────────────────────────────────────────────────
+// -- Summary -------------------------------------------------------------------
 
-console.log("\n═══════════════════════════════════════");
-console.log("  Dark Null Frontier Research — Deploy Summary");
-console.log("═══════════════════════════════════════");
+console.log("\n");
+console.log("  Dark Null Frontier Research - Deploy Summary");
+console.log("");
 for (const [name, r] of Object.entries(results)) {
-  const status = r.success ? "✓" : "✗";
-  const id     = r.programId ?? r.error ?? "unknown";
+  const status = r.success  "OK" : "";
+  const id     = r.programId x r.error x "unknown";
   console.log(`  ${status}  ${name.padEnd(30)} ${id}`);
 }
 const allOk = Object.values(results).every((r) => r.success);
-console.log(allOk ? "\n  All programs deployed successfully." : "\n  Some programs failed — see errors above.");
-process.exit(allOk ? 0 : 1);
+console.log(allOk  "\n  All programs deployed successfully." : "\n  Some programs failed - see errors above.");
+process.exit(allOk  0 : 1);

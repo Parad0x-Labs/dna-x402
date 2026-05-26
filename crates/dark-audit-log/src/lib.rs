@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -163,8 +163,8 @@ mod tests {
         let mut log = new_log();
         let mut prev_hash = [0u8; 32];
         for i in 0u8..4 {
-            let entry = append_entry(&mut log, &[i], 1000 + i as i64)
-                .expect("append should succeed");
+            let entry =
+                append_entry(&mut log, &[i], 1000 + i as i64).expect("append should succeed");
             // The entry_hash is built from the previous head, so the
             // prev_entry_hash used during construction equals prev_hash here.
             let expected = hash_entry(&prev_hash, &entry.event_hash, entry.index);
@@ -200,11 +200,17 @@ mod tests {
         let initial_head = log.head;
 
         let e1 = append_entry(&mut log, b"event-a", 10).expect("append");
-        assert_ne!(log.head, initial_head, "head must change after first append");
+        assert_ne!(
+            log.head, initial_head,
+            "head must change after first append"
+        );
         assert_eq!(log.head, e1.entry_hash);
 
         let e2 = append_entry(&mut log, b"event-b", 20).expect("append");
-        assert_ne!(log.head, e1.entry_hash, "head must change after second append");
+        assert_ne!(
+            log.head, e1.entry_hash,
+            "head must change after second append"
+        );
         assert_eq!(log.head, e2.entry_hash);
     }
 

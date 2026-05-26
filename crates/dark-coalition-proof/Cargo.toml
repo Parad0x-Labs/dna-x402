@@ -1,0 +1,9 @@
+[package]
+name = "dark-coalition-proof"
+version = "0.1.0"
+edition = "2021"
+description = "Agent coalition collective spending proof — prove threshold met without revealing members"
+
+[dependencies]
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -233,7 +233,10 @@ mod tests {
         let result = aggregate_shares(&shares, &MSG, 2, 1);
         assert_eq!(
             result.unwrap_err(),
-            ThreshSigError::ThresholdNotMet { required: 2, present: 1 }
+            ThreshSigError::ThresholdNotMet {
+                required: 2,
+                present: 1
+            }
         );
     }
 

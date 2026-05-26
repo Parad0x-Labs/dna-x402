@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyBudget {
@@ -26,10 +26,7 @@ pub enum BudgetError {
     BudgetIdZero,
 }
 
-pub fn new_budget(
-    budget_id: [u8; 32],
-    total_epsilon: u32,
-) -> Result<PrivacyBudget, BudgetError> {
+pub fn new_budget(budget_id: [u8; 32], total_epsilon: u32) -> Result<PrivacyBudget, BudgetError> {
     if budget_id == [0u8; 32] {
         return Err(BudgetError::BudgetIdZero);
     }
@@ -85,7 +82,11 @@ pub fn remaining_budget(budget: &PrivacyBudget) -> u32 {
 }
 
 pub fn budget_public_record(budget: &PrivacyBudget) -> String {
-    let id_hex: String = budget.budget_id.iter().map(|b| format!("{:02x}", b)).collect();
+    let id_hex: String = budget
+        .budget_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "budget_id": id_hex,
         "total_epsilon": budget.total_epsilon,
@@ -119,7 +120,13 @@ mod tests {
     fn test_budget_exhausted() {
         let mut b = new_budget(budget_id(), 100).unwrap();
         let err = consume_budget(&mut b, 101).unwrap_err();
-        assert_eq!(err, BudgetError::BudgetExhausted { remaining: 100, requested: 101 });
+        assert_eq!(
+            err,
+            BudgetError::BudgetExhausted {
+                remaining: 100,
+                requested: 101
+            }
+        );
     }
 
     #[test]
@@ -139,7 +146,13 @@ mod tests {
         assert_eq!(b.query_count, 3);
         // next one that would exceed
         let err = consume_budget(&mut b, 500).unwrap_err();
-        assert_eq!(err, BudgetError::BudgetExhausted { remaining: 400, requested: 500 });
+        assert_eq!(
+            err,
+            BudgetError::BudgetExhausted {
+                remaining: 400,
+                requested: 500
+            }
+        );
     }
 
     #[test]

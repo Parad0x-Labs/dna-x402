@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-staking-rewards"
 version = "0.1.0"

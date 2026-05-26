@@ -123,8 +123,11 @@ pub fn reveal_intent(
 
 /// Verify that a reveal matches its original commitment.
 pub fn verify_reveal(commitment: &IntentCommitment, reveal: &IntentReveal) -> bool {
-    let recomputed =
-        compute_commitment(&reveal.intent_bytes, &reveal.nonce, commitment.committed_at_unix);
+    let recomputed = compute_commitment(
+        &reveal.intent_bytes,
+        &reveal.nonce,
+        commitment.committed_at_unix,
+    );
     recomputed == commitment.commitment_hash
 }
 
@@ -176,7 +179,10 @@ mod tests {
 
         let result = reveal_intent(&commitment, INTENT, &NONCE, REVEAL_AFTER - 1);
         match result {
-            Err(IntentError::TooEarlyToReveal { reveal_after, current }) => {
+            Err(IntentError::TooEarlyToReveal {
+                reveal_after,
+                current,
+            }) => {
                 assert_eq!(reveal_after, REVEAL_AFTER);
                 assert_eq!(current, REVEAL_AFTER - 1);
             }

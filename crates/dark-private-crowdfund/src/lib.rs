@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -34,13 +34,19 @@ pub enum CrowdfundError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(hashes: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
-    for h in hashes { for i in 0..32 { acc[i] ^= h[i]; } }
+    for h in hashes {
+        for i in 0..32 {
+            acc[i] ^= h[i];
+        }
+    }
     acc
 }
 
@@ -62,7 +68,11 @@ fn compute_backer_hash(backer_secret: &[u8; 32]) -> [u8; 32] {
     sha256_multi(&[b"cf-backer-v1", backer_secret])
 }
 
-fn compute_contribution_commitment(backer_hash: &[u8; 32], amount: u64, nonce: &[u8; 32]) -> [u8; 32] {
+fn compute_contribution_commitment(
+    backer_hash: &[u8; 32],
+    amount: u64,
+    nonce: &[u8; 32],
+) -> [u8; 32] {
     sha256_multi(&[b"cf-contrib-v1", backer_hash, &amount.to_le_bytes(), nonce])
 }
 
@@ -123,12 +133,16 @@ pub fn back_campaign(
     cf.contribution_count += 1;
     // Rebuild contribution root with the new contrib_id (simple: fold all existing by re-deriving)
     // For simplicity, XOR-fold the campaign_id with contrib_id using count as domain separator
-    let new_root = compute_contribution_root(&[cf.contribution_root, contrib_id], cf.contribution_count);
+    let new_root =
+        compute_contribution_root(&[cf.contribution_root, contrib_id], cf.contribution_count);
     cf.contribution_root = new_root;
     if cf.total_committed >= goal {
         cf.funded = true;
     }
-    Ok(Contribution { contrib_id, commitment })
+    Ok(Contribution {
+        contrib_id,
+        commitment,
+    })
 }
 
 pub fn is_funded(cf: &Crowdfund) -> bool {
@@ -141,10 +155,26 @@ pub fn is_funded(cf: &Crowdfund) -> bool {
 mod tests {
     use super::*;
 
-    fn org_secret() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x11; s }
-    fn goal_blind() -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x22; s }
-    fn backer1()   -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x33; s }
-    fn nonce1()    -> [u8; 32] { let mut s = [0u8; 32]; s[0] = 0x44; s }
+    fn org_secret() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x11;
+        s
+    }
+    fn goal_blind() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x22;
+        s
+    }
+    fn backer1() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x33;
+        s
+    }
+    fn nonce1() -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x44;
+        s
+    }
 
     // Test 1: new_crowdfund + mainnet_ready=false
     #[test]
@@ -179,8 +209,10 @@ mod tests {
     fn test_already_funded_returns_error() {
         let mut cf = new_crowdfund(&org_secret(), 100, &goal_blind()).unwrap();
         back_campaign(&mut cf, &backer1(), 100, &nonce1(), 100).unwrap();
-        let mut b2 = [0u8; 32]; b2[0] = 0x55;
-        let mut n2 = [0u8; 32]; n2[0] = 0x66;
+        let mut b2 = [0u8; 32];
+        b2[0] = 0x55;
+        let mut n2 = [0u8; 32];
+        n2[0] = 0x66;
         let err = back_campaign(&mut cf, &b2, 50, &n2, 100).unwrap_err();
         assert_eq!(err, CrowdfundError::AlreadyFunded);
     }

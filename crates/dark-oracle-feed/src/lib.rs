@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -93,9 +93,9 @@ pub fn new_feed(oracle_secret: &[u8; 32], asset_bytes: &[u8]) -> Result<OracleFe
     if asset_bytes.is_empty() {
         return Err(OracleError::EmptyAsset);
     }
-    let oracle_hash     = compute_oracle_hash(oracle_secret);
-    let asset_hash      = compute_asset_hash(asset_bytes);
-    let feed_id         = compute_feed_id(&oracle_hash, &asset_hash);
+    let oracle_hash = compute_oracle_hash(oracle_secret);
+    let asset_hash = compute_asset_hash(asset_bytes);
+    let feed_id = compute_feed_id(&oracle_hash, &asset_hash);
     Ok(OracleFeed {
         feed_id,
         oracle_hash,
@@ -109,13 +109,13 @@ pub fn new_feed(oracle_secret: &[u8; 32], asset_bytes: &[u8]) -> Result<OracleFe
 
 pub fn update_price(feed: &mut OracleFeed, price: u64, blinding: &[u8; 32], timestamp: i64) {
     feed.price_commitment = compute_price_commitment(price, blinding, timestamp);
-    feed.timestamp        = timestamp;
-    feed.round           += 1;
+    feed.timestamp = timestamp;
+    feed.round += 1;
 }
 
 pub fn attest_price(feed: &OracleFeed, price: u64) -> PriceAttestation {
-    let price_hash      = compute_price_hash(price, feed.timestamp);
-    let attestation_id  = compute_attestation_id(&feed.feed_id, &price_hash, feed.round);
+    let price_hash = compute_price_hash(price, feed.timestamp);
+    let attestation_id = compute_attestation_id(&feed.feed_id, &price_hash, feed.round);
     PriceAttestation {
         attestation_id,
         feed_id: feed.feed_id,
@@ -130,8 +130,12 @@ pub fn attest_price(feed: &OracleFeed, price: u64) -> PriceAttestation {
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { [b; 32] }
-    fn blinding(b: u8) -> [u8; 32] { [b; 32] }
+    fn secret(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
+    fn blinding(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
 
     // Test 1: new_feed correct hashes + mainnet_ready=false
     #[test]
@@ -142,8 +146,8 @@ mod tests {
         assert_eq!(feed.timestamp, 0);
 
         let expected_oracle = compute_oracle_hash(&secret(0xa1));
-        let expected_asset  = compute_asset_hash(b"BTC/USD");
-        let expected_feed   = compute_feed_id(&expected_oracle, &expected_asset);
+        let expected_asset = compute_asset_hash(b"BTC/USD");
+        let expected_feed = compute_feed_id(&expected_oracle, &expected_asset);
         assert_eq!(feed.oracle_hash, expected_oracle);
         assert_eq!(feed.asset_hash, expected_asset);
         assert_eq!(feed.feed_id, expected_feed);
@@ -154,10 +158,16 @@ mod tests {
     fn test_update_price_changes_commitment() {
         let mut feed = new_feed(&secret(0xa1), b"ETH/USD").unwrap();
         let commit_before = feed.price_commitment;
-        update_price(&mut feed, 2000_00000000u64, &blinding(0x55), 1_700_000_000i64);
+        update_price(
+            &mut feed,
+            2000_00000000u64,
+            &blinding(0x55),
+            1_700_000_000i64,
+        );
         assert_ne!(feed.price_commitment, commit_before);
 
-        let expected = compute_price_commitment(2000_00000000u64, &blinding(0x55), 1_700_000_000i64);
+        let expected =
+            compute_price_commitment(2000_00000000u64, &blinding(0x55), 1_700_000_000i64);
         assert_eq!(feed.price_commitment, expected);
     }
 

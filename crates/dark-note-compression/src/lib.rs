@@ -17,20 +17,20 @@ pub struct CompressedNoteLeaf {
 
 #[derive(Debug, Clone)]
 pub struct CompressionSavingsReport {
-    pub regular_pda_bytes: u64,       // full Note struct: ~96 bytes + overhead ≈ 128 bytes
-    pub compressed_leaf_bytes: u64,   // 32 bytes commitment only
-    pub savings_pct: f32,             // (1 - compressed/regular) * 100
-    pub rent_regular_lamports: u64,   // at 6960 lamports/byte + 128 base
+    pub regular_pda_bytes: u64, // full Note struct: ~96 bytes + overhead ≈ 128 bytes
+    pub compressed_leaf_bytes: u64, // 32 bytes commitment only
+    pub savings_pct: f32,       // (1 - compressed/regular) * 100
+    pub rent_regular_lamports: u64, // at 6960 lamports/byte + 128 base
     pub rent_compressed_lamports: u64,
     pub rent_savings_lamports: u64,
 }
 
 #[derive(Debug, Clone)]
 pub struct CompressedPoolState {
-    pub leaf_roots: Vec<[u8; 32]>,   // compressed commitment roots
-    pub nullifier_root: [u8; 32],    // root of nullifier set
+    pub leaf_roots: Vec<[u8; 32]>, // compressed commitment roots
+    pub nullifier_root: [u8; 32],  // root of nullifier set
     pub total_leaves: u64,
-    pub mainnet_ready: bool,          // always false
+    pub mainnet_ready: bool, // always false
 }
 
 // ---------------------------------------------------------------------------
@@ -137,12 +137,7 @@ mod tests {
     use dark_shielded_pool_core::create_note;
 
     fn test_note() -> dark_shielded_pool_core::Note {
-        create_note(
-            1_000_000_000,
-            &[0x42u8; 32],
-            &[0xBBu8; 32],
-            400_000_000,
-        )
+        create_note(1_000_000_000, &[0x42u8; 32], &[0xBBu8; 32], 400_000_000)
     }
 
     /// 1. Compressed leaf commitment must equal the original note commitment.

@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-commitment-scheme"
 version = "0.1.0"

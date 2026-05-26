@@ -18,7 +18,9 @@ pub enum RangeErrorV3 {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
@@ -43,7 +45,12 @@ pub fn prove_range(
     let value_commitment = sha256_multi(&[b"rangev3-val-v1", &value_le, blinding]);
     let range_commitment = sha256_multi(&[b"rangev3-range-v1", &low_le, &high_le]);
     let in_range_byte = [1u8];
-    let proof_id = sha256_multi(&[b"rangev3-proof-v1", &value_commitment, &range_commitment, &in_range_byte]);
+    let proof_id = sha256_multi(&[
+        b"rangev3-proof-v1",
+        &value_commitment,
+        &range_commitment,
+        &in_range_byte,
+    ]);
     Ok(RangeProofV3 {
         proof_id,
         value_commitment,
@@ -62,7 +69,9 @@ pub fn verify_range(proof: &RangeProofV3) -> bool {
 mod tests {
     use super::*;
 
-    fn blinding() -> [u8; 32] { [0xbbu8; 32] }
+    fn blinding() -> [u8; 32] {
+        [0xbbu8; 32]
+    }
 
     #[test]
     fn prove_range_in_range_is_stub_mainnet_ready_false() {
@@ -82,7 +91,14 @@ mod tests {
     #[test]
     fn value_out_of_range_rejected_with_values() {
         let result = prove_range(200, 0, 100, &blinding());
-        assert_eq!(result.err(), Some(RangeErrorV3::ValueOutOfRange { value: 200, low: 0, high: 100 }));
+        assert_eq!(
+            result.err(),
+            Some(RangeErrorV3::ValueOutOfRange {
+                value: 200,
+                low: 0,
+                high: 100
+            })
+        );
     }
 
     #[test]

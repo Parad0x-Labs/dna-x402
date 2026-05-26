@@ -57,11 +57,7 @@ fn compute_outcome_commitment(party_id: u8, outcome_bytes: &[u8], nonce: &[u8; 3
     h.finalize().into()
 }
 
-fn compute_match_id(
-    commitment_a: &[u8; 32],
-    commitment_b: &[u8; 32],
-    epoch: u64,
-) -> [u8; 32] {
+fn compute_match_id(commitment_a: &[u8; 32], commitment_b: &[u8; 32], epoch: u64) -> [u8; 32] {
     let mut h = Sha256::new();
     h.update(b"match-v1");
     h.update(commitment_a);
@@ -124,8 +120,11 @@ pub fn create_match(
         return Err(HedgeError::StakeMismatch);
     }
     let epoch = party_a.epoch;
-    let match_id =
-        compute_match_id(&party_a.outcome_commitment, &party_b.outcome_commitment, epoch);
+    let match_id = compute_match_id(
+        &party_a.outcome_commitment,
+        &party_b.outcome_commitment,
+        epoch,
+    );
     Ok(HedgeMatch {
         match_id,
         party_a,
@@ -231,8 +230,8 @@ mod tests {
         let (a, b) = make_pair();
         let mut hedge = create_match(a, b).expect("create_match should succeed");
 
-        let receipt = resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A)
-            .expect("resolve should succeed");
+        let receipt =
+            resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A).expect("resolve should succeed");
 
         assert_eq!(receipt.winner_party_id, 0);
         assert_eq!(receipt.stake_lamports, STAKE);
@@ -279,8 +278,7 @@ mod tests {
     fn test_double_resolve_rejected() {
         let (a, b) = make_pair();
         let mut hedge = create_match(a, b).expect("create_match should succeed");
-        resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A)
-            .expect("first resolve should succeed");
+        resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A).expect("first resolve should succeed");
         match resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A) {
             Err(HedgeError::AlreadyResolved) => {}
             _ => panic!("expected AlreadyResolved"),

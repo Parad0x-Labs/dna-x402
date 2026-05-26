@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-zk-complete-demo"
 version = "0.1.0"
@@ -15,7 +13,6 @@ dark-bn254-circuit      = { path = "../dark-bn254-circuit" }
 dark-bn254-proof-gen    = { path = "../dark-bn254-proof-gen" }
 dark-shielded-pool-core = { path = "../dark-shielded-pool-core" }
 dark-shielded-client    = { path = "../dark-shielded-client" }
-dark-private-x402       = { path = "../dark-private-x402" }
 dark-anon-signal        = { path = "../dark-anon-signal" }
 dark-note-compression   = { path = "../dark-note-compression" }
 sha2      = "0.10"

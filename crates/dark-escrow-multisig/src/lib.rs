@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -108,7 +108,10 @@ pub fn create_escrow(
         return Err(EscrowError::ThresholdExceedsSigners);
     }
 
-    let signer_hashes: Vec<[u8; 32]> = signer_secrets.iter().map(|s| compute_signer_hash(s)).collect();
+    let signer_hashes: Vec<[u8; 32]> = signer_secrets
+        .iter()
+        .map(|s| compute_signer_hash(s))
+        .collect();
     let condition_hash = compute_condition_hash(condition_bytes);
     let escrow_id = compute_escrow_id(&signer_hashes, amount, &condition_hash, threshold);
 
@@ -127,7 +130,10 @@ pub fn create_escrow(
 pub fn approve(escrow: &MultisigEscrow, signer_secret: &[u8; 32]) -> Approval {
     let signer_hash = compute_signer_hash(signer_secret);
     let approval_hash = compute_approval_hash(&escrow.escrow_id, &signer_hash);
-    Approval { signer_hash, approval_hash }
+    Approval {
+        signer_hash,
+        approval_hash,
+    }
 }
 
 pub fn release(
@@ -165,7 +171,9 @@ mod tests {
     use super::*;
 
     fn secret(b: u8) -> [u8; 32] {
-        let mut s = [0u8; 32]; s[0] = b + 1; s
+        let mut s = [0u8; 32];
+        s[0] = b + 1;
+        s
     }
 
     fn three_signers() -> Vec<[u8; 32]> {

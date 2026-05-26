@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -123,7 +123,8 @@ pub fn create_schedule(
     }
 
     let beneficiary_hash = compute_beneficiary_hash(beneficiary_secret);
-    let schedule_id = compute_schedule_id(&beneficiary_hash, total_amount, cliff_unix, end_unix, nonce);
+    let schedule_id =
+        compute_schedule_id(&beneficiary_hash, total_amount, cliff_unix, end_unix, nonce);
 
     Ok(VestingSchedule {
         schedule_id,
@@ -208,7 +209,7 @@ mod tests {
 
     // Timestamps: cliff=1000, end=2000, fully vested at 2000
     const CLIFF: i64 = 1_000;
-    const END: i64   = 2_000;
+    const END: i64 = 2_000;
     const TOTAL: u64 = 10_000;
 
     fn make_schedule() -> VestingSchedule {
@@ -231,15 +232,21 @@ mod tests {
     fn test_before_cliff_rejected() {
         let mut schedule = make_schedule();
         let err = claim_vested(&mut schedule, &bsecret(), 1, CLIFF - 1).unwrap_err();
-        assert_eq!(err, VestingError::BeforeCliff { cliff: CLIFF, current: CLIFF - 1 });
+        assert_eq!(
+            err,
+            VestingError::BeforeCliff {
+                cliff: CLIFF,
+                current: CLIFF - 1
+            }
+        );
     }
 
     #[test]
     fn test_exceeds_vested_rejected() {
         let mut schedule = make_schedule();
         // At midpoint, only half is vested
-        let mid = (CLIFF + END) / 2;  // 1500
-        let vested = TOTAL / 2;       // 5000
+        let mid = (CLIFF + END) / 2; // 1500
+        let vested = TOTAL / 2; // 5000
 
         // Trying to claim more than vested should fail
         let err = claim_vested(&mut schedule, &bsecret(), vested + 1, mid).unwrap_err();
@@ -272,7 +279,11 @@ mod tests {
         let record = schedule_public_record(&schedule);
         let v: serde_json::Value = serde_json::from_str(&record).unwrap();
 
-        let bh_hex: String = schedule.beneficiary_hash.iter().map(|b| format!("{:02x}", b)).collect();
+        let bh_hex: String = schedule
+            .beneficiary_hash
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
         assert!(!record.contains(&bh_hex));
         assert!(v.get("beneficiary_hash").is_none());
         assert_eq!(v["mainnet_ready"], false);

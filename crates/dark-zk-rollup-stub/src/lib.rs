@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -81,7 +81,11 @@ fn compute_state_root(prev_state_root: &[u8; 32], tx_root: &[u8; 32]) -> [u8; 32
     sha256(&d)
 }
 
-fn compute_proof_hash(operator_key: &[u8; 32], tx_root: &[u8; 32], state_root: &[u8; 32]) -> [u8; 32] {
+fn compute_proof_hash(
+    operator_key: &[u8; 32],
+    tx_root: &[u8; 32],
+    state_root: &[u8; 32],
+) -> [u8; 32] {
     let mut d = Vec::new();
     d.extend_from_slice(b"rollup-proof-v1");
     d.extend_from_slice(operator_key);
@@ -176,10 +180,17 @@ mod tests {
     }
 
     fn make_tx(a: u8, b: u8, amount: u64) -> RollupTx {
-        let mut sh = [0u8; 32]; sh[0] = a;
-        let mut rh = [0u8; 32]; rh[0] = b;
+        let mut sh = [0u8; 32];
+        sh[0] = a;
+        let mut rh = [0u8; 32];
+        rh[0] = b;
         let tx_hash = compute_tx_hash(&sh, &rh, amount);
-        RollupTx { tx_hash, sender_hash: sh, receiver_hash: rh, amount }
+        RollupTx {
+            tx_hash,
+            sender_hash: sh,
+            receiver_hash: rh,
+            amount,
+        }
     }
 
     // Test 1: create + verify passes
@@ -225,7 +236,9 @@ mod tests {
     // Test 5: too many txs rejected
     #[test]
     fn test_too_many_txs_rejected() {
-        let txs: Vec<RollupTx> = (0..65u8).map(|i| make_tx(i, i.wrapping_add(1), 1)).collect();
+        let txs: Vec<RollupTx> = (0..65u8)
+            .map(|i| make_tx(i, i.wrapping_add(1), 1))
+            .collect();
         let err = create_batch(&op_key(), &txs, &prev_root()).unwrap_err();
         assert_eq!(err, RollupError::TooManyTxs);
     }

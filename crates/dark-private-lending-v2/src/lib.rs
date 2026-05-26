@@ -94,9 +94,12 @@ mod tests {
     use super::*;
 
     fn make_secrets() -> ([u8; 32], [u8; 32], [u8; 32]) {
-        let mut l = [0u8; 32]; l[0] = 0xAA;
-        let mut b = [0u8; 32]; b[0] = 0xBB;
-        let mut blind = [0u8; 32]; blind[0] = 0xCC;
+        let mut l = [0u8; 32];
+        l[0] = 0xAA;
+        let mut b = [0u8; 32];
+        b[0] = 0xBB;
+        let mut blind = [0u8; 32];
+        blind[0] = 0xCC;
         (l, b, blind)
     }
 

@@ -23,14 +23,18 @@ pub enum PayrollError {
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
     let mut h = Sha256::new();
-    for p in parts { h.update(p); }
+    for p in parts {
+        h.update(p);
+    }
     h.finalize().into()
 }
 
 fn xor_fold(ids: &[[u8; 32]]) -> [u8; 32] {
     let mut acc = [0u8; 32];
     for id in ids {
-        for i in 0..32 { acc[i] ^= id[i]; }
+        for i in 0..32 {
+            acc[i] ^= id[i];
+        }
     }
     acc
 }
@@ -81,10 +85,18 @@ pub fn add_employee(
 mod tests {
     use super::*;
 
-    fn org_secret() -> [u8; 32] { [0x11u8; 32] }
-    fn emp1_secret() -> [u8; 32] { [0x22u8; 32] }
-    fn emp2_secret() -> [u8; 32] { [0x33u8; 32] }
-    fn blinding() -> [u8; 32] { [0xaau8; 32] }
+    fn org_secret() -> [u8; 32] {
+        [0x11u8; 32]
+    }
+    fn emp1_secret() -> [u8; 32] {
+        [0x22u8; 32]
+    }
+    fn emp2_secret() -> [u8; 32] {
+        [0x33u8; 32]
+    }
+    fn blinding() -> [u8; 32] {
+        [0xaau8; 32]
+    }
 
     #[test]
     fn new_payroll_mainnet_ready_false() {

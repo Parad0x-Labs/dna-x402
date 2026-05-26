@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-threshold-decrypt"
 version = "0.1.0"

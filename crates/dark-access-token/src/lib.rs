@@ -205,8 +205,7 @@ mod tests {
 
     #[test]
     fn test_issue_and_verify_happy_path() {
-        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1)
-            .expect("issue should succeed");
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).expect("issue should succeed");
 
         assert!(!token.revoked);
         assert!(!token.mainnet_ready);
@@ -222,8 +221,7 @@ mod tests {
 
     #[test]
     fn test_expired_token_rejected() {
-        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1)
-            .expect("issue should succeed");
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).expect("issue should succeed");
 
         let current = T1 + 1; // one second past expiry
         let err = verify_token(&token, SCOPE, current).unwrap_err();
@@ -238,8 +236,8 @@ mod tests {
 
     #[test]
     fn test_revoked_token_rejected() {
-        let mut token = issue_token(&issuer(), &holder(), SCOPE, T0, T1)
-            .expect("issue should succeed");
+        let mut token =
+            issue_token(&issuer(), &holder(), SCOPE, T0, T1).expect("issue should succeed");
 
         revoke_token(&mut token);
         assert!(token.revoked);
@@ -250,8 +248,7 @@ mod tests {
 
     #[test]
     fn test_scope_mismatch_rejected() {
-        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1)
-            .expect("issue should succeed");
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).expect("issue should succeed");
 
         let wrong_scope = b"dna:x402:write:receipts";
         let err = verify_token(&token, wrong_scope, T0).unwrap_err();
@@ -267,8 +264,7 @@ mod tests {
 
     #[test]
     fn test_public_record_hides_identities() {
-        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1)
-            .expect("issue should succeed");
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).expect("issue should succeed");
 
         let record = token_public_record(&token);
 

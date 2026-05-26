@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-note-ledger"
 version = "0.1.0"

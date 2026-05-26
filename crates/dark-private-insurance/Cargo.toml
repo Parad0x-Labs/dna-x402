@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-private-insurance"
 version = "0.1.0"

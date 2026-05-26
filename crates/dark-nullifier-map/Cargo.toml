@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-nullifier-map"
 version = "0.1.0"

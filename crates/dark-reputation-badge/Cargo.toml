@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-reputation-badge"
 version = "0.1.0"

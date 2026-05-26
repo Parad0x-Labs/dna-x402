@@ -104,9 +104,9 @@ pub enum StealthError {
 impl std::fmt::Display for StealthError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ZeroSecret  => write!(f, "secret key is all-zero"),
-            Self::ZeroAmount  => write!(f, "payment amount is zero"),
-            Self::CurveError  => write!(f, "BN254 G1 curve operation failed"),
+            Self::ZeroSecret => write!(f, "secret key is all-zero"),
+            Self::ZeroAmount => write!(f, "payment amount is zero"),
+            Self::CurveError => write!(f, "BN254 G1 curve operation failed"),
         }
     }
 }
@@ -140,12 +140,8 @@ pub fn derive_view_secret(spend_secret: &[u8; 32]) -> [u8; 32] {
 /// Both sender and recipient can compute the same value:
 /// - Sender:    `ephem_secret * view_pub = ephem_secret * (view_secret * G) = k * G`
 /// - Recipient: `view_secret * ephem_pub = view_secret * (ephem_secret * G) = k * G`
-fn ecdh_shared_scalar(
-    scalar: &[u8; 32],
-    point: &G1Affine,
-) -> Result<[u8; 32], StealthError> {
-    let shared_pt = g1_mul_scalar(point, scalar)
-        .map_err(|_| StealthError::CurveError)?;
+fn ecdh_shared_scalar(scalar: &[u8; 32], point: &G1Affine) -> Result<[u8; 32], StealthError> {
+    let shared_pt = g1_mul_scalar(point, scalar).map_err(|_| StealthError::CurveError)?;
     let mut h = Sha256::new();
     h.update(b"dark-stealth-shared-v1");
     h.update(&shared_pt.x);
@@ -159,8 +155,7 @@ fn stealth_address_point(
     shared_scalar: &[u8; 32],
 ) -> Result<G1Affine, StealthError> {
     let gen = g1_generator();
-    let offset = g1_mul_scalar(&gen, shared_scalar)
-        .map_err(|_| StealthError::CurveError)?;
+    let offset = g1_mul_scalar(&gen, shared_scalar).map_err(|_| StealthError::CurveError)?;
     g1_add(spend_pub, &offset).map_err(|_| StealthError::CurveError)
 }
 
@@ -186,11 +181,13 @@ pub fn create_meta_address(spend_secret: &[u8; 32]) -> Result<StealthMetaAddress
     }
     let view_secret = derive_view_secret(spend_secret);
     let gen = g1_generator();
-    let spend_pub = g1_mul_scalar(&gen, spend_secret)
-        .map_err(|_| StealthError::CurveError)?;
-    let view_pub = g1_mul_scalar(&gen, &view_secret)
-        .map_err(|_| StealthError::CurveError)?;
-    Ok(StealthMetaAddress { spend_pub, view_pub, mainnet_ready: false })
+    let spend_pub = g1_mul_scalar(&gen, spend_secret).map_err(|_| StealthError::CurveError)?;
+    let view_pub = g1_mul_scalar(&gen, &view_secret).map_err(|_| StealthError::CurveError)?;
+    Ok(StealthMetaAddress {
+        spend_pub,
+        view_pub,
+        mainnet_ready: false,
+    })
 }
 
 /// Create a stealth payment to `meta` using a single-use `ephem_secret`.
@@ -210,8 +207,7 @@ pub fn create_payment(
     }
 
     let gen = g1_generator();
-    let ephem_pub = g1_mul_scalar(&gen, ephem_secret)
-        .map_err(|_| StealthError::CurveError)?;
+    let ephem_pub = g1_mul_scalar(&gen, ephem_secret).map_err(|_| StealthError::CurveError)?;
 
     // ECDH: shared = ephem_secret * view_pub
     let shared_scalar = ecdh_shared_scalar(ephem_secret, &meta.view_pub)?;
@@ -251,8 +247,7 @@ pub fn scan_payment(
 
     // Recompute stealth address
     let gen = g1_generator();
-    let spend_pub = g1_mul_scalar(&gen, spend_secret)
-        .map_err(|_| StealthError::CurveError)?;
+    let spend_pub = g1_mul_scalar(&gen, spend_secret).map_err(|_| StealthError::CurveError)?;
     let candidate = stealth_address_point(&spend_pub, &shared_scalar)?;
 
     // Compare with payment's stealth_addr
@@ -295,11 +290,15 @@ pub fn verify_amount_blind(
 ///
 /// Format: `"<x_hex>:<y_hex>"` (64 hex chars + colon + 64 hex chars = 129 chars).
 pub fn meta_address_to_str(meta: &StealthMetaAddress) -> String {
-    fn hex32(b: &[u8; 32]) -> String { b.iter().map(|x| format!("{:02x}", x)).collect() }
+    fn hex32(b: &[u8; 32]) -> String {
+        b.iter().map(|x| format!("{:02x}", x)).collect()
+    }
     format!(
         "spend={}:{} view={}:{}",
-        hex32(&meta.spend_pub.x), hex32(&meta.spend_pub.y),
-        hex32(&meta.view_pub.x),  hex32(&meta.view_pub.y),
+        hex32(&meta.spend_pub.x),
+        hex32(&meta.spend_pub.y),
+        hex32(&meta.view_pub.x),
+        hex32(&meta.view_pub.y),
     )
 }
 
@@ -340,7 +339,10 @@ mod tests {
         let meta = create_meta_address(&spend_secret(2)).unwrap();
         let payment = create_payment(&meta, &ephem_secret(2), 500_000).unwrap();
         let result = scan_payment(&spend_secret(3), &payment).unwrap();
-        assert!(result.is_none(), "different spend secret must not match payment");
+        assert!(
+            result.is_none(),
+            "different spend secret must not match payment"
+        );
     }
 
     // ── Test 3: zero spend secret rejected ──────────────────────────────────
@@ -364,8 +366,10 @@ mod tests {
         let meta = create_meta_address(&spend_secret(5)).unwrap();
         let p1 = create_payment(&meta, &ephem_secret(0xAA), 1_000).unwrap();
         let p2 = create_payment(&meta, &ephem_secret(0xBB), 1_000).unwrap();
-        assert_ne!(p1.stealth_addr.x, p2.stealth_addr.x,
-            "different ephemeral keys must produce different stealth addresses");
+        assert_ne!(
+            p1.stealth_addr.x, p2.stealth_addr.x,
+            "different ephemeral keys must produce different stealth addresses"
+        );
     }
 
     // ── Test 6: different recipients → different stealth addresses ───────────
@@ -376,8 +380,10 @@ mod tests {
         let ephem = ephem_secret(0x10);
         let p1 = create_payment(&meta1, &ephem, 1_000).unwrap();
         let p2 = create_payment(&meta2, &ephem, 1_000).unwrap();
-        assert_ne!(p1.stealth_addr.x, p2.stealth_addr.x,
-            "same ephemeral key to different recipients must produce different addresses");
+        assert_ne!(
+            p1.stealth_addr.x, p2.stealth_addr.x,
+            "same ephemeral key to different recipients must produce different addresses"
+        );
     }
 
     // ── Test 7: view key cannot scan payment without spend key (property) ───
@@ -396,7 +402,7 @@ mod tests {
         let m1 = create_meta_address(&spend_secret(9)).unwrap();
         let m2 = create_meta_address(&spend_secret(9)).unwrap();
         assert_eq!(m1.spend_pub.x, m2.spend_pub.x);
-        assert_eq!(m1.view_pub.x,  m2.view_pub.x);
+        assert_eq!(m1.view_pub.x, m2.view_pub.x);
     }
 
     // ── Test 9: one-time spend key is deterministic ──────────────────────────
@@ -418,8 +424,10 @@ mod tests {
         let p2 = create_payment(&meta, &ephem_secret(0x21), 1_000).unwrap();
         let k1 = scan_payment(&s, &p1).unwrap().unwrap();
         let k2 = scan_payment(&s, &p2).unwrap().unwrap();
-        assert_ne!(k1.one_time_secret, k2.one_time_secret,
-            "each payment must produce a unique one-time spend key");
+        assert_ne!(
+            k1.one_time_secret, k2.one_time_secret,
+            "each payment must produce a unique one-time spend key"
+        );
     }
 
     // ── Test 11: amount blind verifies correctly ─────────────────────────────
@@ -445,8 +453,8 @@ mod tests {
         let meta = create_meta_address(&spend_secret(15)).unwrap();
         let s = meta_address_to_str(&meta);
         assert!(s.starts_with("spend="), "must start with spend= prefix");
-        assert!(s.contains("view="),    "must contain view= section");
-        assert!(s.len() > 100,          "hex coordinates must be long");
+        assert!(s.contains("view="), "must contain view= section");
+        assert!(s.len() > 100, "hex coordinates must be long");
     }
 
     // ── Test 14: zero ephem secret rejected ─────────────────────────────────

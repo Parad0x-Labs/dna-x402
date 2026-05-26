@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -98,8 +98,7 @@ pub fn revoke_credential(
     // Override the last entry with the actual epoch
     let last_idx = proper_entries.len() - 1;
     proper_entries[last_idx] = compute_revocation_entry(&cred_id, epoch);
-    registry.revocation_root =
-        compute_revocation_root(&proper_entries, registry.revocation_count);
+    registry.revocation_root = compute_revocation_root(&proper_entries, registry.revocation_count);
     Ok(())
 }
 

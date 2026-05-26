@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-zk-rollup-stub"
 version = "0.1.0"

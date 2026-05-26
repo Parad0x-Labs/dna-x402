@@ -25,7 +25,7 @@ pub struct ComputeReceipt {
 pub struct ReceiptChainNode {
     pub receipt_hash: [u8; 32],
     pub previous_hash: [u8; 32], // links to previous receipt in DAG
-    pub chain_root: [u8; 32], // SHA256("chain-root-v1" || receipt_hash || previous_hash)
+    pub chain_root: [u8; 32],    // SHA256("chain-root-v1" || receipt_hash || previous_hash)
 }
 
 // ---------------------------------------------------------------------------
@@ -154,7 +154,12 @@ mod tests {
     use super::*;
     use dark_wasm_compute::{build_compute_proof, create_job_spec, simulate_execution};
 
-    fn make_receipt() -> (ComputeReceipt, ComputeProof, WasmJobSpec, WasmExecutionResult) {
+    fn make_receipt() -> (
+        ComputeReceipt,
+        ComputeProof,
+        WasmJobSpec,
+        WasmExecutionResult,
+    ) {
         let spec = create_job_spec(
             b"wasm binary bytes",
             b"input payload",

@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-commit-reveal-game"
 version = "0.1.0"

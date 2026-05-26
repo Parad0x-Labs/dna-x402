@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -49,7 +49,11 @@ pub fn compute_output_hash(input_hash: &[u8; 32], delay_rounds: u32) -> [u8; 32]
     state
 }
 
-pub fn compute_proof_id(input_hash: &[u8; 32], output_hash: &[u8; 32], delay_rounds: u32) -> [u8; 32] {
+pub fn compute_proof_id(
+    input_hash: &[u8; 32],
+    output_hash: &[u8; 32],
+    delay_rounds: u32,
+) -> [u8; 32] {
     let mut d = Vec::new();
     d.extend_from_slice(b"vdf2-proof-v1");
     d.extend_from_slice(input_hash);
@@ -70,9 +74,9 @@ pub fn compute_vdf(input: &[u8], delay_rounds: u32) -> Result<VdfProof, VdfError
     if delay_rounds > MAX_ROUNDS {
         return Err(VdfError::TooManyRounds);
     }
-    let input_hash  = compute_input_hash(input);
+    let input_hash = compute_input_hash(input);
     let output_hash = compute_output_hash(&input_hash, delay_rounds);
-    let proof_id    = compute_proof_id(&input_hash, &output_hash, delay_rounds);
+    let proof_id = compute_proof_id(&input_hash, &output_hash, delay_rounds);
     Ok(VdfProof {
         proof_id,
         input_hash,
@@ -84,7 +88,7 @@ pub fn compute_vdf(input: &[u8], delay_rounds: u32) -> Result<VdfProof, VdfError
 }
 
 pub fn verify_vdf(proof: &VdfProof, input: &[u8]) -> bool {
-    let input_hash  = compute_input_hash(input);
+    let input_hash = compute_input_hash(input);
     if input_hash != proof.input_hash {
         return false;
     }
@@ -109,13 +113,13 @@ mod tests {
         assert!(!proof.mainnet_ready);
         assert!(!proof.verified);
         assert_eq!(proof.delay_rounds, 5);
-        assert_ne!(proof.input_hash,  [0u8; 32]);
+        assert_ne!(proof.input_hash, [0u8; 32]);
         assert_ne!(proof.output_hash, [0u8; 32]);
-        assert_ne!(proof.proof_id,    [0u8; 32]);
+        assert_ne!(proof.proof_id, [0u8; 32]);
 
-        let expected_input  = compute_input_hash(b"seed-input");
+        let expected_input = compute_input_hash(b"seed-input");
         let expected_output = compute_output_hash(&expected_input, 5);
-        let expected_pid    = compute_proof_id(&expected_input, &expected_output, 5);
+        let expected_pid = compute_proof_id(&expected_input, &expected_output, 5);
         assert_eq!(proof.input_hash, expected_input);
         assert_eq!(proof.output_hash, expected_output);
         assert_eq!(proof.proof_id, expected_pid);
@@ -131,10 +135,10 @@ mod tests {
     // Test 3: different rounds → different output
     #[test]
     fn test_different_rounds_different_output() {
-        let proof5  = compute_vdf(b"same-input", 5).unwrap();
+        let proof5 = compute_vdf(b"same-input", 5).unwrap();
         let proof10 = compute_vdf(b"same-input", 10).unwrap();
         assert_ne!(proof5.output_hash, proof10.output_hash);
-        assert_ne!(proof5.proof_id,    proof10.proof_id);
+        assert_ne!(proof5.proof_id, proof10.proof_id);
     }
 
     // Test 4: zero_rounds rejected

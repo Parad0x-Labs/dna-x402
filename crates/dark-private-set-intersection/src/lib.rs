@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 fn sha256(data: &[u8]) -> [u8; 32] {
     let mut h = Sha256::new();
@@ -28,10 +28,7 @@ pub enum PsiError {
     PartySecretZero,
 }
 
-pub fn hash_set(
-    elements: &[&[u8]],
-    party_secret: &[u8; 32],
-) -> Result<HashedSet, PsiError> {
+pub fn hash_set(elements: &[&[u8]], party_secret: &[u8; 32]) -> Result<HashedSet, PsiError> {
     if party_secret == &[0u8; 32] {
         return Err(PsiError::PartySecretZero);
     }

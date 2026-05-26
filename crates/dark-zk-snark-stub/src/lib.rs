@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnarkStatement {
@@ -11,9 +11,9 @@ pub struct SnarkStatement {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SnarkProof {
     pub statement: SnarkStatement,
-    pub proof_a: Vec<u8>,   // 64 bytes
-    pub proof_b: Vec<u8>,   // 128 bytes
-    pub proof_c: Vec<u8>,   // 64 bytes
+    pub proof_a: Vec<u8>, // 64 bytes
+    pub proof_b: Vec<u8>, // 128 bytes
+    pub proof_c: Vec<u8>, // 64 bytes
     pub proof_hash: [u8; 32],
     pub is_stub: bool,
     pub mainnet_ready: bool,
@@ -133,8 +133,17 @@ pub fn verify_stub_proof(proof: &SnarkProof) -> bool {
 }
 
 pub fn proof_public_record(proof: &SnarkProof) -> String {
-    let ph_hex: String = proof.proof_hash.iter().map(|b| format!("{:02x}", b)).collect();
-    let cid_hex: String = proof.statement.circuit_id.iter().map(|b| format!("{:02x}", b)).collect();
+    let ph_hex: String = proof
+        .proof_hash
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
+    let cid_hex: String = proof
+        .statement
+        .circuit_id
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect();
     serde_json::json!({
         "proof_hash": ph_hex,
         "is_stub": proof.is_stub,
@@ -192,7 +201,10 @@ mod tests {
         let p1 = generate_stub_proof(&stmt1);
         let p2 = generate_stub_proof(&stmt2);
         assert_eq!(p1.proof_hash, p2.proof_hash);
-        assert_eq!(p1.statement.public_inputs_hash, p2.statement.public_inputs_hash);
+        assert_eq!(
+            p1.statement.public_inputs_hash,
+            p2.statement.public_inputs_hash
+        );
     }
 
     #[test]

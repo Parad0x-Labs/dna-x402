@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -214,7 +214,13 @@ mod tests {
     fn test_too_early_to_reveal() {
         let sc = commit_signal(&sender(), b"#news", b"big news", 5, 100, &nonce()).unwrap();
         let err = reveal_signal(&sc, b"big news", &nonce(), 50).unwrap_err();
-        assert_eq!(err, SignalError::TooEarlyToReveal { reveal_epoch: 100, current: 50 });
+        assert_eq!(
+            err,
+            SignalError::TooEarlyToReveal {
+                reveal_epoch: 100,
+                current: 50
+            }
+        );
     }
 
     // Test 3: different channels → different signal_ids

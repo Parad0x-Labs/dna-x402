@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-ring-vrf"
 version = "0.1.0"

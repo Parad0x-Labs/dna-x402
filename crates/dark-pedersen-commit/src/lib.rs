@@ -103,11 +103,7 @@ pub fn add_commitments(a: &PedersenCommitment, b: &PedersenCommitment) -> Commit
 ///
 /// Recomputes both `combined` (XOR) and `sum_hash`, and checks both match
 /// the values stored in `sum`.
-pub fn verify_sum(
-    sum: &CommitmentSum,
-    a: &PedersenCommitment,
-    b: &PedersenCommitment,
-) -> bool {
+pub fn verify_sum(sum: &CommitmentSum, a: &PedersenCommitment, b: &PedersenCommitment) -> bool {
     let mut expected_combined = [0u8; 32];
     for i in 0..32 {
         expected_combined[i] = a.commitment[i] ^ b.commitment[i];
@@ -151,8 +147,7 @@ mod tests {
         let value = 42u64;
         let blind = blinding(7);
         let commitment = commit(value, &blind).expect("commit should succeed");
-        let opened = open_commitment(&commitment, value, &blind)
-            .expect("open should succeed");
+        let opened = open_commitment(&commitment, value, &blind).expect("open should succeed");
         assert_eq!(opened.value, value);
         assert_eq!(opened.blinding, blind);
         assert_eq!(opened.commitment, commitment.commitment);

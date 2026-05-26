@@ -178,8 +178,7 @@ mod tests {
 
         assert_eq!(memo.mainnet_ready, false);
 
-        let decrypted = decrypt_memo(&memo, &SHARED_SECRET)
-            .expect("decryption should succeed");
+        let decrypted = decrypt_memo(&memo, &SHARED_SECRET).expect("decryption should succeed");
 
         assert_eq!(decrypted.plaintext, PLAINTEXT);
         assert_eq!(decrypted.sender_pubkey, memo.sender_pubkey);

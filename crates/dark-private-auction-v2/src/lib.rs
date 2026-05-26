@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -128,11 +128,11 @@ pub fn new_auction(
     if item_bytes.is_empty() {
         return Err(AuctionError::EmptyItem);
     }
-    let auctioneer_hash     = compute_auctioneer_hash(auctioneer_secret);
-    let item_hash           = compute_item_hash(item_bytes);
-    let auction_id          = compute_auction_id(&auctioneer_hash, &item_hash);
-    let reserve_commitment  = compute_reserve_commitment(reserve_price, reserve_blinding);
-    let bid_root            = [0u8; 32]; // running XOR accumulator; use get_bid_root() for final hash
+    let auctioneer_hash = compute_auctioneer_hash(auctioneer_secret);
+    let item_hash = compute_item_hash(item_bytes);
+    let auction_id = compute_auction_id(&auctioneer_hash, &item_hash);
+    let reserve_commitment = compute_reserve_commitment(reserve_price, reserve_blinding);
+    let bid_root = [0u8; 32]; // running XOR accumulator; use get_bid_root() for final hash
     Ok(Auction {
         auction_id,
         auctioneer_hash,
@@ -157,8 +157,8 @@ pub fn place_bid(
         return Err(AuctionError::AlreadyFinalized);
     }
     let bidder_hash = compute_bidder_hash(bidder_secret);
-    let commitment  = compute_bid_commitment(&bidder_hash, amount, nonce);
-    let bid_id      = compute_bid_id(&auction.auction_id, &bidder_hash);
+    let commitment = compute_bid_commitment(&bidder_hash, amount, nonce);
+    let bid_id = compute_bid_id(&auction.auction_id, &bidder_hash);
 
     // bid_root stores the running XOR accumulator of all bid_ids.
     // get_bid_root() applies sha256("auc2-root-v1" || xor || count_le4) on top.
@@ -167,10 +167,7 @@ pub fn place_bid(
     }
     auction.bid_count += 1;
 
-    Ok(BidCommitment {
-        bid_id,
-        commitment,
-    })
+    Ok(BidCommitment { bid_id, commitment })
 }
 
 /// Returns bid_root as sha256("auc2-root-v1" || xor_accumulator || count_le4)
@@ -194,11 +191,11 @@ pub fn finalize_auction(
     if auction.bid_count == 0 {
         return Err(AuctionError::NoBids);
     }
-    let winner_hash          = compute_bidder_hash(winning_bidder_secret);
-    let winning_bid_commit   = compute_bid_commitment(&winner_hash, winning_amount, winning_nonce);
-    auction.winner_hash              = Some(winner_hash);
-    auction.winning_bid_commitment   = Some(winning_bid_commit);
-    auction.finalized                = true;
+    let winner_hash = compute_bidder_hash(winning_bidder_secret);
+    let winning_bid_commit = compute_bid_commitment(&winner_hash, winning_amount, winning_nonce);
+    auction.winner_hash = Some(winner_hash);
+    auction.winning_bid_commitment = Some(winning_bid_commit);
+    auction.finalized = true;
     Ok(())
 }
 
@@ -208,8 +205,12 @@ pub fn finalize_auction(
 mod tests {
     use super::*;
 
-    fn secret(b: u8) -> [u8; 32] { [b; 32] }
-    fn nonce(b: u8)  -> [u8; 32] { [b; 32] }
+    fn secret(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
+    fn nonce(b: u8) -> [u8; 32] {
+        [b; 32]
+    }
 
     // Test 1: new_auction + mainnet_ready=false
     #[test]

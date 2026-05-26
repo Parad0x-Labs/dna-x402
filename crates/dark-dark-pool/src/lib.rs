@@ -81,11 +81,7 @@ fn hash_order(
     h.finalize().into()
 }
 
-fn hash_receipt(
-    buy_commitment: &[u8; 32],
-    sell_commitment: &[u8; 32],
-    epoch: u64,
-) -> [u8; 32] {
+fn hash_receipt(buy_commitment: &[u8; 32], sell_commitment: &[u8; 32], epoch: u64) -> [u8; 32] {
     let mut h = Sha256::new();
     h.update(b"match-receipt-v1");
     h.update(buy_commitment);
@@ -124,7 +120,7 @@ pub fn commit_order(
         commitment,
         trader_hash,
         epoch,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -179,7 +175,7 @@ pub fn try_match(
         receipt_hash,
         filled_amount,
         epoch: buy_commitment.epoch,
-        mainnet_ready: true,
+        mainnet_ready: false,
     })
 }
 
@@ -188,7 +184,7 @@ pub fn pool_batch_record(receipts: &[MatchReceipt], epoch: u64) -> String {
     serde_json::json!({
         "epoch": epoch,
         "match_count": receipts.len(),
-        "mainnet_ready": true
+        "mainnet_ready": false
     })
     .to_string()
 }
@@ -222,24 +218,22 @@ mod tests {
         let nonce_s = nonce(20);
         let epoch = 1u64;
 
-        let buy_commit = commit_order(&secret_b, OrderSide::Buy, 50, 100, &nonce_b, epoch)
-            .expect("buy commit");
-        let sell_commit = commit_order(&secret_s, OrderSide::Sell, 50, 90, &nonce_s, epoch)
-            .expect("sell commit");
+        let buy_commit =
+            commit_order(&secret_b, OrderSide::Buy, 50, 100, &nonce_b, epoch).expect("buy commit");
+        let sell_commit =
+            commit_order(&secret_s, OrderSide::Sell, 50, 90, &nonce_s, epoch).expect("sell commit");
 
-        let buy_reveal =
-            reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 50, 100, &nonce_b)
-                .expect("buy reveal");
-        let sell_reveal =
-            reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 50, 90, &nonce_s)
-                .expect("sell reveal");
+        let buy_reveal = reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 50, 100, &nonce_b)
+            .expect("buy reveal");
+        let sell_reveal = reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 50, 90, &nonce_s)
+            .expect("sell reveal");
 
-        let receipt = try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit)
-            .expect("match");
+        let receipt =
+            try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit).expect("match");
 
         assert_eq!(receipt.filled_amount, 50);
         assert_eq!(receipt.epoch, epoch);
-        assert!(receipt.mainnet_ready);
+        assert!(!receipt.mainnet_ready);
     }
 
     // 2 -----------------------------------------------------------------------
@@ -252,17 +246,15 @@ mod tests {
         let epoch = 1u64;
 
         // buy at 80, sell at 100 → buy.price < sell.price → NoMatchFound
-        let buy_commit = commit_order(&secret_b, OrderSide::Buy, 50, 80, &nonce_b, epoch)
-            .expect("buy commit");
+        let buy_commit =
+            commit_order(&secret_b, OrderSide::Buy, 50, 80, &nonce_b, epoch).expect("buy commit");
         let sell_commit = commit_order(&secret_s, OrderSide::Sell, 50, 100, &nonce_s, epoch)
             .expect("sell commit");
 
-        let buy_reveal =
-            reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 50, 80, &nonce_b)
-                .expect("buy reveal");
-        let sell_reveal =
-            reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 50, 100, &nonce_s)
-                .expect("sell reveal");
+        let buy_reveal = reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 50, 80, &nonce_b)
+            .expect("buy reveal");
+        let sell_reveal = reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 50, 100, &nonce_s)
+            .expect("sell reveal");
 
         let result = try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit);
         assert_eq!(result, Err(PoolError::NoMatchFound));
@@ -275,8 +267,7 @@ mod tests {
         let n = nonce(30);
         let epoch = 2u64;
 
-        let commit = commit_order(&secret, OrderSide::Buy, 10, 50, &n, epoch)
-            .expect("commit");
+        let commit = commit_order(&secret, OrderSide::Buy, 10, 50, &n, epoch).expect("commit");
 
         // Reveal with a wrong amount (20 instead of 10)
         let result = reveal_order(&commit, &secret, OrderSide::Buy, 20, 50, &n);
@@ -302,20 +293,18 @@ mod tests {
         let epoch = 3u64;
 
         // buy 100, sell 50 → filled = 50
-        let buy_commit = commit_order(&secret_b, OrderSide::Buy, 100, 200, &nonce_b, epoch)
-            .expect("buy commit");
+        let buy_commit =
+            commit_order(&secret_b, OrderSide::Buy, 100, 200, &nonce_b, epoch).expect("buy commit");
         let sell_commit = commit_order(&secret_s, OrderSide::Sell, 50, 150, &nonce_s, epoch)
             .expect("sell commit");
 
-        let buy_reveal =
-            reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 100, 200, &nonce_b)
-                .expect("buy reveal");
-        let sell_reveal =
-            reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 50, 150, &nonce_s)
-                .expect("sell reveal");
+        let buy_reveal = reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 100, 200, &nonce_b)
+            .expect("buy reveal");
+        let sell_reveal = reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 50, 150, &nonce_s)
+            .expect("sell reveal");
 
-        let receipt = try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit)
-            .expect("match");
+        let receipt =
+            try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit).expect("match");
 
         assert_eq!(receipt.filled_amount, 50);
     }
@@ -329,20 +318,18 @@ mod tests {
         let nonce_s = nonce(80);
         let epoch = 4u64;
 
-        let buy_commit = commit_order(&secret_b, OrderSide::Buy, 30, 120, &nonce_b, epoch)
-            .expect("buy commit");
+        let buy_commit =
+            commit_order(&secret_b, OrderSide::Buy, 30, 120, &nonce_b, epoch).expect("buy commit");
         let sell_commit = commit_order(&secret_s, OrderSide::Sell, 30, 100, &nonce_s, epoch)
             .expect("sell commit");
 
-        let buy_reveal =
-            reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 30, 120, &nonce_b)
-                .expect("buy reveal");
-        let sell_reveal =
-            reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 30, 100, &nonce_s)
-                .expect("sell reveal");
+        let buy_reveal = reveal_order(&buy_commit, &secret_b, OrderSide::Buy, 30, 120, &nonce_b)
+            .expect("buy reveal");
+        let sell_reveal = reveal_order(&sell_commit, &secret_s, OrderSide::Sell, 30, 100, &nonce_s)
+            .expect("sell reveal");
 
-        let receipt = try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit)
-            .expect("match");
+        let receipt =
+            try_match(&buy_reveal, &sell_reveal, &buy_commit, &sell_commit).expect("match");
 
         let json = pool_batch_record(&[receipt], epoch);
 

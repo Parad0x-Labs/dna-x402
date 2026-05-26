@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,7 +127,10 @@ pub fn form_coalition(
         .map(|secret| {
             let agent_pubkey = derive_pubkey(secret);
             let agent_id = derive_agent_id(&agent_pubkey);
-            CoalitionMember { agent_id, agent_pubkey }
+            CoalitionMember {
+                agent_id,
+                agent_pubkey,
+            }
         })
         .collect();
 
@@ -197,8 +200,11 @@ pub fn verify_signature(
     }
 
     // Recompute aggregate sig from stored partial sigs
-    let expected_agg =
-        derive_aggregate_sig(&coalition.coalition_id, &sig.message_hash, &sig.partial_sigs);
+    let expected_agg = derive_aggregate_sig(
+        &coalition.coalition_id,
+        &sig.message_hash,
+        &sig.partial_sigs,
+    );
     if sig.aggregate_sig != expected_agg {
         return false;
     }

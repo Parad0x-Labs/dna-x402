@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,13 +85,13 @@ pub fn create_note(
     }
 
     // Derive public keys
-    let scan_pubkey  = h(b"sn-scan-pubkey-v1",  scan_secret);
+    let scan_pubkey = h(b"sn-scan-pubkey-v1", scan_secret);
     let spend_pubkey = h(b"sn-spend-pubkey-v1", spend_secret);
     let ephem_pubkey = h(b"sn-ephem-pubkey-v1", ephem_secret);
 
     // Shared secret & stealth address
     let shared_secret = h2(b"sn-shared-v1", &ephem_pubkey, &scan_pubkey);
-    let stealth_addr  = h2(b"sn-addr-v1",   &shared_secret, &spend_pubkey);
+    let stealth_addr = h2(b"sn-addr-v1", &shared_secret, &spend_pubkey);
 
     // Scope
     let scope_hash = h(b"sn-scope-v1", scope_bytes);
@@ -124,9 +124,9 @@ pub fn create_note(
 /// Recomputes `shared_secret` from `ephem_pubkey` and `scan_secret`, then
 /// recomputes `stealth_addr` using the note's stored `receiver_spend_pubkey`.
 pub fn scan_note(note: &StealthNote, scan_secret: &[u8; 32], ephem_pubkey: &[u8; 32]) -> bool {
-    let scan_pubkey   = h(b"sn-scan-pubkey-v1", scan_secret);
+    let scan_pubkey = h(b"sn-scan-pubkey-v1", scan_secret);
     let shared_secret = h2(b"sn-shared-v1", ephem_pubkey, &scan_pubkey);
-    let stealth_addr  = h2(b"sn-addr-v1",   &shared_secret, &note.receiver_spend_pubkey);
+    let stealth_addr = h2(b"sn-addr-v1", &shared_secret, &note.receiver_spend_pubkey);
     stealth_addr == note.stealth_addr
 }
 
@@ -162,25 +162,42 @@ mod tests {
     use super::*;
 
     fn scan_secret() -> [u8; 32] {
-        let mut b = [0u8; 32]; b[0] = 1; b
+        let mut b = [0u8; 32];
+        b[0] = 1;
+        b
     }
     fn spend_secret() -> [u8; 32] {
-        let mut b = [0u8; 32]; b[0] = 2; b
+        let mut b = [0u8; 32];
+        b[0] = 2;
+        b
     }
     fn ephem_secret() -> [u8; 32] {
-        let mut b = [0u8; 32]; b[0] = 3; b
+        let mut b = [0u8; 32];
+        b[0] = 3;
+        b
     }
-    fn scope() -> &'static [u8] { b"dark-x402-mainnet" }
+    fn scope() -> &'static [u8] {
+        b"dark-x402-mainnet"
+    }
 
     #[test]
     fn test_create_scan_spend_roundtrip() {
-        let note = create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1_000_000)
-            .expect("create_note failed");
+        let note = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            1_000_000,
+        )
+        .expect("create_note failed");
 
         assert!(!note.mainnet_ready, "mainnet_ready must be false");
 
         let scanned = scan_note(&note, &scan_secret(), &note.sender_ephem_pubkey);
-        assert!(scanned, "scan_note should return true for correct scan_secret");
+        assert!(
+            scanned,
+            "scan_note should return true for correct scan_secret"
+        );
 
         let spend = spend_note(&note, &spend_secret()).expect("spend_note failed");
         assert!(!spend.mainnet_ready, "mainnet_ready must be false");
@@ -190,25 +207,48 @@ mod tests {
 
     #[test]
     fn test_scan_wrong_secret_fails() {
-        let note = create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 42)
-            .expect("create_note failed");
+        let note = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            42,
+        )
+        .expect("create_note failed");
 
         let mut wrong = scan_secret();
         wrong[31] ^= 0xff;
 
         let scanned = scan_note(&note, &wrong, &note.sender_ephem_pubkey);
-        assert!(!scanned, "scan_note must return false for wrong scan_secret");
+        assert!(
+            !scanned,
+            "scan_note must return false for wrong scan_secret"
+        );
     }
 
     #[test]
     fn test_different_scopes_different_note_ids() {
-        let note_a = create_note(&scan_secret(), &spend_secret(), &ephem_secret(), b"scope-a", 100)
-            .expect("note a");
-        let note_b = create_note(&scan_secret(), &spend_secret(), &ephem_secret(), b"scope-b", 100)
-            .expect("note b");
+        let note_a = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            b"scope-a",
+            100,
+        )
+        .expect("note a");
+        let note_b = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            b"scope-b",
+            100,
+        )
+        .expect("note b");
 
-        assert_ne!(note_a.note_id, note_b.note_id,
-            "different scopes must produce different note_ids");
+        assert_ne!(
+            note_a.note_id, note_b.note_id,
+            "different scopes must produce different note_ids"
+        );
     }
 
     #[test]
@@ -227,8 +267,14 @@ mod tests {
 
     #[test]
     fn test_public_record_hides_encrypted_amount() {
-        let note = create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 9999)
-            .expect("create_note failed");
+        let note = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            9999,
+        )
+        .expect("create_note failed");
 
         let json = note_public_record(&note);
         let enc_amt_hex = hex_encode(&note.encrypted_amount);

@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-threshold-sig"
 version = "0.1.0"

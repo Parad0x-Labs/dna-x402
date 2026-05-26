@@ -47,17 +47,17 @@ members = [
     "crates/model-output-receipts",
     "crates/public-puzzle-generator",
     "crates/telegram-command-receipts",
-    # FRONTIER_FINAL — Phase 1 (Poseidon / hash parity)
+    # FRONTIER_FINAL - Phase 1 (Poseidon / hash parity)
     "crates/dark-hash-core",
-    # FRONTIER_FINAL — Phase 2 (ZK proof scaffold)
+    # FRONTIER_FINAL - Phase 2 (ZK proof scaffold)
     "crates/dark-proof-core",
     "crates/dark-proof-receipts",
     "programs/dark_proof_gate_lite",
-    # FRONTIER_FINAL — Phase 3 (Bonsol / RISC0)
+    # FRONTIER_FINAL - Phase 3 (Bonsol / RISC0)
     "crates/dark-batch-auditor-core",
     "crates/dark-bonsol-adapter",
     "crates/dark-risc0-adapter",
-    # FRONTIER_FINAL — Phase 4 (x402 flow)
+    # FRONTIER_FINAL - Phase 4 (x402 flow)
     "crates/dark-x402-core",
     "crates/dark-x402-server-mock",
     "crates/dark-x402-client-mock",
@@ -68,12 +68,29 @@ members = [
     "crates/dark-withdrawal-bundle",
     "crates/dark-stealth-address",
     "crates/dark-private-x402",
-    # FRONTIER_FINAL — Phase 5 (ZK compression)
+    "crates/dark-sparse-merkle",
+    # WAVE_16_PRIMITIVES - commitment chain, threshold nullifier, batch stealth scan, dutch auction, coalition proof, sliding budget, selective disclosure
+    "crates/dark-commitment-chain",
+    "crates/dark-threshold-nullifier",
+    "crates/dark-batch-stealth-scan",
+    "crates/dark-private-dutch-auction",
+    "crates/dark-coalition-proof",
+    "crates/dark-sliding-window-budget",
+    "crates/dark-selective-disclosure",
+    # WAVE_17_PRIMITIVES - private airdrop, MEV shield, proof of innocence, timelock encryption
+    "crates/dark-private-airdrop",
+    "crates/dark-mev-shield",
+    "crates/dark-proof-of-innocence",
+    "crates/dark-timelock-encryption",
+    # WAVE_18_PRIMITIVES - HTLC receipts and private voting
+    "crates/dark-htlc-receipt",
+    "crates/dark-private-voting",
+    # FRONTIER_FINAL - Phase 5 (ZK compression)
     "crates/dark-compression-core",
     "crates/dark-compressed-receipt-ledger",
-    # FRONTIER_FINAL — Phase 8 (demo)
+    # FRONTIER_FINAL - Phase 8 (demo)
     "crates/dark-frontier-final-demo",
-    # TRUE_FRONTIER_PRIMITIVES — 10 new Dark Null product primitives
+    # TRUE_FRONTIER_PRIMITIVES - 10 new Dark Null product primitives
     "crates/agent-permission-notes",
     "crates/spend-shadows",
     "crates/agent-flight-recorder",
@@ -84,9 +101,9 @@ members = [
     "crates/onchain-puzzle-compiler",
     "crates/no-custody-attestation",
     "crates/roadmap-commitments",
-    # TRUE_FRONTIER_DEVNET_DEMO — devnet frontier demo
+    # TRUE_FRONTIER_DEVNET_DEMO - devnet frontier demo
     "crates/true-frontier-devnet-demo",
-    # DARK_NULL_PUBLIC_WOW_DEMO — clickable public demo "AI agent spent without a wallet"
+    # DARK_NULL_PUBLIC_WOW_DEMO - clickable public demo "AI agent spent without a wallet"
     "crates/rogue-agent-demo-core",
     # DARK_NULL_TRANSACTION_RITUAL_VM_V1
     "crates/ritual-grammar",
@@ -99,7 +116,7 @@ members = [
     "programs/dark_ritual_gate",
     "crates/ritual-vm-demo",
     "crates/dark-ritual-gate-verify",
-    # DARK_NULL_RITUAL_BOUND_TOKEN_V1 — Token-2022 token with ritual bouncer
+    # DARK_NULL_RITUAL_BOUND_TOKEN_V1 - Token-2022 token with ritual bouncer
     "programs/dark_ritual_transfer_hook",
     "crates/ritual-token-factory",
     "crates/ritual-precompile-braid",
@@ -119,17 +136,17 @@ members = [
     "crates/sleep-earn-watcher",
     "crates/degen-scoreboard",
     "crates/degen-swarm-demo",
-    # DARK_NULL_FRONTIER_EDGE_V1 — frontier edge from research report
+    # DARK_NULL_FRONTIER_EDGE_V1 - frontier edge from research report
     "crates/dark-alpha-receipts",
     "crates/dark-swarm-capsule",
     "crates/dark-compressed-leaves",
     "crates/dark-meme-risk",
     "crates/dark-fee-optimizer",
-    # FRONTIER EDGE — ritual-blink-gateway: Blinks + x402 + Token-2022 Hook + HookVerdict receipt
+    # FRONTIER EDGE - ritual-blink-gateway: Blinks + x402 + Token-2022 Hook + HookVerdict receipt
     "crates/ritual-blink-gateway",
-    # DARK_NULL_FRONTIER_EDGE_V1 — demo binary exercising all 6 frontier crates
+    # DARK_NULL_FRONTIER_EDGE_V1 - demo binary exercising all 6 frontier crates
     "crates/dark-frontier-demo",
-    # BETTING_ALPHA — sealed pick wall, copy sniper trap, hint ladder, proofboard, fee rebate, alpha receipts
+    # BETTING_ALPHA - sealed pick wall, copy sniper trap, hint ladder, proofboard, fee rebate, alpha receipts
     "crates/sealed-pick-x402-wall",
     "crates/copy-sniper-tax-trap",
     "crates/hint-ladder-market",
@@ -146,42 +163,198 @@ members = [
     "crates/p-token-roi-bot",
     "crates/confidential-amount-watch",
     "crates/nulla-betting-edge-demo",
-    # NULL_FLYWHEEL_VAULT_V1 — premium-fee conversion ? rewards vault
+    # NULL_FLYWHEEL_VAULT_V1 - premium-fee conversion  rewards vault
     "crates/null-flywheel-core",
-    # NULL_FLYWHEEL_VAULT_V1 — execution receipts for public auditability
+    # NULL_FLYWHEEL_VAULT_V1 - execution receipts for public auditability
     "crates/null-flywheel-receipts",
-    # NULL_FLYWHEEL_VAULT_V1 — commit-reveal schedule randomizer
+    # NULL_FLYWHEEL_VAULT_V1 - commit-reveal schedule randomizer
     "crates/null-flywheel-randomizer",
-    # NULL_FLYWHEEL_VAULT_V1 — simulation demo binary
+    # NULL_FLYWHEEL_VAULT_V1 - simulation demo binary
     "crates/null-flywheel-sim",
     # dark-groth16-core: real BN254 Groth16 verifier using alt_bn128_pairing
     "crates/dark-groth16-core",
-    # DARK_ZK_PRIMITIVES_V1 — on-chain BN254 Groth16 (Phase 1)
+    # DARK_ZK_PRIMITIVES_V1 - on-chain BN254 Groth16 (Phase 1)
     "crates/dark-poseidon-bn254",
     "crates/dark-bn254-circuit",
-    # DARK_ZK_PRIMITIVES_V1 — Phase 2 (proof bundle generator + on-chain gate)
+    # DARK_ZK_PRIMITIVES_V1 - Phase 2 (proof bundle generator + on-chain gate)
     "crates/dark-bn254-proof-gen",
     "programs/dark_bn254_gate",
-    # DARK_ZK_PRIMITIVES_V1 — Phase 3 (on-chain nullifier recorder)
+    # DARK_ZK_PRIMITIVES_V1 - Phase 3 (on-chain nullifier recorder)
     "programs/dark_nullifier_record",
-    # WAVE_14_BATCH_1 — privacy primitives
+    # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",
     "crates/dark-merkle-accumulator",
     "crates/dark-private-order-book",
     "crates/dark-receipt-chain",
-    # WAVE_14_BATCH_2 — advanced privacy primitives
+    # WAVE_14_BATCH_2 - advanced privacy primitives
     "crates/dark-validator-set",
     "crates/dark-blind-auction",
     "crates/dark-recursive-proof",
     "crates/dark-confidential-transfer",
     "crates/dark-zkp-membership",
-    # WAVE_15_BATCH_1 — epoch, privacy layer, shielded pool, lottery, compliance
+    # WAVE_15_BATCH_1 - epoch, privacy layer, shielded pool, lottery, compliance
     "crates/dark-epoch-transition",
     "crates/dark-privacy-layer",
     "crates/dark-shielded-pool",
     "crates/dark-private-lottery",
     "crates/dark-compliance-proof",
+    # ORPHAN_INTEGRATION - 151 previously standalone crates unified into workspace
+    "crates/agent-shielded-capsule",
+    "crates/dark-access-token",
+    "crates/dark-agent-coalition",
+    "crates/dark-agent-escrow",
+    "crates/dark-agent-payment-sdk",
+    "crates/dark-agent-receipt",
+    "crates/dark-anon-credential",
+    "crates/dark-anon-signal",
+    "crates/dark-anonymous-credential-v2",
+    "crates/dark-anonymous-credentials",
+    "crates/dark-anonymous-payment",
+    "crates/dark-anonymous-swap",
+    "crates/dark-audit-log",
+    "crates/dark-batch-nullifier",
+    "crates/dark-blind-oracle",
+    "crates/dark-blind-signature",
+    "crates/dark-blind-swap",
+    "crates/dark-bond-covenant",
+    "crates/dark-bulletproof-range",
+    "crates/dark-commit-reveal-game",
+    "crates/dark-commitment-accumulator",
+    "crates/dark-commitment-scheme",
+    "crates/dark-competitive-proof",
+    "crates/dark-compliance-receipts",
+    "crates/dark-compute-capsule",
+    "crates/dark-compute-receipt",
+    "crates/dark-credential-revocation",
+    "crates/dark-cross-chain-lock",
+    "crates/dark-cross-chain-receipt",
+    "crates/dark-cross-primitive-demo",
+    "crates/dark-dao-vote",
+    "crates/dark-dark-dao",
+    "crates/dark-dark-indexer",
+    "crates/dark-dark-pool",
+    "crates/dark-decentralized-id",
+    "crates/dark-encrypted-memo",
+    "crates/dark-encrypted-state",
+    "crates/dark-escrow-multisig",
+    "crates/dark-fee-commitment",
+    "crates/dark-fee-escrow",
+    "crates/dark-fee-market",
+    "crates/dark-flash-loan-guard",
+    "crates/dark-gossip-proof",
+    "crates/dark-governance-proposal",
+    "crates/dark-groth16-stub",
+    "crates/dark-identity-bridge",
+    "crates/dark-identity-credential",
+    "crates/dark-intent-proof",
+    "crates/dark-liquidity-proof",
+    "crates/dark-merkle-forest",
+    "crates/dark-merkle-proof",
+    "crates/dark-message-capsule",
+    "crates/dark-mixer-receipt",
+    "crates/dark-mixer-v2",
+    "crates/dark-mpc-ceremony",
+    "crates/dark-mpc-round",
+    "crates/dark-multisig-threshold",
+    "crates/dark-note-commitment",
+    "crates/dark-note-compression",
+    "crates/dark-note-ledger",
+    "crates/dark-note-mixer",
+    "crates/dark-null-token",
+    "crates/dark-nullifier-batch",
+    "crates/dark-nullifier-map",
+    "crates/dark-nullifier-tree",
+    "crates/dark-oblivious-transfer",
+    "crates/dark-oracle-feed",
+    "crates/dark-payment-channel",
+    "crates/dark-pedersen-commit",
+    "crates/dark-plonk-stub",
+    "crates/dark-privacy-audit",
+    "crates/dark-privacy-budget",
+    "crates/dark-privacy-oracle",
+    "crates/dark-privacy-pipeline",
+    "crates/dark-privacy-stats-v2",
+    "crates/dark-privacy-stats-v3",
+    "crates/dark-private-amm",
+    "crates/dark-private-auction-v2",
+    "crates/dark-private-auction",
+    "crates/dark-private-bridge",
+    "crates/dark-private-crowdfund",
+    "crates/dark-private-dao-v2",
+    "crates/dark-private-escrow",
+    "crates/dark-private-governance",
+    "crates/dark-private-insurance",
+    "crates/dark-private-invoice",
+    "crates/dark-private-lending-v2",
+    "crates/dark-private-lending",
+    "crates/dark-private-liquidation",
+    "crates/dark-private-nft",
+    "crates/dark-private-payroll",
+    "crates/dark-private-referral",
+    "crates/dark-private-set-intersection",
+    "crates/dark-private-staking",
+    "crates/dark-private-subscription",
+    "crates/dark-private-transfer-v2",
+    "crates/dark-proof-aggregator",
+    "crates/dark-proof-bundle",
+    "crates/dark-proof-cascade",
+    "crates/dark-proof-of-history",
+    "crates/dark-proof-of-reserve",
+    "crates/dark-proof-of-reserves",
+    "crates/dark-proof-of-work",
+    "crates/dark-proof-relay",
+    "crates/dark-protocol-stats",
+    "crates/dark-pvp-hedge",
+    "crates/dark-range-proof",
+    "crates/dark-rate-limiter",
+    "crates/dark-receipt-aggregator",
+    "crates/dark-relay-proof",
+    "crates/dark-reputation-badge",
+    "crates/dark-reputation-ring",
+    "crates/dark-reputation-score",
+    "crates/dark-ring-vrf",
+    "crates/dark-secret-sharing",
+    "crates/dark-session-proof",
+    "crates/dark-shielded-client",
+    "crates/dark-shielded-pool-core",
+    "crates/dark-shielded-vote",
+    "crates/dark-signal-proof",
+    "crates/dark-slashing-proof",
+    "crates/dark-sovereign-proof",
+    "crates/dark-spending-limit",
+    "crates/dark-staking-rewards",
+    "crates/dark-state-channel",
+    "crates/dark-stealth-note",
+    "crates/dark-threshold-decrypt",
+    "crates/dark-threshold-sig",
+    "crates/dark-threshold-signature",
+    "crates/dark-timelock-vault",
+    "crates/dark-token-mixer",
+    "crates/dark-token-vesting",
+    "crates/dark-tx-capsule",
+    "crates/dark-vdf-proof",
+    "crates/dark-verifiable-delay",
+    "crates/dark-vote-delegation",
+    "crates/dark-vote-tally",
+    "crates/dark-wasm-compute",
+    "crates/dark-zk-complete-demo",
+    "crates/dark-zk-rollup-stub",
+    "crates/dark-zk-snark-stub",
+    "crates/dark-zk-snark-v2",
+    "crates/dark-zkp-bulletproof",
+    "crates/dark-zkp-groth16-v2",
+    "crates/dark-zkp-identity-circuit",
+    "crates/dark-zkp-range-v2",
+    "crates/dark-zkp-range-v3",
+    "crates/dark-zkp-schnorr",
+    "crates/dark-zkp-set-membership",
+    "crates/dark-zkp-sigma",
+    "crates/dark-zkvm-bridge",
+    # DARK_COMMITMENT_CHAIN - hash-linked commitment chain for private balance proofs
+    "crates/dark-commitment-chain",
+    # DARK_HTLC_RECEIPT - HTLC receipts for cross-party x402 settlements
+    "crates/dark-htlc-receipt",
 ]
 resolver = "2"
 

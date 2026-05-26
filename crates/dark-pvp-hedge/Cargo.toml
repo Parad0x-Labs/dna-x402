@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-pvp-hedge"
 version = "0.1.0"

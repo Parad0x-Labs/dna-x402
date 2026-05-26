@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,10 +27,7 @@ pub struct MessageLink {
 
 #[derive(Debug, PartialEq)]
 pub enum SessionError {
-    ChainBroken {
-        expected: [u8; 32],
-        got: [u8; 32],
-    },
+    ChainBroken { expected: [u8; 32], got: [u8; 32] },
     EmptyMessage,
     CounterMismatch,
 }

@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -154,9 +154,15 @@ mod tests {
     #[test]
     fn test_create_prove_verify() {
         let payment = create_payment(
-            &secret(0x01), &secret(0x02), 1000,
-            b"payment memo", &secret(0x03), &secret(0x04), &secret(0x05),
-        ).unwrap();
+            &secret(0x01),
+            &secret(0x02),
+            1000,
+            b"payment memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
         assert!(!payment.mainnet_ready);
 
         let proof = prove_payment(&payment);
@@ -174,13 +180,25 @@ mod tests {
     #[test]
     fn test_different_senders_produce_different_payments() {
         let p1 = create_payment(
-            &secret(0x10), &secret(0x20), 500,
-            b"memo", &secret(0x30), &secret(0x40), &secret(0x50),
-        ).unwrap();
+            &secret(0x10),
+            &secret(0x20),
+            500,
+            b"memo",
+            &secret(0x30),
+            &secret(0x40),
+            &secret(0x50),
+        )
+        .unwrap();
         let p2 = create_payment(
-            &secret(0x11), &secret(0x20), 500,
-            b"memo", &secret(0x30), &secret(0x40), &secret(0x50),
-        ).unwrap();
+            &secret(0x11),
+            &secret(0x20),
+            500,
+            b"memo",
+            &secret(0x30),
+            &secret(0x40),
+            &secret(0x50),
+        )
+        .unwrap();
         assert_ne!(p1.payment_id, p2.payment_id);
         assert_ne!(p1.sender_commitment, p2.sender_commitment);
     }
@@ -188,13 +206,25 @@ mod tests {
     #[test]
     fn test_amount_commitment_hides_amount() {
         let p1 = create_payment(
-            &secret(0x11), &secret(0x22), 100,
-            b"memo", &secret(0x33), &secret(0x44), &secret(0x55),
-        ).unwrap();
+            &secret(0x11),
+            &secret(0x22),
+            100,
+            b"memo",
+            &secret(0x33),
+            &secret(0x44),
+            &secret(0x55),
+        )
+        .unwrap();
         let p2 = create_payment(
-            &secret(0x11), &secret(0x22), 200,
-            b"memo", &secret(0x33), &secret(0x44), &secret(0x55),
-        ).unwrap();
+            &secret(0x11),
+            &secret(0x22),
+            200,
+            b"memo",
+            &secret(0x33),
+            &secret(0x44),
+            &secret(0x55),
+        )
+        .unwrap();
         // Different amounts → different amount_commitment (hidden)
         assert_ne!(p1.amount_commitment, p2.amount_commitment);
         // amount_commitment does not directly reveal amount
@@ -206,27 +236,45 @@ mod tests {
     #[test]
     fn test_zero_sender_rejected() {
         let err = create_payment(
-            &[0u8; 32], &secret(0x22), 100,
-            b"memo", &secret(0x33), &secret(0x44), &secret(0x55),
-        ).unwrap_err();
+            &[0u8; 32],
+            &secret(0x22),
+            100,
+            b"memo",
+            &secret(0x33),
+            &secret(0x44),
+            &secret(0x55),
+        )
+        .unwrap_err();
         assert_eq!(err, PaymentError::ZeroSenderSecret);
     }
 
     #[test]
     fn test_empty_memo_rejected() {
         let err = create_payment(
-            &secret(0x11), &secret(0x22), 100,
-            b"", &secret(0x33), &secret(0x44), &secret(0x55),
-        ).unwrap_err();
+            &secret(0x11),
+            &secret(0x22),
+            100,
+            b"",
+            &secret(0x33),
+            &secret(0x44),
+            &secret(0x55),
+        )
+        .unwrap_err();
         assert_eq!(err, PaymentError::EmptyMemo);
     }
 
     #[test]
     fn test_public_record_hides_sender_receiver_amount() {
         let payment = create_payment(
-            &secret(0x61), &secret(0x62), 9999,
-            b"hidden amount", &secret(0x63), &secret(0x64), &secret(0x65),
-        ).unwrap();
+            &secret(0x61),
+            &secret(0x62),
+            9999,
+            b"hidden amount",
+            &secret(0x63),
+            &secret(0x64),
+            &secret(0x65),
+        )
+        .unwrap();
         let rec = payment_public_record(&payment);
         let v: serde_json::Value = serde_json::from_str(&rec).unwrap();
         assert!(v["payment_id"].is_string());

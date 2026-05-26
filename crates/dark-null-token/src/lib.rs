@@ -305,7 +305,14 @@ mod tests {
             r
         });
 
-        let result = transfer_note(&mut ledger, &note, &wrong_secret, &recip_hash, &nonce(2), 250);
+        let result = transfer_note(
+            &mut ledger,
+            &note,
+            &wrong_secret,
+            &recip_hash,
+            &nonce(2),
+            250,
+        );
         assert_eq!(result, Err(TokenError::OwnershipMismatch));
     }
 

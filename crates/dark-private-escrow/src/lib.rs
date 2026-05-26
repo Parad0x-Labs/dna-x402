@@ -41,7 +41,8 @@ pub fn new_escrow(
     amount: u64,
     blinding: &[u8; 32],
 ) -> Result<Escrow, EscrowError> {
-    if party_a_secret == &[0u8; 32] || party_b_secret == &[0u8; 32] || arbiter_secret == &[0u8; 32] {
+    if party_a_secret == &[0u8; 32] || party_b_secret == &[0u8; 32] || arbiter_secret == &[0u8; 32]
+    {
         return Err(EscrowError::ZeroSecret);
     }
     let party_a_hash = sha256_tagged(b"escrow2-party-v1", party_a_secret);
@@ -55,7 +56,12 @@ pub fn new_escrow(
         h.update(blinding);
         h.finalize().into()
     };
-    let escrow_id = sha256_tagged3(b"escrow2-id-v1", &party_a_hash, &party_b_hash, &arbiter_hash);
+    let escrow_id = sha256_tagged3(
+        b"escrow2-id-v1",
+        &party_a_hash,
+        &party_b_hash,
+        &arbiter_hash,
+    );
     Ok(Escrow {
         escrow_id,
         party_a_hash,
@@ -83,10 +89,14 @@ mod tests {
     use super::*;
 
     fn make_secrets() -> ([u8; 32], [u8; 32], [u8; 32], [u8; 32]) {
-        let mut a = [0u8; 32]; a[0] = 0xAA;
-        let mut b = [0u8; 32]; b[0] = 0xBB;
-        let mut arb = [0u8; 32]; arb[0] = 0xCC;
-        let mut blind = [0u8; 32]; blind[0] = 0xDD;
+        let mut a = [0u8; 32];
+        a[0] = 0xAA;
+        let mut b = [0u8; 32];
+        b[0] = 0xBB;
+        let mut arb = [0u8; 32];
+        arb[0] = 0xCC;
+        let mut blind = [0u8; 32];
+        blind[0] = 0xDD;
         (a, b, arb, blind)
     }
 

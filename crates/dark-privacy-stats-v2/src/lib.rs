@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -31,7 +31,12 @@ fn hex32(b: &[u8; 32]) -> String {
 
 /// Compute stats_hash:
 /// SHA256("stats-v2" || crate_count_le || total_tests_le || ts_test_files_le || wave_count_as_u32_le)
-fn compute_stats_hash(crate_count: u32, total_tests: u32, ts_test_files: u32, wave_count: u8) -> [u8; 32] {
+fn compute_stats_hash(
+    crate_count: u32,
+    total_tests: u32,
+    ts_test_files: u32,
+    wave_count: u8,
+) -> [u8; 32] {
     let wave_u32 = wave_count as u32;
     sha256_multi(&[
         b"stats-v2",
@@ -46,12 +51,12 @@ fn compute_stats_hash(crate_count: u32, total_tests: u32, ts_test_files: u32, wa
 
 /// Returns the current protocol statistics for Wave 16.
 pub fn current_stats_v2() -> ProtocolStatsV2 {
-    let crate_count   = 160u32;
-    let total_tests   = 960u32;
+    let crate_count = 160u32;
+    let total_tests = 960u32;
     let ts_test_files = 80u32;
-    let wave_count    = 16u8;
+    let wave_count = 16u8;
     let zk_proof_types = 20u32;
-    let version       = "0.2.0";
+    let version = "0.2.0";
 
     let stats_hash = compute_stats_hash(crate_count, total_tests, ts_test_files, wave_count);
 
@@ -91,13 +96,21 @@ mod tests {
     #[test]
     fn test_crate_count_at_least_160() {
         let stats = current_stats_v2();
-        assert!(stats.crate_count >= 160, "crate_count {} < 160", stats.crate_count);
+        assert!(
+            stats.crate_count >= 160,
+            "crate_count {} < 160",
+            stats.crate_count
+        );
     }
 
     #[test]
     fn test_total_tests_at_least_960() {
         let stats = current_stats_v2();
-        assert!(stats.total_tests >= 960, "total_tests {} < 960", stats.total_tests);
+        assert!(
+            stats.total_tests >= 960,
+            "total_tests {} < 960",
+            stats.total_tests
+        );
     }
 
     #[test]

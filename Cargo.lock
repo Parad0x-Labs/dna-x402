@@ -95,6 +95,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent-shielded-capsule"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "ahash"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1264,6 +1273,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-access-token"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-agent-coalition"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-agent-escrow"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-agent-payment-sdk"
+version = "0.1.0"
+dependencies = [
+ "agent-shielded-capsule",
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-agent-receipt"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-alpha-receipts"
 version = "0.1.0"
 dependencies = [
@@ -1274,7 +1330,70 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-anon-credential"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-anon-signal"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-anonymous-credential-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-anonymous-credentials"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-anonymous-payment"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-anonymous-swap"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-atomic-swap"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-audit-log"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1292,7 +1411,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-batch-nullifier"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-batch-stealth-scan"
+version = "0.1.0"
+dependencies = [
+ "dark-groth16-core",
+ "dark-stealth-address",
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-blind-auction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-blind-oracle"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-blind-signature"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-blind-swap"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1340,7 +1505,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-bond-covenant"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-bonsol-adapter"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-bulletproof-range"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1376,7 +1559,68 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-coalition-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-commit-reveal-game"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-commitment-accumulator"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-commitment-chain"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-commitment-scheme"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-competitive-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-compliance-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-compliance-receipts"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1425,7 +1669,127 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-compute-capsule"
+version = "0.1.0"
+dependencies = [
+ "dark-compute-receipt",
+ "dark-wasm-compute",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-compute-receipt"
+version = "0.1.0"
+dependencies = [
+ "dark-wasm-compute",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-confidential-transfer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-credential-revocation"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-cross-chain-lock"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-cross-chain-receipt"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-cross-primitive-demo"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-dao-vote"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-dark-dao"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-dark-indexer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-dark-pool"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-decentralized-id"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-encrypted-memo"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-encrypted-state"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1443,7 +1807,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-escrow-multisig"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-fee-commitment"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-fee-escrow"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-fee-market"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-fee-optimizer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-flash-loan-guard"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1490,6 +1900,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-gossip-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-governance-proposal"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-groth16-core"
 version = "0.1.0"
 dependencies = [
@@ -1498,9 +1926,63 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-groth16-stub"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-hash-core"
 version = "0.1.0"
 dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-htlc-receipt"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-identity-bridge"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-identity-credential"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-intent-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-liquidity-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
 ]
 
@@ -1535,9 +2017,139 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-merkle-forest"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-merkle-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-message-capsule"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-mev-shield"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-mixer-receipt"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-mixer-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-module-abi"
 version = "0.1.0"
 dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-mpc-ceremony"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-mpc-round"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-multisig-threshold"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-note-commitment"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-note-compression"
+version = "0.1.0"
+dependencies = [
+ "dark-poseidon-bn254",
+ "dark-shielded-pool-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-note-ledger"
+version = "0.1.0"
+dependencies = [
+ "dark-poseidon-bn254",
+ "dark-shielded-pool-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-note-mixer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-null-token"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
 ]
 
@@ -1553,6 +2165,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-nullifier-batch"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-nullifier-epoch-manager"
 version = "0.1.0"
 dependencies = [
@@ -1564,6 +2185,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-nullifier-map"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-nullifier-record"
 version = "0.1.0"
 dependencies = [
@@ -1571,6 +2201,60 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "tokio",
+]
+
+[[package]]
+name = "dark-nullifier-tree"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-oblivious-transfer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-oracle-feed"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-payment-channel"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-pedersen-commit"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-plonk-stub"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -1589,7 +2273,194 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-privacy-audit"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-privacy-budget"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-privacy-layer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-privacy-oracle"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-privacy-pipeline"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-privacy-stats-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-privacy-stats-v3"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-airdrop"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-amm"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-auction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-auction-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-bridge"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-crowdfund"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-dao-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-dutch-auction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-escrow"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-governance"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-insurance"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-invoice"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-lending"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-lending-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-liquidation"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1607,7 +2478,79 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-private-nft"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-private-order-book"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-payroll"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-referral"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-set-intersection"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-staking"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-subscription"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-transfer-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-private-voting"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1623,6 +2566,33 @@ dependencies = [
  "dark-stealth-address",
  "dark-withdrawal-bundle",
  "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-aggregator"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-bundle"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-cascade"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
 ]
 
@@ -1643,10 +2613,108 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-proof-of-history"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-of-innocence"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-of-reserve"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-of-reserves"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-of-work"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-proof-receipts"
 version = "0.1.0"
 dependencies = [
  "dark-proof-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-proof-relay"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-protocol-stats"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-pvp-hedge"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-range-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-rate-limiter"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-receipt-aggregator"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -1671,6 +2739,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-relay-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-relay-router"
 version = "0.1.0"
 dependencies = [
@@ -1679,6 +2756,42 @@ dependencies = [
  "serde_json",
  "solana-sdk",
  "tokio",
+]
+
+[[package]]
+name = "dark-reputation-badge"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-reputation-ring"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-reputation-score"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-ring-vrf"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -1723,6 +2836,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-secret-sharing"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-selective-disclosure"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-session-netting"
 version = "0.1.0"
 dependencies = [
@@ -1730,7 +2861,116 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-session-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-shielded-client"
+version = "0.1.0"
+dependencies = [
+ "dark-poseidon-bn254",
+ "dark-shielded-pool-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-shielded-pool"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-shielded-pool-core"
+version = "0.1.0"
+dependencies = [
+ "dark-poseidon-bn254",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-shielded-vote"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-signal-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-slashing-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-sliding-window-budget"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-sovereign-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-sparse-merkle"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-spending-limit"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-staking-rewards"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-state-channel"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1749,6 +2989,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-stealth-note"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-swarm-capsule"
 version = "0.1.0"
 dependencies = [
@@ -1759,7 +3008,61 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-threshold-decrypt"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-threshold-nullifier"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-threshold-sig"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-threshold-signature"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-time-capsule"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-timelock-encryption"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-timelock-vault"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1775,7 +3078,79 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-token-mixer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-token-vesting"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-tx-capsule"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-validator-set"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-vdf-proof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-verifiable-delay"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-vote-delegation"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-vote-tally"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-wasm-compute"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -1862,9 +3237,135 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-zk-complete-demo"
+version = "0.1.0"
+dependencies = [
+ "dark-anon-signal",
+ "dark-bn254-circuit",
+ "dark-bn254-proof-gen",
+ "dark-note-compression",
+ "dark-poseidon-bn254",
+ "dark-shielded-client",
+ "dark-shielded-pool-core",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zk-rollup-stub"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zk-snark-stub"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zk-snark-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-bulletproof"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-groth16-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-identity-circuit"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-zkp-membership"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-range-v2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-range-v3"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-schnorr"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-set-membership"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkp-sigma"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zkvm-bridge"
+version = "0.1.0"
+dependencies = [
+ "dark-bn254-circuit",
+ "dark-bn254-proof-gen",
+ "dark-poseidon-bn254",
  "serde",
  "serde_json",
  "sha2 0.10.9",

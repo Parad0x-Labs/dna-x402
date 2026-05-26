@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-fee-escrow"
 version = "0.1.0"

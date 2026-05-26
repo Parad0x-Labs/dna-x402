@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-fee-commitment"
 version = "0.1.0"

@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-session-proof"
 version = "0.1.0"

@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "dark-liquidity-proof"
 version = "0.1.0"

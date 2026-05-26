@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "dark-protocol-stats"
 version = "0.1.0"

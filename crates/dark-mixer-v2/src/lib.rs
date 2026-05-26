@@ -1,5 +1,5 @@
-use sha2::{Digest, Sha256};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -14,7 +14,7 @@ pub const VALID_DENOMINATIONS: [u64; 5] = [
 // ── Types ──────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MixerPool {
+pub struct ShieldPool {
     pub pool_id: [u8; 32],
     pub denomination: u64,
     pub pool_root: [u8; 32],
@@ -27,7 +27,7 @@ pub struct MixerPool {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MixNote {
+pub struct ShieldNote {
     pub commitment: [u8; 32],
     pub nullifier_hash: [u8; 32],
     pub denomination: u64,
@@ -35,7 +35,7 @@ pub struct MixNote {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum MixError {
+pub enum ShieldError {
     InvalidDenomination,
     NullifierAlreadySpent,
     PoolEmpty,
@@ -66,7 +66,7 @@ fn xor_fold(hashes: &[[u8; 32]]) -> [u8; 32] {
 fn compute_pool_root(commitments: &[[u8; 32]], deposit_count: u32) -> [u8; 32] {
     let xor = xor_fold(commitments);
     let mut d = Vec::new();
-    d.extend_from_slice(b"mixer-v2-root-v1");
+    d.extend_from_slice(b"shield-v2-root-v1");
     d.extend_from_slice(&xor);
     d.extend_from_slice(&deposit_count.to_le_bytes());
     sha256(&d)
@@ -74,15 +74,15 @@ fn compute_pool_root(commitments: &[[u8; 32]], deposit_count: u32) -> [u8; 32] {
 
 // ── API ────────────────────────────────────────────────────────────────────
 
-pub fn create_pool(denomination: u64, version: u32) -> Result<MixerPool, MixError> {
+pub fn create_pool(denomination: u64, version: u32) -> Result<ShieldPool, ShieldError> {
     if !VALID_DENOMINATIONS.contains(&denomination) {
-        return Err(MixError::InvalidDenomination);
+        return Err(ShieldError::InvalidDenomination);
     }
 
-    // pool_id = SHA256("mixer-v2-pool-v1" || denomination_le || version_le)
+    // pool_id = SHA256("shield-v2-pool-v1" || denomination_le || version_le)
     let pool_id = {
         let mut d = Vec::new();
-        d.extend_from_slice(b"mixer-v2-pool-v1");
+        d.extend_from_slice(b"shield-v2-pool-v1");
         d.extend_from_slice(&denomination.to_le_bytes());
         d.extend_from_slice(&version.to_le_bytes());
         sha256(&d)
@@ -91,7 +91,7 @@ pub fn create_pool(denomination: u64, version: u32) -> Result<MixerPool, MixErro
     // initial pool_root with zero commitments
     let pool_root = compute_pool_root(&[], 0);
 
-    Ok(MixerPool {
+    Ok(ShieldPool {
         pool_id,
         denomination,
         pool_root,
@@ -102,11 +102,11 @@ pub fn create_pool(denomination: u64, version: u32) -> Result<MixerPool, MixErro
     })
 }
 
-pub fn deposit(pool: &mut MixerPool, secret: &[u8; 32]) -> MixNote {
-    // commitment = SHA256("mixer-v2-commit-v1" || denomination_le || secret)
+pub fn deposit(pool: &mut ShieldPool, secret: &[u8; 32]) -> ShieldNote {
+    // commitment = SHA256("shield-v2-commit-v1" || denomination_le || secret)
     let commitment = {
         let mut d = Vec::new();
-        d.extend_from_slice(b"mixer-v2-commit-v1");
+        d.extend_from_slice(b"shield-v2-commit-v1");
         d.extend_from_slice(&pool.denomination.to_le_bytes());
         d.extend_from_slice(secret);
         sha256(&d)
@@ -116,16 +116,16 @@ pub fn deposit(pool: &mut MixerPool, secret: &[u8; 32]) -> MixNote {
     pool.deposit_count += 1;
     pool.pool_root = compute_pool_root(&pool.commitments, pool.deposit_count);
 
-    // nullifier_hash = SHA256("mixer-v2-null-v1" || commitment || pool_root)
+    // nullifier_hash = SHA256("shield-v2-null-v1" || commitment || pool_root)
     let nullifier_hash = {
         let mut d = Vec::new();
-        d.extend_from_slice(b"mixer-v2-null-v1");
+        d.extend_from_slice(b"shield-v2-null-v1");
         d.extend_from_slice(&commitment);
         d.extend_from_slice(&pool.pool_root);
         sha256(&d)
     };
 
-    MixNote {
+    ShieldNote {
         commitment,
         nullifier_hash,
         denomination: pool.denomination,
@@ -133,14 +133,14 @@ pub fn deposit(pool: &mut MixerPool, secret: &[u8; 32]) -> MixNote {
     }
 }
 
-pub fn withdraw(pool: &MixerPool, note: &MixNote) -> Result<[u8; 32], MixError> {
+pub fn withdraw(pool: &ShieldPool, note: &ShieldNote) -> Result<[u8; 32], ShieldError> {
     if pool.deposit_count == 0 {
-        return Err(MixError::PoolEmpty);
+        return Err(ShieldError::PoolEmpty);
     }
     Ok(note.nullifier_hash)
 }
 
-pub fn pool_public_record(pool: &MixerPool) -> String {
+pub fn pool_public_record(pool: &ShieldPool) -> String {
     serde_json::json!({
         "pool_id": hex(&pool.pool_id),
         "denomination": pool.denomination,
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_invalid_denomination_rejected() {
         let err = create_pool(999_999, 1).unwrap_err();
-        assert_eq!(err, MixError::InvalidDenomination);
+        assert_eq!(err, ShieldError::InvalidDenomination);
     }
 
     // Test 3: nullifier unique per pool root (depositing changes pool root,

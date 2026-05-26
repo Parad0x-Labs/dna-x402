@@ -1,0 +1,9 @@
+[package]
+name = "dark-sliding-window-budget"
+version = "0.1.0"
+edition = "2021"
+description = "Sliding window spending budget with committed amounts — prove compliance without revealing individual spends"
+
+[dependencies]
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }
