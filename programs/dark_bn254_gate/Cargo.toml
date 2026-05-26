@@ -7,7 +7,8 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-solana-program = { workspace = true }
+solana-program   = { workspace = true }
+dark-groth16-core = { path = "../../crates/dark-groth16-core" }
 
 [dev-dependencies]
 solana-program-test = { workspace = true }

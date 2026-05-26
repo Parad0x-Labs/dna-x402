@@ -1321,6 +1321,7 @@ dependencies = [
 name = "dark-bn254-gate"
 version = "0.1.0"
 dependencies = [
+ "dark-groth16-core",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
