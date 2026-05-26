@@ -194,6 +194,38 @@ import { verifySignedReceipt } from "dna-x402";
 if (!verifySignedReceipt(receipt)) throw new Error("invalid receipt");
 ```
 
+## Optional Dark Null Privacy Path
+
+Normal DNA x402 remains the default path. Use the optional Dark Null path only after a signed DNA receipt exists and the paid unlock benefits from a private receipt summary.
+
+SDK helpers:
+
+```ts
+import {
+  createDarkNullPrivacyRequest,
+  verifyDarkNullPrivacyRequest,
+} from "dna-x402";
+```
+
+The helper consumes a signed DNA receipt plus settlement evidence and returns a hash-only request object for Dark Null. It stores hashes for the resource, recipient, mint, receipt signature, request digest, and response digest.
+
+Devnet target:
+
+```ts
+const request = createDarkNullPrivacyRequest({
+  signedReceipt,
+  target: {
+    cluster: "devnet",
+    programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+    manifestLabel: "canonical-devnet-root-2",
+  },
+  settlementSlot: 434395918,
+  confirmationStatus: "finalized",
+});
+```
+
+Mainnet-beta Dark Null private receipt use requires promoted Dark Null deployment evidence and hosted account enablement.
+
 ## Webhooks
 
 Public Beta sandbox webhook receiver test:

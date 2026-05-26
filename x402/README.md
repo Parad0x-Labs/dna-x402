@@ -14,7 +14,7 @@ AI agents need to pay for things: inference, storage, data, compute. Current opt
 - Not a privacy pool
 - Not a zk-SNARK payment hot path
 
-Privacy-oriented Dark Null work is a separate product line. The live DNA x402 request path is optimized for fast payments and does not require zk proof generation per call.
+Privacy-oriented Dark Null work is a separate product line. The live DNA x402 request path is optimized for fast payments and does not require zk proof generation per call. Builders can opt into the Dark Null private receipt path after a normal DNA receipt exists.
 
 ## Features
 
@@ -22,6 +22,7 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 - **Three settlement modes**: Netting (off-chain batched, cheapest), Transfer (real on-chain USDC), Stream (Streamflow time-locked)
 - **x402 HTTP standard**: Any REST API becomes payment-gated with one middleware call
 - **Receipt anchoring**: Cryptographic receipts anchored on Solana via `receipt_anchor` program with Merkle-style accumulator hashing
+- **Optional Dark Null privacy path**: Hash-only private receipt request after a DNA receipt is issued
 - **Replay protection**: TTL-based replay attack prevention on every payment proof
 - **Surge pricing**: Dynamic price multipliers (0.8x–2.5x) based on real-time load (queue depth, inflight, latency, error rate)
 
@@ -264,6 +265,46 @@ Use `examples/dna-guard-seller.ts` for the full runnable example.
 | **Netting** | None | Nano/micro payments | Off-chain ledger, batched settlement |
 | **Transfer** | ~$0.0001 | Larger payments | Real on-chain USDC SPL transfer |
 | **Stream** | ~$0.0001 | Continuous access | Streamflow time-locked payments |
+
+## Optional Dark Null Privacy Path
+
+The normal DNA path stays default:
+
+```txt
+quote -> commit -> payment proof -> signed receipt -> paid unlock
+```
+
+The optional Dark Null path adds a private receipt request after the signed DNA receipt:
+
+```txt
+signed DNA receipt -> createDarkNullPrivacyRequest() -> Dark Null private receipt summary
+```
+
+```typescript
+import {
+  createDarkNullPrivacyRequest,
+  verifyDarkNullPrivacyRequest,
+} from "dna-x402";
+
+const request = createDarkNullPrivacyRequest({
+  signedReceipt,
+  target: {
+    cluster: "devnet",
+    programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+    manifestLabel: "canonical-devnet-root-2",
+  },
+  settlementSlot: 434395918,
+  confirmationStatus: "finalized",
+});
+
+if (!verifyDarkNullPrivacyRequest(request).ok) {
+  throw new Error("Dark Null privacy request failed verification");
+}
+```
+
+Use it for privacy-sensitive paid unlocks. Do not put Dark Null proving in the live per-request hot path.
+
+Devnet is the current Dark Null evidence lane. Mainnet-beta use requires promoted Dark Null deployment evidence and hosted enablement.
 
 ## Architecture
 

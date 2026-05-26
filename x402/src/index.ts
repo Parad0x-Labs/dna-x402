@@ -59,6 +59,7 @@ export * from "./marketplace/orders.js";
 export * from "./marketplace/server.js";
 export * from "./marketplace/main.js";
 export * from "./market/server.js";
+export * from "./privacy/darkNull.js";
 export * from "./verifier/splTransfer.js";
 export * from "./verifier/streamflow.js";
 export * from "./sdk/guard.js";

@@ -87,6 +87,20 @@ export type {
 export type { MarketPolicy } from "../market/policy.js";
 export type { MarketQuote, MarketOrder, ShopEndpoint } from "../market/types.js";
 
+export {
+  createDarkNullPrivacyRequest,
+  resolveDnaX402SettlementPath,
+  verifyDarkNullPrivacyRequest,
+} from "../privacy/darkNull.js";
+export type {
+  CreateDarkNullPrivacyRequestInput,
+  DarkNullCluster,
+  DarkNullPrivacyRequest,
+  DarkNullPrivacyRequestVerification,
+  DarkNullPrivacyTarget,
+  DnaX402SettlementPath,
+} from "../privacy/darkNull.js";
+
 export { LiquefyVaultExporter } from "../bridge/liquefy/exporter.js";
 export { LiquefySidecar } from "../bridge/liquefy/sidecar.js";
 export {

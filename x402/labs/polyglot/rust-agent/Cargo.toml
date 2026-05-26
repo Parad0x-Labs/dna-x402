@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 dna-x402-client = { path = "../../../sdk/rust/dna-x402-client" }
+
+[workspace]

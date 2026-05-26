@@ -34,6 +34,7 @@ not_for:
   - mixer or privacy-pool flows
 related_repo:
   privacy_settlement: https://github.com/Parad0x-Labs/Dark-Null-Protocol
+  dark_null_privacy_path: docs/DARK_NULL_PRIVACY_PATH.md
   frontier_primitives: docs/DARK_NULL_FRONTIER.md
   alien_tek_research: docs/DARK_NULL_ALIEN_TEK.md
   solana_alien_tek: docs/SOLANA_ALIEN_TEK.md
@@ -53,7 +54,7 @@ related_repo:
 | a seller/paywall integration | `dnaSeller()` and seller middleware |
 | proof and verification | signed receipts + replay-safe verification |
 | on-chain auditability | `receipt_anchor` and VERIFIED semantics |
-| privacy settlement | **not this repo** - use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) |
+| privacy settlement | optional Dark Null receipt path, or use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) directly |
 
 ## Why it gets attention
 
@@ -73,7 +74,7 @@ related_repo:
 | How do buyers integrate? | `fetchWith402` and x402-compatible proof retry flow |
 | How do sellers integrate? | seller SDK + paywall middleware |
 | What makes it defensible? | receipts, replay protection, anchor semantics, diagnostics, market telemetry |
-| What should use the separate repo? | private settlement / optimistic-ZK flows |
+| What should use the optional Dark Null path? | privacy-sensitive paid unlocks that need a private receipt summary |
 
 ## Why teams use DNA
 
@@ -90,6 +91,7 @@ related_repo:
 | `x402/` package | Active | Canonical product surface |
 | `receipt_anchor` program | Active | Receipt anchoring for VERIFIED semantics |
 | Seller / buyer SDKs | Active | Live in `x402/src/` |
+| Dark Null privacy path | Active SDK surface | Optional hash-only private receipt request path |
 | Proof / audit docs | Active | See [`docs/`](./docs) |
 | `/agent` front door | Active | See [`site-agent/`](./site-agent) |
 | Privacy / zk settlement | Separate repo | Use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) |
@@ -107,6 +109,7 @@ Parad0x Labs has two separate lanes:
    - Separate privacy settlement protocol
    - Optimistic-ZK / challenge-window design
    - Different latency and operational profile
+   - Optional DNA receipt privacy path for paid unlocks that need hash-only private receipt summaries
 
 This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path payment system.
 
@@ -118,6 +121,7 @@ This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path pay
 - x402 HTTP payment flows for APIs and agents
 - Solana settlement via netting, SPL transfers, and stream-style access flows
 - Signed receipts and anchored receipt commitments
+- Optional Dark Null private receipt request path
 - Replay protection, wrong-recipient checks, wrong-mint checks, underpay checks
 
 ### Intelligence and Routing
@@ -195,6 +199,7 @@ Anti-copytrading spec: [`docs/ANTI_COPYTRADE_ALPHA.md`](./docs/ANTI_COPYTRADE_AL
 
 - Package docs: [`x402/README.md`](./x402/README.md)
 - Agent integration reference: [`x402/AGENTS.md`](./x402/AGENTS.md)
+- Dark Null privacy path: [`docs/DARK_NULL_PRIVACY_PATH.md`](./docs/DARK_NULL_PRIVACY_PATH.md)
 - Proof and rollout docs: [`docs/`](./docs)
 - Public site: [`site/`](./site)
 - `/agent` UI: [`site-agent/`](./site-agent)
@@ -229,6 +234,7 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 - [`docs/FOOTPRINT.md`](./docs/FOOTPRINT.md)
 - [`docs/PROGRAMMABILITY_CONTRACT.md`](./docs/PROGRAMMABILITY_CONTRACT.md)
 - [`docs/X402_COMPAT.md`](./docs/X402_COMPAT.md)
+- [`docs/DARK_NULL_PRIVACY_PATH.md`](./docs/DARK_NULL_PRIVACY_PATH.md)
 - [`x402/test-mainnet/`](./x402/test-mainnet)
 
 ## Alien Tek Research
@@ -238,6 +244,21 @@ Deep research across five threads: forgotten e-cash (Chaum 1982, GNU Taler deplo
 The single most underappreciated finding: every deployed ZK payment system has an access pattern leak — your Merkle path fetch tells the full node which leaf you're proving. Piano PIR (2024, IEEE S&P) is at 12ms + 220KB per nullifier check. The fix exists. Zero deployments.
 
 [`docs/DARK_NULL_ALIEN_TEK.md`](./docs/DARK_NULL_ALIEN_TEK.md)
+
+## Dark Null Privacy Path
+
+DNA x402 now has an optional Dark Null receipt path:
+
+```txt
+normal:    quote -> commit -> payment proof -> signed receipt -> paid unlock
+dark-null: normal path + hash-only Dark Null private receipt request
+```
+
+`normal` remains the default. `dark-null` is for paid alpha reveals, private signal rooms, wallet-stalker reports, API access receipts, and receipt chains where raw resource paths should not become public receipt metadata.
+
+The SDK exports `createDarkNullPrivacyRequest()` and `verifyDarkNullPrivacyRequest()`. The request requires canonical transfer settlement evidence and fails closed without it.
+
+Read [`docs/DARK_NULL_PRIVACY_PATH.md`](./docs/DARK_NULL_PRIVACY_PATH.md).
 
 ## Frontier Primitives
 

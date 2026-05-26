@@ -8,6 +8,7 @@
 DNA is a payment rail for AI agents. It lets agents pay for API calls using USDC on Solana.
 Three settlement modes: **transfer** (real on-chain USDC, safest default), **stream** (continuous), **netting** (trusted/off-chain only, explicit opt-in).
 It is not a privacy-pool or zk-SNARK hot-path product.
+Normal DNA x402 remains the default path. Use the optional Dark Null path only after a normal signed DNA receipt exists and the receipt needs a private receipt summary.
 
 **Program**: `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` (Solana mainnet)
 
@@ -54,6 +55,34 @@ const data = await result.response.json();
 That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. Netting is no longer auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for an intentional trusted loop.
 If you need deterministic receipt binding, pass `payerCommitment32B` explicitly as a 32-byte hex string instead of letting the client generate a random one per call.
 If you want a no-code buyer smoke test first, use `npx dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000`.
+
+## Optional Dark Null Privacy Path
+
+Use this only for privacy-sensitive paid unlocks such as private alpha reveals, signal rooms, wallet reports, or access receipts. Keep the normal DNA path as default.
+
+```typescript
+import {
+  createDarkNullPrivacyRequest,
+  verifyDarkNullPrivacyRequest,
+} from "dna-x402";
+
+const darkNullRequest = createDarkNullPrivacyRequest({
+  signedReceipt,
+  target: {
+    cluster: "devnet",
+    programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+    manifestLabel: "canonical-devnet-root-2",
+  },
+  settlementSlot: 434395918,
+  confirmationStatus: "finalized",
+});
+
+if (!verifyDarkNullPrivacyRequest(darkNullRequest).ok) {
+  throw new Error("Dark Null request failed verification");
+}
+```
+
+Devnet is the current Dark Null evidence lane. Mainnet-beta private receipt use requires promoted Dark Null deployment evidence and hosted account enablement.
 
 ### With real USDC transfer (on-chain proof)
 
