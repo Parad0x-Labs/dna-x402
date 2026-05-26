@@ -30,8 +30,8 @@
 //!
 //! mainnet_ready = false — devnet only until security audit
 
-use dark_x402_core::DarkX402Receipt;
 pub use dark_nullifier_banks::bank_index;
+use dark_x402_core::DarkX402Receipt;
 
 use sha2::{Digest, Sha256};
 use solana_program::pubkey::Pubkey;
@@ -87,7 +87,10 @@ impl std::fmt::Display for BridgeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::MockReceiptRejectedInStrictMode => {
-                write!(f, "mock receipt rejected: strict mode requires a real on-chain payment")
+                write!(
+                    f,
+                    "mock receipt rejected: strict mode requires a real on-chain payment"
+                )
             }
             Self::EmptyScopeHash => write!(f, "receipt scope_hash is all-zero"),
             Self::EpochZero => write!(f, "epoch must be > 0"),
@@ -186,10 +189,7 @@ pub fn build_init_bank_instruction_data(shard: u8, epoch: u64) -> [u8; 10] {
 /// Mirrors the on-chain PDA derivation in `dark_nullifier_banks`:
 /// `PDA seeds: [b"null_bank", shard_u8, epoch_le8]`
 pub fn bank_pda(program_id: &Pubkey, shard: u8, epoch: u64) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[b"null_bank", &[shard], &epoch.to_le_bytes()],
-        program_id,
-    )
+    Pubkey::find_program_address(&[b"null_bank", &[shard], &epoch.to_le_bytes()], program_id)
 }
 
 /// Compute the nullifier record PDA for a specific nullifier.
@@ -239,15 +239,14 @@ pub fn build_submission_bundle(
 mod tests {
     use super::*;
     use dark_x402_core::{
-        mint_receipt_note_after_payment, DarkX402Receipt,
-        X402PaymentProof, X402PaymentRequirement,
+        mint_receipt_note_after_payment, DarkX402Receipt, X402PaymentProof, X402PaymentRequirement,
     };
     use sha2::{Digest, Sha256};
 
     /// Build a minimal mock receipt using the real mint function.
     fn mock_receipt() -> DarkX402Receipt {
         let pay_to = [0xAA; 32];
-        let payer  = [0xBB; 32];  // different from pay_to — passes SelfPayment check
+        let payer = [0xBB; 32]; // different from pay_to — passes SelfPayment check
 
         let req = X402PaymentRequirement {
             scheme: "exact".into(),
@@ -416,7 +415,9 @@ mod tests {
 
         let n1 = derive_nullifier(&r1, 5, false).unwrap();
         let n2 = derive_nullifier(&r2, 5, false).unwrap();
-        assert_ne!(n1.nullifier, n2.nullifier,
-            "nullifiers must differ across API scopes — prevents cross-API replay");
+        assert_ne!(
+            n1.nullifier, n2.nullifier,
+            "nullifiers must differ across API scopes — prevents cross-API replay"
+        );
     }
 }

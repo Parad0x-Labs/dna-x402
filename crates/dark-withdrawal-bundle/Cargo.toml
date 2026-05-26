@@ -1,0 +1,12 @@
+[package]
+name = "dark-withdrawal-bundle"
+version = "0.1.0"
+edition = "2021"
+description = "Assembles the complete on-chain withdrawal payload: note → Merkle proof → Groth16 gate instruction (352 bytes)"
+
+[dependencies]
+dark-poseidon-bn254      = { path = "../dark-poseidon-bn254" }
+dark-merkle-accumulator  = { path = "../dark-merkle-accumulator" }
+dark-groth16-core        = { path = "../dark-groth16-core" }
+sha2                     = "0.10"
+serde                    = { version = "1", features = ["derive"] }

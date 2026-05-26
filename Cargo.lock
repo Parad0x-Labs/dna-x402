@@ -1763,6 +1763,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-withdrawal-bundle"
+version = "0.1.0"
+dependencies = [
+ "dark-groth16-core",
+ "dark-merkle-accumulator",
+ "dark-poseidon-bn254",
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-x402-client-mock"
 version = "0.1.0"
 dependencies = [

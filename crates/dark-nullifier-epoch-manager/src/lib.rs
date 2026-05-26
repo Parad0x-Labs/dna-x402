@@ -30,8 +30,8 @@
 //! mainnet_ready = false — devnet only
 
 use dark_x402_nullifier_bridge::{
-    bank_pda, build_init_bank_instruction_data, build_insert_instruction_data,
-    null_rec_pda, BridgeNullifier,
+    bank_pda, build_init_bank_instruction_data, build_insert_instruction_data, null_rec_pda,
+    BridgeNullifier,
 };
 use solana_program::pubkey::Pubkey;
 use std::collections::{HashMap, HashSet};
@@ -56,10 +56,18 @@ impl std::fmt::Display for EpochManagerError {
         match self {
             Self::AlreadySpent { nullifier, shard } => {
                 let hex: String = nullifier.iter().map(|b| format!("{:02x}", b)).collect();
-                write!(f, "nullifier already spent this epoch: shard={} null={}", shard, &hex[..16])
+                write!(
+                    f,
+                    "nullifier already spent this epoch: shard={} null={}",
+                    shard,
+                    &hex[..16]
+                )
             }
-            Self::EpochMismatch { got, expected } =>
-                write!(f, "epoch mismatch: got {}, manager is on epoch {}", got, expected),
+            Self::EpochMismatch { got, expected } => write!(
+                f,
+                "epoch mismatch: got {}, manager is on epoch {}",
+                got, expected
+            ),
             Self::EpochZero => write!(f, "epoch 0 is invalid"),
             Self::InvalidShard => write!(f, "shard index invalid"),
         }
@@ -174,14 +182,18 @@ impl NullifierManager {
     ///
     /// Old epoch state is retained for replay detection of late submissions.
     pub fn advance_epoch(&mut self, new_epoch: u64) {
-        assert!(new_epoch > self.active_epoch,
-            "new epoch must be greater than current");
+        assert!(
+            new_epoch > self.active_epoch,
+            "new epoch must be greater than current"
+        );
         self.active_epoch = new_epoch;
         self.epoch_states.entry(new_epoch).or_default();
     }
 
     /// Returns the current active epoch.
-    pub fn active_epoch(&self) -> u64 { self.active_epoch }
+    pub fn active_epoch(&self) -> u64 {
+        self.active_epoch
+    }
 
     /// Check if a nullifier is already spent in its target epoch.
     pub fn is_spent(&self, nullifier: &[u8; 32], shard: u8, epoch: u64) -> bool {
@@ -216,7 +228,8 @@ impl NullifierManager {
         }
         if bn.epoch != self.active_epoch {
             return Err(EpochManagerError::EpochMismatch {
-                got: bn.epoch, expected: self.active_epoch,
+                got: bn.epoch,
+                expected: self.active_epoch,
             });
         }
 
@@ -232,13 +245,11 @@ impl NullifierManager {
 
         // Decide whether to include InitBank
         let needs_init = !self.is_bank_initialized(bn.shard, bn.epoch);
-        let init_bank_ix = needs_init.then(|| {
-            build_init_bank_instruction_data(bn.shard, bn.epoch)
-        });
+        let init_bank_ix = needs_init.then(|| build_init_bank_instruction_data(bn.shard, bn.epoch));
 
         let insert_nullifier_ix = build_insert_instruction_data(bn);
 
-        let (bp, bank_bump)      = bank_pda(&self.program_id, bn.shard, bn.epoch);
+        let (bp, bank_bump) = bank_pda(&self.program_id, bn.shard, bn.epoch);
         let (nrp, null_rec_bump) = null_rec_pda(&self.program_id, &bn.nullifier);
 
         Ok(SubmissionInstructions {
@@ -255,16 +266,16 @@ impl NullifierManager {
     ///
     /// Also marks the bank as initialized (since the tx necessarily created/used it).
     pub fn confirm_submission(&mut self, bn: &BridgeNullifier) {
-        let state = self.epoch_states
-            .entry(bn.epoch)
-            .or_default();
+        let state = self.epoch_states.entry(bn.epoch).or_default();
         state.mark_bank_initialized(bn.shard);
         state.mark_spent(bn.nullifier, bn.shard);
     }
 
     /// Pre-mark a bank as initialized (e.g., you know it was created in a prior tx).
     pub fn mark_bank_initialized(&mut self, shard: u8, epoch: u64) {
-        self.epoch_states.entry(epoch).or_default()
+        self.epoch_states
+            .entry(epoch)
+            .or_default()
             .mark_bank_initialized(shard);
     }
 
@@ -277,7 +288,10 @@ impl NullifierManager {
 
     /// Total across ALL tracked epochs.
     pub fn confirmed_count_all_epochs(&self) -> usize {
-        self.epoch_states.values().map(|s| s.nullifier_count()).sum()
+        self.epoch_states
+            .values()
+            .map(|s| s.nullifier_count())
+            .sum()
     }
 
     /// Number of initialized banks in the active epoch.
@@ -347,8 +361,10 @@ mod tests {
         let mgr = NullifierManager::new(test_program_id(), 7);
         let bn = mock_bridge_nullifier(7, 1);
         let instrs = mgr.prepare_submission(&bn).unwrap();
-        assert!(instrs.init_bank_ix.is_some(),
-            "first submission to a shard must include InitBank");
+        assert!(
+            instrs.init_bank_ix.is_some(),
+            "first submission to a shard must include InitBank"
+        );
         assert_eq!(instrs.insert_nullifier_ix[0], 0x01);
         assert_ne!(instrs.bank_pda, Pubkey::default());
         assert_ne!(instrs.null_rec_pda, Pubkey::default());
@@ -360,8 +376,10 @@ mod tests {
         let bn = mock_bridge_nullifier(7, 2);
         mgr.mark_bank_initialized(bn.shard, 7);
         let instrs = mgr.prepare_submission(&bn).unwrap();
-        assert!(instrs.init_bank_ix.is_none(),
-            "known-initialized bank must NOT include InitBank");
+        assert!(
+            instrs.init_bank_ix.is_none(),
+            "known-initialized bank must NOT include InitBank"
+        );
     }
 
     #[test]
@@ -381,10 +399,13 @@ mod tests {
         let bn = mock_bridge_nullifier(9, 4);
         mgr.confirm_submission(&bn);
         let err = mgr.prepare_submission(&bn).unwrap_err();
-        assert_eq!(err, EpochManagerError::AlreadySpent {
-            nullifier: bn.nullifier,
-            shard: bn.shard,
-        });
+        assert_eq!(
+            err,
+            EpochManagerError::AlreadySpent {
+                nullifier: bn.nullifier,
+                shard: bn.shard,
+            }
+        );
     }
 
     #[test]
@@ -392,7 +413,13 @@ mod tests {
         let mgr = NullifierManager::new(test_program_id(), 10);
         let bn = mock_bridge_nullifier(11, 5); // epoch 11 ≠ active 10
         let err = mgr.prepare_submission(&bn).unwrap_err();
-        assert_eq!(err, EpochManagerError::EpochMismatch { got: 11, expected: 10 });
+        assert_eq!(
+            err,
+            EpochManagerError::EpochMismatch {
+                got: 11,
+                expected: 10
+            }
+        );
     }
 
     #[test]
@@ -404,7 +431,11 @@ mod tests {
 
         mgr.advance_epoch(4);
         assert_eq!(mgr.active_epoch(), 4);
-        assert_eq!(mgr.confirmed_count(), 0, "new epoch starts with 0 confirmed");
+        assert_eq!(
+            mgr.confirmed_count(),
+            0,
+            "new epoch starts with 0 confirmed"
+        );
         // Old epoch still retained
         assert_eq!(mgr.confirmed_count_all_epochs(), 1);
     }
@@ -445,7 +476,7 @@ mod tests {
         let bn = mock_bridge_nullifier(11, 9);
         let instrs = mgr.prepare_submission(&bn).unwrap();
         let ix = instrs.init_bank_ix.expect("must have init bank ix");
-        assert_eq!(ix[0], 0x00);  // InitBank discriminant
+        assert_eq!(ix[0], 0x00); // InitBank discriminant
         assert_eq!(ix[1], bn.shard);
         let parsed_epoch = u64::from_le_bytes(ix[2..10].try_into().unwrap());
         assert_eq!(parsed_epoch, 11u64);
@@ -458,9 +489,8 @@ mod tests {
         let instrs = mgr.prepare_submission(&bn).unwrap();
         assert_eq!(instrs.insert_nullifier_ix[0], 0x01);
         assert_eq!(&instrs.insert_nullifier_ix[1..33], &bn.nullifier);
-        let parsed_epoch = u64::from_le_bytes(
-            instrs.insert_nullifier_ix[33..41].try_into().unwrap()
-        );
+        let parsed_epoch =
+            u64::from_le_bytes(instrs.insert_nullifier_ix[33..41].try_into().unwrap());
         assert_eq!(parsed_epoch, 12u64);
     }
 }

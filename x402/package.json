@@ -129,7 +129,7 @@
     "test": "vitest run",
     "test:polyglot": "vitest run tests/polyglot-agents.test.ts",
     "test:sdk:python": "python -m unittest discover -s sdk/python/tests",
-    "test:sdk:rust": "cargo test --manifest-path sdk/rust/dna-x402-client/Cargo.toml",
+    "test:sdk:rust": "node scripts/run-cargo.mjs test --manifest-path sdk/rust/dna-x402-client/Cargo.toml",
     "test:guard": "vitest run tests/guard*.test.ts tests/liquefy.bridge.test.ts",
     "test:market": "vitest run tests/market*.test.ts",
     "test:wow": "vitest run tests/market*.test.ts tests/openapi.import.test.ts",

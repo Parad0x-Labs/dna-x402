@@ -65,6 +65,7 @@ members = [
     "crates/dark-x402-nullifier-bridge",
     "crates/dark-x402-e2e-demo",
     "crates/dark-nullifier-epoch-manager",
+    "crates/dark-withdrawal-bundle",
     # FRONTIER_FINAL — Phase 5 (ZK compression)
     "crates/dark-compression-core",
     "crates/dark-compressed-receipt-ledger",

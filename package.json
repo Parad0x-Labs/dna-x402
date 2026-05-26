@@ -7,6 +7,7 @@
     "tsx": "^4.19.0"
   },
   "scripts": {
+    "site:build": "npm --prefix site run build",
     "site-agent:dev": "npm --prefix site-agent run dev",
     "site-agent:build": "npm --prefix site-agent run build",
     "site-agent:preview": "npm --prefix site-agent run preview -- --host --port 4174",

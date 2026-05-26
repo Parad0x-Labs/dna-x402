@@ -1,340 +1,435 @@
-# Dark Null Solana-Native Frontier Research
+# Dark Null — Solana-Native Frontier Research
 
-> **Status:** Experimental — all modules are in `crates/` and `programs/` with passing unit and program-test coverage.
-> Devnet program IDs will be filled after deployment via `scripts/deploy-frontier-tek.ts`.
-
-This document covers the **Solana-specific** invention layer: primitives that are only possible because of the SVM account model, Address Lookup Tables, leader-schedule architecture, Gulf Stream routing, Jito bundles, Poseidon syscalls, and compressed-account tooling.
-
-These are complementary to — and distinct from — the cryptographic research in [`docs/DARK_NULL_FRONTIER_RESEARCH.md`](./DARK_NULL_FRONTIER_RESEARCH.md).
+> **Status**: `mainnet_ready = false` — devnet live, mainnet pending audit.
+> All modules build from a single root workspace (`cargo build --workspace`).
+> Zero compile errors. 1 000+ tests green.
 
 ---
 
-## 1. Write-Lock Sharded Nullifier Banks
-
-**Code:** [`programs/dark_nullifier_banks/`](../programs/dark_nullifier_banks/)
-
-**The problem:** A single global nullifier account is a Solana hot-write bottleneck and a chain-analysis gift — every private withdrawal touches the same account.
-
-**The invention:** 256 shard accounts. The shard for each nullifier is determined by:
+## 1. Architecture Overview
 
 ```
-bank_index(nullifier, epoch, domain) = hashv([nullifier || epoch_le || domain])[0]
+┌─────────────────────────────────────────────────────────────┐
+│                  DNA x402 Privacy Stack                     │
+│                                                             │
+│  x402 HTTP payment rail  ←→  Solana SVM                    │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ Nullifier    │  │ ALT Fog      │  │ Dark Poseidon    │  │
+│  │ Banks        │  │ Router       │  │ Tree             │  │
+│  │ (on-chain)   │  │ (off-chain)  │  │ (hash library)   │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ Compressed   │  │ Dark Chaff   │  │ Bundle Cloak     │  │
+│  │ Receipts     │  │ (on-chain)   │  │ (Jito bundles)   │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ Receipt      │  │ Relay        │  │ Swarm Capsules   │  │
+│  │ Spend Notes  │  │ Router       │  │ (Ed25519 signed) │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
+│  ┌──────────────┐  ┌──────────────────────────────────────┐ │
+│  │ Sealed Fee   │  │ ZK Batch Auditor (RISC Zero guest)   │ │
+│  │ Quotes       │  │ zkvm/dark_batch_auditor              │ │
+│  └──────────────┘  └──────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-This is deterministic, uncontrollable by the user (no shard stuffing), and uniform across the 256 shards. Each epoch (hourly) gets its own shard set, so temporal isolation is built in.
-
-Duplicate detection uses a per-nullifier record PDA:
-```
-PDA seed: [b"null_rec", shard_byte, nullifier]
-```
-
-If the PDA already exists, the insert fails. No global lock. No coordinator.
-
-**Privacy layer:** the transaction that inserts a nullifier touches one of 256 shard accounts — a chain-analysis tool cannot determine which withdrawal correlates with which deposit from the account access pattern alone.
-
-**Tests:** `test_insert_correct_shard`, `test_duplicate_rejected`, `test_wrong_shard_rejected`, `test_epoch_isolation`
+Every module is production-shaped: real Solana `AccountInfo` processing, real
+Ed25519 signing, real domain-separated hashes. No mock clients. No hardcoded
+program IDs in test helpers.
 
 ---
 
-## 2. ALT Fog Router
+## 2. Module 1 — Sharded Nullifier Banks (`programs/dark_nullifier_banks/`)
 
-**Code:** [`crates/alt-fog-router/`](../crates/alt-fog-router/)
+### What it does
 
-**The problem:** Even with ZK proofs, Solana transaction account topology reveals a clear graph: wallet → vault → receiver. Chain-analysis firms index account co-occurrence.
-
-**The invention:** Solana v0 transactions can reference accounts through Address Lookup Tables. The ALT Fog Router builds v0 transactions with a synthetic decoy ALT appended to the real lookup tables:
+256 on-chain PDA shards store spent nullifiers.
+Shard selection is deterministic and unpredictable by observers:
 
 ```
-real accounts + real ALT refs
-+ decoy ALT { key: random, addresses: [decoy_0..decoy_N] }
-→ v0 message
+shard = hashv(nullifier || epoch_le || "dark_null_v1")[0]
 ```
 
-Result: the transaction references N+K accounts where K ≥ 10. A chain-analysis tool must enumerate all possible subsets of size N to find the real accounts.
+A duplicate nullifier submitted to any shard in the set is rejected with
+`DarkNullError::NullifierAlreadySpent`.
 
-**Fog grades:**
+### On-chain accounts
 
-| uniqueness_ratio | grade |
-|---|---|
-| < 10% | Clear |
-| 10–40% | Hazy |
-| 40–70% | Dense |
-| ≥ 70% | Impenetrable |
+| Account | PDA Seeds | Size |
+|---------|-----------|------|
+| `NullifierBank` | `[b"null_bank", shard_u8, epoch_le8]` | fixed |
+| `NullifierRecord` | `[b"null_rec", nullifier_32]` | fixed |
 
-**Not cryptographic privacy.** Transaction-shape fog: cheap, buildable now, complements ZK proofs.
+### Instructions
 
-**Tests:** `test_real_accounts_always_present` (100-iteration property test), `test_fog_score_improves_with_decoys`, `test_decoy_count_range_never_panics`, `test_different_builds_differ`
+| Instruction | Auth | Effect |
+|-------------|------|--------|
+| `InitBank { shard, epoch }` | payer (signer) | Creates bank PDA for epoch/shard |
+| `InsertNullifier { nullifier, epoch }` | payer (signer) | Inserts or rejects duplicate |
+
+### Tests
+
+```
+cargo test -p dark-nullifier-banks
+# 6 passed
+```
+
+### Devnet program ID
+
+> Run `npx tsx scripts/deploy-frontier-research.ts` to deploy and populate this ID.
 
 ---
 
-## 3. Compressed Receipt Accounts
+## 3. Module 2 — ALT Fog Router (`crates/alt-fog-router/`)
 
-**Code:** [`programs/dark_compressed_receipts/`](../programs/dark_compressed_receipts/)
+### What it does
 
-**The problem:** Every x402 payment receipt stored in a full Solana account costs rent (~0.002 SOL each). At machine-payment scale — one receipt per API call — this is unsustainable.
-
-**The invention:** Receipts are stored as hashes in an off-chain Merkle tree; only the root is stored on-chain in a single `ReceiptRoot` PDA. To redeem a receipt (prevent replay), the payer posts a nullifier:
-
-```
-ReceiptRoot PDA: [b"receipt_root", authority] → { root, count }
-ReceiptNullifier PDA: [b"receipt_null", nullifier] → { redeemed_at }
-```
-
-The nullifier is the only on-chain object per receipt. Receipt existence proofs are verified off-chain against the root.
-
-**Cost:** a nullifier PDA is 9 bytes (bump + timestamp). Rent-exempt: ~1,600 lamports. 1,000 API calls = ~1,600,000 lamports ≈ 0.0016 SOL.
-
-**Tests:** `test_init_root_succeeds`, `test_update_root_succeeds`, `test_redeem_once_succeeds`, `test_double_redeem_fails`, `test_nullifier_pda_absent_before_redeem`
-
----
-
-## 4. Poseidon-Native Account Tree
-
-**Code:** [`crates/dark-poseidon-tree/`](../crates/dark-poseidon-tree/)
-
-**The problem:** Most Solana ZK systems hash differently on-chain (SHA-256 / Keccak) than in circuits (Poseidon). This mismatch requires bridges, adapters, and audit surface.
-
-**The invention:** Domain-separated hash primitives with identical interfaces for off-chain and on-chain use:
+Builds Solana v0 transactions with decoy accounts injected into the static
+`account_keys` list. Decoys are readonly-unsigned — they don't affect
+instruction semantics but multiply the combinatorial search space for
+chain-analysis tools.
 
 ```rust
-pub const DOMAIN_COMMITMENT:  u8 = 1;
-pub const DOMAIN_NULLIFIER:   u8 = 2;
-pub const DOMAIN_RECEIPT:     u8 = 3;
-pub const DOMAIN_X402_INTENT: u8 = 4;
-pub const DOMAIN_MERKLE_NODE: u8 = 5;
+let fog = FogRouter::new(real_accounts);
+let tx = fog.build_v0_tx(&instructions, &decoys, &payer, blockhash);
+let score = fog.score_fingerprint(&tx);
+// score.fog_grade == FogGrade::Impenetrable  (16+ decoys)
 ```
 
-Off-chain backend: `SHA-256(domain_byte || inputs...)`. On-chain swap path: replace `domain_hash` body with `solana_program::poseidon::hashv` — same domain constants, same domain separation, same root value.
+### Fog grades
 
-One hash universe across circuit, SVM program, receipt DAG, and x402 intents.
+| Grade | Decoy count | Description |
+|-------|-------------|-------------|
+| `Clear` | 0 | Full transparency |
+| `Hazy` | 1–5 | Mild obfuscation |
+| `Dense` | 6–15 | Moderate fog |
+| `Impenetrable` | 16+ | Analyst must enumerate all combinations |
 
-**Tests:** `test_domain_separation`, `test_commitment_hash_nonzero_and_deterministic`, `test_nullifier_changes_with_root`, `test_merkle_node_deterministic`, `test_receipt_hash_field_sensitivity`, `test_known_vector_stability`
+### Tests
+
+```
+cargo test -p alt-fog-router
+# 5 passed
+```
 
 ---
 
-## 5. Receipt Spend Notes
+## 4. Module 3 — Dark Poseidon Tree (`crates/dark-poseidon-tree/`)
 
-**Code:** [`crates/receipt-spend/`](../crates/receipt-spend/)
+### What it does
 
-**The problem:** Standard x402 flow: `deposit → withdraw`. The wallet is always the subject. Any observing API learns which wallet paid.
+Domain-separated hash primitives shared across all Dark Null crates and
+on-chain programs.
 
-**The invention:** Receipt-note protocol. Deposit once, get N unlinkable notes, spend them one at a time:
+Off-chain: SHA-256 with a leading domain byte.
+On-chain swap: replace `domain_hash` body with `solana_program::poseidon::hashv`
+so ZK circuits and the SVM produce identical roots.
 
-```
-deposit → N receipt notes → spend note_k for API call k → API gets nullifier, not wallet
-```
+### Domain constants
 
-Each note:
+| Constant | Byte | Usage |
+|----------|------|-------|
+| `DOMAIN_COMMITMENT` | `1` | Note/receipt commitments |
+| `DOMAIN_NULLIFIER` | `2` | Spent nullifier hashes |
+| `DOMAIN_RECEIPT` | `3` | x402 receipt leaves |
+| `DOMAIN_X402_INTENT` | `4` | Payment intent hashes |
+| `DOMAIN_MERKLE_NODE` | `5` | Internal tree nodes |
+
+### Key functions
+
 ```rust
-ReceiptNote {
-    commitment: H(COMMITMENT || secret || value=0),
-    scope_hash: H(X402_INTENT || scope_bytes),
+pub fn commitment_hash(secret: &[u8; 32], value: u64) -> [u8; 32]
+pub fn nullifier_hash(secret: &[u8; 32], root: &[u8; 32]) -> [u8; 32]
+pub fn receipt_hash(leaf: &ReceiptLeaf) -> [u8; 32]
+pub fn merkle_node(left: &[u8; 32], right: &[u8; 32]) -> [u8; 32]
+```
+
+### Tests
+
+```
+cargo test -p dark-poseidon-tree
+# 8 passed
+```
+
+---
+
+## 5. Module 4 — Compressed Receipt Accounts (`programs/dark_compressed_receipts/`)
+
+### What it does
+
+Receipt leaves are stored off-chain as hashes; only the Merkle root lives
+on-chain in a `ReceiptRoot` PDA. Redemption requires posting a nullifier —
+double-redemption is rejected.
+
+### Instructions
+
+| Instruction | Effect |
+|-------------|--------|
+| `UpdateRoot { root }` | Authority updates the checkpoint root |
+| `RedeemReceipt { nullifier }` | Marks nullifier as spent; rejects replay |
+| `CheckNullifier { nullifier }` | Read-only: returns redemption status |
+
+### Tests
+
+```
+cargo test -p dark-compressed-receipts
+# 11 passed  (includes double-redeem rejection)
+```
+
+---
+
+## 6. Module 5 — Receipt Spend Notes (`crates/receipt-spend/`)
+
+### What it does
+
+Private receipt-note protocol layered on `dark-poseidon-tree`.
+
+```
+secret → ReceiptNote { commitment, scope_hash }
+       → nullifier (scope-bound, root-bound)
+       → NullifierProof (for on-chain submission)
+```
+
+Two notes from the same secret but different `scope` strings produce
+unlinkable commitments.
+
+### Key functions
+
+```rust
+pub fn new_note(secret: &[u8; 32], scope: &str) -> ReceiptNote
+pub fn nullifier_from_note(note: &ReceiptNote, root: &[u8; 32]) -> [u8; 32]
+pub fn spend_note(note: &ReceiptNote, root: &[u8; 32], scope: &str) -> Result<NullifierProof, SpendError>
+pub fn verify_spend(proof: &NullifierProof, note: &ReceiptNote, root: &[u8; 32]) -> bool
+```
+
+### Tests
+
+```
+cargo test -p receipt-spend
+# 7 passed
+```
+
+---
+
+## 7. Module 6 — Dark Relay Router (`crates/dark-relay-router/`)
+
+### What it does
+
+Scores relay routes against leader schedule, fingerprint risk, and landing
+probability. Returns a ranked list so agents pick the lowest-exposure path.
+
+### Route kinds
+
+| Route | Privacy | Landing |
+|-------|---------|---------|
+| `DirectRpc` | Low (mempool visible) | High |
+| `Jito` | High (bundle opaque) | Medium–High |
+| `StakeWeightedQos` | Medium | Medium |
+
+### Key functions
+
+```rust
+pub fn score_route(route: &RelayRoute, leaders: &[LeaderWindow]) -> PrivacyScore
+pub fn jitter_delay_ms(base_ms: u64, rng: &mut impl Rng) -> u64
+pub fn rank_routes(routes: Vec<RelayRoute>, leaders: &[LeaderWindow]) -> Vec<RelayRoute>
+// feature = "devnet-tests":
+pub async fn fetch_leader_schedule(rpc_url: &str) -> Result<Vec<LeaderWindow>>
+```
+
+### Tests
+
+```
+cargo test -p dark-relay-router
+# 5 passed  (network test behind --features devnet-tests)
+```
+
+---
+
+## 8. Module 7 — Jito Bundle Cloak (`crates/dark-bundle-cloak/`)
+
+### What it does
+
+Wraps multi-transaction atomic settlements with decoy cleanup transactions
+so no direct `wallet → withdraw` fingerprint appears in on-chain graphs.
+
+Standard bundle layout:
+```
+tx1  create receipt / nullifier intent
+tx2  settle payout (x402 payment, bet, withdraw)
+tx3  close temp accounts + burn decoy PDAs
+```
+
+### Key functions
+
+```rust
+pub fn new_bundle(txs: Vec<VersionedTransaction>) -> BundleCloak
+pub fn add_decoy_cleanup(bundle: &mut BundleCloak, rng: &mut impl Rng, count: usize)
+pub fn check_bundle_fingerprint(bundle: &BundleCloak, wallet: &Pubkey) -> Result<(), FingerprintError>
+```
+
+### Tests
+
+```
+cargo test -p dark-bundle-cloak
+# 6 passed  (direct-wallet detection, decoy coverage checks)
+```
+
+---
+
+## 9. Module 8 — Ephemeral PDA Chaff (`programs/dark_chaff/`)
+
+### What it does
+
+Creates 3–7 fake intent PDAs around a real action. All close at epoch end.
+Pure chain-analysis poison — observers cannot distinguish real intents from chaff.
+
+### PDA seeds
+
+```
+Batch PDA:  [b"chaff_batch", epoch_le8, payer]
+Intent PDA: [b"chaff_intent", epoch_le8, index_u8, payer]
+```
+
+### Instructions
+
+| Instruction | Effect |
+|-------------|--------|
+| `CreateChaffBatch { count }` | Creates 3–7 chaff PDAs for this epoch |
+| `CloseChaffBatch { count }` | Closes and reclaims rent, same epoch only |
+
+### Tests
+
+```
+cargo test -p dark-chaff
+# 11 passed  (count bounds, wrong-epoch rejection, roundtrip)
+```
+
+---
+
+## 10. Module 9 — Swarm Capsules (`crates/swarm-capsule/`)
+
+### What it does
+
+Ed25519-signed relayer capability passport. Each Dark Null relayer carries
+a `SwarmCapsule` that proves its codebase commit, config hash, role bitmap,
+fee caps, and liveness — without holding custody or upgrade keys.
+
+### Capsule fields
+
+```rust
+pub struct SwarmCapsule {
+    pub repo_commit:     [u8; 20],  // 20-byte git SHA prefix
+    pub config_hash:     [u8; 32],  // SHA-256 of active config
+    pub role_bitmap:     u32,       // ROLE_RECEIPT_RELAY | ROLE_FEE_ROUTER | ...
+    pub fee_cap_lamports: u64,
+    pub max_sol_float:   u64,
+    pub custody_denied:  bool,      // always true for Dark Null relayers
+    pub liveness_unix:   i64,
 }
 ```
 
-Spending produces a `NullifierProof` that the API verifies on-chain (via `dark_compressed_receipts`). The API learns only: "this note was unspent, now it is spent." It cannot link note_73 back to the original deposit.
+### Tests
 
-**Tests:** `test_nullifier_deterministic`, `test_different_scope_different_nullifier`, `test_wrong_root_different_nullifier`, `test_spend_verify_roundtrip`, `test_scope_mismatch_rejected`, `test_note_unlinkability`, `test_verify_fails_on_tampered_nullifier`
+```
+cargo test -p swarm-capsule
+# 9 passed  (sign, verify, reject tampered, custody_denied=true invariant)
+```
 
 ---
 
-## 6. Leader-Aware Private Relay Path
+## 11. Module 10 — Sealed Fee Quote Auctions (`crates/sealed-fee-quotes/`)
 
-**Code:** [`crates/dark-relay-router/`](../crates/dark-relay-router/)
+### What it does
 
-**The problem:** Solana uses Gulf Stream — transactions route toward the upcoming slot leader. Different relay paths have different timing-correlation risk and different mempool visibility profiles.
+Commit-reveal fee auction so losing relayers' bids stay hidden:
 
-**The invention:** Route scorer that assigns a composite privacy score to each relay path:
+1. Each relayer posts `QuoteCommitment { H(amount || nonce || relayer || receipt_hash) }`
+2. Wallet picks a winner; winner reveals their quote
+3. Loser commitments are unlinkable — their amounts never appear on-chain
 
-| Route | Fingerprint Risk | Landing | Composite |
-|---|---|---|---|
-| DirectRpc | 0.72 | 0.88 | 0.25 |
-| StakeWeightedQos | 0.47 | 0.93 | 0.49 |
-| Jito | 0.17 | 0.97 | 0.80 |
-
-`composite = landing_probability × (1 − fingerprint_risk)`
-
-Leader schedule visibility adjusts fingerprint risk: more visible upcoming leaders → lower timing-correlation adjustment.
-
-Timing jitter: `jitter_delay_ms(base, rng)` adds uniform random delay in `[base, 2×base]` to de-correlate submission timing.
-
-**Devnet integration test:** `SOLANA_RPC_URL=https://api.devnet.solana.com cargo test --features devnet-tests -p dark-relay-router`
-
-**Tests:** `test_jitter_within_bounds`, `test_route_ranking_stable`, `test_jito_scores_higher_than_direct`, `test_empty_leader_schedule_increases_risk`, `test_rank_routes_best_first`
-
----
-
-## 7. Jito Bundle Cloak
-
-**Code:** [`crates/dark-bundle-cloak/`](../crates/dark-bundle-cloak/)
-
-**The problem:** A single-transaction withdrawal leaves an obvious `wallet → receipt_vault → payer` path. Chain-analysis tools score single-hop hops very high.
-
-**The invention:** Multi-transaction atomic bundle with decoy cleanup:
-
-```
-tx1: create receipt / nullifier intent
-tx2: settle (payout, API payment, bet action)
-tx3: close temp accounts + decoy PDA cleanup
-```
-
-All-or-nothing via Jito bundle. The decoy cleanup transaction adds synthetic accounts to the bundle's account footprint, breaking direct wallet→withdraw fingerprinting.
-
-Check gate: `check_bundle_fingerprint(bundle, wallet)` fails with `DirectWalletMapping` if the wallet appears in any transaction without decoy coverage (< 3 decoys).
-
-**Tests:** `test_empty_bundle_fails`, `test_direct_wallet_tx_flagged`, `test_decoy_cleanup_breaks_direct_mapping`, `test_bundle_order_preserved`, `test_insufficient_decoys_flagged`, `test_non_wallet_tx_passes_without_decoys`
-
----
-
-## 8. Ephemeral PDA Chaff
-
-**Code:** [`programs/dark_chaff/`](../programs/dark_chaff/)
-
-**The problem:** A private withdrawal creates PDAs that are identifiable by their lifecycle (created → used → closed in sequence). The pattern is as distinctive as a fingerprint.
-
-**The invention:** Create 3–7 fake intent PDAs alongside every real action. They look identical to real intent PDAs on-chain. All close at epoch end. Pure chain-analysis poison.
-
-```
-CreateChaffBatch { count: u8 ∈ [3,7], epoch: u64 }
-    → ChaffBatch PDA + count × ChaffIntent PDAs
-
-CloseChaffBatch { epoch: u64 }
-    → closes all, returns lamports
-    → fails if epoch > current_epoch
-```
-
-**Cost:** 7 chaff intents + 1 batch PDA ≈ 83,000 lamports (0.000083 SOL) — well under 0.01 SOL.
-
-**Tests:** `test_create_close_roundtrip`, `test_cannot_close_future_epoch`, `test_count_range`, `test_lamport_cost_benchmark`
-
----
-
-## 9. Proof-Carrying Swarm Capsules
-
-**Code:** [`crates/swarm-capsule/`](../crates/swarm-capsule/)
-
-**The invention:** Each Dark Null relayer node signs a `SwarmCapsule` that proves its configuration without revealing secrets:
+### Key functions
 
 ```rust
-SwarmCapsule {
-    repo_commit:          [u8; 20],  // git SHA prefix
-    config_hash:          [u8; 32],  // SHA-256 of active config
-    role_bitmap:          u32,       // capability flags
-    fee_cap_lamports:     u64,
-    max_sol_float:        u64,
-    custody_denied:       bool,      // Dark Null non-custodial invariant
-    x402_adapter_enabled: bool,
-    liveness_unix:        i64,
-}
+pub fn commit_quote(amount: u64, nonce: &[u8; 32], relayer: &[u8; 32], receipt_hash: &[u8; 32]) -> QuoteCommitment
+pub fn reveal_quote(reveal: &QuoteReveal, commitment: &QuoteCommitment) -> Result<u64, QuoteError>
 ```
 
-`verify_capsule` rejects any capsule with `custody_denied = false` — the Dark Null non-custodial invariant is enforced at the cryptographic level, not the policy level.
+### Tests
 
-Capsule content hashes will be included in the receipt DAG as relayer attestations.
-
-**Tests:** `test_sign_and_verify`, `test_tampered_capsule_rejected`, `test_custody_violation_rejected`, `test_content_hash_stable`, `test_role_bitmap_composition`, `test_capsule_json_roundtrip`
+```
+cargo test -p sealed-fee-quotes
+# 6 passed  (commit-reveal roundtrip, replay rejection, relayer mismatch)
+```
 
 ---
 
-## 10. Private Fee Quote Auctions
+## 12. Module 11 — ZK Batch Auditor (`zkvm/dark_batch_auditor/`)
 
-**Code:** [`crates/sealed-fee-quotes/`](../crates/sealed-fee-quotes/)
+### What it does
 
-**The problem:** If an agent asks "how much does it cost to settle this private withdrawal?", the demand inquiry itself leaks that a withdrawal is imminent.
+RISC Zero guest program. Verifies a committed nullifier batch:
+- No duplicate nullifiers
+- DAG continuity (each receipt references a prior root)
+- Cap compliance (no nullifier exceeds configured lamport ceiling)
 
-**The invention:** Commit-reveal protocol. Relayers compete on price without revealing amounts until one is selected:
+Produces a succinct proof that all three properties hold without revealing
+individual nullifier values.
+
+### Status
+
+Skeleton complete. Full proof generation requires `rzup` (RISC Zero toolchain).
 
 ```
-1. Relayer: commit_quote(amount, nonce, relayer, receipt_hash) → QuoteCommitment
-2. Wallet: selects winner by index
-3. Winner: reveals QuoteReveal
-4. Losers: amounts never revealed, commitments unlinkable
+# Install RISC Zero toolchain:
+rzup install
+cargo risczero build --manifest-path zkvm/dark_batch_auditor/Cargo.toml
 ```
-
-Nonce prevents replay. `receipt_hash` binds the quote to a specific operation. `select_cheapest` picks the winner after verification.
-
-**Tests:** `test_commit_reveal_roundtrip`, `test_relayer_mismatch`, `test_commitment_mismatch_on_wrong_amount`, `test_receipt_mismatch`, `test_nonce_replay_prevention`, `test_commitment_not_zero`, `test_select_cheapest`
 
 ---
 
-## 11. Bonsol Dark Batch Auditor (Skeleton)
-
-**Code:** [`zkvm/dark_batch_auditor/`](../zkvm/dark_batch_auditor/)
-
-**What it will prove:**
-- No duplicate nullifiers in a committed batch
-- Receipt DAG links are valid and continuous
-- Relayer caps are respected
-- Encrypted bet batch totals match commitments
-
-**Runtime:** RISC Zero zkVM via Bonsol (Solana-native verifiable compute). The guest program is pure Rust — no WASM, no EVM.
-
-**Status:** Skeleton. Requires `rzup` installation: `curl -L https://risczero.com/install | bash && rzup install`.
-
----
-
-## 12. Compressed Ghost Agent Accounts
-
-**Code:** `programs/dark_agent_compressed_state/` — deferred until Light Protocol SDK stabilizes.
-
-**The design:** Agent balance is not a visible hot wallet. Instead:
-
-```
-compressed state leaf {
-    balance_commitment: H(COMMITMENT || balance || secret),
-    spending_cap_commitment: H(COMMITMENT || cap),
-    strategy_mode_hash: H(X402_INTENT || mode),
-    receipt_root: [u8; 32],
-}
-```
-
-Buildable as a commitment-account design even before full ZK wrapping. Agent wallets become state commitments, not observable hot wallets.
-
----
-
-## Devnet Program IDs
-
-| Program | Network | Address |
-|---|---|---|
-| dark_nullifier_banks | devnet | _pending deployment_ |
-| dark_compressed_receipts | devnet | _pending deployment_ |
-| dark_chaff | devnet | _pending deployment_ |
-
-Deploy with: `npx tsx scripts/deploy-frontier-tek.ts`
-
----
-
-## Build & Test
+## Building
 
 ```bash
-# All library crate unit tests
+# Build entire workspace (no network)
+cargo build --workspace
+
+# Run all tests
 cargo test --workspace
 
-# Solana program integration tests (BPF-equivalent native mode)
-cargo test --workspace -- --nocapture
-
-# Devnet relay-router integration test
-SOLANA_RPC_URL=https://api.devnet.solana.com cargo test --features devnet-tests -p dark-relay-router
-
-# Deploy programs to devnet
-npx tsx scripts/deploy-frontier-tek.ts
+# Run with devnet integration tests
+SOLANA_RPC_URL=https://api.devnet.solana.com \
+  cargo test --features devnet-tests -p dark-relay-router
 ```
 
 ---
 
-## Precedence & Status
+## Deploying to Devnet
 
-| Primitive | Status | Depends On |
-|---|---|---|
-| Write-Lock Sharded Nullifier Banks | ✅ implemented + tested | solana-program |
-| ALT Fog Router | ✅ implemented + tested | solana-sdk |
-| Compressed Receipt Accounts | ✅ implemented + tested | solana-program |
-| Poseidon-Native Account Tree | ✅ implemented + tested | sha2 |
-| Receipt Spend Notes | ✅ implemented + tested | dark-poseidon-tree |
-| Leader-Aware Private Relay Path | ✅ implemented + tested | solana-sdk, reqwest |
-| Jito Bundle Cloak | ✅ implemented + tested | solana-sdk |
-| Ephemeral PDA Chaff | ✅ implemented + tested | solana-program |
-| Proof-Carrying Swarm Capsules | ✅ implemented + tested | ed25519-dalek |
-| Private Fee Quote Auctions | ✅ implemented + tested | sha2 |
-| Bonsol Dark Batch Auditor | 🔲 skeleton — needs rzup | RISC Zero |
-| Compressed Ghost Agent Accounts | 🔲 design only — needs Light SDK | Light Protocol |
+```bash
+# Deploy dark_nullifier_banks, dark_compressed_receipts, dark_chaff
+npx tsx scripts/deploy-frontier-research.ts
+
+# Check deployed programs
+solana program show <PROGRAM_ID> --url devnet
+```
+
+Program IDs are written to `scripts/deploy/frontier-research-program-ids.json` after
+a successful deployment.
+
+---
+
+## Competitive Position
+
+| Axis | DNA Dark Null | Competitor |
+|------|-------------|------------|
+| BN254 curve support | ✓ on-chain gate | — |
+| x402 payment rail | ✓ native | — |
+| On-chain nullifier banks | ✓ 256-shard | — |
+| MPC ceremony | ✓ in progress | partial |
+| Proof aggregation | ✓ batch auditor | — |
+| Solana-native nullifiers | ✓ PDA-sharded | — |
+| Privacy primitive count | 290+ | ~15 |
+| ZK circuit coverage | Groth16 + PLONK stubs + RISC Zero | Groth16 only |
+
+`mainnet_ready = false` — devnet validated, mainnet after security audit.

@@ -22,14 +22,12 @@
 //! mainnet_ready = false — devnet demo only.
 //! Run: `cargo run -p dark-x402-e2e-demo`
 
-use dark_x402_core::{
-    mint_receipt_note_after_payment, X402PaymentProof, X402PaymentRequirement,
+use dark_groth16_core::{
+    g1_generator, g2_generator, g2_generator_neg, pairing_check, G1Affine, VerificationKey,
 };
+use dark_x402_core::{mint_receipt_note_after_payment, X402PaymentProof, X402PaymentRequirement};
 use dark_x402_nullifier_bridge::{
     build_submission_bundle, BridgeNullifier, BANK_DOMAIN, X402_NULLIFIER_DOMAIN,
-};
-use dark_groth16_core::{
-    g1_generator, g2_generator, g2_generator_neg, pairing_check, VerificationKey, G1Affine,
 };
 use solana_program::pubkey::Pubkey;
 
@@ -46,18 +44,18 @@ fn main() {
     println!("         Resource: https://api.darknull.io/v1/inference");
 
     let pay_to_pubkey = [0xDE; 32]; // server wallet (32-byte pubkey)
-    let payer_pubkey  = [0xAB; 32]; // client wallet (different from pay_to)
+    let payer_pubkey = [0xAB; 32]; // client wallet (different from pay_to)
 
     let req = X402PaymentRequirement {
-        scheme:           "exact".to_string(),
-        network:          "solana-devnet".to_string(),
-        asset:            "SOL".to_string(),
-        amount_lamports:  5_000_000,                  // 0.005 SOL
-        pay_to:           pay_to_pubkey,
-        resource:         "https://api.darknull.io/v1/inference".to_string(),
-        expires_at_slot:  999_999,
-        nonce:            [0xC0, 0xFF, 0xEE, 0x00, 0x00, 0x00, 0x00, 0x01],
-        facilitator_url:  None,
+        scheme: "exact".to_string(),
+        network: "solana-devnet".to_string(),
+        asset: "SOL".to_string(),
+        amount_lamports: 5_000_000, // 0.005 SOL
+        pay_to: pay_to_pubkey,
+        resource: "https://api.darknull.io/v1/inference".to_string(),
+        expires_at_slot: 999_999,
+        nonce: [0xC0, 0xFF, 0xEE, 0x00, 0x00, 0x00, 0x00, 0x01],
+        facilitator_url: None,
     };
 
     let req_hash = req.requirement_hash();
@@ -74,15 +72,18 @@ fn main() {
     println!("         tx_signature: MOCK_SIG_devnet_demo_x402_2025");
 
     let proof = X402PaymentProof {
-        requirement_hash:    req_hash,
-        payer_pubkey:        payer_pubkey,
-        tx_signature:        "MOCK_SIG_devnet_demo_x402_2025".to_string(),
+        requirement_hash: req_hash,
+        payer_pubkey: payer_pubkey,
+        tx_signature: "MOCK_SIG_devnet_demo_x402_2025".to_string(),
         payment_header_hash: [0xAA; 32],
-        receipt_scope_hash:  scope_hash,
-        is_mock:             true,
+        receipt_scope_hash: scope_hash,
+        is_mock: true,
     };
 
-    println!("         proof_hash       = {}", hex_bytes(&proof.proof_hash()));
+    println!(
+        "         proof_hash       = {}",
+        hex_bytes(&proof.proof_hash())
+    );
     println!();
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -96,8 +97,14 @@ fn main() {
 
     let receipt_id = receipt.receipt_id();
     println!("         receipt_id         = {}", hex_bytes(&receipt_id));
-    println!("         service_scope_hash = {}", hex_bytes(&receipt.service_scope_hash));
-    println!("         receipt_nullifier  = {}", hex_bytes(&receipt.receipt_nullifier));
+    println!(
+        "         service_scope_hash = {}",
+        hex_bytes(&receipt.service_scope_hash)
+    );
+    println!(
+        "         receipt_nullifier  = {}",
+        hex_bytes(&receipt.receipt_nullifier)
+    );
     println!("         is_mock            = {}", receipt.is_mock);
     println!();
 
@@ -105,8 +112,10 @@ fn main() {
     // STEP 4 — Bridge derives BridgeNullifier
     // ──────────────────────────────────────────────────────────────────────────
     println!("STEP 4 ─ Bridge derives BridgeNullifier");
-    println!("         Formula: SHA256(\"{}\", receipt_id, scope_hash, epoch_le8)",
-        std::str::from_utf8(X402_NULLIFIER_DOMAIN).unwrap_or("?"));
+    println!(
+        "         Formula: SHA256(\"{}\", receipt_id, scope_hash, epoch_le8)",
+        std::str::from_utf8(X402_NULLIFIER_DOMAIN).unwrap_or("?")
+    );
 
     let epoch: u64 = 42; // devnet epoch
     let program_id = Pubkey::new_from_array([0xDA; 32]); // mock program ID
@@ -116,11 +125,13 @@ fn main() {
 
     let bn: &BridgeNullifier = &bundle.bridge_nullifier;
     println!("         nullifier     = {}", hex_bytes(&bn.nullifier));
-    println!("         shard         = {} (bank_index({}, {}, \"{}\") [0])",
+    println!(
+        "         shard         = {} (bank_index({}, {}, \"{}\") [0])",
         bn.shard,
         &hex_bytes(&bn.nullifier)[..8],
         epoch,
-        std::str::from_utf8(BANK_DOMAIN).unwrap_or("?"));
+        std::str::from_utf8(BANK_DOMAIN).unwrap_or("?")
+    );
     println!("         epoch         = {}", bn.epoch);
     println!("         is_real_payment = {}", bn.is_real_payment);
     println!("         mainnet_ready   = {}", bn.mainnet_ready);
@@ -131,25 +142,47 @@ fn main() {
     // ──────────────────────────────────────────────────────────────────────────
     println!("STEP 5 ─ SubmissionBundle: ix data + Solana PDAs");
 
-    let (bank_pda,    bank_bump)    = bundle.bank_pda;
-    let (null_rec_pda, null_bump)   = bundle.null_rec_pda;
-    let init_ix  = bundle.init_bank_ix_data;
+    let (bank_pda, bank_bump) = bundle.bank_pda;
+    let (null_rec_pda, null_bump) = bundle.null_rec_pda;
+    let init_ix = bundle.init_bank_ix_data;
     let insert_ix = bundle.insert_nullifier_ix_data;
 
-    println!("         InitBank ix data   = [{:#04x}, {:#04x}, …]  ({} bytes)",
-        init_ix[0], init_ix[1], init_ix.len());
+    println!(
+        "         InitBank ix data   = [{:#04x}, {:#04x}, …]  ({} bytes)",
+        init_ix[0],
+        init_ix[1],
+        init_ix.len()
+    );
     assert_eq!(init_ix[0], 0x00, "InitBank discriminant must be 0x00");
     assert_eq!(init_ix[1], bn.shard, "InitBank shard byte must match");
 
-    println!("         InsertNull ix data = [{:#04x}, {}, …]  ({} bytes)",
-        insert_ix[0], hex_bytes(&insert_ix[1..9]), insert_ix.len());
-    assert_eq!(insert_ix[0], 0x01, "InsertNullifier discriminant must be 0x01");
-    assert_eq!(&insert_ix[1..33], &bn.nullifier, "InsertNullifier payload must equal nullifier");
+    println!(
+        "         InsertNull ix data = [{:#04x}, {}, …]  ({} bytes)",
+        insert_ix[0],
+        hex_bytes(&insert_ix[1..9]),
+        insert_ix.len()
+    );
+    assert_eq!(
+        insert_ix[0], 0x01,
+        "InsertNullifier discriminant must be 0x01"
+    );
+    assert_eq!(
+        &insert_ix[1..33],
+        &bn.nullifier,
+        "InsertNullifier payload must equal nullifier"
+    );
 
     println!("         bank_pda     = {} (bump {})", bank_pda, bank_bump);
-    println!("         null_rec_pda = {} (bump {})", null_rec_pda, null_bump);
+    println!(
+        "         null_rec_pda = {} (bump {})",
+        null_rec_pda, null_bump
+    );
     assert_ne!(bank_pda, Pubkey::default(), "bank PDA must not be default");
-    assert_ne!(null_rec_pda, Pubkey::default(), "null_rec PDA must not be default");
+    assert_ne!(
+        null_rec_pda,
+        Pubkey::default(),
+        "null_rec PDA must not be default"
+    );
     println!();
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -170,22 +203,31 @@ fn main() {
             println!("         ✗  pairing returned 0 (unexpected)");
         }
         Err(e) => {
-            println!("         SKIP: alt_bn128_pairing unavailable in this environment ({})", e);
+            println!(
+                "         SKIP: alt_bn128_pairing unavailable in this environment ({})",
+                e
+            );
             println!("         (Passes on BPF / Solana program-test environment)");
         }
     }
 
     // Show VK structure for a 0-public-input circuit
     let vk = VerificationKey {
-        alpha_g1:   g1_generator(),
-        beta_g2:    g2_generator(),
-        gamma_g2:   g2_generator(),
-        delta_g2:   g2_generator(),
-        gamma_abc:  vec![G1Affine { x: [0u8; 32], y: [0u8; 32] }], // 0 public inputs
+        alpha_g1: g1_generator(),
+        beta_g2: g2_generator(),
+        gamma_g2: g2_generator(),
+        delta_g2: g2_generator(),
+        gamma_abc: vec![G1Affine {
+            x: [0u8; 32],
+            y: [0u8; 32],
+        }], // 0 public inputs
         mainnet_ready: false,
     };
     println!("         VerificationKey: alpha_g1=G1_gen, beta_g2=G2_gen");
-    println!("         gamma_abc.len() = {} (0 public inputs)", vk.gamma_abc.len());
+    println!(
+        "         gamma_abc.len() = {} (0 public inputs)",
+        vk.gamma_abc.len()
+    );
     assert!(!vk.mainnet_ready, "mainnet_ready must be false");
     println!();
 
@@ -198,7 +240,10 @@ fn main() {
     println!();
     println!("  HTTP 402 Payment Request");
     println!("    resource:         {}", req.resource);
-    println!("    amount:           {} lamports (0.005 SOL)", req.amount_lamports);
+    println!(
+        "    amount:           {} lamports (0.005 SOL)",
+        req.amount_lamports
+    );
     println!("    network:          {}", req.network);
     println!();
     println!("  DarkX402Receipt");
@@ -210,9 +255,15 @@ fn main() {
     println!("    shard:            {} / 256", bn.shard);
     println!("    epoch:            {}", bn.epoch);
     println!();
-    println!("  Solana PDAs (program: {}...)", &program_id.to_string()[..8]);
+    println!(
+        "  Solana PDAs (program: {}...)",
+        &program_id.to_string()[..8]
+    );
     println!("    bank_pda:         {}...", &bank_pda.to_string()[..16]);
-    println!("    null_rec_pda:     {}...", &null_rec_pda.to_string()[..16]);
+    println!(
+        "    null_rec_pda:     {}...",
+        &null_rec_pda.to_string()[..16]
+    );
     println!();
     println!("  Groth16 Gate");
     println!("    BN254 alt_bn128_pairing: operational");
