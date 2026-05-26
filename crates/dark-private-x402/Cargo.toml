@@ -2,10 +2,11 @@
 name = "dark-private-x402"
 version = "0.1.0"
 edition = "2021"
-
-[workspace]
+description = "Complete private x402 payment pipeline: BN254 ECDH stealth address + shielded note + Merkle withdrawal"
 
 [dependencies]
-sha2 = "0.10"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+dark-stealth-address    = { path = "../dark-stealth-address" }
+dark-withdrawal-bundle  = { path = "../dark-withdrawal-bundle" }
+dark-merkle-accumulator = { path = "../dark-merkle-accumulator" }
+sha2                    = "0.10"
+serde                   = { version = "1", features = ["derive"] }

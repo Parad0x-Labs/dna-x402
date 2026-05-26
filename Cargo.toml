@@ -67,6 +67,7 @@ members = [
     "crates/dark-nullifier-epoch-manager",
     "crates/dark-withdrawal-bundle",
     "crates/dark-stealth-address",
+    "crates/dark-private-x402",
     # FRONTIER_FINAL — Phase 5 (ZK compression)
     "crates/dark-compression-core",
     "crates/dark-compressed-receipt-ledger",

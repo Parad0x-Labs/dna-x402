@@ -1616,6 +1616,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-private-x402"
+version = "0.1.0"
+dependencies = [
+ "dark-merkle-accumulator",
+ "dark-stealth-address",
+ "dark-withdrawal-bundle",
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-proof-core"
 version = "0.1.0"
 dependencies = [
