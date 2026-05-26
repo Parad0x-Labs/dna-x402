@@ -1728,6 +1728,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-stealth-address"
+version = "0.1.0"
+dependencies = [
+ "dark-groth16-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-swarm-capsule"
 version = "0.1.0"
 dependencies = [
