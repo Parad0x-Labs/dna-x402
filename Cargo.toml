@@ -62,6 +62,7 @@ members = [
     "crates/dark-x402-server-mock",
     "crates/dark-x402-client-mock",
     "crates/dark-x402-devnet-verify",
+    "crates/dark-x402-nullifier-bridge",
     # FRONTIER_FINAL — Phase 5 (ZK compression)
     "crates/dark-compression-core",
     "crates/dark-compressed-receipt-ledger",

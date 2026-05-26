@@ -1776,6 +1776,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-x402-nullifier-bridge"
+version = "0.1.0"
+dependencies = [
+ "dark-nullifier-banks",
+ "dark-x402-core",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "solana-program",
+]
+
+[[package]]
 name = "dark-x402-server-mock"
 version = "0.1.0"
 dependencies = [
