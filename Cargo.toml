@@ -1,4 +1,4 @@
-[workspace]
+﻿[workspace]
 members = [
     "programs/receipt_anchor",
     "programs/dark_nullifier_banks",
@@ -140,6 +140,14 @@ members = [
     "crates/p-token-roi-bot",
     "crates/confidential-amount-watch",
     "crates/nulla-betting-edge-demo",
+    # NULL_FLYWHEEL_VAULT_V1 — premium-fee conversion → rewards vault
+    "crates/null-flywheel-core",
+    # NULL_FLYWHEEL_VAULT_V1 — execution receipts for public auditability
+    "crates/null-flywheel-receipts",
+    # NULL_FLYWHEEL_VAULT_V1 — commit-reveal schedule randomizer
+    "crates/null-flywheel-randomizer",
+    # NULL_FLYWHEEL_VAULT_V1 — simulation demo binary
+    "crates/null-flywheel-sim",
 ]
 resolver = "2"
 

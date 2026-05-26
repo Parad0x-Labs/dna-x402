@@ -1,0 +1,17 @@
+[package]
+name = "null-flywheel-sim"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "null_flywheel_sim"
+path = "src/bin/null_flywheel_sim.rs"
+
+[dependencies]
+null-flywheel-core        = { path = "../null-flywheel-core" }
+null-flywheel-randomizer  = { path = "../null-flywheel-randomizer" }
+null-flywheel-receipts    = { path = "../null-flywheel-receipts" }
+sha2                      = { workspace = true }
+serde_json                = { workspace = true }
+
+[dev-dependencies]

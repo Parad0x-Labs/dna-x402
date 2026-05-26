@@ -494,6 +494,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
+name = "betting-alpha-receipts"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
+name = "betting-proofboard"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -539,6 +561,17 @@ dependencies = [
  "constant_time_eq",
  "cpufeatures 0.3.0",
  "digest 0.11.3",
+]
+
+[[package]]
+name = "blink-work-board"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
 ]
 
 [[package]]
@@ -986,6 +1019,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "confidential-amount-watch"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
 name = "console"
 version = "0.15.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1035,6 +1079,17 @@ name = "copy-sniper-sim"
 version = "0.1.0"
 dependencies = [
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "copy-sniper-tax-trap"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
 ]
 
 [[package]]
@@ -1983,6 +2038,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "fee-rebate-for-solvers"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
+name = "fee-weather-market"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
 name = "filetime"
 version = "0.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2363,6 +2440,17 @@ name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
+
+[[package]]
+name = "hint-ladder-market"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
 
 [[package]]
 name = "histogram"
@@ -3204,6 +3292,56 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
 
 [[package]]
+name = "null-flywheel-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "null-flywheel-randomizer"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "null-flywheel-receipts"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "null-flywheel-sim"
+version = "0.1.0"
+dependencies = [
+ "null-flywheel-core",
+ "null-flywheel-randomizer",
+ "null-flywheel-receipts",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "nulla-betting-edge-demo"
+version = "0.1.0"
+dependencies = [
+ "betting-alpha-receipts",
+ "betting-proofboard",
+ "copy-sniper-tax-trap",
+ "fee-rebate-for-solvers",
+ "hint-ladder-market",
+ "sealed-pick-x402-wall",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "nullifier-bank-planner"
 version = "0.1.0"
 dependencies = [
@@ -3508,6 +3646,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "p-token-roi-bot"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
 ]
 
 [[package]]
@@ -4104,6 +4253,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rent-graveyard-index"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.11.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4271,6 +4431,17 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "ritual-mev-insurance"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
 ]
 
 [[package]]
@@ -4568,6 +4739,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sealed-pick-x402-wall"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4795,6 +4977,17 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "shape-subscription"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
 ]
 
 [[package]]
@@ -6822,6 +7015,17 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "token-arcade-factory"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror",
+]
 
 [[package]]
 name = "tokio"
