@@ -2,13 +2,15 @@
 
 Date: 2026-05-16
 Maintainer: sls_0x
-Repository: https://github.com/Parad0x-Labs/x402-dna
+Canonical repository: https://github.com/Parad0x-Labs/dna-x402
+
+Legacy mirror: https://github.com/Parad0x-Labs/x402-dna
 Visibility: Private
 Default branch: main
 
 ## Purpose
 
-This packet records what was exported to the private `x402-dna` GitHub repository, what evidence exists in the repo, what validation was run, and what remains outside the Public Beta scope.
+This packet records what was exported before repository canonicalization, what evidence exists in the repo, what validation was run, and what remains outside the Public Beta scope.
 
 The export is an internal audit snapshot for DNA x402 as a public beta agent and programmable commerce rail. It is not a claim of unlimited permissionless production.
 

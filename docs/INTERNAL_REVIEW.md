@@ -4,7 +4,9 @@
 **Date:** 2026-05-26
 **Status:** NOT_PRODUCTION — devnet only — no audit — mainnet_ready = false
 **Test suite:** 807 Rust tests, 0 failures (`cargo test --workspace`)
-**Repos:** `Parad0x-Labs/dna-x402` · `Parad0x-Labs/x402-dna`
+**Canonical repo:** `Parad0x-Labs/dna-x402`
+
+**Legacy mirror:** `Parad0x-Labs/x402-dna`
 
 ---
 

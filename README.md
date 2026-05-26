@@ -15,6 +15,14 @@ DNA x402 is Parad0x Labs' payment rail for agent-to-agent and API commerce on So
 
 The active product in this repository is the [`x402/`](./x402) package.
 
+Canonical public repository:
+
+```txt
+https://github.com/Parad0x-Labs/dna-x402
+```
+
+`Parad0x-Labs/x402-dna` is a legacy mirror. Public links, install instructions, and builder docs should point to `dna-x402`.
+
 ## LLM / Agent Quick Parse
 
 ```yaml
@@ -41,6 +49,8 @@ related_repo:
   degen_use_cases: docs/DEGEN_USE_CASES.md
   anti_copytrade_alpha: docs/ANTI_COPYTRADE_ALPHA.md
   fee_saving_primitives: docs/FEE_SAVING_SOLANA_PRIMITIVES.md
+canonical_repo: https://github.com/Parad0x-Labs/dna-x402
+legacy_mirror: https://github.com/Parad0x-Labs/x402-dna
 ```
 
 ![DNA x402 Proof Snapshot](./docs/assets/dna-proof-card.svg)
@@ -176,16 +186,16 @@ Degen Mode turns Solana trench ideas into safe DNA x402 agent primitives: fresh 
 
 ## Degen-Native Use Cases
 
-> NOT_PRODUCTION — devnet design only. mainnet_ready = false. Not audited.
+Launch-facing primitives for Solana-native agents, paid signal rooms, wallet intelligence, private unlocks, and x402-powered monetization loops.
 
 Six frontier-edge primitives built for on-chain degen survival:
 
 | Primitive | What It Does | Daily Win |
 |---|---|---|
-| `dark-alpha-receipts` | Anti-copytrading receipts — commit hash published, trade hidden until x402 paid reveal | Sell alpha without getting front-run |
-| `dark-swarm-capsule` | Proof-carrying service capsule — prove no custody keys, no root keys | Pick the safest relayer without trusting anyone |
+| `dark-alpha-receipts` | Anti-copytrading receipts - commit hash published, trade hidden until x402 paid reveal | Sell alpha without getting front-run |
+| `dark-swarm-capsule` | Proof-carrying service capsule - prove no custody keys, no root keys | Pick the safest relayer without trusting anyone |
 | `dark-compressed-leaves` | ZK Compression leaf schema — Light Protocol v2 adapter design (integration planned, not live) | Projected: 10,000 receipts for 0.02 SOL vs 8.9 SOL full accounts |
-| `dark-meme-risk` | Hash-only memecoin risk scoring model (live oracle endpoint not deployed) | Score a token before aping — no raw mint in any receipt |
+| `dark-meme-risk` | Hash-only memecoin risk scoring model (live oracle endpoint not deployed) | Score a token before aping - no raw mint in any receipt |
 | `dark-fee-optimizer` | P-token (SIMD-0266) + ZK Compression savings model (live routing not wired) | Projected: 50k transfers/day at 98% fewer compute units |
 | `ritual-blink-gateway` | **MOONSHOT** — Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule, ONE atomic tx | Embed a payment-gated ritual transaction in a tweet link |
 
@@ -200,6 +210,7 @@ Anti-copytrading spec: [`docs/ANTI_COPYTRADE_ALPHA.md`](./docs/ANTI_COPYTRADE_AL
 - Package docs: [`x402/README.md`](./x402/README.md)
 - Agent integration reference: [`x402/AGENTS.md`](./x402/AGENTS.md)
 - Dark Null privacy path: [`docs/DARK_NULL_PRIVACY_PATH.md`](./docs/DARK_NULL_PRIVACY_PATH.md)
+- Repository identity: [`docs/REPOSITORY_IDENTITY.md`](./docs/REPOSITORY_IDENTITY.md)
 - Proof and rollout docs: [`docs/`](./docs)
 - Public site: [`site/`](./site)
 - `/agent` UI: [`site-agent/`](./site-agent)

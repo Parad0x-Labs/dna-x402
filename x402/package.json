@@ -116,6 +116,7 @@
     "monitoring:telegram:status": "tsx scripts/monitoring/send-telegram-status.ts",
     "publish:proof-bundle": "tsx scripts/publish-proof-bundle.ts",
     "security:scan": "tsx scripts/security/scan-secrets.ts",
+    "check:repo": "node scripts/check-repo-identity.mjs",
     "acceptance:builder": "vitest run tests/builder.launch-pack.test.ts",
     "acceptance:agents": "tsx ../examples/agent-wallet-client-ts/test/acceptance.test.ts && tsx ../examples/paper-polymarket-agent-ts/test/acceptance.test.ts && tsx ../examples/copy-settings-ts/test/acceptance.test.ts && tsx ../examples/alpha-monetization-ts/test/acceptance.test.ts && tsx ../examples/copied-lot-ledger-ts/test/acceptance.test.ts",
     "acceptance:degen-mode": "vitest run tests/degen-mode.test.ts",
