@@ -1,0 +1,12 @@
+[package]
+name = "dark-groth16-core"
+version = "0.1.0"
+edition = "2021"
+description = "BN254 Groth16 proof verifier for Solana — uses alt_bn128_pairing syscall on-chain"
+
+[dependencies]
+solana-program = "=1.18.26"
+serde          = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+solana-program = "=1.18.26"

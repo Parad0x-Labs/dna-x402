@@ -149,6 +149,8 @@ members = [
     "crates/null-flywheel-randomizer",
     # NULL_FLYWHEEL_VAULT_V1 — simulation demo binary
     "crates/null-flywheel-sim",
+    # dark-groth16-core: real BN254 Groth16 verifier using alt_bn128_pairing
+    "crates/dark-groth16-core",
     # DARK_ZK_PRIMITIVES_V1 — on-chain BN254 Groth16 (Phase 1)
     "crates/dark-poseidon-bn254",
     "crates/dark-bn254-circuit",

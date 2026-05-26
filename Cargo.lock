@@ -1489,6 +1489,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-groth16-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "solana-program",
+]
+
+[[package]]
 name = "dark-hash-core"
 version = "0.1.0"
 dependencies = [
