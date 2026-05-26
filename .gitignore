@@ -51,6 +51,9 @@ wallet/*.json
 .env.production
 .env.development
 .env.mainnet
+.local-secrets-backups/
+*.secrets.zip
+*.secrets.zip.enc
 
 # Test/audit artifacts (large, ephemeral)
 x402/audit_out*/
