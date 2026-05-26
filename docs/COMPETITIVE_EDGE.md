@@ -124,7 +124,7 @@ The ceremony structure implemented in this codebase:
    `H(contribution)`, and publishes the commitment before revealing the scalar.
 2. **Reveal phase**: Participants reveal their scalars. The combined toxic waste is
    `product(scalars) mod r`. No single participant knows the full product if any one participant
-   is honest and discards their scalar.
+   keeps their scalar private and discards it.
 3. **Threshold check**: A minimum number of contributions (configurable) must be verified before
    the ceremony is considered complete.
 4. **Transcript**: The full set of commitments and revealed values is published as an auditable

@@ -267,7 +267,7 @@ Output:          aggregate reporting figure
 Verifier:        any party confirms result is correct, without seeing any transaction
 ```
 
-No individual transaction is decrypted. Any observer can verify the aggregate was computed honestly.
+No individual transaction is decrypted. Any observer can verify the aggregate was computed correctly.
 
 **Inner-Product FE from DDH (Abdalla et al., PKC 2015)**: Decryption key computes `⟨y, x⟩` from `Enc(x)`. DDH assumption only — same as ECDH. No trusted setup. Implementations exist in arkworks ecosystem.
 

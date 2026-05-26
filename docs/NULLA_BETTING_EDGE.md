@@ -12,7 +12,7 @@ Pick is locked before the match. Pay to reveal it. Copy-bots get bait. After the
 
 ## What This Is
 
-A set of cryptographic primitives that lets Nulla run a provably honest signal and alpha service. Every pick is sealed in a hash commitment before the event. Subscribers pay a small x402 fee to unlock the reveal. Non-paying copy-bots are served worthless decoys — and their payment becomes protocol revenue. Post-game, the commitment is public and verifiable by anyone.
+A set of cryptographic primitives that lets Nulla run a cryptographically verifiable signal and alpha service. Every pick is sealed in a hash commitment before the event. Subscribers pay a small x402 fee to unlock the reveal. Non-paying copy-bots are served worthless decoys — and their payment becomes protocol revenue. Post-game, the commitment is public and verifiable by anyone.
 
 This is not gambling infrastructure. There are no odds-makers, no pooled bets, no guaranteed returns, no casino mechanics. It is a credibility and access-control layer for an analyst publishing picks.
 

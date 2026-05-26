@@ -6,7 +6,7 @@ Date: 2026-05-15
 
 Accepted.
 
-The latest pre-production hardening pass is valid and honestly reported.
+The latest pre-production hardening pass is valid and correctly reported.
 
 Do not overclaim production readiness.
 
@@ -95,7 +95,7 @@ No Polymarket live movement.
 
 Next action is operational proof, not product expansion.
 
-Bluntly: this is a real milestone. The architecture packet is honest enough for counsel and strict enough to stop accidental launch drift.
+Bluntly: this is a real milestone. The architecture packet is precise enough for counsel and strict enough to stop accidental launch drift.
 
 ## Helius RPC Patch Acceptance
 

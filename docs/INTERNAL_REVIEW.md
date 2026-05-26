@@ -256,7 +256,7 @@ Eight programs. Two live on devnet with confirmed transactions. Six ready for de
 
 ---
 
-## Part 6 — What is Honest and What is Planned
+## Part 6 — What Is Proven and What Is Planned
 
 This section is included deliberately. Internal reviewers should know the exact boundary between what is live, what is modelled, and what is next.
 

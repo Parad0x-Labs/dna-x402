@@ -78,7 +78,7 @@ Agent/API discovery:
 | Secrets leakage | Secret scan rejects env/key/wallet dump patterns |
 | Admin abuse | Admin auth and audit log controls |
 
-## Current Honest Limits
+## Current Limits
 
 - Physical goods need shipping, fulfillment, and dispute operations before public launch.
 - Public restricted categories must stay policy-blocked unless separately compliance-gated.

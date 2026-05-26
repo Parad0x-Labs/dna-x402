@@ -329,7 +329,7 @@ describe("NULL tip ledger", () => {
       });
   });
 
-  it("allows honest zero reconciliation when liability is zero", async () => {
+  it("allows zero reconciliation when liability is zero", async () => {
     const { app } = makeApp();
 
     await request(app)
