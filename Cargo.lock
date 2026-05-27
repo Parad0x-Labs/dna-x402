@@ -2938,11 +2938,20 @@ dependencies = [
 name = "dark-shielded-pool-program"
 version = "0.1.0"
 dependencies = [
+ "dark-shielded-verifier",
  "sha2 0.10.9",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "tokio",
+]
+
+[[package]]
+name = "dark-shielded-verifier"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+ "solana-program",
 ]
 
 [[package]]

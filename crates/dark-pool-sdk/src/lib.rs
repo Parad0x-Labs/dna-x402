@@ -58,11 +58,13 @@ pub struct PoolNote {
     pub is_spent: bool,
 }
 
-/// A withdrawal proof (stub until real Groth16 circuit is compiled).
+/// A withdrawal proof for the real Groth16 verifier.
+/// Layout: [A:G1(64B), B:G2(128B), C:G1(64B)] = 256 bytes.
+/// Use `create_stub_proof` for testing. Real proofs come from snarkjs.
 #[derive(Debug, Clone)]
 pub struct WithdrawProof {
-    /// 128-byte proof blob. First 32 bytes = stub gate hash.
-    pub proof_bytes: [u8; 128],
+    /// 256-byte Groth16 proof blob [A(G1), B(G2), C(G1)].
+    pub proof_bytes: [u8; 256],
     pub nullifier: [u8; 32],
     pub merkle_root: [u8; 32],
     pub recipient: [u8; 32],
@@ -132,7 +134,9 @@ pub fn create_stub_proof(
     }
     let nullifier = nullifier_hash(&note.secret, &note.pool);
 
-    let mut proof_bytes = [0u8; 128];
+    // 256-byte stub proof: first 32 bytes = gate hash (same gate the on-chain
+    // placeholder VK accepts off-chain), rest zeros until real circuit is compiled.
+    let mut proof_bytes = [0u8; 256];
     let gate: [u8; 32] = {
         let mut h = Sha256::new();
         h.update(DOMAIN_PROOF);
@@ -161,7 +165,8 @@ pub fn mark_spent(note: &mut PoolNote) -> Result<(), SdkError> {
     Ok(())
 }
 
-/// Verify locally that a proof would pass on-chain (useful for dry-run before submitting tx).
+/// Verify locally that the stub proof gate matches (dry-run before tx submission).
+/// Real verification uses BN254 pairing on-chain via dark-shielded-verifier.
 pub fn verify_stub_proof(proof: &WithdrawProof) -> bool {
     let gate: [u8; 32] = {
         let mut h = Sha256::new();

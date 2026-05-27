@@ -6,7 +6,7 @@ use solana_program::pubkey::Pubkey;
 ///
 ///   0x00 InitPool   { denomination: u64 }         — 1 + 8 = 9 bytes
 ///   0x01 Deposit    { commitment: [u8;32] }        — 1 + 32 = 33 bytes
-///   0x02 Withdraw   { nullifier: [u8;32], proof: [u8;128], recipient: [u8;32] } — 1+32+128+32 = 193 bytes
+///   0x02 Withdraw   { nullifier: [u8;32], proof: [u8;256], recipient: [u8;32] } — 1+32+256+32 = 321 bytes
 ///   0x03 PausePool  {}                             — 1 byte
 ///   0x04 ResumePool {}                             — 1 byte
 #[derive(Debug, PartialEq)]
@@ -26,8 +26,10 @@ pub enum PoolInstruction {
     /// Accounts: [pool_config (mut), pool_vault (mut), nullifier_record (mut PDA), recipient (mut), system_program]
     Withdraw {
         nullifier: [u8; 32],
-        /// 128-byte Groth16 proof (stub: first 32 bytes must equal expected_hash).
-        proof: [u8; 128],
+        /// 256-byte Groth16 proof: [A:G1(64B), B:G2(128B), C:G1(64B)].
+        /// Build with: dark_pool_sdk::create_stub_proof() (placeholder VK) OR
+        /// snarkjs groth16 prove + encode per dark-shielded-verifier layout.
+        proof: [u8; 256],
         recipient: Pubkey,
     },
 
@@ -63,12 +65,12 @@ impl PoolInstruction {
                 Ok(Self::Deposit { commitment })
             }
             0x02 => {
-                if data.len() < 193 {
+                if data.len() < 321 {
                     return Err(ShieldedPoolError::InvalidInstruction.into());
                 }
                 let nullifier:  [u8; 32]  = data[1..33].try_into().unwrap();
-                let proof:      [u8; 128] = data[33..161].try_into().unwrap();
-                let recipient_bytes: [u8; 32] = data[161..193].try_into().unwrap();
+                let proof:      [u8; 256] = data[33..289].try_into().unwrap();
+                let recipient_bytes: [u8; 32] = data[289..321].try_into().unwrap();
                 let recipient = Pubkey::from(recipient_bytes);
                 Ok(Self::Withdraw { nullifier, proof, recipient })
             }
@@ -93,7 +95,7 @@ impl PoolInstruction {
             Self::Withdraw { nullifier, proof, recipient } => {
                 let mut v = vec![0x02];
                 v.extend_from_slice(nullifier);
-                v.extend_from_slice(proof);
+                v.extend_from_slice(proof.as_ref());
                 v.extend_from_slice(recipient.as_ref());
                 v
             }

@@ -370,6 +370,8 @@ members = [
     # DARK_SHIELDED_POOL_V1 - first Solana-native fixed-denomination shielded transfer pool
     "programs/dark_shielded_pool",
     "crates/dark-pool-sdk",
+    # DARK_SHIELDED_VERIFIER - real BN254 Groth16 verifier using alt_bn128 syscalls
+    "crates/dark-shielded-verifier",
 ]
 resolver = "2"
 

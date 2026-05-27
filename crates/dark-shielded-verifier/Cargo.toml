@@ -1,0 +1,8 @@
+[package]
+name = "dark-shielded-verifier"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+solana-program = { workspace = true }
+sha2           = { workspace = true }

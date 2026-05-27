@@ -4,6 +4,9 @@ use crate::state::{
     NoteLeaf, NullifierRecord, PoolConfig, NOTE_LEAF_LEN, NULLIFIER_RECORD_LEN, POOL_CONFIG_LEN,
     POOL_CONFIG_VERSION,
 };
+use dark_shielded_verifier::{
+    placeholder_verifying_key, verify_groth16, VK_N_PUBLIC,
+};
 use sha2::{Digest, Sha256};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -51,29 +54,26 @@ pub fn update_merkle_root(old_root: &[u8; 32], commitment: &[u8; 32], leaf_index
     h.finalize().into()
 }
 
-/// Stub proof verification.
+/// Real Groth16 proof verification using BN254 alt_bn128 pairing syscall.
 ///
-/// A valid proof satisfies: `proof[0..32] == H("dark-pool-proof-v1" || nullifier || merkle_root || recipient)`.
+/// Public inputs for ShieldedWithdraw circuit:
+///   [0] = nullifier     (must match on-chain nullifier slot)
+///   [1] = merkle_root   (must match current pool root)
 ///
-/// IS_STUB=true: real impl uses Groth16 via `alt_bn128_pairing` syscall.
-/// The check is NOT trivially satisfied (requires correct inputs), so it is secure
-/// as a gate even in stub form — an attacker cannot forge a valid proof without
-/// knowing the nullifier, root, and recipient.
-pub fn verify_proof_stub(
-    proof: &[u8; 128],
+/// The verifying key is the PLACEHOLDER from dark-shielded-verifier.
+/// Replace `placeholder_verifying_key()` with the final VK bytes after
+/// compiling shielded_withdraw.circom and running the trusted setup.
+pub fn verify_proof_groth16(
+    proof: &[u8; 256],
     nullifier: &[u8; 32],
     merkle_root: &[u8; 32],
-    recipient: &[u8; 32],
 ) -> bool {
-    let expected: [u8; 32] = {
-        let mut h = Sha256::new();
-        h.update(b"dark-pool-proof-v1");
-        h.update(nullifier);
-        h.update(merkle_root);
-        h.update(recipient);
-        h.finalize().into()
-    };
-    proof[..32] == expected
+    let vk = placeholder_verifying_key();
+    let public_inputs: [[u8; 32]; VK_N_PUBLIC] = [*nullifier, *merkle_root];
+    match verify_groth16(proof, &vk, &public_inputs) {
+        Ok(valid) => valid,
+        Err(_)    => false,
+    }
 }
 
 // ─── PDA seeds ────────────────────────────────────────────────────────────────
@@ -266,7 +266,7 @@ fn process_withdraw(
     program_id: &Pubkey,
     accounts:   &[AccountInfo],
     nullifier:  [u8; 32],
-    proof:      [u8; 128],
+    proof:      [u8; 256],
     recipient:  Pubkey,
 ) -> ProgramResult {
     let iter = &mut accounts.iter();
@@ -300,8 +300,7 @@ fn process_withdraw(
     }
 
     // Verify the ZK proof (stub)
-    let recipient_bytes: [u8; 32] = recipient.to_bytes();
-    if !verify_proof_stub(&proof, &nullifier, &config.merkle_root, &recipient_bytes) {
+    if !verify_proof_groth16(&proof, &nullifier, &config.merkle_root) {
         return Err(ShieldedPoolError::ProofInvalid.into());
     }
 

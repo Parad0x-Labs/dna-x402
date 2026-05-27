@@ -7,8 +7,9 @@ edition = "2021"
 no-entrypoint = []
 
 [dependencies]
-solana-program = { workspace = true }
-sha2           = { workspace = true }
+solana-program        = { workspace = true }
+sha2                  = { workspace = true }
+dark-shielded-verifier = { path = "../../crates/dark-shielded-verifier" }
 
 [dev-dependencies]
 solana-program-test = { workspace = true }
