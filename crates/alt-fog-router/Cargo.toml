@@ -9,4 +9,7 @@ solana-sdk = { workspace = true }
 rand       = { workspace = true }
 
 [dev-dependencies]
-rand = { workspace = true }
+rand            = { workspace = true }
+proptest        = { workspace = true }
+proptest-derive = { workspace = true }
+statrs          = { workspace = true }
