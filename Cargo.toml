@@ -361,6 +361,12 @@ members = [
     "crates/dark-amount-receipt",
     "crates/dark-nova-receipt",
     "crates/dark-zk-hook",
+    # DARK_X402_FRONTIER_V1 - x402-native stealth addresses, session keys, private intents, batch proofs, compliance proofs
+    "crates/dark-x402-stealth",
+    "crates/dark-x402-session-key",
+    "crates/dark-x402-private-intent",
+    "crates/dark-x402-batch-proof",
+    "crates/dark-x402-compliance-proof",
 ]
 resolver = "2"
 

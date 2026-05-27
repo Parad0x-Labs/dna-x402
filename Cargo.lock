@@ -3198,12 +3198,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-x402-batch-proof"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-x402-client-mock"
 version = "0.1.0"
 dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-x402-compliance-proof"
+version = "0.1.0"
+dependencies = [
  "sha2 0.10.9",
 ]
 
@@ -3255,12 +3269,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-x402-private-intent"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-x402-server-mock"
 version = "0.1.0"
 dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-x402-session-key"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-x402-stealth"
+version = "0.1.0"
+dependencies = [
  "sha2 0.10.9",
 ]
 
