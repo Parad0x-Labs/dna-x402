@@ -7,3 +7,7 @@ description = "Domain-separated hash tree for Dark Null. SHA-256 off-chain; swap
 [dependencies]
 sha2 = { workspace = true }
 dark-hash-core = { path = "../dark-hash-core", features = ["sha256-fallback"] }
+
+[dev-dependencies]
+proptest        = { workspace = true }
+proptest-derive = { workspace = true }

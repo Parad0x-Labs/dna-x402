@@ -19,3 +19,8 @@ thiserror      = { workspace = true }
 solana-program-test = { workspace = true }
 solana-sdk          = { workspace = true }
 tokio               = { workspace = true }
+proptest            = { workspace = true }
+proptest-derive     = { workspace = true }
+rayon               = { workspace = true }
+statrs              = { workspace = true }
+rand                = { workspace = true }
