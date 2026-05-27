@@ -299,4 +299,78 @@ mod tests {
         assert_eq!(ev["mainnet_ready"], false);
         assert_eq!(ev["production_claim"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let ev = run_edge_capstone();
+        assert_eq!(ev["mainnet_ready"], false, "mainnet_ready must be false");
+    }
+
+    #[test]
+    fn test_production_claim_false() {
+        let ev = run_edge_capstone();
+        assert_eq!(ev["production_claim"], false, "production_claim must be false");
+    }
+
+    #[test]
+    fn test_network_is_solana_devnet() {
+        let ev = run_edge_capstone();
+        assert_eq!(ev["network"], "solana-devnet");
+    }
+
+    #[test]
+    fn test_final_evidence_hash_nonempty() {
+        let ev = run_edge_capstone();
+        let hash = ev["hashes"]["final_evidence_hash"].as_str().unwrap();
+        assert_eq!(hash.len(), 64, "final_evidence_hash must be 64 hex chars");
+        assert_ne!(hash, "0".repeat(64).as_str());
+    }
+
+    #[test]
+    fn test_compressed_root_hash_nonempty() {
+        let ev = run_edge_capstone();
+        let root = ev["hashes"]["compressed_state_root"].as_str().unwrap();
+        assert_eq!(root.len(), 64);
+        assert_ne!(root, "0".repeat(64).as_str());
+    }
+
+    #[test]
+    fn test_raw_exposure_all_false() {
+        let ev = run_edge_capstone();
+        assert_eq!(ev["raw_exposure"]["execution_wallet_exposed"], false);
+        assert_eq!(ev["raw_exposure"]["payer_key_exposed"], false);
+        assert_eq!(ev["raw_exposure"]["token_mint_exposed"], false);
+    }
+
+    #[test]
+    fn test_step_count_is_nine() {
+        let ev = run_edge_capstone();
+        assert_eq!(ev["steps"].as_array().unwrap().len(), 9);
+    }
+
+    #[test]
+    fn test_batch_500_batched_less_than_naive() {
+        let ev = run_edge_capstone();
+        let naive = ev["fee_model"]["batch_500_naive_writes"].as_u64().unwrap();
+        let batched = ev["fee_model"]["batch_500_batched_writes"].as_u64().unwrap();
+        assert!(batched < naive, "batched writes must be fewer than naive");
+    }
+
+    #[test]
+    fn test_service_capsule_hash_nonempty() {
+        let ev = run_edge_capstone();
+        let h = ev["hashes"]["service_capsule"].as_str().unwrap();
+        assert_eq!(h.len(), 64);
+        assert_ne!(h, "0".repeat(64).as_str());
+    }
+
+    #[test]
+    fn test_blink_receipt_hash_nonempty() {
+        let ev = run_edge_capstone();
+        let h = ev["hashes"]["blink_receipt"].as_str().unwrap();
+        assert_eq!(h.len(), 64);
+        assert_ne!(h, "0".repeat(64).as_str());
+    }
 }
