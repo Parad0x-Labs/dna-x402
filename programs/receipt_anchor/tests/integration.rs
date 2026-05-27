@@ -125,11 +125,12 @@ mod program_tests {
     async fn rejects_missing_payer_signature_flag() {
         let program_id = Pubkey::new_unique();
         let bucket_id = 91u64;
+        let unsigned_payer_account = Pubkey::new_unique();
         let (mut banks_client, payer, recent_blockhash) = program_test(program_id).start().await;
         let ix = Instruction {
             program_id,
             accounts: vec![
-                AccountMeta::new(payer.pubkey(), false),
+                AccountMeta::new(unsigned_payer_account, false),
                 AccountMeta::new(bucket_pda(&program_id, bucket_id), false),
                 AccountMeta::new_readonly(system_program::id(), false),
             ],
