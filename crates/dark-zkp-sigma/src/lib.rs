@@ -192,4 +192,75 @@ mod tests {
         assert_eq!(proof.response, sr.response);
         assert!(verify_sigma_proof(&proof, &verifier_nonce));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let proof = sigma_prove(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        assert_ne!(proof.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_response_nonzero() {
+        let proof = sigma_prove(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        assert_ne!(proof.response, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_key_nonzero() {
+        let proof = sigma_prove(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        assert_ne!(proof.public_key, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_secrets_different_public_key() {
+        let p1 = sigma_prove(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        let p2 = sigma_prove(&[4u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        assert_ne!(p1.public_key, p2.public_key);
+    }
+
+    #[test]
+    fn test_different_verifier_nonce_different_challenge() {
+        let p1 = sigma_prove(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        let p2 = sigma_prove(&[1u8; 32], &[2u8; 32], &[4u8; 32]).unwrap();
+        assert_ne!(p1.challenge, p2.challenge);
+    }
+
+    #[test]
+    fn test_proof_deterministic() {
+        let p1 = sigma_prove(&[5u8; 32], &[6u8; 32], &[7u8; 32]).unwrap();
+        let p2 = sigma_prove(&[5u8; 32], &[6u8; 32], &[7u8; 32]).unwrap();
+        assert_eq!(p1.commitment, p2.commitment);
+        assert_eq!(p1.challenge, p2.challenge);
+        assert_eq!(p1.response, p2.response);
+        assert_eq!(p1.public_key, p2.public_key);
+    }
+
+    #[test]
+    fn test_sigma_commit_mainnet_ready_false() {
+        let sc = sigma_commit(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        assert!(!sc.mainnet_ready);
+    }
+
+    #[test]
+    fn test_sigma_response_mainnet_ready_false() {
+        let sc = sigma_commit(&[1u8; 32], &[2u8; 32], &[3u8; 32]).unwrap();
+        let sr = sigma_respond(&[1u8; 32], &sc).unwrap();
+        assert!(!sr.mainnet_ready);
+    }
+
+    #[test]
+    fn test_challenge_nonzero() {
+        let proof = sigma_prove(&[8u8; 32], &[9u8; 32], &[10u8; 32]).unwrap();
+        assert_ne!(proof.challenge, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_key_matches_across_proofs() {
+        // Same secret → same public_key regardless of nonces
+        let p1 = sigma_prove(&[11u8; 32], &[1u8; 32], &[2u8; 32]).unwrap();
+        let p2 = sigma_prove(&[11u8; 32], &[3u8; 32], &[4u8; 32]).unwrap();
+        assert_eq!(p1.public_key, p2.public_key);
+    }
 }

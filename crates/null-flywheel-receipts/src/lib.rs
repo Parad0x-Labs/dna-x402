@@ -305,4 +305,84 @@ mod tests {
         assert_eq!(agg1.aggregate_root, agg2.aggregate_root);
         assert_eq!(agg1.total_receipts, 3);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipt = build_execution_receipt(1, 100, 50_000, &fee_root, "sink", &srh);
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_fee_source_root_nonzero() {
+        let root = build_fee_source_root(&[[1u8; 32], [2u8; 32]], 1);
+        assert_ne!(root.root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_fee_source_root_event_count() {
+        let root = build_fee_source_root(&[[1u8; 32], [2u8; 32], [3u8; 32]], 5);
+        assert_eq!(root.event_count, 3);
+    }
+
+    #[test]
+    fn test_fee_source_root_epoch_stored() {
+        let root = build_fee_source_root(&[[1u8; 32]], 42);
+        assert_eq!(root.epoch, 42);
+    }
+
+    #[test]
+    fn test_receipt_is_public_true() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipt = build_execution_receipt(1, 100, 50_000, &fee_root, "pool", &srh);
+        assert!(receipt.is_public);
+    }
+
+    #[test]
+    fn test_receipt_epoch_stored() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipt = build_execution_receipt(77, 100, 50_000, &fee_root, "pool", &srh);
+        assert_eq!(receipt.epoch, 77);
+    }
+
+    #[test]
+    fn test_allocated_lamports_hash_nonzero() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipt = build_execution_receipt(1, 100, 50_000, &fee_root, "dest", &srh);
+        assert_ne!(receipt.allocated_lamports_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_destination_hash_nonzero() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipt = build_execution_receipt(1, 100, 50_000, &fee_root, "treasury", &srh);
+        assert_ne!(receipt.destination_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_aggregate_total_receipts_count() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipts: Vec<_> = (0u64..4)
+            .map(|i| build_execution_receipt(1, i * 10, i * 1000, &fee_root, "pool", &srh))
+            .collect();
+        let agg = aggregate_epoch_receipts(&receipts, 1);
+        assert_eq!(agg.total_receipts, 4);
+    }
+
+    #[test]
+    fn test_redacted_receipt_mainnet_ready_false_in_json() {
+        let fee_root = dummy_fee_root();
+        let srh = dummy_schedule_reveal_hash();
+        let receipt = build_execution_receipt(1, 100, 50_000, &fee_root, "pool", &srh);
+        let json = redacted_public_receipt(&receipt);
+        assert_eq!(json["mainnet_ready"], false);
+    }
 }

@@ -274,4 +274,121 @@ mod tests {
         assert_eq!(FogGrade::from_ratio(0.70), FogGrade::Impenetrable);
         assert_eq!(FogGrade::from_ratio(1.0), FogGrade::Impenetrable);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_generate_decoy_count_accurate() {
+        let mut rng = seeded_rng();
+        let decoys = generate_decoy_accounts(7, &mut rng);
+        assert_eq!(decoys.len(), 7);
+    }
+
+    #[test]
+    fn test_generate_zero_returns_empty() {
+        let mut rng = seeded_rng();
+        let decoys = generate_decoy_accounts(0, &mut rng);
+        assert!(decoys.is_empty());
+    }
+
+    #[test]
+    fn test_fingerprint_score_no_decoys_clear_grade() {
+        let payer = Pubkey::new_unique();
+        let real = Pubkey::new_unique();
+        let ix = dummy_ix(&real);
+        let fog_tx = build_fog_v0_tx(&[ix], &payer, Hash::default(), &[], &[]).unwrap();
+        let score = score_tx_fingerprint(&fog_tx);
+        assert_eq!(score.fog_grade, FogGrade::Clear);
+    }
+
+    #[test]
+    fn test_fingerprint_score_no_decoys_count_zero() {
+        let payer = Pubkey::new_unique();
+        let real = Pubkey::new_unique();
+        let ix = dummy_ix(&real);
+        let fog_tx = build_fog_v0_tx(&[ix], &payer, Hash::default(), &[], &[]).unwrap();
+        let score = score_tx_fingerprint(&fog_tx);
+        assert_eq!(score.decoy_count, 0);
+    }
+
+    #[test]
+    fn test_uniqueness_ratio_between_zero_and_one() {
+        let payer = Pubkey::new_unique();
+        let real = Pubkey::new_unique();
+        let ix = dummy_ix(&real);
+        let mut rng = seeded_rng();
+        let decoys = generate_decoy_accounts(10, &mut rng);
+        let fog_tx = build_fog_v0_tx(&[ix], &payer, Hash::default(), &[], &decoys).unwrap();
+        let score = score_tx_fingerprint(&fog_tx);
+        assert!(
+            score.uniqueness_ratio >= 0.0 && score.uniqueness_ratio <= 1.0,
+            "ratio out of range: {}",
+            score.uniqueness_ratio
+        );
+    }
+
+    #[test]
+    fn test_payer_always_in_fog_account_keys() {
+        let payer = Pubkey::new_unique();
+        let real = Pubkey::new_unique();
+        let ix = dummy_ix(&real);
+        let mut rng = seeded_rng();
+        let decoys = generate_decoy_accounts(5, &mut rng);
+        let fog_tx = build_fog_v0_tx(&[ix], &payer, Hash::default(), &[], &decoys).unwrap();
+        match &fog_tx.inner.message {
+            VersionedMessage::V0(msg) => assert!(
+                msg.account_keys.contains(&payer),
+                "payer must be in account_keys"
+            ),
+            _ => panic!("expected v0 message"),
+        }
+    }
+
+    #[test]
+    fn test_fog_grade_eq() {
+        assert_eq!(FogGrade::Impenetrable, FogGrade::Impenetrable);
+        assert_eq!(FogGrade::Dense, FogGrade::Dense);
+        assert_ne!(FogGrade::Clear, FogGrade::Hazy);
+    }
+
+    #[test]
+    fn test_real_account_as_decoy_not_double_added() {
+        let payer = Pubkey::new_unique();
+        let real = Pubkey::new_unique();
+        let ix = dummy_ix(&real);
+        // Pass the real account as a decoy — already in account_keys, must not be re-added.
+        let fog_tx = build_fog_v0_tx(&[ix], &payer, Hash::default(), &[], &[real]).unwrap();
+        assert_eq!(
+            fog_tx.decoy_count, 0,
+            "real account re-submitted as decoy must not be added"
+        );
+    }
+
+    #[test]
+    fn test_generate_same_seed_same_accounts() {
+        let mut rng1 = rand::rngs::StdRng::seed_from_u64(42);
+        let mut rng2 = rand::rngs::StdRng::seed_from_u64(42);
+        let d1 = generate_decoy_accounts(5, &mut rng1);
+        let d2 = generate_decoy_accounts(5, &mut rng2);
+        assert_eq!(d1, d2, "same seed must produce identical decoy sets");
+    }
+
+    #[test]
+    fn test_fog_error_display() {
+        let msg = format!("{}", FogError::MessageCompile);
+        assert!(!msg.is_empty(), "FogError display must not be empty");
+    }
+
+    #[test]
+    fn test_many_decoys_impenetrable_grade() {
+        let payer = Pubkey::new_unique();
+        let real = Pubkey::new_unique();
+        let ix = dummy_ix(&real);
+        let mut rng = seeded_rng();
+        // 20 random decoys on a tx with ~3 base accounts → ratio ≈ 0.87 → Impenetrable
+        let decoys = generate_decoy_accounts(20, &mut rng);
+        let fog_tx = build_fog_v0_tx(&[ix], &payer, Hash::default(), &[], &decoys).unwrap();
+        let score = score_tx_fingerprint(&fog_tx);
+        assert_eq!(score.fog_grade, FogGrade::Impenetrable);
+    }
 }

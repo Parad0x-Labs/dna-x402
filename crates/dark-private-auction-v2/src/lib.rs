@@ -283,4 +283,76 @@ mod tests {
         assert_eq!(root1, root2);
         assert_ne!(root1, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_auction_id_nonzero() {
+        let auction = new_auction(&secret(0x01), b"item", 100, &nonce(0x01)).unwrap();
+        assert_ne!(auction.auction_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_auctioneer_hash_nonzero() {
+        let auction = new_auction(&secret(0x02), b"item", 100, &nonce(0x01)).unwrap();
+        assert_ne!(auction.auctioneer_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_item_hash_nonzero() {
+        let auction = new_auction(&secret(0x03), b"item", 100, &nonce(0x01)).unwrap();
+        assert_ne!(auction.item_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reserve_commitment_nonzero() {
+        let auction = new_auction(&secret(0x04), b"item", 100, &nonce(0x01)).unwrap();
+        assert_ne!(auction.reserve_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_item_rejected() {
+        let err = new_auction(&secret(0x05), b"", 100, &nonce(0x01)).unwrap_err();
+        assert_eq!(err, AuctionError::EmptyItem);
+    }
+
+    #[test]
+    fn test_no_bids_finalize_rejected() {
+        let mut auction = new_auction(&secret(0x06), b"item", 100, &nonce(0x01)).unwrap();
+        let err = finalize_auction(&mut auction, &secret(0xb1), 100, &nonce(0x01)).unwrap_err();
+        assert_eq!(err, AuctionError::NoBids);
+    }
+
+    #[test]
+    fn test_double_finalize_rejected() {
+        let mut auction = new_auction(&secret(0x07), b"item", 100, &nonce(0x01)).unwrap();
+        place_bid(&mut auction, &secret(0xb1), 100, &nonce(0x0a)).unwrap();
+        finalize_auction(&mut auction, &secret(0xb1), 100, &nonce(0x0a)).unwrap();
+        let err = finalize_auction(&mut auction, &secret(0xb1), 100, &nonce(0x0a)).unwrap_err();
+        assert_eq!(err, AuctionError::AlreadyFinalized);
+    }
+
+    #[test]
+    fn test_bid_count_increments() {
+        let mut auction = new_auction(&secret(0x08), b"item", 100, &nonce(0x01)).unwrap();
+        assert_eq!(auction.bid_count, 0);
+        place_bid(&mut auction, &secret(0xb1), 50, &nonce(0x0a)).unwrap();
+        assert_eq!(auction.bid_count, 1);
+        place_bid(&mut auction, &secret(0xb2), 60, &nonce(0x0b)).unwrap();
+        assert_eq!(auction.bid_count, 2);
+    }
+
+    #[test]
+    fn test_bid_commitment_nonzero() {
+        let mut auction = new_auction(&secret(0x09), b"item", 100, &nonce(0x01)).unwrap();
+        let bc = place_bid(&mut auction, &secret(0xb1), 100, &nonce(0x0a)).unwrap();
+        assert_ne!(bc.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bid_id_nonzero() {
+        let mut auction = new_auction(&secret(0x0A), b"item", 100, &nonce(0x01)).unwrap();
+        let bc = place_bid(&mut auction, &secret(0xb1), 100, &nonce(0x0a)).unwrap();
+        assert_ne!(bc.bid_id, [0u8; 32]);
+    }
 }

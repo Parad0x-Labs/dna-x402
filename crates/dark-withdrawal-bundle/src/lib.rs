@@ -562,4 +562,12 @@ mod tests {
         let ns3 = derive_note_secret(&make_root_secret(100));
         assert_ne!(ns1.note_secret, ns3.note_secret);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_zero_recipient_key_rejected() {
+        let err = create_note(1_000, &make_nonce(0x01), &[0u8; 32]).unwrap_err();
+        assert_eq!(err, WithdrawalError::ZeroRecipientKey);
+    }
 }

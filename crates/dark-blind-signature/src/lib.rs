@@ -194,4 +194,90 @@ mod tests {
         assert!(verify_unblinded(&unblinded));
         assert_eq!(unblinded.message_hash, blinded.message_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let blinded = blind_message(b"msg", &[1u8; 32]).unwrap();
+        assert!(!blinded.mainnet_ready);
+        let sig = sign_blinded(&[2u8; 32], &blinded).unwrap();
+        assert!(!sig.mainnet_ready);
+        let unblinded = unblind_signature(&sig, &blinded).unwrap();
+        assert!(!unblinded.mainnet_ready);
+    }
+
+    #[test]
+    fn test_blind_deterministic() {
+        let b1 = blind_message(b"msg", &[5u8; 32]).unwrap();
+        let b2 = blind_message(b"msg", &[5u8; 32]).unwrap();
+        assert_eq!(b1.blinded, b2.blinded);
+    }
+
+    #[test]
+    fn test_blinded_message_blinding_sensitive() {
+        let b1 = blind_message(b"msg", &[5u8; 32]).unwrap();
+        let b2 = blind_message(b"msg", &[6u8; 32]).unwrap();
+        assert_ne!(b1.blinded, b2.blinded);
+    }
+
+    #[test]
+    fn test_message_hash_message_sensitive() {
+        let b1 = blind_message(b"message-one", &[5u8; 32]).unwrap();
+        let b2 = blind_message(b"message-two", &[5u8; 32]).unwrap();
+        assert_ne!(b1.message_hash, b2.message_hash);
+    }
+
+    #[test]
+    fn test_signer_pubkey_deterministic() {
+        let blinded = blind_message(b"msg", &[3u8; 32]).unwrap();
+        let s1 = sign_blinded(&[9u8; 32], &blinded).unwrap();
+        let s2 = sign_blinded(&[9u8; 32], &blinded).unwrap();
+        assert_eq!(s1.signer_pubkey, s2.signer_pubkey);
+    }
+
+    #[test]
+    fn test_signer_pubkey_secret_sensitive() {
+        let blinded = blind_message(b"msg", &[3u8; 32]).unwrap();
+        let s1 = sign_blinded(&[9u8; 32], &blinded).unwrap();
+        let s2 = sign_blinded(&[10u8; 32], &blinded).unwrap();
+        assert_ne!(s1.signer_pubkey, s2.signer_pubkey);
+    }
+
+    #[test]
+    fn test_signature_deterministic() {
+        let blinded = blind_message(b"msg", &[3u8; 32]).unwrap();
+        let s1 = sign_blinded(&[9u8; 32], &blinded).unwrap();
+        let s2 = sign_blinded(&[9u8; 32], &blinded).unwrap();
+        assert_eq!(s1.signature, s2.signature);
+    }
+
+    #[test]
+    fn test_unblinded_message_hash_matches_blinded() {
+        let blinding = [7u8; 32];
+        let blinded = blind_message(b"match-me", &blinding).unwrap();
+        let sig = sign_blinded(&[3u8; 32], &blinded).unwrap();
+        let unblinded = unblind_signature(&sig, &blinded).unwrap();
+        assert_eq!(unblinded.message_hash, blinded.message_hash);
+    }
+
+    #[test]
+    fn test_unblinded_signer_pubkey_matches() {
+        let blinding = [8u8; 32];
+        let blinded = blind_message(b"pub-check", &blinding).unwrap();
+        let sig = sign_blinded(&[4u8; 32], &blinded).unwrap();
+        let unblinded = unblind_signature(&sig, &blinded).unwrap();
+        assert_eq!(unblinded.signer_pubkey, sig.signer_pubkey);
+    }
+
+    #[test]
+    fn test_verify_unblinded_false_for_zeroed_sig() {
+        let sig = UnblindedSignature {
+            message_hash: [1u8; 32],
+            signature: [0u8; 32], // zero sig → verify returns false
+            signer_pubkey: [2u8; 32],
+            mainnet_ready: false,
+        };
+        assert!(!verify_unblinded(&sig));
+    }
 }

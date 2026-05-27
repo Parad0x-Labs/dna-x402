@@ -119,4 +119,80 @@ mod tests {
         let p2 = prove_range(20, 0, 100, &blinding()).unwrap();
         assert_ne!(p1.value_commitment, p2.value_commitment);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_range_commitment_nonzero() {
+        let proof = prove_range(50, 0, 100, &blinding()).unwrap();
+        assert_ne!(proof.range_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_range_commitment_deterministic() {
+        let p1 = prove_range(50, 0, 100, &blinding()).unwrap();
+        let p2 = prove_range(75, 0, 100, &blinding()).unwrap();
+        // Same low/high → same range_commitment regardless of value
+        assert_eq!(p1.range_commitment, p2.range_commitment);
+    }
+
+    #[test]
+    fn test_different_blinding_different_value_commitment() {
+        let bl2 = [0xcc_u8; 32];
+        let p1 = prove_range(50, 0, 100, &blinding()).unwrap();
+        let p2 = prove_range(50, 0, 100, &bl2).unwrap();
+        assert_ne!(p1.value_commitment, p2.value_commitment);
+    }
+
+    #[test]
+    fn test_value_at_low_boundary_ok() {
+        let proof = prove_range(0, 0, 100, &blinding()).unwrap();
+        assert!(proof.in_range);
+    }
+
+    #[test]
+    fn test_value_at_high_boundary_ok() {
+        let proof = prove_range(100, 0, 100, &blinding()).unwrap();
+        assert!(proof.in_range);
+    }
+
+    #[test]
+    fn test_value_below_low_rejected() {
+        let result = prove_range(0, 1, 100, &blinding());
+        assert_eq!(
+            result.err(),
+            Some(RangeErrorV3::ValueOutOfRange {
+                value: 0,
+                low: 1,
+                high: 100
+            })
+        );
+    }
+
+    #[test]
+    fn test_equal_low_high_ok() {
+        // low == high is allowed; value must equal both
+        let proof = prove_range(5, 5, 5, &blinding()).unwrap();
+        assert!(proof.in_range);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let proof = prove_range(50, 0, 100, &blinding()).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_ranges_different_range_commitment() {
+        let p1 = prove_range(50, 0, 100, &blinding()).unwrap();
+        let p2 = prove_range(50, 0, 200, &blinding()).unwrap();
+        assert_ne!(p1.range_commitment, p2.range_commitment);
+    }
+
+    #[test]
+    fn test_proof_deterministic() {
+        let p1 = prove_range(42, 0, 100, &blinding()).unwrap();
+        let p2 = prove_range(42, 0, 100, &blinding()).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
 }

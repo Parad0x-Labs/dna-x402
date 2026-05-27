@@ -258,4 +258,80 @@ mod tests {
         assert_eq!(p1.proof_id, p2.proof_id);
         assert_eq!(p1.commitment, p2.commitment);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_set_id_nonzero() {
+        let set = build_set(&elements()).unwrap();
+        assert_ne!(set.set_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_element_root_nonzero() {
+        let set = build_set(&elements()).unwrap();
+        assert_ne!(set.element_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_set_mainnet_ready_false() {
+        let set = build_set(&elements()).unwrap();
+        assert!(!set.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let elems = elements();
+        let set = build_set(&elems).unwrap();
+        let hashes = hashes_for(&elems);
+        let proof = prove_membership(&set, &hashes, b"alice", &secret()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_set_size_matches_element_count() {
+        let set = build_set(&elements()).unwrap();
+        assert_eq!(set.size, 3);
+    }
+
+    #[test]
+    fn test_different_sets_different_set_id() {
+        let s1 = build_set(&[b"a", b"b"]).unwrap();
+        let s2 = build_set(&[b"c", b"d"]).unwrap();
+        assert_ne!(s1.set_id, s2.set_id);
+    }
+
+    #[test]
+    fn test_element_hash_nonzero() {
+        let h = compute_element_hash(b"test_elem");
+        assert_ne!(h, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_element_hash_deterministic() {
+        let h1 = compute_element_hash(b"deterministic");
+        let h2 = compute_element_hash(b"deterministic");
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_public_record_fields() {
+        let set = build_set(&elements()).unwrap();
+        let record = set_public_record(&set);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["set_id"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+        assert_eq!(v["size"], 3);
+    }
+
+    #[test]
+    fn test_verify_wrong_element_fails() {
+        let elems = elements();
+        let set = build_set(&elems).unwrap();
+        let hashes = hashes_for(&elems);
+        let proof = prove_membership(&set, &hashes, b"alice", &secret()).unwrap();
+        // Verify with wrong element (bob instead of alice)
+        let ok = verify_membership(&proof, &set, &hashes, b"bob", &secret());
+        assert!(!ok);
+    }
 }

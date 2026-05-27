@@ -159,4 +159,78 @@ mod tests {
             assert!(!exts.is_empty(), "{:?} has no extensions", t);
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_template_hash_nonzero() {
+        assert_ne!(template_hash(&TemplateKind::RitualBound), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_all_template_hashes_distinct() {
+        let hashes = [
+            template_hash(&TemplateKind::MemeWithFee),
+            template_hash(&TemplateKind::HuntWithHook),
+            template_hash(&TemplateKind::SoulboundBadge),
+            template_hash(&TemplateKind::HintPass),
+            template_hash(&TemplateKind::RitualBound),
+        ];
+        for i in 0..hashes.len() {
+            for j in (i + 1)..hashes.len() {
+                assert_ne!(
+                    hashes[i], hashes[j],
+                    "templates {} and {} share a hash",
+                    i, j
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_hint_pass_has_transfer_hook() {
+        let exts = extensions_for_template(&TemplateKind::HintPass);
+        assert!(exts.contains(&TokenExtension::TransferHook));
+    }
+
+    #[test]
+    fn test_hint_pass_has_transfer_fee() {
+        let exts = extensions_for_template(&TemplateKind::HintPass);
+        assert!(exts.contains(&TokenExtension::TransferFee));
+    }
+
+    #[test]
+    fn test_soulbound_badge_non_transferable() {
+        let exts = extensions_for_template(&TemplateKind::SoulboundBadge);
+        assert!(exts.contains(&TokenExtension::NonTransferable));
+    }
+
+    #[test]
+    fn test_ritual_bound_three_extensions() {
+        let exts = extensions_for_template(&TemplateKind::RitualBound);
+        assert_eq!(exts.len(), 3);
+    }
+
+    #[test]
+    fn test_rent_grows_with_extension_count() {
+        // RitualBound (3 ext) > MemeWithFee (2 ext)
+        let est_ritual = estimate_launch(TemplateKind::RitualBound);
+        let est_meme = estimate_launch(TemplateKind::MemeWithFee);
+        assert!(
+            est_ritual.estimated_rent_lamports > est_meme.estimated_rent_lamports,
+            "more extensions should cost more rent"
+        );
+    }
+
+    #[test]
+    fn test_estimate_launch_compatible_true() {
+        let est = estimate_launch(TemplateKind::HuntWithHook);
+        assert!(est.compatible);
+    }
+
+    #[test]
+    fn test_estimate_launch_template_preserved() {
+        let est = estimate_launch(TemplateKind::HintPass);
+        assert_eq!(est.template, TemplateKind::HintPass);
+    }
 }

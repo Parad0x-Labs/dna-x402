@@ -210,4 +210,61 @@ mod tests {
         let winner = select_cheapest(&[r_a, r_b], &[c_a, c_b]);
         assert_eq!(winner, Some(0), "relayer_a (100k) should be cheapest");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_deterministic() {
+        let c1 = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        let c2 = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        assert_eq!(c1.hash, c2.hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_amount_sensitive() {
+        let c1 = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        let c2 = commit_quote(AMOUNT + 1, &NONCE, &RELAYER, &RECEIPT);
+        assert_ne!(c1.hash, c2.hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_nonce_sensitive() {
+        let c1 = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        let c2 = commit_quote(AMOUNT, &[0xFFu8; 32], &RELAYER, &RECEIPT);
+        assert_ne!(c1.hash, c2.hash);
+    }
+
+    #[test]
+    fn test_relayer_field_stored() {
+        let c = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        assert_eq!(c.relayer, RELAYER);
+    }
+
+    #[test]
+    fn test_receipt_hash_field_stored() {
+        let c = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        assert_eq!(c.receipt_hash, RECEIPT);
+    }
+
+    #[test]
+    fn test_display_relayer_mismatch_nonempty() {
+        assert!(!QuoteError::RelayerMismatch.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_display_commitment_mismatch_nonempty() {
+        assert!(!QuoteError::CommitmentMismatch.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_select_cheapest_single() {
+        let c = commit_quote(AMOUNT, &NONCE, &RELAYER, &RECEIPT);
+        let r = good_reveal();
+        assert_eq!(select_cheapest(&[r], &[c]), Some(0));
+    }
+
+    #[test]
+    fn test_select_cheapest_empty() {
+        assert_eq!(select_cheapest(&[], &[]), None);
+    }
 }

@@ -166,4 +166,82 @@ mod tests {
             GossipError::ReceiverMismatch
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_message_commitment_nonzero() {
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        assert_ne!(r.message_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_message_commitment_deterministic() {
+        let r1 = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        let r2 = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        assert_eq!(r1.message_commitment, r2.message_commitment);
+    }
+
+    #[test]
+    fn test_message_commitment_message_sensitive() {
+        let r1 = create_gossip_receipt(b"msg-a", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        let r2 = create_gossip_receipt(b"msg-b", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        assert_ne!(r1.message_commitment, r2.message_commitment);
+    }
+
+    #[test]
+    fn test_receiver_commitment_nonzero() {
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        assert_ne!(r.receiver_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_gossip_receipt_mainnet_ready_false() {
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, 0).unwrap();
+        assert!(!r.mainnet_ready);
+    }
+
+    #[test]
+    fn test_gossip_proof_mainnet_ready_false() {
+        let secret = make_nonce(7);
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &secret, 0, 0).unwrap();
+        let proof = prove_receipt(&r, &secret).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let secret = make_nonce(7);
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &secret, 0, 0).unwrap();
+        let proof = prove_receipt(&r, &secret).unwrap();
+        assert_ne!(proof.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_hop_count_stored() {
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, 5).unwrap();
+        assert_eq!(r.hop_count, 5);
+    }
+
+    #[test]
+    fn test_received_at_unix_stored_in_receipt() {
+        let r = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 9999, 0).unwrap();
+        assert_eq!(r.received_at_unix, 9999);
+    }
+
+    #[test]
+    fn test_max_hops_exact_ok() {
+        // hop_count == MAX_HOPS should succeed (check is `>`, not `>=`)
+        let result = create_gossip_receipt(b"hello", &make_nonce(1), &make_nonce(2), 0, MAX_HOPS);
+        assert!(result.is_ok(), "hop_count == MAX_HOPS must succeed");
+    }
+
+    #[test]
+    fn test_verify_wrong_commitment_fails() {
+        let secret = make_nonce(42);
+        let r = create_gossip_receipt(b"signal", &make_nonce(1), &secret, 0, 0).unwrap();
+        let proof = prove_receipt(&r, &secret).unwrap();
+        let wrong_commitment = [0xFFu8; 32];
+        assert!(!verify_gossip_proof(&proof, &wrong_commitment));
+    }
 }

@@ -258,4 +258,90 @@ mod tests {
         assert!(!record.contains("receiver"));
         assert!(record.contains("contract_id"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let r = sample();
+        assert!(!r.mainnet_ready);
+        let c = claim_htlc(&r, b"secret", 15).unwrap();
+        assert!(!c.mainnet_ready);
+        let rf = refund_htlc(&r, 20).unwrap();
+        assert!(!rf.mainnet_ready);
+    }
+
+    #[test]
+    fn test_hash_preimage_deterministic() {
+        let h1 = hash_preimage(b"my-secret");
+        let h2 = hash_preimage(b"my-secret");
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_different_preimage_different_hash() {
+        let h1 = hash_preimage(b"secret-alpha");
+        let h2 = hash_preimage(b"secret-beta");
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_contract_id_deterministic() {
+        let r1 = create_htlc(b"payer", b"recv", hash_preimage(b"s"), 100, 1, 50).unwrap();
+        let r2 = create_htlc(b"payer", b"recv", hash_preimage(b"s"), 100, 1, 50).unwrap();
+        assert_eq!(r1.contract_id, r2.contract_id);
+    }
+
+    #[test]
+    fn test_contract_id_sensitive_to_amount() {
+        let r1 = create_htlc(b"payer", b"recv", hash_preimage(b"s"), 100, 1, 50).unwrap();
+        let r2 = create_htlc(b"payer", b"recv", hash_preimage(b"s"), 200, 1, 50).unwrap();
+        assert_ne!(r1.contract_id, r2.contract_id);
+    }
+
+    #[test]
+    fn test_claim_exactly_at_timeout_slot_succeeds() {
+        // current implementation uses > (strict), so claiming at timeout_slot is allowed
+        let r = sample(); // timeout_slot = 20
+        let c = claim_htlc(&r, b"secret", 20).unwrap();
+        assert_eq!(c.claimed_slot, 20);
+    }
+
+    #[test]
+    fn test_claim_receipt_hash_deterministic() {
+        let r = sample();
+        let c1 = claim_htlc(&r, b"secret", 15).unwrap();
+        let c2 = claim_htlc(&r, b"secret", 15).unwrap();
+        assert_eq!(c1.receipt_hash, c2.receipt_hash);
+    }
+
+    #[test]
+    fn test_claim_receipt_hash_slot_sensitive() {
+        let r = sample();
+        let c1 = claim_htlc(&r, b"secret", 14).unwrap();
+        let c2 = claim_htlc(&r, b"secret", 15).unwrap();
+        assert_ne!(c1.receipt_hash, c2.receipt_hash);
+    }
+
+    #[test]
+    fn test_refund_receipt_hash_deterministic() {
+        let r = sample();
+        let rf1 = refund_htlc(&r, 25).unwrap();
+        let rf2 = refund_htlc(&r, 25).unwrap();
+        assert_eq!(rf1.receipt_hash, rf2.receipt_hash);
+    }
+
+    #[test]
+    fn test_empty_payer_rejected() {
+        let err = create_htlc(b"", b"recv", hash_preimage(b"s"), 100, 1, 50).unwrap_err();
+        assert_eq!(err, HtlcError::EmptyParty);
+    }
+
+    #[test]
+    fn test_public_record_contains_hashlock_and_amount() {
+        let record = public_record(&sample());
+        assert!(record.contains("hashlock"));
+        assert!(record.contains("amount"));
+        assert!(record.contains("timeout_slot"));
+    }
 }

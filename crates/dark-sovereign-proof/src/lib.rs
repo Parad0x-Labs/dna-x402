@@ -263,4 +263,78 @@ mod tests {
         assert_eq!(v["valid"], true);
         assert!(v["proof_id"].is_string());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let p = prove_sovereignty(&owner_secret(), b"data", b"domain", &blinding(), 0).unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_id_deterministic() {
+        let p1 = prove_sovereignty(&owner_secret(), b"data", b"domain", &blinding(), 100).unwrap();
+        let p2 = prove_sovereignty(&owner_secret(), b"data", b"domain", &blinding(), 100).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_different_data_different_commitment() {
+        let p1 = prove_sovereignty(&owner_secret(), b"data-a", b"domain", &blinding(), 0).unwrap();
+        let p2 = prove_sovereignty(&owner_secret(), b"data-b", b"domain", &blinding(), 0).unwrap();
+        assert_ne!(p1.data_commitment, p2.data_commitment);
+    }
+
+    #[test]
+    fn test_different_blinding_different_commitment() {
+        let mut b2 = blinding();
+        b2[0] ^= 0xFF;
+        let p1 = prove_sovereignty(&owner_secret(), b"data", b"domain", &blinding(), 0).unwrap();
+        let p2 = prove_sovereignty(&owner_secret(), b"data", b"domain", &b2, 0).unwrap();
+        assert_ne!(p1.data_commitment, p2.data_commitment);
+    }
+
+    #[test]
+    fn test_proof_valid_flag_true() {
+        let p = prove_sovereignty(&owner_secret(), b"data", b"domain", &blinding(), 0).unwrap();
+        assert!(p.valid);
+        assert!(verify_sovereignty(&p));
+    }
+
+    #[test]
+    fn test_empty_domain_rejected() {
+        let err = prove_sovereignty(&owner_secret(), b"data", b"", &blinding(), 0).unwrap_err();
+        assert_eq!(err, SovereignError::EmptyDomain);
+    }
+
+    #[test]
+    fn test_issued_at_stored() {
+        let p =
+            prove_sovereignty(&owner_secret(), b"data", b"dom", &blinding(), 42_000_000).unwrap();
+        assert_eq!(p.issued_at, 42_000_000);
+    }
+
+    #[test]
+    fn test_update_domain_preserves_owner_hash() {
+        let mut p = prove_sovereignty(&owner_secret(), b"data", b"dom-1", &blinding(), 0).unwrap();
+        let original_owner_hash = p.owner_hash;
+        update_domain(&mut p, b"dom-2");
+        assert_eq!(p.owner_hash, original_owner_hash);
+    }
+
+    #[test]
+    fn test_public_record_issued_at() {
+        let p = prove_sovereignty(&owner_secret(), b"data", b"dom", &blinding(), 9_999).unwrap();
+        let record = proof_public_record(&p);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["issued_at"], 9_999i64);
+    }
+
+    #[test]
+    fn test_proof_id_sensitive_to_timestamp() {
+        let p1 = prove_sovereignty(&owner_secret(), b"data", b"dom", &blinding(), 100).unwrap();
+        let p2 = prove_sovereignty(&owner_secret(), b"data", b"dom", &blinding(), 200).unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
 }

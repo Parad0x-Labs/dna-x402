@@ -208,4 +208,87 @@ mod tests {
         assert_eq!(proof1.proof_hash, proof2.proof_hash);
         assert_eq!(proof1.intersection_size, proof2.intersection_size);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_set_hash_nonzero() {
+        let shared_secret = [5u8; 32];
+        let set = hash_set(&[b"item"], &shared_secret).unwrap();
+        assert_ne!(set.set_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_element_hash_nonzero() {
+        let shared_secret = [6u8; 32];
+        let set = hash_set(&[b"item"], &shared_secret).unwrap();
+        assert_ne!(set.elements[0], [0u8; 32]);
+    }
+
+    #[test]
+    fn test_set_mainnet_ready_false() {
+        let shared_secret = [7u8; 32];
+        let set = hash_set(&[b"item"], &shared_secret).unwrap();
+        assert!(!set.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let shared_secret = [8u8; 32];
+        let set_a = hash_set(&[b"a"], &shared_secret).unwrap();
+        let set_b = hash_set(&[b"a"], &shared_secret).unwrap();
+        let proof = intersect(&set_a, &set_b);
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let shared_secret = [9u8; 32];
+        let set_a = hash_set(&[b"a"], &shared_secret).unwrap();
+        let set_b = hash_set(&[b"b"], &shared_secret).unwrap();
+        let proof = intersect(&set_a, &set_b);
+        assert_ne!(proof.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_set_rejected() {
+        let shared_secret = [10u8; 32];
+        let err = hash_set(&[], &shared_secret).unwrap_err();
+        assert_eq!(err, PsiError::EmptySet);
+    }
+
+    #[test]
+    fn test_zero_secret_rejected() {
+        let err = hash_set(&[b"item"], &[0u8; 32]).unwrap_err();
+        assert_eq!(err, PsiError::PartySecretZero);
+    }
+
+    #[test]
+    fn test_verify_fails_on_modified_proof() {
+        let shared_secret = [11u8; 32];
+        let set_a = hash_set(&[b"x"], &shared_secret).unwrap();
+        let set_b = hash_set(&[b"x", b"y"], &shared_secret).unwrap();
+        let mut proof = intersect(&set_a, &set_b);
+        proof.intersection_size = 999; // tamper
+        assert!(!verify_intersection(&set_a, &set_b, &proof));
+    }
+
+    #[test]
+    fn test_full_intersection() {
+        let shared_secret = [12u8; 32];
+        let set_a = hash_set(&[b"p", b"q"], &shared_secret).unwrap();
+        let set_b = hash_set(&[b"p", b"q"], &shared_secret).unwrap();
+        let proof = intersect(&set_a, &set_b);
+        assert_eq!(proof.intersection_size, 2);
+    }
+
+    #[test]
+    fn test_intersection_commutative() {
+        let shared_secret = [13u8; 32];
+        let set_a = hash_set(&[b"r", b"s", b"t"], &shared_secret).unwrap();
+        let set_b = hash_set(&[b"s", b"t", b"u"], &shared_secret).unwrap();
+        let proof_ab = intersect(&set_a, &set_b);
+        let proof_ba = intersect(&set_b, &set_a);
+        assert_eq!(proof_ab.intersection_size, proof_ba.intersection_size);
+    }
 }

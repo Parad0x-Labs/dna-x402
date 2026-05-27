@@ -200,4 +200,72 @@ mod tests {
         assert!(v.get("requester_hash").is_none());
         assert!(v.get("reveal_nonce").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_request_id_nonzero() {
+        let req = submit_request(&secret(0x01), b"q", &nonce(0x01)).unwrap();
+        assert_ne!(req.request_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_requester_hash_nonzero() {
+        let req = submit_request(&secret(0x02), b"q", &nonce(0x01)).unwrap();
+        assert_ne!(req.requester_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_query_hash_nonzero() {
+        let req = submit_request(&secret(0x03), b"query", &nonce(0x01)).unwrap();
+        assert_ne!(req.query_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_blinded_query_nonzero() {
+        let req = submit_request(&secret(0x04), b"query", &nonce(0x01)).unwrap();
+        assert_ne!(req.blinded_query, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let req = submit_request(&secret(0x05), b"q", &nonce(0x01)).unwrap();
+        assert!(!req.mainnet_ready);
+    }
+
+    #[test]
+    fn test_response_mainnet_ready_false() {
+        let req = submit_request(&secret(0x06), b"q", &nonce(0x01)).unwrap();
+        let resp = submit_response(&secret(0x07), &req, b"answer").unwrap();
+        assert!(!resp.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_oracle_secret_rejected() {
+        let req = submit_request(&secret(0x08), b"q", &nonce(0x01)).unwrap();
+        let err = submit_response(&[0u8; 32], &req, b"answer").unwrap_err();
+        assert_eq!(err, OracleError::ZeroOracleSecret);
+    }
+
+    #[test]
+    fn test_empty_answer_rejected() {
+        let req = submit_request(&secret(0x09), b"q", &nonce(0x01)).unwrap();
+        let err = submit_response(&secret(0x0A), &req, b"").unwrap_err();
+        assert_eq!(err, OracleError::EmptyAnswer);
+    }
+
+    #[test]
+    fn test_different_nonces_different_requests() {
+        let r1 = submit_request(&secret(0x0B), b"same-query", &nonce(0x01)).unwrap();
+        let r2 = submit_request(&secret(0x0B), b"same-query", &nonce(0x02)).unwrap();
+        assert_ne!(r1.blinded_query, r2.blinded_query);
+        assert_ne!(r1.request_id, r2.request_id);
+    }
+
+    #[test]
+    fn test_response_commitment_nonzero() {
+        let req = submit_request(&secret(0x0C), b"query", &nonce(0x01)).unwrap();
+        let resp = submit_response(&secret(0x0D), &req, b"answer").unwrap();
+        assert_ne!(resp.response_commitment, [0u8; 32]);
+    }
 }

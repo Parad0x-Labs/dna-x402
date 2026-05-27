@@ -160,4 +160,70 @@ mod tests {
         let c = sample(); // expiry_slot = 9999
         assert!(is_expired(&c, 10_000));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_hash_nonzero() {
+        let c = sample();
+        assert_ne!(intent_hash(&c), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_from_json_parse_error() {
+        let bad_json = "this is not json";
+        let hash = [0u8; 32];
+        assert_eq!(verify_from_json(bad_json, &hash), Err("parse error"));
+    }
+
+    #[test]
+    fn test_is_not_expired_well_before_expiry() {
+        let c = sample(); // expiry_slot=9999
+        assert!(!is_expired(&c, 0));
+    }
+
+    #[test]
+    fn test_render_contains_action() {
+        let c = sample();
+        let json = render(&c);
+        assert!(json.contains("buy 100 API calls"));
+    }
+
+    #[test]
+    fn test_no_withdraw_field_preserved() {
+        let mut c = sample();
+        c.no_withdraw = true;
+        assert!(c.no_withdraw);
+        assert_ne!(intent_hash(&c), intent_hash(&sample())); // hash changes
+    }
+
+    #[test]
+    fn test_receipt_root_none_vs_some_differ() {
+        let none = sample();
+        let mut with_root = sample();
+        with_root.receipt_root_after = Some([0xDDu8; 32]);
+        assert_ne!(intent_hash(&none), intent_hash(&with_root));
+    }
+
+    #[test]
+    fn test_intent_capsule_clone_equality() {
+        let c = sample();
+        let c2 = c.clone();
+        assert_eq!(c, c2);
+        assert_eq!(intent_hash(&c), intent_hash(&c2));
+    }
+
+    #[test]
+    fn test_verify_from_json_wrong_hash_returns_mismatch() {
+        let c = sample();
+        let json = render(&c);
+        let wrong_hash = [0xFFu8; 32];
+        assert_eq!(verify_from_json(&json, &wrong_hash), Err("hash mismatch"));
+    }
+
+    #[test]
+    fn test_render_is_not_empty() {
+        let c = sample();
+        assert!(!render(&c).is_empty());
+    }
 }

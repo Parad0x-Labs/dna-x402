@@ -266,4 +266,97 @@ mod tests {
         assert!(record.contains("leaf_count"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_leaf_hash_nonzero() {
+        let leaf = create_leaf(&sample_id(30), 1_000, &sample_nonce(30)).unwrap();
+        assert_ne!(leaf.leaf_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_leaf_mainnet_ready_false() {
+        let leaf = create_leaf(&sample_id(31), 500, &sample_nonce(31)).unwrap();
+        assert!(!leaf.mainnet_ready);
+    }
+
+    #[test]
+    fn test_inclusion_proof_mainnet_ready_false() {
+        let mut tree = new_reserves_tree();
+        let leaf = create_leaf(&sample_id(32), 100, &sample_nonce(32)).unwrap();
+        let hash = leaf.leaf_hash;
+        add_leaf(&mut tree, leaf, 100);
+        let proof = prove_inclusion(&tree, &hash).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_total_committed_accumulates() {
+        let mut tree = new_reserves_tree();
+        let l1 = create_leaf(&sample_id(40), 1_000, &sample_nonce(40)).unwrap();
+        let l2 = create_leaf(&sample_id(41), 2_000, &sample_nonce(41)).unwrap();
+        add_leaf(&mut tree, l1, 1_000);
+        add_leaf(&mut tree, l2, 2_000);
+        assert_eq!(tree.total_committed, 3_000);
+    }
+
+    #[test]
+    fn test_leaf_count_increments() {
+        let mut tree = new_reserves_tree();
+        assert_eq!(tree.leaf_count, 0);
+        let l1 = create_leaf(&sample_id(50), 100, &sample_nonce(50)).unwrap();
+        add_leaf(&mut tree, l1, 100);
+        assert_eq!(tree.leaf_count, 1);
+    }
+
+    #[test]
+    fn test_root_nonzero_after_leaf() {
+        let mut tree = new_reserves_tree();
+        let leaf = create_leaf(&sample_id(60), 1_000, &sample_nonce(60)).unwrap();
+        add_leaf(&mut tree, leaf, 1_000);
+        assert_ne!(tree.root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_balance_different_leaf_hash() {
+        let l1 = create_leaf(&sample_id(70), 100, &sample_nonce(70)).unwrap();
+        let l2 = create_leaf(&sample_id(70), 200, &sample_nonce(70)).unwrap();
+        assert_ne!(l1.leaf_hash, l2.leaf_hash);
+    }
+
+    #[test]
+    fn test_different_nonce_different_leaf_hash() {
+        let l1 = create_leaf(&sample_id(80), 500, &sample_nonce(80)).unwrap();
+        let l2 = create_leaf(&sample_id(80), 500, &sample_nonce(81)).unwrap();
+        assert_ne!(l1.leaf_hash, l2.leaf_hash);
+    }
+
+    #[test]
+    fn test_public_record_leaf_count_correct() {
+        let mut tree = new_reserves_tree();
+        let l1 = create_leaf(&sample_id(90), 100, &sample_nonce(90)).unwrap();
+        let l2 = create_leaf(&sample_id(91), 200, &sample_nonce(91)).unwrap();
+        add_leaf(&mut tree, l1, 100);
+        add_leaf(&mut tree, l2, 200);
+        let record = reserves_public_record(&tree);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["leaf_count"], 2u64);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_root_deterministic_same_leaves() {
+        let mut tree1 = new_reserves_tree();
+        let mut tree2 = new_reserves_tree();
+        let l1a = create_leaf(&sample_id(100), 1_000, &sample_nonce(100)).unwrap();
+        let l1b = create_leaf(&sample_id(100), 1_000, &sample_nonce(100)).unwrap();
+        let l2a = create_leaf(&sample_id(101), 2_000, &sample_nonce(101)).unwrap();
+        let l2b = create_leaf(&sample_id(101), 2_000, &sample_nonce(101)).unwrap();
+        add_leaf(&mut tree1, l1a, 1_000);
+        add_leaf(&mut tree1, l2a, 2_000);
+        add_leaf(&mut tree2, l1b, 1_000);
+        add_leaf(&mut tree2, l2b, 2_000);
+        assert_eq!(tree1.root, tree2.root);
+    }
 }

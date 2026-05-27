@@ -129,4 +129,81 @@ mod tests {
         increment_paid_users(&mut entry);
         assert_eq!(entry.paid_user_count, 2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_create_entry_revealed_false() {
+        let entry = create_entry(&commitment(), 100, 50, &seller_pubkey());
+        assert!(!entry.revealed);
+        assert!(entry.reveal_hash.is_none());
+    }
+
+    #[test]
+    fn test_submit_reveal_succeeds() {
+        let mut entry = create_entry(&commitment(), 100, 50, &seller_pubkey());
+        let reveal = [0x11u8; 32];
+        submit_reveal(&mut entry, &reveal, 80, 100).unwrap();
+        assert!(entry.revealed);
+        assert_eq!(entry.reveal_hash, Some(reveal));
+    }
+
+    #[test]
+    fn test_stale_reveal_fails() {
+        let mut entry = create_entry(&commitment(), 100, 50, &seller_pubkey());
+        let reveal = [0x22u8; 32];
+        let err = submit_reveal(&mut entry, &reveal, 101, 100).unwrap_err();
+        assert_eq!(err, ProofboardError::StaleReveal);
+    }
+
+    #[test]
+    fn test_already_revealed_rejected() {
+        let mut entry = create_entry(&commitment(), 100, 50, &seller_pubkey());
+        let reveal = [0x33u8; 32];
+        submit_reveal(&mut entry, &reveal, 80, 100).unwrap();
+        let err = submit_reveal(&mut entry, &reveal, 81, 100).unwrap_err();
+        assert_eq!(err, ProofboardError::AlreadyRevealed);
+    }
+
+    #[test]
+    fn test_seller_hash_deterministic() {
+        let pubkey = seller_pubkey();
+        let e1 = create_entry(&commitment(), 0, 0, &pubkey);
+        let e2 = create_entry(&commitment(), 0, 0, &pubkey);
+        assert_eq!(e1.seller_hash, e2.seller_hash);
+    }
+
+    #[test]
+    fn test_seller_hash_pubkey_sensitive() {
+        let pk1 = [0x11u8; 32];
+        let pk2 = [0x22u8; 32];
+        let e1 = create_entry(&commitment(), 0, 0, &pk1);
+        let e2 = create_entry(&commitment(), 0, 0, &pk2);
+        assert_ne!(e1.seller_hash, e2.seller_hash);
+    }
+
+    #[test]
+    fn test_is_late_reveal_at_boundary_not_late() {
+        // current_slot == deadline → NOT late (> check)
+        assert!(!is_late_reveal(100, 100));
+    }
+
+    #[test]
+    fn test_is_late_reveal_one_past() {
+        assert!(is_late_reveal(101, 100));
+    }
+
+    #[test]
+    fn test_paid_user_count_saturates_at_max() {
+        let mut entry = create_entry(&commitment(), 0, 0, &seller_pubkey());
+        entry.paid_user_count = u32::MAX;
+        increment_paid_users(&mut entry);
+        assert_eq!(entry.paid_user_count, u32::MAX);
+    }
+
+    #[test]
+    fn test_verify_post_game_wrong_commitment_false() {
+        let entry = create_entry(&commitment(), 100, 50, &seller_pubkey());
+        assert!(!verify_post_game(&entry, &[0xFFu8; 32]));
+    }
 }

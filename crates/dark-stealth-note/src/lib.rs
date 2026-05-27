@@ -284,4 +284,133 @@ mod tests {
             "public record must not contain encrypted_amount hex; got: {json}"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_flags_always_false() {
+        let note =
+            create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1).unwrap();
+        assert!(!note.mainnet_ready);
+        let spend = spend_note(&note, &spend_secret()).unwrap();
+        assert!(!spend.mainnet_ready);
+    }
+
+    #[test]
+    fn test_note_id_deterministic() {
+        let n1 = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            500,
+        )
+        .unwrap();
+        let n2 = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            500,
+        )
+        .unwrap();
+        assert_eq!(n1.note_id, n2.note_id);
+    }
+
+    #[test]
+    fn test_different_amounts_different_note_ids() {
+        let n1 = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            100,
+        )
+        .unwrap();
+        let n2 = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            scope(),
+            200,
+        )
+        .unwrap();
+        assert_ne!(n1.note_id, n2.note_id);
+    }
+
+    #[test]
+    fn test_different_ephem_different_stealth_addr() {
+        let mut ephem2 = ephem_secret();
+        ephem2[0] ^= 0xFF;
+        let n1 = create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1).unwrap();
+        let n2 = create_note(&scan_secret(), &spend_secret(), &ephem2, scope(), 1).unwrap();
+        assert_ne!(n1.stealth_addr, n2.stealth_addr);
+    }
+
+    #[test]
+    fn test_different_scopes_different_scope_hashes() {
+        let n1 = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            b"scope-x",
+            1,
+        )
+        .unwrap();
+        let n2 = create_note(
+            &scan_secret(),
+            &spend_secret(),
+            &ephem_secret(),
+            b"scope-y",
+            1,
+        )
+        .unwrap();
+        assert_ne!(n1.scope_hash, n2.scope_hash);
+    }
+
+    #[test]
+    fn test_wrong_ephem_pubkey_scan_fails() {
+        let note =
+            create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1).unwrap();
+        let wrong_ephem = [0xFFu8; 32];
+        assert!(!scan_note(&note, &scan_secret(), &wrong_ephem));
+    }
+
+    #[test]
+    fn test_spend_nullifier_deterministic() {
+        let note =
+            create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1).unwrap();
+        let s1 = spend_note(&note, &spend_secret()).unwrap();
+        let s2 = spend_note(&note, &spend_secret()).unwrap();
+        assert_eq!(s1.nullifier, s2.nullifier);
+    }
+
+    #[test]
+    fn test_different_spend_secret_different_nullifier() {
+        let note =
+            create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1).unwrap();
+        let mut ss2 = spend_secret();
+        ss2[0] ^= 0xFF;
+        let s1 = spend_note(&note, &spend_secret()).unwrap();
+        let s2 = spend_note(&note, &ss2).unwrap();
+        assert_ne!(s1.nullifier, s2.nullifier);
+    }
+
+    #[test]
+    fn test_zero_ephem_secret_rejected() {
+        let err = create_note(&scan_secret(), &spend_secret(), &[0u8; 32], scope(), 1).unwrap_err();
+        assert_eq!(err, NoteError::ZeroEphemeral);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_fields() {
+        let note =
+            create_note(&scan_secret(), &spend_secret(), &ephem_secret(), scope(), 1).unwrap();
+        let json = note_public_record(&note);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(v["note_id"].is_string());
+        assert!(v["stealth_addr"].is_string());
+        assert!(v["scope_hash"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

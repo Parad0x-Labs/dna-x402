@@ -213,4 +213,80 @@ mod tests {
         assert!(v.get("chain_b_hash").is_none());
         assert!(v.get("identity_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_anchor_id_nonzero() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        assert_ne!(anchor.anchor_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_anchor_id_deterministic() {
+        let a1 = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        let a2 = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        assert_eq!(a1.anchor_id, a2.anchor_id);
+    }
+
+    #[test]
+    fn test_anchor_id_nonce_sensitive() {
+        let nonce2 = {
+            let mut n = [0u8; 32];
+            n[0] = 0xFF;
+            n
+        };
+        let a1 = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        let a2 = create_anchor(&secret(), b"solana", b"ethereum", &nonce2).unwrap();
+        assert_ne!(a1.anchor_id, a2.anchor_id);
+    }
+
+    #[test]
+    fn test_chain_a_hash_nonzero() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        assert_ne!(anchor.chain_a_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_chain_b_hash_nonzero() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        assert_ne!(anchor.chain_b_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bridge_commitment_nonzero() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        assert_ne!(anchor.bridge_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bridge_proof_mainnet_ready_false() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        let proof = prove_bridge(&anchor);
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_verify_tampered_proof_fails() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        let mut proof = prove_bridge(&anchor);
+        proof.proof_hash = [0xFFu8; 32]; // tamper
+        assert!(!verify_bridge(&anchor, &proof));
+    }
+
+    #[test]
+    fn test_chain_hashes_differ_for_different_chains() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        assert_ne!(anchor.chain_a_hash, anchor.chain_b_hash);
+    }
+
+    #[test]
+    fn test_public_record_has_anchor_id_and_commitment() {
+        let anchor = create_anchor(&secret(), b"solana", b"ethereum", &nonce()).unwrap();
+        let record = anchor_public_record(&anchor);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["anchor_id"].is_string());
+        assert!(v["bridge_commitment"].is_string());
+        assert!(!v["anchor_id"].as_str().unwrap().is_empty());
+    }
 }

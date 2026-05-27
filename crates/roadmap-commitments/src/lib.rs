@@ -293,4 +293,56 @@ mod tests {
         let c2 = commit_feature(DOCS_A, TESTS_A, CLAIM, 100, 8888, 1000);
         assert_ne!(c1.commit_hash, c2.commit_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commit_hash_nonzero() {
+        let c = make_commit(DOCS_A, TESTS_A, CLAIM);
+        assert_ne!(c.commit_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reveal_at_exact_deadline_verified() {
+        // reveal_slot == reveal_deadline (9999) — strictly > check, so == is NOT Stale
+        let commit = make_commit(DOCS_A, TESTS_A, CLAIM);
+        let mut reveal = make_reveal(&commit, DOCS_A, TESTS_A, CLAIM);
+        reveal.reveal_slot = 9999;
+        assert_eq!(
+            reveal_commit(&commit, &reveal, 9999),
+            RevealStatus::Verified
+        );
+    }
+
+    #[test]
+    fn test_feature_hash_nonzero() {
+        let fh = feature_hash_from(&DOCS_A, &TESTS_A);
+        assert_ne!(fh.0, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_claim_hash_nonzero() {
+        let ch = claim_hash_from(CLAIM);
+        assert_ne!(ch.0, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commit_hash_changes_with_target_epoch() {
+        let c1 = commit_feature(DOCS_A, TESTS_A, CLAIM, 100, 9999, 1000);
+        let c2 = commit_feature(DOCS_A, TESTS_A, CLAIM, 200, 9999, 1000);
+        assert_ne!(c1.commit_hash, c2.commit_hash);
+    }
+
+    #[test]
+    fn test_derive_commit_hash_matches_stored() {
+        let c = make_commit(DOCS_A, TESTS_A, CLAIM);
+        assert_eq!(c.derive_commit_hash(), c.commit_hash);
+    }
+
+    #[test]
+    fn test_commit_hash_changes_with_commit_slot() {
+        let c1 = commit_feature(DOCS_A, TESTS_A, CLAIM, 100, 9999, 1000);
+        let c2 = commit_feature(DOCS_A, TESTS_A, CLAIM, 100, 9999, 2000);
+        assert_ne!(c1.commit_hash, c2.commit_hash);
+    }
 }

@@ -295,4 +295,83 @@ mod tests {
         let err = advance_round(&mut session, &[]).unwrap_err();
         assert_eq!(err, MpcError::RoundComplete);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_session_id_nonzero() {
+        let session = new_session(&secret(), 2).unwrap();
+        assert_ne!(session.session_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_session_id_deterministic() {
+        let s1 = new_session(&secret(), 3).unwrap();
+        let s2 = new_session(&secret(), 3).unwrap();
+        assert_eq!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_session_id_secret_sensitive() {
+        let mut sec2 = secret();
+        sec2[0] ^= 0xFF;
+        let s1 = new_session(&secret(), 2).unwrap();
+        let s2 = new_session(&sec2, 2).unwrap();
+        assert_ne!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let session = new_session(&secret(), 2).unwrap();
+        assert!(!session.mainnet_ready);
+    }
+
+    #[test]
+    fn test_message_hash_nonzero() {
+        let session = new_session(&secret(), 2).unwrap();
+        let msg = create_message(&session, 0, 1, b"payload");
+        assert_ne!(msg.msg_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_message_hash_payload_sensitive() {
+        let session = new_session(&secret(), 2).unwrap();
+        let m1 = create_message(&session, 0, 1, b"payload-alpha");
+        let m2 = create_message(&session, 0, 1, b"payload-beta");
+        assert_ne!(m1.msg_hash, m2.msg_hash);
+    }
+
+    #[test]
+    fn test_round_hash_nonzero() {
+        let mut session = new_session(&secret(), 2).unwrap();
+        let msg = create_message(&session, 0, 1, b"data");
+        let rh = advance_round(&mut session, &[msg]).unwrap();
+        assert_ne!(rh, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_record_fields() {
+        let session = new_session(&secret(), 3).unwrap();
+        let json_str = session_public_record(&session);
+        let v: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        assert!(v["session_id"].is_string());
+        assert_eq!(v["party_count"], 3u8);
+        assert_eq!(v["round"], 0u8);
+        assert_eq!(v["completed"], false);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_min_two_parties_ok() {
+        // party_count == 2 is the minimum allowed
+        let result = new_session(&secret(), 2);
+        assert!(result.is_ok(), "party_count == 2 must succeed");
+    }
+
+    #[test]
+    fn test_session_starts_incomplete() {
+        let session = new_session(&secret(), 4).unwrap();
+        assert!(!session.completed);
+        assert_eq!(session.round, 0);
+    }
 }

@@ -287,4 +287,211 @@ mod tests {
         assert!(!rec.contains(&hex32(&payment.receiver_commitment)));
         assert!(!rec.contains(&hex32(&payment.amount_commitment)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let p = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        assert!(!p.mainnet_ready);
+        let proof = prove_payment(&p);
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_payment_id_deterministic() {
+        let p1 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let p2 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        assert_eq!(p1.payment_id, p2.payment_id);
+    }
+
+    #[test]
+    fn test_payment_id_amount_sensitive() {
+        let p1 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let p2 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            200,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        assert_ne!(p1.payment_id, p2.payment_id);
+    }
+
+    #[test]
+    fn test_payment_id_memo_sensitive() {
+        let p1 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo-a",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let p2 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo-b",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        assert_ne!(p1.payment_id, p2.payment_id);
+    }
+
+    #[test]
+    fn test_zero_receiver_rejected() {
+        let err = create_payment(
+            &secret(0x01),
+            &[0u8; 32],
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap_err();
+        assert_eq!(err, PaymentError::ZeroReceiverSecret);
+    }
+
+    #[test]
+    fn test_zero_amount_rejected() {
+        let err = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            0,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap_err();
+        assert_eq!(err, PaymentError::ZeroAmount);
+    }
+
+    #[test]
+    fn test_receiver_commitment_sensitive() {
+        let p1 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let p2 = create_payment(
+            &secret(0x01),
+            &secret(0x03),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        assert_ne!(p1.receiver_commitment, p2.receiver_commitment);
+    }
+
+    #[test]
+    fn test_nonce_r_commitment_sensitive() {
+        let p1 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let p2 = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x06),
+        )
+        .unwrap();
+        assert_ne!(p1.receiver_commitment, p2.receiver_commitment);
+    }
+
+    #[test]
+    fn test_verify_wrong_payment_id_fails() {
+        let payment = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let mut proof = prove_payment(&payment);
+        proof.payment_id[0] ^= 0xFF;
+        assert!(!verify_payment(&payment, &proof));
+    }
+
+    #[test]
+    fn test_public_record_contains_payment_id_hex() {
+        let payment = create_payment(
+            &secret(0x01),
+            &secret(0x02),
+            100,
+            b"memo",
+            &secret(0x03),
+            &secret(0x04),
+            &secret(0x05),
+        )
+        .unwrap();
+        let rec = payment_public_record(&payment);
+        assert!(rec.contains(&hex32(&payment.payment_id)));
+    }
 }

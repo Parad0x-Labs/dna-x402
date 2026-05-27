@@ -167,4 +167,92 @@ mod tests {
         let h3 = withdraw_public_inputs_hash(&root, &nullifier, amount + 1);
         assert_ne!(h1, h3, "different amount must produce different hash");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_note_commitment_nonzero() {
+        let c = note_commitment(1_000_000, &[0xAAu8; 32], &[0xBBu8; 32]);
+        assert_ne!(c, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_commitment_deterministic() {
+        let c1 = note_commitment(1_000_000, &[0xAAu8; 32], &[0xBBu8; 32]);
+        let c2 = note_commitment(1_000_000, &[0xAAu8; 32], &[0xBBu8; 32]);
+        assert_eq!(c1, c2);
+    }
+
+    #[test]
+    fn test_nullifier_hash_nonzero() {
+        let n = nullifier_hash(&[0x11u8; 32], &[0x22u8; 32], &[0x33u8; 32]);
+        assert_ne!(n, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_root_sensitive() {
+        let commitment = [0x11u8; 32];
+        let secret = [0x22u8; 32];
+        let n1 = nullifier_hash(&commitment, &secret, &[0x33u8; 32]);
+        let n2 = nullifier_hash(&commitment, &secret, &[0x44u8; 32]);
+        assert_ne!(n1, n2);
+    }
+
+    #[test]
+    fn test_nullifier_commitment_sensitive() {
+        let secret = [0x22u8; 32];
+        let root = [0x33u8; 32];
+        let n1 = nullifier_hash(&[0x11u8; 32], &secret, &root);
+        let n2 = nullifier_hash(&[0x99u8; 32], &secret, &root);
+        assert_ne!(n1, n2);
+    }
+
+    #[test]
+    fn test_withdraw_hash_nonzero() {
+        let h = withdraw_public_inputs_hash(&[0x55u8; 32], &[0x66u8; 32], 1_000);
+        assert_ne!(h, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_withdraw_root_sensitive() {
+        let nullifier = [0x66u8; 32];
+        let h1 = withdraw_public_inputs_hash(&[0x55u8; 32], &nullifier, 1_000);
+        let h2 = withdraw_public_inputs_hash(&[0x77u8; 32], &nullifier, 1_000);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_withdraw_nullifier_sensitive() {
+        let root = [0x55u8; 32];
+        let h1 = withdraw_public_inputs_hash(&root, &[0x66u8; 32], 1_000);
+        let h2 = withdraw_public_inputs_hash(&root, &[0x88u8; 32], 1_000);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_note_secret_to_key_nonzero() {
+        let k = note_secret_to_key(&[0xABu8; 32]);
+        assert_ne!(k, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_secret_to_key_deterministic() {
+        let k1 = note_secret_to_key(&[0xABu8; 32]);
+        let k2 = note_secret_to_key(&[0xABu8; 32]);
+        assert_eq!(k1, k2);
+    }
+
+    #[test]
+    fn test_note_secret_to_key_secret_sensitive() {
+        let k1 = note_secret_to_key(&[0x01u8; 32]);
+        let k2 = note_secret_to_key(&[0x02u8; 32]);
+        assert_ne!(k1, k2);
+    }
+
+    #[test]
+    fn test_poseidon_hash_input_sensitive() {
+        let h1 = poseidon_bn254(DOMAIN_COMMITMENT, &[b"input_a"]);
+        let h2 = poseidon_bn254(DOMAIN_COMMITMENT, &[b"input_b"]);
+        assert_ne!(h1, h2);
+    }
 }

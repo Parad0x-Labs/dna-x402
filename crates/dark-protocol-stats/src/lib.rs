@@ -143,4 +143,75 @@ mod tests {
         assert!(v.get("total_tests").is_some());
         assert!(v.get("stats_hash").is_some());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_stats_hash_nonzero() {
+        assert_ne!(current_stats().stats_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_total_privacy_primitives_count() {
+        assert!(current_stats().total_privacy_primitives >= 80);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        assert!(!current_stats().mainnet_ready);
+    }
+
+    #[test]
+    fn test_version_string() {
+        let s = current_stats();
+        assert!(!s.version.is_empty());
+        assert!(s.version.contains('.'));
+    }
+
+    #[test]
+    fn test_stats_public_record_mainnet_ready_false() {
+        let s = current_stats();
+        let record = stats_public_record(&s);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_stats_public_record_stats_hash_hex_len() {
+        let s = current_stats();
+        let record = stats_public_record(&s);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        let hex_str = v["stats_hash"].as_str().unwrap();
+        assert_eq!(hex_str.len(), 64);
+    }
+
+    #[test]
+    fn test_stats_hash_deterministic_across_calls() {
+        let h1 = current_stats().stats_hash;
+        let h2 = current_stats().stats_hash;
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_stats_public_record_wave_count() {
+        let s = current_stats();
+        let record = stats_public_record(&s);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["wave_count"], s.wave_count as u64);
+    }
+
+    #[test]
+    fn test_stats_public_record_zk_proof_types() {
+        let s = current_stats();
+        let record = stats_public_record(&s);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["zk_proof_types"].as_u64().unwrap() >= 10);
+    }
+
+    #[test]
+    fn test_stats_crate_count_gte_100() {
+        let s = current_stats();
+        assert!(s.crate_count >= 100);
+        assert!(s.total_tests >= 600);
+    }
 }

@@ -295,4 +295,65 @@ mod tests {
         capsule.custody_denied = false;
         assert_eq!(compute_risk_score(&capsule), CustodyRiskScore(100));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_hash_nonzero() {
+        let capsule = make_capsule();
+        assert_ne!(capsule.capsule_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capsule_hash_config_sensitive() {
+        let c1 = make_capsule();
+        let mut c2 = make_capsule();
+        c2.config_hash = [0xFFu8; 32];
+        assert_ne!(c1.capsule_hash(), c2.capsule_hash());
+    }
+
+    #[test]
+    fn test_risk_score_one_missing_is_25() {
+        let mut capsule = make_capsule();
+        capsule
+            .denied_key_classes
+            .retain(|k| k != &DeniedKeyClass::UserSpendKey);
+        // One missing → 1 × 25 = 25
+        assert_eq!(compute_risk_score(&capsule), CustodyRiskScore(25));
+    }
+
+    #[test]
+    fn test_denied_key_class_bytes_distinct() {
+        let all = DeniedKeyClass::all();
+        let bytes: Vec<u8> = all.iter().map(|k| k.class_byte()).collect();
+        let unique: std::collections::HashSet<u8> = bytes.iter().cloned().collect();
+        assert_eq!(unique.len(), all.len());
+    }
+
+    #[test]
+    fn test_bind_to_receipt_nonzero() {
+        let receipt_hash = [0xAAu8; 32];
+        let capsule = make_capsule();
+        let bound = bind_to_receipt(&receipt_hash, &capsule);
+        assert_ne!(bound, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capsule_not_stale_at_exact_max_age() {
+        // issued=1000, max_age=1000, current=2000 → age=1000, 1000 > 1000 is false → Ok
+        let capsule = make_capsule(); // issued_at_slot=1000
+        assert!(validate_capsule(&capsule, 2000, 1000).is_ok());
+    }
+
+    #[test]
+    fn test_has_denied_true_for_all_classes() {
+        let capsule = make_capsule();
+        for class in DeniedKeyClass::all() {
+            assert!(
+                capsule.has_denied(&class),
+                "has_denied must be true for {:?}",
+                class
+            );
+        }
+    }
 }

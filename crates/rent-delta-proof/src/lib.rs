@@ -212,4 +212,157 @@ mod tests {
         );
         assert_eq!(summary.net_rent_cost, proof.net_rent_cost);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_empty_actions_zero_rent() {
+        let proof = compute_rent_delta(&[]);
+        assert_eq!(proof.rent_locked, 0);
+        assert_eq!(proof.rent_reclaimed, 0);
+        assert_eq!(proof.net_rent_cost, 0);
+        assert_eq!(proof.chaff_reward, 0);
+    }
+
+    #[test]
+    fn test_realloc_does_not_affect_totals() {
+        let actions = vec![RentAction::Realloc {
+            account_hash: make_hash(0x01),
+            delta_bytes: 100,
+            lamports_delta: 500,
+        }];
+        let proof = compute_rent_delta(&actions);
+        assert_eq!(proof.rent_locked, 0);
+        assert_eq!(proof.rent_reclaimed, 0);
+    }
+
+    #[test]
+    fn test_chaff_reward_equal_when_locked_equals_reclaimed() {
+        // Create 5000 + Close 5000 → chaff_reward = min(5000, 5000) = 5000
+        let actions = vec![
+            RentAction::CreateAccount {
+                account_hash: make_hash(0x01),
+                lamports: 5000,
+            },
+            RentAction::CloseAccount {
+                account_hash: make_hash(0x02),
+                lamports: 5000,
+            },
+        ];
+        let proof = compute_rent_delta(&actions);
+        assert_eq!(proof.chaff_reward, 5000);
+    }
+
+    #[test]
+    fn test_summary_hash_nonzero() {
+        let proof = compute_rent_delta(&[RentAction::CreateAccount {
+            account_hash: make_hash(0x01),
+            lamports: 1000,
+        }]);
+        let summary = summarize_rent_delta(&proof, false);
+        assert_ne!(summary.summary_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_summary_hash_deterministic() {
+        let actions = vec![RentAction::CreateAccount {
+            account_hash: make_hash(0x01),
+            lamports: 1000,
+        }];
+        let proof = compute_rent_delta(&actions);
+        let s1 = summarize_rent_delta(&proof, false);
+        let s2 = summarize_rent_delta(&proof, false);
+        assert_eq!(s1.summary_hash, s2.summary_hash);
+    }
+
+    #[test]
+    fn test_net_label_profitable() {
+        // Create 3000, Close 8000 → net=-5000, locked=3000>0 → chaff_reward=3000>0 → "profitable"
+        let actions = vec![
+            RentAction::CreateAccount {
+                account_hash: make_hash(0x01),
+                lamports: 3000,
+            },
+            RentAction::CloseAccount {
+                account_hash: make_hash(0x02),
+                lamports: 8000,
+            },
+        ];
+        let proof = compute_rent_delta(&actions);
+        let summary = summarize_rent_delta(&proof, false);
+        assert_eq!(summary.net_label, "profitable");
+    }
+
+    #[test]
+    fn test_net_label_self_funding() {
+        // Only close → reclaimed>0, locked=0 → chaff_reward=0, net<0 → "self-funding"
+        let actions = vec![RentAction::CloseAccount {
+            account_hash: make_hash(0x01),
+            lamports: 5000,
+        }];
+        let proof = compute_rent_delta(&actions);
+        let summary = summarize_rent_delta(&proof, false);
+        assert_eq!(summary.net_label, "self-funding");
+    }
+
+    #[test]
+    fn test_net_label_net_cost() {
+        // Only create → net>0 → "net cost"
+        let actions = vec![RentAction::CreateAccount {
+            account_hash: make_hash(0x01),
+            lamports: 5000,
+        }];
+        let proof = compute_rent_delta(&actions);
+        let summary = summarize_rent_delta(&proof, false);
+        assert_eq!(summary.net_label, "net cost");
+    }
+
+    #[test]
+    fn test_chaff_reward_zero_when_no_reclaimed() {
+        // Only create accounts → reclaimed=0 → chaff_reward = 0.min(locked) = 0
+        let actions = vec![RentAction::CreateAccount {
+            account_hash: make_hash(0x01),
+            lamports: 5000,
+        }];
+        let proof = compute_rent_delta(&actions);
+        assert_eq!(proof.chaff_reward, 0);
+    }
+
+    #[test]
+    fn test_proof_actions_count_preserved() {
+        let actions = vec![
+            RentAction::CreateAccount {
+                account_hash: make_hash(0x01),
+                lamports: 1000,
+            },
+            RentAction::CloseAccount {
+                account_hash: make_hash(0x02),
+                lamports: 2000,
+            },
+            RentAction::Realloc {
+                account_hash: make_hash(0x03),
+                delta_bytes: 64,
+                lamports_delta: 0,
+            },
+        ];
+        let proof = compute_rent_delta(&actions);
+        assert_eq!(proof.actions.len(), 3);
+    }
+
+    #[test]
+    fn test_summary_net_rent_cost_matches_proof() {
+        let actions = vec![
+            RentAction::CreateAccount {
+                account_hash: make_hash(0x01),
+                lamports: 4000,
+            },
+            RentAction::CloseAccount {
+                account_hash: make_hash(0x02),
+                lamports: 1000,
+            },
+        ];
+        let proof = compute_rent_delta(&actions);
+        let summary = summarize_rent_delta(&proof, true);
+        assert_eq!(summary.net_rent_cost, proof.net_rent_cost);
+    }
 }

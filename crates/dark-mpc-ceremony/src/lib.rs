@@ -315,4 +315,85 @@ mod tests {
             "different epochs must produce different final key hashes"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let state = new_ceremony(2, 3, 1);
+        assert!(!state.mainnet_ready);
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let share = generate_party_share(0, 1, &entropy(0xAB));
+        assert_ne!(share.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_key_hash_nonzero() {
+        let share = generate_party_share(1, 2, &entropy(0xCD));
+        assert_ne!(share.public_key_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let s1 = generate_party_share(0, 10, &entropy(0x42));
+        let s2 = generate_party_share(0, 10, &entropy(0x42));
+        assert_eq!(s1.commitment, s2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_entropy_sensitive() {
+        let s1 = generate_party_share(0, 1, &entropy(0x01));
+        let s2 = generate_party_share(0, 1, &entropy(0x02));
+        assert_ne!(s1.commitment, s2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_party_id_sensitive() {
+        let s1 = generate_party_share(0, 1, &entropy(0xFF));
+        let s2 = generate_party_share(1, 1, &entropy(0xFF));
+        assert_ne!(s1.commitment, s2.commitment);
+    }
+
+    #[test]
+    fn test_verify_contribution_passes() {
+        let ep = entropy(0x77);
+        let share = generate_party_share(3, 99, &ep);
+        assert!(verify_contribution(&share, 3, 99, &ep));
+    }
+
+    #[test]
+    fn test_verify_contribution_fails_wrong_entropy() {
+        let ep = entropy(0x77);
+        let wrong_ep = entropy(0x78);
+        let share = generate_party_share(3, 99, &ep);
+        assert!(!verify_contribution(&share, 3, 99, &wrong_ep));
+    }
+
+    #[test]
+    fn test_ceremony_json_keys() {
+        let mut state = new_ceremony(1, 1, 7);
+        let share = generate_party_share(0, 7, &entropy(0x11));
+        contribute(&mut state, share).unwrap();
+        finalize_ceremony(&mut state).unwrap();
+        let json = ceremony_to_json(&state);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(v["threshold"].is_number());
+        assert!(v["n_parties"].is_number());
+        assert!(v["final_key_hash"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_already_finalized_rejected() {
+        let mut state = new_ceremony(1, 1, 5);
+        let share = generate_party_share(0, 5, &entropy(0x55));
+        contribute(&mut state, share).unwrap();
+        finalize_ceremony(&mut state).unwrap();
+        // Second finalize must fail
+        let err = finalize_ceremony(&mut state).unwrap_err();
+        assert_eq!(err, CeremonyError::AlreadyFinalized);
+    }
 }

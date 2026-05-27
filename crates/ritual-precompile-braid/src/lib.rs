@@ -235,4 +235,62 @@ mod tests {
         assert_eq!(hex.len(), 64);
         assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_braid_message_hash_nonzero() {
+        let rh = test_ritual_hash();
+        let ph = test_permission_hash();
+        let hash = braid_message_hash(&rh, &ph, 1_000_000);
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_braid_message_binds_permission_hash() {
+        let rh = test_ritual_hash();
+        let slot = 1_000_000u64;
+        let m1 = build_signed_ritual_message(&rh, &[0x22; 32], slot);
+        let m2 = build_signed_ritual_message(&rh, &[0x33; 32], slot);
+        assert_ne!(m1, m2);
+    }
+
+    #[test]
+    fn test_braid_pubkey_bytes_length() {
+        let kp = test_keypair();
+        let braid = new_braid(test_ritual_hash(), test_permission_hash(), 1_000, &kp);
+        assert_eq!(braid.pubkey_bytes.len(), 32);
+    }
+
+    #[test]
+    fn test_braid_signature_bytes_length() {
+        let kp = test_keypair();
+        let braid = new_braid(test_ritual_hash(), test_permission_hash(), 1_000, &kp);
+        assert_eq!(braid.signature_bytes.len(), 64);
+    }
+
+    #[test]
+    fn test_tampered_signature_rejected() {
+        let kp = test_keypair();
+        let rh = test_ritual_hash();
+        let ph = test_permission_hash();
+        let mut braid = new_braid(rh, ph, 9_999, &kp);
+        braid.signature_bytes[0] ^= 0xFF;
+        assert_eq!(verify_braid(&braid, 0), Err(BraidError::InvalidSignature));
+    }
+
+    #[test]
+    fn test_braid_message_hash_hex_nonempty() {
+        let hex = braid_message_hash_hex(&test_ritual_hash(), &test_permission_hash(), 1_000);
+        assert!(!hex.is_empty());
+    }
+
+    #[test]
+    fn test_braid_ritual_hash_stored() {
+        let kp = test_keypair();
+        let rh = test_ritual_hash();
+        let ph = test_permission_hash();
+        let braid = new_braid(rh, ph, 1_000, &kp);
+        assert_eq!(braid.ritual_hash, rh);
+    }
 }

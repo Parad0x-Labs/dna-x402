@@ -194,4 +194,68 @@ mod tests {
             "mock client must produce proofs with is_mock=true"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_client_starts_with_empty_receipts() {
+        let client = make_client();
+        assert!(client.stored_receipts.is_empty());
+    }
+
+    #[test]
+    fn test_client_zero_amount_rejected() {
+        let client = make_client();
+        let mut req = make_req("https://api.darknull.example/resource");
+        req.amount_lamports = 0;
+        let result = client.parse_payment_requirement(&req);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_client_payment_header_hash_nonzero() {
+        let client = make_client();
+        let req = make_req("https://api.darknull.example/resource");
+        let proof = client.build_mock_payment_proof(&req);
+        assert_ne!(proof.payment_header_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_client_multiple_receipts_stored() {
+        let mut client = make_client();
+        let req1 = make_req("https://api.darknull.example/r1");
+        let req2 = make_req("https://api.darknull.example/r2");
+        client.store_receipt(make_receipt(&req1, &client));
+        client.store_receipt(make_receipt(&req2, &client));
+        assert_eq!(client.stored_receipts.len(), 2);
+    }
+
+    #[test]
+    fn test_client_receipt_scope_hash_matches_req() {
+        let client = make_client();
+        let req = make_req("https://api.darknull.example/resource");
+        let proof = client.build_mock_payment_proof(&req);
+        assert_eq!(proof.receipt_scope_hash, req.scope_hash());
+    }
+
+    #[test]
+    fn test_client_find_receipt_absent_scope_none() {
+        let client = make_client();
+        let result = client.find_receipt_for_scope(&[0u8; 32]);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_client_requirement_hash_nonzero() {
+        let req = make_req("https://api.darknull.example/resource");
+        assert_ne!(req.requirement_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_client_proof_receipt_scope_nonzero() {
+        let client = make_client();
+        let req = make_req("https://api.darknull.example/resource");
+        let proof = client.build_mock_payment_proof(&req);
+        assert_ne!(proof.receipt_scope_hash, [0u8; 32]);
+    }
 }

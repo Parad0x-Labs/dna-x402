@@ -176,4 +176,109 @@ mod tests {
         assert!(url.contains(&hex_hash), "URL should contain job hash hex");
         assert!(url.starts_with("https://blinks.darknull.xyz/job/"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_job_hash_deterministic() {
+        let j1 = make_job();
+        let j2 = make_job();
+        assert_eq!(j1.job_hash, j2.job_hash);
+    }
+
+    #[test]
+    fn test_job_hash_kind_sensitive() {
+        let j1 = post_job(
+            JobKind::FillShapePool,
+            &dummy_hash(10),
+            100_000,
+            &dummy_hash(99),
+        );
+        let j2 = post_job(
+            JobKind::CloseExpiredChaff,
+            &dummy_hash(10),
+            100_000,
+            &dummy_hash(99),
+        );
+        assert_ne!(j1.job_hash, j2.job_hash);
+    }
+
+    #[test]
+    fn test_job_starts_open() {
+        let job = make_job();
+        assert!(job.open);
+    }
+
+    #[test]
+    fn test_worker_hash_stored_in_completion() {
+        let mut job = make_job();
+        let worker = dummy_hash(42);
+        let completion = complete_job(&mut job, &worker, &dummy_hash(10)).unwrap();
+        assert_eq!(completion.worker_hash, worker);
+    }
+
+    #[test]
+    fn test_job_proof_hash_matches_submitted() {
+        let mut job = make_job();
+        let proof = dummy_hash(10);
+        let completion = complete_job(&mut job, &dummy_hash(5), &proof).unwrap();
+        assert_eq!(completion.proof_hash, proof);
+    }
+
+    #[test]
+    fn test_completion_receipt_hash_worker_sensitive() {
+        let mut job1 = make_job();
+        let mut job2 = make_job();
+        let c1 = complete_job(&mut job1, &dummy_hash(11), &dummy_hash(10)).unwrap();
+        let c2 = complete_job(&mut job2, &dummy_hash(22), &dummy_hash(10)).unwrap();
+        assert_ne!(c1.completion_receipt_hash, c2.completion_receipt_hash);
+    }
+
+    #[test]
+    fn test_blink_url_starts_with_base() {
+        let job = make_job();
+        let url = blink_url_for_job(&job, "https://blinks.darknull.xyz");
+        assert!(url.starts_with("https://blinks.darknull.xyz/job/"));
+    }
+
+    #[test]
+    fn test_different_reward_different_job_hash() {
+        let j1 = post_job(
+            JobKind::FillShapePool,
+            &dummy_hash(10),
+            100_000,
+            &dummy_hash(99),
+        );
+        let j2 = post_job(
+            JobKind::FillShapePool,
+            &dummy_hash(10),
+            200_000,
+            &dummy_hash(99),
+        );
+        assert_ne!(j1.job_hash, j2.job_hash);
+    }
+
+    #[test]
+    fn test_different_poster_different_job_hash() {
+        let j1 = post_job(
+            JobKind::FillShapePool,
+            &dummy_hash(10),
+            100_000,
+            &dummy_hash(11),
+        );
+        let j2 = post_job(
+            JobKind::FillShapePool,
+            &dummy_hash(10),
+            100_000,
+            &dummy_hash(22),
+        );
+        assert_ne!(j1.job_hash, j2.job_hash);
+    }
+
+    #[test]
+    fn test_job_hash_stored_in_completion() {
+        let mut job = make_job();
+        let completion = complete_job(&mut job, &dummy_hash(7), &dummy_hash(10)).unwrap();
+        assert_eq!(completion.job_hash, job.job_hash);
+    }
 }

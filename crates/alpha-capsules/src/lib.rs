@@ -353,4 +353,67 @@ mod tests {
         let (capsule_b, _, _) = make_capsule(1000);
         assert_eq!(capsule_a.capsule_hash(), capsule_b.capsule_hash());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_hash_nonzero() {
+        let (capsule, _, _) = make_capsule(1000);
+        assert_ne!(capsule.capsule_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capsule_hash_market_sensitive() {
+        let (capsule_a, side_commitment, _) = make_capsule(1000);
+        let capsule_b = new_capsule(
+            [0xFFu8; 32], // different market_hash
+            side_commitment,
+            ConfidenceBucket(4),
+            [0x02u8; 32],
+            [0x03u8; 32],
+            1000,
+            [0x04u8; 32],
+            true,
+        );
+        assert_ne!(capsule_a.capsule_hash(), capsule_b.capsule_hash());
+    }
+
+    #[test]
+    fn test_commit_side_nonzero() {
+        let commitment = commit_side(b"OVER", &[0x99u8; 32]);
+        assert_ne!(commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commit_side_salt_sensitive() {
+        let c1 = commit_side(b"OVER", &[0x99u8; 32]);
+        let c2 = commit_side(b"OVER", &[0x88u8; 32]);
+        assert_ne!(c1, c2);
+    }
+
+    #[test]
+    fn test_non_transferable_capsule_never_transfers() {
+        let side = b"OVER";
+        let salt = [0x99u8; 32];
+        let side_commitment = commit_side(side, &salt);
+        let capsule = new_capsule(
+            [0x01u8; 32],
+            side_commitment,
+            ConfidenceBucket(4),
+            [0x02u8; 32],
+            [0x03u8; 32],
+            1000,
+            [0x04u8; 32],
+            false, // not transferable
+        );
+        // Even well before reveal_slot, should not be transferable
+        assert!(!is_transferable(&capsule, 1));
+        assert!(!is_transferable(&capsule, 999));
+    }
+
+    #[test]
+    fn test_capsule_id_nonzero() {
+        let (capsule, _, _) = make_capsule(1000);
+        assert_ne!(capsule.capsule_id, [0u8; 32]);
+    }
 }

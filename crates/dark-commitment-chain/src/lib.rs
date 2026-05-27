@@ -429,4 +429,18 @@ mod tests {
             "chain_tip must not contain raw balance bytes"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_genesis_node_index_is_zero() {
+        let chain = genesis(0, &seed(0xAA));
+        assert_eq!(chain.nodes[0].index, 0);
+    }
+
+    #[test]
+    fn test_genesis_creates_exactly_one_node() {
+        let chain = genesis(500, &seed(0x01));
+        assert_eq!(chain.nodes.len(), 1);
+    }
 }

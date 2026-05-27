@@ -216,4 +216,102 @@ mod tests {
         let c2 = evaluate_claim(&t, &report).unwrap();
         assert_eq!(c1.coupon_hash, c2.coupon_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_ticket_hash_nonzero() {
+        let t = make_ticket();
+        assert_ne!(t.ticket_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ticket_hash_deterministic() {
+        let t1 = make_ticket();
+        let t2 = make_ticket();
+        assert_eq!(t1.ticket_hash, t2.ticket_hash);
+    }
+
+    #[test]
+    fn test_ticket_hash_buyer_sensitive() {
+        let buyer_a = buyer();
+        let mut buyer_b = buyer();
+        buyer_b[0] = 0xFF;
+        let t_a = create_ticket(&buyer_a, 100, 200, 50, RouteClass::Priority, 5_000);
+        let t_b = create_ticket(&buyer_b, 100, 200, 50, RouteClass::Priority, 5_000);
+        assert_ne!(t_a.ticket_hash, t_b.ticket_hash);
+    }
+
+    #[test]
+    fn test_coupon_hash_nonzero() {
+        let t = make_ticket();
+        let report = LandingReport {
+            ticket_hash: t.ticket_hash,
+            landed_slot: 999,
+            actual_slippage_bps: 200,
+        };
+        let coupon = evaluate_claim(&t, &report).unwrap();
+        assert_ne!(coupon.coupon_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_refund_equals_premium() {
+        let t = make_ticket();
+        let report = LandingReport {
+            ticket_hash: t.ticket_hash,
+            landed_slot: 999,
+            actual_slippage_bps: 200,
+        };
+        let coupon = evaluate_claim(&t, &report).unwrap();
+        assert_eq!(coupon.refund_lamports, t.premium_lamports);
+    }
+
+    #[test]
+    fn test_claim_coupon_not_claimed_ok() {
+        let t = make_ticket();
+        let report = LandingReport {
+            ticket_hash: t.ticket_hash,
+            landed_slot: 999,
+            actual_slippage_bps: 200,
+        };
+        let coupon = evaluate_claim(&t, &report).unwrap();
+        assert_eq!(claim_coupon(&coupon, false), Ok(coupon.refund_lamports));
+    }
+
+    #[test]
+    fn test_slot_at_min_no_claim() {
+        // landed_slot == expected_slot_min → slot_ok = true → NoClaim (with slip ok)
+        let t = make_ticket(); // slot range [100, 200]
+        let report = LandingReport {
+            ticket_hash: t.ticket_hash,
+            landed_slot: 100,
+            actual_slippage_bps: 10,
+        };
+        assert_eq!(evaluate_claim(&t, &report), Err(InsuranceError::NoClaim));
+    }
+
+    #[test]
+    fn test_slot_at_max_no_claim() {
+        // landed_slot == expected_slot_max → slot_ok = true → NoClaim (with slip ok)
+        let t = make_ticket(); // slot range [100, 200]
+        let report = LandingReport {
+            ticket_hash: t.ticket_hash,
+            landed_slot: 200,
+            actual_slippage_bps: 10,
+        };
+        assert_eq!(evaluate_claim(&t, &report), Err(InsuranceError::NoClaim));
+    }
+
+    #[test]
+    fn test_slot_below_min_slot_miss() {
+        // landed_slot < expected_slot_min → slot_ok = false → SlotMiss
+        let t = make_ticket(); // slot range [100, 200]
+        let report = LandingReport {
+            ticket_hash: t.ticket_hash,
+            landed_slot: 99,
+            actual_slippage_bps: 10, // slip ok
+        };
+        let coupon = evaluate_claim(&t, &report).unwrap();
+        assert_eq!(coupon.reason, ClaimReason::SlotMiss);
+    }
 }

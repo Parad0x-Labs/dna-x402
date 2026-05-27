@@ -176,4 +176,80 @@ mod tests {
         assert!(v.get("state_id").is_some());
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_state_id_nonzero() {
+        let c = new_state(&owner(), b"data", &nonce()).unwrap();
+        assert_ne!(c.state_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_state_id_deterministic() {
+        let c1 = new_state(&owner(), b"data", &nonce()).unwrap();
+        let c2 = new_state(&owner(), b"data", &nonce()).unwrap();
+        assert_eq!(c1.state_id, c2.state_id);
+    }
+
+    #[test]
+    fn test_state_id_nonce_sensitive() {
+        let nonce2 = [9u8; 32];
+        let c1 = new_state(&owner(), b"data", &nonce()).unwrap();
+        let c2 = new_state(&owner(), b"data", &nonce2).unwrap();
+        assert_ne!(c1.state_id, c2.state_id);
+    }
+
+    #[test]
+    fn test_state_hash_nonzero() {
+        let c = new_state(&owner(), b"data", &nonce()).unwrap();
+        assert_ne!(c.state_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_state_hash_deterministic() {
+        let c1 = new_state(&owner(), b"same-content", &nonce()).unwrap();
+        let c2 = new_state(&owner(), b"same-content", &nonce()).unwrap();
+        assert_eq!(c1.state_hash, c2.state_hash);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let c = new_state(&owner(), b"data", &nonce()).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_transition_hash_nonzero() {
+        let mut c = new_state(&owner(), b"initial", &nonce()).unwrap();
+        let t = transition_state(&mut c, b"updated", &owner(), 0).unwrap();
+        assert_ne!(t.transition_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_version_increments_after_transition() {
+        let mut c = new_state(&owner(), b"v0", &nonce()).unwrap();
+        assert_eq!(c.version, 0);
+        transition_state(&mut c, b"v1", &owner(), 0).unwrap();
+        assert_eq!(c.version, 1);
+        transition_state(&mut c, b"v2", &owner(), 1).unwrap();
+        assert_eq!(c.version, 2);
+    }
+
+    #[test]
+    fn test_state_public_record_has_version() {
+        let c = new_state(&owner(), b"data", &nonce()).unwrap();
+        let record = state_public_record(&c);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["version"].is_number());
+        assert_eq!(v["version"], 0u32);
+    }
+
+    #[test]
+    fn test_transition_from_hash_matches_previous_state_hash() {
+        let mut c = new_state(&owner(), b"initial", &nonce()).unwrap();
+        let old_hash = c.state_hash;
+        let t = transition_state(&mut c, b"new state", &owner(), 0).unwrap();
+        assert_eq!(t.from_hash, old_hash);
+    }
 }

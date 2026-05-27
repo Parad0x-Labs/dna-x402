@@ -213,4 +213,100 @@ mod tests {
             size
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_account_size_both_extensions() {
+        // base=82, hook=80, memo=26, cpi=26 → 214
+        let config = full_config();
+        assert_eq!(estimate_mint_account_size(&config), 214);
+    }
+
+    #[test]
+    fn test_account_size_hook_only() {
+        // base=82, hook=80 → 162
+        let config = RitualMintConfig {
+            hook_program_id: hook_id(),
+            ritual_gate_program_id: gate_id(),
+            decimals: 6,
+            enable_memo_transfer: false,
+            enable_cpi_guard: false,
+        };
+        assert_eq!(estimate_mint_account_size(&config), 162);
+    }
+
+    #[test]
+    fn test_instructions_end_with_initialize_mint2() {
+        let plan = plan_ritual_mint(&full_config());
+        assert_eq!(
+            plan.instructions_needed.last().unwrap(),
+            "InitializeMint2",
+            "last instruction must always be InitializeMint2"
+        );
+    }
+
+    #[test]
+    fn test_instructions_start_with_create_account() {
+        let plan = plan_ritual_mint(&full_config());
+        assert_eq!(
+            plan.instructions_needed.first().unwrap(),
+            "CreateAccount",
+            "first instruction must always be CreateAccount"
+        );
+    }
+
+    #[test]
+    fn test_default_config_decimals_six() {
+        let cfg = default_ritual_config(hook_id(), gate_id());
+        assert_eq!(cfg.decimals, 6);
+    }
+
+    #[test]
+    fn test_default_config_extensions_enabled() {
+        let cfg = default_ritual_config(hook_id(), gate_id());
+        assert!(cfg.enable_memo_transfer);
+        assert!(cfg.enable_cpi_guard);
+    }
+
+    #[test]
+    fn test_plan_config_preserved() {
+        let config = full_config();
+        let plan = plan_ritual_mint(&config);
+        assert_eq!(plan.config.decimals, config.decimals);
+        assert_eq!(plan.config.hook_program_id, config.hook_program_id);
+        assert_eq!(
+            plan.config.enable_memo_transfer,
+            config.enable_memo_transfer
+        );
+        assert_eq!(plan.config.enable_cpi_guard, config.enable_cpi_guard);
+    }
+
+    #[test]
+    fn test_hook_only_one_extension() {
+        let config = RitualMintConfig {
+            hook_program_id: hook_id(),
+            ritual_gate_program_id: gate_id(),
+            decimals: 6,
+            enable_memo_transfer: false,
+            enable_cpi_guard: false,
+        };
+        let plan = plan_ritual_mint(&config);
+        assert_eq!(plan.extensions.len(), 1);
+        assert_eq!(plan.extensions[0], "TransferHook");
+    }
+
+    #[test]
+    fn test_hook_only_three_instructions() {
+        // CreateAccount, InitializeTransferHookMint, InitializeMint2
+        let config = RitualMintConfig {
+            hook_program_id: hook_id(),
+            ritual_gate_program_id: gate_id(),
+            decimals: 6,
+            enable_memo_transfer: false,
+            enable_cpi_guard: false,
+        };
+        let plan = plan_ritual_mint(&config);
+        assert_eq!(plan.instructions_needed.len(), 3);
+    }
 }

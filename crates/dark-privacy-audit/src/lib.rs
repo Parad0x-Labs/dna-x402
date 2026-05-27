@@ -200,4 +200,81 @@ mod tests {
         let ah_hex = hex32(&trail.auditor_hash);
         assert!(!record.contains(&ah_hex));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_trail_id_nonzero() {
+        let trail = new_trail(&secret(0x01), &nonce(0x01)).unwrap();
+        assert_ne!(trail.trail_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_auditor_hash_nonzero() {
+        let trail = new_trail(&secret(0x02), &nonce(0x01)).unwrap();
+        assert_ne!(trail.auditor_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let trail = new_trail(&secret(0x03), &nonce(0x01)).unwrap();
+        assert!(!trail.mainnet_ready);
+    }
+
+    #[test]
+    fn test_event_mainnet_ready_false() {
+        let mut trail = new_trail(&secret(0x04), &nonce(0x01)).unwrap();
+        let event = log_event(&mut trail, b"data").unwrap();
+        assert!(!event.mainnet_ready);
+    }
+
+    #[test]
+    fn test_event_count_increments() {
+        let mut trail = new_trail(&secret(0x05), &nonce(0x01)).unwrap();
+        assert_eq!(trail.event_count, 0);
+        log_event(&mut trail, b"e1").unwrap();
+        assert_eq!(trail.event_count, 1);
+        log_event(&mut trail, b"e2").unwrap();
+        assert_eq!(trail.event_count, 2);
+    }
+
+    #[test]
+    fn test_verify_empty_trail() {
+        let trail = new_trail(&secret(0x06), &nonce(0x01)).unwrap();
+        assert!(verify_trail(&trail, &[]));
+    }
+
+    #[test]
+    fn test_seq_sequential() {
+        let mut trail = new_trail(&secret(0x07), &nonce(0x01)).unwrap();
+        let e1 = log_event(&mut trail, b"first").unwrap();
+        let e2 = log_event(&mut trail, b"second").unwrap();
+        assert_eq!(e1.seq, 0);
+        assert_eq!(e2.seq, 1);
+    }
+
+    #[test]
+    fn test_event_id_nonzero() {
+        let mut trail = new_trail(&secret(0x08), &nonce(0x01)).unwrap();
+        let event = log_event(&mut trail, b"payload").unwrap();
+        assert_ne!(event.event_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_nonce_different_trail_id() {
+        let t1 = new_trail(&secret(0x09), &nonce(0x01)).unwrap();
+        let t2 = new_trail(&secret(0x09), &nonce(0x02)).unwrap();
+        assert_ne!(t1.trail_id, t2.trail_id);
+    }
+
+    #[test]
+    fn test_public_record_has_all_keys() {
+        let trail = new_trail(&secret(0x0A), &nonce(0x01)).unwrap();
+        let record = trail_public_record(&trail);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["trail_id"].is_string());
+        assert!(v["head"].is_string());
+        assert!(v["event_count"].is_number());
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

@@ -178,4 +178,86 @@ mod tests {
         c2.policy_hash = [0xFFu8; 32];
         assert_ne!(commit_hash(&c), commit_hash(&c2));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commit_hash_nonzero() {
+        let c = make_commit();
+        assert_ne!(commit_hash(&c), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reveal_hash_nonzero() {
+        let c = make_commit();
+        let r = make_reveal(&c);
+        assert_ne!(reveal_hash(&r), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commit_hash_module_sensitive() {
+        let c = make_commit();
+        let mut c2 = c.clone();
+        c2.module_hash = [0xEEu8; 32];
+        assert_ne!(commit_hash(&c), commit_hash(&c2));
+    }
+
+    #[test]
+    fn test_commit_hash_activation_slot_sensitive() {
+        let c = make_commit();
+        let mut c2 = c.clone();
+        c2.activation_slot = 9999;
+        assert_ne!(commit_hash(&c), commit_hash(&c2));
+    }
+
+    #[test]
+    fn test_reveal_hash_source_sensitive() {
+        let c = make_commit();
+        let r = make_reveal(&c);
+        let mut r2 = r.clone();
+        r2.source_hash = [0xFFu8; 32];
+        assert_ne!(reveal_hash(&r), reveal_hash(&r2));
+    }
+
+    #[test]
+    fn test_activation_receipt_nonzero() {
+        let c = make_commit();
+        let r = make_reveal(&c);
+        let receipt = activate(&c, &r, 1000).unwrap();
+        assert_ne!(receipt, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_paused_commit_id_matches() {
+        let c = make_commit();
+        let paused = pause(&c);
+        assert_eq!(paused.commit_id, c.commit_id);
+    }
+
+    #[test]
+    fn test_wrong_policy_rejected() {
+        let c = make_commit();
+        let mut r = make_reveal(&c);
+        r.policy_hash = [0x00u8; 32]; // wrong policy
+        let err = activate(&c, &r, 1000).unwrap_err();
+        assert_eq!(err, FeatureError::WrongReveal);
+    }
+
+    #[test]
+    fn test_activation_at_future_slot_ok() {
+        let c = make_commit();
+        let r = make_reveal(&c);
+        // slot far in future is still OK
+        let receipt = activate(&c, &r, 9_000_000).unwrap();
+        assert_ne!(receipt, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reveal_hash_deterministic() {
+        let c = make_commit();
+        let r = make_reveal(&c);
+        let h1 = reveal_hash(&r);
+        let h2 = reveal_hash(&r);
+        assert_eq!(h1, h2);
+    }
 }

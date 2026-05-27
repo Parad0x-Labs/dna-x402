@@ -294,4 +294,86 @@ mod tests {
         assert!(record.contains("redeemed"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let mut bond = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        assert!(!bond.mainnet_ready);
+        let receipt = redeem_bond(&mut bond, &beneficiary(), 100).unwrap();
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_bond_id_deterministic() {
+        let b1 = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        let b2 = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        assert_eq!(b1.bond_id, b2.bond_id);
+    }
+
+    #[test]
+    fn test_bond_id_nonce_sensitive() {
+        let mut n2 = nonce();
+        n2[0] = 0xFF;
+        let b1 = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        let b2 = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &n2).unwrap();
+        assert_ne!(b1.bond_id, b2.bond_id);
+    }
+
+    #[test]
+    fn test_bond_id_amount_sensitive() {
+        let b1 = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        let b2 = issue_bond(&issuer(), &beneficiary(), 2_000, 100, &nonce()).unwrap();
+        assert_ne!(b1.bond_id, b2.bond_id);
+    }
+
+    #[test]
+    fn test_bond_id_issuer_sensitive() {
+        let mut issuer2 = issuer();
+        issuer2[0] = 0xCC;
+        let b1 = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        let b2 = issue_bond(&issuer2, &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        assert_ne!(b1.bond_id, b2.bond_id);
+    }
+
+    #[test]
+    fn test_beneficiary_zero_rejected() {
+        let err = issue_bond(&issuer(), &[0u8; 32], 1_000, 100, &nonce()).unwrap_err();
+        assert_eq!(err, BondError::BeneficiarySecretZero);
+    }
+
+    #[test]
+    fn test_exact_maturity_ok() {
+        let maturity: i64 = 500_000;
+        let mut bond = issue_bond(&issuer(), &beneficiary(), 1_000, maturity, &nonce()).unwrap();
+        // Redeem at exactly maturity_unix — should succeed (not strict >)
+        let receipt = redeem_bond(&mut bond, &beneficiary(), maturity).unwrap();
+        assert_eq!(receipt.redeemed_at_unix, maturity);
+    }
+
+    #[test]
+    fn test_wrong_beneficiary_rejected() {
+        let maturity: i64 = 100;
+        let mut bond = issue_bond(&issuer(), &beneficiary(), 1_000, maturity, &nonce()).unwrap();
+        let mut wrong = beneficiary();
+        wrong[0] = 0xFF;
+        let err = redeem_bond(&mut bond, &wrong, maturity).unwrap_err();
+        assert_eq!(err, BondError::BeneficiarySecretZero);
+    }
+
+    #[test]
+    fn test_redeemed_starts_false() {
+        let bond = issue_bond(&issuer(), &beneficiary(), 1_000, 100, &nonce()).unwrap();
+        assert!(!bond.redeemed);
+    }
+
+    #[test]
+    fn test_receipt_amount_matches_bond() {
+        let amount: u64 = 999_000;
+        let maturity: i64 = 50;
+        let mut bond = issue_bond(&issuer(), &beneficiary(), amount, maturity, &nonce()).unwrap();
+        let receipt = redeem_bond(&mut bond, &beneficiary(), maturity).unwrap();
+        assert_eq!(receipt.amount_lamports, amount);
+    }
 }

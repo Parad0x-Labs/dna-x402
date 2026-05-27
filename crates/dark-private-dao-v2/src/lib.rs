@@ -239,4 +239,79 @@ mod tests {
         assert_eq!(d1.dao_id, d2.dao_id);
         assert_ne!(d1.dao_id, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_dao_id_nonzero() {
+        let dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        assert_ne!(dao.dao_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_founder_hash_nonzero() {
+        let dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        assert_ne!(dao.founder_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_treasury_commitment_nonzero() {
+        let dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        assert_ne!(dao.treasury_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        assert!(!dao.mainnet_ready);
+    }
+
+    #[test]
+    fn test_member_count_increments() {
+        let mut dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        assert_eq!(dao.member_count, 0);
+        add_member(&mut dao, &member1()).unwrap();
+        assert_eq!(dao.member_count, 1);
+    }
+
+    #[test]
+    fn test_proposal_count_increments() {
+        let mut dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        assert_eq!(dao.proposal_count, 0);
+        create_proposal(&mut dao, &member1(), b"proposal content").unwrap();
+        assert_eq!(dao.proposal_count, 1);
+    }
+
+    #[test]
+    fn test_member_hash_nonzero() {
+        let mut dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        let mhash = add_member(&mut dao, &member1()).unwrap();
+        assert_ne!(mhash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proposal_id_nonzero() {
+        let mut dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        let prop = create_proposal(&mut dao, &member1(), b"build something").unwrap();
+        assert_ne!(prop.proposal_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_founder_different_dao_id() {
+        let mut s2 = [0u8; 32];
+        s2[0] = 0xf9;
+        let d1 = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        let d2 = new_dao(&s2, 1_000, &tblind()).unwrap();
+        assert_ne!(d1.dao_id, d2.dao_id);
+    }
+
+    #[test]
+    fn test_public_record_has_correct_fields() {
+        let dao = new_dao(&founder(), 1_000, &tblind()).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&dao_public_record(&dao)).unwrap();
+        assert!(v["dao_id"].is_string());
+        assert_eq!(v["member_count"], 0u32);
+        assert_eq!(v["proposal_count"], 0u32);
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

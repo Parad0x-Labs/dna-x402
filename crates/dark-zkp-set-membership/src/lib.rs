@@ -175,4 +175,97 @@ mod tests {
         let p2 = new_membership_proof(set2, b"alice", &blinding()).unwrap();
         assert_ne!(p1.set_root, p2.set_root);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_id_deterministic() {
+        let elements: &[&[u8]] = &[b"alice", b"bob", b"carol"];
+        let p1 = new_membership_proof(elements, b"alice", &blinding()).unwrap();
+        let p2 = new_membership_proof(elements, b"alice", &blinding()).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_different_blinding_different_commitment() {
+        let elements: &[&[u8]] = &[b"alice", b"bob"];
+        let mut b2 = blinding();
+        b2[0] ^= 0xFF;
+        let p1 = new_membership_proof(elements, b"alice", &blinding()).unwrap();
+        let p2 = new_membership_proof(elements, b"alice", &b2).unwrap();
+        assert_ne!(p1.element_commitment, p2.element_commitment);
+    }
+
+    #[test]
+    fn test_nullifier_depends_on_set_root() {
+        let set1: &[&[u8]] = &[b"alice", b"bob"];
+        let set2: &[&[u8]] = &[b"alice", b"carol"];
+        let p1 = new_membership_proof(set1, b"alice", &blinding()).unwrap();
+        let p2 = new_membership_proof(set2, b"alice", &blinding()).unwrap();
+        assert_ne!(p1.nullifier, p2.nullifier);
+    }
+
+    #[test]
+    fn test_single_element_set_works() {
+        let elements: &[&[u8]] = &[b"solo"];
+        let proof = new_membership_proof(elements, b"solo", &blinding()).unwrap();
+        assert!(verify_membership(&proof));
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let elements: &[&[u8]] = &[b"x", b"y"];
+        let proof = new_membership_proof(elements, b"x", &blinding()).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let elements: &[&[u8]] = &[b"alpha"];
+        let proof = new_membership_proof(elements, b"alpha", &blinding()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_public_record_hides_element_commitment() {
+        let elements: &[&[u8]] = &[b"secret-member", b"other"];
+        let proof = new_membership_proof(elements, b"secret-member", &blinding()).unwrap();
+        let record = set_public_record(&proof);
+        let commit_hex: String = proof
+            .element_commitment
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+        assert!(
+            !record.contains(&commit_hex),
+            "element_commitment must not appear in public record"
+        );
+    }
+
+    #[test]
+    fn test_public_record_has_set_root_and_proof_id() {
+        let elements: &[&[u8]] = &[b"a", b"b", b"c"];
+        let proof = new_membership_proof(elements, b"a", &blinding()).unwrap();
+        let record = set_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["set_root"].is_string());
+        assert!(v["proof_id"].is_string());
+    }
+
+    #[test]
+    fn test_set_root_order_invariant() {
+        // XOR is commutative: swapping elements should not change set_root
+        let set_ab: &[&[u8]] = &[b"alice", b"bob"];
+        let set_ba: &[&[u8]] = &[b"bob", b"alice"];
+        let p1 = new_membership_proof(set_ab, b"alice", &blinding()).unwrap();
+        let p2 = new_membership_proof(set_ba, b"alice", &blinding()).unwrap();
+        assert_eq!(p1.set_root, p2.set_root);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let elements: &[&[u8]] = &[b"node-1", b"node-2"];
+        let proof = new_membership_proof(elements, b"node-1", &blinding()).unwrap();
+        assert_ne!(proof.nullifier, [0u8; 32]);
+    }
 }

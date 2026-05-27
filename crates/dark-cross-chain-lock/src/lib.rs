@@ -304,4 +304,167 @@ mod tests {
         assert!(v.get("locker_hash").is_none());
         assert!(v.get("unlock_secret_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let lock = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        assert!(!lock.mainnet_ready);
+    }
+
+    #[test]
+    fn test_released_starts_false() {
+        let lock = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        assert!(!lock.released);
+    }
+
+    #[test]
+    fn test_released_set_after_unlock() {
+        let mut lock = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        unlock(&mut lock, &unlock_secret()).unwrap();
+        assert!(lock.released);
+    }
+
+    #[test]
+    fn test_unlock_proof_mainnet_ready_false() {
+        let mut lock = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        let proof = unlock(&mut lock, &unlock_secret()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_lock_id_deterministic() {
+        let l1 = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        let l2 = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        assert_eq!(l1.lock_id, l2.lock_id);
+    }
+
+    #[test]
+    fn test_lock_id_sensitive_to_amount() {
+        let l1 = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        let l2 = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            200,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        assert_ne!(l1.lock_id, l2.lock_id);
+    }
+
+    #[test]
+    fn test_lock_id_sensitive_to_chain() {
+        let l1 = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        let l2 = create_lock(
+            &locker(),
+            b"ethereum",
+            b"SOL",
+            100,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        assert_ne!(l1.lock_id, l2.lock_id);
+    }
+
+    #[test]
+    fn test_different_unlock_secrets_different_hash() {
+        let s1 = unlock_secret();
+        let mut s2 = [0u8; 32];
+        s2[0] = 0xee;
+        let l1 = create_lock(&locker(), b"solana", b"SOL", 100, &s1, &nonce()).unwrap();
+        let l2 = create_lock(&locker(), b"solana", b"SOL", 100, &s2, &nonce()).unwrap();
+        assert_ne!(l1.unlock_secret_hash, l2.unlock_secret_hash);
+    }
+
+    #[test]
+    fn test_empty_asset_rejected() {
+        let err =
+            create_lock(&locker(), b"solana", b"", 100, &unlock_secret(), &nonce()).unwrap_err();
+        assert_eq!(err, LockError::EmptyAsset);
+    }
+
+    #[test]
+    fn test_public_record_has_lock_id_and_amount() {
+        let lock = create_lock(
+            &locker(),
+            b"solana",
+            b"SOL",
+            750,
+            &unlock_secret(),
+            &nonce(),
+        )
+        .unwrap();
+        let record = lock_public_record(&lock);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["lock_id"].is_string());
+        assert_eq!(v["amount"], 750u64);
+    }
 }

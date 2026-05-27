@@ -291,4 +291,61 @@ mod tests {
         let result = chain_valid(&chain);
         assert!(matches!(result, Err(FlightError::EmptyChain)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let receipt = make_receipt(1000, [0u8; 32], [0xCCu8; 32]);
+        assert_ne!(receipt.compute_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_agent_sensitive() {
+        let r1 = make_receipt(1000, [0u8; 32], [0xCCu8; 32]);
+        let mut r2 = make_receipt(1000, [0u8; 32], [0xCCu8; 32]);
+        r2.agent_id_hash = [0x99u8; 32];
+        assert_ne!(r1.compute_hash(), r2.compute_hash());
+    }
+
+    #[test]
+    fn test_chain_root_deterministic() {
+        let chain = make_chain(3, [0xCCu8; 32]);
+        let root1 = chain_root(&chain);
+        let root2 = chain_root(&chain);
+        assert_eq!(root1, root2);
+    }
+
+    #[test]
+    fn test_chain_root_nonzero() {
+        let chain = make_chain(2, [0xCCu8; 32]);
+        assert_ne!(chain_root(&chain), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_redacted_view_flight_hash_matches_receipt() {
+        let receipt = make_receipt(1000, [0u8; 32], [0xCCu8; 32]);
+        let view = redact(&receipt);
+        assert_eq!(view.flight_hash, receipt.compute_hash());
+    }
+
+    #[test]
+    fn test_single_receipt_chain_valid() {
+        let chain = make_chain(1, [0xCCu8; 32]);
+        assert!(chain_valid(&chain).is_ok());
+    }
+
+    #[test]
+    fn test_wrong_reveal_chain_root_rejected() {
+        let chain = make_chain(2, [0xCCu8; 32]);
+        let wrong_root = [0xFFu8; 32];
+        let reveal = PrivateFlightReveal {
+            chain_root: wrong_root,
+            receipts: chain.receipts,
+        };
+        assert!(matches!(
+            verify_private_reveal(&reveal),
+            Err(FlightError::RevealMismatch)
+        ));
+    }
 }

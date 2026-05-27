@@ -820,6 +820,61 @@ mod tests {
         }
     }
 
+    // ── Extended tests ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_fixture_mock_sig_rejected() {
+        let verifier = FixtureVerifier::ok(make_verified_payment([0xAA; 32], 1_000_000));
+        let result = verifier.verify_transfer("MOCK_SIG_anything", &[0xAA; 32], 1_000_000);
+        assert!(matches!(result, Err(X402DevnetError::MockSigRejected)));
+    }
+
+    #[test]
+    fn test_evidence_mainnet_ready_false() {
+        let e = X402DevnetEvidenceJson {
+            commit: "abc".to_string(),
+            network: "solana-devnet".to_string(),
+            rpc_url: "https://api.devnet.solana.com".to_string(),
+            tx_signature: "5xRealSig111".to_string(),
+            verified_at_slot: 1,
+            amount_lamports: 1_000_000,
+            pay_to: "AAAA".to_string(),
+            requirement_hash: "aa".to_string(),
+            payment_proof_hash: "bb".to_string(),
+            receipt_id: "cc".to_string(),
+            receipt_nullifier: "dd".to_string(),
+            mock: false,
+            mainnet_ready: false,
+        };
+        assert!(!e.mainnet_ready);
+    }
+
+    #[test]
+    fn test_hex_encode_nonempty() {
+        let h = hex_encode(&[0x01u8; 32]);
+        assert!(!h.is_empty());
+        assert_eq!(h.len(), 64);
+    }
+
+    #[test]
+    fn test_verified_payment_slot_field() {
+        let payment = make_verified_payment([0xAA; 32], 1_000_000);
+        assert_eq!(payment.slot, 9001);
+        assert_eq!(payment.amount_lamports, 1_000_000);
+    }
+
+    #[test]
+    fn test_request_resource_no_proof_returns_requirement() {
+        let verifier = FixtureVerifier::ok(make_verified_payment([0xAA; 32], 1_000_000));
+        let mut server = make_strict_server(Box::new(verifier));
+        let resp = server.request_resource_strict(None);
+        assert!(
+            matches!(resp, StrictServerResponse::PaymentRequired(_)),
+            "no proof must return PaymentRequired: {:?}",
+            resp
+        );
+    }
+
     // ── Test 10: replay rejected after first success ──────────────────────────
 
     #[test]

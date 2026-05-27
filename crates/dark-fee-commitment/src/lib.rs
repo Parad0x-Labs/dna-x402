@@ -203,4 +203,88 @@ mod tests {
         assert!(json.contains("expiry_slot"));
         assert!(json.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_nonzero() {
+        let c = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        assert_ne!(c.commitment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_hash_deterministic() {
+        let c1 = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        let c2 = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        assert_eq!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_amount_sensitive() {
+        let c1 = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        let c2 = commit_fee(200, &NONCE, EPOCH, EXPIRY).unwrap();
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_nonce_sensitive() {
+        let nonce2 = [0x44u8; 32];
+        let c1 = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        let c2 = commit_fee(100, &nonce2, EPOCH, EXPIRY).unwrap();
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let c = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_epoch_stored() {
+        let c = commit_fee(100, &NONCE, 99, EXPIRY).unwrap();
+        assert_eq!(c.epoch, 99);
+    }
+
+    #[test]
+    fn test_expiry_slot_stored() {
+        let c = commit_fee(100, &NONCE, EPOCH, 5555).unwrap();
+        assert_eq!(c.expiry_slot, 5555);
+    }
+
+    #[test]
+    fn test_verify_reveal_ok() {
+        let amount = 777u64;
+        let c = commit_fee(amount, &NONCE, EPOCH, EXPIRY).unwrap();
+        let reveal = reveal_fee(&c, amount, &NONCE, 1).unwrap();
+        assert!(verify_reveal(&c, &reveal));
+    }
+
+    #[test]
+    fn test_verify_reveal_wrong_amount_fails() {
+        let c = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        let reveal = FeeReveal {
+            commitment_hash: c.commitment_hash,
+            revealed_amount: 999, // wrong
+            nonce: NONCE,
+            settled_at_slot: 1,
+        };
+        assert!(!verify_reveal(&c, &reveal));
+    }
+
+    #[test]
+    fn test_reveal_at_exact_expiry_ok() {
+        let c = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        // current_slot == expiry_slot: check is `current_slot > expiry`, so == is valid
+        let result = reveal_fee(&c, 100, &NONCE, EXPIRY);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_reveal_nonce_sensitive() {
+        let c = commit_fee(100, &NONCE, EPOCH, EXPIRY).unwrap();
+        let wrong_nonce = [0x44u8; 32];
+        let result = reveal_fee(&c, 100, &wrong_nonce, 1);
+        assert_eq!(result, Err(FeeCommitError::RevealMismatch));
+    }
 }

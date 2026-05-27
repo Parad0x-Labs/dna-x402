@@ -216,4 +216,169 @@ mod tests {
         let map = compute_heat_map(&[], 1000);
         assert!(map.is_empty());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_multiple_accounts_in_map() {
+        let a1 = make_account(10);
+        let a2 = make_account(11);
+        let samples = vec![
+            FeeSample {
+                account: a1,
+                slot: 100,
+                prioritization_fee_micro_lamports: 300,
+            },
+            FeeSample {
+                account: a2,
+                slot: 100,
+                prioritization_fee_micro_lamports: 600,
+            },
+        ];
+        let map = compute_heat_map(&samples, 150);
+        assert_eq!(map.len(), 2);
+    }
+
+    #[test]
+    fn test_heat_sorted_hottest_first() {
+        let hot = make_account(12);
+        let cold = make_account(13);
+        let samples = vec![
+            FeeSample {
+                account: hot,
+                slot: 100,
+                prioritization_fee_micro_lamports: 1000,
+            },
+            FeeSample {
+                account: cold,
+                slot: 100,
+                prioritization_fee_micro_lamports: 50,
+            },
+        ];
+        let map = compute_heat_map(&samples, 150);
+        assert_eq!(map[0].account, hot);
+    }
+
+    #[test]
+    fn test_stale_threshold_boundary_fresh() {
+        let acct = make_account(14);
+        // diff = STALE_SLOT_THRESHOLD is exactly on boundary → NOT stale (<= threshold)
+        let samples = vec![FeeSample {
+            account: acct,
+            slot: 0,
+            prioritization_fee_micro_lamports: 500,
+        }];
+        let map = compute_heat_map(&samples, STALE_SLOT_THRESHOLD);
+        assert_eq!(map.len(), 1);
+        assert_eq!(count_stale(&samples, STALE_SLOT_THRESHOLD), 0);
+    }
+
+    #[test]
+    fn test_single_account_heat_is_one() {
+        let acct = make_account(15);
+        let samples = vec![FeeSample {
+            account: acct,
+            slot: 100,
+            prioritization_fee_micro_lamports: 777,
+        }];
+        let map = compute_heat_map(&samples, 150);
+        assert!((map[0].heat_score - 1.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_has_hot_account_false_when_threshold_99() {
+        let cold = make_account(16);
+        let samples = vec![FeeSample {
+            account: cold,
+            slot: 100,
+            prioritization_fee_micro_lamports: 100,
+        }];
+        let map = compute_heat_map(&samples, 150);
+        // Only one account, so heat_score = 1.0; but threshold is very high at 1.01
+        assert!(!has_hot_account(&[cold], &map, 1.01));
+    }
+
+    #[test]
+    fn test_sample_count_correct() {
+        let acct = make_account(17);
+        let samples = vec![
+            FeeSample {
+                account: acct,
+                slot: 100,
+                prioritization_fee_micro_lamports: 100,
+            },
+            FeeSample {
+                account: acct,
+                slot: 101,
+                prioritization_fee_micro_lamports: 200,
+            },
+            FeeSample {
+                account: acct,
+                slot: 102,
+                prioritization_fee_micro_lamports: 300,
+            },
+        ];
+        let map = compute_heat_map(&samples, 150);
+        assert_eq!(map[0].sample_count, 3);
+    }
+
+    #[test]
+    fn test_max_fee_is_actual_max() {
+        let acct = make_account(18);
+        let samples = vec![
+            FeeSample {
+                account: acct,
+                slot: 100,
+                prioritization_fee_micro_lamports: 50,
+            },
+            FeeSample {
+                account: acct,
+                slot: 101,
+                prioritization_fee_micro_lamports: 9999,
+            },
+            FeeSample {
+                account: acct,
+                slot: 102,
+                prioritization_fee_micro_lamports: 300,
+            },
+        ];
+        let map = compute_heat_map(&samples, 150);
+        assert_eq!(map[0].max_fee, 9999);
+    }
+
+    #[test]
+    fn test_stale_just_past_threshold() {
+        let acct = make_account(19);
+        // diff = STALE_SLOT_THRESHOLD + 1 > threshold → stale
+        let samples = vec![FeeSample {
+            account: acct,
+            slot: 0,
+            prioritization_fee_micro_lamports: 500,
+        }];
+        let map = compute_heat_map(&samples, STALE_SLOT_THRESHOLD + 1);
+        assert!(map.is_empty());
+        assert_eq!(count_stale(&samples, STALE_SLOT_THRESHOLD + 1), 1);
+    }
+
+    #[test]
+    fn test_no_candidates_returns_none() {
+        let map = compute_heat_map(&[], 1000);
+        let result = select_coolest(&[], &map);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_unknown_candidate_treated_as_zero_fee() {
+        // Account not in heat map → virtual fee 0 → selected as coolest over a known hot account
+        let known = make_account(20);
+        let unknown = make_account(21);
+        let samples = vec![FeeSample {
+            account: known,
+            slot: 100,
+            prioritization_fee_micro_lamports: 500,
+        }];
+        let map = compute_heat_map(&samples, 150);
+        let coolest = select_coolest(&[known, unknown], &map);
+        assert_eq!(coolest, Some(unknown));
+    }
 }

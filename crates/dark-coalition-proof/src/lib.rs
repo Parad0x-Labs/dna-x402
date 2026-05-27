@@ -440,4 +440,21 @@ mod tests {
         let proof = prove_coalition(&config, &[c1, c2], &[600, 500], &test_nonce(0)).unwrap();
         assert!(!proof.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_coalition_root_domain_sensitive() {
+        let config1 = default_config();
+        let config2 = CoalitionConfig {
+            domain_hash: sha256(&[b"other-domain"]),
+            ..default_config()
+        };
+        let c1 = make_contribution(b"alice", 600, &test_nonce(1));
+        let c2 = make_contribution(b"bob", 500, &test_nonce(2));
+        let nonce = test_nonce(0);
+        let p1 = prove_coalition(&config1, &[c1.clone(), c2.clone()], &[600, 500], &nonce).unwrap();
+        let p2 = prove_coalition(&config2, &[c1, c2], &[600, 500], &nonce).unwrap();
+        assert_ne!(p1.coalition_root, p2.coalition_root);
+    }
 }

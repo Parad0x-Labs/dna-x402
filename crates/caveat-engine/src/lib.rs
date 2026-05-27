@@ -263,4 +263,52 @@ mod tests {
         c5.daily_loss_limit_lamports = 1;
         assert_ne!(fp1, caveat_fingerprint(&c5));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_priority_fee_exceeded() {
+        let c = base_caveats(); // max_priority_fee_lamports = 5_000
+        let mut ctx = base_ctx();
+        ctx.priority_fee_lamports = 6_000; // > 5_000
+        assert_eq!(
+            check_caveats(&c, &ctx),
+            Err(CaveatError::PriorityFeeExceeded)
+        );
+    }
+
+    #[test]
+    fn test_daily_loss_limit_exceeded() {
+        let c = base_caveats(); // daily_loss_limit = 500_000
+        let mut ctx = base_ctx();
+        ctx.session_daily_loss = 490_000;
+        ctx.amount_lamports = 50_000; // 490_000 + 50_000 = 540_000 > 500_000
+        assert_eq!(
+            check_caveats(&c, &ctx),
+            Err(CaveatError::DailyLossLimitExceeded)
+        );
+    }
+
+    #[test]
+    fn test_exactly_at_not_before_ok() {
+        // not_before_slot = 100; check is current_slot < not_before_slot → at 100 is ok
+        let c = base_caveats();
+        let mut ctx = base_ctx();
+        ctx.current_slot = 100; // == not_before_slot
+        assert!(check_caveats(&c, &ctx).is_ok());
+    }
+
+    #[test]
+    fn test_caveat_fingerprint_nonzero() {
+        let c = base_caveats();
+        let fp = caveat_fingerprint(&c);
+        assert_ne!(fp, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_valid_base_case_passes() {
+        let c = base_caveats();
+        let ctx = base_ctx();
+        assert!(check_caveats(&c, &ctx).is_ok());
+    }
 }

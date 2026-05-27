@@ -189,4 +189,87 @@ mod tests {
         // Capped
         assert_eq!(bounty_from_reclaimed(200_000_000_000, &rules), 1_000_000);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_target_hash_nonzero() {
+        let target = make_target(1_000_000, 100);
+        assert_ne!(target_hash(&target), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_target_hash_deterministic() {
+        let target = make_target(500_000, 200);
+        assert_eq!(target_hash(&target), target_hash(&target));
+    }
+
+    #[test]
+    fn test_target_hash_account_sensitive() {
+        let mut t1 = make_target(1_000_000, 100);
+        let mut t2 = make_target(1_000_000, 100);
+        t1.account = [0x11u8; 32];
+        t2.account = [0x22u8; 32];
+        assert_ne!(target_hash(&t1), target_hash(&t2));
+    }
+
+    #[test]
+    fn test_total_reclaimable_sum() {
+        let targets = vec![
+            make_target(100_000, 10),
+            make_target(200_000, 20),
+            make_target(300_000, 30),
+        ];
+        assert_eq!(total_reclaimable(&targets), 600_000);
+    }
+
+    #[test]
+    fn test_total_reclaimable_empty_zero() {
+        assert_eq!(total_reclaimable(&[]), 0);
+    }
+
+    #[test]
+    fn test_sort_empty_ok() {
+        let mut targets: Vec<ExpiredAccountTarget> = vec![];
+        sort_targets_by_value(&mut targets); // must not panic
+        assert!(targets.is_empty());
+    }
+
+    #[test]
+    fn test_bounty_zero_error() {
+        // 1 lamport * 100bps / 10_000 = 0 → BountyZero
+        let target = make_target(1, 100);
+        let rules = default_rules();
+        assert_eq!(
+            calculate_bounty(&target, &rules, 111, 0),
+            Err(BountyError::BountyZero)
+        );
+    }
+
+    #[test]
+    fn test_min_age_not_met_rejected() {
+        // expires=100, min_age=10, current=105 → 105 < 110 → NotYetExpired
+        let target = make_target(1_000_000, 100);
+        let rules = default_rules(); // min_age_slots=10, grace=5
+                                     // current=105 > expires=100, grace ok (created=0, 105 >= 5), but 105 < 100+10=110
+        assert_eq!(
+            calculate_bounty(&target, &rules, 105, 0),
+            Err(BountyError::NotYetExpired)
+        );
+    }
+
+    #[test]
+    fn test_default_rules_values() {
+        let rules = BountyRules::default_rules();
+        assert_eq!(rules.min_age_slots, 10);
+        assert_eq!(rules.bounty_bps, 100);
+        assert_eq!(rules.max_bounty_lamports, 1_000_000);
+        assert_eq!(rules.grace_period_slots, 5);
+    }
+
+    #[test]
+    fn test_bounty_from_reclaimed_zero_is_zero() {
+        let rules = default_rules();
+        assert_eq!(bounty_from_reclaimed(0, &rules), 0);
+    }
 }

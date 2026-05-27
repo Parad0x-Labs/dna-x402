@@ -347,4 +347,74 @@ mod tests {
         assert!(v.get("mainnet_ready").is_some());
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_badge_id_nonzero() {
+        let badge = issue_badge(&issuer(), &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        assert_ne!(badge.badge_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_badge_mainnet_ready_false() {
+        let badge = issue_badge(&issuer(), &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        assert!(!badge.mainnet_ready);
+    }
+
+    #[test]
+    fn test_presentation_mainnet_ready_false() {
+        let badge = issue_badge(&issuer(), &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        let pres = present_badge(&badge, &holder(), &nonce(7), DOMAIN, ISSUED + 1).unwrap();
+        assert!(!pres.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_issuer_rejected() {
+        let zero = [0u8; 32];
+        let err = issue_badge(&zero, &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap_err();
+        assert_eq!(err, BadgeError::ZeroIssuerSecret);
+    }
+
+    #[test]
+    fn test_level_zero_rejected() {
+        let err = issue_badge(&issuer(), &holder(), DOMAIN, 0, ISSUED, EXPIRES).unwrap_err();
+        assert_eq!(err, BadgeError::LevelZero);
+    }
+
+    #[test]
+    fn test_empty_domain_rejected() {
+        let err = issue_badge(&issuer(), &holder(), b"", 1, ISSUED, EXPIRES).unwrap_err();
+        assert_eq!(err, BadgeError::EmptyDomain);
+    }
+
+    #[test]
+    fn test_holder_hash_nonzero() {
+        let badge = issue_badge(&issuer(), &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        assert_ne!(badge.holder_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_presentation_false_wrong_badge_id() {
+        let badge = issue_badge(&issuer(), &holder(), DOMAIN, 2, ISSUED, EXPIRES).unwrap();
+        let mut pres = present_badge(&badge, &holder(), &nonce(3), DOMAIN, ISSUED + 1).unwrap();
+        pres.badge_id[0] ^= 0xFF;
+        assert!(!verify_presentation(&badge, &pres));
+    }
+
+    #[test]
+    fn test_different_holder_different_badge_id() {
+        let badge1 = issue_badge(&issuer(), &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        let mut h2 = holder();
+        h2[1] = 0xFF;
+        let badge2 = issue_badge(&issuer(), &h2, DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        assert_ne!(badge1.badge_id, badge2.badge_id);
+    }
+
+    #[test]
+    fn test_different_level_different_badge_id() {
+        let badge1 = issue_badge(&issuer(), &holder(), DOMAIN, 1, ISSUED, EXPIRES).unwrap();
+        let badge2 = issue_badge(&issuer(), &holder(), DOMAIN, 2, ISSUED, EXPIRES).unwrap();
+        assert_ne!(badge1.badge_id, badge2.badge_id);
+    }
 }

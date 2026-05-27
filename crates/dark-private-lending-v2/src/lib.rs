@@ -149,4 +149,76 @@ mod tests {
         let err = new_loan(&l, &b, 1_000_000, 10_001, &blind, 1_800_000_000).unwrap_err();
         assert_eq!(err, LoanErrorV2::InvalidRate);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_loan_id_nonzero() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert_ne!(loan.loan_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_lender_hash_nonzero() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert_ne!(loan.lender_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_borrower_hash_nonzero() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert_ne!(loan.borrower_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_principal_commitment_nonzero() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert_ne!(loan.principal_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_rate_commitment_nonzero() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert_ne!(loan.rate_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert!(!loan.mainnet_ready);
+    }
+
+    #[test]
+    fn test_repaid_false_initially() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 1_000).unwrap();
+        assert!(!loan.repaid);
+    }
+
+    #[test]
+    fn test_zero_borrower_rejected() {
+        let (l, _, blind) = make_secrets();
+        let err = new_loan(&l, &[0u8; 32], 1_000, 500, &blind, 1_000).unwrap_err();
+        assert_eq!(err, LoanErrorV2::ZeroSecret);
+    }
+
+    #[test]
+    fn test_max_rate_ok() {
+        let (l, b, blind) = make_secrets();
+        let result = new_loan(&l, &b, 1_000, 10_000, &blind, 1_000);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_due_epoch_stored() {
+        let (l, b, blind) = make_secrets();
+        let loan = new_loan(&l, &b, 1_000, 500, &blind, 9_999).unwrap();
+        assert_eq!(loan.due_epoch, 9_999);
+    }
 }

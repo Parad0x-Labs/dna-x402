@@ -317,4 +317,82 @@ mod tests {
         // Sanity: the match_id IS present.
         assert!(record.contains(&hex(&hedge.match_id)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_outcome_commitment_nonzero() {
+        let c = create_commitment(0, OUTCOME_A, &NONCE_A, STAKE, EPOCH);
+        assert_ne!(c.outcome_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_commitment() {
+        let c = create_commitment(0, OUTCOME_A, &NONCE_A, STAKE, EPOCH);
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_match_id_nonzero() {
+        let (a, b) = make_pair();
+        let hedge = create_match(a, b).unwrap();
+        assert_ne!(hedge.match_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_resolved_false_initially() {
+        let (a, b) = make_pair();
+        let hedge = create_match(a, b).unwrap();
+        assert!(!hedge.resolved);
+    }
+
+    #[test]
+    fn test_winner_party_id_none_initially() {
+        let (a, b) = make_pair();
+        let hedge = create_match(a, b).unwrap();
+        assert!(hedge.winner_party_id.is_none());
+    }
+
+    #[test]
+    fn test_receipt_mainnet_ready_false() {
+        let (a, b) = make_pair();
+        let mut hedge = create_match(a, b).unwrap();
+        let receipt = resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A).unwrap();
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_receipt_match_id_matches_hedge() {
+        let (a, b) = make_pair();
+        let mut hedge = create_match(a, b).unwrap();
+        let mid = hedge.match_id;
+        let receipt = resolve_match(&mut hedge, 0, OUTCOME_A, &NONCE_A).unwrap();
+        assert_eq!(receipt.match_id, mid);
+    }
+
+    #[test]
+    fn test_stake_mismatch_rejected() {
+        let a = create_commitment(0, OUTCOME_A, &NONCE_A, 1_000, EPOCH);
+        let b = create_commitment(1, OUTCOME_B, &NONCE_B, 2_000, EPOCH);
+        assert!(matches!(create_match(a, b), Err(HedgeError::StakeMismatch)));
+    }
+
+    #[test]
+    fn test_different_outcomes_different_commitments() {
+        let c1 = create_commitment(0, b"OUTCOME_X", &NONCE_A, STAKE, EPOCH);
+        let c2 = create_commitment(0, b"OUTCOME_Y", &NONCE_A, STAKE, EPOCH);
+        assert_ne!(c1.outcome_commitment, c2.outcome_commitment);
+    }
+
+    #[test]
+    fn test_match_public_record_fields() {
+        let (a, b) = make_pair();
+        let hedge = create_match(a, b).unwrap();
+        let record = match_public_record(&hedge);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["match_id"].is_string());
+        assert_eq!(v["resolved"], false);
+        assert_eq!(v["mainnet_ready"], false);
+        assert_eq!(v["epoch"], EPOCH);
+    }
 }

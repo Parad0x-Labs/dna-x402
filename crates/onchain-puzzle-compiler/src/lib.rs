@@ -370,4 +370,54 @@ mod tests {
         let result = hex_to_bytes("abc");
         assert!(matches!(result, Err(PuzzleError::NonAsciiMessage)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_verify_nullifier_wrong_epoch_fails() {
+        // The known D nullifier is valid for epoch=0 only; epoch=1 must fail.
+        let bytes = hex_to_bytes(KNOWN_D_NULLIFIER_HEX).unwrap();
+        let result = verify_nullifier_for_shard(&bytes, 68, 1, b"dark_null_v1");
+        assert!(
+            !result,
+            "known DARKNULL nullifier must NOT satisfy ritual formula for epoch=1"
+        );
+    }
+
+    #[test]
+    fn test_shard_positions_sequential() {
+        let input = darknull_input(PuzzleMethod::ShardAscii);
+        let output = compile_puzzle(&input).unwrap();
+        for (i, t) in output.shard_targets.iter().enumerate() {
+            assert_eq!(t.position, i, "position must equal index {}", i);
+        }
+    }
+
+    #[test]
+    fn test_compile_alt_order_cipher_same_shard_bytes() {
+        // Both ShardAscii and AltOrderCipher use ASCII value as shard_byte.
+        let mk = |method: PuzzleMethod| PuzzleCompileInput {
+            message: "DARK".to_string(),
+            method,
+            target_network: "devnet".to_string(),
+        };
+        let out_ascii = compile_puzzle(&mk(PuzzleMethod::ShardAscii)).unwrap();
+        let out_alt = compile_puzzle(&mk(PuzzleMethod::AltOrderCipher)).unwrap();
+        let bytes_ascii: Vec<u8> = out_ascii
+            .shard_targets
+            .iter()
+            .map(|t| t.shard_byte)
+            .collect();
+        let bytes_alt: Vec<u8> = out_alt.shard_targets.iter().map(|t| t.shard_byte).collect();
+        assert_eq!(
+            bytes_ascii, bytes_alt,
+            "both methods must produce identical shard_bytes for the same message"
+        );
+    }
+
+    #[test]
+    fn test_hex_to_bytes_uppercase() {
+        let result = hex_to_bytes("AABB").unwrap();
+        assert_eq!(result, vec![0xAAu8, 0xBB]);
+    }
 }

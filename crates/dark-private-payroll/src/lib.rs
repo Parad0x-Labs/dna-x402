@@ -144,4 +144,75 @@ mod tests {
         add_employee(&mut p, &emp2_secret(), 60000, &blinding()).unwrap();
         assert_ne!(p.salary_root, root_after_1);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_payroll_id_nonzero() {
+        let p = new_payroll(&org_secret()).unwrap();
+        assert_ne!(p.payroll_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_org_hash_nonzero() {
+        let p = new_payroll(&org_secret()).unwrap();
+        assert_ne!(p.org_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let p = new_payroll(&org_secret()).unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_employee_count_zero_initially() {
+        let p = new_payroll(&org_secret()).unwrap();
+        assert_eq!(p.employee_count, 0);
+    }
+
+    #[test]
+    fn test_total_committed_zero_initially() {
+        let p = new_payroll(&org_secret()).unwrap();
+        assert_eq!(p.total_committed, 0);
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let mut p = new_payroll(&org_secret()).unwrap();
+        let sc = add_employee(&mut p, &emp1_secret(), 50_000, &blinding()).unwrap();
+        assert_ne!(sc.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_emp_id_nonzero() {
+        let mut p = new_payroll(&org_secret()).unwrap();
+        let sc = add_employee(&mut p, &emp1_secret(), 50_000, &blinding()).unwrap();
+        assert_ne!(sc.emp_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_payroll_id_deterministic() {
+        let p1 = new_payroll(&org_secret()).unwrap();
+        let p2 = new_payroll(&org_secret()).unwrap();
+        assert_eq!(p1.payroll_id, p2.payroll_id);
+    }
+
+    #[test]
+    fn test_commitment_salary_sensitive() {
+        let mut p = new_payroll(&org_secret()).unwrap();
+        let sc1 = add_employee(&mut p, &emp1_secret(), 50_000, &blinding()).unwrap();
+        let mut p2 = new_payroll(&org_secret()).unwrap();
+        let sc2 = add_employee(&mut p2, &emp1_secret(), 60_000, &blinding()).unwrap();
+        assert_ne!(sc1.commitment, sc2.commitment);
+    }
+
+    #[test]
+    fn test_employee_count_increments() {
+        let mut p = new_payroll(&org_secret()).unwrap();
+        add_employee(&mut p, &emp1_secret(), 50_000, &blinding()).unwrap();
+        assert_eq!(p.employee_count, 1);
+        add_employee(&mut p, &emp2_secret(), 60_000, &blinding()).unwrap();
+        assert_eq!(p.employee_count, 2);
+    }
 }

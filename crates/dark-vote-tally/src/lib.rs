@@ -330,4 +330,86 @@ mod tests {
         assert!(record.contains("tally_hash"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_ballot_mainnet_ready_false() {
+        let ballot = cast_ballot(&voter_secret(9), VoteChoice::Yes, 1, &nonce(1)).unwrap();
+        assert!(!ballot.mainnet_ready);
+    }
+
+    #[test]
+    fn test_revealed_ballot_mainnet_ready_false() {
+        let pid = 1u64;
+        let ballot = cast_ballot(&voter_secret(9), VoteChoice::No, pid, &nonce(2)).unwrap();
+        let rev = reveal_ballot(&ballot, &voter_secret(9), VoteChoice::No, &nonce(2)).unwrap();
+        assert!(!rev.mainnet_ready);
+    }
+
+    #[test]
+    fn test_tally_mainnet_ready_false() {
+        let pid = 1u64;
+        let ballot = cast_ballot(&voter_secret(9), VoteChoice::Yes, pid, &nonce(1)).unwrap();
+        let rev = reveal_ballot(&ballot, &voter_secret(9), VoteChoice::Yes, &nonce(1)).unwrap();
+        let tally = tally_votes(&[rev], pid).unwrap();
+        assert!(!tally.mainnet_ready);
+    }
+
+    #[test]
+    fn test_ballot_commitment_nonzero() {
+        let ballot = cast_ballot(&voter_secret(8), VoteChoice::Yes, 42, &nonce(5)).unwrap();
+        assert_ne!(ballot.ballot_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ballot_commitment_deterministic() {
+        let b1 = cast_ballot(&voter_secret(8), VoteChoice::Yes, 42, &nonce(5)).unwrap();
+        let b2 = cast_ballot(&voter_secret(8), VoteChoice::Yes, 42, &nonce(5)).unwrap();
+        assert_eq!(b1.ballot_commitment, b2.ballot_commitment);
+    }
+
+    #[test]
+    fn test_different_choices_different_commitment() {
+        let pid = 10u64;
+        let b_yes = cast_ballot(&voter_secret(3), VoteChoice::Yes, pid, &nonce(1)).unwrap();
+        let b_no = cast_ballot(&voter_secret(3), VoteChoice::No, pid, &nonce(1)).unwrap();
+        assert_ne!(b_yes.ballot_commitment, b_no.ballot_commitment);
+    }
+
+    #[test]
+    fn test_empty_ballot_set_rejected() {
+        let err = tally_votes(&[], 1).unwrap_err();
+        assert_eq!(err, TallyError::EmptyBallotSet);
+    }
+
+    #[test]
+    fn test_wrong_choice_fails_reveal() {
+        let pid = 5u64;
+        let ballot = cast_ballot(&voter_secret(4), VoteChoice::Yes, pid, &nonce(3)).unwrap();
+        let err = reveal_ballot(&ballot, &voter_secret(4), VoteChoice::No, &nonce(3)).unwrap_err();
+        assert_eq!(err, TallyError::CommitmentMismatch);
+    }
+
+    #[test]
+    fn test_total_votes_equals_sum() {
+        let pid = 99u64;
+        let b1 = cast_ballot(&voter_secret(1), VoteChoice::Yes, pid, &nonce(1)).unwrap();
+        let b2 = cast_ballot(&voter_secret(2), VoteChoice::No, pid, &nonce(2)).unwrap();
+        let b3 = cast_ballot(&voter_secret(3), VoteChoice::Abstain, pid, &nonce(3)).unwrap();
+        let r1 = reveal_ballot(&b1, &voter_secret(1), VoteChoice::Yes, &nonce(1)).unwrap();
+        let r2 = reveal_ballot(&b2, &voter_secret(2), VoteChoice::No, &nonce(2)).unwrap();
+        let r3 = reveal_ballot(&b3, &voter_secret(3), VoteChoice::Abstain, &nonce(3)).unwrap();
+        let tally = tally_votes(&[r1, r2, r3], pid).unwrap();
+        assert_eq!(
+            tally.total_votes,
+            tally.yes_count + tally.no_count + tally.abstain_count
+        );
+    }
+
+    #[test]
+    fn test_voter_hash_nonzero() {
+        let ballot = cast_ballot(&voter_secret(7), VoteChoice::Yes, 1, &nonce(1)).unwrap();
+        assert_ne!(ballot.voter_hash, [0u8; 32]);
+    }
 }

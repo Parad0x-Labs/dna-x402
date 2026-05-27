@@ -206,4 +206,83 @@ mod tests {
 
         assert!(verify_withdrawal(&deposit, &withdrawal));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let d = create_deposit(100, &make_secret(0x01), 0, 0).unwrap();
+        assert!(!d.mainnet_ready);
+        let w = withdraw_vault(&d, 100, &make_secret(0x01), 0).unwrap();
+        assert!(!w.mainnet_ready);
+    }
+
+    #[test]
+    fn test_vault_id_deterministic() {
+        let s = make_secret(0x02);
+        let d1 = create_deposit(500, &s, 1000, 2000).unwrap();
+        let d2 = create_deposit(500, &s, 1000, 2000).unwrap();
+        assert_eq!(d1.vault_id, d2.vault_id);
+    }
+
+    #[test]
+    fn test_vault_id_sensitive_to_secret() {
+        let d1 = create_deposit(500, &make_secret(0x03), 1000, 2000).unwrap();
+        let d2 = create_deposit(500, &make_secret(0x04), 1000, 2000).unwrap();
+        assert_ne!(d1.vault_id, d2.vault_id);
+    }
+
+    #[test]
+    fn test_withdraw_at_exact_lock_time_succeeds() {
+        let secret = make_secret(0x05);
+        let deposit = create_deposit(1000, &secret, 0, 5000).unwrap();
+        let w = withdraw_vault(&deposit, 1000, &secret, 5000).unwrap();
+        assert_eq!(w.withdrawn_at_unix, 5000);
+    }
+
+    #[test]
+    fn test_withdrawal_proof_deterministic() {
+        let secret = make_secret(0x06);
+        let d = create_deposit(200, &secret, 0, 0).unwrap();
+        let w1 = withdraw_vault(&d, 200, &secret, 100).unwrap();
+        let w2 = withdraw_vault(&d, 200, &secret, 100).unwrap();
+        assert_eq!(w1.withdrawal_proof, w2.withdrawal_proof);
+    }
+
+    #[test]
+    fn test_withdrawal_proof_sensitive_to_amount() {
+        let secret = make_secret(0x07);
+        let d1 = create_deposit(300, &secret, 0, 0).unwrap();
+        let d2 = create_deposit(400, &secret, 0, 0).unwrap();
+        let w1 = withdraw_vault(&d1, 300, &secret, 0).unwrap();
+        let w2 = withdraw_vault(&d2, 400, &secret, 0).unwrap();
+        assert_ne!(w1.withdrawal_proof, w2.withdrawal_proof);
+    }
+
+    #[test]
+    fn test_commitment_changes_with_secret() {
+        let d1 = create_deposit(100, &make_secret(0x08), 0, 0).unwrap();
+        let d2 = create_deposit(100, &make_secret(0x09), 0, 0).unwrap();
+        assert_ne!(d1.amount_commitment, d2.amount_commitment);
+    }
+
+    #[test]
+    fn test_lock_until_stored() {
+        let d = create_deposit(100, &make_secret(0x0A), 0, 99999).unwrap();
+        assert_eq!(d.lock_until_unix, 99999);
+    }
+
+    #[test]
+    fn test_deposited_at_stored() {
+        let d = create_deposit(100, &make_secret(0x0B), 12345, 99999).unwrap();
+        assert_eq!(d.deposited_at_unix, 12345);
+    }
+
+    #[test]
+    fn test_different_amounts_different_commitments() {
+        let s = make_secret(0x0C);
+        let d1 = create_deposit(100, &s, 0, 0).unwrap();
+        let d2 = create_deposit(200, &s, 0, 0).unwrap();
+        assert_ne!(d1.amount_commitment, d2.amount_commitment);
+    }
 }

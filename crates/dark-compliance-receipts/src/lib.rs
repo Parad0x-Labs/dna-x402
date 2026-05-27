@@ -241,4 +241,86 @@ mod tests {
         assert_eq!(a1.receipt_hash, a2.receipt_hash);
         assert_eq!(a1.attester_hash, a2.attester_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        assert!(!check.mainnet_ready);
+    }
+
+    #[test]
+    fn test_subject_hash_nonzero() {
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        assert_ne!(check.subject_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_result_hash_nonzero() {
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        assert_ne!(check.result_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let att = attest_compliance(check, ATTESTER);
+        assert_ne!(att.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_attester_hash_nonzero() {
+        let check = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let att = attest_compliance(check, ATTESTER);
+        assert_ne!(att.attester_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_attester_hash_deterministic() {
+        let c1 = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let c2 = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let a1 = attest_compliance(c1, ATTESTER);
+        let a2 = attest_compliance(c2, ATTESTER);
+        assert_eq!(a1.attester_hash, a2.attester_hash);
+    }
+
+    #[test]
+    fn test_attester_hash_sensitive() {
+        let c1 = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let c2 = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let a1 = attest_compliance(c1, b"attester-alpha");
+        let a2 = attest_compliance(c2, b"attester-beta");
+        assert_ne!(a1.attester_hash, a2.attester_hash);
+    }
+
+    #[test]
+    fn test_check_type_affects_result_hash() {
+        let c1 = create_compliance_check(ComplianceType::KycBasic, SUBJECT, true, NOW, FUTURE);
+        let c2 = create_compliance_check(ComplianceType::KycEnhanced, SUBJECT, true, NOW, FUTURE);
+        assert_ne!(c1.result_hash, c2.result_hash);
+    }
+
+    #[test]
+    fn test_not_expired_at_exact_expiry() {
+        let check =
+            create_compliance_check(ComplianceType::AmlScreening, SUBJECT, true, NOW, FUTURE);
+        // check_expired uses strict > so exact expiry timestamp is NOT expired
+        assert!(!check_expired(&check, FUTURE));
+    }
+
+    #[test]
+    fn test_compliance_type_kyc_basic_name() {
+        assert_eq!(ComplianceType::KycBasic.name(), "kyc_basic");
+    }
+
+    #[test]
+    fn test_public_record_check_type_name_present() {
+        let check =
+            create_compliance_check(ComplianceType::AmlScreening, SUBJECT, true, NOW, FUTURE);
+        let att = attest_compliance(check, ATTESTER);
+        let record = compliance_public_record(&att);
+        assert!(record.contains("aml_screening"));
+        assert!(record.contains("mainnet_ready"));
+    }
 }

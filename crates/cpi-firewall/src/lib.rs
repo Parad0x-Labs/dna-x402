@@ -287,4 +287,200 @@ mod tests {
             })
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_manifest_hash_nonzero() {
+        let m = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 0,
+        };
+        assert_ne!(manifest_hash(&m), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_manifest_hash_deterministic() {
+        let m = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 0,
+        };
+        assert_eq!(manifest_hash(&m), manifest_hash(&m));
+    }
+
+    #[test]
+    fn test_allowed_only_policy_passes_known_target() {
+        let target = make_hash(0x10);
+        let manifest = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![AllowedCpi {
+                program_id_hash: target,
+                max_count: 1,
+                allowed_receiver_hash: None,
+                allowed_mint_hash: None,
+            }],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 1,
+        };
+        let policy = CpiPolicy::AllowedOnly(vec![AllowedCpi {
+            program_id_hash: target,
+            max_count: 1,
+            allowed_receiver_hash: None,
+            allowed_mint_hash: None,
+        }]);
+        assert!(validate_cpi_manifest(&manifest, &policy).is_ok());
+    }
+
+    #[test]
+    fn test_allowed_only_rejects_unlisted_cpi() {
+        let target = make_hash(0x99);
+        let manifest = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![AllowedCpi {
+                program_id_hash: target,
+                max_count: 1,
+                allowed_receiver_hash: None,
+                allowed_mint_hash: None,
+            }],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 1,
+        };
+        let policy = CpiPolicy::AllowedOnly(vec![]); // empty allowed list
+        let result = validate_cpi_manifest(&manifest, &policy);
+        assert_eq!(
+            result,
+            Err(CpiViolation::UnauthorizedCpiTarget {
+                program_id_hash: target
+            })
+        );
+    }
+
+    #[test]
+    fn test_no_cpi_policy_passes_empty_manifest() {
+        let manifest = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 0,
+        };
+        assert!(validate_cpi_manifest(&manifest, &CpiPolicy::NoCpiAllowed).is_ok());
+    }
+
+    #[test]
+    fn test_allowed_with_manifest_passes_correct_hash() {
+        let m = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 0,
+        };
+        let h = manifest_hash(&m);
+        let policy = CpiPolicy::AllowedWithManifest { manifest_hash: h };
+        assert!(validate_cpi_manifest(&m, &policy).is_ok());
+    }
+
+    #[test]
+    fn test_allowed_with_manifest_rejects_wrong_hash() {
+        let m = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 0,
+        };
+        let policy = CpiPolicy::AllowedWithManifest {
+            manifest_hash: make_hash(0xFF),
+        };
+        assert!(matches!(
+            validate_cpi_manifest(&m, &policy),
+            Err(CpiViolation::ManifestHashMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn test_bind_manifest_to_ritual_deterministic() {
+        let mh = make_hash(0x01);
+        let rh = make_hash(0x02);
+        assert_eq!(
+            bind_manifest_to_ritual(&mh, &rh),
+            bind_manifest_to_ritual(&mh, &rh)
+        );
+    }
+
+    #[test]
+    fn test_bind_different_ritual_different_result() {
+        let mh = make_hash(0x01);
+        assert_ne!(
+            bind_manifest_to_ritual(&mh, &make_hash(0xAA)),
+            bind_manifest_to_ritual(&mh, &make_hash(0xBB))
+        );
+    }
+
+    #[test]
+    fn test_token_transfer_ok_matching_receiver_and_mint() {
+        let receiver = [0x01u8; 32];
+        let mint = [0x02u8; 32];
+        let manifest = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![AllowedCpi {
+                program_id_hash: make_hash(0x10),
+                max_count: 1,
+                allowed_receiver_hash: Some(receiver),
+                allowed_mint_hash: Some(mint),
+            }],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 1,
+        };
+        assert!(validate_token_transfer(&manifest, &receiver, &mint).is_ok());
+    }
+
+    #[test]
+    fn test_token_transfer_wrong_mint_rejected() {
+        let receiver = [0x01u8; 32];
+        let mint = [0x02u8; 32];
+        let manifest = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![AllowedCpi {
+                program_id_hash: make_hash(0x10),
+                max_count: 1,
+                allowed_receiver_hash: Some(receiver),
+                allowed_mint_hash: Some(mint),
+            }],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 1,
+        };
+        assert!(matches!(
+            validate_token_transfer(&manifest, &receiver, &[0xFFu8; 32]),
+            Err(CpiViolation::ForbiddenTokenTransfer { .. })
+        ));
+    }
+
+    #[test]
+    fn test_token_transfer_no_constraints_always_ok() {
+        let manifest = CpiManifest {
+            declaring_program_hash: make_hash(0x01),
+            allowed_cpis: vec![AllowedCpi {
+                program_id_hash: make_hash(0x10),
+                max_count: 1,
+                allowed_receiver_hash: None,
+                allowed_mint_hash: None,
+            }],
+            forbidden_program_hashes: vec![],
+            effect_hash: make_hash(0x02),
+            max_total_cpi_depth: 1,
+        };
+        assert!(validate_token_transfer(&manifest, &[0xAAu8; 32], &[0xBBu8; 32]).is_ok());
+    }
 }

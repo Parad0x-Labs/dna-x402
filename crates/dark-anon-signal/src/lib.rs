@@ -211,4 +211,143 @@ mod tests {
         assert!(json_str.contains("signal_hash"));
         assert!(json_str.contains("slot"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_underpaid_listing_rejected() {
+        let listing = sample_listing(); // price = 500_000
+        let payment = sample_payment(499_999);
+        let result = purchase_signal(&listing, &payment, &sample_nonce(), 500);
+        assert_eq!(result, Err(SignalError::Underpaid));
+    }
+
+    #[test]
+    fn test_listing_at_exact_expiry_ok() {
+        let listing = sample_listing(); // expiry_slot = 1000
+        let payment = sample_payment(500_000);
+        // slot == expiry_slot → NOT expired (strict > check)
+        assert!(!is_listing_expired(&listing, 1000));
+        let result = purchase_signal(&listing, &payment, &sample_nonce(), 1000);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_access_token_deterministic() {
+        let listing = sample_listing();
+        let payment = sample_payment(500_000);
+        let nonce = sample_nonce();
+        let p1 = purchase_signal(&listing, &payment, &nonce, 500).unwrap();
+        let p2 = purchase_signal(&listing, &payment, &nonce, 500).unwrap();
+        assert_eq!(p1.access_token, p2.access_token);
+    }
+
+    #[test]
+    fn test_access_token_signal_sensitive() {
+        let mut listing2 = sample_listing();
+        listing2.signal_hash[0] ^= 0xFF;
+        let payment = sample_payment(500_000);
+        let nonce = sample_nonce();
+        let p1 = purchase_signal(&sample_listing(), &payment, &nonce, 500).unwrap();
+        let p2 = purchase_signal(&listing2, &payment, &nonce, 500).unwrap();
+        assert_ne!(p1.access_token, p2.access_token);
+    }
+
+    #[test]
+    fn test_access_token_nonce_sensitive() {
+        let listing = sample_listing();
+        let payment = sample_payment(500_000);
+        let nonce2 = [0xFF; 32];
+        let p1 = purchase_signal(&listing, &payment, &sample_nonce(), 500).unwrap();
+        let p2 = purchase_signal(&listing, &payment, &nonce2, 500).unwrap();
+        assert_ne!(p1.access_token, p2.access_token);
+    }
+
+    #[test]
+    fn test_receipt_commitment_buyer_sensitive() {
+        let mut payment2 = sample_payment(500_000);
+        payment2.buyer_hash[0] ^= 0xFF;
+        let p1 = purchase_signal(
+            &sample_listing(),
+            &sample_payment(500_000),
+            &sample_nonce(),
+            500,
+        )
+        .unwrap();
+        let p2 = purchase_signal(&sample_listing(), &payment2, &sample_nonce(), 500).unwrap();
+        assert_ne!(p1.receipt.commitment_hash, p2.receipt.commitment_hash);
+    }
+
+    #[test]
+    fn test_receipt_commitment_amount_sensitive() {
+        let p1 = purchase_signal(
+            &sample_listing(),
+            &sample_payment(500_000),
+            &sample_nonce(),
+            500,
+        )
+        .unwrap();
+        let p2 = purchase_signal(
+            &sample_listing(),
+            &sample_payment(600_000),
+            &sample_nonce(),
+            500,
+        )
+        .unwrap();
+        assert_ne!(p1.receipt.commitment_hash, p2.receipt.commitment_hash);
+    }
+
+    #[test]
+    fn test_receipt_nonce_sensitive() {
+        let nonce2 = [0xEE; 32];
+        let p1 = purchase_signal(
+            &sample_listing(),
+            &sample_payment(500_000),
+            &sample_nonce(),
+            500,
+        )
+        .unwrap();
+        let p2 =
+            purchase_signal(&sample_listing(), &sample_payment(500_000), &nonce2, 500).unwrap();
+        assert_ne!(p1.receipt.commitment_hash, p2.receipt.commitment_hash);
+    }
+
+    #[test]
+    fn test_seller_view_contains_expected_fields() {
+        let purchase = purchase_signal(
+            &sample_listing(),
+            &sample_payment(500_000),
+            &sample_nonce(),
+            500,
+        )
+        .unwrap();
+        let view = seller_sees_only_commitment(&purchase);
+        assert!(view["commitment_hash"].is_string());
+        assert!(view["signal_hash"].is_string());
+        assert!(view["slot"].is_number());
+    }
+
+    #[test]
+    fn test_purchase_slot_stored() {
+        let purchase = purchase_signal(
+            &sample_listing(),
+            &sample_payment(500_000),
+            &sample_nonce(),
+            750,
+        )
+        .unwrap();
+        assert_eq!(purchase.purchased_at_slot, 750);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let purchase = purchase_signal(
+            &sample_listing(),
+            &sample_payment(500_000),
+            &sample_nonce(),
+            500,
+        )
+        .unwrap();
+        assert_ne!(purchase.receipt.receipt_hash, [0u8; 32]);
+    }
 }

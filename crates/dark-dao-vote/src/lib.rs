@@ -304,6 +304,84 @@ mod tests {
         assert!(json.contains("\"abstain_count\":1"));
     }
 
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_nonzero() {
+        let c = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        assert_ne!(c.commitment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_hash_deterministic() {
+        let c1 = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        let c2 = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        assert_eq!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_choice_sensitive() {
+        let c1 = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        let c2 = commit_vote(VoteChoice::No, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_nonce_sensitive() {
+        let c1 = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        let c2 = commit_vote(VoteChoice::Yes, &NONCE_NO, PROPOSAL, COMMIT_SLOT);
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_proposal_sensitive() {
+        let c1 = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        let c2 = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL + 1, COMMIT_SLOT);
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commit_mainnet_ready_false() {
+        let c = commit_vote(VoteChoice::Abstain, &NONCE_ABS, PROPOSAL, COMMIT_SLOT);
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_tally_mainnet_ready_false() {
+        let votes = build_votes();
+        let tally = tally_votes(PROPOSAL, &votes, REVEAL_OPEN);
+        assert!(!tally.mainnet_ready);
+    }
+
+    #[test]
+    fn test_tally_hash_nonzero() {
+        let votes = build_votes();
+        let tally = tally_votes(PROPOSAL, &votes, REVEAL_OPEN);
+        assert_ne!(tally.tally_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reveal_at_exact_open_slot_ok() {
+        let commitment = commit_vote(VoteChoice::Yes, &NONCE_YES, PROPOSAL, COMMIT_SLOT);
+        // current_slot == reveal_slot_open: check is `current < open`, so exact == is valid
+        let result = reveal_vote(
+            &commitment,
+            VoteChoice::Yes,
+            &NONCE_YES,
+            REVEAL_OPEN,
+            REVEAL_OPEN,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_tally_hash_proposal_sensitive() {
+        let votes = build_votes();
+        let t1 = tally_votes(PROPOSAL, &votes, REVEAL_OPEN);
+        let t2 = tally_votes(PROPOSAL + 1, &votes, REVEAL_OPEN);
+        assert_ne!(t1.tally_hash, t2.tally_hash);
+    }
+
     // ---------------------------------------------------------------------------
     // Helper: build a canonical 6-vote slice (3 Yes, 2 No, 1 Abstain)
     // ---------------------------------------------------------------------------

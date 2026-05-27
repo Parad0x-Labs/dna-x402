@@ -180,4 +180,74 @@ mod tests {
         assert!(thread.contains("ShardAscii"));
         assert!(thread.contains("50000"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_job_id_nonzero() {
+        let job = create_puzzle_job("HELLO", PuzzleMethod::ShardAscii, 10_000, 9_999);
+        assert_ne!(job.job_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_solution_commitment_nonzero() {
+        let job = create_puzzle_job("HELLO", PuzzleMethod::ShardAscii, 10_000, 9_999);
+        assert_ne!(job.solution_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_messages_different_job_id() {
+        let j1 = create_puzzle_job("ALPHA", PuzzleMethod::ShardAscii, 10_000, 9_999);
+        let j2 = create_puzzle_job("BETA", PuzzleMethod::ShardAscii, 10_000, 9_999);
+        assert_ne!(j1.job_id, j2.job_id);
+    }
+
+    #[test]
+    fn test_different_methods_different_commitment() {
+        let j1 = create_puzzle_job("MSG", PuzzleMethod::ShardAscii, 10_000, 9_999);
+        let j2 = create_puzzle_job("MSG", PuzzleMethod::AltOrderCipher, 10_000, 9_999);
+        assert_ne!(j1.solution_commitment, j2.solution_commitment);
+    }
+
+    #[test]
+    fn test_puzzle_deterministic() {
+        let j1 = create_puzzle_job("SAME", PuzzleMethod::CouponNonceCipher, 5_000, 200);
+        let j2 = create_puzzle_job("SAME", PuzzleMethod::CouponNonceCipher, 5_000, 200);
+        assert_eq!(j1.job_id, j2.job_id);
+        assert_eq!(j1.solution_commitment, j2.solution_commitment);
+    }
+
+    #[test]
+    fn test_submit_at_expiry_slot_ok() {
+        // current_slot == expires_at_slot → not expired (check is >)
+        let mut job = create_puzzle_job("CASH", PuzzleMethod::ShardAscii, 50_000, 100_000);
+        let correct = build_correct_solution(&job);
+        assert!(submit_solution(&mut job, correct, 100_000).is_ok());
+    }
+
+    #[test]
+    fn test_message_hash_nonzero() {
+        let job = create_puzzle_job("DATA", PuzzleMethod::ShardAscii, 1_000, 999);
+        assert_ne!(job.message_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_thread_not_empty() {
+        let job = create_puzzle_job("WORD", PuzzleMethod::ChaffConstellation, 42_000, 500);
+        let thread = generate_public_thread(&job);
+        assert!(!thread.is_empty());
+    }
+
+    #[test]
+    fn test_job_initially_unclaimed() {
+        let job = create_puzzle_job("UNCLAIMED", PuzzleMethod::ShardAscii, 100, 100);
+        assert!(!job.claimed);
+    }
+
+    #[test]
+    fn test_different_rewards_different_job_id() {
+        let j1 = create_puzzle_job("SAME", PuzzleMethod::ShardAscii, 1_000, 9_999);
+        let j2 = create_puzzle_job("SAME", PuzzleMethod::ShardAscii, 2_000, 9_999);
+        assert_ne!(j1.job_id, j2.job_id);
+    }
 }

@@ -219,4 +219,76 @@ mod tests {
         // layer_secret_hash must not appear
         assert!(v.get("layer_secret_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_layer_id_nonzero() {
+        let layer = new_layer(&secret(0x01), &nonce(0x01)).unwrap();
+        assert_ne!(layer.layer_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let layer = new_layer(&secret(0x02), &nonce(0x01)).unwrap();
+        assert!(!layer.mainnet_ready);
+    }
+
+    #[test]
+    fn test_protected_payload_mainnet_ready_false() {
+        let mut layer = new_layer(&secret(0x03), &nonce(0x01)).unwrap();
+        let pp = protect_payload(&mut layer, b"test").unwrap();
+        assert!(!pp.mainnet_ready);
+    }
+
+    #[test]
+    fn test_empty_payload_rejected() {
+        let mut layer = new_layer(&secret(0x04), &nonce(0x01)).unwrap();
+        let err = protect_payload(&mut layer, b"").unwrap_err();
+        assert_eq!(err, PrivacyError::EmptyPayload);
+    }
+
+    #[test]
+    fn test_commitment_nonzero_after_protect() {
+        let mut layer = new_layer(&secret(0x05), &nonce(0x01)).unwrap();
+        protect_payload(&mut layer, b"data").unwrap();
+        assert_ne!(layer.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let mut layer = new_layer(&secret(0x06), &nonce(0x01)).unwrap();
+        let pp = protect_payload(&mut layer, b"data").unwrap();
+        assert_ne!(pp.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_payload_id_nonzero() {
+        let mut layer = new_layer(&secret(0x07), &nonce(0x01)).unwrap();
+        let pp = protect_payload(&mut layer, b"data").unwrap();
+        assert_ne!(pp.payload_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_secret_different_layer_id() {
+        let l1 = new_layer(&secret(0x08), &nonce(0x01)).unwrap();
+        let l2 = new_layer(&secret(0x09), &nonce(0x01)).unwrap();
+        assert_ne!(l1.layer_id, l2.layer_id);
+    }
+
+    #[test]
+    fn test_public_record_payload_count_increments() {
+        let mut layer = new_layer(&secret(0x0A), &nonce(0x01)).unwrap();
+        protect_payload(&mut layer, b"first").unwrap();
+        protect_payload(&mut layer, b"second").unwrap();
+        let v: serde_json::Value = serde_json::from_str(&layer_public_record(&layer)).unwrap();
+        assert_eq!(v["payload_count"], 2u32);
+    }
+
+    #[test]
+    fn test_payload_commitment_nonzero() {
+        let mut layer = new_layer(&secret(0x0B), &nonce(0x01)).unwrap();
+        let pp = protect_payload(&mut layer, b"content").unwrap();
+        assert_ne!(pp.commitment, [0u8; 32]);
+    }
 }

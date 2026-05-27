@@ -272,4 +272,73 @@ mod tests {
             panic!("expected ServicePayload");
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_server_requirement_amount_matches() {
+        let server = make_server();
+        let req = server.make_requirement();
+        assert_eq!(req.amount_lamports, 1_000_000);
+    }
+
+    #[test]
+    fn test_server_requirement_resource_matches() {
+        let server = make_server();
+        let req = server.make_requirement();
+        assert_eq!(req.resource, "https://api.darknull.example/resource");
+    }
+
+    #[test]
+    fn test_server_mock_proof_is_mock_true() {
+        let server = make_server();
+        let req = server.make_requirement();
+        let proof = build_mock_proof(&req, make_payer());
+        assert!(proof.is_mock);
+    }
+
+    #[test]
+    fn test_server_mock_proof_sig_prefix() {
+        let server = make_server();
+        let req = server.make_requirement();
+        let proof = build_mock_proof(&req, make_payer());
+        assert!(proof.tx_signature.starts_with("MOCK_SIG_"));
+    }
+
+    #[test]
+    fn test_server_advance_slot_changes_expires_at() {
+        let mut server = make_server();
+        let req_before = server.make_requirement(); // expires_at_slot = 1100
+        server.advance_slot(100);
+        let req_after = server.make_requirement(); // expires_at_slot = 1200
+        assert!(req_after.expires_at_slot > req_before.expires_at_slot);
+    }
+
+    #[test]
+    fn test_server_receipt_scope_hash_nonzero() {
+        let server = make_server();
+        let req = server.make_requirement();
+        let proof = build_mock_proof(&req, make_payer());
+        let resp = server.request_resource(Some(&proof));
+        if let ServerResponse::ServicePayload { receipt, .. } = resp {
+            assert_ne!(receipt.service_scope_hash, [0u8; 32]);
+        } else {
+            panic!("expected ServicePayload");
+        }
+    }
+
+    #[test]
+    fn test_server_requirement_hash_nonzero() {
+        let server = make_server();
+        let req = server.make_requirement();
+        assert_ne!(req.requirement_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_server_proof_requirement_hash_matches_req() {
+        let server = make_server();
+        let req = server.make_requirement();
+        let proof = build_mock_proof(&req, make_payer());
+        assert_eq!(proof.requirement_hash, req.requirement_hash());
+    }
 }

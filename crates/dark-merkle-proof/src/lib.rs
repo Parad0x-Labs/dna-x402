@@ -293,4 +293,94 @@ mod tests {
         assert_eq!(root_hex.len(), 64);
         assert_eq!(v["leaf_count"].as_u64().unwrap(), 1);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_leaf_hash_data_sensitive() {
+        let mut t1 = new_tree();
+        let mut t2 = new_tree();
+        let lh1 = add_leaf(&mut t1, b"alpha").unwrap();
+        let lh2 = add_leaf(&mut t2, b"beta").unwrap();
+        assert_ne!(lh1, lh2);
+    }
+
+    #[test]
+    fn test_leaf_hash_deterministic() {
+        let mut t1 = new_tree();
+        let mut t2 = new_tree();
+        let lh1 = add_leaf(&mut t1, b"same-data").unwrap();
+        let lh2 = add_leaf(&mut t2, b"same-data").unwrap();
+        assert_eq!(lh1, lh2);
+    }
+
+    #[test]
+    fn test_leaf_count_nonzero_after_add() {
+        let mut tree = new_tree();
+        add_leaf(&mut tree, b"one").unwrap();
+        assert_eq!(tree.leaf_count, 1);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let tree = new_tree();
+        assert!(!tree.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let mut tree = new_tree();
+        let lh = add_leaf(&mut tree, b"proof-test").unwrap();
+        let proof = prove_inclusion(&tree, &lh).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_leaf_count_increments() {
+        let mut tree = new_tree();
+        assert_eq!(tree.leaf_count, 0);
+        add_leaf(&mut tree, b"first").unwrap();
+        assert_eq!(tree.leaf_count, 1);
+        add_leaf(&mut tree, b"second").unwrap();
+        assert_eq!(tree.leaf_count, 2);
+    }
+
+    #[test]
+    fn test_leaf_not_found_error() {
+        let mut tree = new_tree();
+        add_leaf(&mut tree, b"present").unwrap();
+        let dummy = [0xFFu8; 32];
+        assert_eq!(
+            prove_inclusion(&tree, &dummy),
+            Err(MerkleError::LeafNotFound)
+        );
+    }
+
+    #[test]
+    fn test_empty_data_rejected() {
+        let mut tree = new_tree();
+        assert_eq!(add_leaf(&mut tree, b""), Err(MerkleError::EmptyData));
+    }
+
+    #[test]
+    fn test_single_leaf_proof_path_empty() {
+        let mut tree = new_tree();
+        let lh = add_leaf(&mut tree, b"solo").unwrap();
+        let proof = prove_inclusion(&tree, &lh).unwrap();
+        assert!(
+            proof.path.is_empty(),
+            "single-leaf proof path must be empty"
+        );
+    }
+
+    #[test]
+    fn test_verify_two_leaf_tree() {
+        let mut tree = new_tree();
+        let lh0 = add_leaf(&mut tree, b"leaf-0").unwrap();
+        let lh1 = add_leaf(&mut tree, b"leaf-1").unwrap();
+        let proof0 = prove_inclusion(&tree, &lh0).unwrap();
+        let proof1 = prove_inclusion(&tree, &lh1).unwrap();
+        assert!(verify_inclusion(&proof0));
+        assert!(verify_inclusion(&proof1));
+    }
 }

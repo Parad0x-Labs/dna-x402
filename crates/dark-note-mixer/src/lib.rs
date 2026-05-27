@@ -214,4 +214,75 @@ mod tests {
         assert_eq!(record["note_count"], 1);
         assert!(!record["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let note = create_shield_note(&secret(10), 500, b"SOL").unwrap();
+        assert_ne!(note.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let n1 = create_shield_note(&secret(11), 100, b"SOL").unwrap();
+        let n2 = create_shield_note(&secret(11), 100, b"SOL").unwrap();
+        assert_eq!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_secret_sensitive() {
+        let n1 = create_shield_note(&secret(12), 100, b"SOL").unwrap();
+        let n2 = create_shield_note(&secret(13), 100, b"SOL").unwrap();
+        assert_ne!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_asset_tag_nonzero() {
+        let note = create_shield_note(&secret(14), 100, b"USDC").unwrap();
+        assert_ne!(note.asset_tag, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_mainnet_ready_false() {
+        let note = create_shield_note(&secret(15), 100, b"SOL").unwrap();
+        assert!(!note.mainnet_ready);
+    }
+
+    #[test]
+    fn test_pool_mainnet_ready_false() {
+        let pool = new_shield_pool();
+        assert!(!pool.mainnet_ready);
+    }
+
+    #[test]
+    fn test_pool_starts_empty() {
+        let pool = new_shield_pool();
+        assert_eq!(pool.note_count, 0);
+        assert_eq!(pool.total_committed, 0);
+    }
+
+    #[test]
+    fn test_total_committed_increments() {
+        let mut pool = new_shield_pool();
+        let note = create_shield_note(&secret(16), 750, b"SOL").unwrap();
+        deposit_note(&mut pool, &note);
+        assert_eq!(pool.total_committed, 750);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero_on_withdraw() {
+        let mut pool = new_shield_pool();
+        let note = create_shield_note(&secret(17), 100, b"SOL").unwrap();
+        deposit_note(&mut pool, &note);
+        let nullifier = withdraw_note(&mut pool, &note, &secret(17)).unwrap();
+        assert_ne!(nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_asset_tag_asset_sensitive() {
+        let n1 = create_shield_note(&secret(18), 100, b"SOL").unwrap();
+        let n2 = create_shield_note(&secret(18), 100, b"USDC").unwrap();
+        assert_ne!(n1.asset_tag, n2.asset_tag);
+    }
 }

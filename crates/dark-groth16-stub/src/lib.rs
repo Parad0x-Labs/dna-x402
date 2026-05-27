@@ -167,4 +167,73 @@ mod tests {
         assert_eq!(v["is_stub"], true);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_a_nonzero() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        assert_ne!(proof.proof_a, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_b_nonzero() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        assert_ne!(proof.proof_b, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_c_nonzero() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        assert_ne!(proof.proof_c, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_inputs_hash_nonzero() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        assert_ne!(proof.public_inputs_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_is_stub_always_true() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        assert!(proof.is_stub);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_verify_wrong_inputs_fails() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        let wrong: Vec<&[u8]> = vec![b"wrong"];
+        let result = verify_proof(&proof, &key(), &wrong);
+        assert!(!result.verified);
+    }
+
+    #[test]
+    fn test_proof_key_sensitive() {
+        let key2 = [2u8; 32];
+        let p1 = create_proof(&key(), &inputs()).unwrap();
+        let p2 = create_proof(&key2, &inputs()).unwrap();
+        assert_ne!(p1.proof_a, p2.proof_a);
+    }
+
+    #[test]
+    fn test_verify_result_mainnet_ready_false() {
+        let proof = create_proof(&key(), &inputs()).unwrap();
+        let result = verify_proof(&proof, &key(), &inputs());
+        assert!(!result.mainnet_ready);
+    }
+
+    #[test]
+    fn test_single_input_ok() {
+        let single: Vec<&[u8]> = vec![b"solo"];
+        let proof = create_proof(&key(), &single).unwrap();
+        let result = verify_proof(&proof, &key(), &single);
+        assert!(result.verified);
+    }
 }

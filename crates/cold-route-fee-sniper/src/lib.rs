@@ -156,4 +156,90 @@ mod tests {
         let cut = estimate_dark_null_cut(savings, 500); // 5%
         assert!(cut <= savings);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_no_candidates_returns_error() {
+        let result = select_coldest_safe_route(vec![], &[], 10_000, 1);
+        assert!(matches!(result, Err(RouteError::NoSafeCandidates)));
+    }
+
+    #[test]
+    fn test_is_sample_fresh_within_age() {
+        let sample = WritableFeeSample {
+            account_hash: [0u8; 32],
+            slot: 90,
+            prioritization_fee_lamports: 100,
+        };
+        assert!(is_sample_fresh(&sample, 100, 20));
+    }
+
+    #[test]
+    fn test_is_sample_fresh_past_age() {
+        let sample = WritableFeeSample {
+            account_hash: [0u8; 32],
+            slot: 70,
+            prioritization_fee_lamports: 100,
+        };
+        assert!(!is_sample_fresh(&sample, 100, 20));
+    }
+
+    #[test]
+    fn test_savings_zero_when_fee_exceeds_reference() {
+        let candidate = make_candidate(1, 15_000, 3); // fee > reference
+        let score = score_route(&candidate, &[], 10_000);
+        assert_eq!(score.expected_savings_lamports, 0);
+    }
+
+    #[test]
+    fn test_dark_null_cut_500bps() {
+        let cut = estimate_dark_null_cut(1_000, 500); // 5% of 1000 = 50
+        assert_eq!(cut, 50);
+    }
+
+    #[test]
+    fn test_combined_score_zero_reference_fee() {
+        let candidate = make_candidate(1, 0, 5);
+        let score = score_route(&candidate, &[], 0);
+        // fee_ratio = 0.0 when reference = 0; k_shape_score = 1.0; combined = 0.5 + 0.5
+        assert!((score.combined_score - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_k_shape_high_caps_same_as_five() {
+        let c_high = make_candidate(1, 1_000, 10); // k=10 > 5 → capped
+        let c_five = make_candidate(2, 1_000, 5); // k=5 → cap boundary
+        let s_high = score_route(&c_high, &[], 10_000);
+        let s_five = score_route(&c_five, &[], 10_000);
+        assert!((s_high.combined_score - s_five.combined_score).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_lower_fee_higher_combined_score() {
+        let cheap = make_candidate(1, 1_000, 3);
+        let pricey = make_candidate(2, 8_000, 3);
+        assert!(
+            score_route(&cheap, &[], 10_000).combined_score
+                > score_route(&pricey, &[], 10_000).combined_score
+        );
+    }
+
+    #[test]
+    fn test_min_k_shape_rejects_all_below() {
+        let candidates = vec![make_candidate(1, 1_000, 1), make_candidate(2, 500, 2)];
+        let result = select_coldest_safe_route(candidates, &[], 10_000, 5);
+        assert!(matches!(result, Err(RouteError::NoSafeCandidates)));
+    }
+
+    #[test]
+    fn test_is_sample_fresh_at_exact_boundary() {
+        // diff = max_age exactly → fresh (<= check)
+        let sample = WritableFeeSample {
+            account_hash: [0u8; 32],
+            slot: 80,
+            prioritization_fee_lamports: 100,
+        };
+        assert!(is_sample_fresh(&sample, 100, 20));
+    }
 }

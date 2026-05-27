@@ -356,4 +356,102 @@ mod tests {
     fn hex_encode(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{:02x}", b)).collect()
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let c = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(1), 1).unwrap();
+        assert_ne!(c.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let c1 = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(1), 1).unwrap();
+        let c2 = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(1), 1).unwrap();
+        assert_eq!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_side_sensitive() {
+        let c1 = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(1), 1).unwrap();
+        let c2 = commit_order(&trader_secret(1), OrderSide::Sell, 10, 50, &nonce(1), 1).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_nonce_sensitive() {
+        let c1 = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(1), 1).unwrap();
+        let c2 = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(2), 1).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_mainnet_ready_false() {
+        let c = commit_order(&trader_secret(1), OrderSide::Buy, 10, 50, &nonce(1), 1).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_receipt_mainnet_ready_false() {
+        let sb = trader_secret(1);
+        let ss = trader_secret(2);
+        let nb = nonce(10);
+        let ns = nonce(20);
+        let bc = commit_order(&sb, OrderSide::Buy, 50, 100, &nb, 1).unwrap();
+        let sc = commit_order(&ss, OrderSide::Sell, 50, 90, &ns, 1).unwrap();
+        let br = reveal_order(&bc, &sb, OrderSide::Buy, 50, 100, &nb).unwrap();
+        let sr = reveal_order(&sc, &ss, OrderSide::Sell, 50, 90, &ns).unwrap();
+        let receipt = try_match(&br, &sr, &bc, &sc).unwrap();
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let sb = trader_secret(1);
+        let ss = trader_secret(2);
+        let nb = nonce(10);
+        let ns = nonce(20);
+        let bc = commit_order(&sb, OrderSide::Buy, 50, 100, &nb, 1).unwrap();
+        let sc = commit_order(&ss, OrderSide::Sell, 50, 90, &ns, 1).unwrap();
+        let br = reveal_order(&bc, &sb, OrderSide::Buy, 50, 100, &nb).unwrap();
+        let sr = reveal_order(&sc, &ss, OrderSide::Sell, 50, 90, &ns).unwrap();
+        let receipt = try_match(&br, &sr, &bc, &sc).unwrap();
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_deterministic() {
+        let sb = trader_secret(1);
+        let ss = trader_secret(2);
+        let nb = nonce(10);
+        let ns = nonce(20);
+        let bc = commit_order(&sb, OrderSide::Buy, 50, 100, &nb, 1).unwrap();
+        let sc = commit_order(&ss, OrderSide::Sell, 50, 90, &ns, 1).unwrap();
+        let br = reveal_order(&bc, &sb, OrderSide::Buy, 50, 100, &nb).unwrap();
+        let sr = reveal_order(&sc, &ss, OrderSide::Sell, 50, 90, &ns).unwrap();
+        let r1 = try_match(&br, &sr, &bc, &sc).unwrap();
+        let r2 = try_match(&br, &sr, &bc, &sc).unwrap();
+        assert_eq!(r1.receipt_hash, r2.receipt_hash);
+    }
+
+    #[test]
+    fn test_epoch_mismatch_rejected() {
+        let sb = trader_secret(1);
+        let ss = trader_secret(2);
+        let nb = nonce(10);
+        let ns = nonce(20);
+        let bc = commit_order(&sb, OrderSide::Buy, 50, 100, &nb, 1).unwrap();
+        let sc = commit_order(&ss, OrderSide::Sell, 50, 90, &ns, 2).unwrap(); // epoch 2
+        let br = reveal_order(&bc, &sb, OrderSide::Buy, 50, 100, &nb).unwrap();
+        let sr = reveal_order(&sc, &ss, OrderSide::Sell, 50, 90, &ns).unwrap();
+        let err = try_match(&br, &sr, &bc, &sc).unwrap_err();
+        assert_eq!(err, PoolError::EpochMismatch);
+    }
+
+    #[test]
+    fn test_zero_price_rejected() {
+        let result = commit_order(&trader_secret(1), OrderSide::Buy, 10, 0, &nonce(1), 1);
+        assert_eq!(result, Err(PoolError::ZeroPrice));
+    }
 }

@@ -212,4 +212,85 @@ mod tests {
         let expected = 1.0 / 5.0;
         assert!((risk - expected).abs() < 1e-9);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_create_board_leaf_count() {
+        let board = create_board(market(), b"seed", 4, 2, 0);
+        // 1 real + 4 decoy + 2 poison = 7
+        assert_eq!(board.public_leaves.len(), 7);
+    }
+
+    #[test]
+    fn test_board_id_deterministic() {
+        let b1 = create_board(market(), b"seed", 2, 1, 100);
+        let b2 = create_board(market(), b"seed", 2, 1, 100);
+        assert_eq!(b1.board_id, b2.board_id);
+    }
+
+    #[test]
+    fn test_board_root_sensitive_to_seed() {
+        let b1 = create_board(market(), b"seed-a", 2, 1, 0);
+        let b2 = create_board(market(), b"seed-b", 2, 1, 0);
+        assert_ne!(board_root(&b1), board_root(&b2));
+    }
+
+    #[test]
+    fn test_poison_count_stored() {
+        let board = create_board(market(), b"seed", 3, 2, 0);
+        assert_eq!(board.poison_count, 2);
+    }
+
+    #[test]
+    fn test_real_count_always_one() {
+        let board = create_board(market(), b"seed", 5, 3, 0);
+        assert_eq!(board.real_count, 1);
+    }
+
+    #[test]
+    fn test_decoy_leaf_not_flagged_as_poison() {
+        let board = create_board(market(), b"seed", 2, 1, 0);
+        let decoy_hash = board
+            .public_leaves
+            .iter()
+            .find(|l| l.kind == LeafKind::Decoy)
+            .unwrap()
+            .leaf_hash;
+        let report = detect_poison_redeemer(&board, decoy_hash);
+        assert!(!report.flagged_as_poison);
+    }
+
+    #[test]
+    fn test_copy_risk_one_leaf() {
+        let board = create_board(market(), b"seed", 0, 0, 0);
+        // Only the real leaf
+        assert_eq!(board.public_leaves.len(), 1);
+        let risk = compute_copy_risk(&board);
+        assert!((risk - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_reveal_policy_hash_deterministic() {
+        let b1 = create_board(market(), b"s", 1, 1, 0);
+        let b2 = create_board(market(), b"s", 1, 1, 0);
+        assert_eq!(b1.reveal_policy_hash, b2.reveal_policy_hash);
+    }
+
+    #[test]
+    fn test_zero_poison_no_poison_leaves() {
+        let board = create_board(market(), b"seed", 3, 0, 0);
+        let has_poison = board
+            .public_leaves
+            .iter()
+            .any(|l| l.kind == LeafKind::Poison);
+        assert!(!has_poison);
+    }
+
+    #[test]
+    fn test_board_root_changes_with_more_leaves() {
+        let small = create_board(market(), b"seed", 1, 0, 0);
+        let large = create_board(market(), b"seed", 5, 0, 0);
+        assert_ne!(board_root(&small), board_root(&large));
+    }
 }

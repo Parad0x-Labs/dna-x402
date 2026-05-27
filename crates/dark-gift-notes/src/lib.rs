@@ -170,4 +170,83 @@ mod tests {
         note2.gift_id = [0x11u8; 32];
         assert_ne!(gift_nullifier(&note1), gift_nullifier(&note2));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_gift_nullifier_nonzero() {
+        let note = make_note();
+        assert_ne!(gift_nullifier(&note), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_gift_nullifier_deterministic() {
+        let note = make_note();
+        assert_eq!(gift_nullifier(&note), gift_nullifier(&note));
+    }
+
+    #[test]
+    fn test_gift_nullifier_amount_sensitive() {
+        let note1 = make_note();
+        let mut note2 = make_note();
+        note2.amount_lamports = 2_000_000;
+        assert_ne!(gift_nullifier(&note1), gift_nullifier(&note2));
+    }
+
+    #[test]
+    fn test_gift_nullifier_asset_sensitive() {
+        let note1 = make_note();
+        let mut note2 = make_note();
+        note2.asset_mint = [0x99u8; 32];
+        assert_ne!(gift_nullifier(&note1), gift_nullifier(&note2));
+    }
+
+    #[test]
+    fn test_claim_at_exact_expiry_ok() {
+        // current_slot == expires_at_slot: check is `>`, so == is allowed
+        let note = make_note(); // expires_at_slot = 2000
+        let claimer = [0xBBu8; 32];
+        let result = claim(&note, &claimer, 2000);
+        assert!(result.is_ok(), "claim at exact expiry slot must succeed");
+    }
+
+    #[test]
+    fn test_claim_after_expiry_rejected() {
+        let note = make_note(); // expires_at_slot = 2000
+        let claimer = [0xBBu8; 32];
+        let err = claim(&note, &claimer, 2001).unwrap_err();
+        assert_eq!(err, GiftError::Expired);
+    }
+
+    #[test]
+    fn test_bound_recipient_can_claim() {
+        let mut note = make_note();
+        let bound = [0xAAu8; 32];
+        note.recipient_binding = Some(bound);
+        let result = claim(&note, &bound, 1000);
+        assert!(result.is_ok(), "bound recipient must be able to claim");
+    }
+
+    #[test]
+    fn test_claim_receipt_deterministic() {
+        let note = make_note();
+        let claimer = [0xBBu8; 32];
+        let r1 = claim(&note, &claimer, 1000).unwrap();
+        let r2 = claim(&note, &claimer, 1000).unwrap();
+        assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn test_log_starts_empty() {
+        let log = GiftRedemptionLog::new();
+        assert!(log.claimed.is_empty());
+    }
+
+    #[test]
+    fn test_clawback_receipt_nonzero() {
+        let note = make_note(); // expires_at_slot = 2000
+        let sender_secret = [0xCCu8; 32];
+        let receipt = clawback(&note, &sender_secret, 2001).unwrap();
+        assert_ne!(receipt, [0u8; 32]);
+    }
 }

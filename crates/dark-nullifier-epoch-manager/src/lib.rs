@@ -493,4 +493,46 @@ mod tests {
             u64::from_le_bytes(instrs.insert_nullifier_ix[33..41].try_into().unwrap());
         assert_eq!(parsed_epoch, 12u64);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let mgr = NullifierManager::new(test_program_id(), 1);
+        assert!(!mgr.mainnet_ready);
+    }
+
+    #[test]
+    #[should_panic(expected = "epoch 0 is invalid")]
+    fn test_epoch_zero_panics() {
+        let _ = NullifierManager::new(test_program_id(), 0);
+    }
+
+    #[test]
+    fn test_initialized_bank_count_increments() {
+        let mut mgr = NullifierManager::new(test_program_id(), 15);
+        assert_eq!(mgr.initialized_bank_count(), 0);
+        let bn = mock_bridge_nullifier(15, 1);
+        mgr.confirm_submission(&bn);
+        assert_eq!(mgr.initialized_bank_count(), 1);
+    }
+
+    #[test]
+    fn test_is_spent_false_before_confirm() {
+        let mgr = NullifierManager::new(test_program_id(), 16);
+        let bn = mock_bridge_nullifier(16, 1);
+        assert!(!mgr.is_spent(&bn.nullifier, bn.shard, 16));
+    }
+
+    #[test]
+    fn test_confirmed_count_all_epochs_includes_old() {
+        let mut mgr = NullifierManager::new(test_program_id(), 20);
+        let bn = mock_bridge_nullifier(20, 1);
+        mgr.confirm_submission(&bn);
+        mgr.advance_epoch(21);
+        let bn2 = mock_bridge_nullifier(21, 2);
+        mgr.confirm_submission(&bn2);
+        assert_eq!(mgr.confirmed_count_all_epochs(), 2);
+        assert_eq!(mgr.confirmed_count(), 1); // active epoch only
+    }
 }

@@ -157,4 +157,86 @@ mod tests {
         assert_eq!(record["active_count"], 1);
         assert!(!record["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_map_starts_empty() {
+        let map = new_map(0);
+        assert!(map.entries.is_empty());
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let map = new_map(0);
+        assert!(!map.mainnet_ready);
+    }
+
+    #[test]
+    fn test_entry_mainnet_ready_false() {
+        let mut map = new_map(0);
+        let n = make_nullifier(10);
+        insert_nullifier(&mut map, n, 1000).unwrap();
+        assert!(!map.entries[0].mainnet_ready);
+    }
+
+    #[test]
+    fn test_check_unknown_nullifier_returns_false() {
+        let map = new_map(0);
+        let n = make_nullifier(11);
+        assert!(!check_nullifier(&map, &n));
+    }
+
+    #[test]
+    fn test_advance_epoch_increments() {
+        let mut map = new_map(3);
+        advance_epoch(&mut map);
+        assert_eq!(map.current_epoch, 4);
+    }
+
+    #[test]
+    fn test_nullifier_within_window_active() {
+        let mut map = new_map(0);
+        let n = make_nullifier(12);
+        insert_nullifier(&mut map, n, 1000).unwrap();
+        // advance EPOCH_WINDOW - 1 times; entry still inside window
+        for _ in 0..(EPOCH_WINDOW - 1) {
+            advance_epoch(&mut map);
+        }
+        assert!(check_nullifier(&map, &n));
+    }
+
+    #[test]
+    fn test_entries_count_after_insert() {
+        let mut map = new_map(0);
+        let n = make_nullifier(13);
+        insert_nullifier(&mut map, n, 1000).unwrap();
+        assert_eq!(map.entries.len(), 1);
+    }
+
+    #[test]
+    fn test_epoch_stored_in_entry() {
+        let mut map = new_map(7);
+        let n = make_nullifier(14);
+        insert_nullifier(&mut map, n, 1000).unwrap();
+        assert_eq!(map.entries[0].epoch, 7);
+    }
+
+    #[test]
+    fn test_different_nullifiers_both_active() {
+        let mut map = new_map(0);
+        let n1 = make_nullifier(15);
+        let n2 = make_nullifier(16);
+        insert_nullifier(&mut map, n1, 1000).unwrap();
+        insert_nullifier(&mut map, n2, 1001).unwrap();
+        assert!(check_nullifier(&map, &n1));
+        assert!(check_nullifier(&map, &n2));
+    }
+
+    #[test]
+    fn test_public_record_mainnet_ready_false() {
+        let map = new_map(0);
+        let record: serde_json::Value = serde_json::from_str(&map_public_record(&map)).unwrap();
+        assert_eq!(record["mainnet_ready"], false);
+    }
 }

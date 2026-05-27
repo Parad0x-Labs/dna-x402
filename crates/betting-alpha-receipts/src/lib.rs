@@ -288,4 +288,78 @@ mod tests {
         let r2 = create_betting_reveal(&commitment, &session, &sub, &sub, 0, 75).unwrap();
         assert_eq!(r1.reveal_receipt_hash, r2.reveal_receipt_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_session_hash_nonzero() {
+        let session = make_session();
+        assert_ne!(session.session_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_session_hash_salt_sensitive() {
+        let s1 = create_betting_session(&[0x01u8; 32], &[2u8; 32], 1);
+        let s2 = create_betting_session(&[0x02u8; 32], &[2u8; 32], 1);
+        assert_ne!(s1.session_hash, s2.session_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_nonzero() {
+        let session = make_session();
+        let c = make_commitment(&session);
+        assert_ne!(c.commitment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_market_hash_deterministic() {
+        let session = make_session();
+        let c1 = create_market_commitment(&session, b"market-abc", 0, 75, &[3u8; 32], 500);
+        let c2 = create_market_commitment(&session, b"market-abc", 0, 75, &[3u8; 32], 500);
+        assert_eq!(c1.market_hash, c2.market_hash);
+    }
+
+    #[test]
+    fn test_reveal_receipt_hash_nonzero() {
+        let session = make_session();
+        let commitment = make_commitment(&session);
+        let sub = subscriber();
+        let reveal = create_betting_reveal(&commitment, &session, &sub, &sub, 0, 75).unwrap();
+        assert_ne!(reveal.reveal_receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_mismatch_on_wrong_side() {
+        let session = make_session();
+        let commitment = make_commitment(&session); // side_byte=0
+        let sub = subscriber();
+        // Reveal with wrong side_byte → CommitmentMismatch
+        let result = create_betting_reveal(&commitment, &session, &sub, &sub, 1, 75);
+        assert_eq!(result, Err(BettingError::CommitmentMismatch));
+    }
+
+    #[test]
+    fn test_assert_raw_market_absent_false_when_present() {
+        // If the hex encoding of raw bytes appears in the JSON string, function returns false
+        let raw_bytes = &[0xAAu8, 0xBB, 0xCC, 0xDD];
+        let hex_str = "aabbccdd";
+        let json = format!("{{\"data\":\"{}\"}}", hex_str);
+        assert!(!assert_raw_market_absent(&json, raw_bytes));
+    }
+
+    #[test]
+    fn test_verify_wrong_side_byte_fails() {
+        let session = make_session();
+        let commitment = make_commitment(&session); // side_byte=0
+        let sub = subscriber();
+        let reveal = create_betting_reveal(&commitment, &session, &sub, &sub, 0, 75).unwrap();
+        // verify with side_byte=1 (wrong)
+        assert!(!verify_betting_reveal(
+            &commitment,
+            &reveal,
+            &session,
+            1,
+            75
+        ));
+    }
 }

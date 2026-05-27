@@ -239,4 +239,123 @@ mod tests {
         let err = Instruction::unpack(&data).unwrap_err();
         assert_eq!(err, ProgramError::InvalidInstructionData);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_claim_record_len_is_74() {
+        assert_eq!(CLAIM_RECORD_LEN, 74); // 1+32+32+1+8
+    }
+
+    #[test]
+    fn test_claim_record_unpack_too_short_returns_none() {
+        let short = vec![0u8; 10];
+        assert!(ClaimRecord::unpack(&short).is_none());
+    }
+
+    #[test]
+    fn test_claim_record_bump_stored() {
+        let record = ClaimRecord {
+            bump: 255,
+            claim_hash: [0u8; 32],
+            authority: [0u8; 32],
+            statement_kind: 0x10,
+            recorded_at_slot: 0,
+        };
+        let mut buf = vec![0u8; CLAIM_RECORD_LEN];
+        record.pack(&mut buf);
+        let unpacked = ClaimRecord::unpack(&buf).unwrap();
+        assert_eq!(unpacked.bump, 255);
+    }
+
+    #[test]
+    fn test_claim_record_max_slot_stored() {
+        let record = ClaimRecord {
+            bump: 0,
+            claim_hash: [0u8; 32],
+            authority: [0u8; 32],
+            statement_kind: 0x14,
+            recorded_at_slot: u64::MAX,
+        };
+        let mut buf = vec![0u8; CLAIM_RECORD_LEN];
+        record.pack(&mut buf);
+        let unpacked = ClaimRecord::unpack(&buf).unwrap();
+        assert_eq!(unpacked.recorded_at_slot, u64::MAX);
+    }
+
+    #[test]
+    fn test_gate_error_duplicate_is_custom_1() {
+        let pe: ProgramError = GateError::DuplicateClaim.into();
+        assert_eq!(pe, ProgramError::Custom(1));
+    }
+
+    #[test]
+    fn test_gate_error_wrong_authority_is_custom_2() {
+        let pe: ProgramError = GateError::WrongAuthority.into();
+        assert_eq!(pe, ProgramError::Custom(2));
+    }
+
+    #[test]
+    fn test_instruction_packed_len_is_34() {
+        let ix = Instruction::RecordVerifiedClaim {
+            claim_hash: [0u8; 32],
+            statement_kind: 0x10,
+        };
+        assert_eq!(ix.pack().len(), 34);
+    }
+
+    #[test]
+    fn test_instruction_all_zero_claim_hash_roundtrip() {
+        let ix = Instruction::RecordVerifiedClaim {
+            claim_hash: [0u8; 32],
+            statement_kind: 0x15,
+        };
+        let packed = ix.pack();
+        match Instruction::unpack(&packed).unwrap() {
+            Instruction::RecordVerifiedClaim {
+                claim_hash,
+                statement_kind,
+            } => {
+                assert_eq!(claim_hash, [0u8; 32]);
+                assert_eq!(statement_kind, 0x15);
+            }
+        }
+    }
+
+    #[test]
+    fn test_instruction_different_hashes_produce_different_packed_bytes() {
+        let ix1 = Instruction::RecordVerifiedClaim {
+            claim_hash: [0x11u8; 32],
+            statement_kind: 0x10,
+        };
+        let ix2 = Instruction::RecordVerifiedClaim {
+            claim_hash: [0x22u8; 32],
+            statement_kind: 0x10,
+        };
+        assert_ne!(ix1.pack(), ix2.pack());
+    }
+
+    #[test]
+    fn test_claim_record_statement_kind_at_byte_65() {
+        let mut r1 = vec![0u8; CLAIM_RECORD_LEN];
+        let mut r2 = vec![0u8; CLAIM_RECORD_LEN];
+        ClaimRecord {
+            bump: 0,
+            claim_hash: [0u8; 32],
+            authority: [0u8; 32],
+            statement_kind: 0x10,
+            recorded_at_slot: 0,
+        }
+        .pack(&mut r1);
+        ClaimRecord {
+            bump: 0,
+            claim_hash: [0u8; 32],
+            authority: [0u8; 32],
+            statement_kind: 0x15,
+            recorded_at_slot: 0,
+        }
+        .pack(&mut r2);
+        assert_eq!(r1[65], 0x10);
+        assert_eq!(r2[65], 0x15);
+    }
 }

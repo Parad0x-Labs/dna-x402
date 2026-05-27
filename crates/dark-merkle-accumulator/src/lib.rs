@@ -242,4 +242,76 @@ mod tests {
         let expected = compute_node(&n01, &n23);
         assert_eq!(acc.root, expected);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_acc_id_nonzero() {
+        let acc = new_accumulator(4, &nonce()).unwrap();
+        assert_ne!(acc.acc_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_acc_id_deterministic() {
+        let a1 = new_accumulator(4, &nonce()).unwrap();
+        let a2 = new_accumulator(4, &nonce()).unwrap();
+        assert_eq!(a1.acc_id, a2.acc_id);
+    }
+
+    #[test]
+    fn test_acc_id_nonce_sensitive() {
+        let nonce2 = {
+            let mut n = [0u8; 32];
+            n[0] = 0xFF;
+            n
+        };
+        let a1 = new_accumulator(4, &nonce()).unwrap();
+        let a2 = new_accumulator(4, &nonce2).unwrap();
+        assert_ne!(a1.acc_id, a2.acc_id);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let acc = new_accumulator(4, &nonce()).unwrap();
+        assert!(!acc.mainnet_ready);
+    }
+
+    #[test]
+    fn test_max_depth_ok() {
+        // depth == MAX_DEPTH must succeed; check is `depth > MAX_DEPTH`
+        let result = new_accumulator(MAX_DEPTH, &nonce());
+        assert!(result.is_ok(), "depth == MAX_DEPTH must succeed");
+    }
+
+    #[test]
+    fn test_depth_too_high_rejected() {
+        let err = new_accumulator(MAX_DEPTH + 1, &nonce()).unwrap_err();
+        assert_eq!(err, AccError::DepthTooHigh);
+    }
+
+    #[test]
+    fn test_leaf_hash_nonzero() {
+        let lh = compute_leaf_hash(b"some-data");
+        assert_ne!(lh, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_leaf_rejected() {
+        let mut acc = new_accumulator(4, &nonce()).unwrap();
+        let err = append_leaf(&mut acc, b"").unwrap_err();
+        assert_eq!(err, AccError::LeafZero);
+    }
+
+    #[test]
+    fn test_prove_membership_out_of_bounds_returns_none() {
+        let acc = new_accumulator(4, &nonce()).unwrap();
+        assert!(prove_membership(&acc, 0).is_none());
+    }
+
+    #[test]
+    fn test_root_nonzero_after_append() {
+        let mut acc = new_accumulator(4, &nonce()).unwrap();
+        append_leaf(&mut acc, b"leaf-data").unwrap();
+        assert_ne!(acc.root, [0u8; 32]);
+    }
 }

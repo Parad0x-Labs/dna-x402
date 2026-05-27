@@ -204,4 +204,123 @@ mod tests {
         let c2 = vault.vault_commitment();
         assert_ne!(c1, c2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_vault_commitment_deterministic() {
+        let mut v1 = AltFogVault::new(seed(), 1);
+        v1.add(fog(1)).unwrap();
+        let mut v2 = AltFogVault::new(seed(), 1);
+        v2.add(fog(1)).unwrap();
+        assert_eq!(v1.vault_commitment(), v2.vault_commitment());
+    }
+
+    #[test]
+    fn test_is_empty_initially() {
+        let vault = AltFogVault::new(seed(), 1);
+        assert!(vault.is_empty());
+        assert_eq!(vault.len(), 0);
+    }
+
+    #[test]
+    fn test_generate_candidates_epoch_sensitive() {
+        let s = seed();
+        let c1 = AltFogVault::generate_candidates(&s, 5, 1);
+        let c2 = AltFogVault::generate_candidates(&s, 5, 2);
+        assert_ne!(c1, c2);
+    }
+
+    #[test]
+    fn test_generate_candidates_seed_sensitive() {
+        let mut s2 = seed();
+        s2[0] ^= 0xFF;
+        let c1 = AltFogVault::generate_candidates(&seed(), 5, 0);
+        let c2 = AltFogVault::generate_candidates(&s2, 5, 0);
+        assert_ne!(c1, c2);
+    }
+
+    #[test]
+    fn test_extension_plan_no_duplicates() {
+        let mut vault = AltFogVault::new(seed(), 1);
+        let pk = make_pubkey(42);
+        vault
+            .add(FogAccount {
+                pubkey: pk,
+                kind: FogAccountKind::Chaff,
+                added_epoch: 0,
+            })
+            .unwrap();
+        // required list already contains the same pubkey
+        let plan = vault.extension_plan(&[pk]);
+        assert_eq!(
+            plan.iter().filter(|&&p| p == pk).count(),
+            1,
+            "no duplicates in plan"
+        );
+    }
+
+    #[test]
+    fn test_fog_account_receipt_kind_added() {
+        let mut vault = AltFogVault::new(seed(), 0);
+        vault
+            .add(FogAccount {
+                pubkey: make_pubkey(99),
+                kind: FogAccountKind::Receipt,
+                added_epoch: 0,
+            })
+            .unwrap();
+        assert_eq!(vault.accounts[0].kind, FogAccountKind::Receipt);
+    }
+
+    #[test]
+    fn test_vault_commitment_seed_sensitive() {
+        let mut s2 = seed();
+        s2[31] ^= 0xFF;
+        let v1 = AltFogVault::new(seed(), 0);
+        let v2 = AltFogVault::new(s2, 0);
+        assert_ne!(v1.vault_commitment(), v2.vault_commitment());
+    }
+
+    #[test]
+    fn test_add_multiple_kinds() {
+        let mut vault = AltFogVault::new(seed(), 0);
+        vault
+            .add(FogAccount {
+                pubkey: make_pubkey(1),
+                kind: FogAccountKind::Receipt,
+                added_epoch: 0,
+            })
+            .unwrap();
+        vault
+            .add(FogAccount {
+                pubkey: make_pubkey(2),
+                kind: FogAccountKind::DecoyAta,
+                added_epoch: 0,
+            })
+            .unwrap();
+        vault
+            .add(FogAccount {
+                pubkey: make_pubkey(3),
+                kind: FogAccountKind::Maintenance,
+                added_epoch: 0,
+            })
+            .unwrap();
+        assert_eq!(vault.len(), 3);
+    }
+
+    #[test]
+    fn test_candidates_all_distinct() {
+        let s = seed();
+        let candidates = AltFogVault::generate_candidates(&s, 50, 0);
+        let unique: std::collections::HashSet<_> = candidates.iter().collect();
+        assert_eq!(unique.len(), 50);
+    }
+
+    #[test]
+    fn test_vault_commitment_changes_with_epoch() {
+        let v1 = AltFogVault::new(seed(), 1);
+        let v2 = AltFogVault::new(seed(), 2);
+        assert_ne!(v1.vault_commitment(), v2.vault_commitment());
+    }
 }

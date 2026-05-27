@@ -271,4 +271,54 @@ mod tests {
         let result = verifier.verify(&claim, &proof, public_inputs).unwrap();
         assert!(result.accepted);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_claim_hash_nonzero() {
+        let claim = make_claim(ProofSystem::Mock);
+        assert_ne!(claim.claim_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_claim_hash_circuit_id_sensitive() {
+        let mut claim_a = make_claim(ProofSystem::Mock);
+        let mut claim_b = make_claim(ProofSystem::Mock);
+        claim_a.circuit_id = [0x11u8; 32];
+        claim_b.circuit_id = [0x22u8; 32];
+        assert_ne!(claim_a.claim_hash(), claim_b.claim_hash());
+    }
+
+    #[test]
+    fn test_build_mock_proof_nonempty() {
+        let circuit_id = [0xABu8; 32];
+        let proof = build_mock_proof(&circuit_id, b"inputs");
+        assert!(!proof.is_empty());
+        assert_eq!(proof.len(), 32);
+    }
+
+    #[test]
+    fn test_reject_all_has_reason_string() {
+        let verifier = RejectAllVerifier;
+        let claim = make_claim(ProofSystem::Mock);
+        let result = verifier.verify(&claim, b"x", b"y").unwrap();
+        assert!(!result.accepted);
+        let reason = result.reason.unwrap();
+        assert!(!reason.is_empty());
+    }
+
+    #[test]
+    fn test_proof_system_equality() {
+        assert_eq!(ProofSystem::Mock, ProofSystem::Mock);
+        assert_ne!(ProofSystem::Mock, ProofSystem::Groth16Bn254);
+    }
+
+    #[test]
+    fn test_claim_hash_domain_changes() {
+        let mut claim_a = make_claim(ProofSystem::Mock);
+        let mut claim_b = make_claim(ProofSystem::Mock);
+        claim_a.domain = b"domain_alpha".to_vec();
+        claim_b.domain = b"domain_beta".to_vec();
+        assert_ne!(claim_a.claim_hash(), claim_b.claim_hash());
+    }
 }

@@ -402,4 +402,35 @@ mod tests {
         let result = verify_mock_inclusion(&proof, &wrong_root);
         assert!(matches!(result, Err(CompressedLeavesError::WrongRoot)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_leaf_schema_version_stored() {
+        let leaf = create_commitment_leaf(&dummy_hash(1), 0, 0);
+        assert_eq!(leaf.schema_version, LEAF_SCHEMA_VERSION);
+    }
+
+    #[test]
+    fn test_commitment_leaf_epoch_slot_sensitive() {
+        let c = dummy_hash(1);
+        let a = create_commitment_leaf(&c, 5, 100);
+        let b = create_commitment_leaf(&c, 5, 200); // different slot
+        assert_ne!(a.leaf_hash, b.leaf_hash);
+    }
+
+    #[test]
+    fn test_nullifier_leaf_epoch_sensitive() {
+        let n = dummy_hash(2);
+        let a = create_nullifier_leaf(&n, 1, 50);
+        let b = create_nullifier_leaf(&n, 2, 50); // different epoch
+        assert_ne!(a.leaf_hash, b.leaf_hash);
+    }
+
+    #[test]
+    fn test_state_tree_root_empty_returns_zero_hash() {
+        let result = compute_state_tree_root(&[]);
+        assert_eq!(result.root, ZERO_HASH);
+        assert_eq!(result.leaf_count, 0);
+    }
 }

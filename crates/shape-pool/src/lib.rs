@@ -184,4 +184,72 @@ mod tests {
         let decoded: TxShape = serde_json::from_str(&json).unwrap();
         assert_eq!(shape, decoded);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_fingerprint_nonzero_single_key() {
+        let key = Pubkey::new_unique();
+        assert_ne!(account_fingerprint(&[key]), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_pool_k_anonymity_zero() {
+        assert_eq!(k_anonymity(&[]), 0);
+    }
+
+    #[test]
+    fn test_k_anonymity_all_same_shape() {
+        let pool = vec![
+            ShapeClass::ReceiptSpend,
+            ShapeClass::ReceiptSpend,
+            ShapeClass::ReceiptSpend,
+            ShapeClass::ReceiptSpend,
+        ];
+        assert_eq!(k_anonymity(&pool), 4);
+    }
+
+    #[test]
+    fn test_nullifier_insert_cu_thirty_k() {
+        let shape = canonical_shape(&ShapeClass::NullifierInsert);
+        assert_eq!(shape.target_compute_units, 30_000);
+    }
+
+    #[test]
+    fn test_custom_shape_writable_count() {
+        let shape = canonical_shape(&ShapeClass::Custom(7));
+        assert_eq!(shape.num_writable_unsigned, 7);
+    }
+
+    #[test]
+    fn test_is_indistinguishable_reflexive() {
+        // Every class is indistinguishable from itself
+        for class in &[
+            ShapeClass::ReceiptSpend,
+            ShapeClass::QuoteSettle,
+            ShapeClass::NullifierInsert,
+        ] {
+            assert!(is_indistinguishable(class, class));
+        }
+    }
+
+    #[test]
+    fn test_chaff_close_receipt_spend_same_cu() {
+        let s1 = canonical_shape(&ShapeClass::ReceiptSpend);
+        let s2 = canonical_shape(&ShapeClass::ChaffClose);
+        assert_eq!(s1.target_compute_units, s2.target_compute_units);
+    }
+
+    #[test]
+    fn test_k_anonymity_single_element() {
+        let pool = vec![ShapeClass::QuoteSettle];
+        assert_eq!(k_anonymity(&pool), 1);
+    }
+
+    #[test]
+    fn test_fingerprint_empty_input_deterministic() {
+        let fp1 = account_fingerprint(&[]);
+        let fp2 = account_fingerprint(&[]);
+        assert_eq!(fp1, fp2);
+    }
 }

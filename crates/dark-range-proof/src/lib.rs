@@ -302,4 +302,82 @@ mod tests {
         assert!(record.contains("bit_width"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let b = blinding();
+        let commitment = commit_value(42, &b, 8).unwrap();
+        assert_ne!(commitment.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let b = blinding();
+        let proof = prove_range(42, &b, 8).unwrap();
+        assert_ne!(proof.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_commitment() {
+        let b = blinding();
+        let commitment = commit_value(1, &b, 8).unwrap();
+        assert!(!commitment.mainnet_ready);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_proof() {
+        let b = blinding();
+        let proof = prove_range(1, &b, 8).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_bit_width_zero_rejected() {
+        let b = blinding();
+        let err = commit_value(0, &b, 0).unwrap_err();
+        assert_eq!(err, RangeError::BitWidthZero);
+    }
+
+    #[test]
+    fn test_bit_width_exceeds_64_rejected() {
+        let b = blinding();
+        let err = commit_value(0, &b, 65).unwrap_err();
+        assert_eq!(err, RangeError::BitWidthExceeds64);
+    }
+
+    #[test]
+    fn test_blinding_zero_rejected() {
+        let zero = [0u8; 32];
+        let err = commit_value(1, &zero, 8).unwrap_err();
+        assert_eq!(err, RangeError::BlindingZero);
+    }
+
+    #[test]
+    fn test_different_value_different_commitment() {
+        let b = blinding();
+        let c1 = commit_value(10, &b, 8).unwrap();
+        let c2 = commit_value(20, &b, 8).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_different_blinding_different_commitment() {
+        let b1 = blinding();
+        let mut b2 = blinding();
+        b2[0] ^= 0xFF;
+        let c1 = commit_value(10, &b1, 8).unwrap();
+        let c2 = commit_value(10, &b2, 8).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_proof_hash() {
+        let b = blinding();
+        let commitment = commit_value(50, &b, 8).unwrap();
+        let mut proof = prove_range(50, &b, 8).unwrap();
+        proof.proof_hash[0] ^= 0xFF;
+        assert!(!verify_range_proof(&commitment, &proof));
+    }
 }

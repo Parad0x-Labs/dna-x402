@@ -219,4 +219,78 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(!v["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        let proof = generate_stub_proof(&stmt);
+        assert_ne!(proof.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_inputs_hash_nonzero() {
+        let stmt = create_statement(circuit_id(), &[b"input"]).unwrap();
+        assert_ne!(stmt.public_inputs_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_a_size() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        let proof = generate_stub_proof(&stmt);
+        assert_eq!(proof.proof_a.len(), 64);
+    }
+
+    #[test]
+    fn test_proof_b_size() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        let proof = generate_stub_proof(&stmt);
+        assert_eq!(proof.proof_b.len(), 128);
+    }
+
+    #[test]
+    fn test_proof_c_size() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        let proof = generate_stub_proof(&stmt);
+        assert_eq!(proof.proof_c.len(), 64);
+    }
+
+    #[test]
+    fn test_different_inputs_different_proof_hash() {
+        let p1 = generate_stub_proof(&create_statement(circuit_id(), &[b"aaa"]).unwrap());
+        let p2 = generate_stub_proof(&create_statement(circuit_id(), &[b"bbb"]).unwrap());
+        assert_ne!(p1.proof_hash, p2.proof_hash);
+    }
+
+    #[test]
+    fn test_different_circuit_different_proof_hash() {
+        let mut cid2 = circuit_id();
+        cid2[0] ^= 0xFF;
+        let p1 = generate_stub_proof(&create_statement(circuit_id(), &[b"x"]).unwrap());
+        let p2 = generate_stub_proof(&create_statement(cid2, &[b"x"]).unwrap());
+        assert_ne!(p1.proof_hash, p2.proof_hash);
+    }
+
+    #[test]
+    fn test_verify_fails_tampered_proof_hash() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        let mut proof = generate_stub_proof(&stmt);
+        proof.proof_hash[0] ^= 0xFF;
+        assert!(!verify_stub_proof(&proof));
+    }
+
+    #[test]
+    fn test_verify_fails_if_not_stub() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        let mut proof = generate_stub_proof(&stmt);
+        proof.is_stub = false;
+        assert!(!verify_stub_proof(&proof));
+    }
+
+    #[test]
+    fn test_statement_mainnet_ready_false() {
+        let stmt = create_statement(circuit_id(), &[b"x"]).unwrap();
+        assert!(!stmt.mainnet_ready);
+    }
 }

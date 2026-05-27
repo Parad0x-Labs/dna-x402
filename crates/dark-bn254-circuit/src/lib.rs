@@ -203,4 +203,112 @@ mod tests {
         assert_eq!(pub_in.nullifier, inputs.nullifier);
         assert_eq!(pub_in.withdraw_amount, inputs.withdraw_amount);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_withdraw_zero_passes() {
+        let mut inputs = valid_inputs();
+        inputs.withdraw_amount = 0;
+        // 0 <= note_value always — constraint 1 passes
+        // Must rebuild nullifier because withdraw_amount is not in the nullifier derivation,
+        // only in the public inputs. The nullifier from valid_inputs() is still correct.
+        assert!(simulate_verify(&inputs).is_ok());
+    }
+
+    #[test]
+    fn test_withdraw_equal_note_value_passes() {
+        let note_value: u64 = 10_000_000;
+        let note_randomness = [0x42u8; 32];
+        let note_secret = [0x99u8; 32];
+        let recipient_hash = [0xBBu8; 32];
+        let merkle_root = [0x55u8; 32];
+
+        let commitment = note_commitment(note_value, &note_randomness, &recipient_hash);
+        let nullifier = nullifier_hash(&commitment, &note_secret, &merkle_root);
+
+        let inputs = WithdrawCircuitInputs {
+            merkle_root,
+            nullifier,
+            withdraw_amount: note_value, // exactly equal — not an underflow
+            note_value,
+            note_randomness,
+            note_secret,
+            recipient_hash,
+        };
+        assert!(simulate_verify(&inputs).is_ok());
+    }
+
+    #[test]
+    fn test_secret_change_breaks_nullifier() {
+        let mut inputs = valid_inputs();
+        inputs.note_secret[0] ^= 0xFF;
+        assert_eq!(
+            simulate_verify(&inputs),
+            Err(CircuitError::NullifierMismatch)
+        );
+    }
+
+    #[test]
+    fn test_merkle_root_change_breaks_nullifier() {
+        let mut inputs = valid_inputs();
+        inputs.merkle_root[0] ^= 0xFF;
+        assert_eq!(
+            simulate_verify(&inputs),
+            Err(CircuitError::NullifierMismatch)
+        );
+    }
+
+    #[test]
+    fn test_recipient_hash_change_breaks_commitment_chain() {
+        let mut inputs = valid_inputs();
+        inputs.recipient_hash[0] ^= 0xFF;
+        // Changing recipient_hash corrupts the commitment, which cascades to a wrong nullifier
+        assert_eq!(
+            simulate_verify(&inputs),
+            Err(CircuitError::NullifierMismatch)
+        );
+    }
+
+    #[test]
+    fn test_extract_public_inputs_consistent_with_verify() {
+        let inputs = valid_inputs();
+        let from_extract = extract_public_inputs(&inputs);
+        let from_verify = simulate_verify(&inputs).unwrap();
+        assert_eq!(from_extract, from_verify);
+    }
+
+    #[test]
+    fn test_constraints_description_has_four_entries() {
+        let desc = circuit_constraints_description();
+        assert_eq!(desc.len(), 4, "expected exactly 4 circuit constraints");
+    }
+
+    #[test]
+    fn test_valid_nullifier_is_nonzero() {
+        let inputs = valid_inputs();
+        assert_ne!(inputs.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_commitment_deterministic() {
+        let c1 = note_commitment(100, &[0x01u8; 32], &[0x02u8; 32]);
+        let c2 = note_commitment(100, &[0x01u8; 32], &[0x02u8; 32]);
+        assert_eq!(c1, c2);
+    }
+
+    #[test]
+    fn test_nullifier_hash_deterministic() {
+        let commit = note_commitment(100, &[0x01u8; 32], &[0x02u8; 32]);
+        let n1 = nullifier_hash(&commit, &[0x03u8; 32], &[0x04u8; 32]);
+        let n2 = nullifier_hash(&commit, &[0x03u8; 32], &[0x04u8; 32]);
+        assert_eq!(n1, n2);
+    }
+
+    #[test]
+    fn test_public_inputs_contain_withdraw_amount() {
+        let inputs = valid_inputs();
+        let pub_in = extract_public_inputs(&inputs);
+        assert_eq!(pub_in.withdraw_amount, inputs.withdraw_amount);
+    }
 }

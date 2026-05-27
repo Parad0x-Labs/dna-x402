@@ -216,4 +216,96 @@ mod tests {
         assert!(!record.contains(&hex32(&capsule.sender_hash)));
         assert!(!record.contains(&hex32(&capsule.recipient_key_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_id_nonzero() {
+        let sender = secret(0xA0);
+        let recipient = secret(0xB0);
+        let capsule = seal_message(&sender, &recipient, b"data", &nonce(0x01)).unwrap();
+        assert_ne!(capsule.capsule_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capsule_id_deterministic() {
+        let sender = secret(0xA1);
+        let recipient = secret(0xB1);
+        let n = nonce(0x02);
+        let c1 = seal_message(&sender, &recipient, b"msg", &n).unwrap();
+        let c2 = seal_message(&sender, &recipient, b"msg", &n).unwrap();
+        assert_eq!(c1.capsule_id, c2.capsule_id);
+    }
+
+    #[test]
+    fn test_sender_hash_nonzero() {
+        let sender = secret(0xA2);
+        let recipient = secret(0xB2);
+        let capsule = seal_message(&sender, &recipient, b"data", &nonce(0x03)).unwrap();
+        assert_ne!(capsule.sender_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_message_commitment_nonzero() {
+        let sender = secret(0xA3);
+        let recipient = secret(0xB3);
+        let capsule = seal_message(&sender, &recipient, b"data", &nonce(0x04)).unwrap();
+        assert_ne!(capsule.message_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ciphertext_hash_nonzero() {
+        let sender = secret(0xA4);
+        let recipient = secret(0xB4);
+        let capsule = seal_message(&sender, &recipient, b"data", &nonce(0x05)).unwrap();
+        assert_ne!(capsule.ciphertext_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_recipient_key_hash_nonzero() {
+        let sender = secret(0xA5);
+        let recipient = secret(0xB5);
+        let capsule = seal_message(&sender, &recipient, b"data", &nonce(0x06)).unwrap();
+        assert_ne!(capsule.recipient_key_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_zero_recipient_rejected() {
+        let sender = secret(0xA6);
+        let recipient = [0u8; 32];
+        let err = seal_message(&sender, &recipient, b"msg", &nonce(0x07)).unwrap_err();
+        assert_eq!(err, CapsuleError::ZeroRecipientSecret);
+    }
+
+    #[test]
+    fn test_wrong_sender_secret_fails_unseal() {
+        let sender = secret(0xA7);
+        let wrong_sender = secret(0xFF);
+        let recipient = secret(0xB7);
+        let n = nonce(0x08);
+        let capsule = seal_message(&sender, &recipient, b"msg", &n).unwrap();
+        let dm = unseal_message(&capsule, &wrong_sender, &recipient, b"msg", &n).unwrap();
+        assert!(!dm.verified);
+    }
+
+    #[test]
+    fn test_wrong_nonce_fails_unseal() {
+        let sender = secret(0xA8);
+        let recipient = secret(0xB8);
+        let n_seal = nonce(0x09);
+        let n_wrong = nonce(0x0A);
+        let capsule = seal_message(&sender, &recipient, b"msg", &n_seal).unwrap();
+        let dm = unseal_message(&capsule, &sender, &recipient, b"msg", &n_wrong).unwrap();
+        assert!(!dm.verified);
+    }
+
+    #[test]
+    fn test_message_commitment_message_sensitive() {
+        let sender = secret(0xA9);
+        let recipient = secret(0xB9);
+        let n = nonce(0x0B);
+        let c1 = seal_message(&sender, &recipient, b"msg-one", &n).unwrap();
+        let c2 = seal_message(&sender, &recipient, b"msg-two", &n).unwrap();
+        assert_ne!(c1.message_commitment, c2.message_commitment);
+    }
 }

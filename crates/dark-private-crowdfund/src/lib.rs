@@ -232,4 +232,73 @@ mod tests {
         assert_eq!(cf1.campaign_id, cf2.campaign_id);
         assert_ne!(cf1.campaign_id, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_campaign_id_nonzero() {
+        let cf = new_crowdfund(&org_secret(), 1_000, &goal_blind()).unwrap();
+        assert_ne!(cf.campaign_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_organizer_hash_nonzero() {
+        let cf = new_crowdfund(&org_secret(), 1_000, &goal_blind()).unwrap();
+        assert_ne!(cf.organizer_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_goal_commitment_nonzero() {
+        let cf = new_crowdfund(&org_secret(), 1_000, &goal_blind()).unwrap();
+        assert_ne!(cf.goal_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let cf = new_crowdfund(&org_secret(), 1_000, &goal_blind()).unwrap();
+        assert!(!cf.mainnet_ready);
+    }
+
+    #[test]
+    fn test_goal_too_high_rejected() {
+        let err = new_crowdfund(&org_secret(), MAX_GOAL + 1, &goal_blind()).unwrap_err();
+        assert_eq!(err, CrowdfundError::GoalTooHigh);
+    }
+
+    #[test]
+    fn test_contribution_root_changes_after_back() {
+        let mut cf = new_crowdfund(&org_secret(), 10_000, &goal_blind()).unwrap();
+        let root_before = cf.contribution_root;
+        back_campaign(&mut cf, &backer1(), 100, &nonce1(), 10_000).unwrap();
+        assert_ne!(cf.contribution_root, root_before);
+    }
+
+    #[test]
+    fn test_contribution_count_increments() {
+        let mut cf = new_crowdfund(&org_secret(), 10_000, &goal_blind()).unwrap();
+        assert_eq!(cf.contribution_count, 0);
+        back_campaign(&mut cf, &backer1(), 100, &nonce1(), 10_000).unwrap();
+        assert_eq!(cf.contribution_count, 1);
+    }
+
+    #[test]
+    fn test_total_committed_increases() {
+        let mut cf = new_crowdfund(&org_secret(), 10_000, &goal_blind()).unwrap();
+        back_campaign(&mut cf, &backer1(), 400, &nonce1(), 10_000).unwrap();
+        assert_eq!(cf.total_committed, 400);
+    }
+
+    #[test]
+    fn test_contrib_id_nonzero() {
+        let mut cf = new_crowdfund(&org_secret(), 10_000, &goal_blind()).unwrap();
+        let contrib = back_campaign(&mut cf, &backer1(), 200, &nonce1(), 10_000).unwrap();
+        assert_ne!(contrib.contrib_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let mut cf = new_crowdfund(&org_secret(), 10_000, &goal_blind()).unwrap();
+        let contrib = back_campaign(&mut cf, &backer1(), 200, &nonce1(), 10_000).unwrap();
+        assert_ne!(contrib.commitment, [0u8; 32]);
+    }
 }

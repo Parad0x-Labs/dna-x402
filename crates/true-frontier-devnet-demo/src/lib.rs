@@ -538,4 +538,39 @@ mod tests {
             "reveal after deadline must be Stale"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_tests_total_522() {
+        let d = demo();
+        assert_eq!(d.tests_total, 522, "tests_total must be 522");
+    }
+
+    #[test]
+    fn test_soul_nullifier_nonzero() {
+        let d = demo();
+        assert_ne!(
+            d.soul_nullifier, [0u8; 32],
+            "soul_nullifier must be nonzero"
+        );
+    }
+
+    #[test]
+    fn test_flight_chain_root_nonzero() {
+        let d = demo();
+        assert_ne!(
+            d.flight_chain_root, [0u8; 32],
+            "flight_chain_root must be nonzero"
+        );
+    }
+
+    #[test]
+    fn test_no_custody_capsule_hash_nonzero() {
+        let d = demo();
+        assert_ne!(
+            d.no_custody_capsule_hash, [0u8; 32],
+            "no_custody_capsule_hash must be nonzero"
+        );
+    }
 }

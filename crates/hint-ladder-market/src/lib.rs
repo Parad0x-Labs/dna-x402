@@ -167,4 +167,88 @@ mod tests {
         assert_eq!(pot.total_lamports, 800);
         assert_eq!(pot.hint_count, 2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_purchase_hint_valid() {
+        let hint = make_tier(1); // reveal_after_slot = 50
+        let buyer = [0xBBu8; 32];
+        let result = purchase_hint(&hint, &buyer, 1000, 50, false);
+        assert!(result.is_ok(), "valid purchase at reveal slot must succeed");
+    }
+
+    #[test]
+    fn test_purchase_hint_too_early() {
+        let hint = make_tier(1); // reveal_after_slot = 50
+        let buyer = [9u8; 32];
+        let result = purchase_hint(&hint, &buyer, 1000, 49, false);
+        assert_eq!(result, Err(HintError::TooEarly));
+    }
+
+    #[test]
+    fn test_purchase_receipt_nonzero() {
+        let hint = make_tier(2);
+        let receipt = purchase_hint(&hint, &[9u8; 32], 1000, 100, false).unwrap();
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_clue_hash_nonzero() {
+        let hint = make_tier(1);
+        assert_ne!(hint.clue_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_clue_hash_deterministic() {
+        let h1 = make_tier(1);
+        let h2 = make_tier(1);
+        assert_eq!(h1.clue_hash, h2.clue_hash);
+    }
+
+    #[test]
+    fn test_clue_hash_tier_sensitive() {
+        let t1 = make_tier(1);
+        let t2 = make_tier(2);
+        assert_ne!(t1.clue_hash, t2.clue_hash);
+    }
+
+    #[test]
+    fn test_pot_hint_count_increments() {
+        let mut pot = HintPot {
+            total_lamports: 0,
+            hint_count: 0,
+        };
+        grow_pot(&mut pot, 100);
+        assert_eq!(pot.hint_count, 1);
+    }
+
+    #[test]
+    fn test_split_fees_seller_plus_protocol_equals_total() {
+        let total = 5_000u64;
+        let (seller, protocol) = split_hint_fees(total, 70);
+        assert_eq!(seller + protocol, total);
+    }
+
+    #[test]
+    fn test_higher_tier_false_for_same_tier() {
+        let t1 = make_tier(2);
+        let t2 = make_tier(2);
+        assert!(!higher_tier_reveals_more(&t1, &t2));
+    }
+
+    #[test]
+    fn test_invalid_tier_rejected() {
+        // tier 4 is outside 1..=3
+        let hint = create_hint_tier(&[1u8; 32], 4, 1000, &[2u8; 32], 50);
+        let result = purchase_hint(&hint, &[9u8; 32], 1000, 100, false);
+        assert_eq!(result, Err(HintError::InvalidTier));
+    }
+
+    #[test]
+    fn test_insufficient_payment_below_price() {
+        let hint = make_tier(1); // price 1000
+        let result = purchase_hint(&hint, &[9u8; 32], 999, 100, false);
+        assert_eq!(result, Err(HintError::InsufficientPayment));
+    }
 }

@@ -169,4 +169,60 @@ mod tests {
         proof.nullifier[0] ^= 0xFF;
         assert!(!verify_spend(&proof, &note, &ROOT));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_hash_scope_nonzero() {
+        assert_ne!(hash_scope(SCOPE), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_hash_scope_deterministic() {
+        assert_eq!(hash_scope(SCOPE), hash_scope(SCOPE));
+    }
+
+    #[test]
+    fn test_hash_scope_sensitive() {
+        assert_ne!(hash_scope("scope/a"), hash_scope("scope/b"));
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let note = new_note(&SECRET, SCOPE);
+        assert_ne!(note.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_secret_sensitive() {
+        let note_a = new_note(&[0x01u8; 32], SCOPE);
+        let note_b = new_note(&[0x02u8; 32], SCOPE);
+        assert_ne!(note_a.commitment, note_b.commitment);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let note = new_note(&SECRET, SCOPE);
+        assert_ne!(nullifier_from_note(&note, &ROOT), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_spend_wrong_root_fails() {
+        let note = new_note(&SECRET, SCOPE);
+        let proof = spend_note(&note, &ROOT, SCOPE).unwrap();
+        let wrong_root = [0xFFu8; 32];
+        assert!(!verify_spend(&proof, &note, &wrong_root));
+    }
+
+    #[test]
+    fn test_note_scope_hash_matches_hash_scope() {
+        let note = new_note(&SECRET, SCOPE);
+        assert_eq!(note.scope_hash, hash_scope(SCOPE));
+    }
+
+    #[test]
+    fn test_spend_error_display_nonempty() {
+        let msg = SpendError::ScopeMismatch.to_string();
+        assert!(!msg.is_empty());
+    }
 }

@@ -233,4 +233,74 @@ mod tests {
         let p = new_proposal(&PROPOSER, CONTENT).unwrap();
         assert!(!p.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_content_hash_nonzero() {
+        let p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        assert_ne!(p.content_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proposal_id_nonzero() {
+        let p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        assert_ne!(p.proposal_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_vote_root_changes_after_vote() {
+        let mut p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        let root_before = p.vote_root;
+        cast_vote(&mut p, &VOTER_A, true, &NONCE_A).unwrap();
+        assert_ne!(p.vote_root, root_before);
+    }
+
+    #[test]
+    fn test_vote_count_zero_initially() {
+        let p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        assert_eq!(p.vote_count, 0);
+    }
+
+    #[test]
+    fn test_yes_count_increments() {
+        let mut p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        cast_vote(&mut p, &VOTER_A, true, &NONCE_A).unwrap();
+        assert_eq!(p.yes_count, 1);
+    }
+
+    #[test]
+    fn test_no_count_increments() {
+        let mut p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        cast_vote(&mut p, &VOTER_A, false, &NONCE_A).unwrap();
+        assert_eq!(p.no_count, 1);
+    }
+
+    #[test]
+    fn test_vote_commitment_nonzero() {
+        let mut p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        let vc = cast_vote(&mut p, &VOTER_A, true, &NONCE_A).unwrap();
+        assert_ne!(vc.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_vote_id_nonzero() {
+        let mut p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        let vc = cast_vote(&mut p, &VOTER_A, true, &NONCE_A).unwrap();
+        assert_ne!(vc.vote_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_double_finalize_rejected() {
+        let mut p = new_proposal(&PROPOSER, CONTENT).unwrap();
+        finalize_proposal(&mut p).unwrap();
+        let err = finalize_proposal(&mut p).unwrap_err();
+        assert_eq!(err, GovError::AlreadyFinalized);
+    }
+
+    #[test]
+    fn test_zero_proposer_rejected() {
+        let err = new_proposal(&[0u8; 32], CONTENT).unwrap_err();
+        assert_eq!(err, GovError::ZeroProposerSecret);
+    }
 }

@@ -204,4 +204,80 @@ mod tests {
         r2.confidence_bucket = 0;
         assert!(!dr.can_reveal(&r2, 10_001));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_input_snapshot_sensitive() {
+        let r = make_receipt();
+        let mut r2 = r.clone();
+        r2.input_snapshot_hash = [0xEEu8; 32];
+        assert_ne!(output_commitment(&r), output_commitment(&r2));
+    }
+
+    #[test]
+    fn test_commitment_output_hash_sensitive() {
+        let r = make_receipt();
+        let mut r2 = r.clone();
+        r2.output_hash = [0xDDu8; 32];
+        assert_ne!(output_commitment(&r), output_commitment(&r2));
+    }
+
+    #[test]
+    fn test_commitment_access_scope_sensitive() {
+        let r = make_receipt();
+        let mut r2 = r.clone();
+        r2.access_scope_hash = [0xCCu8; 32];
+        assert_ne!(output_commitment(&r), output_commitment(&r2));
+    }
+
+    #[test]
+    fn test_is_stale_exactly_at_max_age_not_stale() {
+        // elapsed == max_age_slots: condition is >, so NOT stale
+        let r = make_receipt(); // timestamp_slot = 5_000
+                                // 5_050 - 5_000 = 50; max_age = 50 → 50 > 50 is false → not stale
+        assert!(!is_stale(&r, 5_050, 50));
+    }
+
+    #[test]
+    fn test_delayed_reveal_receipt_hash_nonzero() {
+        let r = make_receipt();
+        let dr = DelayedReveal::new(&r, 10_000);
+        assert_ne!(dr.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_epoch_and_slot_stored() {
+        let r = make_receipt();
+        assert_eq!(r.timestamp_slot, 5_000);
+    }
+
+    #[test]
+    fn test_verify_output_exact_match() {
+        let r = make_receipt();
+        assert!(verify_output(&r, &r.output_hash));
+    }
+
+    #[test]
+    fn test_redacted_display_contains_slot_number() {
+        let r = make_receipt();
+        let display = r.redacted_display();
+        assert!(display.contains("5000"), "slot must appear in display");
+    }
+
+    #[test]
+    fn test_delayed_reveal_well_past_slot_ok() {
+        let r = make_receipt();
+        let dr = DelayedReveal::new(&r, 10_000);
+        assert!(dr.can_reveal(&r, 99_999_999));
+    }
+
+    #[test]
+    fn test_commitment_model_and_prompt_differ_with_same_other_fields() {
+        let r = make_receipt();
+        let mut r2 = r.clone();
+        r2.model_version_hash = [0xFFu8; 32];
+        r2.prompt_policy_hash = [0xFFu8; 32];
+        assert_ne!(output_commitment(&r), output_commitment(&r2));
+    }
 }

@@ -208,4 +208,71 @@ mod tests {
         let c2 = compute_price_commitment(1000, &blinding(0x22), 1000);
         assert_ne!(c1, c2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_zero_oracle_secret_rejected() {
+        let err = new_feed(&[0u8; 32], b"BTC/USD").unwrap_err();
+        assert_eq!(err, OracleError::ZeroOracleSecret);
+    }
+
+    #[test]
+    fn test_empty_asset_rejected() {
+        let err = new_feed(&secret(0xa1), b"").unwrap_err();
+        assert_eq!(err, OracleError::EmptyAsset);
+    }
+
+    #[test]
+    fn test_feed_id_nonzero() {
+        let feed = new_feed(&secret(0xa1), b"BTC/USD").unwrap();
+        assert_ne!(feed.feed_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_oracle_hash_nonzero() {
+        let feed = new_feed(&secret(0xa1), b"SOL/USD").unwrap();
+        assert_ne!(feed.oracle_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_asset_hash_nonzero() {
+        let feed = new_feed(&secret(0xa1), b"ETH/USD").unwrap();
+        assert_ne!(feed.asset_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let feed = new_feed(&secret(0xa1), b"BTC/USD").unwrap();
+        assert!(!feed.mainnet_ready);
+    }
+
+    #[test]
+    fn test_attest_mainnet_ready_false() {
+        let mut feed = new_feed(&secret(0xa1), b"BTC/USD").unwrap();
+        update_price(&mut feed, 30000_00000000, &blinding(0x55), 1_700_000_000);
+        let att = attest_price(&feed, 30000_00000000);
+        assert!(!att.mainnet_ready);
+    }
+
+    #[test]
+    fn test_price_commitment_nonzero_after_update() {
+        let mut feed = new_feed(&secret(0xa1), b"SOL/USD").unwrap();
+        update_price(&mut feed, 100_00000000, &blinding(0x01), 1000);
+        assert_ne!(feed.price_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_oracle_different_feed_id() {
+        let feed_a = new_feed(&secret(0x01), b"BTC/USD").unwrap();
+        let feed_b = new_feed(&secret(0x02), b"BTC/USD").unwrap();
+        assert_ne!(feed_a.feed_id, feed_b.feed_id);
+    }
+
+    #[test]
+    fn test_price_hash_price_sensitive() {
+        let h1 = compute_price_hash(1000, 0);
+        let h2 = compute_price_hash(2000, 0);
+        assert_ne!(h1, h2);
+    }
 }

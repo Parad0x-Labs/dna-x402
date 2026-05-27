@@ -148,4 +148,79 @@ mod tests {
         let p2 = create_cleanup_proof(&a, &c, 1_000);
         assert_eq!(p1.proof_hash, p2.proof_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let p = create_cleanup_proof(&dummy_hash(1), &dummy_hash(2), 5_000);
+        assert_ne!(p.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_lamports_sensitive() {
+        let a = dummy_hash(1);
+        let c = dummy_hash(2);
+        let p1 = create_cleanup_proof(&a, &c, 1_000);
+        let p2 = create_cleanup_proof(&a, &c, 2_000);
+        assert_ne!(p1.proof_hash, p2.proof_hash);
+    }
+
+    #[test]
+    fn test_proof_closer_sensitive() {
+        let a = dummy_hash(1);
+        let p1 = create_cleanup_proof(&a, &dummy_hash(10), 1_000);
+        let p2 = create_cleanup_proof(&a, &dummy_hash(20), 1_000);
+        assert_ne!(p1.proof_hash, p2.proof_hash);
+    }
+
+    #[test]
+    fn test_score_zero_at_zero_lamports_zero_slots() {
+        assert_eq!(score_grave(0, 0, 0), 0);
+    }
+
+    #[test]
+    fn test_bounty_10pct_formula() {
+        let entry = create_grave_entry(
+            &dummy_hash(5),
+            1_000_000,
+            0,
+            0,
+            CloseabilityStatus::Closeable,
+        );
+        assert_eq!(entry.bounty_lamports, 100_000);
+    }
+
+    #[test]
+    fn test_total_recoverable_empty() {
+        assert_eq!(total_recoverable(&[]), 0);
+    }
+
+    #[test]
+    fn test_total_recoverable_multiple_closeable() {
+        let g1 = create_grave_entry(&dummy_hash(1), 10_000, 0, 0, CloseabilityStatus::Closeable);
+        let g2 = create_grave_entry(&dummy_hash(2), 20_000, 0, 0, CloseabilityStatus::Closeable);
+        let g3 = create_grave_entry(&dummy_hash(3), 99_999, 0, 0, CloseabilityStatus::Locked);
+        assert_eq!(total_recoverable(&[g1, g2, g3]), 30_000);
+    }
+
+    #[test]
+    fn test_grave_entry_lamports_stored() {
+        let entry = create_grave_entry(&dummy_hash(1), 42_000, 0, 0, CloseabilityStatus::Closeable);
+        assert_eq!(entry.lamports, 42_000);
+    }
+
+    #[test]
+    fn test_grave_entry_account_hash_stored() {
+        let h = dummy_hash(77);
+        let entry = create_grave_entry(&h, 1_000, 0, 0, CloseabilityStatus::Closeable);
+        assert_eq!(entry.account_hash, h);
+    }
+
+    #[test]
+    fn test_score_deterministic() {
+        let s1 = score_grave(500_000, 100, 200);
+        let s2 = score_grave(500_000, 100, 200);
+        assert_eq!(s1, s2);
+    }
 }

@@ -161,4 +161,69 @@ mod tests {
         let v2: VirtualBalance = serde_json::from_str(&json).unwrap();
         assert_eq!(v, v2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commit_nonzero() {
+        let v = sample();
+        assert_ne!(commit(&v), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commit_balance_sensitive() {
+        let v1 = sample();
+        let mut v2 = sample();
+        v2.balance = 999;
+        assert_ne!(commit(&v1), commit(&v2));
+    }
+
+    #[test]
+    fn test_commit_owner_sensitive() {
+        let v1 = sample();
+        let mut v2 = sample();
+        v2.owner_hash = [0xFFu8; 32];
+        assert_ne!(commit(&v1), commit(&v2));
+    }
+
+    #[test]
+    fn test_deposit_increments_nonce() {
+        let mut v = sample();
+        assert_eq!(v.nonce, 0);
+        deposit(&mut v, 100);
+        assert_eq!(v.nonce, 1);
+    }
+
+    #[test]
+    fn test_spend_increments_nonce() {
+        let mut v = sample();
+        assert_eq!(v.nonce, 0);
+        spend(&mut v, 50).unwrap();
+        assert_eq!(v.nonce, 1);
+    }
+
+    #[test]
+    fn test_spend_at_cap_ok() {
+        // cap = 500, balance = 1000 → spending exactly 500 must succeed
+        let mut v = sample();
+        let result = spend(&mut v, 500);
+        assert!(result.is_ok(), "spending exactly at cap must be ok");
+        assert_eq!(v.balance, 500);
+    }
+
+    #[test]
+    fn test_deposit_saturates_u64_max() {
+        let mut v = sample();
+        v.balance = u64::MAX;
+        deposit(&mut v, 1); // saturating_add → stays at u64::MAX
+        assert_eq!(v.balance, u64::MAX);
+    }
+
+    #[test]
+    fn test_exit_intent_at_full_balance_ok() {
+        let v = sample(); // balance = 1_000
+        let result = create_exit_intent(&v, 1_000);
+        assert!(result.is_ok(), "intent for full balance must succeed");
+        assert_eq!(result.unwrap().amount, 1_000);
+    }
 }

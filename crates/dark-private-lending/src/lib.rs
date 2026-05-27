@@ -231,4 +231,71 @@ mod tests {
         assert!(v.get("loan_id").is_some());
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_offer_id_nonzero() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        assert_ne!(offer.offer_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_lender_hash_nonzero() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        assert_ne!(offer.lender_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_collateral_hash_nonzero() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        assert_ne!(offer.collateral_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_offer_mainnet_ready_false() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        assert!(!offer.mainnet_ready);
+    }
+
+    #[test]
+    fn test_loan_mainnet_ready_false() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        let loan = take_loan(&offer, &borrower(), 1_000_000).unwrap();
+        assert!(!loan.mainnet_ready);
+    }
+
+    #[test]
+    fn test_loan_id_nonzero() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        let loan = take_loan(&offer, &borrower(), 1_000_000).unwrap();
+        assert_ne!(loan.loan_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_repayment_hash_nonzero() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        let loan = take_loan(&offer, &borrower(), 1_000_000).unwrap();
+        assert_ne!(loan.repayment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_due_at_unix_computed() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        let loan = take_loan(&offer, &borrower(), 5_000).unwrap();
+        assert_eq!(loan.due_at_unix, 5_000 + 86400);
+    }
+
+    #[test]
+    fn test_zero_borrower_rejected() {
+        let offer = create_offer(&lender(), 1_000, 30, 86400, collateral()).unwrap();
+        let err = take_loan(&offer, &[0u8; 32], 1_000_000).unwrap_err();
+        assert_eq!(err, LendError::ZeroBorrowerSecret);
+    }
+
+    #[test]
+    fn test_principal_zero_rejected() {
+        let err = create_offer(&lender(), 0, 30, 86400, collateral()).unwrap_err();
+        assert_eq!(err, LendError::PrincipalZero);
+    }
 }

@@ -178,4 +178,90 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(!v["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_budget_id_zero_rejected() {
+        let err = new_budget([0u8; 32], 1000).unwrap_err();
+        assert_eq!(err, BudgetError::BudgetIdZero);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let b = new_budget(budget_id(), 500).unwrap();
+        assert!(!b.mainnet_ready);
+    }
+
+    #[test]
+    fn test_receipt_mainnet_ready_false() {
+        let mut b = new_budget(budget_id(), 500).unwrap();
+        let receipt = consume_budget(&mut b, 10).unwrap();
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_query_hash_nonzero() {
+        let mut b = new_budget(budget_id(), 500).unwrap();
+        let receipt = consume_budget(&mut b, 10).unwrap();
+        assert_ne!(receipt.query_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_query_count_increments() {
+        let mut b = new_budget(budget_id(), 1000).unwrap();
+        assert_eq!(b.query_count, 0);
+        consume_budget(&mut b, 10).unwrap();
+        assert_eq!(b.query_count, 1);
+        consume_budget(&mut b, 10).unwrap();
+        assert_eq!(b.query_count, 2);
+    }
+
+    #[test]
+    fn test_exact_budget_consumed_ok() {
+        let mut b = new_budget(budget_id(), 100).unwrap();
+        let receipt = consume_budget(&mut b, 100).unwrap();
+        assert_eq!(receipt.new_total_spent, 100);
+        assert_eq!(remaining_budget(&b), 0);
+    }
+
+    #[test]
+    fn test_one_over_budget_rejected() {
+        let mut b = new_budget(budget_id(), 100).unwrap();
+        consume_budget(&mut b, 99).unwrap();
+        let err = consume_budget(&mut b, 2).unwrap_err();
+        assert_eq!(
+            err,
+            BudgetError::BudgetExhausted {
+                remaining: 1,
+                requested: 2,
+            }
+        );
+    }
+
+    #[test]
+    fn test_budget_id_stored_in_receipt() {
+        let id = budget_id();
+        let mut b = new_budget(id, 500).unwrap();
+        let receipt = consume_budget(&mut b, 50).unwrap();
+        assert_eq!(receipt.budget_id, id);
+    }
+
+    #[test]
+    fn test_query_hash_query_count_sensitive() {
+        let mut b = new_budget(budget_id(), 500).unwrap();
+        let r1 = consume_budget(&mut b, 10).unwrap();
+        let r2 = consume_budget(&mut b, 10).unwrap();
+        assert_ne!(
+            r1.query_hash, r2.query_hash,
+            "query_hash must differ by query_count"
+        );
+    }
+
+    #[test]
+    fn test_remaining_budget_zero_after_full_consume() {
+        let mut b = new_budget(budget_id(), 300).unwrap();
+        consume_budget(&mut b, 300).unwrap();
+        assert_eq!(remaining_budget(&b), 0);
+    }
 }

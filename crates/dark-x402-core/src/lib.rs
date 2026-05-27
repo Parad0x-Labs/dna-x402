@@ -373,4 +373,36 @@ mod tests {
         let receipt2 = mint_receipt_note_after_payment(&req, &proof, b"payload", 1000).unwrap();
         assert_eq!(receipt1.receipt_id(), receipt2.receipt_id());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_requirement_not_expired_at_exact_slot() {
+        // is_expired: current_slot > expires_at_slot (strictly >, so == is NOT expired)
+        let req = make_req("https://api.darknull.example/resource", 9999);
+        assert!(!req.is_expired(9999));
+    }
+
+    #[test]
+    fn test_requirement_hash_nonzero() {
+        let req = make_req("https://api.darknull.example/resource", 9999);
+        assert_ne!(req.requirement_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_id_nonzero() {
+        let req = make_req("https://api.darknull.example/resource", 9999);
+        let payer = [0xBB; 32];
+        let proof = make_proof(&req, payer, "MOCK_SIG_aabbccdd");
+        let receipt = mint_receipt_note_after_payment(&req, &proof, b"payload", 1000).unwrap();
+        assert_ne!(receipt.receipt_id(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_replay_key_nonzero() {
+        let req = make_req("https://api.darknull.example/resource", 9999);
+        let payer = [0xBB; 32];
+        let key = derive_replay_key(&req, &payer);
+        assert_ne!(key, [0u8; 32]);
+    }
 }

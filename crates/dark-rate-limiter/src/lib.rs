@@ -312,4 +312,116 @@ mod tests {
         assert!(json.contains("\"spend_count\":1"));
         assert!(json.contains("\"mainnet_ready\":false"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let ledger = new_ledger(make_config(5, 1));
+        assert!(!ledger.mainnet_ready);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let secret = [0xABu8; 32];
+        let domain = *b"testdmn1";
+        let n = generate_spend_nullifier(&secret, 1, 0, &domain);
+        assert_ne!(n, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_epoch_sensitive() {
+        let secret = [0x01u8; 32];
+        let domain = *b"testdmn1";
+        let n1 = generate_spend_nullifier(&secret, 1, 0, &domain);
+        let n2 = generate_spend_nullifier(&secret, 2, 0, &domain);
+        assert_ne!(n1, n2, "different epoch must produce different nullifier");
+    }
+
+    #[test]
+    fn test_nullifier_counter_sensitive() {
+        let secret = [0x02u8; 32];
+        let domain = *b"testdmn1";
+        let n1 = generate_spend_nullifier(&secret, 1, 0, &domain);
+        let n2 = generate_spend_nullifier(&secret, 1, 1, &domain);
+        assert_ne!(n1, n2, "different counter must produce different nullifier");
+    }
+
+    #[test]
+    fn test_nullifier_domain_sensitive() {
+        let secret = [0x03u8; 32];
+        let n1 = generate_spend_nullifier(&secret, 1, 0, b"domain_a");
+        let n2 = generate_spend_nullifier(&secret, 1, 0, b"domain_b");
+        assert_ne!(n1, n2, "different domain must produce different nullifier");
+    }
+
+    #[test]
+    fn test_verify_under_quota_initial() {
+        let ledger = new_ledger(make_config(5, 1));
+        assert!(
+            verify_under_quota(&ledger),
+            "empty ledger must be under quota"
+        );
+    }
+
+    #[test]
+    fn test_verify_under_quota_at_max() {
+        let config = make_config(3, 1);
+        let domain = config.domain;
+        let epoch = config.epoch;
+        let mut ledger = new_ledger(config);
+        let secret = [0x10u8; 32];
+        for counter in 0..3 {
+            let t = ticket_for(&secret, epoch, counter, &domain);
+            record_spend(&mut ledger, t).unwrap();
+        }
+        assert_eq!(ledger.spend_count, 3);
+        // spend_count (3) <= max_per_epoch (3) → true
+        assert!(verify_under_quota(&ledger));
+    }
+
+    #[test]
+    fn test_wrong_domain_rejected() {
+        let config = make_config(10, 1);
+        let epoch = config.epoch;
+        let mut ledger = new_ledger(config);
+        let secret = [0x20u8; 32];
+        let wrong_domain = *b"wrongdmn";
+        let t = SpendTicket {
+            nullifier: generate_spend_nullifier(&secret, epoch, 0, &wrong_domain),
+            epoch,
+            domain: wrong_domain,
+            remaining_after: 0,
+        };
+        assert_eq!(
+            record_spend(&mut ledger, t).unwrap_err(),
+            RateLimitError::WrongDomain
+        );
+    }
+
+    #[test]
+    fn test_stats_json_has_expected_fields() {
+        let config = make_config(5, 42);
+        let domain = config.domain;
+        let epoch = config.epoch;
+        let mut ledger = new_ledger(config);
+        let secret = [0x30u8; 32];
+        let t = ticket_for(&secret, epoch, 0, &domain);
+        record_spend(&mut ledger, t).unwrap();
+        let json = ledger_stats_json(&ledger);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(v["spend_count"], 1u64);
+        assert_eq!(v["epoch"], 42u64);
+        assert_eq!(v["mainnet_ready"], false);
+        assert_eq!(v["max_per_epoch"], 5u64);
+    }
+
+    #[test]
+    fn test_epoch_reset_updates_epoch() {
+        let config = make_config(5, 10);
+        let mut ledger = new_ledger(config);
+        reset_epoch(&mut ledger, 20);
+        assert_eq!(ledger.config.epoch, 20);
+        assert_eq!(ledger.spend_count, 0);
+    }
 }

@@ -227,4 +227,91 @@ mod tests {
         assert!(v.get("mainnet_ready").is_some());
         assert!(!proof.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_work_hash_nonzero() {
+        let stmt = create_statement(0).unwrap();
+        let proof = solve_proof(&stmt, &secret(), 1).unwrap();
+        assert_ne!(proof.work_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_statement_mainnet_ready_false() {
+        let stmt = create_statement(0).unwrap();
+        assert!(!stmt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_hash() {
+        let stmt = create_statement(0).unwrap();
+        let mut proof = solve_proof(&stmt, &secret(), 1).unwrap();
+        proof.work_hash[0] ^= 0xFF;
+        assert!(!verify_work(&stmt, &proof, &secret()));
+    }
+
+    #[test]
+    fn test_max_iterations_exhausted_returns_unsatisfied() {
+        // difficulty=20 won't be satisfied in 1 iteration with overwhelming probability
+        let stmt = create_statement(20).unwrap();
+        let proof = solve_proof(&stmt, &secret(), 1).unwrap();
+        // We can't guarantee satisfies_difficulty is false (could get lucky),
+        // but iterations must equal max_iterations when not satisfied
+        if !proof.satisfies_difficulty {
+            assert_eq!(proof.iterations, 1);
+        }
+    }
+
+    #[test]
+    fn test_different_secrets_different_work_hash() {
+        let stmt = create_statement(0).unwrap();
+        let mut sec2 = secret();
+        sec2[0] ^= 0xFF;
+        let p1 = solve_proof(&stmt, &secret(), 1).unwrap();
+        let p2 = solve_proof(&stmt, &sec2, 1).unwrap();
+        assert_ne!(p1.work_hash, p2.work_hash);
+    }
+
+    #[test]
+    fn test_iterations_count_correct() {
+        let stmt = create_statement(0).unwrap();
+        let proof = solve_proof(&stmt, &secret(), 5).unwrap();
+        // difficulty 0 solved at nonce=0, iterations=1
+        assert_eq!(proof.iterations, 1);
+        assert_eq!(proof.nonce, 0);
+    }
+
+    #[test]
+    fn test_difficulty_20_boundary_ok() {
+        assert!(create_statement(20).is_ok());
+        assert_eq!(
+            create_statement(21).unwrap_err(),
+            WorkError::DifficultyTooHigh
+        );
+    }
+
+    #[test]
+    fn test_work_mainnet_ready_false() {
+        let stmt = create_statement(0).unwrap();
+        let proof = solve_proof(&stmt, &secret(), 1).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_difficulty_zero_always_satisfies() {
+        let stmt = create_statement(0).unwrap();
+        let proof = solve_proof(&stmt, &secret(), 1).unwrap();
+        assert!(proof.satisfies_difficulty);
+        assert!(verify_work(&stmt, &proof, &secret()));
+    }
+
+    #[test]
+    fn test_verify_fails_wrong_secret() {
+        let stmt = create_statement(0).unwrap();
+        let proof = solve_proof(&stmt, &secret(), 1).unwrap();
+        let mut wrong_sec = secret();
+        wrong_sec[0] ^= 0x01;
+        assert!(!verify_work(&stmt, &proof, &wrong_sec));
+    }
 }

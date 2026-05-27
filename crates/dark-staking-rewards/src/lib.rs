@@ -201,4 +201,89 @@ mod tests {
         assert!(!record.contains(&vh_hex));
         assert!(v.get("validator_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let pool = create_pool(&secret(0x10), 1000, 1).unwrap();
+        assert!(!pool.mainnet_ready);
+        let mut p2 = create_pool(&secret(0x10), 1000, 1).unwrap();
+        let claim = claim_reward(&mut p2, &secret(0x20), 100).unwrap();
+        assert!(!claim.mainnet_ready);
+    }
+
+    #[test]
+    fn test_pool_id_deterministic() {
+        let p1 = create_pool(&secret(0x11), 500, 5).unwrap();
+        let p2 = create_pool(&secret(0x11), 500, 5).unwrap();
+        assert_eq!(p1.pool_id, p2.pool_id);
+    }
+
+    #[test]
+    fn test_pool_id_sensitive_to_epoch() {
+        let p1 = create_pool(&secret(0x12), 500, 1).unwrap();
+        let p2 = create_pool(&secret(0x12), 500, 2).unwrap();
+        assert_ne!(p1.pool_id, p2.pool_id);
+    }
+
+    #[test]
+    fn test_multiple_claims_reduce_available() {
+        let mut pool = create_pool(&secret(0x13), 1000, 1).unwrap();
+        claim_reward(&mut pool, &secret(0xA1), 300).unwrap();
+        claim_reward(&mut pool, &secret(0xA2), 300).unwrap();
+        assert_eq!(pool.distributed, 600);
+        // only 400 left
+        let err = claim_reward(&mut pool, &secret(0xA3), 500).unwrap_err();
+        assert_eq!(
+            err,
+            RewardError::InsufficientRewards {
+                available: 400,
+                requested: 500
+            }
+        );
+    }
+
+    #[test]
+    fn test_zero_rewards_rejected() {
+        let err = create_pool(&secret(0x14), 0, 1).unwrap_err();
+        assert_eq!(err, RewardError::ZeroRewards);
+    }
+
+    #[test]
+    fn test_different_stakers_different_claim_ids() {
+        let mut pool = create_pool(&secret(0x15), 2000, 1).unwrap();
+        let c1 = claim_reward(&mut pool, &secret(0xB1), 100).unwrap();
+        let c2 = claim_reward(&mut pool, &secret(0xB2), 100).unwrap();
+        assert_ne!(c1.claim_id, c2.claim_id);
+    }
+
+    #[test]
+    fn test_staker_hash_not_in_public_record() {
+        let mut pool = create_pool(&secret(0x16), 1000, 1).unwrap();
+        let claim = claim_reward(&mut pool, &secret(0xC1), 100).unwrap();
+        let record = pool_public_record(&pool);
+        let staker_hex = hex32(&claim.staker_hash);
+        assert!(!record.contains(&staker_hex));
+    }
+
+    #[test]
+    fn test_distributed_starts_at_zero() {
+        let pool = create_pool(&secret(0x17), 1000, 1).unwrap();
+        assert_eq!(pool.distributed, 0);
+    }
+
+    #[test]
+    fn test_claim_amount_stored() {
+        let mut pool = create_pool(&secret(0x18), 5000, 1).unwrap();
+        let claim = claim_reward(&mut pool, &secret(0xD1), 777).unwrap();
+        assert_eq!(claim.amount, 777);
+    }
+
+    #[test]
+    fn test_claim_epoch_matches_pool() {
+        let mut pool = create_pool(&secret(0x19), 1000, 42).unwrap();
+        let claim = claim_reward(&mut pool, &secret(0xE1), 100).unwrap();
+        assert_eq!(claim.epoch, 42);
+    }
 }

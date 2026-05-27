@@ -231,4 +231,89 @@ mod tests {
         assert_eq!(v["version"], 2u32);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_pool_id_nonzero() {
+        let pool = create_pool(1_000_000_000, 1).unwrap();
+        assert_ne!(pool.pool_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_pool_id_deterministic() {
+        let p1 = create_pool(1_000_000_000, 1).unwrap();
+        let p2 = create_pool(1_000_000_000, 1).unwrap();
+        assert_eq!(p1.pool_id, p2.pool_id);
+    }
+
+    #[test]
+    fn test_pool_id_version_sensitive() {
+        let p1 = create_pool(1_000_000_000, 1).unwrap();
+        let p2 = create_pool(1_000_000_000, 2).unwrap();
+        assert_ne!(p1.pool_id, p2.pool_id);
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let mut pool = create_pool(10_000_000_000, 1).unwrap();
+        let note = deposit(&mut pool, &secret_a());
+        assert_ne!(note.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_hash_nonzero() {
+        let mut pool = create_pool(100_000_000_000, 1).unwrap();
+        let note = deposit(&mut pool, &secret_a());
+        assert_ne!(note.nullifier_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_deposit_count_increments() {
+        let mut pool = create_pool(1_000_000_000, 1).unwrap();
+        assert_eq!(pool.deposit_count, 0);
+        deposit(&mut pool, &secret_a());
+        assert_eq!(pool.deposit_count, 1);
+        deposit(&mut pool, &secret_b());
+        assert_eq!(pool.deposit_count, 2);
+    }
+
+    #[test]
+    fn test_withdraw_empty_pool_fails() {
+        let pool = create_pool(1_000_000_000, 1).unwrap();
+        let dummy_note = ShieldNote {
+            commitment: [0u8; 32],
+            nullifier_hash: [0u8; 32],
+            denomination: 1_000_000_000,
+            mainnet_ready: false,
+        };
+        let err = withdraw(&pool, &dummy_note).unwrap_err();
+        assert_eq!(err, ShieldError::PoolEmpty);
+    }
+
+    #[test]
+    fn test_all_valid_denominations_accepted() {
+        for &denom in &VALID_DENOMINATIONS {
+            let result = create_pool(denom, 1);
+            assert!(result.is_ok(), "denomination {} should be valid", denom);
+        }
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        // Fresh pool, same secret → same commitment (commitment doesn't depend on pool state)
+        let mut p1 = create_pool(1_000_000_000, 1).unwrap();
+        let mut p2 = create_pool(1_000_000_000, 1).unwrap();
+        let note1 = deposit(&mut p1, &secret_a());
+        let note2 = deposit(&mut p2, &secret_a());
+        assert_eq!(note1.commitment, note2.commitment);
+    }
+
+    #[test]
+    fn test_note_denomination_matches_pool() {
+        let denom = 100_000_000_000u64;
+        let mut pool = create_pool(denom, 1).unwrap();
+        let note = deposit(&mut pool, &secret_a());
+        assert_eq!(note.denomination, denom);
+    }
 }

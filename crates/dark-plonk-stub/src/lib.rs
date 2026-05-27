@@ -149,4 +149,73 @@ mod tests {
         assert_eq!(v["is_stub"], true);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert_ne!(proof.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_opening_nonzero() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert_ne!(proof.opening, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_eval_hash_nonzero() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert_ne!(proof.eval_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_srs_sensitivity() {
+        let srs2 = [3u8; 32];
+        let p1 = create_plonk_proof(&srs(), &witness()).unwrap();
+        let p2 = create_plonk_proof(&srs2, &witness()).unwrap();
+        assert_ne!(p1.commitment, p2.commitment);
+    }
+
+    #[test]
+    fn test_wrong_witness_verify_fails() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert!(!verify_plonk(&proof, &srs(), &[b"wrong_witness" as &[u8]]));
+    }
+
+    #[test]
+    fn test_zero_srs_verify_returns_false() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert!(!verify_plonk(&proof, &[0u8; 32], &witness()));
+    }
+
+    #[test]
+    fn test_empty_witness_verify_returns_false() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert!(!verify_plonk(&proof, &srs(), &[]));
+    }
+
+    #[test]
+    fn test_public_record_keys() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        let record = plonk_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["commitment"].is_string());
+        assert!(v["opening"].is_string());
+        assert!(v["eval_hash"].is_string());
+    }
+
+    #[test]
+    fn test_is_stub_always_true() {
+        let proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        assert!(proof.is_stub);
+    }
+
+    #[test]
+    fn test_verify_tampered_proof_fails() {
+        let mut proof = create_plonk_proof(&srs(), &witness()).unwrap();
+        proof.commitment[0] ^= 0xFF;
+        assert!(!verify_plonk(&proof, &srs(), &witness()));
+    }
 }

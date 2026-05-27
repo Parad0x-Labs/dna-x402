@@ -241,4 +241,86 @@ mod tests {
         assert_eq!(v["total_shielded"], 250);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_create_pool_mainnet_ready_false() {
+        let pool = create_pool(b"usdc-mint", &nonce(0x01)).unwrap();
+        assert!(!pool.mainnet_ready);
+    }
+
+    #[test]
+    fn test_create_pool_empty_asset_fails() {
+        let err = create_pool(b"", &nonce(0x01)).unwrap_err();
+        assert_eq!(err, PoolError::ZeroAsset);
+    }
+
+    #[test]
+    fn test_pool_id_nonzero() {
+        let pool = create_pool(b"sol-mint", &nonce(0x01)).unwrap();
+        assert_ne!(pool.pool_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_total_shielded_accumulates() {
+        let mut pool = create_pool(b"usdc-mint", &nonce(0x01)).unwrap();
+        shield(&mut pool, &secret(0x11), 1000, &nonce(0x02)).unwrap();
+        shield(&mut pool, &secret(0x22), 500, &nonce(0x03)).unwrap();
+        assert_eq!(pool.total_shielded, 1500);
+    }
+
+    #[test]
+    fn test_deposit_count_increments() {
+        let mut pool = create_pool(b"usdc-mint", &nonce(0x01)).unwrap();
+        shield(&mut pool, &secret(0x11), 100, &nonce(0x02)).unwrap();
+        shield(&mut pool, &secret(0x22), 200, &nonce(0x03)).unwrap();
+        assert_eq!(pool.deposit_count, 2);
+    }
+
+    #[test]
+    fn test_note_id_nonzero() {
+        let mut pool = create_pool(b"sol-mint", &nonce(0x01)).unwrap();
+        let note = shield(&mut pool, &secret(0x11), 100, &nonce(0x02)).unwrap();
+        assert_ne!(note.note_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_mainnet_ready_false() {
+        let mut pool = create_pool(b"sol-mint", &nonce(0x01)).unwrap();
+        let note = shield(&mut pool, &secret(0x11), 100, &nonce(0x02)).unwrap();
+        assert!(!note.mainnet_ready);
+    }
+
+    #[test]
+    fn test_unshield_empty_pool_fails() {
+        let pool = create_pool(b"sol-mint", &nonce(0x01)).unwrap();
+        // Construct a fake note to attempt unshield
+        let fake_note = DepositNote {
+            note_id: [0x01u8; 32],
+            shielder_hash: [0x02u8; 32],
+            amount: 100,
+            nullifier_hash: [0x03u8; 32],
+            mainnet_ready: false,
+        };
+        let err = unshield(&pool, &fake_note).unwrap_err();
+        assert_eq!(err, PoolError::PoolEmpty);
+    }
+
+    #[test]
+    fn test_different_asset_different_pool_id() {
+        let p1 = create_pool(b"usdc-mint", &nonce(0x01)).unwrap();
+        let p2 = create_pool(b"sol-mint", &nonce(0x01)).unwrap();
+        assert_ne!(p1.pool_id, p2.pool_id);
+    }
+
+    #[test]
+    fn test_public_record_no_internal_fields() {
+        let pool = create_pool(b"usdc-mint", &nonce(0x01)).unwrap();
+        let record = pool_public_record(&pool);
+        assert!(
+            !record.contains("note_ids"),
+            "note_ids must not appear in public record"
+        );
+    }
 }

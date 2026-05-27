@@ -143,4 +143,84 @@ mod tests {
         assert!(!pass.transferable);
         assert_eq!(pass.uses_remaining, 5);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_pass_id_nonzero() {
+        let pass = mint_pass(shape(), owner(), 10_000, 3, true);
+        assert_ne!(pass.pass_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_pass_id_deterministic() {
+        let p1 = mint_pass(shape(), owner(), 10_000, 3, true);
+        let p2 = mint_pass(shape(), owner(), 10_000, 3, true);
+        assert_eq!(p1.pass_id, p2.pass_id);
+    }
+
+    #[test]
+    fn test_pass_uses_remaining_equals_max_uses() {
+        let pass = mint_pass(shape(), owner(), 5_000, 7, false);
+        assert_eq!(pass.uses_remaining, pass.max_uses);
+        assert_eq!(pass.uses_remaining, 7);
+    }
+
+    #[test]
+    fn test_consume_decrements_uses() {
+        let mut pass = mint_pass(shape(), owner(), 10_000, 3, true);
+        let remaining = consume_pass(&mut pass, &shape(), 1000).unwrap();
+        assert_eq!(remaining, 2);
+        assert_eq!(pass.uses_remaining, 2);
+    }
+
+    #[test]
+    fn test_pass_at_expiry_slot_ok() {
+        // current_slot > valid_until_slot is Expired; == is OK
+        let mut pass = mint_pass(shape(), owner(), 500, 2, true);
+        assert!(consume_pass(&mut pass, &shape(), 500).is_ok());
+    }
+
+    #[test]
+    fn test_price_floor_enforced() {
+        // pool_k=100 → divisor=20 → price=base/20 < base/10 → return base/10
+        let base = 100_000u64;
+        let price = price_pass_by_pool_depth(100, base);
+        assert_eq!(price, base / 10);
+    }
+
+    #[test]
+    fn test_k_boost_exhausted_pass_is_zero() {
+        let mut pass = mint_pass(shape(), owner(), 10_000, 1, true);
+        consume_pass(&mut pass, &shape(), 1000).unwrap();
+        assert_eq!(pass.uses_remaining, 0);
+        let boost = compute_k_shape_boost(&pass, 5);
+        assert_eq!(boost, 0);
+    }
+
+    #[test]
+    fn test_pass_id_owner_sensitive() {
+        let o1 = [0xAAu8; 32];
+        let o2 = [0xBBu8; 32];
+        let p1 = mint_pass(shape(), o1, 10_000, 3, true);
+        let p2 = mint_pass(shape(), o2, 10_000, 3, true);
+        assert_ne!(p1.pass_id, p2.pass_id);
+    }
+
+    #[test]
+    fn test_pass_id_shape_sensitive() {
+        let s1 = [0x11u8; 32];
+        let s2 = [0x22u8; 32];
+        let p1 = mint_pass(s1, owner(), 10_000, 3, true);
+        let p2 = mint_pass(s2, owner(), 10_000, 3, true);
+        assert_ne!(p1.pass_id, p2.pass_id);
+    }
+
+    #[test]
+    fn test_price_at_pool_depth_zero() {
+        // pool_k=0 → divisor=max(0,1)=1 → price=base → max(base, base/10) = base
+        let base = 50_000u64;
+        let price = price_pass_by_pool_depth(0, base);
+        assert_eq!(price, base);
+    }
 }

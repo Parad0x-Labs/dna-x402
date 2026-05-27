@@ -373,4 +373,79 @@ mod tests {
         let result = create_paid_reveal(&pick, &sub, &payment, PickSide::Home, 100, true);
         assert_eq!(result, Err(PickError::DuplicateReveal));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_reveal_deadline_exactly_ok() {
+        // current_slot == reveal_deadline_slot (500) — strictly > check means exactly at deadline is ok
+        let pick = dummy_pick(PickSide::Home);
+        let sub = [9u8; 32];
+        let payment = nonzero_payment();
+        let result = create_paid_reveal(&pick, &sub, &payment, PickSide::Home, 500, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_market_hash_nonzero() {
+        let pick = dummy_pick(PickSide::Home);
+        assert_ne!(pick.market_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_side_commitment_nonzero() {
+        let pick = dummy_pick(PickSide::Home);
+        assert_ne!(pick.side_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_commitment_hash_nonzero() {
+        let pick = dummy_pick(PickSide::Home);
+        assert_ne!(pick.public_commitment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reveal_receipt_hash_nonzero() {
+        let pick = dummy_pick(PickSide::Home);
+        let sub = [9u8; 32];
+        let payment = nonzero_payment();
+        let reveal = create_paid_reveal(&pick, &sub, &payment, PickSide::Home, 100, false).unwrap();
+        assert_ne!(reveal.reveal_receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_raw_side_present_returns_false() {
+        // If the json string contains "Home", the side is NOT absent → false
+        let json_with_side = r#"{"side":"Home","other":1}"#;
+        assert!(!raw_side_absent_from_commitment(
+            json_with_side,
+            PickSide::Home
+        ));
+    }
+
+    #[test]
+    fn test_odds_snapshot_bound() {
+        let odds_a = [1u8; 32];
+        let odds_b = [5u8; 32];
+        let model = [2u8; 32];
+        let pick_a = create_sealed_pick(
+            b"market-001",
+            PickSide::Home,
+            ConfidenceBucket::High,
+            &odds_a,
+            &model,
+            100,
+            500,
+        );
+        let pick_b = create_sealed_pick(
+            b"market-001",
+            PickSide::Home,
+            ConfidenceBucket::High,
+            &odds_b,
+            &model,
+            100,
+            500,
+        );
+        assert_ne!(pick_a.side_commitment, pick_b.side_commitment);
+    }
 }

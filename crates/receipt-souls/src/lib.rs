@@ -301,4 +301,60 @@ mod tests {
         let result = redeem_soul(&soul, [0xAAu8; 32], 10000);
         assert!(matches!(result, Err(SoulError::Expired)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_soul_hash_nonzero() {
+        let soul = make_soul(SoulTransferPolicy::Transferable);
+        assert_ne!(soul.soul_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_soul_hash_scope_sensitive() {
+        let mut s1 = make_soul(SoulTransferPolicy::Transferable);
+        let mut s2 = make_soul(SoulTransferPolicy::Transferable);
+        s1.scope_hash = [0x10u8; 32];
+        s2.scope_hash = [0x20u8; 32];
+        assert_ne!(s1.soul_hash(), s2.soul_hash());
+    }
+
+    #[test]
+    fn test_soul_hash_issuer_sensitive() {
+        let mut s1 = make_soul(SoulTransferPolicy::Transferable);
+        let mut s2 = make_soul(SoulTransferPolicy::Transferable);
+        s1.issuer_hash = [0x10u8; 32];
+        s2.issuer_hash = [0x20u8; 32];
+        assert_ne!(s1.soul_hash(), s2.soul_hash());
+    }
+
+    #[test]
+    fn test_soulbound_transfer_denied() {
+        let soul = make_soul(SoulTransferPolicy::SoulboundAfterClaim);
+        let result = transfer_soul(&soul, [0xBBu8; 32], 100);
+        assert!(matches!(result, Err(SoulError::Soulbound)));
+    }
+
+    #[test]
+    fn test_is_expired_at_exact_expiry_not_expired() {
+        // is_expired: current_slot > expiry_slot (strictly >, so == is NOT expired)
+        let soul = make_soul(SoulTransferPolicy::Transferable); // expiry_slot=9999
+        assert!(!is_expired(&soul, 9999));
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let soul = make_soul(SoulTransferPolicy::Transferable);
+        let (nullifier, _) = redeem_soul(&soul, [0xAAu8; 32], 100).unwrap();
+        assert_ne!(nullifier.0, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_holder_sensitive() {
+        let soul_a = make_soul(SoulTransferPolicy::Transferable);
+        let soul_b = soul_a.clone();
+        let (null_a, _) = redeem_soul(&soul_a, [0x11u8; 32], 100).unwrap();
+        let (null_b, _) = redeem_soul(&soul_b, [0x22u8; 32], 100).unwrap();
+        assert_ne!(null_a, null_b);
+    }
 }

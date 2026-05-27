@@ -163,4 +163,75 @@ mod tests {
         assert_eq!(p1.proof_id, p2.proof_id);
         assert_eq!(p1.output_hash, p2.output_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let p = compute_vdf(b"x", 1).unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_verify_fails_wrong_input() {
+        let p = compute_vdf(b"correct-input", 5).unwrap();
+        assert!(!verify_vdf(&p, b"wrong-input"));
+    }
+
+    #[test]
+    fn test_output_hash_not_zero() {
+        let p = compute_vdf(b"nonzero", 3).unwrap();
+        assert_ne!(p.output_hash, [0u8; 32]);
+        assert_ne!(p.input_hash, [0u8; 32]);
+        assert_ne!(p.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_single_round_works() {
+        let p = compute_vdf(b"one-round", 1).unwrap();
+        assert_eq!(p.delay_rounds, 1);
+        assert!(verify_vdf(&p, b"one-round"));
+    }
+
+    #[test]
+    fn test_max_rounds_works() {
+        let p = compute_vdf(b"max", MAX_ROUNDS).unwrap();
+        assert_eq!(p.delay_rounds, MAX_ROUNDS);
+        assert!(verify_vdf(&p, b"max"));
+    }
+
+    #[test]
+    fn test_input_hash_deterministic() {
+        let h1 = compute_input_hash(b"hello");
+        let h2 = compute_input_hash(b"hello");
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_output_hash_sensitive_to_input() {
+        let p1 = compute_vdf(b"input-a", 5).unwrap();
+        let p2 = compute_vdf(b"input-b", 5).unwrap();
+        assert_ne!(p1.output_hash, p2.output_hash);
+    }
+
+    #[test]
+    fn test_proof_id_depends_on_rounds() {
+        let p1 = compute_vdf(b"same", 3).unwrap();
+        let p2 = compute_vdf(b"same", 4).unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_different_inputs_different_proof_ids() {
+        let p1 = compute_vdf(b"alpha", 5).unwrap();
+        let p2 = compute_vdf(b"beta", 5).unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_verified_flag_false_on_compute() {
+        // compute_vdf sets verified=false; caller must call verify_vdf separately
+        let p = compute_vdf(b"flag-check", 2).unwrap();
+        assert!(!p.verified);
+    }
 }

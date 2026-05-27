@@ -210,4 +210,76 @@ mod tests {
         // subject_hash must NOT appear
         assert!(v.get("subject_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_rule_mainnet_ready_false() {
+        let rule = create_rule(&secret(0x11), b"rule-bytes").unwrap();
+        assert!(!rule.mainnet_ready);
+    }
+
+    #[test]
+    fn test_attestation_mainnet_ready_false() {
+        let rule = create_rule(&secret(0x11), b"rule-bytes").unwrap();
+        let att = attest(&rule, &secret(0x22), true).unwrap();
+        assert!(!att.mainnet_ready);
+    }
+
+    #[test]
+    fn test_rule_id_deterministic() {
+        let r1 = create_rule(&secret(0xAA), b"rule-abc").unwrap();
+        let r2 = create_rule(&secret(0xAA), b"rule-abc").unwrap();
+        assert_eq!(r1.rule_id, r2.rule_id);
+    }
+
+    #[test]
+    fn test_rule_id_rule_sensitive() {
+        let r1 = create_rule(&secret(0xAA), b"rule-one").unwrap();
+        let r2 = create_rule(&secret(0xAA), b"rule-two").unwrap();
+        assert_ne!(r1.rule_id, r2.rule_id);
+    }
+
+    #[test]
+    fn test_rule_id_issuer_sensitive() {
+        let r1 = create_rule(&secret(0x01), b"same-rule").unwrap();
+        let r2 = create_rule(&secret(0x02), b"same-rule").unwrap();
+        assert_ne!(r1.rule_id, r2.rule_id);
+    }
+
+    #[test]
+    fn test_empty_rule_rejected() {
+        let err = create_rule(&secret(0x11), b"").unwrap_err();
+        assert_eq!(err, ComplianceError::EmptyRule);
+    }
+
+    #[test]
+    fn test_tampered_rule_id_fails_verify() {
+        let rule = create_rule(&secret(0x11), b"some-rule").unwrap();
+        let mut att = attest(&rule, &secret(0x22), true).unwrap();
+        att.rule_id[0] ^= 0xFF; // tamper the rule_id in the attestation
+        assert!(!verify_attestation(&rule, &att));
+    }
+
+    #[test]
+    fn test_subject_hash_differs_between_subjects() {
+        let rule = create_rule(&secret(0x11), b"rule").unwrap();
+        let att1 = attest(&rule, &secret(0x01), true).unwrap();
+        let att2 = attest(&rule, &secret(0x02), true).unwrap();
+        assert_ne!(att1.subject_hash, att2.subject_hash);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let rule = create_rule(&secret(0x11), b"rule").unwrap();
+        let att = attest(&rule, &secret(0x22), true).unwrap();
+        assert_ne!(att.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_attestation_id_nonzero() {
+        let rule = create_rule(&secret(0x11), b"rule").unwrap();
+        let att = attest(&rule, &secret(0x22), true).unwrap();
+        assert_ne!(att.attestation_id, [0u8; 32]);
+    }
 }

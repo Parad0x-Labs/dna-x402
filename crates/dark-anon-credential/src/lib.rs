@@ -304,4 +304,82 @@ mod tests {
             "record must not expose issuer_hash value"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let cred = issue_credential(&issuer(), b"attr", 0).unwrap();
+        assert!(!cred.mainnet_ready);
+        let pres = present_credential(&cred, &holder(), &nonce(1), 0).unwrap();
+        assert!(!pres.mainnet_ready);
+    }
+
+    #[test]
+    fn test_credential_id_deterministic() {
+        let c1 = issue_credential(&issuer(), b"attr", 1_000).unwrap();
+        let c2 = issue_credential(&issuer(), b"attr", 1_000).unwrap();
+        assert_eq!(c1.credential_id, c2.credential_id);
+    }
+
+    #[test]
+    fn test_credential_id_attribute_sensitive() {
+        let c1 = issue_credential(&issuer(), b"attr-a", 1_000).unwrap();
+        let c2 = issue_credential(&issuer(), b"attr-b", 1_000).unwrap();
+        assert_ne!(c1.credential_id, c2.credential_id);
+    }
+
+    #[test]
+    fn test_credential_id_timestamp_sensitive() {
+        let c1 = issue_credential(&issuer(), b"attr", 1_000).unwrap();
+        let c2 = issue_credential(&issuer(), b"attr", 2_000).unwrap();
+        assert_ne!(c1.credential_id, c2.credential_id);
+    }
+
+    #[test]
+    fn test_issuer_secret_zero_rejected() {
+        let err = issue_credential(&[0u8; 32], b"attr", 0).unwrap_err();
+        assert_eq!(err, CredentialError::IssuerSecretZero);
+    }
+
+    #[test]
+    fn test_holder_secret_zero_rejected() {
+        let cred = issue_credential(&issuer(), b"attr", 0).unwrap();
+        let err = present_credential(&cred, &[0u8; 32], &nonce(1), 0).unwrap_err();
+        assert_eq!(err, CredentialError::HolderSecretZero);
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_pseudonym() {
+        let cred = issue_credential(&issuer(), b"attr", 0).unwrap();
+        let mut pres = present_credential(&cred, &holder(), &nonce(3), 0).unwrap();
+        pres.pseudonym[0] ^= 0xFF;
+        assert!(!verify_presentation(&pres));
+    }
+
+    #[test]
+    fn test_pseudonym_deterministic() {
+        let cred = issue_credential(&issuer(), b"attr", 0).unwrap();
+        let p1 = present_credential(&cred, &holder(), &nonce(5), 100).unwrap();
+        let p2 = present_credential(&cred, &holder(), &nonce(5), 100).unwrap();
+        assert_eq!(p1.pseudonym, p2.pseudonym);
+    }
+
+    #[test]
+    fn test_public_record_contains_credential_id_hex() {
+        let cred = issue_credential(&issuer(), b"attr", 0).unwrap();
+        let record = credential_public_record(&cred);
+        let cred_id_hex = hex::encode_bytes(&cred.credential_id);
+        assert!(
+            record.contains(&cred_id_hex),
+            "record must contain credential_id hex"
+        );
+    }
+
+    #[test]
+    fn test_attribute_hash_consistent_between_cred_and_presentation() {
+        let cred = issue_credential(&issuer(), b"some-attribute", 0).unwrap();
+        let pres = present_credential(&cred, &holder(), &nonce(7), 0).unwrap();
+        assert_eq!(pres.attribute_hash, cred.attribute_hash);
+    }
 }

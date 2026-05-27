@@ -274,4 +274,104 @@ mod tests {
         assert!(!record.contains(&hex32(&cred.holder_hash)));
         assert!(!record.contains(&hex32(&cred.issuer_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let issuer = secret(0x11);
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"val")];
+        let cred = issue_credential_v2(&issuer, &holder, attrs, 0).unwrap();
+        assert!(!cred.mainnet_ready);
+        let proof = prove_selective(&cred, &holder, &[1]).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_cred_id_deterministic() {
+        let issuer = secret(0x11);
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"val")];
+        let c1 = issue_credential_v2(&issuer, &holder, attrs, 1_000).unwrap();
+        let c2 = issue_credential_v2(&issuer, &holder, attrs, 1_000).unwrap();
+        assert_eq!(c1.cred_id, c2.cred_id);
+    }
+
+    #[test]
+    fn test_cred_id_holder_sensitive() {
+        let issuer = secret(0x11);
+        let attrs: &[(u8, &[u8])] = &[(1, b"val")];
+        let c1 = issue_credential_v2(&issuer, &secret(0x22), attrs, 0).unwrap();
+        let c2 = issue_credential_v2(&issuer, &secret(0x23), attrs, 0).unwrap();
+        assert_ne!(c1.cred_id, c2.cred_id);
+    }
+
+    #[test]
+    fn test_cred_id_issuer_sensitive() {
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"val")];
+        let c1 = issue_credential_v2(&secret(0x11), &holder, attrs, 0).unwrap();
+        let c2 = issue_credential_v2(&secret(0x12), &holder, attrs, 0).unwrap();
+        assert_ne!(c1.cred_id, c2.cred_id);
+    }
+
+    #[test]
+    fn test_zero_issuer_rejected() {
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"val")];
+        let err = issue_credential_v2(&[0u8; 32], &holder, attrs, 0).unwrap_err();
+        assert_eq!(err, CredError::ZeroIssuerSecret);
+    }
+
+    #[test]
+    fn test_empty_attributes_rejected() {
+        let issuer = secret(0x11);
+        let holder = secret(0x22);
+        let err = issue_credential_v2(&issuer, &holder, &[], 0).unwrap_err();
+        assert_eq!(err, CredError::EmptyAttributes);
+    }
+
+    #[test]
+    fn test_proof_id_deterministic() {
+        let issuer = secret(0x11);
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"v1"), (2, b"v2")];
+        let cred = issue_credential_v2(&issuer, &holder, attrs, 0).unwrap();
+        let p1 = prove_selective(&cred, &holder, &[1]).unwrap();
+        let p2 = prove_selective(&cred, &holder, &[1]).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_verify_selective_wrong_cred_id_fails() {
+        let issuer = secret(0x11);
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"v1")];
+        let cred = issue_credential_v2(&issuer, &holder, attrs, 0).unwrap();
+        let other_cred = issue_credential_v2(&secret(0x33), &holder, attrs, 0).unwrap();
+        let proof = prove_selective(&cred, &holder, &[1]).unwrap();
+        // verifying proof against wrong cred → cred_id mismatch → false
+        assert!(!verify_selective(&other_cred, &proof));
+    }
+
+    #[test]
+    fn test_public_record_contains_cred_id() {
+        let issuer = secret(0x11);
+        let holder = secret(0x22);
+        let attrs: &[(u8, &[u8])] = &[(1, b"v1")];
+        let cred = issue_credential_v2(&issuer, &holder, attrs, 0).unwrap();
+        let record = cred_public_record(&cred);
+        assert!(record.contains(&hex32(&cred.cred_id)));
+    }
+
+    #[test]
+    fn test_attribute_commitment_holder_sensitive() {
+        let issuer = secret(0x11);
+        let attrs: &[(u8, &[u8])] = &[(1, b"val")];
+        let c1 = issue_credential_v2(&issuer, &secret(0x22), attrs, 0).unwrap();
+        let c2 = issue_credential_v2(&issuer, &secret(0x23), attrs, 0).unwrap();
+        // attr commitment = SHA256("credv2-attr-v1" || attr_id || attr_value || holder_hash)
+        assert_ne!(c1.attributes[0].commitment, c2.attributes[0].commitment);
+    }
 }

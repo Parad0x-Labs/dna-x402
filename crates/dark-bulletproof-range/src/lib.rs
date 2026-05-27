@@ -280,4 +280,81 @@ mod tests {
         assert_eq!(proof.a_hash, a_hash);
         assert_eq!(proof.b_hash, b_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let proof = create_bp_range(1, 8, &blinding()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_deterministic() {
+        let p1 = create_bp_range(42, 8, &blinding()).unwrap();
+        let p2 = create_bp_range(42, 8, &blinding()).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+        assert_eq!(p1.commitment, p2.commitment);
+    }
+
+    #[test]
+    fn test_blinding_sensitive() {
+        let mut b2 = blinding();
+        b2[2] = 0xFF;
+        let p1 = create_bp_range(42, 8, &blinding()).unwrap();
+        let p2 = create_bp_range(42, 8, &b2).unwrap();
+        assert_ne!(p1.commitment, p2.commitment);
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_verify_wrong_value_fails() {
+        let proof = create_bp_range(42, 8, &blinding()).unwrap();
+        assert!(!verify_bp(&proof, 43, &blinding()));
+    }
+
+    #[test]
+    fn test_verify_wrong_blinding_fails() {
+        let proof = create_bp_range(42, 8, &blinding()).unwrap();
+        let mut bad_blinding = blinding();
+        bad_blinding[0] ^= 0xFF;
+        assert!(!verify_bp(&proof, 42, &bad_blinding));
+    }
+
+    #[test]
+    fn test_value_zero_passes() {
+        let proof = create_bp_range(0, 8, &blinding()).unwrap();
+        assert!(verify_bp(&proof, 0, &blinding()));
+    }
+
+    #[test]
+    fn test_value_at_max_range_ok() {
+        // max for bit_width=8 is 255
+        let proof = create_bp_range(255, 8, &blinding()).unwrap();
+        assert!(verify_bp(&proof, 255, &blinding()));
+    }
+
+    #[test]
+    fn test_bit_width_64_max_value_ok() {
+        // bit_width=64 accepts u64::MAX
+        let proof = create_bp_range(u64::MAX, 64, &blinding()).unwrap();
+        assert!(verify_bp(&proof, u64::MAX, &blinding()));
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let proof = create_bp_range(1, 4, &blinding()).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_fields() {
+        let proof = create_bp_range(7, 4, &blinding()).unwrap();
+        let record = bp_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+        assert!(v["proof_id"].is_string());
+        assert!(v["commitment"].is_string());
+        assert!(v["inner_product_hash"].is_string());
+    }
 }

@@ -167,4 +167,75 @@ mod tests {
         let result_at_max = create_cascade(b"some input", 32);
         assert!(result_at_max.is_ok());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let (proof, _) = create_cascade(b"nonzero_test", 3).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_root_input_nonzero() {
+        let (proof, _) = create_cascade(b"root_test", 2).unwrap();
+        assert_ne!(proof.root_input, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_final_output_nonzero() {
+        let (proof, _) = create_cascade(b"output_test", 2).unwrap();
+        assert_ne!(proof.final_output, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let (proof, _) = create_cascade(b"mainnet_test", 1).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_verify_cascade_true() {
+        let (proof, _) = create_cascade(b"verify_test", 5).unwrap();
+        assert!(verify_cascade(&proof));
+    }
+
+    #[test]
+    fn test_layer_count_matches_depth() {
+        let (_, layers) = create_cascade(b"layer_count", 7).unwrap();
+        assert_eq!(layers.len(), 7);
+    }
+
+    #[test]
+    fn test_layer_inputs_chain_correctly() {
+        let (_, layers) = create_cascade(b"chain_test", 4).unwrap();
+        for i in 1..layers.len() {
+            assert_eq!(layers[i].input_hash, layers[i - 1].output_hash);
+        }
+    }
+
+    #[test]
+    fn test_cascade_public_record_fields() {
+        let (proof, _) = create_cascade(b"record_test", 3).unwrap();
+        let record = cascade_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["proof_id"].is_string());
+        assert_eq!(v["depth"], 3u64);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_max_depth_ok() {
+        let result = create_cascade(b"max_depth", MAX_CASCADE_DEPTH);
+        assert!(result.is_ok());
+        let (proof, layers) = result.unwrap();
+        assert_eq!(layers.len(), MAX_CASCADE_DEPTH as usize);
+        assert!(verify_cascade(&proof));
+    }
+
+    #[test]
+    fn test_empty_input_rejected() {
+        let result = create_cascade(b"", 3);
+        assert_eq!(result.unwrap_err(), CascadeError::ZeroInput);
+    }
 }

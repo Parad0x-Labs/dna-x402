@@ -167,4 +167,101 @@ mod tests {
         let batch = new_batch();
         assert!(!batch.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_batch_root_deterministic() {
+        let mut b1 = new_batch();
+        let mut b2 = new_batch();
+        add_nullifier(&mut b1, [0x11u8; 32]).unwrap();
+        add_nullifier(&mut b1, [0x22u8; 32]).unwrap();
+        add_nullifier(&mut b2, [0x11u8; 32]).unwrap();
+        add_nullifier(&mut b2, [0x22u8; 32]).unwrap();
+        commit_batch(&mut b1).unwrap();
+        commit_batch(&mut b2).unwrap();
+        assert_eq!(b1.batch_root, b2.batch_root);
+    }
+
+    #[test]
+    fn test_batch_root_order_sensitive() {
+        let mut b1 = new_batch();
+        let mut b2 = new_batch();
+        add_nullifier(&mut b1, [0x11u8; 32]).unwrap();
+        add_nullifier(&mut b1, [0x22u8; 32]).unwrap();
+        add_nullifier(&mut b2, [0x22u8; 32]).unwrap();
+        add_nullifier(&mut b2, [0x11u8; 32]).unwrap();
+        commit_batch(&mut b1).unwrap();
+        commit_batch(&mut b2).unwrap();
+        // Index is included in entry hash, so order matters
+        assert_ne!(b1.batch_root, b2.batch_root);
+    }
+
+    #[test]
+    fn test_batch_id_deterministic() {
+        let mut b1 = new_batch();
+        let mut b2 = new_batch();
+        add_nullifier(&mut b1, [0xAAu8; 32]).unwrap();
+        add_nullifier(&mut b2, [0xAAu8; 32]).unwrap();
+        let id1 = commit_batch(&mut b1).unwrap();
+        let id2 = commit_batch(&mut b2).unwrap();
+        assert_eq!(id1, id2);
+    }
+
+    #[test]
+    fn test_add_after_commit_rejected() {
+        let mut batch = new_batch();
+        add_nullifier(&mut batch, [0x01u8; 32]).unwrap();
+        commit_batch(&mut batch).unwrap();
+        let err = add_nullifier(&mut batch, [0x02u8; 32]).unwrap_err();
+        assert_eq!(err, BatchError::AlreadyCommitted);
+    }
+
+    #[test]
+    fn test_nullifier_count_stored() {
+        let mut batch = new_batch();
+        add_nullifier(&mut batch, [0x01u8; 32]).unwrap();
+        add_nullifier(&mut batch, [0x02u8; 32]).unwrap();
+        add_nullifier(&mut batch, [0x03u8; 32]).unwrap();
+        assert_eq!(batch.nullifiers.len(), 3);
+    }
+
+    #[test]
+    fn test_new_batch_not_committed() {
+        let batch = new_batch();
+        assert!(!batch.committed);
+    }
+
+    #[test]
+    fn test_batch_root_nonzero_after_commit() {
+        let mut batch = new_batch();
+        add_nullifier(&mut batch, [0xFFu8; 32]).unwrap();
+        commit_batch(&mut batch).unwrap();
+        assert_ne!(batch.batch_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_max_batch_constant() {
+        assert_eq!(MAX_BATCH, 64);
+    }
+
+    #[test]
+    fn test_different_nullifiers_different_root() {
+        let mut b1 = new_batch();
+        let mut b2 = new_batch();
+        add_nullifier(&mut b1, [0xAAu8; 32]).unwrap();
+        add_nullifier(&mut b2, [0xBBu8; 32]).unwrap();
+        commit_batch(&mut b1).unwrap();
+        commit_batch(&mut b2).unwrap();
+        assert_ne!(b1.batch_root, b2.batch_root);
+    }
+
+    #[test]
+    fn test_batch_id_not_equal_to_batch_root() {
+        let mut batch = new_batch();
+        add_nullifier(&mut batch, [0x01u8; 32]).unwrap();
+        commit_batch(&mut batch).unwrap();
+        // batch_id is derived from batch_root with a different domain prefix
+        assert_ne!(batch.batch_id, batch.batch_root);
+    }
 }

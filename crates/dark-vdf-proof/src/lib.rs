@@ -224,4 +224,81 @@ mod tests {
         assert_eq!(oh.len(), 64, "output_hash hex must be 64 chars");
         assert_eq!(ph.len(), 64, "proof_hash hex must be 64 chars");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let c = create_challenge(b"x", 1).unwrap();
+        assert!(!c.mainnet_ready);
+        let o = compute_vdf(&c);
+        assert!(!o.mainnet_ready);
+    }
+
+    #[test]
+    fn test_challenge_deterministic() {
+        let c1 = create_challenge(b"same", 4).unwrap();
+        let c2 = create_challenge(b"same", 4).unwrap();
+        assert_eq!(c1.challenge_hash, c2.challenge_hash);
+    }
+
+    #[test]
+    fn test_different_inputs_different_challenge() {
+        let c1 = create_challenge(b"alpha", 4).unwrap();
+        let c2 = create_challenge(b"beta", 4).unwrap();
+        assert_ne!(c1.challenge_hash, c2.challenge_hash);
+    }
+
+    #[test]
+    fn test_tampered_output_hash_fails_verify() {
+        let c = create_challenge(b"tamper-out", 3).unwrap();
+        let mut o = compute_vdf(&c);
+        o.output_hash[0] ^= 0xFF;
+        assert!(!verify_vdf(&c, &o));
+    }
+
+    #[test]
+    fn test_tampered_proof_hash_fails_verify() {
+        let c = create_challenge(b"tamper-proof", 3).unwrap();
+        let mut o = compute_vdf(&c);
+        o.proof_hash[0] ^= 0xFF;
+        assert!(!verify_vdf(&c, &o));
+    }
+
+    #[test]
+    fn test_difficulty_1_works() {
+        let c = create_challenge(b"min-diff", 1).unwrap();
+        let o = compute_vdf(&c);
+        assert!(verify_vdf(&c, &o));
+        assert_eq!(o.iterations, 1);
+    }
+
+    #[test]
+    fn test_challenge_difficulty_stored_correctly() {
+        let c = create_challenge(b"check-diff", 7).unwrap();
+        assert_eq!(c.difficulty, 7);
+    }
+
+    #[test]
+    fn test_output_iterations_matches_difficulty() {
+        let c = create_challenge(b"iter-check", 5).unwrap();
+        let o = compute_vdf(&c);
+        assert_eq!(o.iterations, c.difficulty);
+    }
+
+    #[test]
+    fn test_output_verified_flag_true() {
+        let c = create_challenge(b"verify-flag", 2).unwrap();
+        let o = compute_vdf(&c);
+        assert!(o.verified);
+    }
+
+    #[test]
+    fn test_different_inputs_same_difficulty_different_output() {
+        let c1 = create_challenge(b"input-one", 3).unwrap();
+        let c2 = create_challenge(b"input-two", 3).unwrap();
+        let o1 = compute_vdf(&c1);
+        let o2 = compute_vdf(&c2);
+        assert_ne!(o1.output_hash, o2.output_hash);
+    }
 }

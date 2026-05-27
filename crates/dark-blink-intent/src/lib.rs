@@ -193,4 +193,87 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), intent.intent_hash());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_blink_id_change_changes_hash() {
+        let intent1 = make_intent();
+        let mut intent2 = make_intent();
+        intent2.blink_id = [0xFFu8; 32];
+        assert_ne!(intent1.intent_hash(), intent2.intent_hash());
+    }
+
+    #[test]
+    fn test_description_change_changes_hash() {
+        let intent1 = make_intent();
+        let mut intent2 = make_intent();
+        intent2.human_description = "Totally different description".to_string();
+        assert_ne!(intent1.intent_hash(), intent2.intent_hash());
+    }
+
+    #[test]
+    fn test_max_spend_change_changes_hash() {
+        let intent1 = make_intent();
+        let mut intent2 = make_intent();
+        intent2.max_spend_lamports = 999_999;
+        assert_ne!(intent1.intent_hash(), intent2.intent_hash());
+    }
+
+    #[test]
+    fn test_receipt_hash_sensitive() {
+        let intent1 = make_intent();
+        let mut intent2 = make_intent();
+        intent2.receipt_hash = [0xFFu8; 32];
+        assert_ne!(intent1.intent_hash(), intent2.intent_hash());
+    }
+
+    #[test]
+    fn test_capsule_hash_sensitive() {
+        let intent1 = make_intent();
+        let mut intent2 = make_intent();
+        intent2.intent_capsule_hash = [0xFFu8; 32];
+        assert_ne!(intent1.intent_hash(), intent2.intent_hash());
+    }
+
+    #[test]
+    fn test_not_expired_one_before_slot() {
+        let intent = make_intent(); // expires_at_slot = 1000
+        assert!(!intent.is_expired(999));
+        assert!(validate_blink(&intent, 999, 100_000).is_ok());
+    }
+
+    #[test]
+    fn test_validate_exact_spend_ok() {
+        let intent = make_intent(); // max_spend_lamports = 1_000_000
+        let result = validate_blink(&intent, 500, 1_000_000);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_all_action_types_distinct_hashes() {
+        let types = [
+            BlinkActionType::GrantAgentPermission,
+            BlinkActionType::MintReceiptNote,
+            BlinkActionType::JoinShapePool,
+            BlinkActionType::CloseChaffForBounty,
+            BlinkActionType::DecodeShardRitual,
+            BlinkActionType::BuyApiCalls,
+            BlinkActionType::ClaimComputeCoupon,
+        ];
+        let hashes: Vec<[u8; 32]> = types
+            .iter()
+            .map(|t| {
+                let mut i = make_intent();
+                i.action_type = t.clone();
+                i.intent_hash()
+            })
+            .collect();
+        // All hashes should be unique
+        for i in 0..hashes.len() {
+            for j in (i + 1)..hashes.len() {
+                assert_ne!(hashes[i], hashes[j], "types {i} and {j} collide");
+            }
+        }
+    }
 }

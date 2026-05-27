@@ -240,4 +240,78 @@ mod tests {
         assert!(v.get("complete").is_some());
         assert!(v.get("mainnet_ready").is_some());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_pipeline_id_nonzero() {
+        let p = new_pipeline(&secret(), &nonce()).unwrap();
+        assert_ne!(p.pipeline_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let p = new_pipeline(&secret(), &nonce()).unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_secret_rejected() {
+        let err = new_pipeline(&[0u8; 32], &nonce()).unwrap_err();
+        assert_eq!(err, PipelineError::SecretZero);
+    }
+
+    #[test]
+    fn test_zero_nonce_rejected() {
+        let err = new_pipeline(&secret(), &[0u8; 32]).unwrap_err();
+        assert_eq!(err, PipelineError::NonceZero);
+    }
+
+    #[test]
+    fn test_step_mainnet_ready_false() {
+        let mut p = new_pipeline(&secret(), &nonce()).unwrap();
+        let step = add_step(&mut p, 1, b"data").unwrap();
+        assert!(!step.mainnet_ready);
+    }
+
+    #[test]
+    fn test_finalize_empty_pipeline_ok() {
+        let mut p = new_pipeline(&secret(), &nonce()).unwrap();
+        let fh = finalize_pipeline(&mut p).unwrap();
+        assert!(p.complete);
+        assert_ne!(fh, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_double_finalize_rejected() {
+        let mut p = new_pipeline(&secret(), &nonce()).unwrap();
+        finalize_pipeline(&mut p).unwrap();
+        let err = finalize_pipeline(&mut p).unwrap_err();
+        assert_eq!(err, PipelineError::PipelineAlreadyComplete);
+    }
+
+    #[test]
+    fn test_step_count_in_public_record() {
+        let mut p = new_pipeline(&secret(), &nonce()).unwrap();
+        add_step(&mut p, 1, b"a").unwrap();
+        add_step(&mut p, 2, b"b").unwrap();
+        let v: serde_json::Value = serde_json::from_str(&pipeline_public_record(&p)).unwrap();
+        assert_eq!(v["step_count"], 2u64);
+    }
+
+    #[test]
+    fn test_pipeline_id_deterministic() {
+        let p1 = new_pipeline(&secret(), &nonce()).unwrap();
+        let p2 = new_pipeline(&secret(), &nonce()).unwrap();
+        assert_eq!(p1.pipeline_id, p2.pipeline_id);
+    }
+
+    #[test]
+    fn test_different_secrets_different_pipeline_id() {
+        let mut s2 = secret();
+        s2[1] = 0xFF;
+        let p1 = new_pipeline(&secret(), &nonce()).unwrap();
+        let p2 = new_pipeline(&s2, &nonce()).unwrap();
+        assert_ne!(p1.pipeline_id, p2.pipeline_id);
+    }
 }

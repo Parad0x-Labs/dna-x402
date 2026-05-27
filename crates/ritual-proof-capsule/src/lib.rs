@@ -198,4 +198,103 @@ mod tests {
             "rejected and accepted capsule hashes must differ"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_hash_nonzero() {
+        let capsule = make_capsule(RitualVerdict::Accepted);
+        assert_ne!(capsule_hash(&capsule), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capsule_hash_deterministic() {
+        let capsule = make_capsule(RitualVerdict::Accepted);
+        assert_eq!(capsule_hash(&capsule), capsule_hash(&capsule));
+    }
+
+    #[test]
+    fn test_pending_verdict_different_hash_from_accepted() {
+        let accepted = make_capsule(RitualVerdict::Accepted);
+        let pending = make_capsule(RitualVerdict::Pending);
+        assert_ne!(capsule_hash(&accepted), capsule_hash(&pending));
+    }
+
+    #[test]
+    fn test_encode_decode_pending_verdict() {
+        let original = make_capsule(RitualVerdict::Pending);
+        let encoded = encode_capsule(&original);
+        let decoded = decode_capsule(&encoded).unwrap();
+        assert_eq!(decoded.verdict, RitualVerdict::Pending);
+    }
+
+    #[test]
+    fn test_encode_starts_with_length_prefix() {
+        let capsule = make_capsule(RitualVerdict::Accepted);
+        let encoded = encode_capsule(&capsule);
+        let len = u32::from_le_bytes([encoded[0], encoded[1], encoded[2], encoded[3]]) as usize;
+        assert_eq!(encoded.len(), 4 + len);
+    }
+
+    #[test]
+    fn test_decode_too_short_returns_error() {
+        let err = decode_capsule(&[0u8; 2]).unwrap_err();
+        assert_eq!(
+            err,
+            CapsuleError::WrongLength {
+                expected: 4,
+                found: 2
+            }
+        );
+    }
+
+    #[test]
+    fn test_decode_invalid_data_returns_error() {
+        // length prefix = 4, body = 0xFF*4 which is invalid JSON
+        let bytes = [4u8, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF];
+        assert_eq!(
+            decode_capsule(&bytes).unwrap_err(),
+            CapsuleError::InvalidData
+        );
+    }
+
+    #[test]
+    fn test_redacted_pending_verdict() {
+        let capsule = make_capsule(RitualVerdict::Pending);
+        let view = redacted_display(&capsule);
+        assert_eq!(view.verdict, "Pending");
+    }
+
+    #[test]
+    fn test_ritual_type_changes_capsule_hash() {
+        let mut capsule = make_capsule(RitualVerdict::Accepted);
+        let h1 = capsule_hash(&capsule);
+        capsule.ritual_type = "DifferentType".to_string();
+        let h2 = capsule_hash(&capsule);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_permission_hash_changes_capsule_hash() {
+        let mut capsule = make_capsule(RitualVerdict::Accepted);
+        let h1 = capsule_hash(&capsule);
+        capsule.permission_hash = [0xFFu8; 32];
+        assert_ne!(h1, capsule_hash(&capsule));
+    }
+
+    #[test]
+    fn test_nullifier_hash_changes_capsule_hash() {
+        let mut capsule = make_capsule(RitualVerdict::Accepted);
+        let h1 = capsule_hash(&capsule);
+        capsule.nullifier_hash = [0xEEu8; 32];
+        assert_ne!(h1, capsule_hash(&capsule));
+    }
+
+    #[test]
+    fn test_shape_hash_changes_capsule_hash() {
+        let mut capsule = make_capsule(RitualVerdict::Accepted);
+        let h1 = capsule_hash(&capsule);
+        capsule.shape_hash = [0xDDu8; 32];
+        assert_ne!(h1, capsule_hash(&capsule));
+    }
 }

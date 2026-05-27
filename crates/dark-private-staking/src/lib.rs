@@ -203,4 +203,71 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(v.get("staker_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_position_id_nonzero() {
+        let pos = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        assert_ne!(pos.position_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_staker_hash_nonzero() {
+        let pos = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        assert_ne!(pos.staker_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_rewards_hash_nonzero() {
+        let pos = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        assert_ne!(pos.rewards_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let pos = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        assert!(!pos.mainnet_ready);
+    }
+
+    #[test]
+    fn test_amount_stored() {
+        let pos = create_position(&secret(), 9_999, 0, &nonce()).unwrap();
+        assert_eq!(pos.amount, 9_999);
+    }
+
+    #[test]
+    fn test_locked_until_stored() {
+        let pos = create_position(&secret(), 1000, 5_000_000, &nonce()).unwrap();
+        assert_eq!(pos.locked_until_unix, 5_000_000);
+    }
+
+    #[test]
+    fn test_unstaked_false_initially() {
+        let pos = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        assert!(!pos.unstaked);
+    }
+
+    #[test]
+    fn test_position_id_nonce_sensitive() {
+        let mut n2 = [0u8; 32];
+        n2[0] = 0xff;
+        let p1 = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        let p2 = create_position(&secret(), 1000, 0, &n2).unwrap();
+        assert_ne!(p1.position_id, p2.position_id);
+    }
+
+    #[test]
+    fn test_position_id_deterministic() {
+        let p1 = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        let p2 = create_position(&secret(), 1000, 0, &nonce()).unwrap();
+        assert_eq!(p1.position_id, p2.position_id);
+    }
+
+    #[test]
+    fn test_rewards_hash_amount_sensitive() {
+        let p1 = create_position(&secret(), 100, 0, &nonce()).unwrap();
+        let p2 = create_position(&secret(), 200, 0, &nonce()).unwrap();
+        assert_ne!(p1.rewards_hash, p2.rewards_hash);
+    }
 }

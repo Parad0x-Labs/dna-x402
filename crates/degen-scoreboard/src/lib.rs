@@ -157,4 +157,92 @@ mod tests {
         assert!(anti_sybil_minimum_work(&events, 700));
         assert!(!anti_sybil_minimum_work(&events, 900));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_score_empty_events_zero() {
+        assert_eq!(compute_epoch_score(&[]), 0);
+    }
+
+    #[test]
+    fn test_chaff_job_multiplier_two() {
+        // ChaffJobCompleted multiplier is 2
+        let events = vec![make_event(ScoreEventKind::ChaffJobCompleted, 500)];
+        assert_eq!(compute_epoch_score(&events), 1000);
+    }
+
+    #[test]
+    fn test_receipt_verified_multiplier_one() {
+        let events = vec![make_event(ScoreEventKind::ReceiptVerified, 1000)];
+        assert_eq!(compute_epoch_score(&events), 1000);
+    }
+
+    #[test]
+    fn test_ritual_transfer_multiplier_one() {
+        let events = vec![make_event(ScoreEventKind::RitualTransferPassed, 1000)];
+        assert_eq!(compute_epoch_score(&events), 1000);
+    }
+
+    #[test]
+    fn test_badge_events_count_matches() {
+        let events = vec![
+            make_event(ScoreEventKind::RentReclaimed, 100),
+            make_event(ScoreEventKind::PuzzleSolved, 200),
+            make_event(ScoreEventKind::ReceiptVerified, 300),
+        ];
+        let badge = generate_badge([0x01u8; 32], &events);
+        assert_eq!(badge.events_count, 3);
+    }
+
+    #[test]
+    fn test_badge_deterministic() {
+        let events = vec![make_event(ScoreEventKind::PuzzleSolved, 1000)];
+        let b1 = generate_badge([0xDEu8; 32], &events);
+        let b2 = generate_badge([0xDEu8; 32], &events);
+        assert_eq!(b1.badge_hash, b2.badge_hash);
+    }
+
+    #[test]
+    fn test_badge_user_hash_preserved() {
+        let user = [0xABu8; 32];
+        let events = vec![make_event(ScoreEventKind::RentReclaimed, 1000)];
+        let badge = generate_badge(user, &events);
+        assert_eq!(badge.user_hash, user);
+    }
+
+    #[test]
+    fn test_badge_score_matches_epoch_score() {
+        let events = vec![
+            make_event(ScoreEventKind::RentReclaimed, 1000),
+            make_event(ScoreEventKind::ChaffJobCompleted, 500),
+        ];
+        let expected_score = compute_epoch_score(&events);
+        let badge = generate_badge([0xDEu8; 32], &events);
+        assert_eq!(badge.epoch_score, expected_score);
+    }
+
+    #[test]
+    fn test_leaderboard_sorted_descending() {
+        let u1 = [0x01u8; 32];
+        let u2 = [0x02u8; 32];
+        let u3 = [0x03u8; 32];
+        let lb = leaderboard_redacted(vec![(u1, 100), (u2, 500), (u3, 250)]);
+        assert_eq!(lb.entries[0], u2); // 500 first
+        assert_eq!(lb.entries[1], u3); // 250 second
+        assert_eq!(lb.entries[2], u1); // 100 last
+    }
+
+    #[test]
+    fn test_leaderboard_epoch_root_nonzero() {
+        let lb = leaderboard_redacted(vec![([0x01u8; 32], 1000)]);
+        assert_ne!(lb.epoch_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_anti_sybil_at_minimum_passes() {
+        // total == min_value → passes (>= is inclusive)
+        let events = vec![make_event(ScoreEventKind::RentReclaimed, 800)];
+        assert!(anti_sybil_minimum_work(&events, 800));
+    }
 }

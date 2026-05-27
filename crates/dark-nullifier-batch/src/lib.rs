@@ -186,4 +186,78 @@ mod tests {
         let err = submit_batch(&mut batch).unwrap_err();
         assert_eq!(err, BatchError::AlreadySubmitted);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_batch_id_nonzero() {
+        let batch = create_batch(vec![null(0xA1)], 1).unwrap();
+        assert_ne!(batch.batch_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_batch_root_nonzero() {
+        let batch = create_batch(vec![null(0xA2)], 1).unwrap();
+        assert_ne!(batch.batch_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_batch_id_deterministic() {
+        let b1 = create_batch(vec![null(0xA3), null(0xA4)], 10).unwrap();
+        let b2 = create_batch(vec![null(0xA3), null(0xA4)], 10).unwrap();
+        assert_eq!(b1.batch_id, b2.batch_id);
+    }
+
+    #[test]
+    fn test_batch_root_epoch_sensitive() {
+        let b1 = create_batch(vec![null(0xA5)], 1).unwrap();
+        let b2 = create_batch(vec![null(0xA5)], 2).unwrap();
+        assert_ne!(b1.batch_root, b2.batch_root);
+    }
+
+    #[test]
+    fn test_max_batch_size_ok() {
+        // exactly MAX_BATCH nullifiers must succeed; check is `> MAX_BATCH`
+        let nullifiers: Vec<[u8; 32]> = (0..MAX_BATCH as u8).map(|i| null(i)).collect();
+        let result = create_batch(nullifiers, 1);
+        assert!(result.is_ok(), "exactly MAX_BATCH nullifiers must succeed");
+    }
+
+    #[test]
+    fn test_nullifier_count_in_batch() {
+        let batch = create_batch(vec![null(0xB1), null(0xB2), null(0xB3)], 7).unwrap();
+        assert_eq!(batch.nullifiers.len(), 3);
+    }
+
+    #[test]
+    fn test_batch_epoch_stored() {
+        let batch = create_batch(vec![null(0xC1)], 99).unwrap();
+        assert_eq!(batch.epoch, 99);
+    }
+
+    #[test]
+    fn test_verify_tampered_batch_fails() {
+        let mut batch = create_batch(vec![null(0xD1), null(0xD2)], 5).unwrap();
+        batch.batch_root = [0xFFu8; 32]; // tamper
+        assert!(!verify_batch_integrity(&batch));
+    }
+
+    #[test]
+    fn test_public_record_has_correct_keys() {
+        let batch = create_batch(vec![null(0xE1), null(0xE2)], 3).unwrap();
+        let record = batch_public_record(&batch);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["batch_id"].is_string());
+        assert!(v["batch_root"].is_string());
+        assert_eq!(v["nullifier_count"], 2u64);
+        assert_eq!(v["epoch"], 3u64);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_single_nullifier_batch_ok() {
+        let batch = create_batch(vec![null(0xF1)], 1);
+        assert!(batch.is_ok(), "single nullifier batch must succeed");
+        assert_eq!(batch.unwrap().nullifiers.len(), 1);
+    }
 }

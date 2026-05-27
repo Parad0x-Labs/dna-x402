@@ -234,4 +234,148 @@ mod tests {
         let ac2 = compute_amount_commitment(200, &blind(0x55));
         assert_ne!(ac1, ac2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_transfer_id_nonzero() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert_ne!(t.transfer_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_sender_commitment_nonzero() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert_ne!(t.sender_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receiver_commitment_nonzero() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert_ne!(t.receiver_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_amount_commitment_nonzero() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert_ne!(t.amount_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert_ne!(t.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert!(!t.mainnet_ready);
+    }
+
+    #[test]
+    fn test_settled_false_initially() {
+        let t = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert!(!t.settled);
+    }
+
+    #[test]
+    fn test_zero_receiver_rejected() {
+        let err = new_transfer(
+            &secret(0xaa),
+            &[0u8; 32],
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap_err();
+        assert_eq!(err, TransferError::ZeroReceiverSecret);
+    }
+
+    #[test]
+    fn test_transfer_id_deterministic() {
+        let t1 = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        let t2 = new_transfer(
+            &secret(0xaa),
+            &secret(0xbb),
+            100,
+            &blind(0x01),
+            &blind(0x02),
+            &blind(0x03),
+        )
+        .unwrap();
+        assert_eq!(t1.transfer_id, t2.transfer_id);
+    }
+
+    #[test]
+    fn test_different_senders_different_sender_commitment() {
+        let c1 = compute_sender_commitment(&secret(0x11), &blind(0x01));
+        let c2 = compute_sender_commitment(&secret(0x22), &blind(0x01));
+        assert_ne!(c1, c2);
+    }
 }

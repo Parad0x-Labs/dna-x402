@@ -198,4 +198,80 @@ mod tests {
         assert!(!rec.contains(&hex32(&ev.validator_hash)));
         assert!(!rec.contains(&hex32(&ev.witness_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let ev = submit_evidence(&secret(0x20), b"offense", 1, &secret(0x21)).unwrap();
+        assert!(!ev.mainnet_ready);
+        let mut ev2 = submit_evidence(&secret(0x20), b"offense", 1, &secret(0x21)).unwrap();
+        let verdict = render_verdict(&mut ev2, true).unwrap();
+        assert!(!verdict.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_witness_rejected() {
+        let err = submit_evidence(&secret(0x22), b"offense", 1, &[0u8; 32]).unwrap_err();
+        assert_eq!(err, SlashError::ZeroWitnessSecret);
+    }
+
+    #[test]
+    fn test_different_offenses_different_evidence_ids() {
+        let ev1 = submit_evidence(&secret(0x30), b"double-vote", 1, &secret(0x31)).unwrap();
+        let ev2 = submit_evidence(&secret(0x30), b"surround-vote", 1, &secret(0x31)).unwrap();
+        assert_ne!(ev1.evidence_id, ev2.evidence_id);
+    }
+
+    #[test]
+    fn test_evidence_id_not_zero() {
+        let ev = submit_evidence(&secret(0x40), b"equivocation", 7, &secret(0x41)).unwrap();
+        assert_ne!(ev.evidence_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verdict_id_deterministic() {
+        let mut ev1 = submit_evidence(&secret(0x50), b"offense", 1, &secret(0x51)).unwrap();
+        let mut ev2 = submit_evidence(&secret(0x50), b"offense", 1, &secret(0x51)).unwrap();
+        let v1 = render_verdict(&mut ev1, true).unwrap();
+        let v2 = render_verdict(&mut ev2, true).unwrap();
+        assert_eq!(v1.verdict_id, v2.verdict_id);
+    }
+
+    #[test]
+    fn test_slashed_true_stored() {
+        let mut ev = submit_evidence(&secret(0x60), b"offense", 1, &secret(0x61)).unwrap();
+        let verdict = render_verdict(&mut ev, true).unwrap();
+        assert!(verdict.slashed);
+    }
+
+    #[test]
+    fn test_slashed_false_stored() {
+        let mut ev = submit_evidence(&secret(0x70), b"offense", 1, &secret(0x71)).unwrap();
+        let verdict = render_verdict(&mut ev, false).unwrap();
+        assert!(!verdict.slashed);
+    }
+
+    #[test]
+    fn test_public_record_has_offense_hash() {
+        let ev = submit_evidence(&secret(0x80), b"double-sign", 5, &secret(0x81)).unwrap();
+        let rec = evidence_public_record(&ev);
+        let v: serde_json::Value = serde_json::from_str(&rec).unwrap();
+        assert!(v["offense_hash"].is_string());
+        assert_eq!(v["epoch"], 5u64);
+    }
+
+    #[test]
+    fn test_verdicted_flag_set_after_verdict() {
+        let mut ev = submit_evidence(&secret(0x90), b"offense", 1, &secret(0x91)).unwrap();
+        assert!(!ev.verdicted);
+        render_verdict(&mut ev, true).unwrap();
+        assert!(ev.verdicted);
+    }
+
+    #[test]
+    fn test_evidence_verify_returns_true() {
+        let ev = submit_evidence(&secret(0xA0), b"offense", 1, &secret(0xA1)).unwrap();
+        assert!(verify_evidence(&ev));
+    }
 }

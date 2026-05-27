@@ -465,4 +465,73 @@ mod tests {
         let ev = run_demo();
         assert_eq!(ev.ritual_message, "CASH");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_not_production_note_present() {
+        let ev = run_demo();
+        assert!(!ev.not_production_note.is_empty());
+    }
+
+    #[test]
+    fn test_network_is_solana_devnet() {
+        let ev = run_demo();
+        assert_eq!(ev.network, "solana-devnet");
+    }
+
+    #[test]
+    fn test_money_saved_nonzero() {
+        let ev = run_demo();
+        assert!(ev.money_saved_lamports > 0);
+    }
+
+    #[test]
+    fn test_money_earned_nonzero() {
+        let ev = run_demo();
+        assert!(ev.money_earned_lamports > 0);
+    }
+
+    #[test]
+    fn test_public_summary_nonempty() {
+        let ev = run_demo();
+        assert!(!ev.public_summary.is_empty());
+    }
+
+    #[test]
+    fn test_trap_board_sniper_detected() {
+        let ev = run_demo();
+        assert!(ev.primitives.trap_board.sniper_detected);
+    }
+
+    #[test]
+    fn test_puzzle_market_solved() {
+        let ev = run_demo();
+        assert!(ev.primitives.puzzle_market.solved);
+    }
+
+    #[test]
+    fn test_puzzle_market_message_cash() {
+        let ev = run_demo();
+        assert_eq!(ev.primitives.puzzle_market.message, "CASH");
+    }
+
+    #[test]
+    fn test_bounty_blinks_two_jobs_completed() {
+        let ev = run_demo();
+        assert_eq!(ev.primitives.bounty_blinks.jobs_completed, 2);
+    }
+
+    #[test]
+    fn test_scoreboard_five_events() {
+        let ev = run_demo();
+        assert_eq!(ev.primitives.scoreboard.events, 5);
+    }
+
+    #[test]
+    fn test_json_mainnet_ready_false() {
+        let ev = run_demo();
+        let json: serde_json::Value = serde_json::to_value(&ev).unwrap();
+        assert_eq!(json["mainnet_ready"], false);
+    }
 }

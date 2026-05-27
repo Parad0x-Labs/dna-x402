@@ -256,4 +256,82 @@ mod tests {
         assert_eq!(v["is_stub"], true);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_batch_id_nonzero() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let batch = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        assert_ne!(batch.batch_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_tx_root_nonzero() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let batch = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        assert_ne!(batch.tx_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_state_root_nonzero() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let batch = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        assert_ne!(batch.state_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let batch = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        assert_ne!(batch.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_tx_count_correct() {
+        let txs = vec![make_tx(1, 2, 10), make_tx(3, 4, 20), make_tx(5, 6, 30)];
+        let batch = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        assert_eq!(batch.tx_count, 3);
+    }
+
+    #[test]
+    fn test_zero_operator_key_rejected() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let err = create_batch(&[0u8; 32], &txs, &prev_root()).unwrap_err();
+        assert_eq!(err, RollupError::ZeroOperatorKey);
+    }
+
+    #[test]
+    fn test_tx_hash_nonzero() {
+        let mut sh = [0u8; 32];
+        sh[0] = 0xAA;
+        let mut rh = [0u8; 32];
+        rh[0] = 0xBB;
+        let h = compute_tx_hash(&sh, &rh, 999);
+        assert_ne!(h, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_fails_wrong_key() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let batch = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        let mut wrong_key = op_key();
+        wrong_key[0] ^= 0xFF;
+        assert!(!verify_batch(&batch, &wrong_key));
+    }
+
+    #[test]
+    fn test_max_batch_txs_constant() {
+        assert_eq!(MAX_BATCH_TXS, 64);
+    }
+
+    #[test]
+    fn test_state_root_prev_sensitive() {
+        let txs = vec![make_tx(1, 2, 100)];
+        let b1 = create_batch(&op_key(), &txs, &prev_root()).unwrap();
+        let mut prev2 = prev_root();
+        prev2[1] = 0xFF;
+        let b2 = create_batch(&op_key(), &txs, &prev2).unwrap();
+        assert_ne!(b1.state_root, b2.state_root);
+    }
 }

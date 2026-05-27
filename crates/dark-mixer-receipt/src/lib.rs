@@ -284,4 +284,93 @@ mod tests {
         // Different pool states → different nullifiers.
         assert_ne!(w_a.nullifier, w_b.nullifier);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_note_commitment_nonzero() {
+        let note = create_note(Denomination::One, &secret(0x11));
+        assert_ne!(note.note_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_commitment_deterministic() {
+        let s = secret(0x22);
+        let n1 = create_note(Denomination::Ten, &s);
+        let n2 = create_note(Denomination::Ten, &s);
+        assert_eq!(n1.note_commitment, n2.note_commitment);
+    }
+
+    #[test]
+    fn test_note_commitment_secret_sensitive() {
+        let n1 = create_note(Denomination::Hundred, &secret(0x33));
+        let n2 = create_note(Denomination::Hundred, &secret(0x44));
+        assert_ne!(n1.note_commitment, n2.note_commitment);
+    }
+
+    #[test]
+    fn test_note_mainnet_ready_false() {
+        let note = create_note(Denomination::Thousand, &secret(0x55));
+        assert!(!note.mainnet_ready);
+    }
+
+    #[test]
+    fn test_withdrawal_mainnet_ready_false() {
+        let mut pool = new_pool();
+        let s = secret(0x66);
+        let note = create_note(Denomination::One, &s);
+        deposit_note(&mut pool, &note);
+        let w = withdraw_note(&mut pool, &note, &s, 0).unwrap();
+        assert!(!w.mainnet_ready);
+    }
+
+    #[test]
+    fn test_pool_root_nonzero_after_deposit() {
+        let mut pool = new_pool();
+        let note = create_note(Denomination::Ten, &secret(0x77));
+        deposit_note(&mut pool, &note);
+        assert_ne!(pool.pool_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_count_increments() {
+        let mut pool = new_pool();
+        assert_eq!(pool.note_count, 0);
+        deposit_note(&mut pool, &create_note(Denomination::One, &secret(0x88)));
+        assert_eq!(pool.note_count, 1);
+        deposit_note(&mut pool, &create_note(Denomination::Ten, &secret(0x89)));
+        assert_eq!(pool.note_count, 2);
+    }
+
+    #[test]
+    fn test_withdraw_wrong_secret_fails() {
+        let mut pool = new_pool();
+        let s_real = secret(0xAA);
+        let s_wrong = secret(0xBB);
+        let note = create_note(Denomination::Hundred, &s_real);
+        deposit_note(&mut pool, &note);
+        let err = withdraw_note(&mut pool, &note, &s_wrong, 0).unwrap_err();
+        assert_eq!(err, ShieldError::NullifierMismatch);
+    }
+
+    #[test]
+    fn test_public_record_has_correct_keys() {
+        let mut pool = new_pool();
+        deposit_note(&mut pool, &create_note(Denomination::One, &secret(0xCC)));
+        let record = pool_public_record(&pool);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["pool_root"].is_string());
+        assert_eq!(v["note_count"], 1u32);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let mut pool = new_pool();
+        let s = secret(0xDD);
+        let note = create_note(Denomination::Thousand, &s);
+        deposit_note(&mut pool, &note);
+        let w = withdraw_note(&mut pool, &note, &s, 0).unwrap();
+        assert_ne!(w.nullifier, [0u8; 32]);
+    }
 }

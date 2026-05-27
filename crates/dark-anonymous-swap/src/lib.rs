@@ -1,4 +1,4 @@
-﻿use sha2::{Digest, Sha256};
+use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -317,5 +317,197 @@ mod tests {
             !record.contains(&trader_hex),
             "public record must not expose trader_hash; got record: {record}"
         );
+    }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let offer = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        assert!(!offer.mainnet_ready);
+        let receipt = fill_offer(&offer, 1);
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_offer_id_deterministic() {
+        let o1 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let o2 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        assert_eq!(o1.offer_id, o2.offer_id);
+    }
+
+    #[test]
+    fn test_offer_id_amount_sensitive() {
+        let o1 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let o2 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            2_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        assert_ne!(o1.offer_id, o2.offer_id);
+    }
+
+    #[test]
+    fn test_offer_id_nonce_sensitive() {
+        let mut nonce2 = sample_nonce();
+        nonce2[0] ^= 0xFF;
+        let o1 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let o2 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &nonce2,
+        )
+        .unwrap();
+        assert_ne!(o1.offer_id, o2.offer_id);
+    }
+
+    #[test]
+    fn test_swap_id_slot_sensitive() {
+        let offer = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let r1 = fill_offer(&offer, 100);
+        let r2 = fill_offer(&offer, 200);
+        assert_ne!(r1.swap_id, r2.swap_id);
+    }
+
+    #[test]
+    fn test_nullifier_trader_sensitive() {
+        let mut secret2 = sample_secret();
+        secret2[0] ^= 0xFF;
+        let o1 = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let o2 = create_offer(
+            &secret2,
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let r1 = fill_offer(&o1, 1);
+        let r2 = fill_offer(&o2, 1);
+        assert_ne!(r1.nullifier, r2.nullifier);
+    }
+
+    #[test]
+    fn test_amount_out_zero_rejected() {
+        let err = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            0,
+            &sample_nonce(),
+        )
+        .unwrap_err();
+        assert_eq!(err, SwapError::AmountZero);
+    }
+
+    #[test]
+    fn test_public_record_has_amounts() {
+        let offer = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_234,
+            5_678,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let record = swap_public_record(&offer);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["amount_in"], 1_234u64);
+        assert_eq!(v["amount_out"], 5_678u64);
+    }
+
+    #[test]
+    fn test_receipt_offer_id_matches() {
+        let offer = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        let receipt = fill_offer(&offer, 99);
+        assert_eq!(receipt.offer_id, offer.offer_id);
+    }
+
+    #[test]
+    fn test_input_token_hash_differs_from_output() {
+        let offer = create_offer(
+            &sample_secret(),
+            b"TOKEN_A",
+            b"TOKEN_B",
+            1_000,
+            2_000,
+            &sample_nonce(),
+        )
+        .unwrap();
+        assert_ne!(offer.input_token_hash, offer.output_token_hash);
     }
 }

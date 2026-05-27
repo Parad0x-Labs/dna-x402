@@ -143,4 +143,90 @@ mod tests {
         let h3 = rebate_receipt_hash(&c, 501);
         assert_ne!(h1, h3);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let c = make_completion(1);
+        assert_ne!(rebate_receipt_hash(&c, 500), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_job_sensitive() {
+        let c1 = make_completion(1);
+        let c2 = make_completion(2);
+        assert_ne!(rebate_receipt_hash(&c1, 500), rebate_receipt_hash(&c2, 500));
+    }
+
+    #[test]
+    fn test_rebate_unclaimed_initially() {
+        let c = make_completion(1);
+        let rebate = create_rebate(&c, 500, 1000, 9999).unwrap();
+        assert!(!rebate.claimed);
+    }
+
+    #[test]
+    fn test_claim_at_exact_expiry_succeeds() {
+        // slot == expires_at_slot: condition is (slot > expires_at_slot) → false → ok
+        let c = make_completion(1);
+        let mut rebate = create_rebate(&c, 500, 1000, 100).unwrap();
+        let result = claim_rebate(&mut rebate, 100);
+        assert_eq!(result, Ok(500));
+    }
+
+    #[test]
+    fn test_claim_rebate_returns_lamports() {
+        let c = make_completion(1);
+        let mut rebate = create_rebate(&c, 750, 1000, 9999).unwrap();
+        assert_eq!(claim_rebate(&mut rebate, 50).unwrap(), 750);
+    }
+
+    #[test]
+    fn test_claim_twice_fails() {
+        let c = make_completion(1);
+        let mut rebate = create_rebate(&c, 500, 1000, 9999).unwrap();
+        claim_rebate(&mut rebate, 50).unwrap();
+        assert_eq!(
+            claim_rebate(&mut rebate, 50),
+            Err(RebateError::AlreadyClaimed)
+        );
+    }
+
+    #[test]
+    fn test_rebate_at_cap_allowed() {
+        // rebate_lamports == cap_lamports: condition is > cap → false → ok
+        let c = make_completion(1);
+        let result = create_rebate(&c, 1000, 1000, 9999);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_new_job_passes_checked() {
+        let c = make_completion(5);
+        let seen: Vec<[u8; 32]> = vec![];
+        let result = create_rebate_checked(&c, 300, 1000, 9999, &seen);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_solver_hash_in_rebate() {
+        let c = make_completion(1);
+        let rebate = create_rebate(&c, 500, 1000, 9999).unwrap();
+        assert_eq!(rebate.solver_hash, c.solver_hash);
+    }
+
+    #[test]
+    fn test_rebate_expires_at_slot_preserved() {
+        let c = make_completion(1);
+        let rebate = create_rebate(&c, 500, 1000, 54321).unwrap();
+        assert_eq!(rebate.expires_at_slot, 54321);
+    }
+
+    #[test]
+    fn test_rebate_lamports_preserved_in_struct() {
+        let c = make_completion(1);
+        let rebate = create_rebate(&c, 777, 1000, 9999).unwrap();
+        assert_eq!(rebate.rebate_lamports, 777);
+    }
 }

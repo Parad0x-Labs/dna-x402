@@ -263,4 +263,73 @@ mod tests {
         assert_eq!(t1.nullifier, t2.nullifier);
         assert_eq!(t1.new_token_id, t2.new_token_id);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_token_id_nonzero() {
+        let nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        assert_ne!(nft.token_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_owner_hash_nonzero() {
+        let nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        assert_ne!(nft.owner_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_metadata_hash_nonzero() {
+        let nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        assert_ne!(nft.metadata_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_edition_stored() {
+        let nft = mint_nft(&owner_secret(), META, 7, &nonce()).unwrap();
+        assert_eq!(nft.edition, 7);
+    }
+
+    #[test]
+    fn test_nft_mainnet_ready_false() {
+        let nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        assert!(!nft.mainnet_ready);
+    }
+
+    #[test]
+    fn test_transfer_mainnet_ready_false() {
+        let mut nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        let t = transfer_nft(&mut nft, &owner_secret(), &new_owner_secret()).unwrap();
+        assert!(!t.mainnet_ready);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let mut nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        let t = transfer_nft(&mut nft, &owner_secret(), &new_owner_secret()).unwrap();
+        assert_ne!(t.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_new_token_id_nonzero() {
+        let mut nft = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        let t = transfer_nft(&mut nft, &owner_secret(), &new_owner_secret()).unwrap();
+        assert_ne!(t.new_token_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_token_id_nonce_sensitive() {
+        let mut n2 = [0u8; 32];
+        n2[0] = 0xff;
+        let nft1 = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        let nft2 = mint_nft(&owner_secret(), META, 1, &n2).unwrap();
+        assert_ne!(nft1.token_id, nft2.token_id);
+    }
+
+    #[test]
+    fn test_metadata_hash_deterministic() {
+        let nft1 = mint_nft(&owner_secret(), META, 1, &nonce()).unwrap();
+        let nft2 = mint_nft(&new_owner_secret(), META, 1, &nonce()).unwrap();
+        assert_eq!(nft1.metadata_hash, nft2.metadata_hash);
+    }
 }

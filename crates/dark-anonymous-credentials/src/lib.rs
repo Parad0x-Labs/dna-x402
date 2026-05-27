@@ -262,4 +262,94 @@ mod tests {
         let c2 = issue_credential(&issuer(), &holder(), &a2).unwrap();
         assert_ne!(c1.attr_root, c2.attr_root);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let a = attrs();
+        let cred = issue_credential(&issuer(), &holder(), &a).unwrap();
+        assert!(!cred.mainnet_ready);
+        let proof = disclose_attributes(&cred, &holder(), &[b"age"], &a, &nonce1()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_cred_id_deterministic() {
+        let a = attrs();
+        let c1 = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let c2 = issue_credential(&issuer(), &holder(), &a).unwrap();
+        assert_eq!(c1.cred_id, c2.cred_id);
+    }
+
+    #[test]
+    fn test_cred_id_holder_sensitive() {
+        let a = attrs();
+        let mut h2 = holder();
+        h2[0] ^= 0xFF;
+        let c1 = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let c2 = issue_credential(&issuer(), &h2, &a).unwrap();
+        assert_ne!(c1.cred_id, c2.cred_id);
+    }
+
+    #[test]
+    fn test_cred_id_issuer_sensitive() {
+        let a = attrs();
+        let mut i2 = issuer();
+        i2[0] ^= 0xFF;
+        let c1 = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let c2 = issue_credential(&i2, &holder(), &a).unwrap();
+        assert_ne!(c1.cred_id, c2.cred_id);
+    }
+
+    #[test]
+    fn test_zero_holder_rejected() {
+        let a = attrs();
+        let err = issue_credential(&issuer(), &[0u8; 32], &a).unwrap_err();
+        assert_eq!(err, CredError::ZeroHolderSecret);
+    }
+
+    #[test]
+    fn test_attribute_not_found_rejected() {
+        let a = attrs();
+        let cred = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let err = disclose_attributes(&cred, &holder(), &[b"unknown"], &a, &nonce1()).unwrap_err();
+        assert_eq!(err, CredError::AttributeNotFound);
+    }
+
+    #[test]
+    fn test_proof_id_deterministic() {
+        let a = attrs();
+        let cred = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let p1 = disclose_attributes(&cred, &holder(), &[b"age"], &a, &nonce1()).unwrap();
+        let p2 = disclose_attributes(&cred, &holder(), &[b"age"], &a, &nonce1()).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_nullifier_nonce_sensitive() {
+        let a = attrs();
+        let cred = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let p1 = disclose_attributes(&cred, &holder(), &[b"age"], &a, &nonce1()).unwrap();
+        let p2 = disclose_attributes(&cred, &holder(), &[b"age"], &a, &nonce2()).unwrap();
+        assert_ne!(p1.nullifier, p2.nullifier);
+    }
+
+    #[test]
+    fn test_public_record_contains_cred_id_hex() {
+        let a = attrs();
+        let cred = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let record = cred_public_record(&cred);
+        let cred_id_hex = hex32(&cred.cred_id);
+        assert!(record.contains(&cred_id_hex));
+    }
+
+    #[test]
+    fn test_public_record_hides_holder_and_issuer() {
+        let a = attrs();
+        let cred = issue_credential(&issuer(), &holder(), &a).unwrap();
+        let record = cred_public_record(&cred);
+        assert!(!record.contains(&hex32(&cred.holder_hash)));
+        assert!(!record.contains(&hex32(&cred.issuer_hash)));
+    }
 }

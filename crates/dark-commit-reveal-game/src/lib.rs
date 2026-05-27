@@ -320,4 +320,84 @@ mod tests {
             .collect();
         assert_eq!(v["session_id"], sid_hex);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let session = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        assert!(!session.mainnet_ready);
+    }
+
+    #[test]
+    fn test_session_id_nonce_sensitive() {
+        let s1 = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let mut n2 = nonce();
+        n2[1] = 0xFF;
+        let s2 = new_game(&secret_a(), &secret_b(), &n2).unwrap();
+        assert_ne!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_session_id_player_sensitive() {
+        let s1 = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let mut alt_b = secret_b();
+        alt_b[1] = 0xFF;
+        let s2 = new_game(&secret_a(), &alt_b, &nonce()).unwrap();
+        assert_ne!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_zero_player_a_rejected() {
+        let err = new_game(&[0u8; 32], &secret_b(), &nonce()).unwrap_err();
+        assert_eq!(err, GameError::ZeroPlayerSecret);
+    }
+
+    #[test]
+    fn test_zero_player_b_rejected() {
+        let err = new_game(&secret_a(), &[0u8; 32], &nonce()).unwrap_err();
+        assert_eq!(err, GameError::ZeroPlayerSecret);
+    }
+
+    #[test]
+    fn test_commit_deterministic() {
+        let mut s1 = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let mut s2 = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let c1 = commit_choice(&mut s1, 0, b"rock", &nonce_commit_a()).unwrap();
+        let c2 = commit_choice(&mut s2, 0, b"rock", &nonce_commit_a()).unwrap();
+        assert_eq!(c1, c2);
+    }
+
+    #[test]
+    fn test_commit_nonce_sensitive() {
+        let mut s1 = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let mut s2 = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let c1 = commit_choice(&mut s1, 0, b"rock", &nonce_commit_a()).unwrap();
+        let c2 = commit_choice(&mut s2, 0, b"rock", &nonce_commit_b()).unwrap();
+        assert_ne!(c1, c2);
+    }
+
+    #[test]
+    fn test_already_revealed_rejected() {
+        let mut session = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        commit_choice(&mut session, 0, b"rock", &nonce_commit_a()).unwrap();
+        commit_choice(&mut session, 1, b"paper", &nonce_commit_b()).unwrap();
+        reveal_choice(&mut session, 0, b"rock", &nonce_commit_a()).unwrap();
+        let err = reveal_choice(&mut session, 0, b"rock", &nonce_commit_a()).unwrap_err();
+        assert_eq!(err, GameError::AlreadyRevealed);
+    }
+
+    #[test]
+    fn test_winner_starts_none() {
+        let session = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        assert!(session.winner.is_none());
+    }
+
+    #[test]
+    fn test_public_record_mainnet_ready_false() {
+        let session = new_game(&secret_a(), &secret_b(), &nonce()).unwrap();
+        let record = session_public_record(&session);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

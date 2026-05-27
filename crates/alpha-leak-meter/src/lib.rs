@@ -196,4 +196,93 @@ mod tests {
         let risky_report = score_tx(&risky);
         assert!(!risky_report.public_demo_safe);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_overall_risk_bounded() {
+        let report = score_tx(&base_meta());
+        assert!(report.overall_risk >= 0.0 && report.overall_risk <= 1.0);
+    }
+
+    #[test]
+    fn test_direct_route_higher_leak_than_jito() {
+        let mut direct = base_meta();
+        direct.route_class = 0;
+        let mut jito = base_meta();
+        jito.route_class = 1;
+        assert!(score_tx(&direct).route_leak_score > score_tx(&jito).route_leak_score);
+    }
+
+    #[test]
+    fn test_direct_route_notes_rpc() {
+        let mut meta = base_meta();
+        meta.route_class = 0;
+        let report = score_tx(&meta);
+        assert!(report
+            .notes
+            .contains(&"direct RPC route is fingerprintable"));
+    }
+
+    #[test]
+    fn test_copy_sniper_risk_bounded() {
+        let report = score_tx(&base_meta());
+        assert!(report.copy_sniper_risk >= 0.0 && report.copy_sniper_risk <= 1.0);
+    }
+
+    #[test]
+    fn test_high_entropy_memo_no_low_entropy_note() {
+        let mut meta = base_meta();
+        meta.has_memo = true;
+        meta.memo_entropy_bits = 64;
+        let report = score_tx(&meta);
+        assert!(!report.notes.contains(&"low-entropy memo phrase"));
+    }
+
+    #[test]
+    fn test_many_writables_no_alt_noted() {
+        let mut meta = base_meta();
+        meta.uses_alt = false;
+        meta.writable_account_count = 5;
+        let report = score_tx(&meta);
+        assert!(report
+            .notes
+            .contains(&"consider ALT for account camouflage"));
+    }
+
+    #[test]
+    fn test_with_alt_no_camouflage_note() {
+        let mut meta = base_meta();
+        meta.uses_alt = true;
+        meta.writable_account_count = 5;
+        let report = score_tx(&meta);
+        assert!(!report
+            .notes
+            .contains(&"consider ALT for account camouflage"));
+    }
+
+    #[test]
+    fn test_mainnet_not_demo_safe() {
+        let mut meta = base_meta();
+        meta.is_devnet = false;
+        let report = score_tx(&meta);
+        assert!(!report.public_demo_safe);
+    }
+
+    #[test]
+    fn test_unique_shape_raises_copy_sniper_risk() {
+        let mut common = base_meta();
+        common.shape_class_pool_size = 1000;
+        let mut unique = base_meta();
+        unique.shape_class_pool_size = 1;
+        assert!(score_tx(&unique).copy_sniper_risk > score_tx(&common).copy_sniper_risk);
+    }
+
+    #[test]
+    fn test_no_delay_appears_in_notes() {
+        let mut meta = base_meta();
+        meta.delay_applied = false;
+        let report = score_tx(&meta);
+        assert!(report.notes.contains(&"no timing delay applied"));
+    }
 }

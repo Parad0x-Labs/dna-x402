@@ -295,4 +295,84 @@ mod tests {
         assert!(v_after.get("winner_hash").is_none());
         assert_eq!(v_after["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let auction = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        assert!(!auction.mainnet_ready);
+    }
+
+    #[test]
+    fn test_sealed_bid_mainnet_ready_false() {
+        let mut auction = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        let bid = submit_bid(&mut auction, &bidder(0x11), 100, &nonce_bid(0x01)).unwrap();
+        assert!(!bid.mainnet_ready);
+    }
+
+    #[test]
+    fn test_auction_id_deterministic() {
+        let a1 = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        let a2 = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        assert_eq!(a1.auction_id, a2.auction_id);
+    }
+
+    #[test]
+    fn test_auction_id_item_sensitive() {
+        let a1 = create_auction(&auctioneer(), b"item-a", &nonce()).unwrap();
+        let a2 = create_auction(&auctioneer(), b"item-b", &nonce()).unwrap();
+        assert_ne!(a1.auction_id, a2.auction_id);
+    }
+
+    #[test]
+    fn test_auction_id_nonce_sensitive() {
+        let n2 = [0x02u8; 32];
+        let a1 = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        let a2 = create_auction(&auctioneer(), b"item", &n2).unwrap();
+        assert_ne!(a1.auction_id, a2.auction_id);
+    }
+
+    #[test]
+    fn test_bid_count_in_sealed_bids() {
+        let mut auction = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        submit_bid(&mut auction, &bidder(0x11), 100, &nonce_bid(0x01)).unwrap();
+        submit_bid(&mut auction, &bidder(0x22), 200, &nonce_bid(0x02)).unwrap();
+        assert_eq!(auction.sealed_bids.len(), 2);
+    }
+
+    #[test]
+    fn test_bid_commitment_nonce_sensitive() {
+        let bh = compute_bidder_hash(&bidder(0x11));
+        let nb1 = nonce_bid(0x01);
+        let nb2 = nonce_bid(0x02);
+        let bc1 = compute_bid_commitment(&bh, 100, &nb1);
+        let bc2 = compute_bid_commitment(&bh, 100, &nb2);
+        assert_ne!(bc1, bc2);
+    }
+
+    #[test]
+    fn test_bid_commitment_amount_sensitive() {
+        let bh = compute_bidder_hash(&bidder(0x11));
+        let nb = nonce_bid(0x01);
+        let bc1 = compute_bid_commitment(&bh, 100, &nb);
+        let bc2 = compute_bid_commitment(&bh, 200, &nb);
+        assert_ne!(bc1, bc2);
+    }
+
+    #[test]
+    fn test_finalized_starts_false() {
+        let auction = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        assert!(!auction.finalized);
+    }
+
+    #[test]
+    fn test_public_record_has_bid_count() {
+        let mut auction = create_auction(&auctioneer(), b"item", &nonce()).unwrap();
+        submit_bid(&mut auction, &bidder(0x11), 100, &nonce_bid(0x01)).unwrap();
+        submit_bid(&mut auction, &bidder(0x22), 200, &nonce_bid(0x02)).unwrap();
+        let record = auction_public_record(&auction);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["bid_count"], 2u64);
+    }
 }

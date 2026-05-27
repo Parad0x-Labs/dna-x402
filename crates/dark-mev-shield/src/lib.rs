@@ -467,4 +467,33 @@ mod tests {
         assert_eq!(intent.execute_after_slot, SLOT + 1);
         assert!(intent.execute_after_slot > intent.submitted_at_slot);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_intent_hash_nonzero() {
+        let intent = shield_intent(
+            &TradeDirection::Buy,
+            AMOUNT,
+            SLIPPAGE,
+            &fixed_nonce(0xAB),
+            SLOT,
+            LOCK,
+        );
+        assert_ne!(intent.intent_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bundle_mainnet_ready_false() {
+        let intent = shield_intent(
+            &TradeDirection::Sell,
+            AMOUNT,
+            SLIPPAGE,
+            &fixed_nonce(0xCD),
+            SLOT,
+            LOCK,
+        );
+        let b = bundle(intent, 3, SLOT, &fixed_nonce(0xEF)).unwrap();
+        assert!(!b.mainnet_ready);
+    }
 }

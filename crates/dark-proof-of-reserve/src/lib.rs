@@ -169,4 +169,66 @@ mod tests {
         assert_eq!(proof1.proof_id, proof2.proof_id);
         assert_ne!(proof1.proof_id, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        assert_ne!(make_proof().proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reserve_commitment_nonzero() {
+        assert_ne!(make_proof().reserve_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_liability_commitment_nonzero() {
+        assert_ne!(make_proof().liability_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_surplus_hash_nonzero() {
+        assert_ne!(make_proof().surplus_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_is_solvent_true() {
+        assert!(make_proof().is_solvent);
+    }
+
+    #[test]
+    fn test_equal_reserves_liabilities_ok() {
+        // reserves == liabilities → surplus = 0, still solvent
+        let proof = prove_reserve(500_000, 500_000, &[0x01u8; 32], &[0x02u8; 32]).unwrap();
+        assert!(proof.is_solvent);
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_id_reserve_sensitive() {
+        let p1 = prove_reserve(1_000_000, 800_000, &[0x01u8; 32], &[0x02u8; 32]).unwrap();
+        let p2 = prove_reserve(1_200_000, 800_000, &[0x01u8; 32], &[0x02u8; 32]).unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_verify_reserve_false_when_is_solvent_false() {
+        let mut proof = make_proof();
+        proof.is_solvent = false;
+        assert!(!verify_reserve(&proof));
+    }
+
+    #[test]
+    fn test_liability_zero_ok() {
+        let proof = prove_reserve(500_000, 0, &[0x01u8; 32], &[0x02u8; 32]).unwrap();
+        assert!(proof.is_solvent);
+    }
+
+    #[test]
+    fn test_proof_id_blinding_sensitive() {
+        let p1 = prove_reserve(1_000_000, 800_000, &[0x01u8; 32], &[0x02u8; 32]).unwrap();
+        let p2 = prove_reserve(1_000_000, 800_000, &[0x03u8; 32], &[0x04u8; 32]).unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
 }

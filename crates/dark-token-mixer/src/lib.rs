@@ -12,6 +12,7 @@ pub struct TokenShieldLedger {
     nullifiers: Vec<[u8; 32]>,
 }
 
+#[derive(Debug)]
 pub struct ShieldDeposit {
     pub deposit_id: [u8; 32],
     pub commitment: [u8; 32],
@@ -178,5 +179,102 @@ mod tests {
     fn mainnet_ready_false() {
         let m = new_shield_ledger(500_000);
         assert_eq!(m.mainnet_ready, false);
+    }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_deposit_root_changes_on_second_deposit() {
+        let mut m = new_shield_ledger(1_000_000);
+        deposit(&mut m, &secret1(), &nonce1(), 1_000_000).unwrap();
+        let root1 = m.deposit_root;
+        let s2 = [0x03u8; 32];
+        let n2 = [0x04u8; 32];
+        deposit(&mut m, &s2, &n2, 1_000_000).unwrap();
+        assert_ne!(m.deposit_root, root1);
+    }
+
+    #[test]
+    fn test_zero_depositor_secret_rejected() {
+        let mut m = new_shield_ledger(1_000_000);
+        let err = deposit(&mut m, &[0u8; 32], &nonce1(), 1_000_000).unwrap_err();
+        assert_eq!(err, ShieldError::ZeroSecret);
+    }
+
+    #[test]
+    fn test_nullifier_deterministic() {
+        let mut m1 = new_shield_ledger(1_000_000);
+        deposit(&mut m1, &secret1(), &nonce1(), 1_000_000).unwrap();
+        let w1 = withdraw(&mut m1, &secret1()).unwrap();
+
+        let mut m2 = new_shield_ledger(1_000_000);
+        deposit(&mut m2, &secret1(), &nonce1(), 1_000_000).unwrap();
+        let w2 = withdraw(&mut m2, &secret1()).unwrap();
+
+        assert_eq!(w1.nullifier, w2.nullifier);
+    }
+
+    #[test]
+    fn test_withdrawal_count_increments() {
+        let mut m = new_shield_ledger(1_000_000);
+        deposit(&mut m, &secret1(), &nonce1(), 1_000_000).unwrap();
+        withdraw(&mut m, &secret1()).unwrap();
+        assert_eq!(m.withdrawal_count, 1);
+        let s2 = [0x05u8; 32];
+        deposit(&mut m, &s2, &nonce1(), 1_000_000).unwrap();
+        withdraw(&mut m, &s2).unwrap();
+        assert_eq!(m.withdrawal_count, 2);
+    }
+
+    #[test]
+    fn test_different_secrets_different_nullifiers() {
+        let mut m = new_shield_ledger(1_000_000);
+        let s2 = [0x06u8; 32];
+        deposit(&mut m, &secret1(), &nonce1(), 1_000_000).unwrap();
+        let w1 = withdraw(&mut m, &secret1()).unwrap();
+        deposit(&mut m, &s2, &nonce1(), 1_000_000).unwrap();
+        let w2 = withdraw(&mut m, &s2).unwrap();
+        assert_ne!(w1.nullifier, w2.nullifier);
+    }
+
+    #[test]
+    fn test_deposit_commitment_depends_on_nonce() {
+        let mut m1 = new_shield_ledger(1_000_000);
+        let mut m2 = new_shield_ledger(1_000_000);
+        let n2 = [0xFFu8; 32];
+        let d1 = deposit(&mut m1, &secret1(), &nonce1(), 1_000_000).unwrap();
+        let d2 = deposit(&mut m2, &secret1(), &n2, 1_000_000).unwrap();
+        assert_ne!(d1.commitment, d2.commitment);
+    }
+
+    #[test]
+    fn test_deposit_count_increments() {
+        let mut m = new_shield_ledger(1_000_000);
+        assert_eq!(m.deposit_count, 0);
+        deposit(&mut m, &secret1(), &nonce1(), 1_000_000).unwrap();
+        assert_eq!(m.deposit_count, 1);
+    }
+
+    #[test]
+    fn test_ledger_id_deterministic() {
+        let m1 = new_shield_ledger(1_000_000);
+        let m2 = new_shield_ledger(1_000_000);
+        assert_eq!(m1.ledger_id, m2.ledger_id);
+    }
+
+    #[test]
+    fn test_nullifier_root_changes_after_withdrawal() {
+        let mut m = new_shield_ledger(1_000_000);
+        let root_before = m.nullifier_root;
+        deposit(&mut m, &secret1(), &nonce1(), 1_000_000).unwrap();
+        withdraw(&mut m, &secret1()).unwrap();
+        assert_ne!(m.nullifier_root, root_before);
+    }
+
+    #[test]
+    fn test_deposit_id_not_zero() {
+        let mut m = new_shield_ledger(1_000_000);
+        let d = deposit(&mut m, &secret1(), &nonce1(), 1_000_000).unwrap();
+        assert_ne!(d.deposit_id, [0u8; 32]);
     }
 }

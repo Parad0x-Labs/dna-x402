@@ -347,4 +347,61 @@ mod tests {
         let hash3 = validate_agent_spend_ritual(steps_swapped).unwrap();
         assert_ne!(hash1, hash3);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_encode_proof_return_verdict_byte() {
+        let hash = [0x11u8; 32];
+        let encoded = encode_proof_return(1, &hash);
+        assert_eq!(encoded[0], 1);
+    }
+
+    #[test]
+    fn test_encode_proof_return_hash_embedded() {
+        let hash = [0xAAu8; 32];
+        let encoded = encode_proof_return(2, &hash);
+        assert_eq!(&encoded[1..33], &hash);
+    }
+
+    #[test]
+    fn test_encode_proof_return_is_33_bytes() {
+        let encoded = encode_proof_return(0, &[0u8; 32]);
+        assert_eq!(encoded.len(), 33);
+    }
+
+    #[test]
+    fn test_agent_spend_steps_count() {
+        assert_eq!(AGENT_SPEND_STEPS.len(), 7);
+    }
+
+    #[test]
+    fn test_agent_spend_required_count() {
+        assert_eq!(AGENT_SPEND_REQUIRED.len(), 5);
+    }
+
+    #[test]
+    fn test_unknown_instruction_tag_fails() {
+        let data = [0xFF, 0x00, 0x00];
+        assert_eq!(
+            parse_instruction(&data),
+            Err(ProgramError::InvalidInstructionData)
+        );
+    }
+
+    #[test]
+    fn test_shape_hash_nonzero_canonical() {
+        let hash = validate_agent_spend_ritual(AGENT_SPEND_STEPS).unwrap();
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_shape_hash_step_name_sensitive() {
+        let steps_a: Vec<&str> = AGENT_SPEND_STEPS.to_vec();
+        let mut steps_b: Vec<&str> = AGENT_SPEND_STEPS.to_vec();
+        steps_b[0] = "DifferentStep"; // Replace ComputeBudget (optional step)
+        let hash_a = validate_agent_spend_ritual(&steps_a).unwrap();
+        let hash_b = validate_agent_spend_ritual(&steps_b).unwrap();
+        assert_ne!(hash_a, hash_b);
+    }
 }

@@ -187,4 +187,78 @@ mod tests {
         let err = settle_auction(&mut auction).unwrap_err();
         assert_eq!(err, FeeError::NoQuotes);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_quote_id_nonzero() {
+        let q = create_quote(&secret(1), 1_000, 100).unwrap();
+        assert_ne!(q.quote_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_quote_id_deterministic() {
+        let q1 = create_quote(&secret(1), 1_000, 100).unwrap();
+        let q2 = create_quote(&secret(1), 1_000, 100).unwrap();
+        assert_eq!(q1.quote_id, q2.quote_id);
+    }
+
+    #[test]
+    fn test_quote_id_fee_sensitive() {
+        let q1 = create_quote(&secret(1), 1_000, 100).unwrap();
+        let q2 = create_quote(&secret(1), 2_000, 100).unwrap();
+        assert_ne!(q1.quote_id, q2.quote_id);
+    }
+
+    #[test]
+    fn test_bidder_hash_nonzero() {
+        let q = create_quote(&secret(1), 1_000, 100).unwrap();
+        assert_ne!(q.bidder_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_quote_mainnet_ready_false() {
+        let q = create_quote(&secret(1), 1_000, 100).unwrap();
+        assert!(!q.mainnet_ready);
+    }
+
+    #[test]
+    fn test_auction_mainnet_ready_false() {
+        let auction = new_auction(100);
+        assert!(!auction.mainnet_ready);
+    }
+
+    #[test]
+    fn test_auction_starts_with_no_winner() {
+        let auction = new_auction(100);
+        assert!(auction.winning_quote.is_none());
+    }
+
+    #[test]
+    fn test_auction_quote_count() {
+        let mut auction = new_auction(100);
+        add_quote(&mut auction, create_quote(&secret(1), 1_000, 100).unwrap()).unwrap();
+        add_quote(&mut auction, create_quote(&secret(2), 2_000, 100).unwrap()).unwrap();
+        assert_eq!(auction.quotes.len(), 2);
+    }
+
+    #[test]
+    fn test_public_record_unsettled_auction() {
+        let auction = new_auction(500);
+        let record: serde_json::Value =
+            serde_json::from_str(&auction_public_record(&auction)).unwrap();
+        assert_eq!(record["quote_count"], 0u64);
+        assert_eq!(record["settled"], false);
+        assert!(record.get("winning_fee_lamports").is_none());
+    }
+
+    #[test]
+    fn test_settle_single_quote_wins() {
+        let mut auction = new_auction(600);
+        let q = create_quote(&secret(9), 9_999, 600).unwrap();
+        add_quote(&mut auction, q.clone()).unwrap();
+        let winner = settle_auction(&mut auction).unwrap();
+        assert_eq!(winner.fee_lamports, 9_999);
+        assert_eq!(winner.quote_id, q.quote_id);
+    }
 }

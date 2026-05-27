@@ -203,4 +203,117 @@ mod tests {
         d2.requested_refund_lamports = 1;
         assert_ne!(dispute_commitment(&d), dispute_commitment(&d2));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_dispute_at_exact_deadline_ok() {
+        // current_slot == deadline_slot: condition is >, so this must pass
+        let d = file_dispute(
+            [0x02u8; 32],
+            [0x01u8; 32],
+            [0x03u8; 32],
+            [0x04u8; 32],
+            [0x05u8; 32],
+            5000,
+            500_000,
+            1_000_000,
+            [0x02u8; 32],
+            5000,
+        )
+        .unwrap();
+        assert_eq!(d.deadline_slot, 5000);
+    }
+
+    #[test]
+    fn test_refund_at_exact_max_ok() {
+        // requested == max: condition is >, so this must pass
+        let d = file_dispute(
+            [0x02u8; 32],
+            [0x01u8; 32],
+            [0x03u8; 32],
+            [0x04u8; 32],
+            [0x05u8; 32],
+            5000,
+            1_000_000,
+            1_000_000,
+            [0x02u8; 32],
+            4000,
+        )
+        .unwrap();
+        assert_eq!(d.requested_refund_lamports, 1_000_000);
+    }
+
+    #[test]
+    fn test_dispute_commitment_nonzero() {
+        let d = make_dispute();
+        assert_ne!(dispute_commitment(&d), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_receipt_hash_sensitive() {
+        let d = make_dispute();
+        let mut d2 = d.clone();
+        d2.receipt_hash = [0xFFu8; 32];
+        assert_ne!(dispute_commitment(&d), dispute_commitment(&d2));
+    }
+
+    #[test]
+    fn test_commitment_refund_amount_sensitive() {
+        let d = make_dispute();
+        let mut d2 = d.clone();
+        d2.requested_refund_lamports = 999_999;
+        assert_ne!(dispute_commitment(&d), dispute_commitment(&d2));
+    }
+
+    #[test]
+    fn test_counter_sign_partial_refund() {
+        let dispute = make_dispute();
+        let capsule = counter_sign(&dispute, Resolution::PartialRefund(100_000), [0xBBu8; 32]);
+        assert_eq!(capsule.resolution, Resolution::PartialRefund(100_000));
+        assert_eq!(capsule.dispute_id, dispute.dispute_id);
+    }
+
+    #[test]
+    fn test_counter_sign_refund_denied() {
+        let dispute = make_dispute();
+        let capsule = counter_sign(&dispute, Resolution::RefundDenied, [0xCCu8; 32]);
+        assert_eq!(capsule.resolution, Resolution::RefundDenied);
+    }
+
+    #[test]
+    fn test_dispute_fields_preserved() {
+        let d = file_dispute(
+            [0x02u8; 32],
+            [0x01u8; 32],
+            [0x03u8; 32],
+            [0x04u8; 32],
+            [0x05u8; 32],
+            5000,
+            500_000,
+            1_000_000,
+            [0x02u8; 32],
+            4000,
+        )
+        .unwrap();
+        assert_eq!(d.dispute_id, [0x01u8; 32]);
+        assert_eq!(d.service_hash, [0x03u8; 32]);
+        assert_eq!(d.evidence_hash, [0x05u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_dispute_id_sensitive() {
+        let d = make_dispute();
+        let mut d2 = d.clone();
+        d2.dispute_id = [0xFFu8; 32];
+        assert_ne!(dispute_commitment(&d), dispute_commitment(&d2));
+    }
+
+    #[test]
+    fn test_commitment_evidence_hash_sensitive() {
+        let d = make_dispute();
+        let mut d2 = d.clone();
+        d2.evidence_hash = [0xEEu8; 32];
+        assert_ne!(dispute_commitment(&d), dispute_commitment(&d2));
+    }
 }

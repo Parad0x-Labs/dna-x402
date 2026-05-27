@@ -236,4 +236,77 @@ mod tests {
         assert!(v.get("owner_hash").is_none());
         assert!(v.get("content_commitment").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_id_nonzero() {
+        let cap = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        assert_ne!(cap.capsule_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_seal_hash_nonzero() {
+        let cap = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        assert_ne!(cap.seal_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_owner_hash_nonzero() {
+        let cap = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        assert_ne!(cap.owner_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let cap = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        assert!(!cap.mainnet_ready);
+    }
+
+    #[test]
+    fn test_contents_mainnet_ready_false() {
+        let mut cap = seal_capsule(&owner(), content(), 0, &nonce()).unwrap();
+        let contents = open_capsule(&mut cap, content(), &nonce(), 1).unwrap();
+        assert!(!contents.mainnet_ready);
+    }
+
+    #[test]
+    fn test_opened_false_initially() {
+        let cap = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        assert!(!cap.opened);
+    }
+
+    #[test]
+    fn test_different_owner_different_capsule_id() {
+        let cap1 = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        let mut o2 = owner();
+        o2[1] = 0xFF;
+        let cap2 = seal_capsule(&o2, content(), 100, &nonce()).unwrap();
+        assert_ne!(cap1.capsule_id, cap2.capsule_id);
+    }
+
+    #[test]
+    fn test_different_nonce_different_capsule_id() {
+        let cap1 = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        let mut n2 = nonce();
+        n2[1] = 0xFF;
+        let cap2 = seal_capsule(&owner(), content(), 100, &n2).unwrap();
+        assert_ne!(cap1.capsule_id, cap2.capsule_id);
+    }
+
+    #[test]
+    fn test_different_reveal_time_different_capsule_id() {
+        let cap1 = seal_capsule(&owner(), content(), 100, &nonce()).unwrap();
+        let cap2 = seal_capsule(&owner(), content(), 200, &nonce()).unwrap();
+        assert_ne!(cap1.capsule_id, cap2.capsule_id);
+    }
+
+    #[test]
+    fn test_wrong_nonce_open_fails() {
+        let mut cap = seal_capsule(&owner(), content(), 0, &nonce()).unwrap();
+        let mut wrong_nonce = nonce();
+        wrong_nonce[0] ^= 0xFF;
+        let err = open_capsule(&mut cap, content(), &wrong_nonce, 1).unwrap_err();
+        assert_eq!(err, CapsuleError::EmptyContent);
+    }
 }

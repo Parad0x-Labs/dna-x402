@@ -321,4 +321,90 @@ mod tests {
         assert_eq!(capsule.verdict, RitualVerdict::Accepted);
         assert_ne!(capsule_hash(&capsule), [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_ritual_hash_nonzero() {
+        let (plan, _) = compile_ritual(&test_input()).unwrap();
+        assert_ne!(plan.expected_ritual_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_shape_hash_nonzero() {
+        let (plan, _) = compile_ritual(&test_input()).unwrap();
+        assert_ne!(plan.expected_shape_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_human_summary_hash_nonzero() {
+        let (plan, _) = compile_ritual(&test_input()).unwrap();
+        assert_ne!(plan.human_summary_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_invalid_ritual_type_returns_error() {
+        let mut input = test_input();
+        input.ritual_type = "UnknownRitualXYZ".to_string();
+        let err = compile_ritual(&input).unwrap_err();
+        assert_eq!(
+            err,
+            CompilerError::InvalidRitualType {
+                found: "UnknownRitualXYZ".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_public_summary_contains_withdraw_forbidden() {
+        let (plan, _) = compile_ritual(&test_input()).unwrap();
+        assert!(
+            plan.public_summary.contains("Withdraw forbidden"),
+            "public_summary must mention Withdraw forbidden"
+        );
+    }
+
+    #[test]
+    fn test_capsule_permission_hash_matches_input() {
+        let input = test_input();
+        let (_, capsule) = compile_ritual(&input).unwrap();
+        assert_eq!(capsule.permission_hash, input.permission_hash);
+    }
+
+    #[test]
+    fn test_capsule_no_custody_hash_matches_input() {
+        let input = test_input();
+        let (_, capsule) = compile_ritual(&input).unwrap();
+        assert_eq!(capsule.no_custody_hash, input.no_custody_hash);
+    }
+
+    #[test]
+    fn test_plan_ritual_type_matches_input() {
+        let input = test_input();
+        let (plan, _) = compile_ritual(&input).unwrap();
+        assert_eq!(plan.ritual_type, input.ritual_type);
+    }
+
+    #[test]
+    fn test_permission_change_changes_ritual_hash() {
+        let input1 = test_input();
+        let mut input2 = test_input();
+        input2.permission_hash = [0xFFu8; 32];
+        let (plan1, _) = compile_ritual(&input1).unwrap();
+        let (plan2, _) = compile_ritual(&input2).unwrap();
+        assert_ne!(plan1.expected_ritual_hash, plan2.expected_ritual_hash);
+    }
+
+    #[test]
+    fn test_program_hash_nonzero() {
+        assert_ne!(program_hash("DarkRitualGate"), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_program_hash_role_sensitive() {
+        assert_ne!(
+            program_hash("ComputeBudget"),
+            program_hash("DarkRitualGate")
+        );
+    }
 }

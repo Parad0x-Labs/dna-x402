@@ -167,4 +167,78 @@ mod tests {
         let result = new_circuit(&SECRET, b"", &SEED);
         assert_eq!(result.unwrap_err(), CircuitError::EmptyAttributes);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let circuit = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        assert_ne!(circuit.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_secret_different_commitment() {
+        let secret2 = [0x02u8; 32];
+        let c1 = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let c2 = new_circuit(&secret2, ATTRS, &SEED).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_different_seed_different_nullifier() {
+        let seed2 = [0x03u8; 32];
+        let c1 = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let c2 = new_circuit(&SECRET, ATTRS, &seed2).unwrap();
+        assert_ne!(c1.nullifier, c2.nullifier);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let circuit = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let proof = generate_proof(&circuit, ATTRS);
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_inputs_hash_nonzero() {
+        let circuit = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let proof = generate_proof(&circuit, ATTRS);
+        assert_ne!(proof.public_inputs_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_attributes_different_proof_public_inputs() {
+        let circuit = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let p1 = generate_proof(&circuit, ATTRS);
+        let p2 = generate_proof(&circuit, b"name:charlie,age:99");
+        assert_ne!(p1.public_inputs_hash, p2.public_inputs_hash);
+    }
+
+    #[test]
+    fn test_proof_is_stub_true() {
+        let circuit = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let proof = generate_proof(&circuit, ATTRS);
+        assert!(proof.is_stub);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let circuit = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let proof = generate_proof(&circuit, ATTRS);
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_attribute_hash_nonzero() {
+        let h = attribute_hash(ATTRS);
+        assert_ne!(h, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_proof_wrong_circuit_fails() {
+        let circuit1 = new_circuit(&SECRET, ATTRS, &SEED).unwrap();
+        let circuit2 = new_circuit(&[0x03u8; 32], ATTRS, &SEED).unwrap();
+        let proof = generate_proof(&circuit1, ATTRS);
+        assert!(!verify_proof(&circuit2, &proof));
+    }
 }

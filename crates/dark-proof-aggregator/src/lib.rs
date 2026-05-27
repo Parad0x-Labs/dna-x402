@@ -182,4 +182,74 @@ mod tests {
         let err = aggregate_proofs(proofs).unwrap_err();
         assert_eq!(err, AggError::DuplicateInput);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_agg_id_nonzero() {
+        let agg = aggregate_proofs(vec![make_proof(1), make_proof(2)]).unwrap();
+        assert_ne!(agg.agg_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_output_hash_nonzero() {
+        let agg = aggregate_proofs(vec![make_proof(3), make_proof(4)]).unwrap();
+        assert_ne!(agg.output_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_is_stub_true() {
+        let agg = aggregate_proofs(vec![make_proof(5)]).unwrap();
+        assert!(agg.is_stub);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let agg = aggregate_proofs(vec![make_proof(6)]).unwrap();
+        assert!(!agg.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_count_stored() {
+        let agg = aggregate_proofs(vec![make_proof(8), make_proof(9), make_proof(10)]).unwrap();
+        assert_eq!(agg.input_proofs.len(), 3);
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_output_hash() {
+        let mut agg = aggregate_proofs(vec![make_proof(11), make_proof(12)]).unwrap();
+        agg.output_hash[0] ^= 0xFF;
+        assert!(!verify_aggregated(&agg));
+    }
+
+    #[test]
+    fn test_max_inputs_ok() {
+        let proofs: Vec<[u8; 32]> = (0u8..32).map(make_proof).collect();
+        let agg = aggregate_proofs(proofs).unwrap();
+        assert_eq!(agg.input_proofs.len(), MAX_INPUTS);
+        assert!(verify_aggregated(&agg));
+    }
+
+    #[test]
+    fn test_public_record_has_proof_count() {
+        let agg = aggregate_proofs(vec![make_proof(20), make_proof(21)]).unwrap();
+        let record = agg_public_record(&agg);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["proof_count"], 2u64);
+        assert_eq!(v["mainnet_ready"], false);
+        assert!(v["agg_id"].is_string());
+    }
+
+    #[test]
+    fn test_agg_id_count_sensitive() {
+        let agg1 = aggregate_proofs(vec![make_proof(30)]).unwrap();
+        let agg2 = aggregate_proofs(vec![make_proof(30), make_proof(31)]).unwrap();
+        assert_ne!(agg1.agg_id, agg2.agg_id);
+    }
+
+    #[test]
+    fn test_compression_ratio_reflects_count() {
+        let agg3 = aggregate_proofs(vec![make_proof(40), make_proof(41), make_proof(42)]).unwrap();
+        assert!((agg3.compression_ratio - 3.0_f32).abs() < f32::EPSILON);
+    }
 }

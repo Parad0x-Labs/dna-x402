@@ -271,4 +271,79 @@ mod tests {
         assert!(record.contains("root"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_index_id_nonzero() {
+        let idx = new_index(&nonzero_secret()).unwrap();
+        assert_ne!(idx.index_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_index_id_deterministic() {
+        let i1 = new_index(&nonzero_secret()).unwrap();
+        let i2 = new_index(&nonzero_secret()).unwrap();
+        assert_eq!(i1.index_id, i2.index_id);
+    }
+
+    #[test]
+    fn test_index_id_secret_sensitive() {
+        let mut secret2 = nonzero_secret();
+        secret2[1] = 0xCC;
+        let i1 = new_index(&nonzero_secret()).unwrap();
+        let i2 = new_index(&secret2).unwrap();
+        assert_ne!(i1.index_id, i2.index_id);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let idx = new_index(&nonzero_secret()).unwrap();
+        assert!(!idx.mainnet_ready);
+    }
+
+    #[test]
+    fn test_entry_mainnet_ready_false() {
+        let mut idx = new_index(&nonzero_secret()).unwrap();
+        let entry = add_entry(&mut idx, b"data", b"cat", 1).unwrap();
+        assert!(!entry.mainnet_ready);
+    }
+
+    #[test]
+    fn test_entry_hash_nonzero() {
+        let mut idx = new_index(&nonzero_secret()).unwrap();
+        let entry = add_entry(&mut idx, b"payload", b"category", 10).unwrap();
+        assert_ne!(entry.entry_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_entry_hash_deterministic() {
+        let mut idx = new_index(&nonzero_secret()).unwrap();
+        let e1 = add_entry(&mut idx, b"same-data", b"cat", 5).unwrap();
+        let mut idx2 = new_index(&nonzero_secret()).unwrap();
+        let e2 = add_entry(&mut idx2, b"same-data", b"cat", 5).unwrap();
+        assert_eq!(e1.entry_hash, e2.entry_hash);
+    }
+
+    #[test]
+    fn test_entry_hash_slot_sensitive() {
+        let mut idx = new_index(&nonzero_secret()).unwrap();
+        let e1 = add_entry(&mut idx, b"data", b"cat", 100).unwrap();
+        let mut idx2 = new_index(&nonzero_secret()).unwrap();
+        let e2 = add_entry(&mut idx2, b"data", b"cat", 200).unwrap();
+        assert_ne!(e1.entry_hash, e2.entry_hash);
+    }
+
+    #[test]
+    fn test_empty_category_rejected() {
+        let mut idx = new_index(&nonzero_secret()).unwrap();
+        let result = add_entry(&mut idx, b"data", b"", 0);
+        assert_eq!(result.unwrap_err(), IndexError::EmptyCategory);
+    }
+
+    #[test]
+    fn test_root_is_zero_for_empty_index() {
+        let idx = new_index(&nonzero_secret()).unwrap();
+        assert_eq!(idx.root, [0u8; 32]);
+    }
 }

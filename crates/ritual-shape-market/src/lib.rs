@@ -178,4 +178,100 @@ mod tests {
         );
         assert_eq!(market.report(&hash_c).risk_level, ShapeRiskLevel::Doxxed);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_k_shape_zero_for_unseen() {
+        let market = ShapeMarket::new();
+        assert_eq!(market.k_shape(&[0xFFu8; 32]), 0);
+    }
+
+    #[test]
+    fn test_report_zero_observations_doxxed() {
+        let market = ShapeMarket::new();
+        let report = market.report(&[0x42u8; 32]);
+        assert_eq!(report.risk_level, ShapeRiskLevel::Doxxed);
+        assert_eq!(report.k_shape, 0);
+    }
+
+    #[test]
+    fn test_report_five_observations_safe() {
+        let mut market = ShapeMarket::new();
+        let h = [0x05u8; 32];
+        for _ in 0..5 {
+            market.observe(obs(h));
+        }
+        assert_eq!(market.report(&h).risk_level, ShapeRiskLevel::Safe);
+    }
+
+    #[test]
+    fn test_report_four_observations_low_anonymity() {
+        let mut market = ShapeMarket::new();
+        let h = [0x04u8; 32];
+        for _ in 0..4 {
+            market.observe(obs(h));
+        }
+        assert_eq!(market.report(&h).risk_level, ShapeRiskLevel::LowAnonymity);
+    }
+
+    #[test]
+    fn test_report_two_observations_low_anonymity() {
+        let mut market = ShapeMarket::new();
+        let h = [0x02u8; 32];
+        market.observe(obs(h));
+        market.observe(obs(h));
+        assert_eq!(market.report(&h).risk_level, ShapeRiskLevel::LowAnonymity);
+    }
+
+    #[test]
+    fn test_is_unique_false_multiple_observations() {
+        let mut market = ShapeMarket::new();
+        let h = [0x03u8; 32];
+        market.observe(obs(h));
+        market.observe(obs(h));
+        assert!(!market.is_unique(&h));
+    }
+
+    #[test]
+    fn test_can_join_class_same_hash() {
+        let market = ShapeMarket::new();
+        let h = [0x07u8; 32];
+        assert!(market.can_join_class(&h, &h));
+    }
+
+    #[test]
+    fn test_can_join_class_different_hash() {
+        let market = ShapeMarket::new();
+        let a = [0x01u8; 32];
+        let b = [0x02u8; 32];
+        assert!(!market.can_join_class(&a, &b));
+    }
+
+    #[test]
+    fn test_compute_class_hash_nonzero() {
+        let h = compute_class_hash("AgentSpend", &["step1", "step2"]);
+        assert_ne!(h, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_compute_class_hash_deterministic() {
+        let h1 = compute_class_hash("AgentSpend", &["step1"]);
+        let h2 = compute_class_hash("AgentSpend", &["step1"]);
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_compute_class_hash_ritual_type_sensitive() {
+        let h1 = compute_class_hash("TypeA", &["step1"]);
+        let h2 = compute_class_hash("TypeB", &["step1"]);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_compute_class_hash_step_sensitive() {
+        let h1 = compute_class_hash("TypeX", &["alpha"]);
+        let h2 = compute_class_hash("TypeX", &["beta"]);
+        assert_ne!(h1, h2);
+    }
 }

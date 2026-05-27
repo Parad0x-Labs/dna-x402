@@ -142,4 +142,96 @@ mod tests {
         let profit = estimate_profit(&jobs);
         assert_eq!(profit, 4_500 + 2_800);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_scan_empty_jobs_returns_empty() {
+        let config = default_config();
+        let result = scan_jobs(vec![], &config);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_job_at_min_reward_skipped() {
+        // reward == min_reward (1000) is NOT > min_reward → filtered out
+        let config = default_config();
+        let jobs = vec![make_job(WatcherJobKind::RentSweeper, 1_000, 100)];
+        let result = scan_jobs(jobs, &config);
+        assert!(result.is_empty(), "reward == min must be skipped");
+    }
+
+    #[test]
+    fn test_profitable_job_passes_scan() {
+        let config = default_config();
+        let jobs = vec![make_job(WatcherJobKind::RentSweeper, 5_000, 100)];
+        let result = scan_jobs(jobs, &config);
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_estimate_profit_empty_zero() {
+        assert_eq!(estimate_profit(&[]), 0);
+    }
+
+    #[test]
+    fn test_estimate_profit_single_job() {
+        let jobs = vec![make_job(WatcherJobKind::RentSweeper, 3_000, 800)];
+        assert_eq!(estimate_profit(&jobs), 2_200);
+    }
+
+    #[test]
+    fn test_execution_plan_tx_count() {
+        let config = default_config();
+        let jobs = vec![
+            make_job(WatcherJobKind::RentSweeper, 5_000, 100),
+            make_job(WatcherJobKind::ChaffMarket, 4_000, 200),
+        ];
+        let plan = build_execution_plan(jobs, &config);
+        assert_eq!(plan.tx_count, 2);
+    }
+
+    #[test]
+    fn test_execution_plan_profit_matches_estimate() {
+        let config = default_config();
+        let jobs = vec![make_job(WatcherJobKind::RentSweeper, 6_000, 600)];
+        let plan = build_execution_plan(jobs, &config);
+        assert_eq!(plan.estimated_profit_lamports, 5_400);
+    }
+
+    #[test]
+    fn test_rate_limit_fewer_than_max_not_truncated() {
+        let jobs: Vec<WatcherJob> = (0..3)
+            .map(|_i| make_job(WatcherJobKind::RentSweeper, 5_000, 100))
+            .collect();
+        let limited = enforce_rate_limit(jobs, 10);
+        assert_eq!(limited.len(), 3, "fewer than max must not be truncated");
+    }
+
+    #[test]
+    fn test_plan_dry_run_false_by_default() {
+        let config = default_config(); // dry_run = false
+        let plan = build_execution_plan(vec![], &config);
+        assert!(!plan.dry_run);
+    }
+
+    #[test]
+    fn test_allowed_kinds_all_pass() {
+        let config = default_config(); // allows RentSweeper + ChaffMarket
+        let jobs = vec![
+            make_job(WatcherJobKind::RentSweeper, 5_000, 100),
+            make_job(WatcherJobKind::ChaffMarket, 4_000, 200),
+        ];
+        let result = scan_jobs(jobs, &config);
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_scan_reward_must_exceed_cost() {
+        // reward == cost → reward > cost is false → filtered
+        let config = default_config();
+        let jobs = vec![make_job(WatcherJobKind::RentSweeper, 5_000, 5_000)];
+        let result = scan_jobs(jobs, &config);
+        assert!(result.is_empty(), "reward == cost must be skipped");
+    }
 }

@@ -289,4 +289,85 @@ mod tests {
         assert!(v.get("amount").is_none());
         assert!(v.get("amount_commitment").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        assert!(!note.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        let (proof, _) = transfer_note(&note, &owner(), &new_owner(), 50, &blinding()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_note_id_nonzero() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        assert_ne!(note.note_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_id_deterministic() {
+        let n1 = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        let n2 = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        assert_eq!(n1.note_id, n2.note_id);
+    }
+
+    #[test]
+    fn test_note_id_nonce_sensitive() {
+        let nonce2 = {
+            let mut n = [0u8; 32];
+            n[0] = 0x99;
+            n
+        };
+        let n1 = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        let n2 = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce2).unwrap();
+        assert_ne!(n1.note_id, n2.note_id);
+    }
+
+    #[test]
+    fn test_amount_commitment_nonzero() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        assert_ne!(note.amount_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_transfer_insufficient_balance_rejected() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        let err = transfer_note(&note, &owner(), &new_owner(), 101, &blinding()).unwrap_err();
+        assert!(matches!(
+            err,
+            TransferError::InsufficientBalance {
+                have: 100,
+                need: 101
+            }
+        ));
+    }
+
+    #[test]
+    fn test_transfer_exact_amount_ok() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        // exact amount == note.amount is valid (check is `amount > note.amount`)
+        let result = transfer_note(&note, &owner(), &new_owner(), 100, &blinding());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let note = mint_note(&owner(), b"SOL", 100, &blinding(), &nonce()).unwrap();
+        let (proof, _) = transfer_note(&note, &owner(), &new_owner(), 50, &blinding()).unwrap();
+        assert_ne!(proof.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_new_note_asset_hash_matches_original() {
+        let note = mint_note(&owner(), b"USDC", 500, &blinding(), &nonce()).unwrap();
+        let (_, new_note) = transfer_note(&note, &owner(), &new_owner(), 200, &blinding()).unwrap();
+        assert_eq!(new_note.asset_hash, note.asset_hash);
+    }
 }

@@ -312,4 +312,78 @@ mod tests {
         assert!(record.contains("hop_count"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_attestation_hash_nonzero() {
+        let secret = make_secret(1);
+        let attest = create_attestation(&secret, b"data", &[0u8; 32], 0, 0).unwrap();
+        assert_ne!(attest.attestation, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_node_pubkey_nonzero() {
+        let secret = make_secret(2);
+        let attest = create_attestation(&secret, b"data", &[0u8; 32], 0, 0).unwrap();
+        assert_ne!(attest.node_pubkey, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_message_hash_nonzero() {
+        let secret = make_secret(3);
+        let attest = create_attestation(&secret, b"data", &[0u8; 32], 0, 0).unwrap();
+        assert_ne!(attest.message_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_attestation() {
+        let secret = make_secret(4);
+        let attest = create_attestation(&secret, b"msg", &[0u8; 32], 0, 0).unwrap();
+        assert!(!attest.mainnet_ready);
+    }
+
+    #[test]
+    fn test_chain_mainnet_ready_false_via_record() {
+        let chain = new_relay_chain();
+        let record = chain_public_record(&chain);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_node_secret_zero_rejected() {
+        let zero = [0u8; 32];
+        let result = create_attestation(&zero, b"msg", &[0u8; 32], 0, 0);
+        assert_eq!(result, Err(RelayError::NodeSecretZero));
+    }
+
+    #[test]
+    fn test_hop_mismatch_rejected() {
+        let mut chain = new_relay_chain(); // hop_count = 0
+        let secret = make_secret(5);
+        // Create attestation for hop=1 but chain expects hop=0
+        let attest = create_attestation(&secret, b"msg", &[0u8; 32], 1, 0).unwrap();
+        let result = add_attestation(&mut chain, &attest);
+        assert_eq!(result, Err(RelayError::HopMismatch));
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_attestation() {
+        let secret = make_secret(6);
+        let mut attest = create_attestation(&secret, b"tamper-test", &[0u8; 32], 0, 0).unwrap();
+        attest.attestation[0] ^= 0xFF;
+        assert!(!verify_attestation(&attest));
+    }
+
+    #[test]
+    fn test_max_relay_hops_constant() {
+        assert_eq!(MAX_RELAY_HOPS, 10);
+    }
+
+    #[test]
+    fn test_initial_chain_hop_count_zero() {
+        let chain = new_relay_chain();
+        assert_eq!(chain.hop_count, 0);
+    }
 }

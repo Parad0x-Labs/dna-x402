@@ -357,4 +357,76 @@ mod tests {
         assert_ne!(out1.caveat_hash, out2.caveat_hash);
         assert_ne!(out1.batch_hash, out2.batch_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_merkle_root_two_leaves_not_equal_to_either() {
+        let l1 = [0x11u8; 32];
+        let l2 = [0x22u8; 32];
+        let root = merkle_root_from_leaves(&[l1, l2], b"domain");
+        assert_ne!(root, l1);
+        assert_ne!(root, l2);
+    }
+
+    #[test]
+    fn test_has_duplicate_nullifier_none() {
+        let nullifiers = vec![[0x01u8; 32], [0x02u8; 32], [0x03u8; 32]];
+        assert!(has_duplicate_nullifier(&nullifiers).is_none());
+    }
+
+    #[test]
+    fn test_has_duplicate_nullifier_found() {
+        let dup = [0xABu8; 32];
+        let nullifiers = vec![[0x01u8; 32], dup, [0x02u8; 32], dup];
+        assert_eq!(has_duplicate_nullifier(&nullifiers), Some(dup));
+    }
+
+    #[test]
+    fn test_empty_batch_rejected() {
+        let empty = DarkBatchInput {
+            receipt_leaves: vec![],
+            nullifiers: vec![],
+            session_spends: vec![],
+            starting_balance_commitment: [0u8; 32],
+            ending_balance_commitment: [0u8; 32],
+            macaroon_caveat_hash: [0u8; 32],
+            model_output_hashes: vec![],
+            budget_lamports: 1000,
+        };
+        assert!(matches!(audit_batch(&empty), Err(AuditError::EmptyBatch)));
+    }
+
+    #[test]
+    fn test_poison_leaf_in_redeem_set_rejected() {
+        let poison_hash = [0xBBu8; 32];
+        let input = DarkBatchInput {
+            receipt_leaves: vec![
+                make_leaf(0xAA, false),
+                ReceiptLeafInput {
+                    leaf_hash: poison_hash,
+                    is_poison: true,
+                },
+            ],
+            nullifiers: vec![poison_hash], // trying to redeem a poison leaf
+            session_spends: vec![1],
+            starting_balance_commitment: [0u8; 32],
+            ending_balance_commitment: [0u8; 32],
+            macaroon_caveat_hash: [0u8; 32],
+            model_output_hashes: vec![[0u8; 32]],
+            budget_lamports: 100,
+        };
+        assert!(matches!(
+            audit_batch(&input),
+            Err(AuditError::PoisonLeafInRedeemSet(_))
+        ));
+    }
+
+    #[test]
+    fn test_batch_hash_deterministic() {
+        let input = minimal_valid_input();
+        let out1 = audit_batch(&input).unwrap();
+        let out2 = audit_batch(&input).unwrap();
+        assert_eq!(out1.batch_hash, out2.batch_hash);
+    }
 }

@@ -246,4 +246,82 @@ mod tests {
             "Risc0Error::SealInvalid"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_image_id_digest_nonzero() {
+        let id = make_image_id();
+        assert_ne!(id.digest(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_image_id_bytes_stored() {
+        let id = Risc0ImageId([0xBBu8; 32]);
+        assert_eq!(id.0, [0xBBu8; 32]);
+    }
+
+    #[test]
+    fn test_new_adapter_not_toolchain_available() {
+        let adapter = Risc0Adapter::new();
+        assert!(!adapter.toolchain_available);
+    }
+
+    #[test]
+    fn test_new_with_toolchain_sets_flag() {
+        let adapter = Risc0Adapter::new_with_toolchain();
+        assert!(adapter.toolchain_available);
+    }
+
+    #[test]
+    fn test_prove_batch_blocked_even_with_toolchain() {
+        let adapter = Risc0Adapter::new_with_toolchain();
+        let image_id = make_image_id();
+        let input_hash = [0xFFu8; 32];
+        match adapter.prove_batch(&input_hash, &image_id) {
+            Err(Risc0Error::ToolchainBlocked(_)) => {}
+            other => panic!("expected ToolchainBlocked, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_verify_with_mismatched_image_id() {
+        let adapter = Risc0Adapter::new_with_toolchain();
+        let image_id = make_image_id();
+        let wrong_id = Risc0ImageId([0xFFu8; 32]);
+        let receipt = make_receipt(&image_id);
+        match adapter.verify_receipt(&receipt, &wrong_id) {
+            Err(Risc0Error::InvalidImageId) => {}
+            other => panic!("expected InvalidImageId, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_error_equality() {
+        assert_eq!(Risc0Error::InvalidImageId, Risc0Error::InvalidImageId);
+        assert_eq!(Risc0Error::JournalMismatch, Risc0Error::JournalMismatch);
+        assert_ne!(Risc0Error::InvalidImageId, Risc0Error::JournalMismatch);
+        assert_ne!(Risc0Error::SealInvalid, Risc0Error::JournalMismatch);
+    }
+
+    #[test]
+    fn test_receipt_tx_sig_none_initially() {
+        let image_id = make_image_id();
+        let receipt = make_receipt(&image_id);
+        assert!(receipt.receipt_tx_sig.is_none());
+    }
+
+    #[test]
+    fn test_journal_hash_stored() {
+        let image_id = make_image_id();
+        let receipt = make_receipt(&image_id);
+        assert_eq!(receipt.journal_hash, [0x22u8; 32]);
+    }
+
+    #[test]
+    fn test_seal_hash_stored() {
+        let image_id = make_image_id();
+        let receipt = make_receipt(&image_id);
+        assert_eq!(receipt.seal_hash, [0x33u8; 32]);
+    }
 }

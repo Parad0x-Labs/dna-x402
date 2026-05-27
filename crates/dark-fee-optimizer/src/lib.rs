@@ -296,4 +296,68 @@ mod tests {
             est.state_savings_pct
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_p_token_transfer_checked_cu_correct() {
+        assert_eq!(P_TOKEN_TRANSFER_CHECKED_CU, 111);
+    }
+
+    #[test]
+    fn test_transfer_cu_per_day_calculation() {
+        let est = estimate_deployment_cost(0, 1_000);
+        assert_eq!(est.transfer_cu_per_day, 1_000 * P_TOKEN_TRANSFER_CHECKED_CU);
+    }
+
+    #[test]
+    fn test_batch_savings_zero_receipts() {
+        let saving = batch_receipt_savings(0);
+        assert_eq!(saving.receipts, 0);
+        assert_eq!(saving.on_chain_writes_naive, 0);
+        assert_eq!(saving.on_chain_writes_batched, 0);
+        assert_eq!(saving.saves_writes, 0);
+        assert_eq!(saving.saves_lamports, 0);
+    }
+
+    #[test]
+    fn test_batch_savings_one_checkpoint_for_99() {
+        let saving = batch_receipt_savings(99);
+        // ceil(99/100) = 1 checkpoint
+        assert_eq!(saving.on_chain_writes_batched, 1);
+        assert_eq!(saving.saves_writes, 98);
+    }
+
+    #[test]
+    fn test_sol_saved_large_amount() {
+        let saved = sol_saved_per_million_transfers();
+        let expected =
+            (SPL_TOKEN_TRANSFER_CHECKED_CU_LEGACY - P_TOKEN_TRANSFER_CHECKED_CU) * 1_000_000;
+        assert_eq!(saved, expected);
+    }
+
+    #[test]
+    fn test_p_token_profiles_all_have_source_url() {
+        let profiles = p_token_fee_profiles();
+        for p in &profiles {
+            assert!(
+                !p.source.is_empty(),
+                "source url must not be empty for {}",
+                p.instruction
+            );
+            assert!(
+                p.source.contains("http"),
+                "source must look like a URL for {}",
+                p.instruction
+            );
+        }
+    }
+
+    #[test]
+    fn test_fee_profiles_instruction_names() {
+        let profiles = p_token_fee_profiles();
+        assert_eq!(profiles[0].instruction, "Transfer");
+        assert_eq!(profiles[1].instruction, "TransferChecked");
+        assert_eq!(profiles[2].instruction, "CloseAccount");
+    }
 }

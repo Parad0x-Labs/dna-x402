@@ -131,4 +131,95 @@ mod tests {
         let result = prove(&params, &secret(), &[0u8; 32], message());
         assert_eq!(result.err(), Some(SchnorrError::ZeroNonce));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proof_id_deterministic() {
+        let params = new_params(&secret()).unwrap();
+        let p1 = prove(&params, &secret(), &nonce(), message()).unwrap();
+        let p2 = prove(&params, &secret(), &nonce(), message()).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_proof_id_sensitive_to_message() {
+        let params = new_params(&secret()).unwrap();
+        let p1 = prove(&params, &secret(), &nonce(), b"msg-alpha").unwrap();
+        let p2 = prove(&params, &secret(), &nonce(), b"msg-beta").unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_commitment_depends_on_nonce() {
+        let params = new_params(&secret()).unwrap();
+        let mut n2 = nonce();
+        n2[0] ^= 0xFF;
+        let p1 = prove(&params, &secret(), &nonce(), message()).unwrap();
+        let p2 = prove(&params, &secret(), &n2, message()).unwrap();
+        assert_ne!(p1.commitment, p2.commitment);
+    }
+
+    #[test]
+    fn test_response_depends_on_secret() {
+        let mut s2 = secret();
+        s2[0] ^= 0xFF;
+        let params1 = new_params(&secret()).unwrap();
+        let params2 = new_params(&s2).unwrap();
+        let p1 = prove(&params1, &secret(), &nonce(), message()).unwrap();
+        let p2 = prove(&params2, &s2, &nonce(), message()).unwrap();
+        assert_ne!(p1.response, p2.response);
+    }
+
+    #[test]
+    fn test_is_stub_always_true() {
+        let params = new_params(&secret()).unwrap();
+        let p = prove(&params, &secret(), &nonce(), message()).unwrap();
+        assert!(p.is_stub);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let params = new_params(&secret()).unwrap();
+        assert!(!params.mainnet_ready);
+        let p = prove(&params, &secret(), &nonce(), message()).unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_challenge_depends_on_public_key() {
+        let mut s2 = secret();
+        s2[1] ^= 0xFF;
+        let params1 = new_params(&secret()).unwrap();
+        let params2 = new_params(&s2).unwrap();
+        let p1 = prove(&params1, &secret(), &nonce(), message()).unwrap();
+        let p2 = prove(&params2, &s2, &nonce(), message()).unwrap();
+        assert_ne!(p1.challenge, p2.challenge);
+    }
+
+    #[test]
+    fn test_public_key_hash_deterministic() {
+        let p1 = new_params(&secret()).unwrap();
+        let p2 = new_params(&secret()).unwrap();
+        assert_eq!(p1.public_key_hash, p2.public_key_hash);
+    }
+
+    #[test]
+    fn test_public_key_hash_depends_on_secret() {
+        let mut s2 = secret();
+        s2[0] ^= 0xFF;
+        let p1 = new_params(&secret()).unwrap();
+        let p2 = new_params(&s2).unwrap();
+        assert_ne!(p1.public_key_hash, p2.public_key_hash);
+    }
+
+    #[test]
+    fn test_all_proof_fields_nonzero() {
+        let params = new_params(&secret()).unwrap();
+        let p = prove(&params, &secret(), &nonce(), message()).unwrap();
+        assert_ne!(p.proof_id, [0u8; 32]);
+        assert_ne!(p.commitment, [0u8; 32]);
+        assert_ne!(p.challenge, [0u8; 32]);
+        assert_ne!(p.response, [0u8; 32]);
+    }
 }

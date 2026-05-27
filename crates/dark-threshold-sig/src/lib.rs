@@ -286,4 +286,83 @@ mod tests {
         assert!(json.contains("epoch"));
         assert!(json.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let shares = vec![share(0, &NONCE_A), share(1, &NONCE_B)];
+        let sig = aggregate_shares(&shares, &MSG, 2, 1).unwrap();
+        assert!(!sig.mainnet_ready);
+    }
+
+    #[test]
+    fn test_share_commitment_deterministic() {
+        let s1 = generate_signer_share(3, &MSG, &NONCE_A, &SECRET);
+        let s2 = generate_signer_share(3, &MSG, &NONCE_A, &SECRET);
+        assert_eq!(s1.share_commitment, s2.share_commitment);
+        assert_eq!(s1.partial_sig_hash, s2.partial_sig_hash);
+    }
+
+    #[test]
+    fn test_different_messages_different_share_commitment() {
+        let msg2 = [0xAAu8; 32];
+        let s1 = generate_signer_share(0, &MSG, &NONCE_A, &SECRET);
+        let s2 = generate_signer_share(0, &msg2, &NONCE_A, &SECRET);
+        assert_ne!(s1.share_commitment, s2.share_commitment);
+    }
+
+    #[test]
+    fn test_aggregated_sig_changes_with_epoch() {
+        let shares = vec![share(0, &NONCE_A), share(1, &NONCE_B)];
+        let sig1 = aggregate_shares(&shares, &MSG, 2, 1).unwrap();
+        let sig2 = aggregate_shares(&shares, &MSG, 2, 2).unwrap();
+        assert_ne!(sig1.aggregated_sig, sig2.aggregated_sig);
+    }
+
+    #[test]
+    fn test_verify_fails_wrong_message() {
+        let shares = vec![share(0, &NONCE_A), share(1, &NONCE_B)];
+        let sig = aggregate_shares(&shares, &MSG, 2, 1).unwrap();
+        let wrong_msg = [0xFFu8; 32];
+        assert!(!verify_threshold_sig(&sig, &wrong_msg));
+    }
+
+    #[test]
+    fn test_single_share_threshold_1_works() {
+        let shares = vec![share(0, &NONCE_A)];
+        let sig = aggregate_shares(&shares, &MSG, 1, 99).unwrap();
+        assert_eq!(sig.actual_signers, 1);
+        assert_eq!(sig.threshold, 1);
+        assert!(verify_threshold_sig(&sig, &MSG));
+    }
+
+    #[test]
+    fn test_partial_sig_hash_deterministic() {
+        let s1 = generate_signer_share(7, &MSG, &NONCE_C, &SECRET);
+        let s2 = generate_signer_share(7, &MSG, &NONCE_C, &SECRET);
+        assert_eq!(s1.partial_sig_hash, s2.partial_sig_hash);
+    }
+
+    #[test]
+    fn test_actual_signers_count_correct() {
+        let shares = vec![share(0, &NONCE_A), share(1, &NONCE_B), share(2, &NONCE_C)];
+        let sig = aggregate_shares(&shares, &MSG, 2, 5).unwrap();
+        assert_eq!(sig.actual_signers, 3);
+    }
+
+    #[test]
+    fn test_public_record_mainnet_ready_false() {
+        let shares = vec![share(0, &NONCE_A)];
+        let sig = aggregate_shares(&shares, &MSG, 1, 0).unwrap();
+        let json = sig_public_record(&sig);
+        assert!(json.contains("\"mainnet_ready\":false"));
+    }
+
+    #[test]
+    fn test_different_nonces_different_partial_sigs() {
+        let s1 = generate_signer_share(0, &MSG, &NONCE_A, &SECRET);
+        let s2 = generate_signer_share(0, &MSG, &NONCE_B, &SECRET);
+        assert_ne!(s1.partial_sig_hash, s2.partial_sig_hash);
+    }
 }

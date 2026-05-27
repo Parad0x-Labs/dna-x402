@@ -288,6 +288,214 @@ mod tests {
         }
     }
 
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_direct_rpc_jitter_ms() {
+        let leaders = leaders_sample();
+        let route = RelayRoute {
+            kind: RouteKind::DirectRpc,
+            endpoint: "".into(),
+        };
+        let score = score_route(&route, &leaders);
+        assert_eq!(score.timing_jitter_ms, 150);
+    }
+
+    #[test]
+    fn test_jito_jitter_ms() {
+        let leaders = leaders_sample();
+        let route = RelayRoute {
+            kind: RouteKind::Jito,
+            endpoint: "".into(),
+        };
+        let score = score_route(&route, &leaders);
+        assert_eq!(score.timing_jitter_ms, 50);
+    }
+
+    #[test]
+    fn test_swqos_jitter_ms() {
+        let leaders = leaders_sample();
+        let route = RelayRoute {
+            kind: RouteKind::StakeWeightedQos,
+            endpoint: "".into(),
+        };
+        let score = score_route(&route, &leaders);
+        assert_eq!(score.timing_jitter_ms, 100);
+    }
+
+    #[test]
+    fn test_jitter_base_zero() {
+        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+        for _ in 0..20 {
+            assert_eq!(
+                jitter_delay_ms(0, &mut rng),
+                0,
+                "base=0 must always return 0"
+            );
+        }
+    }
+
+    #[test]
+    fn test_route_kind_eq() {
+        assert_eq!(RouteKind::DirectRpc, RouteKind::DirectRpc);
+        assert_eq!(RouteKind::Jito, RouteKind::Jito);
+        assert_ne!(RouteKind::DirectRpc, RouteKind::Jito);
+        assert_ne!(RouteKind::Jito, RouteKind::StakeWeightedQos);
+    }
+
+    #[test]
+    fn test_composite_positive() {
+        let leaders = leaders_sample();
+        let routes = [
+            RelayRoute {
+                kind: RouteKind::DirectRpc,
+                endpoint: "".into(),
+            },
+            RelayRoute {
+                kind: RouteKind::Jito,
+                endpoint: "".into(),
+            },
+            RelayRoute {
+                kind: RouteKind::StakeWeightedQos,
+                endpoint: "".into(),
+            },
+        ];
+        for route in &routes {
+            let score = score_route(route, &leaders);
+            assert!(
+                score.composite > 0.0,
+                "{:?} composite must be > 0",
+                route.kind
+            );
+        }
+    }
+
+    #[test]
+    fn test_ranking_preserves_count() {
+        let leaders = leaders_sample();
+        let routes = vec![
+            RelayRoute {
+                kind: RouteKind::DirectRpc,
+                endpoint: "".into(),
+            },
+            RelayRoute {
+                kind: RouteKind::Jito,
+                endpoint: "".into(),
+            },
+            RelayRoute {
+                kind: RouteKind::StakeWeightedQos,
+                endpoint: "".into(),
+            },
+        ];
+        let ranked = rank_routes(routes, &leaders);
+        assert_eq!(ranked.len(), 3);
+    }
+
+    #[test]
+    fn test_direct_rpc_highest_fingerprint_risk() {
+        let leaders = leaders_sample();
+        let s_direct = score_route(
+            &RelayRoute {
+                kind: RouteKind::DirectRpc,
+                endpoint: "".into(),
+            },
+            &leaders,
+        );
+        let s_swqos = score_route(
+            &RelayRoute {
+                kind: RouteKind::StakeWeightedQos,
+                endpoint: "".into(),
+            },
+            &leaders,
+        );
+        let s_jito = score_route(
+            &RelayRoute {
+                kind: RouteKind::Jito,
+                endpoint: "".into(),
+            },
+            &leaders,
+        );
+        assert!(s_direct.fingerprint_risk > s_swqos.fingerprint_risk);
+        assert!(s_swqos.fingerprint_risk > s_jito.fingerprint_risk);
+    }
+
+    #[test]
+    fn test_jito_landing_probability() {
+        let leaders = leaders_sample();
+        let route = RelayRoute {
+            kind: RouteKind::Jito,
+            endpoint: "".into(),
+        };
+        let score = score_route(&route, &leaders);
+        assert!((score.landing_probability - 0.97_f32).abs() < 1e-6_f32);
+    }
+
+    #[test]
+    fn test_fingerprint_risk_bounded() {
+        let both_leaders: [Vec<LeaderWindow>; 2] = [vec![], leaders_sample()];
+        let routes = [
+            RelayRoute {
+                kind: RouteKind::DirectRpc,
+                endpoint: "".into(),
+            },
+            RelayRoute {
+                kind: RouteKind::Jito,
+                endpoint: "".into(),
+            },
+            RelayRoute {
+                kind: RouteKind::StakeWeightedQos,
+                endpoint: "".into(),
+            },
+        ];
+        for leaders in &both_leaders {
+            for route in &routes {
+                let score = score_route(route, leaders);
+                assert!(
+                    score.fingerprint_risk >= 0.0 && score.fingerprint_risk <= 1.0,
+                    "fingerprint_risk out of [0,1]: {}",
+                    score.fingerprint_risk
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_jito_composite_best_among_all() {
+        let leaders = leaders_sample();
+        let s_jito = score_route(
+            &RelayRoute {
+                kind: RouteKind::Jito,
+                endpoint: "".into(),
+            },
+            &leaders,
+        )
+        .composite;
+        let s_swqos = score_route(
+            &RelayRoute {
+                kind: RouteKind::StakeWeightedQos,
+                endpoint: "".into(),
+            },
+            &leaders,
+        )
+        .composite;
+        let s_direct = score_route(
+            &RelayRoute {
+                kind: RouteKind::DirectRpc,
+                endpoint: "".into(),
+            },
+            &leaders,
+        )
+        .composite;
+        assert!(
+            s_jito > s_swqos,
+            "Jito composite={s_jito:.4} must beat SWQoS={s_swqos:.4}"
+        );
+        assert!(
+            s_swqos > s_direct,
+            "SWQoS composite={s_swqos:.4} must beat Direct={s_direct:.4}"
+        );
+    }
+
     // ── Devnet integration test (requires --features devnet-tests) ──
 
     #[cfg(feature = "devnet-tests")]

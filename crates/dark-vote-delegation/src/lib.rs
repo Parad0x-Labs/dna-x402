@@ -261,4 +261,78 @@ mod tests {
         assert!(v.get("delegator_hash").is_none());
         assert!(v.get("delegatee_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let d = create_delegation(&delegator(), &delegatee(), scope(), 9999).unwrap();
+        assert!(!d.mainnet_ready);
+        let vote = cast_delegated_vote(&d, true, 100).unwrap();
+        assert!(!vote.mainnet_ready);
+    }
+
+    #[test]
+    fn test_delegate_id_deterministic() {
+        let d1 = create_delegation(&delegator(), &delegatee(), scope(), 9999).unwrap();
+        let d2 = create_delegation(&delegator(), &delegatee(), scope(), 9999).unwrap();
+        assert_eq!(d1.delegate_id, d2.delegate_id);
+    }
+
+    #[test]
+    fn test_delegate_id_sensitive_to_scope() {
+        let d1 = create_delegation(&delegator(), &delegatee(), b"scope-a", 9999).unwrap();
+        let d2 = create_delegation(&delegator(), &delegatee(), b"scope-b", 9999).unwrap();
+        assert_ne!(d1.delegate_id, d2.delegate_id);
+    }
+
+    #[test]
+    fn test_vote_id_deterministic() {
+        let d = create_delegation(&delegator(), &delegatee(), scope(), 9999).unwrap();
+        let v1 = cast_delegated_vote(&d, true, 500).unwrap();
+        let v2 = cast_delegated_vote(&d, true, 500).unwrap();
+        assert_eq!(v1.vote_id, v2.vote_id);
+    }
+
+    #[test]
+    fn test_different_choices_different_vote_ids() {
+        let d = create_delegation(&delegator(), &delegatee(), scope(), 9999).unwrap();
+        let v_yes = cast_delegated_vote(&d, true, 500).unwrap();
+        let v_no = cast_delegated_vote(&d, false, 500).unwrap();
+        assert_ne!(v_yes.vote_id, v_no.vote_id);
+    }
+
+    #[test]
+    fn test_zero_delegatee_rejected() {
+        let err = create_delegation(&delegator(), &[0u8; 32], scope(), 9999).unwrap_err();
+        assert_eq!(err, DelegateError::ZeroDelegateeSecret);
+    }
+
+    #[test]
+    fn test_empty_scope_rejected() {
+        let err = create_delegation(&delegator(), &delegatee(), b"", 9999).unwrap_err();
+        assert_eq!(err, DelegateError::EmptyScope);
+    }
+
+    #[test]
+    fn test_cast_at_expiry_exactly_succeeds() {
+        // expires_at_unix = 500; cast_at = 500 → strict `>` means 500 is ok
+        let d = create_delegation(&delegator(), &delegatee(), scope(), 500).unwrap();
+        let vote = cast_delegated_vote(&d, true, 500).unwrap();
+        assert_eq!(vote.cast_at_unix, 500);
+    }
+
+    #[test]
+    fn test_revoked_flag_starts_false() {
+        let d = create_delegation(&delegator(), &delegatee(), scope(), 9999).unwrap();
+        assert!(!d.revoked);
+    }
+
+    #[test]
+    fn test_public_record_expiry_stored() {
+        let d = create_delegation(&delegator(), &delegatee(), scope(), 12345).unwrap();
+        let record = delegation_public_record(&d);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["expires_at_unix"], 12345i64);
+    }
 }

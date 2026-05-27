@@ -278,4 +278,76 @@ mod tests {
         assert_ne!(session.ballot_root, root_before);
         assert_ne!(session.ballot_root, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_session_id_nonzero() {
+        let session = new_session(&admin(), &nonce(0x01));
+        assert_ne!(session.session_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_vote_count_increments() {
+        let mut session = new_session(&admin(), &nonce(0x01));
+        cast_vote(&mut session, &voter(0xb1), true, &nonce(0x0a)).unwrap();
+        assert_eq!(session.vote_count, 1);
+    }
+
+    #[test]
+    fn test_ballot_id_nonzero() {
+        let mut session = new_session(&admin(), &nonce(0x01));
+        let ballot = cast_vote(&mut session, &voter(0xb1), true, &nonce(0x0a)).unwrap();
+        assert_ne!(ballot.ballot_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ballot_nullifier_nonzero() {
+        let mut session = new_session(&admin(), &nonce(0x01));
+        let ballot = cast_vote(&mut session, &voter(0xb1), true, &nonce(0x0a)).unwrap();
+        assert_ne!(ballot.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_vote_commitment_nonzero() {
+        let mut session = new_session(&admin(), &nonce(0x01));
+        let ballot = cast_vote(&mut session, &voter(0xb1), false, &nonce(0x0a)).unwrap();
+        assert_ne!(ballot.vote_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_zero_voter_secret_rejected() {
+        let mut session = new_session(&admin(), &nonce(0x01));
+        let err = cast_vote(&mut session, &[0u8; 32], true, &nonce(0x0a)).unwrap_err();
+        assert_eq!(err, VoteError::ZeroVoterSecret);
+    }
+
+    #[test]
+    fn test_cast_vote_on_closed_session_fails() {
+        let mut session = new_session(&admin(), &nonce(0x01));
+        close_session(&mut session).unwrap();
+        let err = cast_vote(&mut session, &voter(0xb1), true, &nonce(0x0a)).unwrap_err();
+        assert_eq!(err, VoteError::AlreadyClosed);
+    }
+
+    #[test]
+    fn test_admin_hash_deterministic() {
+        let h1 = compute_admin_hash(&[0xAAu8; 32]);
+        let h2 = compute_admin_hash(&[0xAAu8; 32]);
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_voter_hash_deterministic() {
+        let h1 = compute_voter_hash(&[0xBBu8; 32]);
+        let h2 = compute_voter_hash(&[0xBBu8; 32]);
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_different_admin_different_session_id() {
+        let s1 = compute_session_id(&[0x01u8; 32], &nonce(0x01));
+        let s2 = compute_session_id(&[0x02u8; 32], &nonce(0x01));
+        assert_ne!(s1, s2);
+    }
 }

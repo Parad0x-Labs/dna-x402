@@ -144,4 +144,84 @@ mod tests {
         assert_eq!(v["version"].as_str().unwrap(), "0.3.0");
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_total_privacy_primitives_at_least_100() {
+        let stats = current_stats();
+        assert!(stats.total_privacy_primitives >= 100);
+    }
+
+    #[test]
+    fn test_stats_hash_nonzero() {
+        let stats = current_stats();
+        assert_ne!(stats.stats_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let stats = current_stats();
+        assert!(!stats.mainnet_ready);
+    }
+
+    #[test]
+    fn test_record_has_all_fields() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        assert!(v["crate_count"].is_number());
+        assert!(v["total_tests"].is_number());
+        assert!(v["stats_hash"].is_string());
+        assert!(v["mainnet_ready"].is_boolean());
+    }
+
+    #[test]
+    fn test_record_crate_count_matches() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        assert_eq!(v["crate_count"].as_u64().unwrap(), stats.crate_count as u64);
+    }
+
+    #[test]
+    fn test_record_total_tests_matches() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        assert_eq!(v["total_tests"].as_u64().unwrap(), stats.total_tests as u64);
+    }
+
+    #[test]
+    fn test_record_wave_count_matches() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        assert_eq!(v["wave_count"].as_u64().unwrap(), stats.wave_count as u64);
+    }
+
+    #[test]
+    fn test_record_zk_proof_types_matches() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        assert_eq!(
+            v["zk_proof_types"].as_u64().unwrap(),
+            stats.zk_proof_types as u64
+        );
+    }
+
+    #[test]
+    fn test_record_total_privacy_primitives_matches() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        assert_eq!(
+            v["total_privacy_primitives"].as_u64().unwrap(),
+            stats.total_privacy_primitives as u64
+        );
+    }
+
+    #[test]
+    fn test_stats_hash_is_hex_string() {
+        let stats = current_stats();
+        let v: serde_json::Value = serde_json::from_str(&stats_v3_record(&stats)).unwrap();
+        let h = v["stats_hash"].as_str().unwrap();
+        assert_eq!(h.len(), 64, "stats_hash hex must be 64 chars");
+        assert!(h.chars().all(|c| c.is_ascii_hexdigit()));
+    }
 }

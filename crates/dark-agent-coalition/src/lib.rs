@@ -330,4 +330,87 @@ mod tests {
             );
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let secrets = [secret(1), secret(2)];
+        let coalition = form_coalition(&secrets, 2).unwrap();
+        assert!(!coalition.mainnet_ready);
+        let sig = sign_message(&coalition, &secrets, b"msg").unwrap();
+        assert!(!sig.mainnet_ready);
+    }
+
+    #[test]
+    fn test_coalition_id_deterministic() {
+        let secrets = [secret(5), secret(6)];
+        let c1 = form_coalition(&secrets, 2).unwrap();
+        let c2 = form_coalition(&secrets, 2).unwrap();
+        assert_eq!(c1.coalition_id, c2.coalition_id);
+    }
+
+    #[test]
+    fn test_coalition_id_secret_sensitive() {
+        let s1 = [secret(1), secret(2)];
+        let s2 = [secret(1), secret(3)];
+        let c1 = form_coalition(&s1, 2).unwrap();
+        let c2 = form_coalition(&s2, 2).unwrap();
+        assert_ne!(c1.coalition_id, c2.coalition_id);
+    }
+
+    #[test]
+    fn test_threshold_zero_rejected() {
+        let err = form_coalition(&[secret(1)], 0).unwrap_err();
+        assert_eq!(err, CoalitionError::ThresholdZero);
+    }
+
+    #[test]
+    fn test_empty_members_rejected() {
+        let err = form_coalition(&[], 1).unwrap_err();
+        assert_eq!(err, CoalitionError::EmptyMembers);
+    }
+
+    #[test]
+    fn test_verify_wrong_message_false() {
+        let secrets = [secret(11), secret(12)];
+        let coalition = form_coalition(&secrets, 2).unwrap();
+        let sig = sign_message(&coalition, &secrets, b"correct message").unwrap();
+        assert!(!verify_signature(&coalition, &sig, b"wrong message"));
+    }
+
+    #[test]
+    fn test_partial_sigs_count_equals_signers() {
+        let secrets = [secret(20), secret(21), secret(22)];
+        let coalition = form_coalition(&secrets, 2).unwrap();
+        let signing = [secret(20), secret(21)];
+        let sig = sign_message(&coalition, &signing, b"msg").unwrap();
+        assert_eq!(sig.partial_sigs.len(), 2);
+        assert_eq!(sig.signer_count, 2);
+    }
+
+    #[test]
+    fn test_public_record_member_count_correct() {
+        let secrets = [secret(30), secret(31), secret(32)];
+        let coalition = form_coalition(&secrets, 2).unwrap();
+        let record = coalition_public_record(&coalition);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["member_count"], 3u64);
+    }
+
+    #[test]
+    fn test_signing_one_of_one_threshold_one() {
+        let secrets = [secret(50)];
+        let coalition = form_coalition(&secrets, 1).unwrap();
+        let sig = sign_message(&coalition, &secrets, b"solo").unwrap();
+        assert!(verify_signature(&coalition, &sig, b"solo"));
+    }
+
+    #[test]
+    fn test_coalition_id_sensitive_to_threshold() {
+        let secrets = [secret(1), secret(2)];
+        let c1 = form_coalition(&secrets, 1).unwrap();
+        let c2 = form_coalition(&secrets, 2).unwrap();
+        assert_ne!(c1.coalition_id, c2.coalition_id);
+    }
 }

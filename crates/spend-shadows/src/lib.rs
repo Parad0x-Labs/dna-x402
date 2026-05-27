@@ -345,4 +345,75 @@ mod tests {
             "same inputs must produce identical bundle_id"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_bundle_id_nonzero() {
+        let bundle = new_shadow_bundle([0x01u8; 32], 2, None, None, 9999);
+        assert_ne!(bundle.bundle_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_real_commitment_nonzero() {
+        let bundle = new_shadow_bundle([0x01u8; 32], 2, None, None, 9999);
+        assert_ne!(bundle.real_commitment_hidden, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_kind_bytes_distinct() {
+        let kinds = [
+            SpendShadowKind::Real,
+            SpendShadowKind::Decoy,
+            SpendShadowKind::Delayed,
+            SpendShadowKind::Poison,
+            SpendShadowKind::Maintenance,
+        ];
+        let bytes: Vec<u8> = kinds.iter().map(|k| k.kind_byte()).collect();
+        let unique: std::collections::HashSet<u8> = bytes.iter().cloned().collect();
+        assert_eq!(unique.len(), kinds.len(), "all kind bytes must be distinct");
+    }
+
+    #[test]
+    fn test_copy_sniper_one_leaf_full_precision() {
+        // 0 decoys → 1 real leaf → precision = 1.0 / 1 = 1.0
+        let bundle = new_shadow_bundle([0x01u8; 32], 0, None, None, 9999);
+        assert_eq!(copy_sniper_precision(&bundle), 1.0);
+    }
+
+    #[test]
+    fn test_maintenance_leaf_can_be_redeemed() {
+        let leaf = make_leaf(SpendShadowKind::Maintenance, 0x05);
+        assert!(can_redeem_leaf(&leaf).is_ok());
+    }
+
+    #[test]
+    fn test_no_delayed_leaf_in_simple_bundle() {
+        let bundle = new_shadow_bundle([0x01u8; 32], 3, None, None, 9999);
+        let delayed_count = bundle
+            .public_leaves
+            .iter()
+            .filter(|l| l.kind == SpendShadowKind::Delayed)
+            .count();
+        assert_eq!(delayed_count, 0);
+    }
+
+    #[test]
+    fn test_bundle_with_maintenance_has_maintenance_leaf() {
+        let maint_hash = [0xBBu8; 32];
+        let bundle = new_shadow_bundle([0x01u8; 32], 2, None, Some(maint_hash), 9999);
+        let maint_count = bundle
+            .public_leaves
+            .iter()
+            .filter(|l| l.kind == SpendShadowKind::Maintenance)
+            .count();
+        assert_eq!(maint_count, 1);
+    }
+
+    #[test]
+    fn test_poison_canonical_byte_is_kind_byte() {
+        let leaf = make_leaf(SpendShadowKind::Poison, 0x10);
+        let cb = leaf.canonical_bytes();
+        assert_eq!(cb[0], SpendShadowKind::Poison.kind_byte());
+    }
 }

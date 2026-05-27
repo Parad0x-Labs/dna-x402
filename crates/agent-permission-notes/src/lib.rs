@@ -442,4 +442,45 @@ mod tests {
             json.len()
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_spend_at_exact_expiry_ok() {
+        // spend_allowed: current_slot > expiry_slot (strictly >), so == is ok
+        let note = make_note(); // expiry_slot = 9999
+        let spend = PermissionSpend::new(&note, 1_000, [0x01u8; 32], 9999);
+        let result = spend_allowed(&note, &spend, 9999, 0);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_note_hash_nonzero() {
+        let note = make_note();
+        assert_ne!(note.note_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_note_hash_changes_with_max_spend() {
+        let note_a = make_note();
+        let mut note_b = make_note();
+        note_b.max_total_spend = note_a.max_total_spend + 1;
+        assert_ne!(note_a.note_hash(), note_b.note_hash());
+    }
+
+    #[test]
+    fn test_revoke_session_nonzero() {
+        let note = make_note();
+        let revocation = revoke_session(&note);
+        assert_ne!(revocation.0, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_rotation_hash_nonzero() {
+        let old = make_note();
+        let mut new_note = make_note();
+        new_note.max_single_spend = 50_000;
+        let rotation = rotate_permission(&old, &new_note, 500);
+        assert_ne!(rotation.rotation_hash, [0u8; 32]);
+    }
 }

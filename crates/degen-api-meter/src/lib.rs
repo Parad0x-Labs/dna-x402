@@ -194,4 +194,81 @@ mod tests {
         let note1b = ApiMeter::refill(scope, 100, 1, salt1);
         assert_eq!(note1.meter_id, note1b.meter_id);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_meter_root_nonzero() {
+        let note = make_note(5);
+        assert_ne!(note.meter_root(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_meter_root_deterministic() {
+        let note = make_note(5);
+        assert_eq!(note.meter_root(), note.meter_root());
+    }
+
+    #[test]
+    fn test_call_nullifier_changes_with_index() {
+        let note = make_note(5);
+        let n0 = note.call_nullifier(0);
+        let n1 = note.call_nullifier(1);
+        assert_ne!(n0, n1);
+    }
+
+    #[test]
+    fn test_nullifiers_all_unique() {
+        let note = make_note(5);
+        let meter = ApiMeter::new(note);
+        let batch = meter.batch_nullifiers(5);
+        let unique: HashSet<_> = batch.iter().collect();
+        assert_eq!(unique.len(), 5);
+    }
+
+    #[test]
+    fn test_remaining_starts_at_total() {
+        let note = make_note(7);
+        let meter = ApiMeter::new(note);
+        assert_eq!(meter.remaining(), 7);
+    }
+
+    #[test]
+    fn test_batch_count_capped_at_total() {
+        let note = make_note(5);
+        let meter = ApiMeter::new(note);
+        let batch = meter.batch_nullifiers(100);
+        assert_eq!(batch.len(), 5);
+    }
+
+    #[test]
+    fn test_burn_all_calls_ok() {
+        let note = make_note(3);
+        let mut meter = ApiMeter::new(note);
+        let scope = [0x22u8; 32];
+        meter.burn_call(&scope).unwrap();
+        meter.burn_call(&scope).unwrap();
+        meter.burn_call(&scope).unwrap();
+        assert_eq!(meter.remaining(), 0);
+    }
+
+    #[test]
+    fn test_refill_epoch_stored() {
+        let scope = [0x44u8; 32];
+        let note = ApiMeter::refill(scope, 10, 99, [0xCCu8; 32]);
+        assert_eq!(note.epoch, 99);
+    }
+
+    #[test]
+    fn test_refill_scope_stored() {
+        let scope = [0x55u8; 32];
+        let note = ApiMeter::refill(scope, 5, 1, [0xDDu8; 32]);
+        assert_eq!(note.scope_hash, scope);
+    }
+
+    #[test]
+    fn test_call_nullifier_nonzero() {
+        let note = make_note(5);
+        assert_ne!(note.call_nullifier(0), [0u8; 32]);
+    }
 }

@@ -393,6 +393,52 @@ mod tests {
     }
 
     #[test]
+    fn test_mainnet_ready_always_false() {
+        let receipt = mock_receipt();
+        let bn = derive_nullifier(&receipt, 5, false).unwrap();
+        assert!(!bn.mainnet_ready);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let receipt = mock_receipt();
+        let bn = derive_nullifier(&receipt, 5, false).unwrap();
+        assert_ne!(bn.nullifier, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_is_real_payment_false_for_mock() {
+        let receipt = mock_receipt();
+        assert!(receipt.is_mock);
+        let bn = derive_nullifier(&receipt, 5, false).unwrap();
+        assert!(!bn.is_real_payment);
+    }
+
+    #[test]
+    fn test_null_rec_pda_nonzero() {
+        let receipt = mock_receipt();
+        let bn = derive_nullifier(&receipt, 5, false).unwrap();
+        let program_id = Pubkey::new_unique();
+        let (addr, _bump) = null_rec_pda(&program_id, &bn.nullifier);
+        assert_ne!(addr, Pubkey::default());
+    }
+
+    #[test]
+    fn test_bank_pda_nonzero() {
+        let program_id = Pubkey::new_unique();
+        let (addr, _bump) = bank_pda(&program_id, 42, 7);
+        assert_ne!(addr, Pubkey::default());
+    }
+
+    #[test]
+    fn test_epoch_field_stored() {
+        let receipt = mock_receipt();
+        let epoch = 42u64;
+        let bn = derive_nullifier(&receipt, epoch, false).unwrap();
+        assert_eq!(bn.epoch, epoch);
+    }
+
+    #[test]
     fn test_nullifier_is_scope_bound() {
         // Two receipts with same payment but different resources → different nullifiers
         let mut r1 = mock_receipt();

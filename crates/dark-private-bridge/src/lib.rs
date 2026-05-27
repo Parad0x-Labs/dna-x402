@@ -214,4 +214,71 @@ mod tests {
         assert!(v.get("depositor_hash").is_none());
         assert!(!record.contains(&hex32(&deposit.depositor_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_deposit_id_nonzero() {
+        let deposit = create_deposit(&secret(0x01), 100, b"sol", b"eth", &secret(0x02)).unwrap();
+        assert_ne!(deposit.deposit_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_depositor_hash_nonzero() {
+        let deposit = create_deposit(&secret(0x03), 100, b"sol", b"eth", &secret(0x04)).unwrap();
+        assert_ne!(deposit.depositor_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_source_chain_hash_nonzero() {
+        let deposit = create_deposit(&secret(0x05), 100, b"sol", b"eth", &secret(0x06)).unwrap();
+        assert_ne!(deposit.source_chain_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_dest_chain_hash_nonzero() {
+        let deposit = create_deposit(&secret(0x07), 100, b"sol", b"eth", &secret(0x08)).unwrap();
+        assert_ne!(deposit.dest_chain_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_secret_hash_nonzero() {
+        let deposit = create_deposit(&secret(0x09), 100, b"sol", b"eth", &secret(0x0a)).unwrap();
+        assert_ne!(deposit.secret_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_deposit_mainnet_ready_false() {
+        let deposit = create_deposit(&secret(0x0b), 100, b"sol", b"eth", &secret(0x0c)).unwrap();
+        assert!(!deposit.mainnet_ready);
+    }
+
+    #[test]
+    fn test_claim_mainnet_ready_false() {
+        let mut deposit =
+            create_deposit(&secret(0x0d), 100, b"sol", b"eth", &secret(0x0e)).unwrap();
+        let claim = claim_deposit(&mut deposit, &secret(0x0f), &secret(0x0e)).unwrap();
+        assert!(!claim.mainnet_ready);
+    }
+
+    #[test]
+    fn test_claim_id_nonzero() {
+        let mut deposit =
+            create_deposit(&secret(0x10), 100, b"sol", b"eth", &secret(0x11)).unwrap();
+        let claim = claim_deposit(&mut deposit, &secret(0x12), &secret(0x11)).unwrap();
+        assert_ne!(claim.claim_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_deposit_id_deterministic() {
+        let d1 = create_deposit(&secret(0x13), 500, b"sol", b"eth", &secret(0x14)).unwrap();
+        let d2 = create_deposit(&secret(0x13), 500, b"sol", b"eth", &secret(0x14)).unwrap();
+        assert_eq!(d1.deposit_id, d2.deposit_id);
+    }
+
+    #[test]
+    fn test_zero_depositor_secret_rejected() {
+        let err = create_deposit(&[0u8; 32], 100, b"sol", b"eth", &secret(0x15)).unwrap_err();
+        assert_eq!(err, BridgeError::ZeroDepositorSecret);
+    }
 }

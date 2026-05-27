@@ -182,4 +182,90 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(!v["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let acct = new_account(test_id(), 1000, 1).unwrap();
+        assert!(!acct.mainnet_ready);
+        let mut a2 = new_account(test_id(), 1000, 1).unwrap();
+        let r = record_spend(&mut a2, 100).unwrap();
+        assert!(!r.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_account_id_rejected() {
+        let err = new_account([0u8; 32], 1000, 1).unwrap_err();
+        assert_eq!(err, SpendError::AccountIdZero);
+    }
+
+    #[test]
+    fn test_receipt_hash_deterministic() {
+        let mut a1 = new_account(test_id(), 1000, 5).unwrap();
+        let mut a2 = new_account(test_id(), 1000, 5).unwrap();
+        let r1 = record_spend(&mut a1, 100).unwrap();
+        let r2 = record_spend(&mut a2, 100).unwrap();
+        assert_eq!(r1.receipt_hash, r2.receipt_hash);
+    }
+
+    #[test]
+    fn test_receipt_hash_sensitive_to_amount() {
+        let mut a1 = new_account(test_id(), 1000, 5).unwrap();
+        let mut a2 = new_account(test_id(), 1000, 5).unwrap();
+        let r1 = record_spend(&mut a1, 100).unwrap();
+        let r2 = record_spend(&mut a2, 200).unwrap();
+        assert_ne!(r1.receipt_hash, r2.receipt_hash);
+    }
+
+    #[test]
+    fn test_cap_exactly_reached_succeeds() {
+        let mut acct = new_account(test_id(), 500, 1).unwrap();
+        let r = record_spend(&mut acct, 500).unwrap();
+        assert_eq!(r.new_total, 500);
+        assert_eq!(acct.cumulative_spend, 500);
+    }
+
+    #[test]
+    fn test_epoch_stored_correctly() {
+        let acct = new_account(test_id(), 1000, 77).unwrap();
+        assert_eq!(acct.epoch, 77);
+    }
+
+    #[test]
+    fn test_new_total_tracked_across_spends() {
+        let mut acct = new_account(test_id(), 1000, 1).unwrap();
+        let r1 = record_spend(&mut acct, 100).unwrap();
+        assert_eq!(r1.new_total, 100);
+        let r2 = record_spend(&mut acct, 200).unwrap();
+        assert_eq!(r2.new_total, 300);
+    }
+
+    #[test]
+    fn test_reset_keeps_cap_lamports() {
+        let mut acct = new_account(test_id(), 9999, 1).unwrap();
+        reset_epoch(&mut acct, 2);
+        assert_eq!(acct.cap_lamports, 9999);
+    }
+
+    #[test]
+    fn test_spend_receipt_has_account_id() {
+        let mut acct = new_account(test_id(), 1000, 1).unwrap();
+        let r = record_spend(&mut acct, 100).unwrap();
+        assert_eq!(r.account_id, test_id());
+    }
+
+    #[test]
+    fn test_record_spend_up_to_cap_then_fail() {
+        let mut acct = new_account(test_id(), 300, 1).unwrap();
+        record_spend(&mut acct, 300).unwrap();
+        let err = record_spend(&mut acct, 1).unwrap_err();
+        assert_eq!(
+            err,
+            SpendError::CapExceeded {
+                cap: 300,
+                attempted: 301
+            }
+        );
+    }
 }

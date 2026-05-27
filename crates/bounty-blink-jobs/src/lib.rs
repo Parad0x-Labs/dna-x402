@@ -238,4 +238,108 @@ mod tests {
         );
         assert!(matches!(result, Err(JobError::RawSecretInTitle)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_job_id_nonzero() {
+        let job = create_job(
+            JobKind::CloseExpiredAccount,
+            5_000,
+            100_000,
+            proof(),
+            "Close PDA",
+        )
+        .unwrap();
+        assert_ne!(job.job_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_job_id_deterministic() {
+        let j1 = create_job(JobKind::FillShapePool, 1_000, 9_999, proof(), "Fill pool").unwrap();
+        let j2 = create_job(JobKind::FillShapePool, 1_000, 9_999, proof(), "Fill pool").unwrap();
+        assert_eq!(j1.job_id, j2.job_id);
+    }
+
+    #[test]
+    fn test_different_kinds_different_job_id() {
+        let j1 = create_job(JobKind::CloseExpiredAccount, 1_000, 9_999, proof(), "Work").unwrap();
+        let j2 = create_job(JobKind::RefreshFeeHeatmap, 1_000, 9_999, proof(), "Work").unwrap();
+        assert_ne!(j1.job_id, j2.job_id);
+    }
+
+    #[test]
+    fn test_job_hash_nonzero() {
+        let job = create_job(
+            JobKind::CompactReceiptRoot,
+            3_000,
+            500_000,
+            proof(),
+            "Compact",
+        )
+        .unwrap();
+        assert_ne!(job_hash(&job), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_secret_in_title_rejected() {
+        // "secret" in title → RawSecretInTitle
+        let result = create_job(
+            JobKind::SubmitNullifier,
+            100,
+            999,
+            proof(),
+            "super secret task",
+        );
+        assert!(matches!(result, Err(JobError::RawSecretInTitle)));
+    }
+
+    #[test]
+    fn test_claim_at_exact_expiry_slot_ok() {
+        // current_slot > expires → Expired; == is NOT expired
+        let mut job =
+            create_job(JobKind::VerifySessionRoot, 1_000, 500, proof(), "Verify").unwrap();
+        assert!(claim_job(&mut job, 500).is_ok());
+    }
+
+    #[test]
+    fn test_description_hash_nonzero() {
+        let job = create_job(
+            JobKind::CompileRitualPuzzle,
+            2_000,
+            999,
+            proof(),
+            "Puzzle work",
+        )
+        .unwrap();
+        assert_ne!(job.public_description_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_action_url_hash_nonzero() {
+        let job = create_job(
+            JobKind::RevealAlphaCapsule,
+            2_000,
+            999,
+            proof(),
+            "Reveal task",
+        )
+        .unwrap();
+        assert_ne!(job.action_url_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_complete_job_sets_completed_flag() {
+        let mut job = create_job(
+            JobKind::CompactReceiptRoot,
+            7_500,
+            100_000,
+            proof(),
+            "Compact",
+        )
+        .unwrap();
+        assert!(!job.completed);
+        complete_job(&mut job, proof()).unwrap();
+        assert!(job.completed);
+    }
 }

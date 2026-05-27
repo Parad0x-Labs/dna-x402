@@ -240,4 +240,114 @@ mod tests {
             log_line
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_scope_nonzero() {
+        let scope = required_scope(&TgCommand::Signal);
+        assert_ne!(scope, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_scope_command_sensitive() {
+        let s1 = required_scope(&TgCommand::Signal);
+        let s2 = required_scope(&TgCommand::Bet);
+        assert_ne!(s1, s2);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        let user = [0x11u8; 32];
+        let nonce = [0x22u8; 32];
+        let n = command_nullifier(&user, &TgCommand::Signal, &nonce);
+        assert_ne!(n, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_user_sensitive() {
+        let nonce = [0x01u8; 32];
+        let n1 = command_nullifier(&[0xAAu8; 32], &TgCommand::Bet, &nonce);
+        let n2 = command_nullifier(&[0xBBu8; 32], &TgCommand::Bet, &nonce);
+        assert_ne!(n1, n2);
+    }
+
+    #[test]
+    fn test_nullifier_nonce_sensitive() {
+        let user = [0x55u8; 32];
+        let n1 = command_nullifier(&user, &TgCommand::Tip, &[0x01u8; 32]);
+        let n2 = command_nullifier(&user, &TgCommand::Tip, &[0x02u8; 32]);
+        assert_ne!(n1, n2);
+    }
+
+    #[test]
+    fn test_verify_at_exact_expiry_ok() {
+        // current_slot > expires_at_slot → Expired; == is NOT expired
+        let mut receipt = make_signal_receipt(1000);
+        receipt.expires_at_slot = 500;
+        assert!(verify_command(&receipt, 500).is_ok());
+    }
+
+    #[test]
+    fn test_tip_wrong_scope_rejected() {
+        let tip_scope = required_scope(&TgCommand::Tip);
+        let receipt = CommandReceipt {
+            command: TgCommand::Tip,
+            scope_hash: [0xFFu8; 32], // wrong scope
+            user_hash: [0xABu8; 32],
+            nullifier: [0x01u8; 32],
+            expires_at_slot: 999_999,
+        };
+        assert_eq!(verify_command(&receipt, 0), Err(CommandError::WrongScope));
+        // Correct scope passes
+        let good = CommandReceipt {
+            scope_hash: tip_scope,
+            ..receipt
+        };
+        assert!(verify_command(&good, 0).is_ok());
+    }
+
+    #[test]
+    fn test_log_starts_empty() {
+        let log = CommandLog::new();
+        assert!(log.used_nullifiers.is_empty());
+    }
+
+    #[test]
+    fn test_pause_recorded_even_at_expired_slot() {
+        let receipt = CommandReceipt {
+            command: TgCommand::Pause,
+            scope_hash: [0u8; 32],
+            user_hash: [0xFFu8; 32],
+            nullifier: [0x42u8; 32],
+            expires_at_slot: 0,
+        };
+        let mut log = CommandLog::new();
+        assert!(log.record(&receipt, 999_999).is_ok());
+    }
+
+    #[test]
+    fn test_two_different_nullifiers_both_accepted() {
+        let user = [0xAAu8; 32];
+        let nonce1 = [0x01u8; 32];
+        let nonce2 = [0x02u8; 32];
+        let scope = required_scope(&TgCommand::Signal);
+        let r1 = CommandReceipt {
+            command: TgCommand::Signal,
+            scope_hash: scope,
+            user_hash: user,
+            nullifier: command_nullifier(&user, &TgCommand::Signal, &nonce1),
+            expires_at_slot: 9_999,
+        };
+        let r2 = CommandReceipt {
+            command: TgCommand::Signal,
+            scope_hash: scope,
+            user_hash: user,
+            nullifier: command_nullifier(&user, &TgCommand::Signal, &nonce2),
+            expires_at_slot: 9_999,
+        };
+        let mut log = CommandLog::new();
+        assert!(log.record(&r1, 1000).is_ok());
+        assert!(log.record(&r2, 1000).is_ok());
+    }
 }

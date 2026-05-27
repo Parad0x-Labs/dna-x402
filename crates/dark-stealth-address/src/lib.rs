@@ -475,4 +475,16 @@ mod tests {
         let sk = scan_payment(&spend_secret(17), &payment).unwrap().unwrap();
         assert!(!sk.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_view_secret_differs_per_spend_secret() {
+        let v1 = derive_view_secret(&spend_secret(0xAA));
+        let v2 = derive_view_secret(&spend_secret(0xBB));
+        assert_ne!(
+            v1, v2,
+            "different spend secrets must produce different view secrets"
+        );
+    }
 }

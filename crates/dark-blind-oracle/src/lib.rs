@@ -312,4 +312,112 @@ mod tests {
             serde_json::from_str(&record).expect("record must be valid JSON");
         assert_eq!(parsed["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let data = b"check flags";
+        let blinding = sample_blinding();
+        let secret = sample_secret();
+        let req = blind_data(data, &blinding).unwrap();
+        assert!(!req.mainnet_ready);
+        let att = oracle_attest(&secret, &req, 1_000_000);
+        assert!(!att.mainnet_ready);
+        let unb = unblind_attestation(&att, data, &blinding).unwrap();
+        assert!(!unb.mainnet_ready);
+    }
+
+    #[test]
+    fn test_blind_commitment_deterministic() {
+        let data = b"deterministic input";
+        let blinding = sample_blinding();
+        let r1 = blind_data(data, &blinding).unwrap();
+        let r2 = blind_data(data, &blinding).unwrap();
+        assert_eq!(r1.blinded_commitment, r2.blinded_commitment);
+    }
+
+    #[test]
+    fn test_different_data_different_commitment() {
+        let blinding = sample_blinding();
+        let r1 = blind_data(b"data-alpha", &blinding).unwrap();
+        let r2 = blind_data(b"data-beta", &blinding).unwrap();
+        assert_ne!(r1.blinded_commitment, r2.blinded_commitment);
+    }
+
+    #[test]
+    fn test_different_blinding_different_commitment() {
+        let data = b"same data";
+        let mut b2 = sample_blinding();
+        b2[0] ^= 0xFF;
+        let r1 = blind_data(data, &sample_blinding()).unwrap();
+        let r2 = blind_data(data, &b2).unwrap();
+        assert_ne!(r1.blinded_commitment, r2.blinded_commitment);
+    }
+
+    #[test]
+    fn test_oracle_pubkey_deterministic() {
+        let secret = sample_secret();
+        let req = blind_data(b"x", &sample_blinding()).unwrap();
+        let a1 = oracle_attest(&secret, &req, 100);
+        let a2 = oracle_attest(&secret, &req, 200);
+        assert_eq!(a1.oracle_pubkey, a2.oracle_pubkey);
+    }
+
+    #[test]
+    fn test_different_oracle_secrets_different_pubkeys() {
+        let s1 = sample_secret();
+        let mut s2 = sample_secret();
+        s2[0] ^= 0xFF;
+        let req = blind_data(b"x", &sample_blinding()).unwrap();
+        let a1 = oracle_attest(&s1, &req, 0);
+        let a2 = oracle_attest(&s2, &req, 0);
+        assert_ne!(a1.oracle_pubkey, a2.oracle_pubkey);
+    }
+
+    #[test]
+    fn test_verify_attestation_fails_tampered_sig() {
+        let data = b"tamper test";
+        let blinding = sample_blinding();
+        let secret = sample_secret();
+        let req = blind_data(data, &blinding).unwrap();
+        let mut att = oracle_attest(&secret, &req, 0);
+        att.oracle_sig[0] ^= 0xFF; // corrupt one byte
+        assert!(!verify_attestation(&att));
+    }
+
+    #[test]
+    fn test_attest_timestamp_stored_correctly() {
+        let req = blind_data(b"ts-test", &sample_blinding()).unwrap();
+        let att = oracle_attest(&sample_secret(), &req, 9_999_999_999);
+        assert_eq!(att.attested_at_unix, 9_999_999_999);
+    }
+
+    #[test]
+    fn test_oracle_sig_depends_on_commitment() {
+        let secret = sample_secret();
+        let b1 = sample_blinding();
+        let mut b2 = sample_blinding();
+        b2[5] ^= 0x01;
+        let req1 = blind_data(b"x", &b1).unwrap();
+        let req2 = blind_data(b"x", &b2).unwrap();
+        let a1 = oracle_attest(&secret, &req1, 0);
+        let a2 = oracle_attest(&secret, &req2, 0);
+        assert_ne!(a1.oracle_sig, a2.oracle_sig);
+    }
+
+    #[test]
+    fn test_unblinded_data_hash_depends_on_data() {
+        let blinding = sample_blinding();
+        let secret = sample_secret();
+        let r1 = blind_data(b"payload-one", &blinding).unwrap();
+        let a1 = oracle_attest(&secret, &r1, 0);
+        let u1 = unblind_attestation(&a1, b"payload-one", &blinding).unwrap();
+
+        let r2 = blind_data(b"payload-two", &blinding).unwrap();
+        let a2 = oracle_attest(&secret, &r2, 0);
+        let u2 = unblind_attestation(&a2, b"payload-two", &blinding).unwrap();
+
+        assert_ne!(u1.data_hash, u2.data_hash);
+    }
 }

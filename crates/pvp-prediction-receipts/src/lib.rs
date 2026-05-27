@@ -143,4 +143,98 @@ mod tests {
         assert!(!is_pre_event(500, 500));
         assert!(!is_pre_event(600, 500));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commit_hash_nonzero() {
+        let c = make_commitment();
+        assert_ne!(commit_hash(&c), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_market_hash_different_commit() {
+        let c = make_commitment();
+        let mut c2 = c.clone();
+        c2.market_hash = [0xFFu8; 32];
+        assert_ne!(commit_hash(&c), commit_hash(&c2));
+    }
+
+    #[test]
+    fn test_different_user_salt_different_commit() {
+        let c = make_commitment();
+        let mut c2 = c.clone();
+        c2.user_salt = [0xBBu8; 32];
+        assert_ne!(commit_hash(&c), commit_hash(&c2));
+    }
+
+    #[test]
+    fn test_wrong_market_fails_reveal() {
+        let c = make_commitment();
+        let h = commit_hash(&c);
+        let mut r = reveal_from(&c);
+        r.market_hash = [0xEEu8; 32];
+        assert_eq!(
+            verify_reveal(&h, &r, c.committed_at_slot),
+            Err(PredictionError::HashMismatch)
+        );
+    }
+
+    #[test]
+    fn test_wrong_salt_fails_reveal() {
+        let c = make_commitment();
+        let h = commit_hash(&c);
+        let mut r = reveal_from(&c);
+        r.user_salt = [0xCCu8; 32];
+        assert_eq!(
+            verify_reveal(&h, &r, c.committed_at_slot),
+            Err(PredictionError::HashMismatch)
+        );
+    }
+
+    #[test]
+    fn test_wrong_slot_fails_reveal() {
+        let c = make_commitment();
+        let h = commit_hash(&c);
+        let r = reveal_from(&c);
+        // Wrong committed_at_slot
+        assert_eq!(
+            verify_reveal(&h, &r, 999),
+            Err(PredictionError::HashMismatch)
+        );
+    }
+
+    #[test]
+    fn test_pre_event_well_before_true() {
+        assert!(is_pre_event(0, 1_000_000));
+    }
+
+    #[test]
+    fn test_leaderboard_entry_fields() {
+        let h = [0xAAu8; 32];
+        let entry = LeaderboardEntry {
+            commitment_hash: h,
+            revealed: false,
+            score_points: 100,
+        };
+        assert!(!entry.revealed);
+        assert_eq!(entry.score_points, 100);
+        assert_eq!(entry.commitment_hash, h);
+    }
+
+    #[test]
+    fn test_commit_hash_confidence_sensitive() {
+        let c = make_commitment();
+        let mut c2 = c.clone();
+        c2.confidence_bucket = 99;
+        assert_ne!(commit_hash(&c), commit_hash(&c2));
+    }
+
+    #[test]
+    fn test_commit_hash_slot_sensitive() {
+        let c = make_commitment();
+        let mut c2 = c.clone();
+        c2.committed_at_slot = 9999;
+        assert_ne!(commit_hash(&c), commit_hash(&c2));
+    }
 }

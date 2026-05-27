@@ -210,4 +210,133 @@ mod tests {
         }];
         assert!(should_rollover_shard(&plan, &heats));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_compute_plan_hash_nonzero() {
+        let plan = empty_plan(vec![make_hash(0x01)]);
+        assert_ne!(compute_plan_hash(&plan), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_compute_plan_hash_deterministic() {
+        let plan = empty_plan(vec![make_hash(0x01)]);
+        assert_eq!(compute_plan_hash(&plan), compute_plan_hash(&plan));
+    }
+
+    #[test]
+    fn test_compute_plan_hash_writable_sensitive() {
+        let p1 = empty_plan(vec![make_hash(0x01)]);
+        let p2 = empty_plan(vec![make_hash(0x02)]);
+        assert_ne!(compute_plan_hash(&p1), compute_plan_hash(&p2));
+    }
+
+    #[test]
+    fn test_compute_plan_hash_readonly_sensitive() {
+        let mut p1 = empty_plan(vec![]);
+        p1.readonly_set = vec![make_hash(0x10)];
+        let mut p2 = empty_plan(vec![]);
+        p2.readonly_set = vec![make_hash(0x20)];
+        assert_ne!(compute_plan_hash(&p1), compute_plan_hash(&p2));
+    }
+
+    #[test]
+    fn test_plan_not_doxxed_at_boundary() {
+        // uniqueness_ratio == 0.8 is NOT doxxed (check is >, not >=)
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 2,
+            uniqueness_ratio: 0.8,
+        };
+        assert!(!plan_is_doxxed(&privacy));
+    }
+
+    #[test]
+    fn test_plan_not_doxxed_low_uniqueness() {
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 5,
+            uniqueness_ratio: 0.5,
+        };
+        assert!(!plan_is_doxxed(&privacy));
+    }
+
+    #[test]
+    fn test_shard_rollover_false_at_boundary() {
+        // heat_score == 0.7 → false (check is >, not >=)
+        let hash_x = make_hash(0x11);
+        let plan = empty_plan(vec![hash_x]);
+        let heats = vec![WritableHeat {
+            account_hash: hash_x,
+            recent_writes: 10,
+            heat_score: 0.7,
+        }];
+        assert!(!should_rollover_shard(&plan, &heats));
+    }
+
+    #[test]
+    fn test_score_no_heat_data_zero_fee_heat() {
+        let plan = empty_plan(vec![make_hash(0xCC)]);
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 5,
+            uniqueness_ratio: 0.1,
+        };
+        let score = score_lock_plan(&plan, &[], &privacy);
+        assert_eq!(score.fee_heat_score, 0.0);
+    }
+
+    #[test]
+    fn test_score_many_writables_lower_parallelism() {
+        let plan = AccountLockPlan {
+            writable_set: vec![make_hash(0x01), make_hash(0x02), make_hash(0x03)],
+            readonly_set: vec![],
+            decoy_readonly: vec![],
+            plan_hash: [0u8; 32],
+        };
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 5,
+            uniqueness_ratio: 0.1,
+        };
+        let score = score_lock_plan(&plan, &[], &privacy);
+        assert_eq!(score.parallelism_score, 0.4);
+    }
+
+    #[test]
+    fn test_score_two_writables_high_parallelism() {
+        let plan = empty_plan(vec![make_hash(0x01), make_hash(0x02)]);
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 5,
+            uniqueness_ratio: 0.1,
+        };
+        let score = score_lock_plan(&plan, &[], &privacy);
+        assert_eq!(score.parallelism_score, 0.8);
+    }
+
+    #[test]
+    fn test_rent_touch_score_zero() {
+        let plan = empty_plan(vec![make_hash(0x01)]);
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 5,
+            uniqueness_ratio: 0.1,
+        };
+        let score = score_lock_plan(&plan, &[], &privacy);
+        assert_eq!(score.rent_touch_score, 0.0);
+    }
+
+    #[test]
+    fn test_shape_pool_score_capped_at_one() {
+        let plan = empty_plan(vec![make_hash(0x01)]);
+        let privacy = ShapePrivacyScore {
+            shape_hash: make_hash(0x01),
+            k_shape: 100, // 100/10 = 10.0, capped to 1.0
+            uniqueness_ratio: 0.1,
+        };
+        let score = score_lock_plan(&plan, &[], &privacy);
+        assert_eq!(score.shape_pool_score, 1.0);
+    }
 }

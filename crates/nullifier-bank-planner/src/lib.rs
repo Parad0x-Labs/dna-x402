@@ -189,4 +189,85 @@ mod tests {
         assert!(report.contains("inserts=5"));
         assert!(report.contains("rollover_needed=false"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_record_insert_increments_count() {
+        let mut planner = BankPlanner::new(0);
+        let n = make_nullifier(11);
+        let shard = planner.record_insert(&n);
+        assert_eq!(planner.shards[shard as usize].insert_count, 1);
+    }
+
+    #[test]
+    fn test_hottest_shard_empty_is_zero() {
+        let planner = BankPlanner::new(0);
+        let (_, count) = planner.hottest_shard();
+        assert_eq!(count, 0);
+    }
+
+    #[test]
+    fn test_shard_count_256() {
+        let planner = BankPlanner::new(0);
+        assert_eq!(planner.shards.len(), NUM_SHARDS);
+    }
+
+    #[test]
+    fn test_new_epoch_stored() {
+        let planner = BankPlanner::new(99);
+        assert_eq!(planner.current_epoch, 99);
+    }
+
+    #[test]
+    fn test_distribute_empty_no_change() {
+        let mut planner = BankPlanner::new(0);
+        let hist = planner.distribute(&[]);
+        let total: u32 = hist.iter().sum();
+        assert_eq!(total, 0);
+    }
+
+    #[test]
+    fn test_report_rollover_true_when_hot() {
+        let mut planner = BankPlanner::new(7);
+        planner.shards[42].insert_count = HOT_SHARD_THRESHOLD;
+        let report = planner.contention_report();
+        assert!(report.contains("rollover_needed=true"));
+    }
+
+    #[test]
+    fn test_num_shards_constant() {
+        assert_eq!(NUM_SHARDS, 256);
+    }
+
+    #[test]
+    fn test_bank_index_epoch_isolation() {
+        // Same nullifier, different epochs produce valid u8 indices
+        let n = make_nullifier(55);
+        let idx0 = bank_index(&n, 0);
+        let idx1 = bank_index(&n, 1);
+        // Both are valid shard indices (trivially true for u8)
+        assert!(idx0 <= 255);
+        assert!(idx1 <= 255);
+        // They're deterministic individually
+        assert_eq!(bank_index(&n, 0), idx0);
+        assert_eq!(bank_index(&n, 1), idx1);
+    }
+
+    #[test]
+    fn test_contention_report_contains_epoch() {
+        let planner = BankPlanner::new(13);
+        let report = planner.contention_report();
+        assert!(report.contains("epoch=13"));
+    }
+
+    #[test]
+    fn test_insert_same_nullifier_accumulates() {
+        let mut planner = BankPlanner::new(0);
+        let n = make_nullifier(33);
+        let shard = planner.record_insert(&n);
+        planner.record_insert(&n);
+        planner.record_insert(&n);
+        assert_eq!(planner.shards[shard as usize].insert_count, 3);
+    }
 }

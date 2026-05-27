@@ -248,4 +248,72 @@ mod tests {
         assert_eq!(v["finalized"], false);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_epoch_id_nonzero() {
+        let state = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        assert_ne!(state.epoch_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_epoch_id_deterministic() {
+        let s1 = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        let s2 = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        assert_eq!(s1.epoch_id, s2.epoch_id);
+    }
+
+    #[test]
+    fn test_state_root_nonzero() {
+        let state = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        assert_ne!(state.state_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_validator_root_stored() {
+        let vr = vroot(0x55);
+        let state = genesis_epoch(&secret(0xAA), &vr).unwrap();
+        assert_eq!(state.validator_root, vr);
+    }
+
+    #[test]
+    fn test_starts_not_finalized() {
+        let state = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        assert!(!state.finalized);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let state = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        assert!(!state.mainnet_ready);
+    }
+
+    #[test]
+    fn test_transition_mainnet_ready_false() {
+        let state = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        let (_, transition) = advance_epoch(&state, &vroot(0x22)).unwrap();
+        assert!(!transition.mainnet_ready);
+    }
+
+    #[test]
+    fn test_transition_hash_nonzero() {
+        let state = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        let (_, transition) = advance_epoch(&state, &vroot(0x22)).unwrap();
+        assert_ne!(transition.transition_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_epoch_ids_differ_across_epochs() {
+        let s0 = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        let (s1, _) = advance_epoch(&s0, &vroot(0x22)).unwrap();
+        assert_ne!(s0.epoch_id, s1.epoch_id);
+    }
+
+    #[test]
+    fn test_state_root_changes_with_validator_root() {
+        let s1 = genesis_epoch(&secret(0xAA), &vroot(0x11)).unwrap();
+        let s2 = genesis_epoch(&secret(0xAA), &vroot(0x99)).unwrap();
+        assert_ne!(s1.state_root, s2.state_root);
+    }
 }

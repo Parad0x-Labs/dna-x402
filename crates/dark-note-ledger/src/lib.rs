@@ -265,4 +265,96 @@ mod tests {
             "unspent note must not contribute a nullifier"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_ledger_starts_empty() {
+        let ledger = new_ledger();
+        assert_eq!(ledger.entries.len(), 0);
+        assert_eq!(ledger.total_unspent, 0);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let ledger = new_ledger();
+        assert!(!ledger.mainnet_ready);
+    }
+
+    #[test]
+    fn test_total_unspent_increments() {
+        let mut ledger = new_ledger();
+        let note = make_note(500_000, 0x10);
+        track_note(&mut ledger, &note).unwrap();
+        assert_eq!(ledger.total_unspent, 500_000);
+    }
+
+    #[test]
+    fn test_mark_spent_unknown_commitment_fails() {
+        let mut ledger = new_ledger();
+        let unknown_commitment = [0xFFu8; 32];
+        let err = mark_spent(&mut ledger, &unknown_commitment, dummy_nullifier(0x01)).unwrap_err();
+        assert_eq!(err, LedgerError::NoteNotFound);
+    }
+
+    #[test]
+    fn test_double_spend_mark_rejected() {
+        let mut ledger = new_ledger();
+        let note = make_note(100_000, 0x20);
+        track_note(&mut ledger, &note).unwrap();
+        mark_spent(&mut ledger, &note.commitment, dummy_nullifier(0x02)).unwrap();
+        let err = mark_spent(&mut ledger, &note.commitment, dummy_nullifier(0x03)).unwrap_err();
+        assert_eq!(err, LedgerError::NoteNotFound);
+    }
+
+    #[test]
+    fn test_nullifier_stored_after_mark_spent() {
+        let mut ledger = new_ledger();
+        let note = make_note(200_000, 0x30);
+        let null = dummy_nullifier(0xBB);
+        track_note(&mut ledger, &note).unwrap();
+        mark_spent(&mut ledger, &note.commitment, null).unwrap();
+        assert_eq!(ledger.entries[0].nullifier, Some(null));
+    }
+
+    #[test]
+    fn test_unspent_notes_empty_initially() {
+        let ledger = new_ledger();
+        assert!(unspent_notes(&ledger).is_empty());
+    }
+
+    #[test]
+    fn test_ledger_summary_json_keys() {
+        let ledger = new_ledger();
+        let json = ledger_summary_json(&ledger);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(v["entry_count"].is_number());
+        assert!(v["unspent_count"].is_number());
+        assert!(v["total_unspent"].is_number());
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_portfolio_nullifier_set_empty_initially() {
+        let ledger = new_ledger();
+        assert!(portfolio_nullifier_set(&ledger).is_empty());
+    }
+
+    #[test]
+    fn test_multiple_tracks_total_unspent_adds_up() {
+        let mut ledger = new_ledger();
+        let note_a = make_note(300_000, 0x40);
+        let note_b = make_note(400_000, 0x41);
+        track_note(&mut ledger, &note_a).unwrap();
+        track_note(&mut ledger, &note_b).unwrap();
+        assert_eq!(ledger.total_unspent, 700_000);
+    }
+
+    #[test]
+    fn test_entry_value_matches_note_value() {
+        let mut ledger = new_ledger();
+        let note = make_note(123_456, 0x50);
+        track_note(&mut ledger, &note).unwrap();
+        assert_eq!(ledger.entries[0].value, 123_456);
+    }
 }

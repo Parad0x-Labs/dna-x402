@@ -520,4 +520,14 @@ mod tests {
         let wrong_hash: [u8; 32] = sha256(b"loser");
         assert_ne!(result.winner_hash, wrong_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_verify_commitment_valid_returns_true() {
+        let cfg = make_config();
+        let nonce = make_nonce(0x09);
+        let commitment = commit_bid(&cfg, b"judy", 700, &nonce, 10).unwrap();
+        assert!(verify_commitment(&commitment));
+    }
 }

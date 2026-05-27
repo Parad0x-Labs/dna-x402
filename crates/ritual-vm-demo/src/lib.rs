@@ -403,4 +403,63 @@ mod tests {
         assert_eq!(demo.devnet_ritual.shard_path, vec![82u8, 79, 71, 85, 69]);
         assert_eq!(demo.devnet_ritual.solscan_links.len(), 5);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_network_is_solana_devnet() {
+        let demo = build_ritual_vm_demo();
+        assert_eq!(demo.network, "solana-devnet");
+    }
+
+    #[test]
+    fn test_encoded_bytes_positive() {
+        let demo = build_ritual_vm_demo();
+        assert!(demo.ritual.encoded_bytes > 0);
+    }
+
+    #[test]
+    fn test_cpi_policy_allowed_only() {
+        let demo = build_ritual_vm_demo();
+        assert_eq!(demo.cpi_firewall.policy, "AllowedOnly");
+    }
+
+    #[test]
+    fn test_lock_alchemy_plan_hash_nonempty() {
+        let demo = build_ritual_vm_demo();
+        assert!(!demo.lock_alchemy.plan_hash.is_empty());
+    }
+
+    #[test]
+    fn test_rent_summary_hash_nonempty() {
+        let demo = build_ritual_vm_demo();
+        assert!(!demo.rent_delta.summary_hash.is_empty());
+    }
+
+    #[test]
+    fn test_devnet_note_nonempty() {
+        let demo = build_ritual_vm_demo();
+        assert!(!demo.devnet_ritual.note.is_empty());
+    }
+
+    #[test]
+    fn test_public_summary_nonempty() {
+        let demo = build_ritual_vm_demo();
+        assert!(!demo.ritual.public_summary.is_empty());
+    }
+
+    #[test]
+    fn test_shape_market_class_hash_is_hex_64() {
+        let demo = build_ritual_vm_demo();
+        // hex-encoded 32-byte hash = 64 chars
+        assert_eq!(demo.shape_market.class_hash.len(), 64);
+        // Must be valid hex (all chars in 0-9, a-f)
+        assert!(
+            demo.shape_market
+                .class_hash
+                .chars()
+                .all(|c| c.is_ascii_hexdigit()),
+            "class_hash must be lowercase hex"
+        );
+    }
 }

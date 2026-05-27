@@ -405,4 +405,100 @@ mod tests {
             "modified observation must produce different shape hash"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_shape_hash_nonzero() {
+        let steps = valid_agent_spend_steps();
+        assert_ne!(compute_shape_hash(&steps), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_shape_hash_step_name_sensitive() {
+        let mut steps_a = valid_agent_spend_steps();
+        let mut steps_b = valid_agent_spend_steps();
+        steps_a[0].step_name = "StepAlpha".to_string();
+        steps_b[0].step_name = "StepBeta".to_string();
+        assert_ne!(compute_shape_hash(&steps_a), compute_shape_hash(&steps_b));
+    }
+
+    #[test]
+    fn test_ritual_type_bytes_distinct() {
+        let types = [
+            RitualType::AgentSpendNoCustodyV1,
+            RitualType::ReceiptSoulRedeemV1,
+            RitualType::AlphaCapsuleCommitV1,
+            RitualType::SessionSettlementV1,
+            RitualType::ChaffMaintenanceV1,
+        ];
+        let bytes: Vec<u8> = types.iter().map(|t| t.type_byte()).collect();
+        let unique: std::collections::HashSet<u8> = bytes.iter().cloned().collect();
+        assert_eq!(unique.len(), types.len(), "all type bytes must be distinct");
+    }
+
+    #[test]
+    fn test_default_grammar_all_types_ok() {
+        let types = [
+            RitualType::AgentSpendNoCustodyV1,
+            RitualType::ReceiptSoulRedeemV1,
+            RitualType::AlphaCapsuleCommitV1,
+            RitualType::SessionSettlementV1,
+            RitualType::ChaffMaintenanceV1,
+        ];
+        for t in &types {
+            let g = default_grammar(t);
+            assert!(!g.steps.is_empty(), "grammar for {:?} must have steps", t);
+        }
+    }
+
+    #[test]
+    fn test_valid_observation_result_nonzero() {
+        let grammar = default_grammar(&RitualType::AgentSpendNoCustodyV1);
+        let observation = RitualObservation {
+            ritual_type: RitualType::AgentSpendNoCustodyV1,
+            observed_steps: valid_agent_spend_steps(),
+            forbidden_program_hashes: vec![],
+        };
+        let hash = validate_ritual(&grammar, &observation).unwrap();
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_steps_fails_required() {
+        let grammar = default_grammar(&RitualType::AgentSpendNoCustodyV1);
+        let observation = RitualObservation {
+            ritual_type: RitualType::AgentSpendNoCustodyV1,
+            observed_steps: vec![],
+            forbidden_program_hashes: vec![],
+        };
+        assert!(validate_ritual(&grammar, &observation).is_err());
+    }
+
+    #[test]
+    fn test_default_grammar_has_steps() {
+        let g = default_grammar(&RitualType::AgentSpendNoCustodyV1);
+        assert!(!g.steps.is_empty());
+    }
+
+    #[test]
+    fn test_ritual_type_labels_nonempty() {
+        let types = [
+            RitualType::AgentSpendNoCustodyV1,
+            RitualType::ReceiptSoulRedeemV1,
+            RitualType::AlphaCapsuleCommitV1,
+            RitualType::SessionSettlementV1,
+            RitualType::ChaffMaintenanceV1,
+        ];
+        for t in &types {
+            assert!(!t.label().is_empty(), "label for {:?} must not be empty", t);
+        }
+    }
+
+    #[test]
+    fn test_shape_hash_empty_steps_deterministic() {
+        let h1 = compute_shape_hash(&[]);
+        let h2 = compute_shape_hash(&[]);
+        assert_eq!(h1, h2);
+    }
 }

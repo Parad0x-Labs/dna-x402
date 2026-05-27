@@ -189,4 +189,68 @@ mod tests {
         assert_eq!(sub1.sub_id, sub2.sub_id);
         assert_ne!(sub1.sub_id, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_sub_id_nonzero() {
+        let sub = make_sub();
+        assert_ne!(sub.sub_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_subscriber_hash_nonzero() {
+        let sub = make_sub();
+        assert_ne!(sub.subscriber_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_plan_hash_nonzero() {
+        let sub = make_sub();
+        assert_ne!(sub.plan_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_payment_commitment_nonzero() {
+        let sub = make_sub();
+        assert_ne!(sub.payment_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let sub = make_sub();
+        assert!(!sub.mainnet_ready);
+    }
+
+    #[test]
+    fn test_active_initially() {
+        let sub = make_sub();
+        assert!(sub.active);
+    }
+
+    #[test]
+    fn test_zero_subscriber_rejected() {
+        let err =
+            new_subscription(&[0u8; 32], b"plan", 100, &[0x01u8; 32], 1_000, 2_000).unwrap_err();
+        assert_eq!(err, SubError::ZeroSubscriberSecret);
+    }
+
+    #[test]
+    fn test_empty_plan_rejected() {
+        let err =
+            new_subscription(&[0xabu8; 32], b"", 100, &[0x01u8; 32], 1_000, 2_000).unwrap_err();
+        assert_eq!(err, SubError::EmptyPlan);
+    }
+
+    #[test]
+    fn test_start_epoch_stored() {
+        let sub = make_sub();
+        assert_eq!(sub.start_epoch, 1_000);
+    }
+
+    #[test]
+    fn test_end_epoch_stored() {
+        let sub = make_sub();
+        assert_eq!(sub.end_epoch, 2_000);
+    }
 }

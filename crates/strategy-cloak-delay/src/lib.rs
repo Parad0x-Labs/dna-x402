@@ -174,4 +174,83 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), CloakError::EarliestAfterLatest);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_privacy_score_large_window() {
+        // window = 1000 > 100 → score = 0.9
+        let input = make_input(0, 1000, 999, 2000);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!((plan.privacy_score - 0.9).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_privacy_score_medium_window() {
+        // window = 50 > 10 and <= 100 → score = 0.6
+        let input = make_input(0, 50, 999, 2000);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!((plan.privacy_score - 0.6).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_privacy_score_small_window() {
+        // window = 5 <= 10 → score = 0.3
+        let input = make_input(100, 105, 999, 2000);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!((plan.privacy_score - 0.3).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_submit_before_event_when_event_within_window() {
+        // event=150 is within [100, 200] → submit_slot < 150
+        let input = make_input(100, 200, 200, 150);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!(plan.submit_slot < 150, "submit must be before event");
+    }
+
+    #[test]
+    fn test_chaff_slots_within_window() {
+        let input = make_input(50, 200, 100, 500);
+        let plan = plan_cloak_submit(&input).unwrap();
+        for &cs in &plan.chaff_slots {
+            assert!(cs >= 50 && cs <= 200, "chaff slot {} out of window", cs);
+        }
+    }
+
+    #[test]
+    fn test_equal_earliest_latest_ok() {
+        // earliest == latest is valid (not EarliestAfterLatest)
+        let input = make_input(100, 100, 50, 500);
+        assert!(plan_cloak_submit(&input).is_ok());
+    }
+
+    #[test]
+    fn test_submit_at_least_earliest() {
+        let input = make_input(100, 300, 100, 600);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!(plan.submit_slot >= 100);
+    }
+
+    #[test]
+    fn test_delay_reason_not_empty() {
+        let input = make_input(0, 500, 100, 1000);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!(!plan.delay_reason.is_empty());
+    }
+
+    #[test]
+    fn test_large_delay_clamped_to_window() {
+        // max_delay far exceeds window → still within bounds
+        let input = make_input(10, 110, 999_999, 9_999_999);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!(plan.submit_slot >= 10 && plan.submit_slot <= 110);
+    }
+
+    #[test]
+    fn test_chaff_at_most_three() {
+        let input = make_input(0, 1000, 500, 2000);
+        let plan = plan_cloak_submit(&input).unwrap();
+        assert!(plan.chaff_slots.len() <= 3);
+    }
 }

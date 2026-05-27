@@ -223,4 +223,92 @@ mod tests {
         assert!(json_str.contains("expiry_slot"));
         assert!(json_str.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capability_hash_nonzero() {
+        let cap = make_cap(1_000_000, 9999);
+        assert_ne!(cap.capability_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capability_hash_deterministic() {
+        let nonce = sample_nonce();
+        let c1 = create_capability(b"agent-A", b"scope-X", 500_000, 100, &nonce);
+        let c2 = create_capability(b"agent-A", b"scope-X", 500_000, 100, &nonce);
+        assert_eq!(c1.capability_hash, c2.capability_hash);
+    }
+
+    #[test]
+    fn test_different_nonce_different_capability() {
+        let n1 = [0x01u8; 32];
+        let n2 = [0x02u8; 32];
+        let c1 = create_capability(b"agent-A", b"scope-X", 500_000, 100, &n1);
+        let c2 = create_capability(b"agent-A", b"scope-X", 500_000, 100, &n2);
+        assert_ne!(c1.capability_hash, c2.capability_hash);
+    }
+
+    #[test]
+    fn test_different_agent_different_capability() {
+        let nonce = sample_nonce();
+        let c1 = create_capability(b"agent-AAA", b"scope-X", 500_000, 100, &nonce);
+        let c2 = create_capability(b"agent-BBB", b"scope-X", 500_000, 100, &nonce);
+        assert_ne!(c1.capability_hash, c2.capability_hash);
+    }
+
+    #[test]
+    fn test_zero_amount_rejected() {
+        let cap = make_cap(1_000_000, 9999);
+        let result = create_spend_proof(&cap, 0, &sample_recipient(), 100, &sample_nonce());
+        assert_eq!(result, Err(CapsuleError::ZeroAmount));
+    }
+
+    #[test]
+    fn test_spend_at_expiry_slot_not_expired() {
+        let cap = make_cap(1_000_000, 50);
+        // slot == expiry_slot: condition is (slot > expiry_slot) → false → NOT expired
+        let result = create_spend_proof(&cap, 100_000, &sample_recipient(), 50, &sample_nonce());
+        assert!(result.is_ok(), "slot == expiry_slot must not be rejected");
+    }
+
+    #[test]
+    fn test_spend_proof_commitment_nonzero() {
+        let cap = make_cap(1_000_000, 9999);
+        let proof =
+            create_spend_proof(&cap, 500_000, &sample_recipient(), 100, &sample_nonce()).unwrap();
+        assert_ne!(proof.spend_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_spend_proof_receipt_hash_nonzero() {
+        let cap = make_cap(1_000_000, 9999);
+        let proof =
+            create_spend_proof(&cap, 500_000, &sample_recipient(), 100, &sample_nonce()).unwrap();
+        assert_ne!(proof.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_spend_proof_valid() {
+        let cap = make_cap(1_000_000, 9999);
+        let proof =
+            create_spend_proof(&cap, 500_000, &sample_recipient(), 100, &sample_nonce()).unwrap();
+        assert!(verify_spend_proof(&cap, &proof, &sample_nonce()));
+    }
+
+    #[test]
+    fn test_verify_spend_proof_fails_tampered_receipt() {
+        let cap = make_cap(1_000_000, 9999);
+        let mut proof =
+            create_spend_proof(&cap, 500_000, &sample_recipient(), 100, &sample_nonce()).unwrap();
+        proof.receipt_hash = [0xFFu8; 32];
+        assert!(!verify_spend_proof(&cap, &proof, &sample_nonce()));
+    }
+
+    #[test]
+    fn test_capability_public_record_has_mainnet_ready_false() {
+        let cap = make_cap(1_000_000, 9999);
+        let record = capability_to_public_record(&cap);
+        assert_eq!(record["mainnet_ready"], false);
+    }
 }

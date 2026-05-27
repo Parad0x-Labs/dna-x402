@@ -818,4 +818,24 @@ mod tests {
             "batch_scan must find a payment tagged with payment_to_scan_with_view_pub"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_view_tag_is_one_byte_consistent() {
+        let meta = create_meta_address(&spend_secret(0xE1)).unwrap();
+        let es = ephem_secret(0xE1);
+        let t1 = compute_view_tag(&es, &meta.view_pub.x, &meta.view_pub.y).unwrap();
+        let t2 = compute_view_tag(&es, &meta.view_pub.x, &meta.view_pub.y).unwrap();
+        // u8 is always in [0..=255] — this confirms determinism again at byte level
+        assert_eq!(t1, t2);
+    }
+
+    #[test]
+    fn test_batch_view_secret_matches_direct_derivation() {
+        let s = spend_secret(0xE2);
+        let from_batch = derive_batch_view_secret(&s);
+        let from_direct = derive_view_secret(&s);
+        assert_eq!(from_batch, from_direct);
+    }
 }

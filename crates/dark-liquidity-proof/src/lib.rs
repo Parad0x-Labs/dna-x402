@@ -172,4 +172,83 @@ mod tests {
         assert_eq!(p1.proof_hash, p2.proof_hash);
         assert_eq!(p1.reserve_commitment, p2.reserve_commitment);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_pool_id_stored() {
+        let id = pool_id();
+        let p = prove_liquidity(id, 1_000_000, &blinding(), 500_000).unwrap();
+        assert_eq!(p.pool_id, id);
+    }
+
+    #[test]
+    fn test_reserve_commitment_nonzero() {
+        let p = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        assert_ne!(p.reserve_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_reserve_commitment_blinding_sensitive() {
+        let mut b2 = blinding();
+        b2[0] ^= 0xFF;
+        let p1 = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        let p2 = prove_liquidity(pool_id(), 1_000_000, &b2, 500_000).unwrap();
+        assert_ne!(p1.reserve_commitment, p2.reserve_commitment);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let p = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        assert_ne!(p.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let p = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_blinding_zero_rejected() {
+        let err = prove_liquidity(pool_id(), 1_000_000, &[0u8; 32], 500_000).unwrap_err();
+        assert_eq!(err, LiquidityError::BlindingZero);
+    }
+
+    #[test]
+    fn test_exact_minimum_liquidity_ok() {
+        // actual_reserve == minimum_liquidity: check is `<`, so == is allowed
+        let p = prove_liquidity(pool_id(), 500_000, &blinding(), 500_000);
+        assert!(
+            p.is_ok(),
+            "actual_reserve == minimum_liquidity must succeed"
+        );
+    }
+
+    #[test]
+    fn test_verify_wrong_reserve_fails() {
+        let proof = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        assert!(!verify_liquidity(&proof, 999_999, &blinding()));
+    }
+
+    #[test]
+    fn test_proof_hash_pool_sensitive() {
+        let mut id2 = pool_id();
+        id2[0] ^= 0xFF;
+        let p1 = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        let p2 = prove_liquidity(id2, 1_000_000, &blinding(), 500_000).unwrap();
+        assert_ne!(p1.proof_hash, p2.proof_hash);
+    }
+
+    #[test]
+    fn test_public_record_has_correct_keys() {
+        let proof = prove_liquidity(pool_id(), 1_000_000, &blinding(), 500_000).unwrap();
+        let record = proof_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["pool_id"].is_string());
+        assert!(v["reserve_commitment"].is_string());
+        assert!(v["proof_hash"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+        assert!(v.get("actual_reserve").is_none());
+    }
 }

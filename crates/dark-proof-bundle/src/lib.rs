@@ -185,4 +185,78 @@ mod tests {
         assert_eq!(b1.aggregate_hash, b2.aggregate_hash);
         assert_eq!(b1.bundle_id, b2.bundle_id);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_bundle_id_nonzero() {
+        let bundle = create_bundle(vec![ph(1), ph(2)]).unwrap();
+        assert_ne!(bundle.bundle_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_aggregate_hash_nonzero() {
+        let bundle = create_bundle(vec![ph(3)]).unwrap();
+        assert_ne!(bundle.aggregate_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let bundle = create_bundle(vec![ph(4)]).unwrap();
+        assert!(!bundle.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_count_matches_hashes() {
+        let bundle = create_bundle(vec![ph(5), ph(6), ph(7)]).unwrap();
+        assert_eq!(bundle.proof_count, 3);
+        assert_eq!(bundle.proof_hashes.len(), 3);
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_aggregate_hash() {
+        let mut bundle = create_bundle(vec![ph(8), ph(9)]).unwrap();
+        bundle.aggregate_hash[0] ^= 0xFF;
+        assert!(!verify_bundle(&bundle));
+    }
+
+    #[test]
+    fn test_verify_fails_on_tampered_bundle_id() {
+        let mut bundle = create_bundle(vec![ph(11), ph(12)]).unwrap();
+        bundle.bundle_id[0] ^= 0xFF;
+        assert!(!verify_bundle(&bundle));
+    }
+
+    #[test]
+    fn test_max_bundle_size_ok() {
+        let hashes: Vec<[u8; 32]> = (0..16u8).map(|b| ph(b)).collect();
+        let bundle = create_bundle(hashes).unwrap();
+        assert_eq!(bundle.proof_count, MAX_BUNDLE_SIZE as u32);
+        assert!(verify_bundle(&bundle));
+    }
+
+    #[test]
+    fn test_public_record_has_fields() {
+        let bundle = create_bundle(vec![ph(20), ph(21)]).unwrap();
+        let record = bundle_public_record(&bundle);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["bundle_id"].is_string());
+        assert_eq!(v["proof_count"], 2u64);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_add_proof_duplicate_rejected() {
+        let mut bundle = create_bundle(vec![ph(30)]).unwrap();
+        let err = add_proof(&mut bundle, ph(30)).unwrap_err();
+        assert_eq!(err, BundleError::DuplicateProof);
+    }
+
+    #[test]
+    fn test_add_proof_overflow_rejected() {
+        let hashes: Vec<[u8; 32]> = (0..16u8).map(|b| ph(b)).collect();
+        let mut bundle = create_bundle(hashes).unwrap();
+        let err = add_proof(&mut bundle, ph(200)).unwrap_err();
+        assert_eq!(err, BundleError::TooManyProofs);
+    }
 }

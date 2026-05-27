@@ -454,6 +454,14 @@ mod tests {
         assert!(json.ends_with('}'));
     }
 
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_set_root_nonzero() {
+        let set = build_tainted_set(&[hash_from_byte(1), hash_from_byte(2)]).unwrap();
+        assert_ne!(set.root, [0u8; 32]);
+    }
+
     // ------------------------------------------------------------------
     // 15. prove innocence for values in each gap of a 5-element set
     // ------------------------------------------------------------------

@@ -287,6 +287,39 @@ mod tests {
         assert_eq!(RitualHookError::InvalidAccountData as u32, 7);
         assert_eq!(RitualHookError::MissingRequiredAccount as u32, 8);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_hook_hash_nonzero() {
+        let mint = Pubkey::new_unique();
+        let hash = compute_hook_hash(&mint, 1_000_000);
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_hook_hash_mint_sensitive() {
+        let mint_a = Pubkey::new_unique();
+        let mint_b = Pubkey::new_unique();
+        let h1 = compute_hook_hash(&mint_a, 1_000);
+        let h2 = compute_hook_hash(&mint_b, 1_000);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_execute_discriminator_not_zero() {
+        assert_ne!(EXECUTE_DISCRIMINATOR, [0u8; 8]);
+    }
+
+    #[test]
+    fn test_ritual_gate_id_nonempty() {
+        assert!(!DARK_RITUAL_GATE_ID_STR.is_empty());
+    }
+
+    #[test]
+    fn test_spl_memo_id_differs_from_ritual_gate_id() {
+        assert_ne!(SPL_MEMO_ID_STR, DARK_RITUAL_GATE_ID_STR);
+    }
 }
 
 #[cfg(test)]

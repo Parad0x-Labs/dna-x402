@@ -327,4 +327,101 @@ mod tests {
         assert!(v.get("party_a_hash").is_none());
         assert!(v.get("party_b_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let swap = create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 1, 2, &preimage()).unwrap();
+        assert!(!swap.mainnet_ready);
+    }
+
+    #[test]
+    fn test_completed_starts_false() {
+        let swap = create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 1, 2, &preimage()).unwrap();
+        assert!(!swap.completed);
+    }
+
+    #[test]
+    fn test_completed_set_after_claim() {
+        let mut swap =
+            create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 1, 2, &preimage()).unwrap();
+        claim_swap(&mut swap, &preimage()).unwrap();
+        assert!(swap.completed);
+    }
+
+    #[test]
+    fn test_swap_proof_mainnet_ready_false() {
+        let mut swap =
+            create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 1, 2, &preimage()).unwrap();
+        let proof = claim_swap(&mut swap, &preimage()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_wrong_preimage_returns_error() {
+        let mut swap =
+            create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 1, 2, &preimage()).unwrap();
+        let mut wrong = [0u8; 32];
+        wrong[0] = 0xFF;
+        let err = claim_swap(&mut swap, &wrong).unwrap_err();
+        assert_eq!(err, AtomicError::WrongPreimage);
+    }
+
+    #[test]
+    fn test_zero_amount_a_rejected() {
+        let err =
+            create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 0, 200, &preimage()).unwrap_err();
+        assert_eq!(err, AtomicError::AmountZero);
+    }
+
+    #[test]
+    fn test_zero_amount_b_rejected() {
+        let err =
+            create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 100, 0, &preimage()).unwrap_err();
+        assert_eq!(err, AtomicError::AmountZero);
+    }
+
+    #[test]
+    fn test_same_assets_not_allowed() {
+        let err = create_swap(
+            &party_a(),
+            &party_b(),
+            b"SOL",
+            b"SOL",
+            100,
+            200,
+            &preimage(),
+        )
+        .unwrap_err();
+        assert_eq!(err, AtomicError::SameAssets);
+    }
+
+    #[test]
+    fn test_swap_id_sensitive_to_preimage() {
+        let p1 = preimage();
+        let mut p2 = [0u8; 32];
+        p2[0] = 0xFF;
+        let s1 = create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 100, 200, &p1).unwrap();
+        let s2 = create_swap(&party_a(), &party_b(), b"SOL", b"USDC", 100, 200, &p2).unwrap();
+        assert_ne!(s1.swap_id, s2.swap_id);
+    }
+
+    #[test]
+    fn test_public_record_has_amounts() {
+        let swap = create_swap(
+            &party_a(),
+            &party_b(),
+            b"SOL",
+            b"USDC",
+            333,
+            444,
+            &preimage(),
+        )
+        .unwrap();
+        let record = swap_public_record(&swap);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["amount_a"], 333u64);
+        assert_eq!(v["amount_b"], 444u64);
+    }
 }

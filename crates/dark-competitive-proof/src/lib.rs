@@ -244,4 +244,86 @@ mod tests {
             );
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let proof = generate_competitive_proof();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let proof = generate_competitive_proof();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let proof = generate_competitive_proof();
+        assert_ne!(proof.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_overall_dna_score_above_50() {
+        let proof = generate_competitive_proof();
+        assert!(
+            proof.overall_dna_score >= 90,
+            "DNA overall score should be >= 90"
+        );
+    }
+
+    #[test]
+    fn test_overall_competitor_score_below_dna() {
+        let proof = generate_competitive_proof();
+        assert!(
+            proof.overall_competitor_score < proof.overall_dna_score,
+            "competitor overall must be below DNA"
+        );
+    }
+
+    #[test]
+    fn test_public_record_mainnet_ready_false() {
+        let proof = generate_competitive_proof();
+        let record = proof_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_public_record_is_leading_true() {
+        let proof = generate_competitive_proof();
+        let record = proof_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["is_leading"], true);
+    }
+
+    #[test]
+    fn test_axes_names_unique() {
+        let proof = generate_competitive_proof();
+        let mut names: Vec<&str> = proof.axes.iter().map(|a| a.name).collect();
+        let orig_len = names.len();
+        names.dedup();
+        assert_eq!(names.len(), orig_len, "all axis names must be unique");
+    }
+
+    #[test]
+    fn test_competitor_scores_all_below_50() {
+        let proof = generate_competitive_proof();
+        for axis in &proof.axes {
+            assert!(
+                axis.competitor_score < 50,
+                "competitor score on '{}' should be < 50, got {}",
+                axis.name,
+                axis.competitor_score
+            );
+        }
+    }
+
+    #[test]
+    fn test_proof_id_and_proof_hash_differ() {
+        let proof = generate_competitive_proof();
+        assert_ne!(proof.proof_id, proof.proof_hash);
+    }
 }

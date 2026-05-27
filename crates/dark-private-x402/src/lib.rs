@@ -709,4 +709,16 @@ mod tests {
             "well-formed instruction must pass format check"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_derive_randomness_scope_sensitive() {
+        let ephem = ephem_secret(0xAA);
+        let scope_a = service_scope_hash("https://api.darknull.example/svc/A");
+        let scope_b = service_scope_hash("https://api.darknull.example/svc/B");
+        let r1 = derive_randomness(&ephem, &scope_a);
+        let r2 = derive_randomness(&ephem, &scope_b);
+        assert_ne!(r1, r2, "different scopes must produce different randomness");
+    }
 }

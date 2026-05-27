@@ -215,4 +215,79 @@ mod tests {
         assert!(v.get("proposal_id").is_some());
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_proposal_id_nonzero() {
+        let p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        assert_ne!(p.proposal_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proposer_hash_nonzero() {
+        let p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        assert_ne!(p.proposer_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_content_hash_nonzero() {
+        let p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        assert_ne!(p.content_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_content_rejected() {
+        let err = create_proposal(&secret(), b"", &nonce()).unwrap_err();
+        assert_eq!(err, GovError::EmptyContent);
+    }
+
+    #[test]
+    fn test_vote_id_nonzero() {
+        let mut p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        let vote = cast_vote(&mut p, &[5u8; 32], true).unwrap();
+        assert_ne!(vote.vote_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_vote_id_deterministic() {
+        let mut p1 = create_proposal(&secret(), content(), &nonce()).unwrap();
+        let mut p2 = create_proposal(&secret(), content(), &nonce()).unwrap();
+        let voter = [5u8; 32];
+        let v1 = cast_vote(&mut p1, &voter, true).unwrap();
+        let v2 = cast_vote(&mut p2, &voter, true).unwrap();
+        assert_eq!(v1.vote_id, v2.vote_id);
+    }
+
+    #[test]
+    fn test_vote_mainnet_ready_false() {
+        let mut p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        let vote = cast_vote(&mut p, &[5u8; 32], false).unwrap();
+        assert!(!vote.mainnet_ready);
+    }
+
+    #[test]
+    fn test_vote_root_changes_after_vote() {
+        let mut p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        let root_before = p.vote_root;
+        cast_vote(&mut p, &[5u8; 32], true).unwrap();
+        assert_ne!(
+            p.vote_root, root_before,
+            "vote_root must change after a vote"
+        );
+    }
+
+    #[test]
+    fn test_starts_not_executed() {
+        let p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        assert!(!p.executed);
+    }
+
+    #[test]
+    fn test_executed_tie_returns_false() {
+        // 0 yes, 0 no: yes_count > no_count is 0 > 0 = false
+        let mut p = create_proposal(&secret(), content(), &nonce()).unwrap();
+        let result = execute_proposal(&mut p).unwrap();
+        assert!(!result, "tie (0 yes, 0 no) must return false");
+    }
 }

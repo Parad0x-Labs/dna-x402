@@ -239,4 +239,96 @@ mod tests {
         let id3 = coupon_id(&pubkey, 8);
         assert_ne!(id1, id3);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_coupon_id_pubkey_sensitive() {
+        let pk1 = [0x11u8; 32];
+        let pk2 = [0x22u8; 32];
+        assert_ne!(coupon_id(&pk1, 0), coupon_id(&pk2, 0));
+    }
+
+    #[test]
+    fn test_wrong_route_class_rejected() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 10, 1000, 200_000, 2, 100, receipt);
+        let result = redeem(&coupon, 50, 500, 1, &receipt);
+        assert_eq!(result, Err(CouponError::WrongRouteClass));
+    }
+
+    #[test]
+    fn test_any_route_class_allowed_when_zero() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 11, 1000, 200_000, 0, 100, receipt);
+        assert!(redeem(&coupon, 50, 500, 7, &receipt).is_ok());
+    }
+
+    #[test]
+    fn test_redeem_at_expiry_slot_ok() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 12, 1000, 200_000, 1, 100, receipt);
+        // current_slot == expires_at_slot → ok (> check, not >=)
+        assert!(redeem(&coupon, 100, 500, 1, &receipt).is_ok());
+    }
+
+    #[test]
+    fn test_redeem_one_past_expiry_fails() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 13, 1000, 200_000, 1, 100, receipt);
+        let result = redeem(&coupon, 101, 500, 1, &receipt);
+        assert_eq!(result, Err(CouponError::Expired));
+    }
+
+    #[test]
+    fn test_max_cu_price_at_limit_ok() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 14, 1000, 200_000, 1, 100, receipt);
+        assert!(redeem(&coupon, 50, 1000, 1, &receipt).is_ok());
+    }
+
+    #[test]
+    fn test_tampered_max_cu_price_invalid_sig() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let mut coupon = issue(&kp, 15, 1000, 200_000, 1, 100, receipt);
+        coupon.max_cu_price_lamports = 9999; // tamper: signing_bytes now mismatch
+        let result = redeem(&coupon, 50, 500, 1, &receipt);
+        assert_eq!(result, Err(CouponError::InvalidSignature));
+    }
+
+    #[test]
+    fn test_coupon_fields_correct() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 16, 1500, 300_000, 2, 200, receipt);
+        assert_eq!(coupon.max_cu_price_lamports, 1500);
+        assert_eq!(coupon.max_cu_limit, 300_000);
+        assert_eq!(coupon.route_class, 2);
+        assert_eq!(coupon.expires_at_slot, 200);
+        assert_eq!(coupon.receipt_hash_binding, receipt);
+    }
+
+    #[test]
+    fn test_different_nonce_different_coupon_id() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let c1 = issue(&kp, 20, 1000, 200_000, 1, 100, receipt);
+        let c2 = issue(&kp, 21, 1000, 200_000, 1, 100, receipt);
+        assert_ne!(c1.id, c2.id);
+    }
+
+    #[test]
+    fn test_wrong_receipt_correct_slot_fails() {
+        let kp = test_keypair();
+        let receipt = default_receipt();
+        let coupon = issue(&kp, 22, 1000, 200_000, 1, 100, receipt);
+        let result = redeem(&coupon, 50, 500, 1, &[0x00u8; 32]);
+        assert_eq!(result, Err(CouponError::WrongReceiptBinding));
+    }
 }

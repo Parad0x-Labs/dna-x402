@@ -258,4 +258,72 @@ mod tests {
         assert!(parsed["sent_at_unix"].is_number());
         assert_eq!(parsed["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_ciphertext_commitment_nonzero() {
+        let memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert_ne!(memo.ciphertext_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ciphertext_commitment_deterministic() {
+        let m1 = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        let m2 = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert_eq!(m1.ciphertext_commitment, m2.ciphertext_commitment);
+    }
+
+    #[test]
+    fn test_ciphertext_commitment_sensitive_to_plaintext() {
+        let m1 = encrypt_memo(b"message-alpha", &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        let m2 = encrypt_memo(b"message-beta", &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert_ne!(m1.ciphertext_commitment, m2.ciphertext_commitment);
+    }
+
+    #[test]
+    fn test_nonce_commitment_nonzero() {
+        let memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert_ne!(memo.nonce_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nonce_commitment_deterministic() {
+        let m1 = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        let m2 = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert_eq!(m1.nonce_commitment, m2.nonce_commitment);
+    }
+
+    #[test]
+    fn test_memo_mainnet_ready_false() {
+        let memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert!(!memo.mainnet_ready);
+    }
+
+    #[test]
+    fn test_decrypted_mainnet_ready_false() {
+        let memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        let decrypted = decrypt_memo(&memo, &SHARED_SECRET).unwrap();
+        assert!(!decrypted.mainnet_ready);
+    }
+
+    #[test]
+    fn test_verify_integrity_fails_after_tamper() {
+        let mut memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        memo.ciphertext[0] ^= 0xFF;
+        assert!(!verify_memo_integrity(&memo));
+    }
+
+    #[test]
+    fn test_ciphertext_differs_from_plaintext() {
+        let memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 0).unwrap();
+        assert_ne!(memo.ciphertext, PLAINTEXT);
+    }
+
+    #[test]
+    fn test_decrypt_recovers_sent_at_unix() {
+        let memo = encrypt_memo(PLAINTEXT, &SHARED_SECRET, &SENDER_SECRET, 42_000).unwrap();
+        let decrypted = decrypt_memo(&memo, &SHARED_SECRET).unwrap();
+        assert_eq!(decrypted.sent_at_unix, 42_000);
+    }
 }

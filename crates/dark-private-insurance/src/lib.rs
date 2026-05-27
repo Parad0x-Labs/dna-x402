@@ -297,4 +297,72 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(v.get("insured_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_policy_id_nonzero() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        assert_ne!(policy.policy_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_insured_hash_nonzero() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        assert_ne!(policy.insured_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_coverage_hash_nonzero() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        assert_ne!(policy.coverage_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_policy_mainnet_ready_false() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        assert!(!policy.mainnet_ready);
+    }
+
+    #[test]
+    fn test_claim_mainnet_ready_false() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        let claim = file_claim(&policy, &claimant_secret(), b"event").unwrap();
+        assert!(!claim.mainnet_ready);
+    }
+
+    #[test]
+    fn test_claim_id_nonzero() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        let claim = file_claim(&policy, &claimant_secret(), b"event").unwrap();
+        assert_ne!(claim.claim_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_zero_payout_rejected() {
+        let err = create_policy(&insured_secret(), b"coverage", 100, 0, &nonce()).unwrap_err();
+        assert_eq!(err, InsuranceError::ZeroPayout);
+    }
+
+    #[test]
+    fn test_claim_not_approved_initially() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        let claim = file_claim(&policy, &claimant_secret(), b"event").unwrap();
+        assert!(!claim.approved);
+    }
+
+    #[test]
+    fn test_different_nonce_different_policy_id() {
+        let mut n2 = [0u8; 32];
+        n2[0] = 0x99;
+        let p1 = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        let p2 = create_policy(&insured_secret(), b"coverage", 100, 1000, &n2).unwrap();
+        assert_ne!(p1.policy_id, p2.policy_id);
+    }
+
+    #[test]
+    fn test_policy_active_initially() {
+        let policy = create_policy(&insured_secret(), b"coverage", 100, 1000, &nonce()).unwrap();
+        assert!(policy.active);
+    }
 }

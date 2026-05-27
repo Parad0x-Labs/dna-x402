@@ -188,4 +188,92 @@ mod tests {
         let root2 = reg.registry_root();
         assert_ne!(root1, root2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_new_registry_find_returns_none() {
+        let reg = Registry::new();
+        assert!(reg.find(&ModuleId([99u8; 32])).is_none());
+    }
+
+    #[test]
+    fn test_pause_unknown_module_rejected() {
+        let mut reg = Registry::new();
+        let err = reg.pause(&ModuleId([0xFFu8; 32])).unwrap_err();
+        assert_eq!(err, RegistryError::UnknownModule);
+    }
+
+    #[test]
+    fn test_resume_unknown_module_rejected() {
+        let mut reg = Registry::new();
+        let err = reg.resume(&ModuleId([0xFFu8; 32])).unwrap_err();
+        assert_eq!(err, RegistryError::UnknownModule);
+    }
+
+    #[test]
+    fn test_verify_unknown_module_rejected() {
+        let reg = Registry::new();
+        let result = make_result(7);
+        let err = reg.verify_result(&result, CAP_SPEND).unwrap_err();
+        assert_eq!(err, RegistryError::UnknownModule);
+    }
+
+    #[test]
+    fn test_registry_root_deterministic() {
+        let mut r1 = Registry::new();
+        let mut r2 = Registry::new();
+        r1.register(make_commitment(10, &[CAP_SPEND])).unwrap();
+        r2.register(make_commitment(10, &[CAP_SPEND])).unwrap();
+        assert_eq!(r1.registry_root(), r2.registry_root());
+    }
+
+    #[test]
+    fn test_registry_root_order_sensitive() {
+        let mut r1 = Registry::new();
+        let mut r2 = Registry::new();
+        r1.register(make_commitment(1, &[CAP_SPEND])).unwrap();
+        r1.register(make_commitment(2, &[CAP_RELAY])).unwrap();
+        r2.register(make_commitment(2, &[CAP_RELAY])).unwrap();
+        r2.register(make_commitment(1, &[CAP_SPEND])).unwrap();
+        // Different registration order → different root (hashes concatenated in order)
+        assert_ne!(r1.registry_root(), r2.registry_root());
+    }
+
+    #[test]
+    fn test_multiple_modules_findable() {
+        let mut reg = Registry::new();
+        for id in [20u8, 21, 22] {
+            reg.register(make_commitment(id, &[CAP_SPEND])).unwrap();
+        }
+        for id in [20u8, 21, 22] {
+            assert!(reg.find(&ModuleId([id; 32])).is_some());
+        }
+    }
+
+    #[test]
+    fn test_resumed_module_verifies() {
+        let mut reg = Registry::new();
+        reg.register(make_commitment(30, &[CAP_SPEND])).unwrap();
+        let id = ModuleId([30u8; 32]);
+        reg.pause(&id).unwrap();
+        reg.resume(&id).unwrap();
+        let result = make_result(30);
+        assert!(reg.verify_result(&result, CAP_SPEND).is_ok());
+    }
+
+    #[test]
+    fn test_registry_root_nonzero_after_register() {
+        let mut reg = Registry::new();
+        reg.register(make_commitment(40, &[CAP_SPEND])).unwrap();
+        assert_ne!(reg.registry_root(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_cap_relay_granted_and_verified() {
+        let mut reg = Registry::new();
+        reg.register(make_commitment(50, &[CAP_RELAY])).unwrap();
+        let result = make_result(50);
+        assert!(reg.verify_result(&result, CAP_RELAY).is_ok());
+    }
 }

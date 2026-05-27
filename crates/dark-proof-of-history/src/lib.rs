@@ -178,4 +178,81 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert_eq!(v["ph_id"].as_str().unwrap().len(), 64);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_ph_id_nonzero() {
+        let ph = new_history(&seed(0x40)).unwrap();
+        assert_ne!(ph.ph_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_initial_hash_nonzero() {
+        let ph = new_history(&seed(0x41)).unwrap();
+        assert_ne!(ph.hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let ph = new_history(&seed(0x42)).unwrap();
+        assert!(!ph.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_seed_rejected() {
+        let err = new_history(&[0u8; 32]).unwrap_err();
+        assert_eq!(err, PhError::ZeroSeed);
+    }
+
+    #[test]
+    fn test_tick_record_prev_hash_correct() {
+        let mut ph = new_history(&seed(0x43)).unwrap();
+        let hash_before = ph.hash;
+        let rec = tick(&mut ph);
+        assert_eq!(rec.prev_hash, hash_before);
+        assert_eq!(rec.hash, ph.hash);
+    }
+
+    #[test]
+    fn test_record_data_hash_nonzero() {
+        let mut ph = new_history(&seed(0x44)).unwrap();
+        let rec = record(&mut ph, b"some data bytes");
+        let dh = rec.data_hash.unwrap();
+        assert_ne!(dh, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_multiple_ticks_accumulate() {
+        let mut ph = new_history(&seed(0x45)).unwrap();
+        tick(&mut ph);
+        tick(&mut ph);
+        tick(&mut ph);
+        assert_eq!(ph.tick, 3);
+    }
+
+    #[test]
+    fn test_different_data_different_hash() {
+        let mut ph1 = new_history(&seed(0x46)).unwrap();
+        let mut ph2 = new_history(&seed(0x46)).unwrap();
+        let r1 = record(&mut ph1, b"data_alpha");
+        let r2 = record(&mut ph2, b"data_beta");
+        assert_ne!(r1.hash, r2.hash);
+    }
+
+    #[test]
+    fn test_record_tick_advances_by_one() {
+        let mut ph = new_history(&seed(0x47)).unwrap();
+        assert_eq!(ph.tick, 0);
+        let rec = record(&mut ph, b"advance_test");
+        assert_eq!(rec.tick, 1);
+        assert_eq!(ph.tick, 1);
+    }
+
+    #[test]
+    fn test_ph_id_seed_sensitive() {
+        let ph1 = new_history(&seed(0x48)).unwrap();
+        let ph2 = new_history(&seed(0x49)).unwrap();
+        assert_ne!(ph1.ph_id, ph2.ph_id);
+    }
 }

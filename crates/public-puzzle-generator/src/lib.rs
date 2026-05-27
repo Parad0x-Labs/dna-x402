@@ -303,4 +303,81 @@ mod tests {
         assert!(md.contains("Hint"));
         assert!(md.len() > 100);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_puzzle_id_nonzero() {
+        let p = generate_puzzle(PuzzleType::ShardAscii, "HELLO", &seed());
+        assert_ne!(p.puzzle_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_solution_hash_nonzero() {
+        let p = generate_puzzle(PuzzleType::RootAcrostic, "WORLD", &seed());
+        assert_ne!(p.solution_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_messages_different_solution_hash() {
+        let p1 = generate_puzzle(PuzzleType::ShardAscii, "ALPHA", &seed());
+        let p2 = generate_puzzle(PuzzleType::ShardAscii, "BETA", &seed());
+        assert_ne!(p1.solution_hash, p2.solution_hash);
+    }
+
+    #[test]
+    fn test_different_seeds_different_puzzle_id() {
+        let seed2 = [0x99u8; 32];
+        let p1 = generate_puzzle(PuzzleType::ShardAscii, "SAME", &seed());
+        let p2 = generate_puzzle(PuzzleType::ShardAscii, "SAME", &seed2);
+        assert_ne!(p1.puzzle_id, p2.puzzle_id);
+    }
+
+    #[test]
+    fn test_different_puzzle_types_different_puzzle_id() {
+        let p1 = generate_puzzle(PuzzleType::ShardAscii, "DARK", &seed());
+        let p2 = generate_puzzle(PuzzleType::RootAcrostic, "DARK", &seed());
+        assert_ne!(p1.puzzle_id, p2.puzzle_id);
+    }
+
+    #[test]
+    fn test_all_puzzle_types_generate() {
+        let types = [
+            PuzzleType::ShardAscii,
+            PuzzleType::RootAcrostic,
+            PuzzleType::ChaffConstellation,
+            PuzzleType::CouponNonceCipher,
+            PuzzleType::ShapeKProof,
+        ];
+        for pt in types {
+            let p = generate_puzzle(pt, "TEST", &seed());
+            assert!(!p.encoded_message.is_empty());
+            assert_ne!(p.puzzle_id, [0u8; 32]);
+        }
+    }
+
+    #[test]
+    fn test_root_acrostic_no_devnet_required() {
+        let p = generate_puzzle(PuzzleType::RootAcrostic, "HELLO", &seed());
+        assert!(!p.devnet_tx_required);
+    }
+
+    #[test]
+    fn test_shard_ascii_devnet_required() {
+        let p = generate_puzzle(PuzzleType::ShardAscii, "HELLO", &seed());
+        assert!(p.devnet_tx_required);
+    }
+
+    #[test]
+    fn test_markdown_contains_type_name() {
+        let p = generate_puzzle(PuzzleType::ShardAscii, "TOKEN", &seed());
+        let md = to_markdown(&p);
+        assert!(md.contains("Shard ASCII"));
+    }
+
+    #[test]
+    fn test_coupon_nonce_no_devnet_required() {
+        let p = generate_puzzle(PuzzleType::CouponNonceCipher, "PROMO", &seed());
+        assert!(!p.devnet_tx_required);
+    }
 }

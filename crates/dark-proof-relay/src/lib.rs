@@ -180,4 +180,72 @@ mod tests {
         let packet = new_relay_packet(PAYLOAD, &[SECRET1]).unwrap();
         assert!(!packet.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_packet_id_nonzero() {
+        let packet = new_relay_packet(PAYLOAD, &[SECRET1]).unwrap();
+        assert_ne!(packet.packet_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_payload_commitment_nonzero() {
+        let packet = new_relay_packet(PAYLOAD, &[SECRET1]).unwrap();
+        assert_ne!(packet.payload_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_route_commitment_nonzero() {
+        let packet = new_relay_packet(PAYLOAD, &[SECRET1, SECRET2]).unwrap();
+        assert_ne!(packet.route_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_relay_hash_nonzero_with_secret() {
+        let packet = new_relay_packet(PAYLOAD, &[SECRET1]).unwrap();
+        assert_ne!(packet.relay_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_hop_count_stored() {
+        let packet = new_relay_packet(PAYLOAD, &[SECRET1, SECRET2, SECRET3]).unwrap();
+        assert_eq!(packet.hop_count, 3);
+    }
+
+    #[test]
+    fn test_delivered_false_initially() {
+        let packet = new_relay_packet(PAYLOAD, &[SECRET1]).unwrap();
+        assert!(!packet.delivered);
+    }
+
+    #[test]
+    fn test_zero_hops_ok() {
+        let packet = new_relay_packet(PAYLOAD, &[]).unwrap();
+        assert_eq!(packet.hop_count, 0);
+        assert_eq!(packet.relay_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_max_hops_ok() {
+        let secrets: Vec<[u8; 32]> = (1u8..=MAX_HOPS).map(|i| [i; 32]).collect();
+        let packet = new_relay_packet(PAYLOAD, &secrets).unwrap();
+        assert_eq!(packet.hop_count, MAX_HOPS);
+        assert!(verify_packet(&packet));
+    }
+
+    #[test]
+    fn test_zero_secret_rejected() {
+        let zero = [0u8; 32];
+        let result = new_relay_packet(PAYLOAD, &[zero]);
+        assert_eq!(result.unwrap_err(), RelayError::ZeroRelaySecret);
+    }
+
+    #[test]
+    fn test_payload_commitment_deterministic() {
+        let pc1 = payload_commitment(PAYLOAD);
+        let pc2 = payload_commitment(PAYLOAD);
+        assert_eq!(pc1, pc2);
+        assert_ne!(pc1, [0u8; 32]);
+    }
 }

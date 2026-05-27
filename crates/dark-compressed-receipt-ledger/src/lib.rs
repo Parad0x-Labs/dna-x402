@@ -205,6 +205,82 @@ mod tests {
         assert!(cmp.note.contains("SIMULATED"));
     }
 
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_new_ledger_root_is_zeros() {
+        let ledger = CompressedReceiptLedger::new(1);
+        assert_eq!(ledger.current_root(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_new_ledger_leaf_count_zero() {
+        let ledger = CompressedReceiptLedger::new(1);
+        assert_eq!(ledger.leaf_count(), 0);
+    }
+
+    #[test]
+    fn test_root_changes_with_each_insert() {
+        let mut ledger = CompressedReceiptLedger::new(1);
+        let root0 = ledger.current_root();
+        let (rh, sh, nh) = hashes(10);
+        ledger.insert_receipt_leaf(&owner(), rh, sh, nh).unwrap();
+        let root1 = ledger.current_root();
+        let (rh2, sh2, nh2) = hashes(20);
+        ledger
+            .insert_receipt_leaf(&[0xBBu8; 32], rh2, sh2, nh2)
+            .unwrap();
+        let root2 = ledger.current_root();
+        assert_ne!(root0, root1);
+        assert_ne!(root1, root2);
+    }
+
+    #[test]
+    fn test_mark_redeemed_first_succeeds() {
+        let mut ledger = CompressedReceiptLedger::new(1);
+        let nullifier = [0x99u8; 32];
+        assert!(ledger.mark_redeemed(nullifier).is_ok());
+    }
+
+    #[test]
+    fn test_cost_comparison_empty_ledger() {
+        let ledger = CompressedReceiptLedger::new(1);
+        let cmp = ledger.cost_comparison();
+        assert_eq!(cmp.leaf_count, 0);
+        assert_eq!(cmp.naive_pda_lamports, 0);
+    }
+
+    #[test]
+    fn test_multiple_leaf_types_all_counted() {
+        let mut ledger = CompressedReceiptLedger::new(1);
+        let (rh, sh, nh) = hashes(10);
+        ledger.insert_receipt_leaf(&owner(), rh, sh, nh).unwrap();
+        let (ph, sh2, nh2) = hashes(20);
+        ledger
+            .insert_agent_persona_leaf(&[0xBBu8; 32], ph, sh2, nh2)
+            .unwrap();
+        let (mh, sh3, nh3) = hashes(30);
+        ledger
+            .insert_api_meter_leaf(&[0xCCu8; 32], mh, sh3, nh3)
+            .unwrap();
+        assert_eq!(ledger.leaf_count(), 3);
+    }
+
+    #[test]
+    fn test_epoch_stored_in_ledger() {
+        let ledger = CompressedReceiptLedger::new(42);
+        assert_eq!(ledger.epoch, 42);
+    }
+
+    #[test]
+    fn test_insert_updates_leaf_hash_in_result() {
+        let mut ledger = CompressedReceiptLedger::new(1);
+        let (rh, sh, nh) = hashes(77);
+        let update = ledger.insert_receipt_leaf(&owner(), rh, sh, nh).unwrap();
+        assert_ne!(update.leaf_hash, [0u8; 32]);
+        assert_ne!(update.new_root, [0u8; 32]);
+    }
+
     #[test]
     fn test_different_domains_different_canonical_hash() {
         let base = dark_compression_core::CompressedLeaf {

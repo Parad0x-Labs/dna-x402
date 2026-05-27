@@ -524,4 +524,11 @@ mod tests {
             "leaf_hash and node_hash must differ for same inputs"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_max_depth_constant() {
+        assert_eq!(MAX_DEPTH, 32);
+    }
 }

@@ -254,4 +254,73 @@ mod tests {
         assert_eq!(v["epoch"], 1);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_set_id_nonzero() {
+        let (set, _) = create_set(&[secret(0x11)], &[100], 1, 1).unwrap();
+        assert_ne!(set.set_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_validator_root_nonzero() {
+        let (set, _) = create_set(&[secret(0x22)], &[200], 1, 1).unwrap();
+        assert_ne!(set.validator_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_validator_hash_nonzero() {
+        let (_, validators) = create_set(&[secret(0x33)], &[300], 1, 1).unwrap();
+        assert_ne!(validators[0].validator_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_stake_commitment_nonzero() {
+        let (_, validators) = create_set(&[secret(0x44)], &[400], 1, 1).unwrap();
+        assert_ne!(validators[0].stake_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let (set, _) = create_set(&[secret(0x55)], &[500], 1, 1).unwrap();
+        assert!(!set.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_operator_secret_rejected() {
+        let secrets = [[0u8; 32]];
+        let err = create_set(&secrets, &[100], 1, 1).unwrap_err();
+        assert_eq!(err, ValidatorError::ZeroOperatorSecret);
+    }
+
+    #[test]
+    fn test_epoch_rotation_must_advance() {
+        let (mut set, _) = create_set(&[secret(0x66)], &[100], 1, 5).unwrap();
+        // Same epoch → EpochMismatch
+        let err = rotate_epoch(&mut set, &[], 5).unwrap_err();
+        assert_eq!(err, ValidatorError::EpochMismatch);
+        // Lower epoch → EpochMismatch
+        let err2 = rotate_epoch(&mut set, &[], 3).unwrap_err();
+        assert_eq!(err2, ValidatorError::EpochMismatch);
+    }
+
+    #[test]
+    fn test_active_validators_all_true() {
+        let secrets = [secret(0x77), secret(0x88), secret(0x99)];
+        let (_, validators) = create_set(&secrets, &[100, 200, 300], 2, 1).unwrap();
+        assert!(validators.iter().all(|v| v.active));
+    }
+
+    #[test]
+    fn test_max_validators_constant() {
+        assert_eq!(MAX_VALIDATORS, 128);
+    }
+
+    #[test]
+    fn test_set_id_epoch_sensitive() {
+        let (set1, _) = create_set(&[secret(0xAA)], &[100], 1, 10).unwrap();
+        let (set2, _) = create_set(&[secret(0xAA)], &[100], 1, 20).unwrap();
+        assert_ne!(set1.set_id, set2.set_id);
+    }
 }

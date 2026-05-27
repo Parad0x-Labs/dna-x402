@@ -208,4 +208,66 @@ mod tests {
         let no_warning = check_storm_warning(&cold);
         assert!(no_warning.is_none(), "no warning expected for cold account");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_account_heat_stored_correctly() {
+        let hash = dummy_hash(7);
+        let heat = score_account_heat(&hash, 200, 1_000);
+        assert_eq!(heat.account_hash, hash);
+        assert_eq!(heat.recent_fee_lamports, 200);
+    }
+
+    #[test]
+    fn test_heat_capped_at_one() {
+        let heat = score_account_heat(&dummy_hash(8), 1_000_000, 1);
+        assert_eq!(heat.heat_index, 1.0, "heat_index must be capped at 1.0");
+    }
+
+    #[test]
+    fn test_fog_grade_warm_at_025() {
+        // composite_heat = 0.25 is NOT < 0.25 → Warm
+        let h = score_account_heat(&dummy_hash(1), 250, 1_000);
+        let route = score_route_weather(&dummy_hash(20), vec![h]);
+        assert_eq!(route.fog_grade, FogGrade::Warm);
+    }
+
+    #[test]
+    fn test_fog_grade_hot_at_050() {
+        // composite_heat = 0.5 is NOT < 0.5 → Hot
+        let h = score_account_heat(&dummy_hash(2), 500, 1_000);
+        let route = score_route_weather(&dummy_hash(21), vec![h]);
+        assert_eq!(route.fog_grade, FogGrade::Hot);
+    }
+
+    #[test]
+    fn test_savings_receipt_hash_nonzero() {
+        let receipt = mint_savings_receipt(10_000, 4_000);
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_storm_warning_exactly_at_075() {
+        // heat_index = 750/1000 = 0.75 → >= 0.75 → Some
+        let heat = score_account_heat(&dummy_hash(9), 750, 1_000);
+        assert_eq!(heat.heat_index, 0.75);
+        let warning = check_storm_warning(&heat);
+        assert!(warning.is_some(), "storm warning expected at exactly 0.75");
+    }
+
+    #[test]
+    fn test_empty_route_estimated_fee_zero() {
+        let route = score_route_weather(&dummy_hash(30), vec![]);
+        assert_eq!(route.estimated_fee_lamports, 0);
+        assert_eq!(route.composite_heat, 0.0);
+    }
+
+    #[test]
+    fn test_savings_saturating_when_cold_greater() {
+        // cold_fee > hot_fee → savings saturates to 0
+        let receipt = mint_savings_receipt(1_000, 5_000);
+        assert_eq!(receipt.savings_lamports, 0);
+        assert_eq!(receipt.protocol_fee_lamports, 0);
+    }
 }

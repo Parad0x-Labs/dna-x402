@@ -245,4 +245,78 @@ mod tests {
         assert_eq!(v["depth"], 8u8);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_tree_id_nonzero() {
+        let tree = new_tree(4, &nonce()).unwrap();
+        assert_ne!(tree.tree_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_tree_id_deterministic() {
+        let t1 = new_tree(4, &nonce()).unwrap();
+        let t2 = new_tree(4, &nonce()).unwrap();
+        assert_eq!(t1.tree_id, t2.tree_id);
+    }
+
+    #[test]
+    fn test_tree_id_nonce_sensitive() {
+        let n1 = nonce();
+        let mut n2 = nonce();
+        n2[1] = 0xFF;
+        let t1 = new_tree(4, &n1).unwrap();
+        let t2 = new_tree(4, &n2).unwrap();
+        assert_ne!(t1.tree_id, t2.tree_id);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let tree = new_tree(4, &nonce()).unwrap();
+        assert!(!tree.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_nullifier_rejected() {
+        let mut tree = new_tree(4, &nonce()).unwrap();
+        let err = insert_nullifier(&mut tree, &[0u8; 32]).unwrap_err();
+        assert_eq!(err, TreeError::ZeroNullifier);
+    }
+
+    #[test]
+    fn test_max_depth_ok() {
+        // depth == MAX_TREE_DEPTH (20) must succeed; check is `> MAX_TREE_DEPTH`
+        let result = new_tree(MAX_TREE_DEPTH, &nonce());
+        assert!(result.is_ok(), "depth == MAX_TREE_DEPTH must succeed");
+    }
+
+    #[test]
+    fn test_depth_too_high_rejected() {
+        let err = new_tree(MAX_TREE_DEPTH + 1, &nonce()).unwrap_err();
+        assert_eq!(err, TreeError::DepthTooHigh);
+    }
+
+    #[test]
+    fn test_leaf_hash_nonzero() {
+        let mut tree = new_tree(4, &nonce()).unwrap();
+        let leaf = insert_nullifier(&mut tree, &null(1)).unwrap();
+        assert_ne!(leaf.leaf_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_leaf_position_increments() {
+        let mut tree = new_tree(4, &nonce()).unwrap();
+        let l0 = insert_nullifier(&mut tree, &null(1)).unwrap();
+        let l1 = insert_nullifier(&mut tree, &null(2)).unwrap();
+        assert_eq!(l0.position, 0);
+        assert_eq!(l1.position, 1);
+    }
+
+    #[test]
+    fn test_root_nonzero_after_insert() {
+        let mut tree = new_tree(4, &nonce()).unwrap();
+        insert_nullifier(&mut tree, &null(1)).unwrap();
+        assert_ne!(tree.root, [0u8; 32]);
+    }
 }

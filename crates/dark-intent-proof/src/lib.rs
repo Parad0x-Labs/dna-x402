@@ -235,4 +235,92 @@ mod tests {
         // Sanity: the commitment hash IS present.
         assert!(record.contains(&hex(&commitment.commitment_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_nonzero() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        assert_ne!(c.commitment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_hash_deterministic() {
+        let c1 = commit_intent(INTENT, &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        let c2 = commit_intent(INTENT, &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        assert_eq!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_nonce_sensitive() {
+        let nonce2 = [0xFFu8; 32];
+        let c1 = commit_intent(INTENT, &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        let c2 = commit_intent(INTENT, &nonce2, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_commitment_hash_intent_sensitive() {
+        let c1 = commit_intent(b"buy SOL", &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        let c2 = commit_intent(b"sell SOL", &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Vote, T0, REVEAL_AFTER).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_reveal_at_exact_reveal_after_ok() {
+        // check is `current_unix < reveal_after_unix`, so == reveal_after is allowed
+        let c = commit_intent(INTENT, &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        let result = reveal_intent(&c, INTENT, &NONCE, REVEAL_AFTER);
+        assert!(
+            result.is_ok(),
+            "reveal at exact reveal_after_unix must succeed"
+        );
+    }
+
+    #[test]
+    fn test_verify_reveal_roundtrip() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Claim, T0, REVEAL_AFTER).unwrap();
+        let reveal = reveal_intent(&c, INTENT, &NONCE, REVEAL_AFTER).unwrap();
+        assert!(verify_reveal(&c, &reveal));
+    }
+
+    #[test]
+    fn test_verify_reveal_wrong_nonce_fails() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Trade, T0, REVEAL_AFTER).unwrap();
+        let wrong_nonce = [0xFFu8; 32];
+        // reveal with wrong nonce gives RevealMismatch
+        let result = reveal_intent(&c, INTENT, &wrong_nonce, REVEAL_AFTER);
+        match result {
+            Err(IntentError::RevealMismatch) => {}
+            _ => panic!("expected RevealMismatch for wrong nonce"),
+        }
+    }
+
+    #[test]
+    fn test_intent_type_stored() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Abstain, T0, REVEAL_AFTER).unwrap();
+        assert_eq!(c.intent_type, IntentType::Abstain);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_keys() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Vote, T0, REVEAL_AFTER).unwrap();
+        let record = commitment_public_record(&c);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["commitment_hash"].is_string());
+        assert!(v["intent_type"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_committed_at_unix_stored() {
+        let c = commit_intent(INTENT, &NONCE, IntentType::Trade, 9876, REVEAL_AFTER).unwrap();
+        assert_eq!(c.committed_at_unix, 9876);
+    }
 }

@@ -309,6 +309,108 @@ mod tests {
         );
     }
 
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_correct_scope_accepted() {
+        let allowed: [u8; 32] = [0xCCu8; 32];
+        let caveat = Caveat {
+            allowed_scope_hashes: vec![allowed],
+            ..basic_caveat()
+        };
+        let m = mint(&issuer_key(), &nonce(), vec![caveat]);
+        let res = verify(
+            &m,
+            &issuer_key(),
+            &nonce(),
+            100,
+            0,
+            Some(&allowed),
+            0,
+            false,
+        );
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_correct_relayer_accepted() {
+        let caveat = Caveat {
+            allowed_relayer_class: 3,
+            ..basic_caveat()
+        };
+        let m = mint(&issuer_key(), &nonce(), vec![caveat]);
+        let res = verify(&m, &issuer_key(), &nonce(), 100, 0, None, 3, false);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_wrong_relayer_rejected() {
+        let caveat = Caveat {
+            allowed_relayer_class: 5,
+            ..basic_caveat()
+        };
+        let m = mint(&issuer_key(), &nonce(), vec![caveat]);
+        let res = verify(&m, &issuer_key(), &nonce(), 100, 0, None, 7, false);
+        assert_eq!(res, Err(MacaroonError::RelayerForbidden));
+    }
+
+    #[test]
+    fn test_no_caveat_macaroon() {
+        let m = mint(&issuer_key(), &nonce(), vec![]);
+        let res = verify(&m, &issuer_key(), &nonce(), 0, 0, None, 0, false);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_id_deterministic() {
+        let m1 = mint(&issuer_key(), &nonce(), vec![basic_caveat()]);
+        let m2 = mint(&issuer_key(), &nonce(), vec![basic_caveat()]);
+        assert_eq!(m1.id, m2.id);
+    }
+
+    #[test]
+    fn test_different_nonces_different_ids() {
+        let mut n2 = nonce();
+        n2[0] ^= 0xFF;
+        let m1 = mint(&issuer_key(), &nonce(), vec![basic_caveat()]);
+        let m2 = mint(&issuer_key(), &n2, vec![basic_caveat()]);
+        assert_ne!(m1.id, m2.id);
+    }
+
+    #[test]
+    fn test_signature_covers_caveats() {
+        let c1 = Caveat {
+            max_amount_lamports: 100,
+            ..basic_caveat()
+        };
+        let c2 = Caveat {
+            max_amount_lamports: 200,
+            ..basic_caveat()
+        };
+        let m1 = mint(&issuer_key(), &nonce(), vec![c1]);
+        let m2 = mint(&issuer_key(), &nonce(), vec![c2]);
+        assert_ne!(m1.signature, m2.signature);
+    }
+
+    #[test]
+    fn test_multiple_caveats_all_enforced() {
+        // First caveat expires at slot 50; second has low budget
+        let c1 = Caveat {
+            expires_at_slot: 50,
+            max_amount_lamports: 1_000_000,
+            ..basic_caveat()
+        };
+        let c2 = Caveat {
+            expires_at_slot: 9999,
+            max_amount_lamports: 500,
+            ..basic_caveat()
+        };
+        let m = mint(&issuer_key(), &nonce(), vec![c1, c2]);
+        // slot=100 violates c1.expires_at_slot=50
+        let res = verify(&m, &issuer_key(), &nonce(), 100, 100, None, 0, false);
+        assert_eq!(res, Err(MacaroonError::Expired));
+    }
+
     /// Legacy tokens are accepted when explicitly verified with legacy_mac — confirms the
     /// two MAC schemes produce different outputs and the legacy path still works for migration.
     #[cfg(feature = "legacy-macaroons")]

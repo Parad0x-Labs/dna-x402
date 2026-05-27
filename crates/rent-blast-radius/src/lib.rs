@@ -100,4 +100,76 @@ mod tests {
             sol
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_rent_exempt_formula_correct() {
+        // (128 + 64) * 3480 * 2 = 192 * 6960 = 1_336_320
+        assert_eq!(
+            rent_exempt_lamports(64),
+            192 * LAMPORTS_PER_BYTE_YEAR * RENT_EXEMPT_YEARS
+        );
+    }
+
+    #[test]
+    fn test_lamports_per_sol_constant() {
+        assert_eq!(LAMPORTS_PER_SOL, 1_000_000_000);
+    }
+
+    #[test]
+    fn test_account_overhead_constant() {
+        assert_eq!(ACCOUNT_OVERHEAD_BYTES, 128);
+    }
+
+    #[test]
+    fn test_lamports_per_byte_year_constant() {
+        assert_eq!(LAMPORTS_PER_BYTE_YEAR, 3_480);
+    }
+
+    #[test]
+    fn test_rent_exempt_years_constant() {
+        assert_eq!(RENT_EXEMPT_YEARS, 2);
+    }
+
+    #[test]
+    fn test_lamports_to_sol_half() {
+        let sol = lamports_to_sol(500_000_000);
+        let diff = (sol - 0.5_f64).abs();
+        assert!(diff < 1e-9, "500M lamports must equal 0.5 SOL, got {}", sol);
+    }
+
+    #[test]
+    fn test_blast_radius_zero_accounts() {
+        let sol = blast_radius_sol(100, 0);
+        assert_eq!(sol, 0.0, "0 accounts must have 0 blast radius");
+    }
+
+    #[test]
+    fn test_compare_accounts_avoided_correct() {
+        let cmp = compare(500, 100, 100, 10);
+        assert_eq!(cmp.accounts_avoided, 90);
+    }
+
+    #[test]
+    fn test_compare_naive_sol_matches_blast_radius() {
+        let cmp = compare(500, 100, 50, 5);
+        let expected = blast_radius_sol(500, 50);
+        let diff = (cmp.naive_sol - expected).abs();
+        assert!(diff < 1e-9, "naive_sol must match blast_radius_sol");
+    }
+
+    #[test]
+    fn test_rent_nonzero_bytes_exceeds_zero_bytes() {
+        assert!(rent_exempt_lamports(100) > rent_exempt_lamports(0));
+    }
+
+    #[test]
+    fn test_compare_same_inputs_zero_savings() {
+        let cmp = compare(200, 200, 10, 10);
+        assert!(
+            cmp.savings_sol.abs() < 1e-9,
+            "identical designs must have zero savings"
+        );
+    }
 }

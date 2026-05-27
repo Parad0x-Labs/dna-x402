@@ -352,4 +352,64 @@ mod tests {
         let channel = make_channel(7);
         assert_eq!(channel.total_balance(), 7 * 10_000);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_spend_at_exact_expiry_ok() {
+        // current_slot == expiry_slot (9999) — strictly > check, so exactly at expiry is ok
+        let channel = make_channel(5);
+        let notes = issue_notes(&channel, scope());
+        let used = HashSet::new();
+        let result = spend_note(&notes[0], &channel, 9999, &used);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_note_nullifier_nonzero() {
+        let channel = make_channel(3);
+        let notes = issue_notes(&channel, scope());
+        for note in &notes {
+            assert_ne!(note.nullifier, [0u8; 32]);
+        }
+    }
+
+    #[test]
+    fn test_settlement_root_nonzero() {
+        let channel = make_channel(5);
+        let notes = issue_notes(&channel, scope());
+        let result = settle_session(&channel, &notes).unwrap();
+        assert_ne!(result.root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_scope_different_nullifiers() {
+        let channel = make_channel(3);
+        let scope_a = [0xAAu8; 32];
+        let scope_b = [0xBBu8; 32];
+        let notes_a = issue_notes(&channel, scope_a);
+        let notes_b = issue_notes(&channel, scope_b);
+        for (a, b) in notes_a.iter().zip(notes_b.iter()) {
+            assert_ne!(a.nullifier, b.nullifier);
+        }
+    }
+
+    #[test]
+    fn test_refund_all_unused_when_none_spent() {
+        let channel = make_channel(5);
+        let notes = issue_notes(&channel, scope());
+        let used = HashSet::new(); // nothing spent
+        let refund = refund_unused(&channel, &used, &notes);
+        assert_eq!(refund.unused_count, 5);
+        assert_eq!(refund.unspent_amount, 5 * channel.note_amount_each);
+    }
+
+    #[test]
+    fn test_note_amount_matches_channel() {
+        let channel = make_channel(4);
+        let notes = issue_notes(&channel, scope());
+        for note in &notes {
+            assert_eq!(note.amount, channel.note_amount_each);
+        }
+    }
 }

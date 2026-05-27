@@ -243,4 +243,90 @@ mod tests {
             other => panic!("expected OutputMismatch, got {:?}", other),
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_new_adapter_toolchain_unavailable() {
+        let adapter = BonsolAdapter::new();
+        assert!(!adapter.toolchain_available);
+    }
+
+    #[test]
+    fn test_with_toolchain_adapter_available() {
+        let adapter = BonsolAdapter::new_with_toolchain();
+        assert!(adapter.toolchain_available);
+    }
+
+    #[test]
+    fn test_request_hash_input_hash_sensitive() {
+        let req1 = make_request();
+        let mut req2 = make_request();
+        req2.input_hash = [0x00u8; 32];
+        assert_ne!(req1.request_hash(), req2.request_hash());
+    }
+
+    #[test]
+    fn test_request_hash_program_id_sensitive() {
+        let req1 = make_request();
+        let mut req2 = make_request();
+        req2.program_id = BonsolProgramId([0xFFu8; 32]);
+        assert_ne!(req1.request_hash(), req2.request_hash());
+    }
+
+    #[test]
+    fn test_request_hash_tip_sensitive() {
+        let req1 = make_request();
+        let mut req2 = make_request();
+        req2.tip_lamports = 9999;
+        assert_ne!(req1.request_hash(), req2.request_hash());
+    }
+
+    #[test]
+    fn test_request_hash_nonzero() {
+        let req = make_request();
+        assert_ne!(req.request_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_await_no_pending_when_toolchain_available() {
+        let adapter = BonsolAdapter::new_with_toolchain();
+        let dummy_hash = [0xABu8; 32];
+        match adapter.await_execution_receipt(&dummy_hash) {
+            Err(BonsolError::NoPendingExecution) => {}
+            other => panic!("expected NoPendingExecution, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_verify_receipt_is_real_false() {
+        let adapter = BonsolAdapter::new_with_toolchain();
+        let req = make_request();
+        let receipt = make_receipt(&req);
+        let expected = [0xDDu8; 32]; // matches make_receipt output_hash
+        let digest = adapter.verify_receipt(&receipt, &expected).unwrap();
+        assert!(!digest.is_real);
+    }
+
+    #[test]
+    fn test_verify_receipt_output_hash_preserved() {
+        let adapter = BonsolAdapter::new_with_toolchain();
+        let req = make_request();
+        let receipt = make_receipt(&req);
+        let expected = [0xDDu8; 32];
+        let digest = adapter.verify_receipt(&receipt, &expected).unwrap();
+        assert_eq!(digest.output_hash, expected);
+    }
+
+    #[test]
+    fn test_submit_toolchain_available_still_errors() {
+        let adapter = BonsolAdapter::new_with_toolchain();
+        let req = make_request();
+        // With toolchain=true the stub still returns ToolchainBlocked
+        // (no real implementation wired)
+        match adapter.submit_execution_request(&req) {
+            Err(BonsolError::ToolchainBlocked(_)) => {}
+            other => panic!("expected ToolchainBlocked stub, got {:?}", other),
+        }
+    }
 }

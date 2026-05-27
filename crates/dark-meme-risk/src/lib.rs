@@ -453,4 +453,54 @@ mod tests {
             "expected at least Medium band"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_score_hash_nonzero() {
+        let th = dummy_hash(50);
+        let report = build_risk_report(&th, &clean_data(), 1_000);
+        assert_ne!(report.score_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let th = dummy_hash(51);
+        let xh = dummy_hash(52);
+        let report = build_risk_report(&th, &clean_data(), 2_000);
+        let receipt = create_risk_receipt(&report, &xh);
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_score_epoch_sensitive() {
+        let th = dummy_hash(53);
+        let r1 = build_risk_report(&th, &clean_data(), 1_000);
+        let r2 = build_risk_report(&th, &clean_data(), 2_000);
+        assert_ne!(r1.score_hash, r2.score_hash);
+    }
+
+    #[test]
+    fn test_score_hash_token_sensitive() {
+        let r1 = build_risk_report(&dummy_hash(60), &clean_data(), 1_000);
+        let r2 = build_risk_report(&dummy_hash(61), &clean_data(), 1_000);
+        assert_ne!(r1.score_hash, r2.score_hash);
+    }
+
+    #[test]
+    fn test_verify_receipt_tampered_fails() {
+        let th = dummy_hash(70);
+        let xh = dummy_hash(71);
+        let report = build_risk_report(&th, &clean_data(), 3_000);
+        let mut receipt = create_risk_receipt(&report, &xh);
+        receipt.receipt_hash[0] ^= 0xFF;
+        assert!(verify_risk_receipt(&receipt).is_err());
+    }
+
+    #[test]
+    fn test_signals_have_six_entries() {
+        let th = dummy_hash(80);
+        let report = build_risk_report(&th, &clean_data(), 4_000);
+        assert_eq!(report.signals.len(), 6);
+    }
 }

@@ -224,4 +224,126 @@ mod tests {
             );
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_session_lifetime_goes_offchain() {
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: false,
+            mutable: false,
+            lifetime: Lifetime::Session,
+            public_visibility: false,
+            size_bytes: 32,
+            read_frequency: ReadFrequency::Never,
+            holds_value: false,
+        };
+        let (tier, _) = route(&obj);
+        assert_eq!(tier, StorageTier::OffChainOnly);
+    }
+
+    #[test]
+    fn test_enforced_size_64_tiny_pda() {
+        // size == 64 (exactly at boundary) → TinyPdaHeader
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: true,
+            mutable: true,
+            lifetime: Lifetime::Permanent,
+            public_visibility: false,
+            size_bytes: 64,
+            read_frequency: ReadFrequency::RealTime,
+            holds_value: false,
+        };
+        let (tier, _) = route(&obj);
+        assert_eq!(tier, StorageTier::TinyPdaHeader);
+    }
+
+    #[test]
+    fn test_enforced_size_65_full_account() {
+        // size == 65 (just above boundary) → FullAccount
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: true,
+            mutable: true,
+            lifetime: Lifetime::Permanent,
+            public_visibility: false,
+            size_bytes: 65,
+            read_frequency: ReadFrequency::RealTime,
+            holds_value: false,
+        };
+        let (tier, _) = route(&obj);
+        assert_eq!(tier, StorageTier::FullAccount);
+    }
+
+    #[test]
+    fn test_never_read_epoch_lifetime_event_only() {
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: false,
+            mutable: false,
+            lifetime: Lifetime::Epoch,
+            public_visibility: false,
+            size_bytes: 32,
+            read_frequency: ReadFrequency::Never,
+            holds_value: false,
+        };
+        let (tier, _) = route(&obj);
+        assert_eq!(tier, StorageTier::EventOnly);
+    }
+
+    #[test]
+    fn test_tier_cost_offchain_zero_sol() {
+        let commentary = tier_cost_commentary(StorageTier::OffChainOnly);
+        assert!(commentary.contains("0 SOL"));
+    }
+
+    #[test]
+    fn test_tier_cost_full_account_review() {
+        let commentary = tier_cost_commentary(StorageTier::FullAccount);
+        assert!(commentary.contains("REVIEW"));
+    }
+
+    #[test]
+    fn test_rationale_not_empty_offchain_path() {
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: false,
+            mutable: false,
+            lifetime: Lifetime::Ephemeral,
+            public_visibility: false,
+            size_bytes: 32,
+            read_frequency: ReadFrequency::RealTime,
+            holds_value: false,
+        };
+        let (_, rationale) = route(&obj);
+        assert!(!rationale.is_empty());
+    }
+
+    #[test]
+    fn test_value_bearing_ignores_enforcement_flag() {
+        // holds_value=true → TokenAccount even if not must_enforce_on_chain
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: false,
+            mutable: false,
+            lifetime: Lifetime::Permanent,
+            public_visibility: true,
+            size_bytes: 165,
+            read_frequency: ReadFrequency::FrequentRead,
+            holds_value: true,
+        };
+        let (tier, _) = route(&obj);
+        assert_eq!(tier, StorageTier::TokenAccount);
+    }
+
+    #[test]
+    fn test_rationale_not_empty_enforced_large() {
+        let obj = ObjectDescriptor {
+            must_enforce_on_chain: true,
+            mutable: true,
+            lifetime: Lifetime::Permanent,
+            public_visibility: true,
+            size_bytes: 512,
+            read_frequency: ReadFrequency::RealTime,
+            holds_value: false,
+        };
+        let (_, rationale) = route(&obj);
+        assert!(!rationale.is_empty());
+    }
 }

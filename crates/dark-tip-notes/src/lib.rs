@@ -174,4 +174,81 @@ mod tests {
         assert_ne!(note_commitment(&note), note_commitment(&note2));
         assert_ne!(note_nullifier(&note), note_nullifier(&note2));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        assert_ne!(note_commitment(&make_note()), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_nonzero() {
+        assert_ne!(note_nullifier(&make_note()), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_changes_with_secret() {
+        let note1 = make_note();
+        let mut note2 = note1.clone();
+        note2.secret = [0xEEu8; 32];
+        assert_ne!(note_commitment(&note1), note_commitment(&note2));
+    }
+
+    #[test]
+    fn test_nullifier_changes_with_secret() {
+        let note1 = make_note();
+        let mut note2 = note1.clone();
+        note2.secret = [0xEEu8; 32];
+        assert_ne!(note_nullifier(&note1), note_nullifier(&note2));
+    }
+
+    #[test]
+    fn test_nullifier_changes_with_amount_bucket() {
+        let note1 = make_note();
+        let mut note2 = note1.clone();
+        note2.amount_bucket = 9;
+        assert_ne!(note_nullifier(&note1), note_nullifier(&note2));
+    }
+
+    #[test]
+    fn test_redeem_at_expiry_ok() {
+        // expires_at_slot=1000; slot=1000 is NOT expired (check is `>`, not `>=`)
+        let note = make_note();
+        let recipient = [9u8; 32];
+        let mut log = TipRedemptionLog::new();
+        log.redeem(&note, &recipient, 1000).unwrap();
+    }
+
+    #[test]
+    fn test_log_empty_initially() {
+        let log = TipRedemptionLog::new();
+        assert!(log.nullifiers.is_empty());
+    }
+
+    #[test]
+    fn test_different_recipient_different_receipt() {
+        let note = make_note();
+        let r1 = [0x01u8; 32];
+        let r2 = [0x02u8; 32];
+        let receipt1 = redeem(&note, &r1, 500).unwrap();
+        let receipt2 = redeem(&note, &r2, 500).unwrap();
+        assert_ne!(receipt1, receipt2);
+    }
+
+    #[test]
+    fn test_stateless_redeem_ok() {
+        let note = make_note();
+        let recipient = [0xAAu8; 32];
+        let receipt = redeem(&note, &recipient, 500).unwrap();
+        assert_ne!(receipt, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_changes_with_expires_at_slot() {
+        let note1 = make_note();
+        let mut note2 = note1.clone();
+        note2.expires_at_slot = 2000;
+        assert_ne!(note_commitment(&note1), note_commitment(&note2));
+    }
 }

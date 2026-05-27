@@ -364,4 +364,99 @@ mod tests {
             );
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let shares = split_secret(&SECRET, &NONCE, 2, 2).unwrap();
+        for s in &shares {
+            assert!(!s.mainnet_ready);
+        }
+        let rec = reconstruct_secret(&shares).unwrap();
+        assert!(!rec.mainnet_ready);
+    }
+
+    #[test]
+    fn test_split_5of5_roundtrip() {
+        let shares = split_secret(&SECRET, &NONCE, 5, 5).unwrap();
+        assert_eq!(shares.len(), 5);
+        let rec = reconstruct_secret(&shares).unwrap();
+        assert_eq!(rec.secret, SECRET);
+    }
+
+    #[test]
+    fn test_different_nonces_produce_different_shares() {
+        let nonce2 = [0xABu8; 32];
+        let s1 = split_secret(&SECRET, &NONCE, 3, 3).unwrap();
+        let s2 = split_secret(&SECRET, &nonce2, 3, 3).unwrap();
+        // Shares differ but both reconstruct to the same secret
+        assert_ne!(s1[0].share_bytes, s2[0].share_bytes);
+        let r1 = reconstruct_secret(&s1).unwrap();
+        let r2 = reconstruct_secret(&s2).unwrap();
+        assert_eq!(r1.secret, r2.secret);
+    }
+
+    #[test]
+    fn test_tampered_share_fails_verify() {
+        let mut shares = split_secret(&SECRET, &NONCE, 3, 3).unwrap();
+        shares[1].share_bytes[0] ^= 0xFF; // corrupt one byte
+        assert!(!verify_share(&shares[1]));
+        // Reconstruction with tampered share gives wrong secret
+        let rec = reconstruct_secret(&shares).unwrap();
+        assert_ne!(rec.secret, SECRET);
+    }
+
+    #[test]
+    fn test_threshold_exceeds_parties_rejected() {
+        let err = split_secret(&SECRET, &NONCE, 3, 4).unwrap_err();
+        assert_eq!(err, SharingError::ThresholdExceedsParties);
+    }
+
+    #[test]
+    fn test_split_and_reconstruct_any_order() {
+        let shares = split_secret(&SECRET, &NONCE, 4, 4).unwrap();
+        // Reverse order
+        let reversed: Vec<SecretShare> = shares.into_iter().rev().collect();
+        let rec = reconstruct_secret(&reversed).unwrap();
+        assert_eq!(rec.secret, SECRET);
+    }
+
+    #[test]
+    fn test_each_party_gets_unique_id() {
+        let shares = split_secret(&SECRET, &NONCE, 5, 5).unwrap();
+        let ids: Vec<u8> = shares.iter().map(|s| s.party_id).collect();
+        assert_eq!(ids, vec![0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_secret_commitment_deterministic() {
+        let s1 = split_secret(&SECRET, &NONCE, 2, 2).unwrap();
+        let r1 = reconstruct_secret(&s1).unwrap();
+        let s2 = split_secret(&SECRET, &NONCE, 2, 2).unwrap();
+        let r2 = reconstruct_secret(&s2).unwrap();
+        assert_eq!(r1.secret_commitment, r2.secret_commitment);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_fields() {
+        let shares = split_secret(&SECRET, &NONCE, 2, 2).unwrap();
+        let record = shares_public_record(&shares);
+        assert!(record.contains("party_id"));
+        assert!(record.contains("share_commitment"));
+        assert!(record.contains("threshold"));
+        assert!(record.contains("total_parties"));
+    }
+
+    #[test]
+    fn test_different_secrets_different_reconstruction() {
+        let mut secret2 = SECRET;
+        secret2[0] ^= 0xFF;
+        let s1 = split_secret(&SECRET, &NONCE, 2, 2).unwrap();
+        let s2 = split_secret(&secret2, &NONCE, 2, 2).unwrap();
+        let r1 = reconstruct_secret(&s1).unwrap();
+        let r2 = reconstruct_secret(&s2).unwrap();
+        assert_ne!(r1.secret, r2.secret);
+        assert_ne!(r1.secret_commitment, r2.secret_commitment);
+    }
 }

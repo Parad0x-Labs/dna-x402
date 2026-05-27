@@ -238,4 +238,81 @@ mod tests {
         assert!(verify_range_v2(&stmt8, &p8, 42, &bl));
         assert!(verify_range_v2(&stmt16, &p16, 42, &bl));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let stmt = create_statement(0, 100, 8).unwrap();
+        let proof = prove_range(&stmt, 50, &blinding(0x55)).unwrap();
+        assert_ne!(proof.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let stmt = create_statement(0, 100, 8).unwrap();
+        let proof = prove_range(&stmt, 50, &blinding(0x56)).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_deterministic() {
+        let stmt = create_statement(0, 100, 8).unwrap();
+        let bl = blinding(0x57);
+        let p1 = prove_range(&stmt, 77, &bl).unwrap();
+        let p2 = prove_range(&stmt, 77, &bl).unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+        assert_eq!(p1.commitment, p2.commitment);
+    }
+
+    #[test]
+    fn test_bit_width_too_large_rejected() {
+        let err = create_statement(0, 100, 65).unwrap_err();
+        assert_eq!(err, RangeError::BitWidthTooLarge);
+    }
+
+    #[test]
+    fn test_value_at_min_ok() {
+        let stmt = create_statement(10, 20, 8).unwrap();
+        let bl = blinding(0x58);
+        let proof = prove_range(&stmt, 10, &bl).unwrap();
+        assert!(verify_range_v2(&stmt, &proof, 10, &bl));
+    }
+
+    #[test]
+    fn test_value_at_max_ok() {
+        let stmt = create_statement(10, 20, 8).unwrap();
+        let bl = blinding(0x59);
+        let proof = prove_range(&stmt, 20, &bl).unwrap();
+        assert!(verify_range_v2(&stmt, &proof, 20, &bl));
+    }
+
+    #[test]
+    fn test_different_blinding_different_commitment() {
+        let stmt = create_statement(0, 100, 8).unwrap();
+        let p1 = prove_range(&stmt, 42, &blinding(0x5a)).unwrap();
+        let p2 = prove_range(&stmt, 42, &blinding(0x5b)).unwrap();
+        assert_ne!(p1.commitment, p2.commitment);
+    }
+
+    #[test]
+    fn test_wrong_blinding_verify_fails() {
+        let stmt = create_statement(0, 100, 8).unwrap();
+        let proof = prove_range(&stmt, 42, &blinding(0x5c)).unwrap();
+        assert!(!verify_range_v2(&stmt, &proof, 42, &blinding(0x5d)));
+    }
+
+    #[test]
+    fn test_wrong_value_verify_fails() {
+        let stmt = create_statement(0, 100, 8).unwrap();
+        let bl = blinding(0x5e);
+        let proof = prove_range(&stmt, 42, &bl).unwrap();
+        assert!(!verify_range_v2(&stmt, &proof, 43, &bl));
+    }
+
+    #[test]
+    fn test_max_bit_width_ok() {
+        let stmt = create_statement(0, u64::MAX - 1, MAX_BIT_WIDTH).unwrap();
+        assert_eq!(stmt.bit_width, MAX_BIT_WIDTH);
+    }
 }

@@ -209,4 +209,92 @@ mod tests {
         let expected_root: [u8; 32] = sha2::Digest::finalize(h).into();
         assert_eq!(node.chain_root, expected_root);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let (receipt, _, _, _) = make_receipt();
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_epoch_sensitive() {
+        let (_, proof, spec, result) = make_receipt();
+        let r1 = build_compute_receipt(&proof, &spec, &result, 42);
+        let r2 = build_compute_receipt(&proof, &spec, &result, 99);
+        assert_ne!(r1.receipt_hash, r2.receipt_hash);
+    }
+
+    #[test]
+    fn test_verify_tampered_receipt_fails() {
+        let (mut receipt, _, _, _) = make_receipt();
+        receipt.epoch = 9999;
+        assert!(!verify_compute_receipt(&receipt));
+    }
+
+    #[test]
+    fn test_chain_root_nonzero() {
+        let (receipt, _, _, _) = make_receipt();
+        let node = chain_receipt(&receipt, &[0x11u8; 32]);
+        assert_ne!(node.chain_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_chain_root_prev_sensitive() {
+        let (receipt, _, _, _) = make_receipt();
+        let node1 = chain_receipt(&receipt, &[0x11u8; 32]);
+        let node2 = chain_receipt(&receipt, &[0x22u8; 32]);
+        assert_ne!(node1.chain_root, node2.chain_root);
+    }
+
+    #[test]
+    fn test_receipt_to_public_json_mainnet_ready_false() {
+        let (receipt, _, _, _) = make_receipt();
+        let json = receipt_to_public_json(&receipt);
+        assert_eq!(json["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_receipt_to_public_json_has_epoch() {
+        let (receipt, _, _, _) = make_receipt();
+        let json = receipt_to_public_json(&receipt);
+        assert!(json["epoch"].is_number());
+        assert_eq!(json["epoch"], 42u64);
+    }
+
+    #[test]
+    fn test_epoch_stored() {
+        let (_, proof, spec, result) = make_receipt();
+        let r = build_compute_receipt(&proof, &spec, &result, 77);
+        assert_eq!(r.epoch, 77);
+    }
+
+    #[test]
+    fn test_job_id_stored() {
+        let (receipt, _, spec, _) = make_receipt();
+        assert_eq!(receipt.job_id, spec.job_id);
+    }
+
+    #[test]
+    fn test_instructions_used_stored() {
+        let (receipt, _, _, result) = make_receipt();
+        assert_eq!(receipt.instructions_used, result.instructions_used);
+    }
+
+    #[test]
+    fn test_different_epochs_different_receipt_hash() {
+        let (_, proof, spec, result) = make_receipt();
+        let r1 = build_compute_receipt(&proof, &spec, &result, 1);
+        let r2 = build_compute_receipt(&proof, &spec, &result, 2);
+        assert_ne!(r1.receipt_hash, r2.receipt_hash);
+    }
+
+    #[test]
+    fn test_chain_different_prev_different_root() {
+        let (receipt, _, _, _) = make_receipt();
+        let n1 = chain_receipt(&receipt, &[0xAAu8; 32]);
+        let n2 = chain_receipt(&receipt, &[0xBBu8; 32]);
+        assert_ne!(n1.chain_root, n2.chain_root);
+    }
 }

@@ -202,4 +202,107 @@ mod tests {
         let back: SwarmCapsule = serde_json::from_str(&json).unwrap();
         assert_eq!(c, back);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    fn fresh_key2() -> Keypair {
+        let secret = ed25519_dalek::SecretKey::from_bytes(&[0x99u8; 32]).unwrap();
+        let public = PublicKey::from(&secret);
+        Keypair { secret, public }
+    }
+
+    #[test]
+    fn test_content_hash_fee_cap_sensitive() {
+        let mut c1 = make_test_capsule(true);
+        let mut c2 = make_test_capsule(true);
+        c1.fee_cap_lamports = 100_000;
+        c2.fee_cap_lamports = 200_000;
+        assert_ne!(c1.content_hash(), c2.content_hash());
+    }
+
+    #[test]
+    fn test_content_hash_config_hash_sensitive() {
+        let mut c1 = make_test_capsule(true);
+        let mut c2 = make_test_capsule(true);
+        c1.config_hash = [0x11u8; 32];
+        c2.config_hash = [0x22u8; 32];
+        assert_ne!(c1.content_hash(), c2.content_hash());
+    }
+
+    #[test]
+    fn test_content_hash_liveness_sensitive() {
+        let mut c1 = make_test_capsule(true);
+        let mut c2 = make_test_capsule(true);
+        c1.liveness_unix = 1_000_000;
+        c2.liveness_unix = 2_000_000;
+        assert_ne!(c1.content_hash(), c2.content_hash());
+    }
+
+    #[test]
+    fn test_role_constants_all_distinct() {
+        let roles = [
+            ROLE_RECEIPT_RELAY,
+            ROLE_FEE_ROUTER,
+            ROLE_PROOF_VALIDATOR,
+            ROLE_BUNDLE_BUILDER,
+            ROLE_MARKET_FEED,
+        ];
+        for i in 0..roles.len() {
+            for j in (i + 1)..roles.len() {
+                assert_ne!(roles[i], roles[j], "role bits must be distinct");
+            }
+        }
+    }
+
+    #[test]
+    fn test_wrong_pubkey_rejected() {
+        let k1 = fresh_key();
+        let k2 = fresh_key2();
+        let capsule = make_test_capsule(true);
+        let signed = sign_capsule(&capsule, &k1);
+        let tampered = SignedCapsule {
+            capsule: signed.capsule,
+            signature: signed.signature,
+            pubkey: k2.public.to_bytes(),
+        };
+        assert_eq!(
+            verify_capsule(&tampered),
+            Err(CapsuleError::InvalidSignature)
+        );
+    }
+
+    #[test]
+    fn test_x402_adapter_field_stored() {
+        let c = make_test_capsule(true);
+        assert!(c.x402_adapter_enabled);
+    }
+
+    #[test]
+    fn test_signing_bytes_nonempty() {
+        let c = make_test_capsule(true);
+        assert!(!c.to_signing_bytes().is_empty());
+    }
+
+    #[test]
+    fn test_custody_denied_false_field() {
+        let c = make_test_capsule(false);
+        assert!(!c.custody_denied);
+    }
+
+    #[test]
+    fn test_content_hash_role_bitmap_sensitive() {
+        let mut c1 = make_test_capsule(true);
+        let mut c2 = make_test_capsule(true);
+        c1.role_bitmap = ROLE_RECEIPT_RELAY;
+        c2.role_bitmap = ROLE_BUNDLE_BUILDER;
+        assert_ne!(c1.content_hash(), c2.content_hash());
+    }
+
+    #[test]
+    fn test_serialization_no_private_key() {
+        let c = make_test_capsule(true);
+        let json = serde_json::to_string(&c).unwrap();
+        assert!(!json.contains("private"));
+        assert!(!json.contains("secret"));
+    }
 }

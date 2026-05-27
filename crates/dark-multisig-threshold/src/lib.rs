@@ -202,4 +202,98 @@ mod tests {
         let approval = approve(&setup, &[&s1, &s2], b"test_message").unwrap();
         assert_ne!(approval.aggregate_hash, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_approval_mainnet_ready_false() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup = new_multisig(&[&s1, &s2], 2).unwrap();
+        let approval = approve(&setup, &[&s1, &s2], b"msg").unwrap();
+        assert!(!approval.mainnet_ready);
+    }
+
+    #[test]
+    fn test_approval_id_nonzero() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup = new_multisig(&[&s1, &s2], 2).unwrap();
+        let approval = approve(&setup, &[&s1, &s2], b"msg").unwrap();
+        assert_ne!(approval.approval_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_message_hash_nonzero() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup = new_multisig(&[&s1, &s2], 2).unwrap();
+        let approval = approve(&setup, &[&s1, &s2], b"msg").unwrap();
+        assert_ne!(approval.message_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_signer_root_nonzero() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup = new_multisig(&[&s1, &s2], 2).unwrap();
+        assert_ne!(setup.signer_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_setup_id_deterministic() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup1 = new_multisig(&[&s1, &s2], 2).unwrap();
+        let setup2 = new_multisig(&[&s1, &s2], 2).unwrap();
+        assert_eq!(setup1.setup_id, setup2.setup_id);
+    }
+
+    #[test]
+    fn test_duplicate_signer_rejected() {
+        let s1 = s(0xAA);
+        let err = new_multisig(&[&s1, &s1], 1).unwrap_err();
+        assert_eq!(err, MultisigError::DuplicateSigner);
+    }
+
+    #[test]
+    fn test_single_signer_1_of_1_ok() {
+        let s1 = s(0xAA);
+        let setup = new_multisig(&[&s1], 1).unwrap();
+        let approval = approve(&setup, &[&s1], b"msg").unwrap();
+        assert!(approval.approved);
+        assert_eq!(approval.approvals_collected, 1);
+    }
+
+    #[test]
+    fn test_different_messages_different_aggregate_hash() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup = new_multisig(&[&s1, &s2], 2).unwrap();
+        let a1 = approve(&setup, &[&s1, &s2], b"message-one").unwrap();
+        let a2 = approve(&setup, &[&s1, &s2], b"message-two").unwrap();
+        assert_ne!(a1.aggregate_hash, a2.aggregate_hash);
+    }
+
+    #[test]
+    fn test_approval_message_hash_deterministic() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let setup = new_multisig(&[&s1, &s2], 2).unwrap();
+        let a1 = approve(&setup, &[&s1, &s2], b"same-msg").unwrap();
+        let a2 = approve(&setup, &[&s1, &s2], b"same-msg").unwrap();
+        assert_eq!(a1.message_hash, a2.message_hash);
+    }
+
+    #[test]
+    fn test_more_approvers_than_threshold_ok() {
+        let s1 = s(0xAA);
+        let s2 = s(0xBB);
+        let s3 = s(0xCC);
+        // threshold = 2, but we provide all 3 approvers
+        let setup = new_multisig(&[&s1, &s2, &s3], 2).unwrap();
+        let approval = approve(&setup, &[&s1, &s2, &s3], b"msg").unwrap();
+        assert!(approval.approved);
+        assert_eq!(approval.approvals_collected, 3);
+    }
 }

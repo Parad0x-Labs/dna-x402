@@ -306,4 +306,87 @@ mod tests {
             "JSON must contain the bridge_hash hex"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_image_id_nonzero() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert_ne!(receipt.zkvm_receipt.image_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_journal_hash_nonzero() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert_ne!(receipt.zkvm_receipt.journal_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_seal_hash_nonzero() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert_ne!(receipt.zkvm_receipt.seal_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bridge_hash_nonzero() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert_ne!(receipt.bridge_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_version_is_1() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert_eq!(receipt.zkvm_receipt.receipt_version, 1);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert!(!receipt.zkvm_receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_compatible_true() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        assert!(receipt.compatible);
+    }
+
+    #[test]
+    fn test_program_hash_sensitivity() {
+        let ph1 = [0xDEu8; 32];
+        let ph2 = [0xEFu8; 32];
+        let r1 = bridge_proof(make_bundle(), &ph1).unwrap();
+        let r2 = bridge_proof(make_bundle(), &ph2).unwrap();
+        assert_ne!(r1.zkvm_receipt.image_id, r2.zkvm_receipt.image_id);
+    }
+
+    #[test]
+    fn test_bridge_description_length() {
+        assert_eq!(bridge_description().len(), 4);
+    }
+
+    #[test]
+    fn test_verify_fails_when_compatible_false() {
+        let mut receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        receipt.compatible = false;
+        assert!(!verify_bridge(&receipt));
+    }
+
+    #[test]
+    fn test_json_mainnet_ready_false() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        let json = bridge_to_json(&receipt);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_json_has_expected_keys() {
+        let receipt = bridge_proof(make_bundle(), &make_program_hash()).unwrap();
+        let json = bridge_to_json(&receipt);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(v["bridge_hash"].is_string());
+        assert!(v["compatible"].is_boolean());
+        assert!(v["receipt_version"].is_number());
+    }
 }

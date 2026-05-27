@@ -327,4 +327,84 @@ mod tests {
             "public record must not expose winner_hash"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_sealed_bid_mainnet_ready_false() {
+        let s = commit_bid(&make_secret(1), 100, &make_nonce(1), 1, 0).unwrap();
+        assert!(!s.mainnet_ready);
+    }
+
+    #[test]
+    fn test_bid_commitment_nonzero() {
+        let s = commit_bid(&make_secret(2), 100, &make_nonce(2), 1, 0).unwrap();
+        assert_ne!(s.bid_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bidder_hash_nonzero() {
+        let s = commit_bid(&make_secret(3), 100, &make_nonce(1), 1, 0).unwrap();
+        assert_ne!(s.bidder_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_result_hash_nonzero() {
+        let secret = make_secret(4);
+        let nonce = make_nonce(4);
+        let sealed = commit_bid(&secret, 50, &nonce, 1, 0).unwrap();
+        let revealed = reveal_bid(&sealed, &secret, 50, &nonce).unwrap();
+        let result = finalize_auction(&[revealed], 1).unwrap();
+        assert_ne!(result.result_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bidder_secret_zero_rejected() {
+        let err = commit_bid(&[0u8; 32], 100, &make_nonce(1), 1, 0).unwrap_err();
+        assert_eq!(err, AuctionError::BidderSecretZero);
+    }
+
+    #[test]
+    fn test_nonce_zero_rejected() {
+        let err = commit_bid(&make_secret(5), 100, &[0u8; 32], 1, 0).unwrap_err();
+        assert_eq!(err, AuctionError::NonceZero);
+    }
+
+    #[test]
+    fn test_result_mainnet_ready_false() {
+        let secret = make_secret(6);
+        let nonce = make_nonce(6);
+        let sealed = commit_bid(&secret, 50, &nonce, 1, 0).unwrap();
+        let revealed = reveal_bid(&sealed, &secret, 50, &nonce).unwrap();
+        let result = finalize_auction(&[revealed], 1).unwrap();
+        assert!(!result.mainnet_ready);
+    }
+
+    #[test]
+    fn test_commit_deterministic() {
+        let s1 = commit_bid(&make_secret(7), 200, &make_nonce(7), 1, 0).unwrap();
+        let s2 = commit_bid(&make_secret(7), 200, &make_nonce(7), 1, 0).unwrap();
+        assert_eq!(s1.bid_commitment, s2.bid_commitment);
+    }
+
+    #[test]
+    fn test_different_amounts_different_commitments() {
+        let s1 = commit_bid(&make_secret(8), 100, &make_nonce(1), 1, 0).unwrap();
+        let s2 = commit_bid(&make_secret(8), 200, &make_nonce(1), 1, 0).unwrap();
+        assert_ne!(s1.bid_commitment, s2.bid_commitment);
+    }
+
+    #[test]
+    fn test_auction_record_has_correct_fields() {
+        let secret = make_secret(9);
+        let nonce = make_nonce(9);
+        let sealed = commit_bid(&secret, 999, &nonce, 77, 0).unwrap();
+        let revealed = reveal_bid(&sealed, &secret, 999, &nonce).unwrap();
+        let result = finalize_auction(&[revealed], 77).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&auction_public_record(&result)).unwrap();
+        assert_eq!(v["auction_id"], 77u64);
+        assert_eq!(v["winning_amount"], 999u64);
+        assert!(v["result_hash"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

@@ -210,4 +210,96 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(!v["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let action = create_action(&secret(), 1, b"payload", 0).unwrap();
+        assert!(!action.mainnet_ready);
+        let receipt = record_action(&action, &prev_hash());
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_action_hash_deterministic() {
+        let a1 = create_action(&secret(), 1, b"payload", 1_000).unwrap();
+        let a2 = create_action(&secret(), 1, b"payload", 1_000).unwrap();
+        let r1 = record_action(&a1, &prev_hash());
+        let r2 = record_action(&a2, &prev_hash());
+        assert_eq!(r1.action_hash, r2.action_hash);
+    }
+
+    #[test]
+    fn test_action_hash_payload_sensitive() {
+        let a1 = create_action(&secret(), 1, b"payload-a", 1_000).unwrap();
+        let a2 = create_action(&secret(), 1, b"payload-b", 1_000).unwrap();
+        let r1 = record_action(&a1, &[0u8; 32]);
+        let r2 = record_action(&a2, &[0u8; 32]);
+        assert_ne!(r1.action_hash, r2.action_hash);
+    }
+
+    #[test]
+    fn test_action_hash_type_sensitive() {
+        let a1 = create_action(&secret(), 1, b"payload", 1_000).unwrap();
+        let a2 = create_action(&secret(), 2, b"payload", 1_000).unwrap();
+        let r1 = record_action(&a1, &[0u8; 32]);
+        let r2 = record_action(&a2, &[0u8; 32]);
+        assert_ne!(r1.action_hash, r2.action_hash);
+    }
+
+    #[test]
+    fn test_chain_hash_prev_sensitive() {
+        let action = create_action(&secret(), 1, b"payload", 0).unwrap();
+        let ph1 = [0x01u8; 32];
+        let ph2 = [0x02u8; 32];
+        let r1 = record_action(&action, &ph1);
+        let r2 = record_action(&action, &ph2);
+        assert_ne!(r1.receipt_chain_hash, r2.receipt_chain_hash);
+    }
+
+    #[test]
+    fn test_verify_wrong_prev_hash_fails() {
+        let action = create_action(&secret(), 1, b"payload", 0).unwrap();
+        let receipt = record_action(&action, &prev_hash());
+        let wrong_prev = [0xAAu8; 32];
+        assert!(!verify_receipt_chain(&receipt, &action, &wrong_prev));
+    }
+
+    #[test]
+    fn test_verify_wrong_action_type_fails() {
+        let action = create_action(&secret(), 1, b"payload", 0).unwrap();
+        let receipt = record_action(&action, &prev_hash());
+        let mut tampered = action.clone();
+        tampered.action_type = 99;
+        assert!(!verify_receipt_chain(&receipt, &tampered, &prev_hash()));
+    }
+
+    #[test]
+    fn test_agent_id_deterministic() {
+        let a1 = create_action(&secret(), 1, b"payload", 0).unwrap();
+        let a2 = create_action(&secret(), 1, b"payload", 0).unwrap();
+        assert_eq!(a1.agent_id, a2.agent_id);
+    }
+
+    #[test]
+    fn test_agent_id_secret_sensitive() {
+        let mut s2 = secret();
+        s2[1] ^= 0xFF;
+        let a1 = create_action(&secret(), 1, b"payload", 0).unwrap();
+        let a2 = create_action(&s2, 1, b"payload", 0).unwrap();
+        assert_ne!(a1.agent_id, a2.agent_id);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_keys() {
+        let action = create_action(&secret(), 2, b"data", 999).unwrap();
+        let receipt = record_action(&action, &prev_hash());
+        let json = action_public_record(&receipt);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(v["action_hash"].is_string());
+        assert!(v["prev_action_hash"].is_string());
+        assert!(v["receipt_chain_hash"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

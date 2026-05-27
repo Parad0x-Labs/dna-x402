@@ -287,4 +287,85 @@ mod tests {
             );
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let (payload, shares) = encrypt(b"test", &SECRET, &NONCE, 2, 2).unwrap();
+        assert!(!payload.mainnet_ready);
+        let result = decrypt(&payload, &shares).unwrap();
+        assert!(!result.mainnet_ready);
+    }
+
+    #[test]
+    fn test_encrypt_decrypt_empty_message() {
+        let (payload, shares) = encrypt(b"", &SECRET, &NONCE, 2, 2).unwrap();
+        let result = decrypt(&payload, &shares).unwrap();
+        assert_eq!(result.plaintext, b"");
+    }
+
+    #[test]
+    fn test_encrypt_2of2_roundtrip() {
+        let msg = b"two-of-two scheme";
+        let (payload, shares) = encrypt(msg, &SECRET, &NONCE, 2, 2).unwrap();
+        let result = decrypt(&payload, &shares).unwrap();
+        assert_eq!(result.plaintext, msg);
+    }
+
+    #[test]
+    fn test_different_secrets_different_ciphertext() {
+        let mut secret2 = SECRET;
+        secret2[0] ^= 0xFF;
+        let (p1, _) = encrypt(b"hello", &SECRET, &NONCE, 2, 2).unwrap();
+        let (p2, _) = encrypt(b"hello", &secret2, &NONCE, 2, 2).unwrap();
+        assert_ne!(p1.ciphertext, p2.ciphertext);
+    }
+
+    #[test]
+    fn test_different_nonces_different_ciphertext() {
+        let mut nonce2 = NONCE;
+        nonce2[0] ^= 0xFF;
+        let (p1, _) = encrypt(b"hello", &SECRET, &NONCE, 2, 2).unwrap();
+        let (p2, _) = encrypt(b"hello", &SECRET, &nonce2, 2, 2).unwrap();
+        assert_ne!(p1.ciphertext, p2.ciphertext);
+    }
+
+    #[test]
+    fn test_tampered_share_fails_commitment_check() {
+        let (payload, mut shares) = encrypt(b"tamper", &SECRET, &NONCE, 2, 2).unwrap();
+        shares[0].partial_key[0] ^= 0xFF; // corrupt one byte
+        let err = decrypt(&payload, &shares).unwrap_err();
+        assert_eq!(err, ThresholdError::KeyCommitmentMismatch);
+    }
+
+    #[test]
+    fn test_share_indices_sequential() {
+        let (_, shares) = encrypt(b"index check", &SECRET, &NONCE, 5, 5).unwrap();
+        for (i, s) in shares.iter().enumerate() {
+            assert_eq!(s.share_index, i as u8);
+        }
+    }
+
+    #[test]
+    fn test_k_zero_rejected() {
+        let err = encrypt(b"data", &SECRET, &NONCE, 2, 0).unwrap_err();
+        assert_eq!(err, ThresholdError::KZero);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_fields() {
+        let (_, shares) = encrypt(b"record test", &SECRET, &NONCE, 2, 2).unwrap();
+        let record = share_public_record(&shares[0]);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["share_index"].is_number());
+        assert!(v["share_hash"].is_string());
+    }
+
+    #[test]
+    fn test_ciphertext_same_length_as_plaintext() {
+        let msg = b"length invariant check!";
+        let (payload, _) = encrypt(msg, &SECRET, &NONCE, 3, 3).unwrap();
+        assert_eq!(payload.ciphertext.len(), msg.len());
+    }
 }

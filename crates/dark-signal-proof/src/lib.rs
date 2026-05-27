@@ -262,4 +262,82 @@ mod tests {
         assert!(v.get("sender_hash").is_none());
         assert!(v.get("message_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let sc = commit_signal(&sender(), b"#ch", b"msg", 1, 1, &nonce()).unwrap();
+        assert!(!sc.mainnet_ready);
+        let reveal = reveal_signal(&sc, b"msg", &nonce(), 1).unwrap();
+        assert!(!reveal.mainnet_ready);
+    }
+
+    #[test]
+    fn test_signal_id_deterministic() {
+        let sc1 = commit_signal(&sender(), b"#ch", b"msg", 1, 1, &nonce()).unwrap();
+        let sc2 = commit_signal(&sender(), b"#ch", b"msg", 1, 1, &nonce()).unwrap();
+        assert_eq!(sc1.signal_id, sc2.signal_id);
+    }
+
+    #[test]
+    fn test_signal_id_sensitive_to_nonce() {
+        let mut n2 = nonce();
+        n2[0] ^= 0xFF;
+        let sc1 = commit_signal(&sender(), b"#ch", b"msg", 1, 1, &nonce()).unwrap();
+        let sc2 = commit_signal(&sender(), b"#ch", b"msg", 1, 1, &n2).unwrap();
+        assert_ne!(sc1.signal_id, sc2.signal_id);
+    }
+
+    #[test]
+    fn test_reveal_signal_id_matches_commit() {
+        let sc = commit_signal(&sender(), b"#ch", b"hello", 5, 5, &nonce()).unwrap();
+        let reveal = reveal_signal(&sc, b"hello", &nonce(), 5).unwrap();
+        assert_eq!(sc.signal_id, reveal.signal_id);
+    }
+
+    #[test]
+    fn test_reveal_at_exact_epoch_succeeds() {
+        // reveal_after_epoch=10, current=10 → succeeds (>= comparison)
+        let sc = commit_signal(&sender(), b"#ch", b"msg", 1, 10, &nonce()).unwrap();
+        let reveal = reveal_signal(&sc, b"msg", &nonce(), 10).unwrap();
+        assert_eq!(reveal.revealed_at_epoch, 10);
+    }
+
+    #[test]
+    fn test_verify_wrong_nonce_returns_false() {
+        let sc = commit_signal(&sender(), b"#ch", b"data", 3, 3, &nonce()).unwrap();
+        let reveal = reveal_signal(&sc, b"data", &nonce(), 3).unwrap();
+        let mut wrong_nonce = nonce();
+        wrong_nonce[5] ^= 0xFF;
+        assert!(!verify_signal(&sc, &reveal, b"data", &wrong_nonce));
+    }
+
+    #[test]
+    fn test_empty_channel_rejected() {
+        let err = commit_signal(&sender(), b"", b"msg", 1, 1, &nonce()).unwrap_err();
+        assert_eq!(err, SignalError::EmptyChannel);
+    }
+
+    #[test]
+    fn test_empty_message_rejected() {
+        let err = commit_signal(&sender(), b"#ch", b"", 1, 1, &nonce()).unwrap_err();
+        assert_eq!(err, SignalError::EmptyMessage);
+    }
+
+    #[test]
+    fn test_sender_hash_not_in_public_record() {
+        let sc = commit_signal(&sender(), b"#ch", b"secret", 7, 7, &nonce()).unwrap();
+        let record = signal_public_record(&sc);
+        assert!(!record.contains(&hex(&sc.sender_hash)));
+    }
+
+    #[test]
+    fn test_reveal_hash_depends_on_message() {
+        let sc = commit_signal(&sender(), b"#ch", b"msg-a", 1, 1, &nonce()).unwrap();
+        let r1 = reveal_signal(&sc, b"msg-a", &nonce(), 1).unwrap();
+        let sc2 = commit_signal(&sender(), b"#ch", b"msg-b", 1, 1, &nonce()).unwrap();
+        let r2 = reveal_signal(&sc2, b"msg-b", &nonce(), 1).unwrap();
+        assert_ne!(r1.message_hash, r2.message_hash);
+    }
 }

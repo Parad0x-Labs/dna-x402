@@ -192,4 +192,68 @@ mod tests {
         let dispute = s.dispute_hash();
         assert_ne!(settlement, dispute);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_note_hash_nonzero() {
+        let note = make_note(500, 1);
+        assert_ne!(note.note_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_net_settlement_nonzero() {
+        let mut s = make_session();
+        s.add_note(make_note(500, 1)).unwrap();
+        assert_ne!(s.net_settlement_hash().unwrap(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_session_id_stored() {
+        let id = [0xAAu8; 32];
+        let s = Session::new(id, [0u8; 32], [0u8; 32]);
+        assert_eq!(s.session_id, id);
+    }
+
+    #[test]
+    fn test_note_hash_amount_sensitive() {
+        let n1 = make_note(100, 1);
+        let n2 = make_note(200, 1);
+        assert_ne!(n1.note_hash(), n2.note_hash());
+    }
+
+    #[test]
+    fn test_note_hash_nullifier_sensitive() {
+        let n1 = make_note(100, 1);
+        let n2 = make_note(100, 2);
+        assert_ne!(n1.note_hash(), n2.note_hash());
+    }
+
+    #[test]
+    fn test_ending_balance_nonzero() {
+        let s = make_session();
+        let ebc = s.ending_balance_commitment(1_000_000);
+        assert_ne!(ebc, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_dispute_hash_nonzero() {
+        let s = make_session();
+        assert_ne!(s.dispute_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_total_spent_empty() {
+        let s = make_session();
+        assert_eq!(s.total_spent(), 0);
+    }
+
+    #[test]
+    fn test_note_count_after_add() {
+        let mut s = make_session();
+        s.add_note(make_note(100, 1)).unwrap();
+        s.add_note(make_note(200, 2)).unwrap();
+        s.add_note(make_note(300, 3)).unwrap();
+        assert_eq!(s.notes.len(), 3);
+    }
 }

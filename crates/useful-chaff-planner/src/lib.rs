@@ -106,4 +106,89 @@ mod tests {
         let p = plan(vec![], 10, 5);
         assert!(!p.is_useful());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_plan_with_fewer_than_max_ops() {
+        let pending = make_ops(2);
+        let p = plan(pending, 5, 0);
+        assert_eq!(p.maintenance_ops.len(), 2);
+    }
+
+    #[test]
+    fn test_non_empty_plan_is_useful() {
+        let p = plan(make_ops(1), 5, 2);
+        assert!(p.is_useful());
+    }
+
+    #[test]
+    fn test_efficiency_one_op_one_decoy() {
+        let p = plan(make_ops(1), 5, 1);
+        assert!((p.efficiency() - 1.0_f32).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_efficiency_zero_ops_zero_decoys() {
+        let p = plan(vec![], 5, 0);
+        assert!((p.efficiency() - 0.0_f32).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_decoy_count_stored() {
+        let p = plan(make_ops(3), 5, 7);
+        assert_eq!(p.decoy_account_count, 7);
+    }
+
+    #[test]
+    fn test_maintenance_ops_capped_at_max() {
+        let pending = make_ops(100);
+        let p = plan(pending, 10, 0);
+        assert_eq!(p.maintenance_ops.len(), 10);
+    }
+
+    #[test]
+    fn test_rotate_epoch_op_preserved() {
+        let ops = vec![MaintenanceOp::RotateEpoch {
+            old_epoch: 5,
+            new_epoch: 6,
+        }];
+        let p = plan(ops, 5, 0);
+        assert_eq!(p.maintenance_ops.len(), 1);
+        matches!(
+            p.maintenance_ops[0],
+            MaintenanceOp::RotateEpoch {
+                old_epoch: 5,
+                new_epoch: 6
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_error_contains_waste() {
+        let p = plan(vec![], 5, 2);
+        let err = validate(&p).unwrap_err();
+        assert!(err.contains("waste"));
+    }
+
+    #[test]
+    fn test_efficiency_high_decoy_low_ops() {
+        // 1 op, 100 decoys → 1.0/100.0 = 0.01
+        let p = plan(make_ops(1), 5, 100);
+        let eff = p.efficiency();
+        assert!((eff - 0.01_f32).abs() < 1e-6, "expected 0.01, got {}", eff);
+    }
+
+    #[test]
+    fn test_all_ops_preserved_when_under_max() {
+        let ops = vec![
+            MaintenanceOp::UpdateMetricsRoot,
+            MaintenanceOp::CompactReceiptRoot { old_count: 42 },
+            MaintenanceOp::ReclaimRent {
+                account_key: [0xAAu8; 32],
+            },
+        ];
+        let p = plan(ops, 10, 1);
+        assert_eq!(p.maintenance_ops.len(), 3);
+    }
 }

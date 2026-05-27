@@ -269,4 +269,80 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(v["score_id"].is_string());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_score_id_nonzero() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        assert_ne!(score.score_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_score_commitment_nonzero() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        assert_ne!(score.score_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        let proof = attest_score(&score, &attester_secret()).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_score() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        assert!(!score.mainnet_ready);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_proof() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        let proof = attest_score(&score, &attester_secret()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_passes_threshold_true_when_equal() {
+        let score = compute_score(&subject_secret(), 700, 700, &blinding()).unwrap();
+        assert!(score.passes_threshold, "score == threshold must pass");
+    }
+
+    #[test]
+    fn test_passes_threshold_false_when_below() {
+        let score = compute_score(&subject_secret(), 699, 700, &blinding()).unwrap();
+        assert!(!score.passes_threshold, "score < threshold must not pass");
+    }
+
+    #[test]
+    fn test_score_id_blinding_sensitive() {
+        let s1 = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        let mut b2 = blinding();
+        b2[0] ^= 0xFF;
+        let s2 = compute_score(&subject_secret(), 800, 700, &b2).unwrap();
+        assert_ne!(
+            s1.score_id, s2.score_id,
+            "different blinding must produce different score_id"
+        );
+    }
+
+    #[test]
+    fn test_attestation_hash_nonzero() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        let proof = attest_score(&score, &attester_secret()).unwrap();
+        assert_ne!(proof.attestation_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_record_fields() {
+        let score = compute_score(&subject_secret(), 800, 700, &blinding()).unwrap();
+        let record = score_public_record(&score);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["passes_threshold"].as_bool().unwrap());
+        assert!(v["threshold_hash"].is_string());
+        assert_eq!(v["threshold_hash"].as_str().unwrap().len(), 64);
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

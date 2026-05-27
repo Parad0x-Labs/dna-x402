@@ -178,4 +178,82 @@ mod tests {
         assert_eq!(public_leaf_size(&poison_leaf), LEAF_LEN);
         assert_eq!(real_leaf.leaf_hash.len(), poison_leaf.leaf_hash.len());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_leaf_hash_nonzero_real() {
+        let leaf = ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 10);
+        assert_ne!(leaf.leaf_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_leaf_hash_nonzero_poison() {
+        let leaf = ReceiptLeaf::new_poison(&[3u8; 32], &[4u8; 32], 10);
+        assert_ne!(leaf.leaf_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_real_leaf_commitment_sensitive() {
+        let l1 = ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 5);
+        let l2 = ReceiptLeaf::new_real(&[9u8; 32], &[2u8; 32], 5);
+        assert_ne!(l1.leaf_hash, l2.leaf_hash);
+    }
+
+    #[test]
+    fn test_poison_leaf_entropy_sensitive() {
+        let l1 = ReceiptLeaf::new_poison(&[1u8; 32], &[2u8; 32], 5);
+        let l2 = ReceiptLeaf::new_poison(&[9u8; 32], &[2u8; 32], 5);
+        assert_ne!(l1.leaf_hash, l2.leaf_hash);
+    }
+
+    #[test]
+    fn test_epoch_stored_in_leaf() {
+        let real = ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 77);
+        let poison = ReceiptLeaf::new_poison(&[3u8; 32], &[4u8; 32], 88);
+        assert_eq!(real.epoch, 77);
+        assert_eq!(poison.epoch, 88);
+    }
+
+    #[test]
+    fn test_batch_root_nonzero() {
+        let mut batch = MixedBatch::new();
+        batch.add(ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 1));
+        assert_ne!(batch.batch_root(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_batch_root_deterministic() {
+        let mut b1 = MixedBatch::new();
+        b1.add(ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 1));
+        let mut b2 = MixedBatch::new();
+        b2.add(ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 1));
+        assert_eq!(b1.batch_root(), b2.batch_root());
+    }
+
+    #[test]
+    fn test_real_and_poison_counts() {
+        let mut batch = MixedBatch::new();
+        batch.add(ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 1));
+        batch.add(ReceiptLeaf::new_real(&[3u8; 32], &[4u8; 32], 1));
+        batch.add(ReceiptLeaf::new_poison(&[5u8; 32], &[6u8; 32], 1));
+        batch.add(ReceiptLeaf::new_poison(&[7u8; 32], &[8u8; 32], 1));
+        batch.add(ReceiptLeaf::new_poison(&[9u8; 32], &[10u8; 32], 1));
+        assert_eq!(batch.real_count(), 2);
+        assert_eq!(batch.poison_count(), 3);
+    }
+
+    #[test]
+    fn test_empty_batch_root_deterministic() {
+        let r1 = MixedBatch::new().batch_root();
+        let r2 = MixedBatch::new().batch_root();
+        assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn test_scope_sensitive_real_leaf_hash() {
+        let l1 = ReceiptLeaf::new_real(&[1u8; 32], &[2u8; 32], 1);
+        let l2 = ReceiptLeaf::new_real(&[1u8; 32], &[99u8; 32], 1);
+        assert_ne!(l1.leaf_hash, l2.leaf_hash);
+    }
 }

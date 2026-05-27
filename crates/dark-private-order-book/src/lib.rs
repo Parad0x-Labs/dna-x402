@@ -264,4 +264,76 @@ mod tests {
         let hash_hex: String = trader_hash.iter().map(|x| format!("{:02x}", x)).collect();
         !record.contains(&hash_hex)
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_book_id_nonzero() {
+        let book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        assert_ne!(book.book_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_pair_hash_nonzero() {
+        let book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        assert_ne!(book.pair_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_order_id_nonzero() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        let order = submit_order(&mut book, &trader(), OrderSide::Bid, 100, 50, &blind()).unwrap();
+        assert_ne!(order.order_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_trader_hash_nonzero() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        let order = submit_order(&mut book, &trader(), OrderSide::Bid, 100, 50, &blind()).unwrap();
+        assert_ne!(order.trader_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_price_commitment_nonzero() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        let order = submit_order(&mut book, &trader(), OrderSide::Bid, 100, 50, &blind()).unwrap();
+        assert_ne!(order.price_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_amount_commitment_nonzero() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        let order = submit_order(&mut book, &trader(), OrderSide::Bid, 100, 50, &blind()).unwrap();
+        assert_ne!(order.amount_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_order_mainnet_ready_false() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        let order = submit_order(&mut book, &trader(), OrderSide::Bid, 100, 50, &blind()).unwrap();
+        assert!(!order.mainnet_ready);
+    }
+
+    #[test]
+    fn test_order_count_increments() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        assert_eq!(book.order_count, 0);
+        submit_order(&mut book, &trader(), OrderSide::Bid, 100, 50, &blind()).unwrap();
+        assert_eq!(book.order_count, 1);
+        submit_order(&mut book, &trader(), OrderSide::Ask, 110, 40, &blind()).unwrap();
+        assert_eq!(book.order_count, 2);
+    }
+
+    #[test]
+    fn test_zero_amount_rejected() {
+        let mut book = new_book(b"SOL/USDC", &nonce()).unwrap();
+        let err = submit_order(&mut book, &trader(), OrderSide::Bid, 100, 0, &blind()).unwrap_err();
+        assert_eq!(err, OrderError::ZeroAmount);
+    }
+
+    #[test]
+    fn test_empty_pair_rejected() {
+        let err = new_book(b"", &nonce()).unwrap_err();
+        assert_eq!(err, OrderError::ZeroPair);
+    }
 }

@@ -357,4 +357,76 @@ mod tests {
         let demo = run_demo().unwrap();
         assert!(!demo.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_final_proof_nonzero() {
+        let demo = run_demo().unwrap();
+        assert_ne!(demo.final_proof, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_all_steps_have_nonzero_hash() {
+        let demo = run_demo().unwrap();
+        for step in &demo.steps {
+            assert_ne!(
+                step.hash, [0u8; 32],
+                "step '{}' hash must be nonzero",
+                step.name
+            );
+        }
+    }
+
+    #[test]
+    fn test_step_count_matches_vec_len() {
+        let demo = run_demo().unwrap();
+        assert_eq!(demo.step_count as usize, demo.steps.len());
+    }
+
+    #[test]
+    fn test_first_step_is_stealth_address() {
+        let demo = run_demo().unwrap();
+        assert_eq!(demo.steps[0].name, "stealth_address");
+    }
+
+    #[test]
+    fn test_last_step_is_private_auction() {
+        let demo = run_demo().unwrap();
+        assert_eq!(demo.steps[9].name, "private_auction");
+    }
+
+    #[test]
+    fn test_step_names_distinct() {
+        let demo = run_demo().unwrap();
+        let unique: std::collections::HashSet<_> = demo.steps.iter().map(|s| s.name).collect();
+        assert_eq!(unique.len(), 10);
+    }
+
+    #[test]
+    fn test_step_hashes_distinct() {
+        let demo = run_demo().unwrap();
+        let unique: std::collections::HashSet<[u8; 32]> =
+            demo.steps.iter().map(|s| s.hash).collect();
+        assert_eq!(unique.len(), 10);
+    }
+
+    #[test]
+    fn test_all_passed_reflects_step_values() {
+        let demo = run_demo().unwrap();
+        let computed = demo.steps.iter().all(|s| s.passed);
+        assert_eq!(demo.all_passed, computed);
+    }
+
+    #[test]
+    fn test_vote_tally_step_exists() {
+        let demo = run_demo().unwrap();
+        assert!(demo.steps.iter().any(|s| s.name == "vote_tally"));
+    }
+
+    #[test]
+    fn test_payment_channel_step_exists() {
+        let demo = run_demo().unwrap();
+        assert!(demo.steps.iter().any(|s| s.name == "payment_channel"));
+    }
 }

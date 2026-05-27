@@ -284,4 +284,83 @@ mod tests {
         assert!(record.contains(&hex(&token.token_id)));
         assert!(record.contains(&hex(&token.scope_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        assert!(!token.mainnet_ready);
+        let v = verify_token(&token, SCOPE, T0).unwrap();
+        assert!(!v.mainnet_ready);
+    }
+
+    #[test]
+    fn test_token_id_deterministic() {
+        let t1 = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        let t2 = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        assert_eq!(t1.token_id, t2.token_id);
+    }
+
+    #[test]
+    fn test_token_id_scope_sensitive() {
+        let t1 = issue_token(&issuer(), &holder(), b"scope-a", T0, T1).unwrap();
+        let t2 = issue_token(&issuer(), &holder(), b"scope-b", T0, T1).unwrap();
+        assert_ne!(t1.token_id, t2.token_id);
+    }
+
+    #[test]
+    fn test_token_id_holder_sensitive() {
+        let mut h2 = holder();
+        h2[0] ^= 0xFF;
+        let t1 = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        let t2 = issue_token(&issuer(), &h2, SCOPE, T0, T1).unwrap();
+        assert_ne!(t1.token_id, t2.token_id);
+    }
+
+    #[test]
+    fn test_zero_holder_secret_rejected() {
+        let err = issue_token(&issuer(), &[0u8; 32], SCOPE, T0, T1).unwrap_err();
+        assert_eq!(err, TokenError::HolderSecretZero);
+    }
+
+    #[test]
+    fn test_empty_scope_rejected() {
+        let err = issue_token(&issuer(), &holder(), b"", T0, T1).unwrap_err();
+        assert_eq!(err, TokenError::ScopeEmpty);
+    }
+
+    #[test]
+    fn test_verify_at_expiry_exactly_ok() {
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        // current == expires_at → not expired (> check, not >=)
+        assert!(verify_token(&token, SCOPE, T1).is_ok());
+    }
+
+    #[test]
+    fn test_revoke_prevents_verify() {
+        let mut token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        revoke_token(&mut token);
+        let err = verify_token(&token, SCOPE, T0).unwrap_err();
+        assert_eq!(err, TokenError::TokenRevoked);
+    }
+
+    #[test]
+    fn test_issuer_hash_not_in_public_record() {
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        let record = token_public_record(&token);
+        let issuer_hex = hex(&token.issuer_hash);
+        assert!(!record.contains(&issuer_hex));
+    }
+
+    #[test]
+    fn test_public_record_has_expected_keys() {
+        let token = issue_token(&issuer(), &holder(), SCOPE, T0, T1).unwrap();
+        let record = token_public_record(&token);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["token_id"].is_string());
+        assert!(v["scope_hash"].is_string());
+        assert_eq!(v["revoked"], false);
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

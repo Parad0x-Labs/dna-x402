@@ -173,4 +173,92 @@ mod tests {
         assert_eq!(receipt.protocol_fee_lamports, tax / 10);
         assert_eq!(receipt.seller_fee_lamports, tax - tax / 10);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_build_credential_nonzero_hashes() {
+        let cred = build_credential(&subscriber_pubkey(), 1);
+        assert_ne!(cred.subscriber_hash, [0u8; 32]);
+        assert_ne!(cred.credential_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_build_credential_deterministic() {
+        let c1 = build_credential(&subscriber_pubkey(), 3);
+        let c2 = build_credential(&subscriber_pubkey(), 3);
+        assert_eq!(c1.subscriber_hash, c2.subscriber_hash);
+        assert_eq!(c1.credential_hash, c2.credential_hash);
+    }
+
+    #[test]
+    fn test_different_season_different_credential() {
+        let c1 = build_credential(&subscriber_pubkey(), 1);
+        let c2 = build_credential(&subscriber_pubkey(), 2);
+        assert_ne!(c1.credential_hash, c2.credential_hash);
+    }
+
+    #[test]
+    fn test_different_pubkey_different_subscriber_hash() {
+        let pk1 = [0x01u8; 32];
+        let pk2 = [0x02u8; 32];
+        let c1 = build_credential(&pk1, 1);
+        let c2 = build_credential(&pk2, 1);
+        assert_ne!(c1.subscriber_hash, c2.subscriber_hash);
+    }
+
+    #[test]
+    fn test_create_decoy_reveal_tax_receipt_nonzero() {
+        let decoy = create_decoy_reveal(&[1u8; 32], &[2u8; 32], 5_000);
+        assert_ne!(decoy.tax_receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_create_decoy_reveal_deterministic() {
+        let pick = [0xAAu8; 32];
+        let sniper = [0xBBu8; 32];
+        let d1 = create_decoy_reveal(&pick, &sniper, 1_000);
+        let d2 = create_decoy_reveal(&pick, &sniper, 1_000);
+        assert_eq!(d1.tax_receipt_hash, d2.tax_receipt_hash);
+        assert_eq!(d1.fake_side, d2.fake_side);
+    }
+
+    #[test]
+    fn test_decoy_pick_hash_preserved() {
+        let pick = [0x77u8; 32];
+        let decoy = create_decoy_reveal(&pick, &[0x11u8; 32], 2_000);
+        assert_eq!(decoy.pick_hash, pick);
+    }
+
+    #[test]
+    fn test_decoy_sniper_tax_lamports_preserved() {
+        let tax = 99_999u64;
+        let decoy = create_decoy_reveal(&[1u8; 32], &[2u8; 32], tax);
+        assert_eq!(decoy.sniper_tax_lamports, tax);
+    }
+
+    #[test]
+    fn test_receipt_seller_plus_protocol_equals_tax() {
+        let decoy = create_decoy_reveal(&[1u8; 32], &[2u8; 32], 50_000);
+        let receipt = mint_sniper_tax_receipt(&decoy, &[2u8; 32]);
+        assert_eq!(
+            receipt.protocol_fee_lamports + receipt.seller_fee_lamports,
+            receipt.tax_paid_lamports
+        );
+    }
+
+    #[test]
+    fn test_sniper_hash_in_receipt() {
+        let sniper_hash = [0xCCu8; 32];
+        let decoy = create_decoy_reveal(&[1u8; 32], &sniper_hash, 3_000);
+        let receipt = mint_sniper_tax_receipt(&decoy, &sniper_hash);
+        assert_eq!(receipt.sniper_hash, sniper_hash);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let decoy = create_decoy_reveal(&[1u8; 32], &[2u8; 32], 7_500);
+        let receipt = mint_sniper_tax_receipt(&decoy, &[2u8; 32]);
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
 }

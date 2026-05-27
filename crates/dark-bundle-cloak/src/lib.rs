@@ -244,4 +244,103 @@ mod tests {
         let bundle = new_bundle(vec![wallet_tx(&other)]);
         assert!(check_bundle_fingerprint(&bundle, &wallet).is_ok());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_new_bundle_empty_decoys() {
+        let wallet = Pubkey::new_unique();
+        let bundle = new_bundle(vec![wallet_tx(&wallet)]);
+        assert!(bundle.decoy_accounts.is_empty());
+    }
+
+    #[test]
+    fn test_decoy_accounts_stored() {
+        let wallet = Pubkey::new_unique();
+        let mut bundle = new_bundle(vec![wallet_tx(&wallet)]);
+        let mut rng = seeded_rng();
+        add_decoy_cleanup(&mut bundle, &mut rng, 5);
+        assert_eq!(bundle.decoy_accounts.len(), 5);
+    }
+
+    #[test]
+    fn test_cleanup_tx_added() {
+        let wallet = Pubkey::new_unique();
+        let mut bundle = new_bundle(vec![wallet_tx(&wallet)]);
+        assert_eq!(bundle.txs.len(), 1);
+        let mut rng = seeded_rng();
+        add_decoy_cleanup(&mut bundle, &mut rng, 4);
+        assert_eq!(bundle.txs.len(), 2);
+    }
+
+    #[test]
+    fn test_exactly_three_decoys_ok() {
+        let wallet = Pubkey::new_unique();
+        let mut bundle = new_bundle(vec![wallet_tx(&wallet)]);
+        let mut rng = seeded_rng();
+        add_decoy_cleanup(&mut bundle, &mut rng, 3);
+        assert!(check_bundle_fingerprint(&bundle, &wallet).is_ok());
+    }
+
+    #[test]
+    fn test_encode_bundle_returns_correct_length() {
+        let wallet = Pubkey::new_unique();
+        let other = Pubkey::new_unique();
+        let bundle = new_bundle(vec![wallet_tx(&wallet), wallet_tx(&other)]);
+        let encoded = encode_bundle(&bundle);
+        assert_eq!(encoded.len(), 2);
+    }
+
+    #[test]
+    fn test_bundle_tx_count_preserved() {
+        let txs: Vec<VersionedTransaction> =
+            (0..4).map(|_| wallet_tx(&Pubkey::new_unique())).collect();
+        let bundle = new_bundle(txs);
+        assert_eq!(bundle.txs.len(), 4);
+    }
+
+    #[test]
+    fn test_different_seeds_different_decoys() {
+        let wallet = Pubkey::new_unique();
+        let mut bundle1 = new_bundle(vec![wallet_tx(&wallet)]);
+        let mut bundle2 = new_bundle(vec![wallet_tx(&wallet)]);
+        let mut rng1 = rand::rngs::StdRng::seed_from_u64(0xAAAA);
+        let mut rng2 = rand::rngs::StdRng::seed_from_u64(0xBBBB);
+        add_decoy_cleanup(&mut bundle1, &mut rng1, 3);
+        add_decoy_cleanup(&mut bundle2, &mut rng2, 3);
+        assert_ne!(bundle1.decoy_accounts, bundle2.decoy_accounts);
+    }
+
+    #[test]
+    fn test_fingerprint_error_display_nonempty() {
+        let e1 = format!("{}", FingerprintError::EmptyBundle);
+        let e2 = format!("{}", FingerprintError::DirectWalletMapping);
+        let e3 = format!("{}", FingerprintError::InsufficientDecoys);
+        assert!(!e1.is_empty());
+        assert!(!e2.is_empty());
+        assert!(!e3.is_empty());
+    }
+
+    #[test]
+    fn test_multiple_decoy_rounds_accumulate() {
+        let wallet = Pubkey::new_unique();
+        let mut bundle = new_bundle(vec![wallet_tx(&wallet)]);
+        let mut rng = seeded_rng();
+        add_decoy_cleanup(&mut bundle, &mut rng, 2);
+        add_decoy_cleanup(&mut bundle, &mut rng, 2);
+        assert_eq!(bundle.decoy_accounts.len(), 4);
+    }
+
+    #[test]
+    fn test_decoy_accounts_are_unique_pubkeys() {
+        let wallet = Pubkey::new_unique();
+        let mut bundle = new_bundle(vec![wallet_tx(&wallet)]);
+        let mut rng = rand::rngs::StdRng::seed_from_u64(0xDEAD_BEEF);
+        add_decoy_cleanup(&mut bundle, &mut rng, 8);
+        // All decoy pubkeys should be distinct
+        let mut deduped = bundle.decoy_accounts.clone();
+        deduped.dedup();
+        // StdRng with 8 random 32-byte keys should produce 8 distinct pubkeys
+        assert_eq!(bundle.decoy_accounts.len(), deduped.len());
+    }
 }

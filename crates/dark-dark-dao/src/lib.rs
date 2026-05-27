@@ -255,4 +255,80 @@ mod tests {
         assert_eq!(v["member_count"], 2u32);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_dao_id_nonzero() {
+        let dao = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        assert_ne!(dao.dao_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_dao_id_deterministic() {
+        let d1 = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        let d2 = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        assert_eq!(d1.dao_id, d2.dao_id);
+    }
+
+    #[test]
+    fn test_dao_id_nonce_sensitive() {
+        let nonce2 = {
+            let mut n = [0u8; 32];
+            n[0] = 0x99;
+            n
+        };
+        let d1 = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        let d2 = create_dao(&founder(), 0, 1, &nonce2).unwrap();
+        assert_ne!(d1.dao_id, d2.dao_id);
+    }
+
+    #[test]
+    fn test_treasury_commitment_nonzero() {
+        let dao = create_dao(&founder(), 1_000, 1, &nonce()).unwrap();
+        assert_ne!(dao.treasury_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_treasury_commitment_balance_sensitive() {
+        let d1 = create_dao(&founder(), 100, 1, &nonce()).unwrap();
+        let d2 = create_dao(&founder(), 200, 1, &nonce()).unwrap();
+        assert_ne!(d1.treasury_commitment, d2.treasury_commitment);
+    }
+
+    #[test]
+    fn test_governance_root_nonzero() {
+        let dao = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        assert_ne!(dao.governance_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let dao = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        assert!(!dao.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proposal_mainnet_ready_false() {
+        let dao = create_dao(&founder(), 0, 1, &nonce()).unwrap();
+        let proposal = create_proposal(&dao, &proposer(), b"some-action").unwrap();
+        assert!(!proposal.mainnet_ready);
+    }
+
+    #[test]
+    fn test_already_finalized_rejected() {
+        let dao = create_dao(&founder(), 0, 2, &nonce()).unwrap();
+        let mut proposal = create_proposal(&dao, &proposer(), b"action").unwrap();
+        finalize_proposal(&dao, &mut proposal, 3).unwrap();
+        let err = finalize_proposal(&dao, &mut proposal, 3).unwrap_err();
+        assert_eq!(err, DaoError::AlreadyFinalized);
+    }
+
+    #[test]
+    fn test_public_record_hides_treasury_commitment() {
+        let dao = create_dao(&founder(), 999, 2, &nonce()).unwrap();
+        let record = dao_public_record(&dao);
+        let tc_hex = hex(&dao.treasury_commitment);
+        assert!(!record.contains(&tc_hex));
+    }
 }

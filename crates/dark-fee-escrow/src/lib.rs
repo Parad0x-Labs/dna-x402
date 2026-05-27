@@ -208,4 +208,78 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(v.get("payer_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_escrow_id_nonzero() {
+        let escrow = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        assert_ne!(escrow.escrow_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_escrow_id_deterministic() {
+        let e1 = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        let e2 = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        assert_eq!(e1.escrow_id, e2.escrow_id);
+    }
+
+    #[test]
+    fn test_payer_hash_nonzero() {
+        let escrow = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        assert_ne!(escrow.payer_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_service_hash_nonzero() {
+        let escrow = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        assert_ne!(escrow.service_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_service_hash_sensitive() {
+        let e1 = create_fee_escrow(&payer(), 100, b"service-alpha", &nonce()).unwrap();
+        let e2 = create_fee_escrow(&payer(), 100, b"service-beta", &nonce()).unwrap();
+        assert_ne!(e1.service_hash, e2.service_hash);
+    }
+
+    #[test]
+    fn test_starts_pending() {
+        let escrow = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        assert_eq!(escrow.status, FeeStatus::Pending);
+    }
+
+    #[test]
+    fn test_empty_service_rejected() {
+        let err = create_fee_escrow(&payer(), 100, b"", &nonce()).unwrap_err();
+        assert_eq!(err, FeeError::EmptyService);
+    }
+
+    #[test]
+    fn test_refund_after_release_rejected() {
+        let mut escrow = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        release_fee(&mut escrow).unwrap();
+        let err = refund_fee(&mut escrow).unwrap_err();
+        assert_eq!(err, FeeError::AlreadySettled);
+    }
+
+    #[test]
+    fn test_release_returns_escrow_id() {
+        let mut escrow = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        let expected_id = escrow.escrow_id;
+        let returned_id = release_fee(&mut escrow).unwrap();
+        assert_eq!(returned_id, expected_id);
+    }
+
+    #[test]
+    fn test_escrow_id_nonce_sensitive() {
+        let nonce2 = {
+            let mut n = [0u8; 32];
+            n[0] = 0xFF;
+            n
+        };
+        let e1 = create_fee_escrow(&payer(), 100, b"svc", &nonce()).unwrap();
+        let e2 = create_fee_escrow(&payer(), 100, b"svc", &nonce2).unwrap();
+        assert_ne!(e1.escrow_id, e2.escrow_id);
+    }
 }

@@ -448,4 +448,53 @@ mod tests {
         let result = sim.prove_inclusion(&fake_hash);
         assert!(matches!(result, Err(CompressionError::LeafNotFound)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_leaf_canonical_hash_domain_sensitive() {
+        let leaf_a = make_leaf(LeafDomain::Receipt, 5, 0);
+        let leaf_b = make_leaf(LeafDomain::ApiMeter, 5, 0);
+        assert_ne!(leaf_a.canonical_hash(), leaf_b.canonical_hash());
+    }
+
+    #[test]
+    fn test_leaf_canonical_hash_owner_sensitive() {
+        let leaf_a = make_leaf(LeafDomain::Receipt, 5, 0);
+        let leaf_b = make_leaf(LeafDomain::Receipt, 6, 0);
+        assert_ne!(leaf_a.canonical_hash(), leaf_b.canonical_hash());
+    }
+
+    #[test]
+    fn test_merkle_root_two_leaves_not_equal_to_either() {
+        let l1 = [0x01u8; 32];
+        let l2 = [0x02u8; 32];
+        let root = merkle_root_sha256(&[l1, l2]);
+        assert_ne!(root, l1);
+        assert_ne!(root, l2);
+    }
+
+    #[test]
+    fn test_simulator_update_root_mismatch_rejected() {
+        let mut sim = LocalMerkleSimulator::new();
+        // Provide an update with an old_root that doesn't match current (zeros)
+        let bad_update = CompressedTreeUpdate {
+            old_root: [0xFFu8; 32], // wrong old root
+            new_root: [0xAAu8; 32],
+            leaf_hash: [0xBBu8; 32],
+            path_hash: [0xCCu8; 32],
+            validity_proof_hash: [0u8; 32],
+        };
+        let err = sim.update_root(&bad_update).unwrap_err();
+        assert_eq!(err, CompressionError::RootMismatch);
+    }
+
+    #[test]
+    fn test_validity_proof_hash_is_zeros_on_insert() {
+        let mut sim = LocalMerkleSimulator::new();
+        let leaf = make_leaf(LeafDomain::Receipt, 99, 0);
+        let update = sim.insert_leaf(&leaf).unwrap();
+        // LocalMerkleSimulator always sets validity_proof_hash to zeros — not a real ZK proof
+        assert_eq!(update.validity_proof_hash, [0u8; 32]);
+    }
 }

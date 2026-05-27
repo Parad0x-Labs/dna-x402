@@ -381,4 +381,89 @@ mod tests {
             "public record must not contain raw amount"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let mut escrow = create_escrow(&payer_secret(), 1, condition(), 0, 9_999_999_999).unwrap();
+        assert!(!escrow.mainnet_ready);
+        let release = release_escrow(&mut escrow, &beneficiary_secret(), condition(), 1).unwrap();
+        assert!(!release.mainnet_ready);
+    }
+
+    #[test]
+    fn test_escrow_id_deterministic() {
+        let e1 = create_escrow(&payer_secret(), 1_000, condition(), 100, 200).unwrap();
+        let e2 = create_escrow(&payer_secret(), 1_000, condition(), 100, 200).unwrap();
+        assert_eq!(e1.escrow_id, e2.escrow_id);
+    }
+
+    #[test]
+    fn test_escrow_id_amount_sensitive() {
+        let e1 = create_escrow(&payer_secret(), 1_000, condition(), 100, 200).unwrap();
+        let e2 = create_escrow(&payer_secret(), 2_000, condition(), 100, 200).unwrap();
+        assert_ne!(e1.escrow_id, e2.escrow_id);
+    }
+
+    #[test]
+    fn test_escrow_id_condition_sensitive() {
+        let e1 = create_escrow(&payer_secret(), 500, b"cond-a", 100, 200).unwrap();
+        let e2 = create_escrow(&payer_secret(), 500, b"cond-b", 100, 200).unwrap();
+        assert_ne!(e1.escrow_id, e2.escrow_id);
+    }
+
+    #[test]
+    fn test_payer_secret_zero_rejected() {
+        let err = create_escrow(&[0u8; 32], 100, condition(), 0, 9_999).unwrap_err();
+        assert_eq!(err, EscrowError::PayerSecretZero);
+    }
+
+    #[test]
+    fn test_release_at_exact_expiry_ok() {
+        let expires_at: i64 = 1_700_000_000;
+        let mut escrow = create_escrow(&payer_secret(), 100, condition(), 0, expires_at).unwrap();
+        // current == expires_at → NOT expired (strict > check)
+        assert!(
+            release_escrow(&mut escrow, &beneficiary_secret(), condition(), expires_at).is_ok()
+        );
+    }
+
+    #[test]
+    fn test_release_proof_is_nonzero() {
+        let mut escrow = create_escrow(&payer_secret(), 777, condition(), 0, 9_999_999).unwrap();
+        let release = release_escrow(&mut escrow, &beneficiary_secret(), condition(), 1).unwrap();
+        assert_ne!(release.release_proof, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_record_contains_condition_hash() {
+        let escrow = create_escrow(&payer_secret(), 50, condition(), 0, 9_999_999).unwrap();
+        let record = escrow_public_record(&escrow);
+        let cond_hex = hex_encode(&escrow.condition_hash);
+        assert!(
+            record.contains(&cond_hex),
+            "public record must include condition_hash hex"
+        );
+    }
+
+    #[test]
+    fn test_escrow_id_payer_sensitive() {
+        let mut other_payer = payer_secret();
+        other_payer[0] ^= 0xFF;
+        let e1 = create_escrow(&payer_secret(), 500, condition(), 100, 200).unwrap();
+        let e2 = create_escrow(&other_payer, 500, condition(), 100, 200).unwrap();
+        assert_ne!(e1.escrow_id, e2.escrow_id);
+    }
+
+    #[test]
+    fn test_release_proof_beneficiary_sensitive() {
+        let mut other_bene = beneficiary_secret();
+        other_bene[0] ^= 0xFF;
+        let mut e1 = create_escrow(&payer_secret(), 300, condition(), 0, 9_999_999).unwrap();
+        let mut e2 = create_escrow(&payer_secret(), 300, condition(), 0, 9_999_999).unwrap();
+        let r1 = release_escrow(&mut e1, &beneficiary_secret(), condition(), 1).unwrap();
+        let r2 = release_escrow(&mut e2, &other_bene, condition(), 1).unwrap();
+        assert_ne!(r1.release_proof, r2.release_proof);
+    }
 }

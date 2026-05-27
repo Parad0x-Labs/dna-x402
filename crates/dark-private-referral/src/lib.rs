@@ -148,4 +148,81 @@ mod tests {
         let ref2 = new_referral(&r, &e, 500, &b).unwrap();
         assert_eq!(ref1.referral_id, ref2.referral_id);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_referral_id_nonzero() {
+        let (r, e, b) = make_secrets();
+        let ref_ = new_referral(&r, &e, 500, &b).unwrap();
+        assert_ne!(ref_.referral_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_referrer_hash_nonzero() {
+        let (r, e, b) = make_secrets();
+        let ref_ = new_referral(&r, &e, 500, &b).unwrap();
+        assert_ne!(ref_.referrer_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_referee_hash_nonzero() {
+        let (r, e, b) = make_secrets();
+        let ref_ = new_referral(&r, &e, 500, &b).unwrap();
+        assert_ne!(ref_.referee_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commission_commitment_nonzero() {
+        let (r, e, b) = make_secrets();
+        let ref_ = new_referral(&r, &e, 500, &b).unwrap();
+        assert_ne!(ref_.commission_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let (r, e, b) = make_secrets();
+        let ref_ = new_referral(&r, &e, 500, &b).unwrap();
+        assert!(!ref_.mainnet_ready);
+    }
+
+    #[test]
+    fn test_activated_false_initially() {
+        let (r, e, b) = make_secrets();
+        let ref_ = new_referral(&r, &e, 500, &b).unwrap();
+        assert!(!ref_.activated);
+    }
+
+    #[test]
+    fn test_zero_referee_rejected() {
+        let (r, _, b) = make_secrets();
+        let err = new_referral(&r, &[0u8; 32], 500, &b).unwrap_err();
+        assert_eq!(err, ReferralError::ZeroSecret);
+    }
+
+    #[test]
+    fn test_referral_id_deterministic() {
+        let (r, e, b) = make_secrets();
+        let r1 = new_referral(&r, &e, 500, &b).unwrap();
+        let r2 = new_referral(&r, &e, 500, &b).unwrap();
+        assert_eq!(r1.referral_id, r2.referral_id);
+    }
+
+    #[test]
+    fn test_different_referrer_different_referral_id() {
+        let (r, e, b) = make_secrets();
+        let mut r2 = [0u8; 32];
+        r2[0] = 0xDD;
+        let ref1 = new_referral(&r, &e, 500, &b).unwrap();
+        let ref2 = new_referral(&r2, &e, 500, &b).unwrap();
+        assert_ne!(ref1.referral_id, ref2.referral_id);
+    }
+
+    #[test]
+    fn test_commission_amount_sensitive() {
+        let (r, e, b) = make_secrets();
+        let ref1 = new_referral(&r, &e, 100, &b).unwrap();
+        let ref2 = new_referral(&r, &e, 200, &b).unwrap();
+        assert_ne!(ref1.commission_commitment, ref2.commission_commitment);
+    }
 }

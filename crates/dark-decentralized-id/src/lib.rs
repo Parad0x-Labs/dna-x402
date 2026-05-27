@@ -274,4 +274,72 @@ mod tests {
         assert!(v["did_id"].is_string());
         assert!(v["document_hash"].is_string());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_did_id_nonzero() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        assert_ne!(did.did_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_did_id_deterministic() {
+        let d1 = create_did(&controller_secret(), b"doc", 0).unwrap();
+        let d2 = create_did(&controller_secret(), b"doc", 0).unwrap();
+        assert_eq!(d1.did_id, d2.did_id);
+    }
+
+    #[test]
+    fn test_did_id_document_sensitive() {
+        let d1 = create_did(&controller_secret(), b"doc-alpha", 0).unwrap();
+        let d2 = create_did(&controller_secret(), b"doc-beta", 0).unwrap();
+        assert_ne!(d1.did_id, d2.did_id);
+    }
+
+    #[test]
+    fn test_controller_hash_nonzero() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        assert_ne!(did.controller_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verification_method_hash_nonzero() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        assert_ne!(did.verification_method_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        assert!(!did.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        let proof = prove_control(&did, &controller_secret(), &nonce()).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        let proof = prove_control(&did, &controller_secret(), &nonce()).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_revoked_did_fails() {
+        let mut did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        let proof = prove_control(&did, &controller_secret(), &nonce()).unwrap();
+        revoke_did(&mut did).unwrap();
+        assert!(!verify_did_proof(&did, &proof));
+    }
+
+    #[test]
+    fn test_did_starts_not_revoked() {
+        let did = create_did(&controller_secret(), b"doc", 0).unwrap();
+        assert!(!did.revoked);
+    }
 }

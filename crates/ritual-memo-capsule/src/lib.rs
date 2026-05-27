@@ -189,4 +189,63 @@ mod tests {
         let memo = capsule_to_memo_string(&c);
         assert_eq!(validate_memo_string(&memo), Ok(()));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_hash_nonzero() {
+        let c = test_capsule();
+        assert_ne!(capsule_hash(&c), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_capsule_hash_receipt_sensitive() {
+        let c1 = test_capsule();
+        let mut c2 = test_capsule();
+        c2.receipt_hash = [0xFEu8; 32];
+        assert_ne!(capsule_hash(&c1), capsule_hash(&c2));
+    }
+
+    #[test]
+    fn test_canonical_bytes_length() {
+        let c = test_capsule();
+        // 5 × 32-byte fields + 8-byte u64 = 168 bytes
+        assert_eq!(canonical_bytes(&c).len(), 168);
+    }
+
+    #[test]
+    fn test_empty_memo_rejected() {
+        assert_eq!(validate_memo_string(""), Err(MemoCapsuleError::Empty));
+    }
+
+    #[test]
+    fn test_memo_with_space_rejected() {
+        // 63 lowercase hex chars + space = 64 chars total → RawBuyerIdentity
+        let mut s = "a".repeat(63);
+        s.push(' ');
+        assert_eq!(s.len(), 64);
+        assert_eq!(
+            validate_memo_string(&s),
+            Err(MemoCapsuleError::RawBuyerIdentity)
+        );
+    }
+
+    #[test]
+    fn test_memo_with_double_slash_rejected() {
+        // "//" embedded in a 64-char string → RawUrlDetected
+        let s = format!("//{}", "0".repeat(62));
+        assert_eq!(s.len(), 64);
+        assert_eq!(
+            validate_memo_string(&s),
+            Err(MemoCapsuleError::RawUrlDetected)
+        );
+    }
+
+    #[test]
+    fn test_capsule_hash_expires_sensitive() {
+        let c1 = test_capsule();
+        let mut c2 = test_capsule();
+        c2.expires_at_slot = c1.expires_at_slot + 1;
+        assert_ne!(capsule_hash(&c1), capsule_hash(&c2));
+    }
 }

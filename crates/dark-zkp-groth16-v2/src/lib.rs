@@ -156,4 +156,79 @@ mod tests {
         let err = generate_proof(&c, b"", b"public_inputs_data").unwrap_err();
         assert_eq!(err, Groth16Error::EmptyWitness);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_empty_public_inputs_rejected() {
+        let c = new_circuit(b"pk", b"vk").unwrap();
+        let err = generate_proof(&c, b"witness", b"").unwrap_err();
+        assert_eq!(err, Groth16Error::EmptyPublicInputs);
+    }
+
+    #[test]
+    fn test_proof_deterministic() {
+        let c = new_circuit(b"pk_det", b"vk_det").unwrap();
+        let p1 = generate_proof(&c, b"witness", b"inputs").unwrap();
+        let p2 = generate_proof(&c, b"witness", b"inputs").unwrap();
+        assert_eq!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_different_circuits_different_proof_id() {
+        let c1 = new_circuit(b"pk_one", b"vk_same").unwrap();
+        let c2 = new_circuit(b"pk_two", b"vk_same").unwrap();
+        let p1 = generate_proof(&c1, b"witness", b"inputs").unwrap();
+        let p2 = generate_proof(&c2, b"witness", b"inputs").unwrap();
+        assert_ne!(p1.proof_id, p2.proof_id);
+    }
+
+    #[test]
+    fn test_different_public_inputs_different_pi_b() {
+        let c = new_circuit(b"pk_bytes", b"vk_bytes").unwrap();
+        let p1 = generate_proof(&c, b"witness", b"inputs_a").unwrap();
+        let p2 = generate_proof(&c, b"witness", b"inputs_b").unwrap();
+        assert_ne!(p1.pi_b, p2.pi_b);
+    }
+
+    #[test]
+    fn test_circuit_id_deterministic() {
+        let c1 = new_circuit(b"pk_same", b"vk_same").unwrap();
+        let c2 = new_circuit(b"pk_same", b"vk_same").unwrap();
+        assert_eq!(c1.circuit_id, c2.circuit_id);
+    }
+
+    #[test]
+    fn test_vk_hash_nonzero() {
+        let c = new_circuit(b"pk_test", b"vk_test").unwrap();
+        assert_ne!(c.vk_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_nonzero_proof_passes() {
+        let c = new_circuit(b"pk_bytes_test", b"vk_bytes_test").unwrap();
+        let p = generate_proof(&c, b"witness_data", b"inputs").unwrap();
+        assert_ne!(p.proof_id, [0u8; 32]);
+        assert!(verify_proof(&c, &p));
+    }
+
+    #[test]
+    fn test_is_stub_true() {
+        let c = new_circuit(b"pk_stub", b"vk_stub").unwrap();
+        assert!(c.is_stub);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let c = new_circuit(b"pk_ready", b"vk_ready").unwrap();
+        let p = generate_proof(&c, b"witness", b"pub").unwrap();
+        assert!(!p.mainnet_ready);
+    }
+
+    #[test]
+    fn test_different_vk_different_vk_hash() {
+        let c1 = new_circuit(b"pk_shared", b"vk_alpha").unwrap();
+        let c2 = new_circuit(b"pk_shared", b"vk_beta").unwrap();
+        assert_ne!(c1.vk_hash, c2.vk_hash);
+    }
 }

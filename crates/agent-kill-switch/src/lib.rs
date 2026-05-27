@@ -185,4 +185,86 @@ mod tests {
         assert_ne!(c1.reason_hash, c2.reason_hash);
         assert_ne!(c1.capsule_hash(), c2.capsule_hash());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_verify_user_succeeds_with_correct_secret() {
+        let capsule = make_capsule();
+        assert!(capsule.verify_user(&SECRET));
+    }
+
+    #[test]
+    fn test_verify_user_fails_wrong_secret() {
+        let capsule = make_capsule();
+        assert!(!capsule.verify_user(&WRONG_SECRET));
+    }
+
+    #[test]
+    fn test_user_commitment_deterministic() {
+        let c1 = RevocationCapsule::new(SESSION, &SECRET, 12345, "reason");
+        let c2 = RevocationCapsule::new(SESSION, &SECRET, 12345, "reason");
+        assert_eq!(c1.user_commitment, c2.user_commitment);
+    }
+
+    #[test]
+    fn test_user_commitment_secret_sensitive() {
+        let c1 = RevocationCapsule::new(SESSION, &SECRET, 0, "reason");
+        let c2 = RevocationCapsule::new(SESSION, &WRONG_SECRET, 0, "reason");
+        assert_ne!(c1.user_commitment, c2.user_commitment);
+    }
+
+    #[test]
+    fn test_capsule_hash_session_sensitive() {
+        let c1 = RevocationCapsule::new(SESSION, &SECRET, 0, "reason");
+        let other_session = [0x77u8; 32];
+        let c2 = RevocationCapsule::new(other_session, &SECRET, 0, "reason");
+        assert_ne!(c1.capsule_hash(), c2.capsule_hash());
+    }
+
+    #[test]
+    fn test_check_spend_ok_before_revoke() {
+        let registry = RevocationRegistry::new();
+        assert!(registry.check_spend(&SESSION).is_ok());
+    }
+
+    #[test]
+    fn test_revoke_idempotent() {
+        let capsule = make_capsule();
+        let mut registry = RevocationRegistry::new();
+        registry.revoke(&capsule, &SECRET).unwrap();
+        // Second insert into HashSet is a no-op
+        registry.revoke(&capsule, &SECRET).unwrap();
+        assert!(registry.is_revoked(&SESSION));
+    }
+
+    #[test]
+    fn test_capsule_hash_reason_sensitive() {
+        let c1 = RevocationCapsule::new(SESSION, &SECRET, 0, "reason_x");
+        let c2 = RevocationCapsule::new(SESSION, &SECRET, 0, "reason_y");
+        assert_ne!(c1.capsule_hash(), c2.capsule_hash());
+    }
+
+    #[test]
+    fn test_multiple_sessions_revoked() {
+        let s1 = [0x01u8; 32];
+        let s2 = [0x02u8; 32];
+        let c1 = RevocationCapsule::new(s1, &SECRET, 0, "r");
+        let c2 = RevocationCapsule::new(s2, &SECRET, 0, "r");
+        let mut registry = RevocationRegistry::new();
+        registry.revoke(&c1, &SECRET).unwrap();
+        registry.revoke(&c2, &SECRET).unwrap();
+        assert!(registry.is_revoked(&s1));
+        assert!(registry.is_revoked(&s2));
+    }
+
+    #[test]
+    fn test_cannot_forge_other_user_capsule() {
+        let attacker_secret = [0xAAu8; 32];
+        let capsule = make_capsule(); // owned by SECRET
+        let mut registry = RevocationRegistry::new();
+        let err = registry.revoke(&capsule, &attacker_secret);
+        assert_eq!(err, Err(KillError::WrongUser));
+        assert!(!registry.is_revoked(&SESSION));
+    }
 }

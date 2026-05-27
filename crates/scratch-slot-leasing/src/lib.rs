@@ -171,4 +171,84 @@ mod tests {
             Err(LeaseError::InsufficientFunds)
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_lease_hash_nonzero() {
+        let mut slot = make_slot(SlotState::Available, 0, 500);
+        let req = make_request(5_000, 3000);
+        let hash = lease_slot(&mut slot, &req, 1000).unwrap();
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_lease_hash_deterministic() {
+        let req = make_request(5_000, 3000);
+        let mut s1 = make_slot(SlotState::Available, 0, 500);
+        let mut s2 = make_slot(SlotState::Available, 0, 500);
+        let h1 = lease_slot(&mut s1, &req, 1000).unwrap();
+        let h2 = lease_slot(&mut s2, &req, 1000).unwrap();
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_available_slot_leased_ok() {
+        let mut slot = make_slot(SlotState::Available, 0, 1_000);
+        let req = make_request(5_000, 5000);
+        assert!(lease_slot(&mut slot, &req, 1000).is_ok());
+    }
+
+    #[test]
+    fn test_release_slot_returns_rent() {
+        let mut slot = make_slot(SlotState::Leased, 100, 7_500);
+        let rent = release_slot(&mut slot, 200).unwrap();
+        assert_eq!(rent, 7_500);
+    }
+
+    #[test]
+    fn test_cleanup_expired_ok() {
+        let mut slot = make_slot(SlotState::Leased, 100, 1_000);
+        assert!(cleanup_expired_lease(&mut slot, 101).is_ok());
+        assert_eq!(slot.state, SlotState::Available);
+    }
+
+    #[test]
+    fn test_cleanup_not_expired_rejected() {
+        // current_slot <= expires_at_slot → NotExpired; equality is not expired
+        let mut slot = make_slot(SlotState::Leased, 100, 1_000);
+        assert_eq!(
+            cleanup_expired_lease(&mut slot, 100),
+            Err(LeaseError::NotExpired)
+        );
+    }
+
+    #[test]
+    fn test_slot_state_becomes_leased() {
+        let mut slot = make_slot(SlotState::Available, 0, 500);
+        let req = make_request(5_000, 9999);
+        lease_slot(&mut slot, &req, 1).unwrap();
+        assert_eq!(slot.state, SlotState::Leased);
+    }
+
+    #[test]
+    fn test_slot_expires_updated() {
+        let mut slot = make_slot(SlotState::Available, 0, 500);
+        let req = make_request(5_000, 8888);
+        lease_slot(&mut slot, &req, 1).unwrap();
+        assert_eq!(slot.expires_at_slot, 8888);
+    }
+
+    #[test]
+    fn test_rent_saved_zero_reuses() {
+        assert_eq!(compute_rent_saved_vs_new_pda(2_039_280, 0), 0);
+    }
+
+    #[test]
+    fn test_release_clears_lease_hash() {
+        let mut slot = make_slot(SlotState::Leased, 100, 1_000);
+        slot.current_lease_hash = [0xFFu8; 32];
+        release_slot(&mut slot, 200).unwrap();
+        assert_eq!(slot.current_lease_hash, [0u8; 32]);
+    }
 }

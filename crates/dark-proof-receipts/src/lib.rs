@@ -238,4 +238,128 @@ mod tests {
         r1.nullifier_hash = [0x00u8; 32];
         assert_ne!(r1.receipt_id(), r2.receipt_id());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_receipt_id_nonzero() {
+        let r = make_receipt(StatementKind::ReceiptRedeem);
+        assert_ne!(r.receipt_id(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_id_changes_on_receipt_hash_tamper() {
+        let mut r1 = make_receipt(StatementKind::ApiMeterBurn);
+        let mut r2 = r1.clone();
+        r1.receipt_hash = [0xAAu8; 32];
+        r2.receipt_hash = [0xBBu8; 32];
+        assert_ne!(r1.receipt_id(), r2.receipt_id());
+    }
+
+    #[test]
+    fn test_statement_kind_domain_bytes_unique() {
+        let kinds = [
+            StatementKind::ReceiptRedeem,
+            StatementKind::SessionNetSettlement,
+            StatementKind::ModelOutputBound,
+            StatementKind::NullifierNotReused,
+            StatementKind::ApiMeterBurn,
+            StatementKind::PredictionCommitReveal,
+        ];
+        let bytes: Vec<u8> = kinds.iter().map(|k| k.domain_byte()).collect();
+        let unique: std::collections::HashSet<u8> = bytes.iter().copied().collect();
+        assert_eq!(bytes.len(), unique.len());
+    }
+
+    #[test]
+    fn test_verified_at_slot_stored() {
+        let verifier = MockProofVerifier;
+        let claim = make_claim();
+        let public_inputs = b"slot_test";
+        let proof = build_mock_proof(&claim.circuit_id, public_inputs);
+        let receipt = mint_proof_receipt(
+            &verifier,
+            &claim,
+            &proof,
+            public_inputs,
+            [0xAAu8; 32],
+            [0xBBu8; 32],
+            StatementKind::ApiMeterBurn,
+            12345,
+        )
+        .unwrap();
+        assert_eq!(receipt.verified_at_slot, 12345);
+    }
+
+    #[test]
+    fn test_mint_receipt_stores_receipt_hash() {
+        let verifier = MockProofVerifier;
+        let claim = make_claim();
+        let public_inputs = b"rh_test";
+        let proof = build_mock_proof(&claim.circuit_id, public_inputs);
+        let rh = [0xEEu8; 32];
+        let receipt = mint_proof_receipt(
+            &verifier,
+            &claim,
+            &proof,
+            public_inputs,
+            rh,
+            [0u8; 32],
+            StatementKind::NullifierNotReused,
+            1,
+        )
+        .unwrap();
+        assert_eq!(receipt.receipt_hash, rh);
+    }
+
+    #[test]
+    fn test_mint_receipt_stores_nullifier_hash() {
+        let verifier = MockProofVerifier;
+        let claim = make_claim();
+        let public_inputs = b"nh_test";
+        let proof = build_mock_proof(&claim.circuit_id, public_inputs);
+        let nh = [0xFFu8; 32];
+        let receipt = mint_proof_receipt(
+            &verifier,
+            &claim,
+            &proof,
+            public_inputs,
+            [0u8; 32],
+            nh,
+            StatementKind::ReceiptRedeem,
+            1,
+        )
+        .unwrap();
+        assert_eq!(receipt.nullifier_hash, nh);
+    }
+
+    #[test]
+    fn test_receipt_id_changes_on_claim_hash_tamper() {
+        let mut r1 = make_receipt(StatementKind::SessionNetSettlement);
+        let mut r2 = r1.clone();
+        r1.claim_hash = [0x11u8; 32];
+        r2.claim_hash = [0x22u8; 32];
+        assert_ne!(r1.receipt_id(), r2.receipt_id());
+    }
+
+    #[test]
+    fn test_mint_receipt_public_inputs_hash_set() {
+        let verifier = MockProofVerifier;
+        let claim = make_claim();
+        let public_inputs = b"pih_check_inputs";
+        let proof = build_mock_proof(&claim.circuit_id, public_inputs);
+        let receipt = mint_proof_receipt(
+            &verifier,
+            &claim,
+            &proof,
+            public_inputs,
+            [0u8; 32],
+            [0u8; 32],
+            StatementKind::ModelOutputBound,
+            77,
+        )
+        .unwrap();
+        // public_inputs_hash must be SHA256(public_inputs), non-zero
+        assert_ne!(receipt.public_inputs_hash, [0u8; 32]);
+    }
 }

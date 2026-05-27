@@ -276,4 +276,101 @@ mod tests {
         assert!(json.contains("\"message_count\":0"));
         assert!(json.contains("\"mainnet_ready\":false"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let session = make_session();
+        assert!(!session.mainnet_ready);
+    }
+
+    #[test]
+    fn test_session_id_deterministic() {
+        let s1 = make_session();
+        let s2 = make_session();
+        assert_eq!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_different_secrets_different_sessions() {
+        let s1 = new_session(&[0x11u8; 32], &[0x22u8; 32]);
+        let s2 = new_session(&[0x33u8; 32], &[0x22u8; 32]);
+        assert_ne!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_message_count_increments() {
+        let mut session = make_session();
+        assert_eq!(session.message_count, 0);
+        advance_session(&mut session, b"a").unwrap();
+        assert_eq!(session.message_count, 1);
+        advance_session(&mut session, b"b").unwrap();
+        assert_eq!(session.message_count, 2);
+    }
+
+    #[test]
+    fn test_chain_root_starts_at_session_id() {
+        let session = make_session();
+        assert_eq!(session.chain_root, session.session_id);
+    }
+
+    #[test]
+    fn test_counter_starts_at_zero_in_link() {
+        let mut session = make_session();
+        let link = advance_session(&mut session, b"first").unwrap();
+        assert_eq!(link.counter, 0);
+    }
+
+    #[test]
+    fn test_verify_link_fails_tampered_next_root() {
+        let mut session = make_session();
+        let mut link = advance_session(&mut session, b"tamper test").unwrap();
+        link.next_chain_root[0] ^= 0xFF;
+        let err = verify_link(&session, &link).unwrap_err();
+        match err {
+            SessionError::ChainBroken { .. } => {}
+            _ => panic!("expected ChainBroken"),
+        }
+    }
+
+    #[test]
+    fn test_verify_link_fails_counter_mismatch() {
+        let mut session = make_session();
+        let mut link = advance_session(&mut session, b"counter test").unwrap();
+        link.counter += 1; // tamper counter
+        let err = verify_link(&session, &link).unwrap_err();
+        assert_eq!(err, SessionError::CounterMismatch);
+    }
+
+    #[test]
+    fn test_session_proof_json_has_expected_fields() {
+        let session = make_session();
+        let json = session_proof_json(&session);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert!(v["session_id"].is_string());
+        assert!(v["chain_root"].is_string());
+        assert_eq!(v["message_count"], 0u32);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_multiple_links_all_verify() {
+        let mut session = make_session();
+        let l1 = advance_session(&mut session, b"msg1").unwrap();
+        let l2 = advance_session(&mut session, b"msg2").unwrap();
+        // l1 counter=0, session.message_count=2 → l1 is no longer the "last" link
+        // verify_link checks link.counter == message_count - 1
+        verify_link(&session, &l2).expect("last link must verify");
+        // l1 is stale — counter=0 but message_count=2, so CounterMismatch
+        let err = verify_link(&session, &l1).unwrap_err();
+        assert_eq!(err, SessionError::CounterMismatch);
+    }
+
+    #[test]
+    fn test_same_message_different_nonce_different_session_id() {
+        let s1 = new_session(&[0xFFu8; 32], &[0x01u8; 32]);
+        let s2 = new_session(&[0xFFu8; 32], &[0x02u8; 32]);
+        assert_ne!(s1.session_id, s2.session_id);
+    }
 }

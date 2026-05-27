@@ -153,4 +153,78 @@ mod tests {
         assert_eq!(filler.filler_count, 5);
         assert_eq!(filler.filler_hashes.len(), 5);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_pass_hash_nonzero() {
+        let pass = issue_shape_pass(&dummy_hash(1), ShapeTier::Basic, 1_000);
+        assert_ne!(pass.pass_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_pass_hash_deterministic() {
+        let h = dummy_hash(5);
+        let p1 = issue_shape_pass(&h, ShapeTier::Elite, 9_999);
+        let p2 = issue_shape_pass(&h, ShapeTier::Elite, 9_999);
+        assert_eq!(p1.pass_hash, p2.pass_hash);
+    }
+
+    #[test]
+    fn test_pass_hash_holder_sensitive() {
+        let p1 = issue_shape_pass(&dummy_hash(10), ShapeTier::Advanced, 5_000);
+        let p2 = issue_shape_pass(&dummy_hash(20), ShapeTier::Advanced, 5_000);
+        assert_ne!(p1.pass_hash, p2.pass_hash);
+    }
+
+    #[test]
+    fn test_pass_hash_tier_sensitive() {
+        let h = dummy_hash(3);
+        let p1 = issue_shape_pass(&h, ShapeTier::Basic, 5_000);
+        let p2 = issue_shape_pass(&h, ShapeTier::Elite, 5_000);
+        assert_ne!(p1.pass_hash, p2.pass_hash);
+    }
+
+    #[test]
+    fn test_blended_at_exactly_10() {
+        let score = score_camouflage(&dummy_hash(2), 10);
+        assert_eq!(score.camouflage_grade, CamouflageGrade::Blended);
+    }
+
+    #[test]
+    fn test_exposed_at_9() {
+        let score = score_camouflage(&dummy_hash(2), 9);
+        assert_eq!(score.camouflage_grade, CamouflageGrade::Exposed);
+    }
+
+    #[test]
+    fn test_basic_tier_one_filler() {
+        let tx = dummy_hash(1);
+        let filler = create_chaff_filler(&ShapeTier::Basic, &tx);
+        assert_eq!(filler.filler_count, 1);
+        assert_eq!(filler.filler_hashes.len(), 1);
+    }
+
+    #[test]
+    fn test_advanced_tier_three_fillers() {
+        let tx = dummy_hash(2);
+        let filler = create_chaff_filler(&ShapeTier::Advanced, &tx);
+        assert_eq!(filler.filler_count, 3);
+        assert_eq!(filler.filler_hashes.len(), 3);
+    }
+
+    #[test]
+    fn test_filler_hashes_nonzero() {
+        let tx = dummy_hash(9);
+        let filler = create_chaff_filler(&ShapeTier::Elite, &tx);
+        for h in &filler.filler_hashes {
+            assert_ne!(*h, [0u8; 32]);
+        }
+    }
+
+    #[test]
+    fn test_k_anonymity_stored() {
+        let score = score_camouflage(&dummy_hash(3), 77);
+        assert_eq!(score.k_anonymity, 77);
+    }
 }

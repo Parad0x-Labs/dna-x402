@@ -325,4 +325,102 @@ mod tests {
         // Confirm the rest is zero-padded
         assert_eq!(&fe[8..], &[0u8; 24]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_circuit_version_is_one() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        assert_eq!(bundle.circuit_version, 1);
+    }
+
+    #[test]
+    fn test_parsed_bundle_mainnet_ready_false() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        let wire = build_withdraw_tx_data(&bundle);
+        let parsed = parse_withdraw_tx_data(&wire).unwrap();
+        assert!(!parsed.mainnet_ready);
+    }
+
+    #[test]
+    fn test_parsed_bundle_circuit_version_one() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        let wire = build_withdraw_tx_data(&bundle);
+        let parsed = parse_withdraw_tx_data(&wire).unwrap();
+        assert_eq!(parsed.circuit_version, 1);
+    }
+
+    #[test]
+    fn test_serialize_proof_size() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        let serialized = serialize_proof(&bundle.proof);
+        assert_eq!(serialized.len(), 256);
+    }
+
+    #[test]
+    fn test_tx_data_size() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        let wire = build_withdraw_tx_data(&bundle);
+        assert_eq!(wire.len(), 352);
+    }
+
+    #[test]
+    fn test_proof_bytes_nonzero() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        assert_ne!(bundle.proof.proof_a, [0u8; 64]);
+        assert_ne!(bundle.proof.proof_b, [0u8; 128]);
+        assert_ne!(bundle.proof.proof_c, [0u8; 64]);
+    }
+
+    #[test]
+    fn test_json_has_mainnet_ready_false() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        let json = proof_bundle_to_json(&bundle);
+        assert_eq!(json["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_json_has_circuit_version_one() {
+        let inputs = valid_inputs();
+        let bundle = generate_devnet_test_proof(&inputs).unwrap();
+        let json = proof_bundle_to_json(&bundle);
+        assert_eq!(json["circuit_version"], 1);
+    }
+
+    #[test]
+    fn test_different_amounts_different_proofs() {
+        let inputs1 = valid_inputs();
+        let mut inputs2 = valid_inputs();
+        inputs2.withdraw_amount = 1_000_000; // different amount, still ≤ note_value
+
+        let bundle1 = generate_devnet_test_proof(&inputs1).unwrap();
+        let bundle2 = generate_devnet_test_proof(&inputs2).unwrap();
+
+        assert_ne!(bundle1.proof.proof_a, bundle2.proof.proof_a);
+    }
+
+    #[test]
+    fn test_amount_zero_field_element() {
+        let fe = amount_to_field_element(0);
+        assert_eq!(fe, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_nullifier_mismatch_propagates_as_circuit_violation() {
+        let mut inputs = valid_inputs();
+        inputs.nullifier[0] ^= 0xFF; // tamper public nullifier
+        let result = generate_devnet_test_proof(&inputs);
+        assert!(
+            matches!(result, Err(ProofError::CircuitViolation(_))),
+            "expected CircuitViolation, got {:?}",
+            result
+        );
+    }
 }

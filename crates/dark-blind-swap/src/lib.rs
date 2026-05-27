@@ -209,4 +209,81 @@ mod tests {
         let s = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
         assert!(!s.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_session_id_deterministic() {
+        let s1 = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
+        let s2 = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
+        assert_eq!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_session_id_nonce_sensitive() {
+        let nonce2 = [0x99u8; 32];
+        let s1 = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
+        let s2 = new_swap(&SECRET_A, &SECRET_B, &nonce2).unwrap();
+        assert_ne!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_session_id_party_sensitive() {
+        let secret_c = [0x03u8; 32];
+        let s1 = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
+        let s2 = new_swap(&SECRET_A, &secret_c, &NONCE).unwrap();
+        assert_ne!(s1.session_id, s2.session_id);
+    }
+
+    #[test]
+    fn test_amount_commitment_deterministic() {
+        let th = token_hash(TOKEN_A);
+        let c1 = amount_commitment(500_000, &th, &BLINDING_A);
+        let c2 = amount_commitment(500_000, &th, &BLINDING_A);
+        assert_eq!(c1, c2);
+    }
+
+    #[test]
+    fn test_amount_commitment_amount_sensitive() {
+        let th = token_hash(TOKEN_A);
+        let c1 = amount_commitment(500_000, &th, &BLINDING_A);
+        let c2 = amount_commitment(600_000, &th, &BLINDING_A);
+        assert_ne!(c1, c2);
+    }
+
+    #[test]
+    fn test_swap_root_deterministic() {
+        let a = [0xAAu8; 32];
+        let b = [0xBBu8; 32];
+        let r1 = swap_root_hash(&a, &b);
+        let r2 = swap_root_hash(&a, &b);
+        assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn test_double_settle_rejected() {
+        let mut s = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
+        commit_amount(&mut s, 0, 500_000, TOKEN_A, &BLINDING_A).unwrap();
+        commit_amount(&mut s, 1, 1_000_000, TOKEN_B, &BLINDING_B).unwrap();
+        settle_swap(&mut s).unwrap();
+        assert_eq!(settle_swap(&mut s).unwrap_err(), SwapError::AlreadySettled);
+    }
+
+    #[test]
+    fn test_zero_party_a_rejected() {
+        let err = new_swap(&[0u8; 32], &SECRET_B, &NONCE).unwrap_err();
+        assert_eq!(err, SwapError::ZeroPartySecret);
+    }
+
+    #[test]
+    fn test_zero_party_b_rejected() {
+        let err = new_swap(&SECRET_A, &[0u8; 32], &NONCE).unwrap_err();
+        assert_eq!(err, SwapError::ZeroPartySecret);
+    }
+
+    #[test]
+    fn test_settled_starts_false() {
+        let s = new_swap(&SECRET_A, &SECRET_B, &NONCE).unwrap();
+        assert!(!s.settled);
+    }
 }

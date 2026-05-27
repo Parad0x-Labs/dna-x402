@@ -243,4 +243,84 @@ mod tests {
         let pk_hex = hex32(&key.public_key);
         assert!(!record.contains(&pk_hex));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_key_mainnet_ready_false() {
+        let key = generate_key(&secret(0x11), 3, 2).unwrap();
+        assert!(!key.mainnet_ready);
+    }
+
+    #[test]
+    fn test_sig_mainnet_ready_false() {
+        let key = generate_key(&secret(0x11), 2, 2).unwrap();
+        let msg = b"test-message";
+        let p0 = partial_sign(&key, 0, msg);
+        let p1 = partial_sign(&key, 1, msg);
+        let sig = combine_sigs(&key, &[p0, p1], msg).unwrap();
+        assert!(!sig.mainnet_ready);
+    }
+
+    #[test]
+    fn test_key_id_nonzero() {
+        let key = generate_key(&secret(0x11), 2, 1).unwrap();
+        assert_ne!(key.key_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_key_nonzero() {
+        let key = generate_key(&secret(0x11), 2, 1).unwrap();
+        assert_ne!(key.public_key, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_sig_id_nonzero() {
+        let key = generate_key(&secret(0x11), 2, 2).unwrap();
+        let msg = b"hello";
+        let p0 = partial_sign(&key, 0, msg);
+        let p1 = partial_sign(&key, 1, msg);
+        let sig = combine_sigs(&key, &[p0, p1], msg).unwrap();
+        assert_ne!(sig.sig_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_zero_secret_rejected() {
+        let err = generate_key(&[0u8; 32], 2, 1).unwrap_err();
+        assert_eq!(err, TSigError::ZeroSecret);
+    }
+
+    #[test]
+    fn test_threshold_exceeds_shares_rejected() {
+        let err = generate_key(&secret(0x11), 2, 3).unwrap_err();
+        assert_eq!(err, TSigError::ThresholdExceedsShares);
+    }
+
+    #[test]
+    fn test_wrong_message_verify_fails() {
+        let key = generate_key(&secret(0x11), 2, 2).unwrap();
+        let msg = b"correct-message";
+        let p0 = partial_sign(&key, 0, msg);
+        let p1 = partial_sign(&key, 1, msg);
+        let sig = combine_sigs(&key, &[p0, p1], msg).unwrap();
+        assert!(!verify_tsig(&key, &sig, b"wrong-message"));
+    }
+
+    #[test]
+    fn test_partial_sig_deterministic() {
+        let key = generate_key(&secret(0x11), 3, 2).unwrap();
+        let msg = b"deterministic";
+        let p1 = partial_sign(&key, 0, msg);
+        let p2 = partial_sign(&key, 0, msg);
+        assert_eq!(p1.partial_hash, p2.partial_hash);
+    }
+
+    #[test]
+    fn test_different_signers_different_partial() {
+        let key = generate_key(&secret(0x11), 3, 2).unwrap();
+        let msg = b"multi-signer";
+        let p0 = partial_sign(&key, 0, msg);
+        let p1 = partial_sign(&key, 1, msg);
+        assert_ne!(p0.partial_hash, p1.partial_hash);
+    }
 }

@@ -244,4 +244,63 @@ mod tests {
         assert_eq!(targets[1].rent_lamports, 1_000_000);
         assert_eq!(targets[2].rent_lamports, 500_000);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let plan = build_sweep_plan(vec![], 9999);
+        assert!(!plan.mainnet_ready);
+    }
+
+    #[test]
+    fn test_production_claim_always_false() {
+        let plan = build_sweep_plan(vec![], 9999);
+        assert!(!plan.production_claim);
+    }
+
+    #[test]
+    fn test_not_closeable_excluded_from_plan() {
+        let t = make_target(100, 1_000_000, CloseAuthorityPolicy::NotCloseable);
+        let plan = build_sweep_plan(vec![t], 200);
+        assert!(plan.targets.is_empty());
+    }
+
+    #[test]
+    fn test_bounty_is_10_percent() {
+        assert_eq!(estimate_bounty(1_000_000), 100_000);
+    }
+
+    #[test]
+    fn test_scan_mock_returns_3_targets() {
+        let targets = scan_mock_targets(1_000);
+        assert_eq!(targets.len(), 3);
+    }
+
+    #[test]
+    fn test_validate_close_at_exact_expiry_fails() {
+        // expires_at >= current_slot → Err; exactly at slot → Err
+        let target = make_target(1000, 1_000_000, CloseAuthorityPolicy::KeeperAfterGrace);
+        assert!(validate_close_eligibility(&target, 1000).is_err());
+    }
+
+    #[test]
+    fn test_split_user_portion() {
+        let rent = 1_000_000u64;
+        let split = split_reclaimed_rent(rent, 8000, 1500, 500);
+        assert_eq!(split.user_lamports, 800_000);
+    }
+
+    #[test]
+    fn test_unexpired_target_excluded_from_plan() {
+        // future expiry → excluded
+        let t = make_target(9999, 1_000_000, CloseAuthorityPolicy::KeeperAfterGrace);
+        let plan = build_sweep_plan(vec![t], 500);
+        assert!(plan.targets.is_empty());
+    }
+
+    #[test]
+    fn test_bounty_zero_for_zero_rent() {
+        assert_eq!(estimate_bounty(0), 0);
+    }
 }

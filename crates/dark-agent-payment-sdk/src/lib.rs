@@ -320,4 +320,97 @@ mod tests {
             "verify_session must return false after session_id is tampered"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let cap = make_capability(1_000_000);
+        let payment = make_payment(100_000);
+        let session = new_session(cap, payment, &AGENT_SECRET, &NONCE).unwrap();
+        assert!(!session.mainnet_ready);
+    }
+
+    #[test]
+    fn test_session_id_different_nonces_differ() {
+        let nonce2 = [0x88u8; 32];
+        let cap_a = make_capability(1_000_000);
+        let cap_b = make_capability(1_000_000);
+        let payment_a = make_payment(100_000);
+        let payment_b = make_payment(100_000);
+        let sa = new_session(cap_a, payment_a, &AGENT_SECRET, &NONCE).unwrap();
+        let sb = new_session(cap_b, payment_b, &AGENT_SECRET, &nonce2).unwrap();
+        assert_ne!(sa.session_id, sb.session_id);
+    }
+
+    #[test]
+    fn test_shielded_receipt_deterministic() {
+        let payment = make_payment(100_000);
+        let r1 = issue_shielded_receipt(&payment, &NONCE);
+        let r2 = issue_shielded_receipt(&payment, &NONCE);
+        assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn test_shielded_receipt_buyer_hash_sensitive() {
+        let mut p2 = make_payment(100_000);
+        p2.buyer_hash[0] ^= 0xFF;
+        let r1 = issue_shielded_receipt(&make_payment(100_000), &NONCE);
+        let r2 = issue_shielded_receipt(&p2, &NONCE);
+        assert_ne!(r1.commitment_hash, r2.commitment_hash);
+    }
+
+    #[test]
+    fn test_shielded_receipt_amount_sensitive() {
+        let p1 = make_payment(100_000);
+        let p2 = make_payment(200_000);
+        let r1 = issue_shielded_receipt(&p1, &NONCE);
+        let r2 = issue_shielded_receipt(&p2, &NONCE);
+        assert_ne!(r1.commitment_hash, r2.commitment_hash);
+    }
+
+    #[test]
+    fn test_shielded_receipt_nonce_sensitive() {
+        let payment = make_payment(100_000);
+        let nonce2 = [0x99u8; 32];
+        let r1 = issue_shielded_receipt(&payment, &NONCE);
+        let r2 = issue_shielded_receipt(&payment, &nonce2);
+        assert_ne!(r1.commitment_hash, r2.commitment_hash);
+    }
+
+    #[test]
+    fn test_allowed_scope_found() {
+        let config = AgentPaymentConfig {
+            max_single_payment: 1_000_000,
+            allowed_scopes: vec!["solana-rpc".to_string(), "ipfs".to_string()],
+        };
+        assert!(allowed_scope(&config, "solana-rpc"));
+    }
+
+    #[test]
+    fn test_allowed_scope_not_found() {
+        let config = AgentPaymentConfig {
+            max_single_payment: 1_000_000,
+            allowed_scopes: vec!["solana-rpc".to_string()],
+        };
+        assert!(!allowed_scope(&config, "ethereum-rpc"));
+    }
+
+    #[test]
+    fn test_fee_cap_exact_match_ok() {
+        let cap = make_capability(500_000);
+        let payment = make_payment(500_000); // exactly at cap
+        let result = new_session(cap, payment, &AGENT_SECRET, &NONCE);
+        assert!(result.is_ok(), "payment at exact fee cap should succeed");
+    }
+
+    #[test]
+    fn test_evidence_json_has_mainnet_ready_false() {
+        let cap = make_capability(1_000_000);
+        let payment = make_payment(100_000);
+        let session = new_session(cap, payment, &AGENT_SECRET, &NONCE).unwrap();
+        let json = session_evidence_json(&session);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

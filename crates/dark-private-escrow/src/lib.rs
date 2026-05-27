@@ -148,4 +148,78 @@ mod tests {
         let e2 = new_escrow(&a, &b, &arb, 1_000_000, &blind).unwrap();
         assert_eq!(e1.escrow_id, e2.escrow_id);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_party_a_hash_nonzero() {
+        let (a, b, arb, blind) = make_secrets();
+        let e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        assert_ne!(e.party_a_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_party_b_hash_nonzero() {
+        let (a, b, arb, blind) = make_secrets();
+        let e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        assert_ne!(e.party_b_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_arbiter_hash_nonzero() {
+        let (a, b, arb, blind) = make_secrets();
+        let e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        assert_ne!(e.arbiter_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_amount_commitment_nonzero() {
+        let (a, b, arb, blind) = make_secrets();
+        let e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        assert_ne!(e.amount_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_released_to_none_initially() {
+        let (a, b, arb, blind) = make_secrets();
+        let e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        assert!(e.released_to.is_none());
+    }
+
+    #[test]
+    fn test_release_to_party_b() {
+        let (a, b, arb, blind) = make_secrets();
+        let mut e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        release(&mut e, 1).unwrap();
+        assert_eq!(e.released_to, Some(1));
+    }
+
+    #[test]
+    fn test_escrow_id_nonzero() {
+        let (a, b, arb, blind) = make_secrets();
+        let e = new_escrow(&a, &b, &arb, 500, &blind).unwrap();
+        assert_ne!(e.escrow_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_zero_party_b_rejected() {
+        let (a, _, arb, blind) = make_secrets();
+        let err = new_escrow(&a, &[0u8; 32], &arb, 500, &blind).unwrap_err();
+        assert_eq!(err, EscrowError::ZeroSecret);
+    }
+
+    #[test]
+    fn test_zero_arbiter_rejected() {
+        let (a, b, _, blind) = make_secrets();
+        let err = new_escrow(&a, &b, &[0u8; 32], 500, &blind).unwrap_err();
+        assert_eq!(err, EscrowError::ZeroSecret);
+    }
+
+    #[test]
+    fn test_amount_commitment_amount_sensitive() {
+        let (a, b, arb, blind) = make_secrets();
+        let e1 = new_escrow(&a, &b, &arb, 100, &blind).unwrap();
+        let e2 = new_escrow(&a, &b, &arb, 200, &blind).unwrap();
+        assert_ne!(e1.amount_commitment, e2.amount_commitment);
+    }
 }

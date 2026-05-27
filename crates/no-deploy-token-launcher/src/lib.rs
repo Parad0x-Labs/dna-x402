@@ -203,4 +203,83 @@ mod tests {
         );
         assert!(matches!(result, Err(LaunchError::MissingHookForRitual)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let plan =
+            compile_launch_plan("TOKEN", "TKN", "uri", vec![], [0u8; 32], [0u8; 32]).unwrap();
+        assert!(!plan.mainnet_ready);
+    }
+
+    #[test]
+    fn test_production_claim_always_false() {
+        let plan =
+            compile_launch_plan("TOKEN", "TKN", "uri", vec![], [0u8; 32], [0u8; 32]).unwrap();
+        assert!(!plan.production_claim);
+    }
+
+    #[test]
+    fn test_mint_name_hash_nonzero() {
+        let plan = compile_launch_plan("DARK", "DRK", "uri", vec![], [0u8; 32], [0u8; 32]).unwrap();
+        assert_ne!(plan.mint_name_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_symbol_hash_nonzero() {
+        let plan = compile_launch_plan("DARK", "DRK", "uri", vec![], [0u8; 32], [0u8; 32]).unwrap();
+        assert_ne!(plan.symbol_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_empty_extensions_no_ritual_ok() {
+        let result = compile_launch_plan("DARK", "DRK", "uri", vec![], [0u8; 32], [0u8; 32]);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_launch_card_not_empty() {
+        let plan = compile_launch_plan("DARK", "DRK", "uri", vec![], [0u8; 32], [0u8; 32]).unwrap();
+        let card = produce_public_launch_card(&plan);
+        assert!(!card.is_empty());
+        assert!(card.contains("LaunchPlan"));
+    }
+
+    #[test]
+    fn test_launch_card_no_raw_name() {
+        let plan =
+            compile_launch_plan("DARKTOKEN", "DRK", "uri", vec![], [0u8; 32], [0u8; 32]).unwrap();
+        let card = produce_public_launch_card(&plan);
+        assert!(
+            !card.contains("DARKTOKEN"),
+            "raw name must not appear in public card"
+        );
+    }
+
+    #[test]
+    fn test_transfer_fee_alone_ok() {
+        let result = compile_launch_plan(
+            "TOKEN",
+            "TKN",
+            "uri",
+            vec![TokenExtension::TransferFee],
+            [0u8; 32],
+            [0u8; 32],
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_close_mint_alone_ok() {
+        let result = compile_launch_plan(
+            "TOKEN",
+            "TKN",
+            "uri",
+            vec![TokenExtension::CloseMint],
+            [0u8; 32],
+            [0u8; 32],
+        );
+        assert!(result.is_ok());
+    }
 }

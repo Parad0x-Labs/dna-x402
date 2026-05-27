@@ -176,4 +176,79 @@ mod tests {
         assert!(v.get("value_hash").is_none());
         assert!(v.get("blinding_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let c = commit(b"val", &blinding()).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let c1 = commit(b"same-value", &blinding()).unwrap();
+        let c2 = commit(b"same-value", &blinding()).unwrap();
+        assert_eq!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_value_sensitive() {
+        let c1 = commit(b"value-alpha", &blinding()).unwrap();
+        let c2 = commit(b"value-beta", &blinding()).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_blinding_sensitive() {
+        let mut b2 = blinding();
+        b2[2] = 0xFF;
+        let c1 = commit(b"data", &blinding()).unwrap();
+        let c2 = commit(b"data", &b2).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_open_wrong_blinding_fails() {
+        let c = commit(b"secret", &blinding()).unwrap();
+        let mut bad = blinding();
+        bad[0] ^= 0xFF;
+        let opening = open(&c, b"secret", &bad);
+        assert!(!opening.verified);
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let c = commit(b"test", &blinding()).unwrap();
+        assert_ne!(c.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_value_hash_nonzero() {
+        let c = commit(b"test", &blinding()).unwrap();
+        assert_ne!(c.value_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_blinding_hash_nonzero() {
+        let c = commit(b"test", &blinding()).unwrap();
+        assert_ne!(c.blinding_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_batch_commit_empty_value_rejected() {
+        let b = blinding();
+        let pairs: Vec<(&[u8], [u8; 32])> = vec![(b"", b)];
+        let results = batch_commit(&pairs);
+        assert!(results[0].is_err());
+        assert_eq!(results[0].as_ref().unwrap_err(), &SchemeError::EmptyValue);
+    }
+
+    #[test]
+    fn test_open_value_stored() {
+        let value = b"store-me";
+        let c = commit(value, &blinding()).unwrap();
+        let opening = open(&c, value, &blinding());
+        assert_eq!(opening.value, value);
+    }
 }

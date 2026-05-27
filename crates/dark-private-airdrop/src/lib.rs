@@ -455,4 +455,13 @@ mod tests {
             build_tree(&[lb]).unwrap().root
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_nullifier_mainnet_ready_false() {
+        let leaf = create_leaf(b"frank", 1_000, &nonce(0x40));
+        let null = make_claim_nullifier(&leaf, &secret(0x01));
+        assert!(!null.mainnet_ready);
+    }
 }

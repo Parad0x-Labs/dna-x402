@@ -247,4 +247,76 @@ mod tests {
         assert!(v.get("signers").is_none());
         assert!(v.get("signer_secrets").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_escrow_id_nonzero() {
+        let escrow = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        assert_ne!(escrow.escrow_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_escrow_id_deterministic() {
+        let e1 = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        let e2 = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        assert_eq!(e1.escrow_id, e2.escrow_id);
+    }
+
+    #[test]
+    fn test_approval_hash_nonzero() {
+        let escrow = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        let approval = approve(&escrow, &three_signers()[0]);
+        assert_ne!(approval.approval_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_approval_deterministic() {
+        let escrow = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        let a1 = approve(&escrow, &three_signers()[0]);
+        let a2 = approve(&escrow, &three_signers()[0]);
+        assert_eq!(a1.approval_hash, a2.approval_hash);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let escrow = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        assert!(!escrow.mainnet_ready);
+    }
+
+    #[test]
+    fn test_threshold_exceeds_signers_rejected() {
+        let secrets = vec![secret(1), secret(2)]; // 2 signers
+        let err = create_escrow(&secrets, 3, 1000, b"cond").unwrap_err(); // threshold=3 > 2
+        assert_eq!(err, EscrowError::ThresholdExceedsSigners);
+    }
+
+    #[test]
+    fn test_released_starts_false() {
+        let escrow = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        assert!(!escrow.released);
+    }
+
+    #[test]
+    fn test_approved_count_starts_zero() {
+        let escrow = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        assert_eq!(escrow.approved_count, 0);
+    }
+
+    #[test]
+    fn test_release_at_exact_threshold_ok() {
+        let secrets = three_signers();
+        let mut escrow = create_escrow(&secrets, 2, 1000, b"cond").unwrap();
+        let a1 = approve(&escrow, &secrets[0]);
+        let a2 = approve(&escrow, &secrets[1]);
+        // exactly threshold approvals
+        assert!(release(&mut escrow, &[a1, a2]).is_ok());
+    }
+
+    #[test]
+    fn test_escrow_id_amount_sensitive() {
+        let e1 = create_escrow(&three_signers(), 2, 1000, b"cond").unwrap();
+        let e2 = create_escrow(&three_signers(), 2, 2000, b"cond").unwrap();
+        assert_ne!(e1.escrow_id, e2.escrow_id);
+    }
 }

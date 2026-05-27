@@ -230,4 +230,198 @@ mod tests {
         assert!(!json.contains("secret_instruction_data"));
         assert!(!json.contains(&ix_hex));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            1,
+            &nullifier(1),
+            &target(),
+        )
+        .unwrap();
+        assert!(!r.mainnet_ready);
+    }
+
+    #[test]
+    fn test_bridge_hash_nonzero() {
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            1,
+            &nullifier(2),
+            &target(),
+        )
+        .unwrap();
+        assert_ne!(r.bridge_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_bridge_hash_nullifier_sensitive() {
+        let a = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"p",
+            b"i",
+            100,
+            &nullifier(3),
+            &target(),
+        )
+        .unwrap();
+        let b = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"p",
+            b"i",
+            100,
+            &nullifier(4),
+            &target(),
+        )
+        .unwrap();
+        assert_ne!(a.bridge_hash, b.bridge_hash);
+    }
+
+    #[test]
+    fn test_bridge_hash_slot_sensitive() {
+        let a = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"p",
+            b"i",
+            100,
+            &nullifier(5),
+            &target(),
+        )
+        .unwrap();
+        let b = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"p",
+            b"i",
+            200,
+            &nullifier(5),
+            &target(),
+        )
+        .unwrap();
+        assert_ne!(a.bridge_hash, b.bridge_hash);
+    }
+
+    #[test]
+    fn test_evm_calldata_hash_nonzero() {
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            1,
+            &nullifier(6),
+            &target(),
+        )
+        .unwrap();
+        assert_ne!(r.evm_calldata_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_valid_receipt() {
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            50,
+            &nullifier(7),
+            &target(),
+        )
+        .unwrap();
+        assert!(verify_cross_chain_receipt(&r));
+    }
+
+    #[test]
+    fn test_solana_to_arbitrum_ok() {
+        // Solana → Arbitrum is NOT blocked (only EthereumL2→Arbitrum and Arbitrum→Arbitrum are)
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Arbitrum,
+            b"prog",
+            b"ix",
+            10,
+            &nullifier(8),
+            &target(),
+        );
+        assert!(r.is_ok());
+    }
+
+    #[test]
+    fn test_arbitrum_to_arbitrum_blocked() {
+        let err = create_cross_chain_receipt(
+            SourceChain::Arbitrum,
+            DestChain::Arbitrum,
+            b"p",
+            b"i",
+            1,
+            &nullifier(9),
+            &target(),
+        )
+        .unwrap_err();
+        assert_eq!(err, CrossChainError::SameSourceAndDest);
+    }
+
+    #[test]
+    fn test_public_record_mainnet_ready_false() {
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            1,
+            &nullifier(10),
+            &target(),
+        )
+        .unwrap();
+        let json = receipt_public_record(&r);
+        let v: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_public_record_has_chain_info() {
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            1,
+            &nullifier(11),
+            &target(),
+        )
+        .unwrap();
+        let json = receipt_public_record(&r);
+        assert!(json.contains("solana"));
+        assert!(json.contains("ethereum"));
+    }
+
+    #[test]
+    fn test_public_record_hides_raw_nullifier() {
+        let null = nullifier(12);
+        let r = create_cross_chain_receipt(
+            SourceChain::Solana,
+            DestChain::Ethereum,
+            b"prog",
+            b"ix",
+            1,
+            &null,
+            &target(),
+        )
+        .unwrap();
+        let json = receipt_public_record(&r);
+        let null_hex = hex_encode(&null);
+        assert!(!json.contains(&null_hex));
+    }
 }

@@ -330,4 +330,98 @@ mod tests {
         assert!(record.contains("ring_root"));
         assert!(record.contains("member_count"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_public_key_nonzero() {
+        let secret = make_secret(1);
+        let member = create_member(&secret).unwrap();
+        assert_ne!(member.public_key, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_member_mainnet_ready_false() {
+        let member = create_member(&make_secret(2)).unwrap();
+        assert!(!member.mainnet_ready);
+    }
+
+    #[test]
+    fn test_endorsement_mainnet_ready_false() {
+        let secret = make_secret(3);
+        let member = create_member(&secret).unwrap();
+        let mut ring = new_ring();
+        add_member(&mut ring, &member);
+        let endorsement = endorse(&ring, &secret, &make_target(1), &make_nonce(1)).unwrap();
+        assert!(!endorsement.mainnet_ready);
+    }
+
+    #[test]
+    fn test_member_secret_zero_rejected() {
+        let err = create_member(&[0u8; 32]).unwrap_err();
+        assert_eq!(err, RingError::MemberSecretZero);
+    }
+
+    #[test]
+    fn test_nonce_zero_rejected() {
+        let secret = make_secret(4);
+        let member = create_member(&secret).unwrap();
+        let mut ring = new_ring();
+        add_member(&mut ring, &member);
+        let err = endorse(&ring, &secret, &make_target(1), &[0u8; 32]).unwrap_err();
+        assert_eq!(err, RingError::NonceZero);
+    }
+
+    #[test]
+    fn test_endorsement_hash_nonzero() {
+        let secret = make_secret(5);
+        let member = create_member(&secret).unwrap();
+        let mut ring = new_ring();
+        add_member(&mut ring, &member);
+        let endorsement = endorse(&ring, &secret, &make_target(2), &make_nonce(2)).unwrap();
+        assert_ne!(endorsement.endorsement_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ring_root_nonzero_after_member() {
+        let mut ring = new_ring();
+        add_member(&mut ring, &create_member(&make_secret(6)).unwrap());
+        assert_ne!(ring.ring_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_target_different_endorsement() {
+        let secret = make_secret(7);
+        let member = create_member(&secret).unwrap();
+        let mut ring = new_ring();
+        add_member(&mut ring, &member);
+        let nonce = make_nonce(0xBB);
+        let e1 = endorse(&ring, &secret, &make_target(1), &nonce).unwrap();
+        let e2 = endorse(&ring, &secret, &make_target(2), &nonce).unwrap();
+        assert_ne!(e1.endorsement_hash, e2.endorsement_hash);
+    }
+
+    #[test]
+    fn test_public_record_has_member_count() {
+        let mut ring = new_ring();
+        add_member(&mut ring, &create_member(&make_secret(8)).unwrap());
+        add_member(&mut ring, &create_member(&make_secret(9)).unwrap());
+        let record = ring_public_record(&ring);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["member_count"], 2u64);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_verify_fails_wrong_nonce() {
+        let secret = make_secret(10);
+        let member = create_member(&secret).unwrap();
+        let mut ring = new_ring();
+        add_member(&mut ring, &member);
+        let target = make_target(3);
+        let nonce_a = make_nonce(0xAA);
+        let nonce_b = make_nonce(0xBB);
+        let endorsement = endorse(&ring, &secret, &target, &nonce_a).unwrap();
+        assert!(!verify_endorsement(&ring, &endorsement, &target, &nonce_b));
+    }
 }

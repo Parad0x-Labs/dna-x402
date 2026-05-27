@@ -172,4 +172,73 @@ mod tests {
         let j2 = create_chaff_job(ChaffJobKind::CompactRoot, 1000, 0.5, shape()).unwrap();
         assert_eq!(j1.job_hash, j2.job_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_job_hash_nonzero() {
+        let job = create_chaff_job(ChaffJobKind::HealShard, 500, 0.8, shape()).unwrap();
+        assert_ne!(job.job_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_kinds_different_job_hash() {
+        let j1 = create_chaff_job(ChaffJobKind::CloseExpired, 1000, 0.5, shape()).unwrap();
+        let j2 = create_chaff_job(ChaffJobKind::RotateEpoch, 1000, 0.5, shape()).unwrap();
+        assert_ne!(j1.job_hash, j2.job_hash);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let job = create_chaff_job(ChaffJobKind::CompactRoot, 2000, 0.6, shape()).unwrap();
+        let receipt = execute_job_mock(&job, shape()).unwrap();
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_deterministic() {
+        let job = create_chaff_job(ChaffJobKind::CompactRoot, 2000, 0.6, shape()).unwrap();
+        let r1 = execute_job_mock(&job, shape()).unwrap();
+        let r2 = execute_job_mock(&job, shape()).unwrap();
+        assert_eq!(r1.receipt_hash, r2.receipt_hash);
+    }
+
+    #[test]
+    fn test_reward_zero_for_zero_privacy_score() {
+        let job = create_chaff_job(ChaffJobKind::RefreshHeatmap, 1000, 0.0, shape()).unwrap();
+        assert_eq!(job.reward_lamports, 0);
+    }
+
+    #[test]
+    fn test_reject_useless_chaff_nonzero_ok() {
+        assert!(reject_useless_chaff(1).is_ok());
+        assert!(reject_useless_chaff(1_000_000).is_ok());
+    }
+
+    #[test]
+    fn test_rank_single_job() {
+        let job = create_chaff_job(ChaffJobKind::CompactRoot, 1000, 0.5, shape()).unwrap();
+        let ranked = rank_jobs(&[job]);
+        assert_eq!(ranked, vec![0]);
+    }
+
+    #[test]
+    fn test_privacy_cover_score_stored() {
+        let job = create_chaff_job(ChaffJobKind::FillShapePool, 3000, 0.75, shape()).unwrap();
+        assert!((job.privacy_cover_score - 0.75).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_kind_stored_in_job() {
+        let job =
+            create_chaff_job(ChaffJobKind::SettleAbandonedSession, 100, 0.1, shape()).unwrap();
+        assert_eq!(job.kind, ChaffJobKind::SettleAbandonedSession);
+    }
+
+    #[test]
+    fn test_receipt_job_hash_matches_job() {
+        let job = create_chaff_job(ChaffJobKind::HealShard, 999, 0.5, shape()).unwrap();
+        let receipt = execute_job_mock(&job, shape()).unwrap();
+        assert_eq!(receipt.job_hash, job.job_hash);
+    }
 }

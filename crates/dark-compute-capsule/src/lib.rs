@@ -249,4 +249,93 @@ mod tests {
         let rec = submission.receipt.as_ref().unwrap();
         assert_eq!(rec.receipt_hash, receipt.receipt_hash);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_credential_hash_nonzero() {
+        let cred = make_cred(5, 1000);
+        assert_ne!(cred.credential_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_credential_hash_deterministic() {
+        let c1 = make_cred(5, 1000);
+        let c2 = make_cred(5, 1000);
+        assert_eq!(c1.credential_hash, c2.credential_hash);
+    }
+
+    #[test]
+    fn test_credential_hash_owner_sensitive() {
+        let c1 = create_compute_credential(b"owner-alpha", b"scope", 100, 1, &[0x77u8; 32]);
+        let c2 = create_compute_credential(b"owner-beta", b"scope", 100, 1, &[0x77u8; 32]);
+        assert_ne!(c1.credential_hash, c2.credential_hash);
+    }
+
+    #[test]
+    fn test_credential_hash_scope_sensitive() {
+        let c1 = create_compute_credential(b"owner", b"scope-alpha", 100, 1, &[0x77u8; 32]);
+        let c2 = create_compute_credential(b"owner", b"scope-beta", 100, 1, &[0x77u8; 32]);
+        assert_ne!(c1.credential_hash, c2.credential_hash);
+    }
+
+    #[test]
+    fn test_credential_hash_nonce_sensitive() {
+        let c1 = create_compute_credential(b"owner", b"scope", 100, 1, &[0x77u8; 32]);
+        let c2 = create_compute_credential(b"owner", b"scope", 100, 1, &[0x88u8; 32]);
+        assert_ne!(c1.credential_hash, c2.credential_hash);
+    }
+
+    #[test]
+    fn test_jobs_used_starts_zero() {
+        let cred = make_cred(10, 9999);
+        assert_eq!(cred.jobs_used, 0);
+    }
+
+    #[test]
+    fn test_exact_expiry_slot_ok() {
+        let mut cred = make_cred(5, 100);
+        let spec = make_spec();
+        // slot == expiry_slot: check is `slot > expiry`, so exact == is valid
+        let result = submit_gated_job(&mut cred, spec, 100);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_submission_evidence_json_has_keys() {
+        let mut cred = make_cred(5, 9999);
+        let spec = make_spec();
+        let submission = submit_gated_job(&mut cred, spec, 500).unwrap();
+        let evidence = submission_evidence_json(&submission);
+        assert!(evidence["job_id"].is_string());
+        assert!(evidence["credential_hash"].is_string());
+        assert!(evidence["submission_slot"].is_number());
+        assert!(evidence["result"].is_null());
+    }
+
+    #[test]
+    fn test_submission_slot_stored() {
+        let mut cred = make_cred(5, 9999);
+        let spec = make_spec();
+        let submission = submit_gated_job(&mut cred, spec, 777).unwrap();
+        assert_eq!(submission.submission_slot, 777);
+    }
+
+    #[test]
+    fn test_credential_expiry_stored() {
+        let cred = make_cred(5, 42_000);
+        assert_eq!(cred.expiry_slot, 42_000);
+    }
+
+    #[test]
+    fn test_max_jobs_stored() {
+        let cred = make_cred(7, 9999);
+        assert_eq!(cred.max_jobs, 7);
+    }
+
+    #[test]
+    fn test_scope_hash_nonzero() {
+        let cred = make_cred(5, 1000);
+        assert_ne!(cred.scope_hash, [0u8; 32]);
+    }
 }

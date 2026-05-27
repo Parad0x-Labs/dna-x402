@@ -273,4 +273,83 @@ mod tests {
         assert!(!record.contains(&hex32(&ch.party_a_hash)));
         assert!(!record.contains(&hex32(&ch.party_b_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let ch = open_channel(&secret(0x01), &secret(0x02), 100, 200, &nonce(0x01)).unwrap();
+        assert!(!ch.mainnet_ready);
+        let mut ch2 = open_channel(&secret(0x01), &secret(0x02), 100, 200, &nonce(0x01)).unwrap();
+        let upd = update_channel(&mut ch2, 150, 150).unwrap();
+        assert!(!upd.mainnet_ready);
+    }
+
+    #[test]
+    fn test_channel_id_deterministic() {
+        let c1 = open_channel(&secret(0xA1), &secret(0xB1), 500, 500, &nonce(0x01)).unwrap();
+        let c2 = open_channel(&secret(0xA1), &secret(0xB1), 500, 500, &nonce(0x01)).unwrap();
+        assert_eq!(c1.channel_id, c2.channel_id);
+    }
+
+    #[test]
+    fn test_state_hash_changes_on_update() {
+        let mut ch = open_channel(&secret(0xC1), &secret(0xD1), 500, 500, &nonce(0x02)).unwrap();
+        let old_hash = ch.state_hash;
+        update_channel(&mut ch, 600, 400).unwrap();
+        assert_ne!(ch.state_hash, old_hash);
+    }
+
+    #[test]
+    fn test_update_on_closed_channel_fails() {
+        let mut ch = open_channel(&secret(0xE1), &secret(0xF1), 300, 700, &nonce(0x03)).unwrap();
+        close_channel(&mut ch);
+        let err = update_channel(&mut ch, 500, 500).unwrap_err();
+        assert_eq!(err, ChannelError::ChannelClosed);
+    }
+
+    #[test]
+    fn test_channel_id_sensitive_to_nonce() {
+        let c1 = open_channel(&secret(0x01), &secret(0x02), 100, 100, &nonce(0x10)).unwrap();
+        let c2 = open_channel(&secret(0x01), &secret(0x02), 100, 100, &nonce(0x20)).unwrap();
+        assert_ne!(c1.channel_id, c2.channel_id);
+    }
+
+    #[test]
+    fn test_balance_a_b_updated_on_update() {
+        let mut ch = open_channel(&secret(0x01), &secret(0x02), 400, 600, &nonce(0x01)).unwrap();
+        update_channel(&mut ch, 700, 300).unwrap();
+        assert_eq!(ch.balance_a, 700);
+        assert_eq!(ch.balance_b, 300);
+    }
+
+    #[test]
+    fn test_channel_starts_open() {
+        let ch = open_channel(&secret(0x01), &secret(0x02), 100, 100, &nonce(0x01)).unwrap();
+        assert!(ch.open);
+    }
+
+    #[test]
+    fn test_single_sided_balance_ok() {
+        // one party contributes all balance
+        let ch = open_channel(&secret(0x01), &secret(0x02), 1000, 0, &nonce(0x01)).unwrap();
+        assert_eq!(ch.balance_a, 1000);
+        assert_eq!(ch.balance_b, 0);
+    }
+
+    #[test]
+    fn test_public_record_has_balances_and_sequence() {
+        let ch = open_channel(&secret(0x05), &secret(0x06), 333, 667, &nonce(0x01)).unwrap();
+        let record = channel_public_record(&ch);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["balance_a"], 333u64);
+        assert_eq!(v["balance_b"], 667u64);
+        assert_eq!(v["sequence"], 0u32);
+    }
+
+    #[test]
+    fn test_sequence_0_on_open() {
+        let ch = open_channel(&secret(0x01), &secret(0x02), 100, 100, &nonce(0x01)).unwrap();
+        assert_eq!(ch.sequence, 0);
+    }
 }

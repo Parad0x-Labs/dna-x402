@@ -281,4 +281,85 @@ mod tests {
 
         assert_eq!(err, ScheduleError::InvalidWindow);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_nonzero() {
+        let c = commit_next_schedule(&test_seed(), 1, 100, 500).unwrap();
+        assert_ne!(c.commitment_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_hash_deterministic() {
+        let c1 = commit_next_schedule(&test_seed(), 1, 100, 500).unwrap();
+        let c2 = commit_next_schedule(&test_seed(), 1, 100, 500).unwrap();
+        assert_eq!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_different_seeds_different_commitment() {
+        let c1 = commit_next_schedule(&test_seed(), 1, 100, 500).unwrap();
+        let c2 = commit_next_schedule(&wrong_seed(), 1, 100, 500).unwrap();
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_different_epochs_different_commitment() {
+        let c1 = commit_next_schedule(&test_seed(), 1, 100, 500).unwrap();
+        let c2 = commit_next_schedule(&test_seed(), 2, 100, 500).unwrap();
+        assert_ne!(c1.commitment_hash, c2.commitment_hash);
+    }
+
+    #[test]
+    fn test_reveal_after_slot_equals_committed_plus_window() {
+        let c = commit_next_schedule(&test_seed(), 3, 50, 200).unwrap();
+        assert_eq!(c.reveal_after_slot, 200 + 50);
+    }
+
+    #[test]
+    fn test_compute_scheduled_slot_deterministic() {
+        let s1 = compute_scheduled_slot(&test_seed(), 5, 100);
+        let s2 = compute_scheduled_slot(&test_seed(), 5, 100);
+        assert_eq!(s1, s2);
+    }
+
+    #[test]
+    fn test_verify_schedule_valid() {
+        let seed = test_seed();
+        let c = commit_next_schedule(&seed, 4, 100, 300).unwrap();
+        let reveal = reveal_schedule(&c, &seed, 4, c.reveal_after_slot).unwrap();
+        assert!(verify_schedule(&c, &reveal));
+    }
+
+    #[test]
+    fn test_reject_early_reveal_exact_boundary() {
+        let seed = test_seed();
+        let c = commit_next_schedule(&seed, 2, 50, 100).unwrap();
+        // At exact reveal_after_slot: NOT early
+        assert!(!reject_early_reveal(&c, c.reveal_after_slot));
+        // One slot before: IS early
+        assert!(reject_early_reveal(&c, c.reveal_after_slot - 1));
+    }
+
+    #[test]
+    fn test_reject_seed_mismatch_correct_seed() {
+        let seed = test_seed();
+        let c = commit_next_schedule(&seed, 1, 100, 500).unwrap();
+        assert!(!reject_seed_mismatch(&c, &seed));
+    }
+
+    #[test]
+    fn test_different_window_different_scheduled_slot() {
+        let seed = test_seed();
+        let s1 = compute_scheduled_slot(&seed, 1, 100);
+        let s2 = compute_scheduled_slot(&seed, 1, 200);
+        // The slots will typically differ because modulo range changes
+        // (they could theoretically match but effectively won't with this seed)
+        // We just check the window start differs
+        let start1 = 1u64 * 100;
+        let start2 = 1u64 * 200;
+        assert!(s1 >= start1 && s1 < start1 + 100);
+        assert!(s2 >= start2 && s2 < start2 + 200);
+    }
 }

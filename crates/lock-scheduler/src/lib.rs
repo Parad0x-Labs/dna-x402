@@ -178,4 +178,118 @@ mod tests {
             assert_eq!(batch.len(), 1);
         }
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_write_set_conflicts_with_itself() {
+        let ws = WriteSet::new(vec![key(5), key(10)]);
+        assert!(ws.conflicts_with(&ws));
+    }
+
+    #[test]
+    fn test_write_set_no_conflict_disjoint() {
+        let a = WriteSet::new(vec![key(1), key(2)]);
+        let b = WriteSet::new(vec![key(3), key(4)]);
+        assert!(!a.conflicts_with(&b));
+    }
+
+    #[test]
+    fn test_conflicts_function_symmetric() {
+        let a = WriteSet::new(vec![key(7)]);
+        let b = WriteSet::new(vec![key(7)]);
+        assert!(conflicts(&a, &b));
+        assert!(conflicts(&b, &a));
+    }
+
+    #[test]
+    fn test_single_action_one_batch() {
+        let a = Action {
+            id: 99,
+            write_set: WriteSet::new(vec![key(1)]),
+            shard: 1,
+        };
+        let batches = schedule(vec![a]);
+        assert_eq!(batches.len(), 1);
+        assert_eq!(batches[0].len(), 1);
+        assert_eq!(batches[0][0].id, 99);
+    }
+
+    #[test]
+    fn test_shard_for_max_byte() {
+        let k = key(255);
+        assert_eq!(shard_for(&k), 255);
+    }
+
+    #[test]
+    fn test_shard_for_zero_byte() {
+        let k = [0u8; 32];
+        assert_eq!(shard_for(&k), 0);
+    }
+
+    #[test]
+    fn test_total_actions_preserved() {
+        let actions: Vec<Action> = (0..6u64)
+            .map(|i| Action {
+                id: i,
+                write_set: WriteSet::new(vec![key(i as u8)]),
+                shard: i as u8,
+            })
+            .collect();
+        let batches = schedule(actions);
+        let total: usize = batches.iter().map(|b| b.len()).sum();
+        assert_eq!(total, 6);
+    }
+
+    #[test]
+    fn test_chain_conflict_scheduling() {
+        // A=[1,2], B=[2,3], C=[3,4] — A conflicts B, B conflicts C, A not C
+        let a = Action {
+            id: 1,
+            write_set: WriteSet::new(vec![key(1), key(2)]),
+            shard: 1,
+        };
+        let b = Action {
+            id: 2,
+            write_set: WriteSet::new(vec![key(2), key(3)]),
+            shard: 2,
+        };
+        let c = Action {
+            id: 3,
+            write_set: WriteSet::new(vec![key(3), key(4)]),
+            shard: 3,
+        };
+        let batches = schedule(vec![a, b, c]);
+        let total: usize = batches.iter().map(|b| b.len()).sum();
+        assert_eq!(total, 3);
+        assert_eq!(batches.len(), 2);
+    }
+
+    #[test]
+    fn test_action_ids_preserved() {
+        let a = Action {
+            id: 111,
+            write_set: WriteSet::new(vec![key(1)]),
+            shard: 1,
+        };
+        let b = Action {
+            id: 222,
+            write_set: WriteSet::new(vec![key(2)]),
+            shard: 2,
+        };
+        let batches = schedule(vec![a, b]);
+        let all_ids: Vec<u64> = batches
+            .iter()
+            .flat_map(|b| b.iter().map(|a| a.id))
+            .collect();
+        assert!(all_ids.contains(&111));
+        assert!(all_ids.contains(&222));
+    }
+
+    #[test]
+    fn test_empty_write_sets_no_conflict() {
+        let a = WriteSet::new(vec![]);
+        let b = WriteSet::new(vec![]);
+        assert!(!conflicts(&a, &b));
+    }
 }

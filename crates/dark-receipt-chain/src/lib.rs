@@ -218,4 +218,82 @@ mod tests {
         assert_eq!(v["receipt_count"], 1);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_chain_id_nonzero() {
+        let chain = new_chain(&issuer(), &nonce()).unwrap();
+        assert_ne!(chain.chain_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_head_equals_chain_id_initially() {
+        let chain = new_chain(&issuer(), &nonce()).unwrap();
+        assert_eq!(chain.head, chain.chain_id);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let chain = new_chain(&issuer(), &nonce()).unwrap();
+        assert!(!chain.mainnet_ready);
+    }
+
+    #[test]
+    fn test_receipt_mainnet_ready_false() {
+        let mut chain = new_chain(&issuer(), &nonce()).unwrap();
+        let receipt = append_receipt(&mut chain, b"payload").unwrap();
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_issuer_secret_rejected() {
+        let zero = [0u8; 32];
+        let err = new_chain(&zero, &nonce()).unwrap_err();
+        assert_eq!(err, ChainError::ZeroIssuerSecret);
+    }
+
+    #[test]
+    fn test_receipt_chain_id_matches() {
+        let mut chain = new_chain(&issuer(), &nonce()).unwrap();
+        let receipt = append_receipt(&mut chain, b"payload").unwrap();
+        assert_eq!(receipt.chain_id, chain.chain_id);
+    }
+
+    #[test]
+    fn test_receipt_prev_hash_is_initial_head() {
+        let mut chain = new_chain(&issuer(), &nonce()).unwrap();
+        let initial_head = chain.head;
+        let r0 = append_receipt(&mut chain, b"first").unwrap();
+        assert_eq!(r0.prev_hash, initial_head);
+    }
+
+    #[test]
+    fn test_verify_fails_wrong_chain() {
+        let mut chain1 = new_chain(&issuer(), &nonce()).unwrap();
+        let mut n2 = nonce();
+        n2[0] = 0x99;
+        let chain2 = new_chain(&issuer(), &n2).unwrap();
+        let receipt = append_receipt(&mut chain1, b"payload").unwrap();
+        // Receipt chain_id != chain2.chain_id → verify returns false
+        assert!(!verify_receipt(&chain2, &receipt, b"payload"));
+    }
+
+    #[test]
+    fn test_different_nonce_different_chain_id() {
+        let chain1 = new_chain(&issuer(), &nonce()).unwrap();
+        let mut n2 = nonce();
+        n2[1] = 0xFF;
+        let chain2 = new_chain(&issuer(), &n2).unwrap();
+        assert_ne!(chain1.chain_id, chain2.chain_id);
+    }
+
+    #[test]
+    fn test_different_issuer_different_chain_id() {
+        let chain1 = new_chain(&issuer(), &nonce()).unwrap();
+        let mut iss2 = issuer();
+        iss2[1] = 0xFF;
+        let chain2 = new_chain(&iss2, &nonce()).unwrap();
+        assert_ne!(chain1.chain_id, chain2.chain_id);
+    }
 }

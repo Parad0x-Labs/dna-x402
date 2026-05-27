@@ -284,4 +284,79 @@ mod tests {
         let result = best_job(&market);
         assert!(matches!(result, Err(ChaffError::EmptyMarket)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_job_hash_nonzero() {
+        let job = make_job(ChaffJobKind::CloseExpiredAccount);
+        assert_ne!(job.job_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_all_base_rewards_positive() {
+        let kinds = [
+            ChaffJobKind::CloseExpiredAccount,
+            ChaffJobKind::RefreshFeeHeatmap,
+            ChaffJobKind::RotateEpoch,
+            ChaffJobKind::CompactReceiptRoot,
+            ChaffJobKind::UpdatePuzzle,
+            ChaffJobKind::CleanSession,
+        ];
+        for kind in &kinds {
+            assert!(kind.base_reward() > 0, "{:?} has zero reward", kind);
+        }
+    }
+
+    #[test]
+    fn test_all_cover_scores_in_range() {
+        let kinds = [
+            ChaffJobKind::CloseExpiredAccount,
+            ChaffJobKind::RefreshFeeHeatmap,
+            ChaffJobKind::RotateEpoch,
+            ChaffJobKind::CompactReceiptRoot,
+            ChaffJobKind::UpdatePuzzle,
+            ChaffJobKind::CleanSession,
+        ];
+        for kind in &kinds {
+            let score = kind.cover_score();
+            assert!(
+                score >= 0.0 && score <= 1.0,
+                "{:?} score out of range: {}",
+                kind,
+                score
+            );
+        }
+    }
+
+    #[test]
+    fn test_close_expired_account_reward() {
+        assert_eq!(ChaffJobKind::CloseExpiredAccount.base_reward(), 10_000);
+    }
+
+    #[test]
+    fn test_valid_job_passes_validation() {
+        let job = make_job(ChaffJobKind::CleanSession);
+        assert!(job_is_valid(&job).is_ok());
+    }
+
+    #[test]
+    fn test_rotate_epoch_highest_cover_score() {
+        // RotateEpoch has cover_score = 0.9, the highest
+        let rotate_score = ChaffJobKind::RotateEpoch.cover_score();
+        let all_others = [
+            ChaffJobKind::CloseExpiredAccount,
+            ChaffJobKind::RefreshFeeHeatmap,
+            ChaffJobKind::CompactReceiptRoot,
+            ChaffJobKind::UpdatePuzzle,
+            ChaffJobKind::CleanSession,
+        ];
+        for kind in &all_others {
+            assert!(
+                rotate_score >= kind.cover_score(),
+                "{:?} beats RotateEpoch",
+                kind
+            );
+        }
+    }
 }

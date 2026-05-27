@@ -226,4 +226,85 @@ mod tests {
         let r2 = derive_randomness(&secret, 101);
         assert_ne!(r1, r2, "different slot must produce different randomness");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_derive_randomness_nonzero() {
+        let r = derive_randomness(&test_secret(), test_slot());
+        assert_ne!(r, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_derive_randomness_deterministic() {
+        let r1 = derive_randomness(&test_secret(), test_slot());
+        let r2 = derive_randomness(&test_secret(), test_slot());
+        assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn test_derive_randomness_secret_sensitive() {
+        let s1 = [0x01u8; 32];
+        let s2 = [0x02u8; 32];
+        assert_ne!(derive_randomness(&s1, 42), derive_randomness(&s2, 42));
+    }
+
+    #[test]
+    fn test_build_withdraw_instruction_data_length() {
+        let data = build_withdraw_instruction_data(&[0u8; 32], &[0u8; 32], 0, &[0u8; 32]);
+        assert_eq!(data.len(), 104);
+    }
+
+    #[test]
+    fn test_build_withdraw_instruction_nullifier_at_start() {
+        let nullifier = [0x11u8; 32];
+        let data = build_withdraw_instruction_data(&nullifier, &[0u8; 32], 0, &[0u8; 32]);
+        assert_eq!(&data[0..32], &nullifier);
+    }
+
+    #[test]
+    fn test_parse_recover_nullifier() {
+        let nullifier = [0xAAu8; 32];
+        let data = build_withdraw_instruction_data(&nullifier, &[0xBBu8; 32], 999, &[0xCCu8; 32]);
+        let (p_null, _, _, _) = parse_withdraw_instruction_data(&data);
+        assert_eq!(p_null, nullifier);
+    }
+
+    #[test]
+    fn test_parse_recover_amount() {
+        let amount = 42_000_000u64;
+        let data = build_withdraw_instruction_data(&[0u8; 32], &[0u8; 32], amount, &[0u8; 32]);
+        let (_, _, p_amt, _) = parse_withdraw_instruction_data(&data);
+        assert_eq!(p_amt, amount);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false_in_json() {
+        let note = create_note_from_secret(&test_secret(), 100_000, &test_recipient(), test_slot());
+        let (_, _, json) =
+            generate_withdrawal_note_data(&note, &test_secret(), 100_000, &test_root()).unwrap();
+        assert_eq!(json["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_note_commitment_nonzero() {
+        let note = create_note_from_secret(&test_secret(), 100_000, &test_recipient(), test_slot());
+        assert_ne!(note.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_different_slot_different_commitment() {
+        let note1 = create_note_from_secret(&test_secret(), 100_000, &test_recipient(), 100);
+        let note2 = create_note_from_secret(&test_secret(), 100_000, &test_recipient(), 101);
+        assert_ne!(note1.commitment, note2.commitment);
+    }
+
+    #[test]
+    fn test_different_value_different_commitment() {
+        let note1 =
+            create_note_from_secret(&test_secret(), 100_000, &test_recipient(), test_slot());
+        let note2 =
+            create_note_from_secret(&test_secret(), 200_000, &test_recipient(), test_slot());
+        assert_ne!(note1.commitment, note2.commitment);
+    }
 }

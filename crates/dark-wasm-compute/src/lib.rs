@@ -317,4 +317,82 @@ mod tests {
             "raw owner bytes found in evidence JSON"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_job_id_nonzero() {
+        let spec = make_spec();
+        assert_ne!(spec.job_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_proof_hash_nonzero() {
+        let spec = make_spec();
+        let result = simulate_execution(&spec).unwrap();
+        let proof = build_compute_proof(&spec, &result).unwrap();
+        assert_ne!(proof.proof_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_output_hash_nonzero() {
+        let spec = make_spec();
+        let result = simulate_execution(&spec).unwrap();
+        assert_ne!(result.output_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_output_commitment_nonzero() {
+        let spec = make_spec();
+        let result = simulate_execution(&spec).unwrap();
+        assert_ne!(result.output_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_simulate_succeeded_true() {
+        let spec = make_spec();
+        let result = simulate_execution(&spec).unwrap();
+        assert!(result.succeeded);
+    }
+
+    #[test]
+    fn test_invalid_job_spec_rejected() {
+        let spec = create_job_spec(b"wasm", b"input", b"owner", 0, &[0x01u8; 32]);
+        let err = simulate_execution(&spec).unwrap_err();
+        assert_eq!(err, ComputeError::InvalidJobSpec);
+    }
+
+    #[test]
+    fn test_job_id_mismatch_fails_build() {
+        let spec1 = make_spec();
+        let spec2 = create_job_spec(b"other wasm", b"other input", b"owner", 5000, &[0x99u8; 32]);
+        let result1 = simulate_execution(&spec1).unwrap();
+        // result1.job_id == spec1.job_id != spec2.job_id
+        let err = build_compute_proof(&spec2, &result1).unwrap_err();
+        assert_eq!(err, ComputeError::JobIdMismatch);
+    }
+
+    #[test]
+    fn test_input_commitment_input_sensitive() {
+        let nonce = [0x42u8; 32];
+        let c1 = commit_input(b"input_A", &nonce);
+        let c2 = commit_input(b"input_B", &nonce);
+        assert_ne!(c1, c2);
+    }
+
+    #[test]
+    fn test_different_wasm_different_output_hash() {
+        let spec1 = create_job_spec(b"wasm_v1", b"input", b"owner", 5000, &[0x01u8; 32]);
+        let spec2 = create_job_spec(b"wasm_v2", b"input", b"owner", 5000, &[0x01u8; 32]);
+        let r1 = simulate_execution(&spec1).unwrap();
+        let r2 = simulate_execution(&spec2).unwrap();
+        assert_ne!(r1.output_hash, r2.output_hash);
+    }
+
+    #[test]
+    fn test_commit_input_nonzero() {
+        let nonce = [0x42u8; 32];
+        let c = commit_input(b"some bytes", &nonce);
+        assert_ne!(c, [0u8; 32]);
+    }
 }

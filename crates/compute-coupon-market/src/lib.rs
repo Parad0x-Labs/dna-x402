@@ -261,4 +261,120 @@ mod tests {
         );
         assert_eq!(result, Err(CouponError::WrongWritableClass));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let spec = base_spec();
+        assert_ne!(spec.commitment(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let spec = base_spec();
+        assert_eq!(spec.commitment(), spec.commitment());
+    }
+
+    #[test]
+    fn test_commitment_payer_hash_sensitive() {
+        let mut s1 = base_spec();
+        let mut s2 = base_spec();
+        s1.payer_hash = make_bytes(50);
+        s2.payer_hash = make_bytes(60);
+        assert_ne!(s1.commitment(), s2.commitment());
+    }
+
+    #[test]
+    fn test_commitment_coupon_id_sensitive() {
+        let mut s1 = base_spec();
+        let mut s2 = base_spec();
+        s1.coupon_id = make_bytes(11);
+        s2.coupon_id = make_bytes(12);
+        assert_ne!(s1.commitment(), s2.commitment());
+    }
+
+    #[test]
+    fn test_cu_price_at_max_ok() {
+        // actual_cu_price == max_cu_price → passes (check is >)
+        let mut market = CouponMarket::new();
+        let spec = base_spec(); // max=1_000
+        let result = market.redeem(
+            &spec,
+            500,
+            1_000,
+            &RouteClass::Direct,
+            &make_bytes(20),
+            &make_bytes(10),
+            500,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_priority_fee_at_max_ok() {
+        // actual_priority_fee == max_total_priority_fee_lamports → passes (check is >)
+        let mut market = CouponMarket::new();
+        let spec = base_spec(); // max=5_000
+        let result = market.redeem(
+            &spec,
+            500,
+            500,
+            &RouteClass::Direct,
+            &make_bytes(20),
+            &make_bytes(10),
+            5_000,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_total_fee_exceeded() {
+        let mut market = CouponMarket::new();
+        let spec = base_spec(); // max_total_priority_fee=5_000
+        let result = market.redeem(
+            &spec,
+            500,
+            500,
+            &RouteClass::Direct,
+            &make_bytes(20),
+            &make_bytes(10),
+            5_001,
+        );
+        assert_eq!(result, Err(CouponError::TotalFeeExceeded));
+    }
+
+    #[test]
+    fn test_custom_route_class_redeem_ok() {
+        let mut spec = base_spec();
+        spec.route_class = RouteClass::Custom(99);
+        let mut market = CouponMarket::new();
+        let result = market.redeem(
+            &spec,
+            500,
+            500,
+            &RouteClass::Custom(99),
+            &make_bytes(20),
+            &make_bytes(10),
+            500,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_one_slot_before_expiry_ok() {
+        // current_slot < expires_at_slot → not expired
+        let mut market = CouponMarket::new();
+        let spec = base_spec(); // expires_at=1000
+        let result = market.redeem(
+            &spec,
+            999,
+            500,
+            &RouteClass::Direct,
+            &make_bytes(20),
+            &make_bytes(10),
+            500,
+        );
+        assert!(result.is_ok());
+    }
 }

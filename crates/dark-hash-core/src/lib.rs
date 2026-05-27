@@ -341,4 +341,101 @@ mod tests {
             "Adding an additional input must change the hash output"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_sha256_commitment_hash_nonzero() {
+        let out = sha256_domain_hash(DARK_NULL_COMMITMENT, &[&[0xABu8; 32]]);
+        assert_ne!(out, [0u8; 32]);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_sha256_nullifier_hash_nonzero() {
+        let out = sha256_domain_hash(DARK_NULL_NULLIFIER, &[&[0xCDu8; 32]]);
+        assert_ne!(out, [0u8; 32]);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_sha256_input_order_sensitive() {
+        let a = [0x01u8; 16];
+        let b = [0x02u8; 16];
+        let h1 = sha256_domain_hash(DARK_NULL_COMMITMENT, &[a.as_ref(), b.as_ref()]);
+        let h2 = sha256_domain_hash(DARK_NULL_COMMITMENT, &[b.as_ref(), a.as_ref()]);
+        assert_ne!(h1, h2, "swapping input order must change hash");
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_sha256_single_input_nonzero() {
+        let out = sha256_domain_hash(DARK_NULL_RECEIPT, &[b"single-input"]);
+        assert_ne!(out, [0u8; 32]);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_commitment_differs_from_receipt_hash() {
+        let data = [0xAAu8; 32];
+        let h1 = sha256_domain_hash(DARK_NULL_COMMITMENT, &[data.as_ref()]);
+        let h2 = sha256_domain_hash(DARK_NULL_RECEIPT, &[data.as_ref()]);
+        assert_ne!(h1, h2);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_session_differs_from_macaroon_hash() {
+        let data = [0xBBu8; 32];
+        let h1 = sha256_domain_hash(DARK_NULL_SESSION, &[data.as_ref()]);
+        let h2 = sha256_domain_hash(DARK_NULL_MACAROON, &[data.as_ref()]);
+        assert_ne!(h1, h2);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_model_output_differs_from_puzzle_hash() {
+        let data = [0xCCu8; 32];
+        let h1 = sha256_domain_hash(DARK_NULL_MODEL_OUTPUT, &[data.as_ref()]);
+        let h2 = sha256_domain_hash(DARK_NULL_PUZZLE, &[data.as_ref()]);
+        assert_ne!(h1, h2);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_x402_intent_differs_from_commitment_hash() {
+        let data = [0xDDu8; 32];
+        let h1 = sha256_domain_hash(DARK_NULL_X402_INTENT, &[data.as_ref()]);
+        let h2 = sha256_domain_hash(DARK_NULL_COMMITMENT, &[data.as_ref()]);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_domain_constants_all_nonempty() {
+        assert!(!DARK_NULL_COMMITMENT.is_empty());
+        assert!(!DARK_NULL_NULLIFIER.is_empty());
+        assert!(!DARK_NULL_RECEIPT.is_empty());
+        assert!(!DARK_NULL_X402_INTENT.is_empty());
+        assert!(!DARK_NULL_MACAROON.is_empty());
+        assert!(!DARK_NULL_SESSION.is_empty());
+        assert!(!DARK_NULL_MODEL_OUTPUT.is_empty());
+        assert!(!DARK_NULL_PUZZLE.is_empty());
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_sha256_no_inputs_nonzero() {
+        // domain alone (zero extra inputs) still produces nonzero hash
+        let out = sha256_domain_hash(DARK_NULL_COMMITMENT, &[]);
+        assert_ne!(out, [0u8; 32]);
+    }
+
+    #[cfg(feature = "sha256-fallback")]
+    #[test]
+    fn test_sha256_different_data_different_hash() {
+        let h1 = sha256_domain_hash(DARK_NULL_RECEIPT, &[&[0x11u8; 32]]);
+        let h2 = sha256_domain_hash(DARK_NULL_RECEIPT, &[&[0x22u8; 32]]);
+        assert_ne!(h1, h2);
+    }
 }

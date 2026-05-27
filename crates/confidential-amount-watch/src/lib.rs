@@ -149,4 +149,75 @@ mod tests {
             "matrix should have at least 3 entries"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_extension_name_is_correct() {
+        let r = check_confidential_transfer_readiness();
+        assert_eq!(r.extension_name, "ConfidentialTransfer");
+    }
+
+    #[test]
+    fn test_compatible_with_metadata() {
+        let r = check_confidential_transfer_readiness();
+        assert!(r.compatible_with.contains(&"Metadata".to_string()));
+    }
+
+    #[test]
+    fn test_incompatible_with_transfer_hook() {
+        let r = check_confidential_transfer_readiness();
+        assert!(r.incompatible_with.contains(&"TransferHook".to_string()));
+    }
+
+    #[test]
+    fn test_incompatible_with_transfer_fee() {
+        let r = check_confidential_transfer_readiness();
+        assert!(r.incompatible_with.contains(&"TransferFee".to_string()));
+    }
+
+    #[test]
+    fn test_transfer_hook_fully_available() {
+        let matrix = build_compatibility_matrix();
+        let hook = matrix
+            .entries
+            .iter()
+            .find(|e| e.extension_name == "TransferHook")
+            .expect("TransferHook should be in matrix");
+        assert_eq!(hook.status, ConfidentialTransferStatus::FullyAvailable);
+    }
+
+    #[test]
+    fn test_empty_claim_not_blocked() {
+        let guard = guard_live_claim("");
+        assert!(!guard.blocked);
+    }
+
+    #[test]
+    fn test_case_insensitive_live_check() {
+        let guard = guard_live_claim("LIVE on mainnet");
+        assert!(guard.blocked, "uppercase 'LIVE' should also be blocked");
+    }
+
+    #[test]
+    fn test_matrix_entries_all_named() {
+        let matrix = build_compatibility_matrix();
+        for entry in &matrix.entries {
+            assert!(!entry.extension_name.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_guard_reason_empty_when_not_blocked() {
+        let guard = guard_live_claim("Testing on devnet today");
+        assert!(!guard.blocked);
+        assert!(guard.reason.is_empty());
+    }
+
+    #[test]
+    fn test_guard_stores_claim_verbatim() {
+        let claim = "Using ConfidentialTransfer on staging";
+        let guard = guard_live_claim(claim);
+        assert_eq!(guard.claim, claim);
+    }
 }

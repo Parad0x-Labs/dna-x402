@@ -226,4 +226,73 @@ mod tests {
              (string-prefix domain) must produce different hashes for the same inputs"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_secret_sensitive() {
+        let s1 = [0xAAu8; 32];
+        let s2 = [0xBBu8; 32];
+        assert_ne!(commitment_hash(&s1, 1000), commitment_hash(&s2, 1000));
+    }
+
+    #[test]
+    fn test_nullifier_hash_nonzero() {
+        let secret = [1u8; 32];
+        let root = [2u8; 32];
+        assert_ne!(nullifier_hash(&secret, &root), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_merkle_node_nonzero() {
+        let l = [0x01u8; 32];
+        let r = [0x02u8; 32];
+        assert_ne!(merkle_node(&l, &r), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let leaf = ReceiptLeaf {
+            receipt_hash: [1u8; 32],
+            service_scope_hash: [2u8; 32],
+            settlement_tx_hash: [3u8; 32],
+            previous_receipt_hash: [4u8; 32],
+        };
+        assert_ne!(receipt_hash(&leaf), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_v2_commitment_nonzero() {
+        let secret = [0x11u8; 32];
+        assert_ne!(commitment_hash_v2(&secret, 42), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_v2_nullifier_nonzero() {
+        let secret = [0x22u8; 32];
+        let root = [0x33u8; 32];
+        assert_ne!(nullifier_hash_v2(&secret, &root), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_v2_nullifier_root_sensitive() {
+        let secret = [0x44u8; 32];
+        let n1 = nullifier_hash_v2(&secret, &[0x01u8; 32]);
+        let n2 = nullifier_hash_v2(&secret, &[0x02u8; 32]);
+        assert_ne!(n1, n2);
+    }
+
+    #[test]
+    fn test_domain_hash_all_domains_nonzero() {
+        let data: &[u8] = b"test";
+        for domain in [
+            DOMAIN_COMMITMENT,
+            DOMAIN_NULLIFIER,
+            DOMAIN_RECEIPT,
+            DOMAIN_X402_INTENT,
+            DOMAIN_MERKLE_NODE,
+        ] {
+            assert_ne!(domain_hash(domain, &[data]), [0u8; 32]);
+        }
+    }
 }

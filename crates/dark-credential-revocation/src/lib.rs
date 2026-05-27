@@ -174,4 +174,95 @@ mod tests {
         let entry2 = compute_revocation_entry(&cred2, 100);
         assert_ne!(entry1, entry2);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_is_revoked_returns_false_before_revoke() {
+        let reg = new_registry(&[0x10u8; 32]).unwrap();
+        assert!(!is_revoked(&reg, &[0xAAu8; 32]));
+    }
+
+    #[test]
+    fn test_zero_registry_secret_rejected() {
+        let err = new_registry(&[0u8; 32]).unwrap_err();
+        assert_eq!(err, RevocationError::ZeroRegistrySecret);
+    }
+
+    #[test]
+    fn test_revoke_multiple_creds_all_detected() {
+        let mut reg = new_registry(&[0x05u8; 32]).unwrap();
+        let c1 = [0x11u8; 32];
+        let c2 = [0x22u8; 32];
+        let c3 = [0x33u8; 32];
+        revoke_credential(&mut reg, c1, 1).unwrap();
+        revoke_credential(&mut reg, c2, 2).unwrap();
+        revoke_credential(&mut reg, c3, 3).unwrap();
+        assert!(is_revoked(&reg, &c1));
+        assert!(is_revoked(&reg, &c2));
+        assert!(is_revoked(&reg, &c3));
+    }
+
+    #[test]
+    fn test_count_increments_on_each_revocation() {
+        let mut reg = new_registry(&[0x06u8; 32]).unwrap();
+        assert_eq!(reg.revocation_count, 0);
+        revoke_credential(&mut reg, [0xA1u8; 32], 1).unwrap();
+        assert_eq!(reg.revocation_count, 1);
+        revoke_credential(&mut reg, [0xA2u8; 32], 2).unwrap();
+        assert_eq!(reg.revocation_count, 2);
+        revoke_credential(&mut reg, [0xA3u8; 32], 3).unwrap();
+        assert_eq!(reg.revocation_count, 3);
+    }
+
+    #[test]
+    fn test_same_cred_different_epoch_different_entry() {
+        let cred = [0x55u8; 32];
+        let e1 = compute_revocation_entry(&cred, 100);
+        let e2 = compute_revocation_entry(&cred, 200);
+        assert_ne!(e1, e2);
+    }
+
+    #[test]
+    fn test_root_changes_each_revocation() {
+        let mut reg = new_registry(&[0x07u8; 32]).unwrap();
+        let r0 = reg.revocation_root;
+        revoke_credential(&mut reg, [0xB1u8; 32], 1).unwrap();
+        let r1 = reg.revocation_root;
+        revoke_credential(&mut reg, [0xB2u8; 32], 2).unwrap();
+        let r2 = reg.revocation_root;
+        assert_ne!(r0, r1);
+        assert_ne!(r1, r2);
+    }
+
+    #[test]
+    fn test_registry_id_deterministic() {
+        let secret = [0x08u8; 32];
+        let r1 = new_registry(&secret).unwrap();
+        let r2 = new_registry(&secret).unwrap();
+        assert_eq!(r1.registry_id, r2.registry_id);
+    }
+
+    #[test]
+    fn test_registry_id_sensitive_to_secret() {
+        let r1 = new_registry(&[0x09u8; 32]).unwrap();
+        let r2 = new_registry(&[0x0Au8; 32]).unwrap();
+        assert_ne!(r1.registry_id, r2.registry_id);
+    }
+
+    #[test]
+    fn test_revoke_does_not_affect_unrevoked_creds() {
+        let mut reg = new_registry(&[0x0Bu8; 32]).unwrap();
+        let revoked = [0xC1u8; 32];
+        let untouched = [0xC2u8; 32];
+        revoke_credential(&mut reg, revoked, 1).unwrap();
+        assert!(is_revoked(&reg, &revoked));
+        assert!(!is_revoked(&reg, &untouched));
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let reg = new_registry(&[0x0Cu8; 32]).unwrap();
+        assert!(!reg.mainnet_ready);
+    }
 }

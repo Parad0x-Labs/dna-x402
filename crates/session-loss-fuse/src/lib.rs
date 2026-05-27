@@ -233,4 +233,103 @@ mod tests {
         assert_eq!(h1, h2);
         assert_ne!(h1, [0u8; 32]);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_fuse_hash_nonzero() {
+        let fuse = make_fuse();
+        let state = FuseState::new(fuse, 0);
+        assert_ne!(state.fuse_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_fuse_hash_session_sensitive() {
+        let mut fuse_a = make_fuse();
+        let mut fuse_b = make_fuse();
+        fuse_a.session_id = [0x01u8; 32];
+        fuse_b.session_id = [0x02u8; 32];
+        let state_a = FuseState::new(fuse_a, 0);
+        let state_b = FuseState::new(fuse_b, 0);
+        assert_ne!(state_a.fuse_hash(), state_b.fuse_hash());
+    }
+
+    #[test]
+    fn test_window_resets_after_expiry() {
+        let fuse = make_fuse(); // max_spends_per_window=5, window_slots=100
+        let mut state = FuseState::new(fuse, 0);
+        // Fill the window (5 spends)
+        for i in 0..5u64 {
+            assert!(state.record_spend(1, true, i).is_ok());
+        }
+        // After window expiry (slot 100), window resets and another spend is allowed
+        assert!(
+            state.record_spend(1, true, 100).is_ok(),
+            "spend after window expiry should succeed after reset"
+        );
+    }
+
+    #[test]
+    fn test_drawdown_at_exact_limit_ok() {
+        // max_drawdown_bps=2000 of 10_000_000 → max_loss = 2_000_000
+        // spending exactly 2_000_000 → loss == max_loss → 2_000_000 > 2_000_000 is false → Ok
+        let fuse = make_fuse();
+        let mut state = FuseState::new(fuse, 0);
+        let result = state.record_spend(2_000_000, true, 1);
+        assert!(
+            result.is_ok(),
+            "spending exactly at drawdown limit must be ok"
+        );
+        assert!(!state.tripped);
+    }
+
+    #[test]
+    fn test_failed_spend_before_limit_ok() {
+        // max_failed_spends=3 — two failures should not trip
+        let fuse = make_fuse();
+        let mut state = FuseState::new(fuse, 0);
+        assert!(state.record_spend(1, false, 1).is_ok());
+        assert!(state.record_spend(1, false, 2).is_ok());
+        assert!(
+            !state.tripped,
+            "two failures below limit must not trip fuse"
+        );
+    }
+
+    #[test]
+    fn test_rearm_resets_counts() {
+        let fuse = make_fuse();
+        let mut state = FuseState::new(fuse, 0);
+        // Trip it via drawdown
+        let _ = state.record_spend(2_000_001, true, 10);
+        // Rearm after cooloff
+        let _ = state.user_rearm(60);
+        assert_eq!(state.failed_spend_count, 0);
+        assert_eq!(state.window_spend_count, 0);
+    }
+
+    #[test]
+    fn test_state_starts_armed() {
+        let fuse = make_fuse();
+        let state = FuseState::new(fuse, 0);
+        assert!(state.armed);
+        assert!(!state.tripped);
+    }
+
+    #[test]
+    fn test_tripped_at_slot_recorded() {
+        let fuse = make_fuse();
+        let mut state = FuseState::new(fuse, 0);
+        let _ = state.record_spend(2_000_001, true, 42);
+        assert_eq!(state.tripped_at_slot, Some(42));
+    }
+
+    #[test]
+    fn test_cooloff_one_slot_early_fails() {
+        // tripped at slot 10, cooloff=50 → must rearm at >= 60; slot 59 → CooloffActive
+        let fuse = make_fuse();
+        let mut state = FuseState::new(fuse, 0);
+        let _ = state.record_spend(2_000_001, true, 10);
+        assert_eq!(state.user_rearm(59), Err(FuseError::CooloffActive));
+    }
 }

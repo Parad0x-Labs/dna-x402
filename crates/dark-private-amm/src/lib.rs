@@ -378,4 +378,73 @@ mod tests {
             pos_hex
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_pool_mainnet_ready_false() {
+        let pool = new_pool();
+        assert!(!pool.mainnet_ready);
+    }
+
+    #[test]
+    fn test_position_mainnet_ready_false() {
+        let pos = create_position(&make_secret(0x01), 100, 100, &make_nonce(0x01)).unwrap();
+        assert!(!pos.mainnet_ready);
+    }
+
+    #[test]
+    fn test_swap_mainnet_ready_false() {
+        let mut pool = new_pool();
+        let proof = execute_swap(&mut pool, 1, SwapDirection::AToB).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_lp_secret_zero_rejected() {
+        let err = create_position(&[0u8; 32], 100, 100, &make_nonce(0x01)).unwrap_err();
+        assert_eq!(err, AmmError::LpSecretZero);
+    }
+
+    #[test]
+    fn test_zero_amount_rejected() {
+        let err = create_position(&make_secret(0x01), 0, 0, &make_nonce(0x01)).unwrap_err();
+        assert_eq!(err, AmmError::ZeroAmount);
+    }
+
+    #[test]
+    fn test_position_commitment_nonzero() {
+        let pos = create_position(&make_secret(0x02), 100, 200, &make_nonce(0x02)).unwrap();
+        assert_ne!(pos.position_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_lp_hash_nonzero() {
+        let pos = create_position(&make_secret(0x03), 100, 100, &make_nonce(0x01)).unwrap();
+        assert_ne!(pos.lp_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_swap_hash_nonzero() {
+        let mut pool = new_pool();
+        let proof = execute_swap(&mut pool, 500, SwapDirection::BToA).unwrap();
+        assert_ne!(proof.swap_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_public_record_has_correct_fields() {
+        let pool = new_pool();
+        let v: serde_json::Value = serde_json::from_str(&pool_public_record(&pool)).unwrap();
+        assert!(v["pool_root"].is_string());
+        assert_eq!(v["position_count"], 0u32);
+        assert_eq!(v["swap_count"], 0u32);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_swap_direction_atob() {
+        let mut pool = new_pool();
+        let proof = execute_swap(&mut pool, 100, SwapDirection::AToB).unwrap();
+        assert_eq!(proof.direction, SwapDirection::AToB);
+    }
 }

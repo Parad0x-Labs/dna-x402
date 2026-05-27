@@ -649,4 +649,92 @@ mod tests {
             "changing any step hash must change final_hash"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_blockers_list_nonempty() {
+        let run = run_demo();
+        assert!(!run.blockers.is_empty(), "blockers list must not be empty");
+    }
+
+    #[test]
+    fn test_step5_caveat_status_ok() {
+        let run = run_demo();
+        let step5 = run
+            .steps
+            .iter()
+            .find(|s| s.step == 5)
+            .expect("step 5 must exist");
+        assert_eq!(step5.status, "ok", "step 5 (caveat engine) must pass");
+    }
+
+    #[test]
+    fn test_all_step_hashes_nonempty() {
+        let run = run_demo();
+        for step in &run.steps {
+            assert!(
+                !step.hash.is_empty(),
+                "step {} hash must not be empty",
+                step.step
+            );
+        }
+    }
+
+    #[test]
+    fn test_all_step_details_nonempty() {
+        let run = run_demo();
+        for step in &run.steps {
+            assert!(
+                !step.detail.is_empty(),
+                "step {} detail must not be empty",
+                step.step
+            );
+        }
+    }
+
+    #[test]
+    fn test_final_hash_is_64_char_hex() {
+        let run = run_demo();
+        assert_eq!(
+            run.final_hash.len(),
+            64,
+            "final_hash must be 64 hex chars (32 bytes)"
+        );
+        assert!(
+            run.final_hash.chars().all(|c| c.is_ascii_hexdigit()),
+            "final_hash must be lowercase hex"
+        );
+    }
+
+    #[test]
+    fn test_public_summary_nonempty() {
+        let run = run_demo();
+        assert!(
+            !run.public_summary.is_empty(),
+            "public_summary must not be empty"
+        );
+    }
+
+    #[test]
+    fn test_step9_step_index() {
+        let run = run_demo();
+        let step9 = &run.steps[8]; // 0-based index 8 == step 9
+        assert_eq!(step9.step, 9, "steps[8] must have step==9");
+    }
+
+    #[test]
+    fn test_all_step_hashes_are_valid_hex() {
+        let run = run_demo();
+        for step in &run.steps {
+            let decoded = hex_to_bytes(&step.hash);
+            assert!(decoded.is_ok(), "step {} hash must be valid hex", step.step);
+            assert_eq!(
+                decoded.unwrap().len(),
+                32,
+                "step {} hash must decode to 32 bytes",
+                step.step
+            );
+        }
+    }
 }

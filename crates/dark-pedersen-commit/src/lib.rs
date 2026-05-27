@@ -207,4 +207,83 @@ mod tests {
         assert!(record.contains("commitment"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let blind = blinding(5);
+        let c1 = commit(42u64, &blind).unwrap();
+        let c2 = commit(42u64, &blind).unwrap();
+        assert_eq!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let c = commit(1u64, &blinding(1)).unwrap();
+        assert_ne!(c.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_blinding_sensitive() {
+        let c1 = commit(100u64, &blinding(1)).unwrap();
+        let c2 = commit(100u64, &blinding(2)).unwrap();
+        assert_ne!(c1.commitment, c2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_mainnet_ready_false() {
+        let c = commit(1u64, &blinding(3)).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_opened_mainnet_ready_false() {
+        let blind = blinding(4);
+        let c = commit(50u64, &blind).unwrap();
+        let opened = open_commitment(&c, 50, &blind).unwrap();
+        assert!(!opened.mainnet_ready);
+    }
+
+    #[test]
+    fn test_sum_mainnet_ready_false() {
+        let c_a = commit(10u64, &blinding(5)).unwrap();
+        let c_b = commit(20u64, &blinding(6)).unwrap();
+        let sum = add_commitments(&c_a, &c_b);
+        assert!(!sum.mainnet_ready);
+    }
+
+    #[test]
+    fn test_sum_hash_nonzero() {
+        let c_a = commit(10u64, &blinding(7)).unwrap();
+        let c_b = commit(20u64, &blinding(8)).unwrap();
+        let sum = add_commitments(&c_a, &c_b);
+        assert_ne!(sum.sum_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_sum_tampered_fails() {
+        let c_a = commit(10u64, &blinding(9)).unwrap();
+        let c_b = commit(20u64, &blinding(10)).unwrap();
+        let sum = add_commitments(&c_a, &c_b);
+        let c_fake = commit(99u64, &blinding(99)).unwrap();
+        assert!(!verify_sum(&sum, &c_fake, &c_b));
+    }
+
+    #[test]
+    fn test_wrong_value_fails_open() {
+        let blind = blinding(12);
+        let c = commit(100u64, &blind).unwrap();
+        let err = open_commitment(&c, 999u64, &blind).unwrap_err();
+        assert_eq!(err, CommitmentError::OpeningMismatch);
+    }
+
+    #[test]
+    fn test_public_record_has_correct_keys() {
+        let c = commit(1u64, &blinding(13)).unwrap();
+        let record = commitment_public_record(&c);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["commitment"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

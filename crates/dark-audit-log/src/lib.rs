@@ -231,4 +231,93 @@ mod tests {
         assert!(record.contains("entry_count"));
         assert!(record.contains("mainnet_ready"));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let mut log = new_log();
+        let entry = append_entry(&mut log, b"event", 0).unwrap();
+        assert!(!entry.mainnet_ready);
+    }
+
+    #[test]
+    fn test_entry_count_advances() {
+        let mut log = new_log();
+        assert_eq!(log.entry_count, 0);
+        append_entry(&mut log, b"e1", 1).unwrap();
+        assert_eq!(log.entry_count, 1);
+        append_entry(&mut log, b"e2", 2).unwrap();
+        assert_eq!(log.entry_count, 2);
+    }
+
+    #[test]
+    fn test_event_hash_deterministic() {
+        let mut log1 = new_log();
+        let mut log2 = new_log();
+        let e1 = append_entry(&mut log1, b"same-event", 0).unwrap();
+        let e2 = append_entry(&mut log2, b"same-event", 0).unwrap();
+        assert_eq!(e1.event_hash, e2.event_hash);
+    }
+
+    #[test]
+    fn test_event_hash_event_sensitive() {
+        let mut log1 = new_log();
+        let mut log2 = new_log();
+        let e1 = append_entry(&mut log1, b"event-a", 0).unwrap();
+        let e2 = append_entry(&mut log2, b"event-b", 0).unwrap();
+        assert_ne!(e1.event_hash, e2.event_hash);
+    }
+
+    #[test]
+    fn test_entry_hash_index_sensitive() {
+        let mut log = new_log();
+        // Two different entries with the same event content at different indexes
+        let e0 = append_entry(&mut log, b"same-event", 0).unwrap();
+        // Reset to simulate fresh log at different starting index is not possible,
+        // but we can compare e0 at index 0 vs a new log entry at index 1
+        let e1 = append_entry(&mut log, b"same-event", 1).unwrap();
+        assert_ne!(e0.entry_hash, e1.entry_hash);
+    }
+
+    #[test]
+    fn test_empty_log_verify_fails() {
+        let log = new_log();
+        assert_eq!(verify_log(&log), Err(AuditError::LogEmpty));
+    }
+
+    #[test]
+    fn test_single_entry_log_verifies() {
+        let mut log = new_log();
+        append_entry(&mut log, b"only event", 0).unwrap();
+        assert!(verify_log(&log).is_ok());
+    }
+
+    #[test]
+    fn test_head_matches_last_entry() {
+        let mut log = new_log();
+        append_entry(&mut log, b"e1", 1).unwrap();
+        let last = append_entry(&mut log, b"e2", 2).unwrap();
+        assert_eq!(log.head, last.entry_hash);
+    }
+
+    #[test]
+    fn test_public_record_entry_count_correct() {
+        let mut log = new_log();
+        for i in 0..3u8 {
+            append_entry(&mut log, &[i], i as i64).unwrap();
+        }
+        let record = log_public_record(&log);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert_eq!(v["entry_count"], 3u64);
+    }
+
+    #[test]
+    fn test_public_record_head_hex_present() {
+        let mut log = new_log();
+        append_entry(&mut log, b"event", 0).unwrap();
+        let record = log_public_record(&log);
+        let head_hex = hex(&log.head);
+        assert!(record.contains(&head_hex));
+    }
 }

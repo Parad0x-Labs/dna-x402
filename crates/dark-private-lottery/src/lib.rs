@@ -259,4 +259,74 @@ mod tests {
         // organizer_hash must NOT appear
         assert!(v.get("organizer_hash").is_none());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_lottery_id_nonzero() {
+        let lottery = create_lottery(&secret(0x11), 1_000, &nonce(0x01)).unwrap();
+        assert_ne!(lottery.lottery_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_organizer_hash_nonzero() {
+        let lottery = create_lottery(&secret(0x12), 1_000, &nonce(0x01)).unwrap();
+        assert_ne!(lottery.organizer_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_prize_commitment_nonzero() {
+        let lottery = create_lottery(&secret(0x13), 1_000, &nonce(0x01)).unwrap();
+        assert_ne!(lottery.prize_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_false() {
+        let lottery = create_lottery(&secret(0x14), 1_000, &nonce(0x01)).unwrap();
+        assert!(!lottery.mainnet_ready);
+    }
+
+    #[test]
+    fn test_ticket_id_nonzero() {
+        let mut lottery = create_lottery(&secret(0x15), 1_000, &nonce(0x01)).unwrap();
+        let ticket = buy_ticket(&mut lottery, &secret(0x22), &nonce(0x02)).unwrap();
+        assert_ne!(ticket.ticket_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_holder_hash_nonzero() {
+        let mut lottery = create_lottery(&secret(0x16), 1_000, &nonce(0x01)).unwrap();
+        let ticket = buy_ticket(&mut lottery, &secret(0x22), &nonce(0x02)).unwrap();
+        assert_ne!(ticket.holder_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_ticket_mainnet_ready_false() {
+        let mut lottery = create_lottery(&secret(0x17), 1_000, &nonce(0x01)).unwrap();
+        let ticket = buy_ticket(&mut lottery, &secret(0x22), &nonce(0x02)).unwrap();
+        assert!(!ticket.mainnet_ready);
+    }
+
+    #[test]
+    fn test_ticket_count_increments() {
+        let mut lottery = create_lottery(&secret(0x18), 1_000, &nonce(0x01)).unwrap();
+        assert_eq!(lottery.ticket_count, 0);
+        buy_ticket(&mut lottery, &secret(0x22), &nonce(0x02)).unwrap();
+        assert_eq!(lottery.ticket_count, 1);
+    }
+
+    #[test]
+    fn test_zero_holder_rejected() {
+        let mut lottery = create_lottery(&secret(0x19), 1_000, &nonce(0x01)).unwrap();
+        let err = buy_ticket(&mut lottery, &[0u8; 32], &nonce(0x02)).unwrap_err();
+        assert_eq!(err, LotteryError::ZeroHolderSecret);
+    }
+
+    #[test]
+    fn test_winner_commitment_nonzero() {
+        let mut lottery = create_lottery(&secret(0x1a), 1_000, &nonce(0x01)).unwrap();
+        buy_ticket(&mut lottery, &secret(0x22), &nonce(0x02)).unwrap();
+        draw_winner(&mut lottery).unwrap();
+        assert_ne!(lottery.winner_commitment, [0u8; 32]);
+    }
 }

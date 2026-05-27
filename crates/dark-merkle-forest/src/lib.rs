@@ -174,4 +174,92 @@ mod tests {
         let forest = new_forest(&nonce).unwrap();
         assert!(!forest.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_forest_id_nonzero() {
+        let nonce = [0xaau8; 32];
+        let forest = new_forest(&nonce).unwrap();
+        assert_ne!(forest.forest_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_forest_id_deterministic() {
+        let nonce = [0xbbu8; 32];
+        let f1 = new_forest(&nonce).unwrap();
+        let f2 = new_forest(&nonce).unwrap();
+        assert_eq!(f1.forest_id, f2.forest_id);
+    }
+
+    #[test]
+    fn test_forest_id_nonce_sensitive() {
+        let n1 = [0xccu8; 32];
+        let n2 = [0xddu8; 32];
+        let f1 = new_forest(&n1).unwrap();
+        let f2 = new_forest(&n2).unwrap();
+        assert_ne!(f1.forest_id, f2.forest_id);
+    }
+
+    #[test]
+    fn test_zero_nonce_rejected() {
+        let err = new_forest(&[0u8; 32]).unwrap_err();
+        assert_eq!(err, ForestError::ZeroNonce);
+    }
+
+    #[test]
+    fn test_tree_root_nonzero() {
+        let nonce = [0x06u8; 32];
+        let mut forest = new_forest(&nonce).unwrap();
+        let leaves = vec![[0x11u8; 32]];
+        let tree = add_tree(&mut forest, &leaves).unwrap();
+        assert_ne!(tree.root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_forest_root_nonzero_after_add() {
+        let nonce = [0x07u8; 32];
+        let mut forest = new_forest(&nonce).unwrap();
+        let leaves = vec![[0x22u8; 32]];
+        add_tree(&mut forest, &leaves).unwrap();
+        assert_ne!(forest.forest_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_forest_root_zero_before_add() {
+        let nonce = [0x08u8; 32];
+        let forest = new_forest(&nonce).unwrap();
+        assert_eq!(forest.forest_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_tree_count_increments() {
+        let nonce = [0x09u8; 32];
+        let mut forest = new_forest(&nonce).unwrap();
+        assert_eq!(forest.tree_count, 0);
+        let leaves = vec![[0x33u8; 32]];
+        add_tree(&mut forest, &leaves).unwrap();
+        assert_eq!(forest.tree_count, 1);
+        add_tree(&mut forest, &leaves).unwrap();
+        assert_eq!(forest.tree_count, 2);
+    }
+
+    #[test]
+    fn test_get_forest_root_matches() {
+        let nonce = [0x0au8; 32];
+        let mut forest = new_forest(&nonce).unwrap();
+        let leaves = vec![[0x44u8; 32]];
+        add_tree(&mut forest, &leaves).unwrap();
+        assert_eq!(get_forest_root(&forest), forest.forest_root);
+    }
+
+    #[test]
+    fn test_empty_leaves_tree_root_nonzero() {
+        let nonce = [0x0bu8; 32];
+        let mut forest = new_forest(&nonce).unwrap();
+        // xor_fold([]) = [0;32]; compute_tree_root hashes with tree_id so result is nonzero
+        let leaves: Vec<[u8; 32]> = Vec::new();
+        let tree = add_tree(&mut forest, &leaves).unwrap();
+        assert_ne!(tree.root, [0u8; 32]);
+    }
 }

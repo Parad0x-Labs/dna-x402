@@ -371,4 +371,83 @@ mod tests {
     fn hex_encode(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{:02x}", b)).collect()
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let note = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        assert_ne!(note.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_owner_hash_nonzero() {
+        let note = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        assert_ne!(note.owner_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let n1 = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        let n2 = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        assert_eq!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_nonce_sensitive() {
+        let n1 = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        let n2 = mint_note(&owner_secret(), 100, &nonce(2)).unwrap();
+        assert_ne!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_commitment_amount_sensitive() {
+        let n1 = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        let n2 = mint_note(&owner_secret(), 200, &nonce(1)).unwrap();
+        assert_ne!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_note_mainnet_ready_false() {
+        let note = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        assert!(!note.mainnet_ready);
+    }
+
+    #[test]
+    fn test_owner_secret_zero_rejected() {
+        let err = mint_note(&[0u8; 32], 100, &nonce(1)).unwrap_err();
+        assert_eq!(err, TokenError::OwnerSecretZero);
+    }
+
+    #[test]
+    fn test_ledger_starts_empty() {
+        let ledger = new_ledger();
+        assert_eq!(ledger.commitment_count, 0);
+    }
+
+    #[test]
+    fn test_add_commitment_increments_count() {
+        let mut ledger = new_ledger();
+        let note = mint_note(&owner_secret(), 100, &nonce(1)).unwrap();
+        add_commitment(&mut ledger, note.commitment);
+        assert_eq!(ledger.commitment_count, 1);
+        add_commitment(&mut ledger, note.commitment); // duplicates allowed in add_commitment
+        assert_eq!(ledger.commitment_count, 2);
+    }
+
+    #[test]
+    fn test_transfer_proof_nonzero() {
+        let secret = owner_secret();
+        let note = mint_note(&secret, 500, &nonce(5)).unwrap();
+        let mut ledger = new_ledger();
+        add_commitment(&mut ledger, note.commitment);
+        let recip_hash = compute_owner_hash(&{
+            let mut r = [0xFFu8; 32];
+            r[0] = 0x01;
+            r
+        });
+        let transfer =
+            transfer_note(&mut ledger, &note, &secret, &recip_hash, &nonce(6), 500).unwrap();
+        assert_ne!(transfer.transfer_proof, [0u8; 32]);
+    }
 }

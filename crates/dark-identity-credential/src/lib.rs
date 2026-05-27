@@ -333,4 +333,83 @@ mod tests {
         assert!(record.contains(&cred_id_hex));
         assert!(record.contains(&cred.attribute_bits.to_string()));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_credential_id_nonzero() {
+        let secret = make_secret(10);
+        let cred = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 9999).unwrap();
+        assert_ne!(cred.credential_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_holder_hash_nonzero() {
+        let secret = make_secret(11);
+        let cred = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 9999).unwrap();
+        assert_ne!(cred.holder_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_credential_id_deterministic() {
+        let secret = make_secret(12);
+        let c1 = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 9999).unwrap();
+        let c2 = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 9999).unwrap();
+        assert_eq!(c1.credential_id, c2.credential_id);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let secret = make_secret(13);
+        let cred = issue_credential(&secret, &[AttributeType::KycVerified], 0, 9999).unwrap();
+        assert!(!cred.mainnet_ready);
+    }
+
+    #[test]
+    fn test_attribute_bits_set_for_issued_attributes() {
+        let secret = make_secret(14);
+        let cred = issue_credential(&secret, &[AttributeType::SolanaHolder], 0, 9999).unwrap();
+        let bit = 1u32 << AttributeType::SolanaHolder.clone().as_u8();
+        assert!(cred.attribute_bits & bit != 0);
+    }
+
+    #[test]
+    fn test_disclosure_proof_nonzero() {
+        let secret = make_secret(15);
+        let cred = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 9999).unwrap();
+        let disc = disclose_attribute(&cred, &secret, AttributeType::AgeOver18, 1).unwrap();
+        assert_ne!(disc.disclosure_proof, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_disclosure_proof_deterministic() {
+        let secret = make_secret(16);
+        let cred = issue_credential(&secret, &[AttributeType::KycVerified], 0, 9999).unwrap();
+        let d1 = disclose_attribute(&cred, &secret, AttributeType::KycVerified, 1).unwrap();
+        let d2 = disclose_attribute(&cred, &secret, AttributeType::KycVerified, 1).unwrap();
+        assert_eq!(d1.disclosure_proof, d2.disclosure_proof);
+    }
+
+    #[test]
+    fn test_disclosure_mainnet_ready_false() {
+        let secret = make_secret(17);
+        let cred = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 9999).unwrap();
+        let disc = disclose_attribute(&cred, &secret, AttributeType::AgeOver18, 1).unwrap();
+        assert!(!disc.mainnet_ready);
+    }
+
+    #[test]
+    fn test_holder_secret_zero_rejected() {
+        let err = issue_credential(&[0u8; 32], &[AttributeType::AgeOver18], 0, 9999).unwrap_err();
+        assert_eq!(err, CredentialError::HolderSecretZero);
+    }
+
+    #[test]
+    fn test_disclose_at_exact_expiry_ok() {
+        // check is `current_unix > expires_at_unix`, so == expires_at_unix is allowed
+        let secret = make_secret(18);
+        let cred = issue_credential(&secret, &[AttributeType::AgeOver18], 0, 1000).unwrap();
+        let result = disclose_attribute(&cred, &secret, AttributeType::AgeOver18, 1000);
+        assert!(result.is_ok(), "disclosure at exact expiry must succeed");
+    }
 }

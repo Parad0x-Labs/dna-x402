@@ -378,4 +378,173 @@ mod tests {
             "mainnet_ready must always be false in devnet design"
         );
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_note_commitment_nonzero() {
+        let note = create_note(
+            1_000_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+        );
+        assert_ne!(note.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_merkle_root_nonzero_after_deposit() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        prepare_deposit(
+            &mut pool,
+            500_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        assert_ne!(pool.merkle_root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_merkle_root_changes_on_second_deposit() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        prepare_deposit(
+            &mut pool,
+            500_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        let root1 = pool.merkle_root;
+        prepare_deposit(
+            &mut pool,
+            300_000,
+            &[0xBBu8; 32],
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        assert_ne!(pool.merkle_root, root1);
+    }
+
+    #[test]
+    fn test_pool_stats_json_mainnet_ready_false() {
+        let pool = PoolState::default();
+        let json = pool_stats_json(&pool);
+        assert_eq!(json["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_deposit_zero_value_fails() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        let result = prepare_deposit(
+            &mut pool,
+            0,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        );
+        assert_eq!(result, Err(PoolError::InsufficientValue));
+    }
+
+    #[test]
+    fn test_pool_total_deposited_accumulates() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        prepare_deposit(
+            &mut pool,
+            100_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        prepare_deposit(
+            &mut pool,
+            200_000,
+            &[0xBBu8; 32],
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        assert_eq!(pool.total_deposited, 300_000);
+    }
+
+    #[test]
+    fn test_pool_note_count_accumulates() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        prepare_deposit(
+            &mut pool,
+            100_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        prepare_deposit(
+            &mut pool,
+            200_000,
+            &[0xBBu8; 32],
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        assert_eq!(pool.note_count, 2);
+    }
+
+    #[test]
+    fn test_withdrawal_exceeds_note_value_fails() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        let note = prepare_deposit(
+            &mut pool,
+            100_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        let result =
+            prepare_withdrawal(&mut pool, &note, &test_secret(), 100_001, &[], &commitments);
+        assert_eq!(result, Err(PoolError::InsufficientValue));
+    }
+
+    #[test]
+    fn test_compute_merkle_root_empty_deterministic() {
+        let r1 = compute_merkle_root(&[]);
+        let r2 = compute_merkle_root(&[]);
+        assert_eq!(r1, r2);
+    }
+
+    #[test]
+    fn test_pool_stats_json_note_count() {
+        let mut pool = PoolState::default();
+        let mut commitments = Vec::new();
+        prepare_deposit(
+            &mut pool,
+            500_000,
+            &test_randomness(),
+            &test_recipient(),
+            test_slot(),
+            &mut commitments,
+        )
+        .unwrap();
+        let json = pool_stats_json(&pool);
+        assert_eq!(json["note_count"], 1);
+    }
 }

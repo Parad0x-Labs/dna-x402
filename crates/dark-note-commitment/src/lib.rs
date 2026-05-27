@@ -218,4 +218,79 @@ mod tests {
         let note = new_note(&RCPT, VALUE, &BLINDING).unwrap();
         assert!(!note.mainnet_ready);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_zero_recipient_secret_rejected() {
+        let err = new_note(&[0u8; 32], VALUE, &BLINDING).unwrap_err();
+        assert_eq!(err, NoteError::ZeroRecipientSecret);
+    }
+
+    #[test]
+    fn test_zero_blinding_rejected() {
+        let err = new_note(&RCPT, VALUE, &[0u8; 32]).unwrap_err();
+        assert_eq!(err, NoteError::ZeroBlinding);
+    }
+
+    #[test]
+    fn test_note_id_deterministic() {
+        let n1 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let n2 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        assert_eq!(n1.note_id, n2.note_id);
+    }
+
+    #[test]
+    fn test_nullifier_deterministic() {
+        let n1 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let n2 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        assert_eq!(n1.nullifier, n2.nullifier);
+    }
+
+    #[test]
+    fn test_different_blindings_different_commitments() {
+        let blinding2 = [0xAAu8; 32];
+        let n1 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let n2 = new_note(&RCPT, VALUE, &blinding2).unwrap();
+        assert_ne!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_different_recipients_different_commitments() {
+        let rcpt2 = [0xFFu8; 32];
+        let n1 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let n2 = new_note(&rcpt2, VALUE, &BLINDING).unwrap();
+        assert_ne!(n1.commitment, n2.commitment);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let note = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let proof = open_note(&note, VALUE, &BLINDING, &RCPT).unwrap();
+        assert!(!proof.mainnet_ready);
+    }
+
+    #[test]
+    fn test_spend_note_sets_spent_flag() {
+        let mut note = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        assert!(!note.spent);
+        spend_note(&mut note).unwrap();
+        assert!(note.spent);
+    }
+
+    #[test]
+    fn test_verify_opening_wrong_blinding_fails() {
+        let note = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let proof = open_note(&note, VALUE, &BLINDING, &RCPT).unwrap();
+        let wrong_blinding = [0xFFu8; 32];
+        assert!(!verify_opening(&note, &proof, &wrong_blinding));
+    }
+
+    #[test]
+    fn test_nullifier_recipient_sensitive() {
+        let rcpt2 = [0xFFu8; 32];
+        let n1 = new_note(&RCPT, VALUE, &BLINDING).unwrap();
+        let n2 = new_note(&rcpt2, VALUE, &BLINDING).unwrap();
+        assert_ne!(n1.nullifier, n2.nullifier);
+    }
 }

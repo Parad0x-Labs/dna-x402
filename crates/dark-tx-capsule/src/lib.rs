@@ -192,4 +192,81 @@ mod tests {
         assert!(record.get("payload_commitment").is_some());
         assert!(!record["mainnet_ready"].as_bool().unwrap());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let cap = seal_capsule(&sender_secret(10), b"payload", 0).unwrap();
+        assert!(!cap.mainnet_ready);
+        let mut c2 = seal_capsule(&sender_secret(10), b"payload", 0).unwrap();
+        let rev = reveal_capsule(&mut c2, b"payload", 0).unwrap();
+        assert!(!rev.mainnet_ready);
+    }
+
+    #[test]
+    fn test_empty_payload_rejected() {
+        let err = seal_capsule(&sender_secret(11), b"", 0).unwrap_err();
+        assert_eq!(err, CapsuleError::EmptyPayload);
+    }
+
+    #[test]
+    fn test_sender_secret_zero_rejected() {
+        let err = seal_capsule(&[0u8; 32], b"payload", 0).unwrap_err();
+        assert_eq!(err, CapsuleError::SenderSecretZero);
+    }
+
+    #[test]
+    fn test_capsule_id_sensitive_to_payload() {
+        let c1 = seal_capsule(&sender_secret(12), b"payload-a", 0).unwrap();
+        let c2 = seal_capsule(&sender_secret(12), b"payload-b", 0).unwrap();
+        assert_ne!(c1.capsule_id, c2.capsule_id);
+    }
+
+    #[test]
+    fn test_capsule_id_sensitive_to_unlock_time() {
+        let c1 = seal_capsule(&sender_secret(13), b"payload", 1000).unwrap();
+        let c2 = seal_capsule(&sender_secret(13), b"payload", 2000).unwrap();
+        assert_ne!(c1.capsule_id, c2.capsule_id);
+    }
+
+    #[test]
+    fn test_revealed_starts_false() {
+        let cap = seal_capsule(&sender_secret(14), b"test", 100).unwrap();
+        assert!(!cap.revealed);
+    }
+
+    #[test]
+    fn test_reveal_at_exact_time_succeeds() {
+        let payload = b"exact time test";
+        let mut cap = seal_capsule(&sender_secret(15), payload, 5000).unwrap();
+        let rev = reveal_capsule(&mut cap, payload, 5000).unwrap();
+        assert_eq!(rev.revealed_at_unix, 5000);
+    }
+
+    #[test]
+    fn test_payload_stored_in_reveal() {
+        let payload = b"important data";
+        let mut cap = seal_capsule(&sender_secret(16), payload, 0).unwrap();
+        let rev = reveal_capsule(&mut cap, payload, 0).unwrap();
+        assert_eq!(rev.payload, payload);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_fields() {
+        let cap = seal_capsule(&sender_secret(17), b"data", 9999).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&capsule_public_record(&cap)).unwrap();
+        assert!(v["capsule_id"].is_string());
+        assert!(v["payload_commitment"].is_string());
+        assert_eq!(v["unlock_at_unix"], 9999i64);
+        assert_eq!(v["revealed"], false);
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_different_senders_different_capsule_ids() {
+        let c1 = seal_capsule(&sender_secret(18), b"payload", 0).unwrap();
+        let c2 = seal_capsule(&sender_secret(19), b"payload", 0).unwrap();
+        assert_ne!(c1.capsule_id, c2.capsule_id);
+    }
 }

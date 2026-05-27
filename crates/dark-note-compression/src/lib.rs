@@ -187,4 +187,106 @@ mod tests {
         let root_b = leaf_root_from_leaves(&leaves);
         assert_eq!(root_a, root_b, "same leaves must produce the same root");
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_leaf_root_nonzero() {
+        let note = test_note();
+        let leaves = vec![compress_note(&note, 0, 1_000)];
+        let root = leaf_root_from_leaves(&leaves);
+        assert_ne!(root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_leaf_root_leaf_sensitive() {
+        let note = test_note();
+        let leaf_a = compress_note(&note, 0, 1_000);
+        // Create a second note with different commitment
+        let note2 =
+            dark_shielded_pool_core::create_note(2_000_000_000, &[0x99u8; 32], &[0x11u8; 32], 0);
+        let leaf_b = compress_note(&note2, 0, 1_000);
+        let root_a = leaf_root_from_leaves(&[leaf_a]);
+        let root_b = leaf_root_from_leaves(&[leaf_b]);
+        assert_ne!(root_a, root_b);
+    }
+
+    #[test]
+    fn test_compression_savings_zero_notes() {
+        let report = compute_compression_savings(0);
+        assert_eq!(report.savings_pct, 0.0);
+        assert_eq!(report.rent_regular_lamports, 0);
+        assert_eq!(report.rent_compressed_lamports, 0);
+    }
+
+    #[test]
+    fn test_compression_savings_one_note() {
+        let report = compute_compression_savings(1);
+        assert_eq!(report.regular_pda_bytes, 128);
+        assert_eq!(report.compressed_leaf_bytes, 32);
+    }
+
+    #[test]
+    fn test_pool_state_leaf_count() {
+        let note = test_note();
+        let leaves = vec![
+            compress_note(&note, 0, 1_000),
+            compress_note(&note, 1, 1_001),
+        ];
+        let state = build_compressed_pool_state(&leaves);
+        assert_eq!(state.total_leaves, 2);
+        assert_eq!(state.leaf_roots.len(), 2);
+    }
+
+    #[test]
+    fn test_pool_state_leaf_roots_match_commitments() {
+        let note = test_note();
+        let leaf = compress_note(&note, 5, 2_000);
+        let state = build_compressed_pool_state(&[leaf]);
+        assert_eq!(state.leaf_roots[0], note.commitment);
+    }
+
+    #[test]
+    fn test_compress_note_leaf_index() {
+        let note = test_note();
+        let leaf = compress_note(&note, 42, 999);
+        assert_eq!(leaf.leaf_index, 42);
+    }
+
+    #[test]
+    fn test_compress_note_slot() {
+        let note = test_note();
+        let leaf = compress_note(&note, 0, 777_888);
+        assert_eq!(leaf.compressed_at_slot, 777_888);
+    }
+
+    #[test]
+    fn test_leaf_root_empty_nonzero() {
+        // SHA256("compressed-root-v1") with no leaves → nonzero due to domain tag
+        let root = leaf_root_from_leaves(&[]);
+        assert_ne!(root, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_rent_savings_greater_than_zero() {
+        let report = compute_compression_savings(1);
+        assert!(report.rent_savings_lamports > 0);
+    }
+
+    #[test]
+    fn test_savings_pct_less_than_100() {
+        let report = compute_compression_savings(100);
+        assert!(report.savings_pct < 100.0);
+        assert!(report.savings_pct > 0.0);
+    }
+
+    #[test]
+    fn test_compression_report_json_keys() {
+        let report = compute_compression_savings(10);
+        let v = compression_report_json(&report);
+        assert!(v["regular_pda_bytes"].is_number());
+        assert!(v["compressed_leaf_bytes"].is_number());
+        assert!(v["savings_pct"].is_number());
+        assert_eq!(v["mainnet_ready"], false);
+    }
 }

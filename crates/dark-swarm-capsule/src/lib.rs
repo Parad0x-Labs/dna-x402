@@ -507,4 +507,61 @@ mod tests {
         };
         assert!(assert_no_custody(&custody).is_ok());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_capsule_hash_nonzero() {
+        let c = make_capsule("abc123", "relayer-1", 1_700_000_000);
+        assert_ne!(c.capsule_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_fee_policy_sha256_nonzero() {
+        let hash = fee_policy_sha256_from_str("flat-fee-100-lamports");
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_rank_capsules_lower_fee_wins_when_same_freshness() {
+        let ts = 1_700_000_000u64;
+        let low_fee = create_capsule(
+            SwarmRole::Relayer,
+            "commit-a",
+            [0xAAu8; 32],
+            [0xBBu8; 32],
+            "relayer-fee-test",
+            "devnet",
+            SwarmCaps {
+                max_total_value_locked_lamports: 1_000_000_000,
+                max_deposit_lamports: 10_000_000,
+                daily_withdraw_limit_lamports: 100_000_000,
+            },
+            [0xCCu8; 32],
+            default_liveness(),
+            clean_custody(),
+            ts,
+        )
+        .unwrap();
+        let high_fee = create_capsule(
+            SwarmRole::Relayer,
+            "commit-b",
+            [0xAAu8; 32],
+            [0xBBu8; 32],
+            "relayer-fee-test-2",
+            "devnet",
+            SwarmCaps {
+                max_total_value_locked_lamports: 1_000_000_000,
+                max_deposit_lamports: 50_000_000,
+                daily_withdraw_limit_lamports: 100_000_000,
+            },
+            [0xCCu8; 32],
+            default_liveness(),
+            clean_custody(),
+            ts,
+        )
+        .unwrap();
+        let winner = rank_capsules(&low_fee, &high_fee, ts);
+        assert_eq!(winner.caps.max_deposit_lamports, 10_000_000);
+    }
 }

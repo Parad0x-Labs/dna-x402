@@ -328,4 +328,78 @@ mod tests {
         assert!(v.get("fee_paid").is_some());
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_borrow_id_nonzero() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        assert_ne!(b.borrow_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_borrow_id_deterministic() {
+        let b1 = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        let b2 = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        assert_eq!(b1.borrow_id, b2.borrow_id);
+    }
+
+    #[test]
+    fn test_borrow_id_slot_sensitive() {
+        let b1 = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        let b2 = create_borrow(&test_secret(), 1_000, 30, 2).unwrap();
+        assert_ne!(b1.borrow_id, b2.borrow_id);
+    }
+
+    #[test]
+    fn test_borrower_hash_nonzero() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        assert_ne!(b.borrower_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        assert!(!b.mainnet_ready);
+    }
+
+    #[test]
+    fn test_repayment_mainnet_ready_false() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        let required = 1_000 + 1_000 * 30u64 / 10_000;
+        let r = repay_loan(&b, required).unwrap();
+        assert!(!r.mainnet_ready);
+    }
+
+    #[test]
+    fn test_receipt_mainnet_ready_false() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        let required = 1_000 + 1_000 * 30u64 / 10_000;
+        let r = repay_loan(&b, required).unwrap();
+        let receipt = finalize_loan(&b, &r).unwrap();
+        assert!(!receipt.mainnet_ready);
+    }
+
+    #[test]
+    fn test_repayment_proof_nonzero() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        let required = 1_000 + 1_000 * 30u64 / 10_000;
+        let r = repay_loan(&b, required).unwrap();
+        assert_ne!(r.repayment_proof, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_receipt_hash_nonzero() {
+        let b = create_borrow(&test_secret(), 1_000, 30, 1).unwrap();
+        let required = 1_000 + 1_000 * 30u64 / 10_000;
+        let r = repay_loan(&b, required).unwrap();
+        let receipt = finalize_loan(&b, &r).unwrap();
+        assert_ne!(receipt.receipt_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_borrower_secret_zero_rejected() {
+        let err = create_borrow(&[0u8; 32], 1_000, 30, 1).unwrap_err();
+        assert_eq!(err, FlashLoanError::BorrowerSecretZero);
+    }
 }

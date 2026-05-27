@@ -280,4 +280,97 @@ mod tests {
         assert_eq!(v["is_stub"], true);
         assert_eq!(v["mainnet_ready"], false);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_zero_verifying_key_rejected() {
+        let inputs: &[&[u8]] = &[b"x"];
+        let err = create_snark_v2(&pk(), &[0u8; 32], inputs).unwrap_err();
+        assert_eq!(err, SnarkError::ZeroVerifyingKey);
+    }
+
+    #[test]
+    fn test_proof_id_nonzero() {
+        let inputs: &[&[u8]] = &[b"data"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        assert_ne!(proof.proof_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_pi_a_nonzero() {
+        let inputs: &[&[u8]] = &[b"alpha"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        assert_ne!(proof.pi_a, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_vk_sensitivity() {
+        let inputs: &[&[u8]] = &[b"same"];
+        let vk2 = {
+            let mut k = [0u8; 32];
+            k[0] = 0xCC;
+            k
+        };
+        let p1 = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        let p2 = create_snark_v2(&pk(), &vk2, inputs).unwrap();
+        assert_ne!(p1.vk_hash, p2.vk_hash);
+    }
+
+    #[test]
+    fn test_pk_sensitivity() {
+        let inputs: &[&[u8]] = &[b"same"];
+        let pk2 = {
+            let mut k = [0u8; 32];
+            k[0] = 0xDD;
+            k
+        };
+        let p1 = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        let p2 = create_snark_v2(&pk2, &vk(), inputs).unwrap();
+        assert_ne!(p1.pi_a, p2.pi_a);
+    }
+
+    #[test]
+    fn test_verify_wrong_vk_fails() {
+        let inputs: &[&[u8]] = &[b"verify-me"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        let wrong_vk = {
+            let mut k = [0u8; 32];
+            k[0] = 0xEE;
+            k
+        };
+        assert!(!verify_snark_v2(&proof, &wrong_vk, inputs));
+    }
+
+    #[test]
+    fn test_verify_wrong_inputs_fails() {
+        let inputs: &[&[u8]] = &[b"correct"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        let wrong: &[&[u8]] = &[b"wrong"];
+        assert!(!verify_snark_v2(&proof, &vk(), wrong));
+    }
+
+    #[test]
+    fn test_public_record_fields() {
+        let inputs: &[&[u8]] = &[b"rec"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        let record = snark_v2_public_record(&proof);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["proof_id"].is_string());
+        assert_eq!(v["mainnet_ready"], false);
+    }
+
+    #[test]
+    fn test_multiple_inputs() {
+        let inputs: &[&[u8]] = &[b"a", b"b", b"c"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        assert!(verify_snark_v2(&proof, &vk(), inputs));
+    }
+
+    #[test]
+    fn test_is_stub_always_true() {
+        let inputs: &[&[u8]] = &[b"stub"];
+        let proof = create_snark_v2(&pk(), &vk(), inputs).unwrap();
+        assert!(proof.is_stub);
+    }
 }

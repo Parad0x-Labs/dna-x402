@@ -289,4 +289,99 @@ mod tests {
         assert_eq!(v["mainnet_ready"], false);
         assert!(v["schedule_id"].is_string());
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_mainnet_ready_always_false() {
+        let s = make_schedule();
+        assert!(!s.mainnet_ready);
+        let mut s2 = make_schedule();
+        let c = claim_vested(&mut s2, &bsecret(), 100, END).unwrap();
+        assert!(!c.mainnet_ready);
+    }
+
+    #[test]
+    fn test_zero_beneficiary_secret_rejected() {
+        let err = create_schedule(&[0u8; 32], TOTAL, CLIFF, END, &nonce()).unwrap_err();
+        assert_eq!(err, VestingError::ZeroBeneficiarySecret);
+    }
+
+    #[test]
+    fn test_zero_amount_rejected() {
+        let err = create_schedule(&bsecret(), 0, CLIFF, END, &nonce()).unwrap_err();
+        assert_eq!(err, VestingError::ZeroAmount);
+    }
+
+    #[test]
+    fn test_partial_claim_then_remaining() {
+        let mut s = make_schedule();
+        // claim half at midpoint
+        let mid = (CLIFF + END) / 2;
+        let half = TOTAL / 2;
+        claim_vested(&mut s, &bsecret(), half, mid).unwrap();
+        assert_eq!(s.released, half);
+        // claim remaining at end
+        claim_vested(&mut s, &bsecret(), half, END).unwrap();
+        assert_eq!(s.released, TOTAL);
+    }
+
+    #[test]
+    fn test_schedule_id_deterministic() {
+        let s1 = make_schedule();
+        let s2 = make_schedule();
+        assert_eq!(s1.schedule_id, s2.schedule_id);
+    }
+
+    #[test]
+    fn test_schedule_id_sensitive_to_nonce() {
+        let s1 = make_schedule();
+        let mut n2 = nonce();
+        n2[0] ^= 0xFF;
+        let s2 = create_schedule(&bsecret(), TOTAL, CLIFF, END, &n2).unwrap();
+        assert_ne!(s1.schedule_id, s2.schedule_id);
+    }
+
+    #[test]
+    fn test_vested_at_exact_cliff_is_zero() {
+        let mut s = make_schedule();
+        // at cliff, 0 is vested (t == cliff → start of vesting, 0 elapsed)
+        let err = claim_vested(&mut s, &bsecret(), 1, CLIFF - 1).unwrap_err();
+        assert_eq!(
+            err,
+            VestingError::BeforeCliff {
+                cliff: CLIFF,
+                current: CLIFF - 1
+            }
+        );
+    }
+
+    #[test]
+    fn test_released_tracked_correctly() {
+        let mut s = make_schedule();
+        assert_eq!(s.released, 0);
+        claim_vested(&mut s, &bsecret(), 500, END).unwrap();
+        assert_eq!(s.released, 500);
+    }
+
+    #[test]
+    fn test_public_record_has_expected_fields() {
+        let s = make_schedule();
+        let record = schedule_public_record(&s);
+        let v: serde_json::Value = serde_json::from_str(&record).unwrap();
+        assert!(v["schedule_id"].is_string());
+        assert_eq!(v["total_amount"], TOTAL);
+        assert_eq!(v["cliff_unix"], CLIFF);
+        assert_eq!(v["end_unix"], END);
+        assert_eq!(v["released"], 0u64);
+    }
+
+    #[test]
+    fn test_claim_id_sensitive_to_amount() {
+        let mut s1 = make_schedule();
+        let mut s2 = make_schedule();
+        let c1 = claim_vested(&mut s1, &bsecret(), 100, END).unwrap();
+        let c2 = claim_vested(&mut s2, &bsecret(), 200, END).unwrap();
+        assert_ne!(c1.claim_id, c2.claim_id);
+    }
 }

@@ -201,4 +201,73 @@ mod tests {
         assert!(v.get("borrower_hash").is_none());
         assert!(!rec.contains(&hex32(&pos.borrower_hash)));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_position_id_nonzero() {
+        let pos = create_position(&secret(0x10), 50, 100, &secret(0x11), &secret(0x12)).unwrap();
+        assert_ne!(pos.position_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_borrower_hash_nonzero() {
+        let pos = create_position(&secret(0x13), 50, 100, &secret(0x14), &secret(0x15)).unwrap();
+        assert_ne!(pos.borrower_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_collateral_commitment_nonzero() {
+        let pos = create_position(&secret(0x16), 50, 100, &secret(0x17), &secret(0x18)).unwrap();
+        assert_ne!(pos.collateral_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_debt_commitment_nonzero() {
+        let pos = create_position(&secret(0x19), 50, 100, &secret(0x1a), &secret(0x1b)).unwrap();
+        assert_ne!(pos.debt_commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_position_mainnet_ready_false() {
+        let pos = create_position(&secret(0x1c), 50, 100, &secret(0x1d), &secret(0x1e)).unwrap();
+        assert!(!pos.mainnet_ready);
+    }
+
+    #[test]
+    fn test_liquidation_mainnet_ready_false() {
+        let mut pos =
+            create_position(&secret(0x1f), 50, 100, &secret(0x20), &secret(0x21)).unwrap();
+        let liq = liquidate(&mut pos, &secret(0x22)).unwrap();
+        assert!(!liq.mainnet_ready);
+    }
+
+    #[test]
+    fn test_liq_id_nonzero() {
+        let mut pos =
+            create_position(&secret(0x23), 50, 100, &secret(0x24), &secret(0x25)).unwrap();
+        let liq = liquidate(&mut pos, &secret(0x26)).unwrap();
+        assert_ne!(liq.liq_id, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_zero_debt_rejected() {
+        let err = create_position(&secret(0x27), 100, 0, &secret(0x28), &secret(0x29)).unwrap_err();
+        assert_eq!(err, LiqError::ZeroDebt);
+    }
+
+    #[test]
+    fn test_health_above_100_not_liquidatable() {
+        let pos = create_position(&secret(0x2a), 200, 100, &secret(0x2b), &secret(0x2c)).unwrap();
+        assert!(!pos.liquidatable);
+        assert_eq!(pos.health_factor, 200);
+    }
+
+    #[test]
+    fn test_liquidated_flag_set() {
+        let mut pos =
+            create_position(&secret(0x2d), 50, 100, &secret(0x2e), &secret(0x2f)).unwrap();
+        liquidate(&mut pos, &secret(0x30)).unwrap();
+        assert!(pos.liquidated);
+    }
 }

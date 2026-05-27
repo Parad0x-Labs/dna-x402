@@ -371,4 +371,55 @@ mod tests {
         let result = validate_destination_policy(&DestinationPolicy::BurnVaultDisabledByDefault);
         assert_eq!(result, Err(FlywheelError::BurnVaultDisabled));
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_event_hash_nonzero() {
+        let hash = compute_event_hash(&SourceKind::RiskCheckFee, 1_000_000, 1);
+        assert_ne!(hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_event_hash_source_sensitive() {
+        let h1 = compute_event_hash(&SourceKind::RiskCheckFee, 1_000_000, 1);
+        let h2 = compute_event_hash(&SourceKind::SignalRevealFee, 1_000_000, 1);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn test_split_chunks_exact_fit() {
+        let chunks = split_into_chunks(100, 100);
+        assert_eq!(chunks, vec![100]);
+    }
+
+    #[test]
+    fn test_split_chunks_zero_amount() {
+        let chunks = split_into_chunks(0, 100);
+        assert!(chunks.is_empty());
+    }
+
+    #[test]
+    fn test_plan_execution_burn_vault_rejected() {
+        let mut config = FlywheelConfig::default();
+        config.destination = DestinationPolicy::BurnVaultDisabledByDefault;
+        let result = plan_execution(&config, MIN_EXECUTION_LAMPORTS, 0);
+        assert_eq!(result, Err(FlywheelError::BurnVaultDisabled));
+    }
+
+    #[test]
+    fn test_daily_cap_remaining_decreases_after_event() {
+        let config = FlywheelConfig::default();
+        let event = PremiumFeeEvent::new(SourceKind::HintTierFee, 1_000_000_000, 1);
+        let events = vec![event];
+        let remaining = daily_cap_remaining(&events, &config, 1);
+        assert!(remaining < MAX_DAILY_LAMPORTS);
+    }
+
+    #[test]
+    fn test_null_mint_nonempty() {
+        assert!(!NULL_MINT.is_empty());
+        // NULL_MINT must be a plausible Solana address (32-44 base58 chars)
+        assert!(NULL_MINT.len() >= 32 && NULL_MINT.len() <= 44);
+    }
 }

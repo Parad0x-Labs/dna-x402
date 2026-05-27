@@ -183,4 +183,93 @@ mod tests {
         let err2 = create_statement(0, &blinding(6), 65).unwrap_err();
         assert_eq!(err2, BulletproofError::BitWidthInvalid);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_nonzero() {
+        let stmt = create_statement(100, &blinding(7), 8).unwrap();
+        assert_ne!(stmt.commitment, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_commitment_deterministic() {
+        let s1 = create_statement(50, &blinding(8), 8).unwrap();
+        let s2 = create_statement(50, &blinding(8), 8).unwrap();
+        assert_eq!(s1.commitment, s2.commitment);
+    }
+
+    #[test]
+    fn test_value_sensitive_commitment() {
+        let s1 = create_statement(10, &blinding(9), 8).unwrap();
+        let s2 = create_statement(20, &blinding(9), 8).unwrap();
+        assert_ne!(s1.commitment, s2.commitment);
+    }
+
+    #[test]
+    fn test_blinding_sensitive_commitment() {
+        let s1 = create_statement(10, &blinding(10), 8).unwrap();
+        let s2 = create_statement(10, &blinding(11), 8).unwrap();
+        assert_ne!(s1.commitment, s2.commitment);
+    }
+
+    #[test]
+    fn test_inner_product_hash_nonzero() {
+        let stmt = create_statement(42, &blinding(12), 8).unwrap();
+        let witness = BulletproofWitness {
+            value: 42,
+            blinding: blinding(12),
+        };
+        let proof = prove(&stmt, &witness).unwrap();
+        assert_ne!(proof.inner_product_hash, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_folded_proof_nonzero() {
+        let stmt = create_statement(42, &blinding(13), 8).unwrap();
+        let witness = BulletproofWitness {
+            value: 42,
+            blinding: blinding(13),
+        };
+        let proof = prove(&stmt, &witness).unwrap();
+        assert_ne!(proof.folded_proof, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_64bit_max_value_ok() {
+        let stmt = create_statement(u64::MAX, &blinding(14), 64).unwrap();
+        assert_eq!(stmt.bit_width, 64);
+    }
+
+    #[test]
+    fn test_prove_zero_blinding_rejected() {
+        let stmt = create_statement(10, &blinding(15), 8).unwrap();
+        let witness = BulletproofWitness {
+            value: 10,
+            blinding: [0u8; 32],
+        };
+        let err = prove(&stmt, &witness).unwrap_err();
+        assert_eq!(err, BulletproofError::BlindingZero);
+    }
+
+    #[test]
+    fn test_8bit_max_value_ok() {
+        let stmt = create_statement(255, &blinding(16), 8).unwrap();
+        assert_eq!(stmt.bit_width, 8);
+        // 256 must fail
+        let err = create_statement(256, &blinding(16), 8).unwrap_err();
+        assert_eq!(err, BulletproofError::ValueOutOfRange);
+    }
+
+    #[test]
+    fn test_proof_mainnet_ready_false() {
+        let stmt = create_statement(1, &blinding(17), 8).unwrap();
+        let witness = BulletproofWitness {
+            value: 1,
+            blinding: blinding(17),
+        };
+        let proof = prove(&stmt, &witness).unwrap();
+        assert!(!proof.mainnet_ready);
+        assert!(!proof.statement.mainnet_ready);
+    }
 }

@@ -182,4 +182,69 @@ mod tests {
         assert_eq!(id1, id2);
         assert_ne!(id1, id3);
     }
+
+    // Extended tests -----------------------------------------------------------
+
+    #[test]
+    fn test_commitment_hash_nonzero() {
+        let c = sample_commitment(false);
+        assert_ne!(c.commitment_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_result_hash_nonzero() {
+        let r = sample_result();
+        assert_ne!(r.result_hash(), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_verify_against_active_module_passes() {
+        let commitment = sample_commitment(false);
+        let result = sample_result();
+        assert!(result.verify_against(&commitment));
+    }
+
+    #[test]
+    fn test_verify_against_wrong_module_id_fails() {
+        let commitment = sample_commitment(false);
+        let mut result = sample_result();
+        result.module_id = ModuleId([99u8; 32]);
+        assert!(!result.verify_against(&commitment));
+    }
+
+    #[test]
+    fn test_capability_multiple_grants() {
+        let mut caps = CapabilityBitmap::default();
+        caps.grant(CAP_SPEND);
+        caps.grant(CAP_ROLLUP);
+        caps.grant(CAP_RELAY);
+        assert!(caps.has(CAP_SPEND));
+        assert!(caps.has(CAP_ROLLUP));
+        assert!(caps.has(CAP_RELAY));
+        assert!(!caps.has(CAP_ADMIN));
+    }
+
+    #[test]
+    fn test_commitment_hash_version_sensitive() {
+        let c1 = sample_commitment(false);
+        let mut c2 = sample_commitment(false);
+        c2.version = ModuleVersion(999);
+        assert_ne!(c1.commitment_hash(), c2.commitment_hash());
+    }
+
+    #[test]
+    fn test_commitment_hash_code_hash_sensitive() {
+        let c1 = sample_commitment(false);
+        let mut c2 = sample_commitment(false);
+        c2.code_hash = [0xFFu8; 32];
+        assert_ne!(c1.commitment_hash(), c2.commitment_hash());
+    }
+
+    #[test]
+    fn test_result_hash_input_sensitive() {
+        let r1 = sample_result();
+        let mut r2 = sample_result();
+        r2.input_hash = [0xFFu8; 32];
+        assert_ne!(r1.result_hash(), r2.result_hash());
+    }
 }
