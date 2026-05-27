@@ -1,19 +1,21 @@
-//! dark-shielded-pool — first Solana-native fixed-denomination shielded transfer pool
+//! dark-shielded-pool - fixed-denomination shielded transfer pool prototype
 //!
 //! Privacy architecture:
-//!   1. Deposit `denomination` lamports  →  record H(secret || leaf_index) on-chain
+//!   1. Deposit `denomination` lamports and record H(secret || leaf_index) on-chain
 //!   2. Withdraw by presenting: nullifier + ZK proof + recipient (any address)
-//!      Nullifier = H(secret || pool_key)  — unlinked to commitment without the secret
+//!      Nullifier = H(secret || pool_key) - unlinked to commitment without the secret
 //!      Proof     = Groth16(knowledge of secret that opens a commitment in the tree)
-//!                  IS_STUB: SHA-256 gate until circuit is compiled
+//!                  inactive until final VK/circuit artifacts are wired
 //!
-//! Privacy guarantees (v1 — note scheme, Groth16 stub):
-//!   ✓ Sender-receiver address unlinkability
-//!   ✓ Uniform amounts (fixed denomination eliminates amount fingerprinting)
-//!   ✓ Nullifier prevents double-spend
-//!   ✗ Full ZK (secret not revealed on-chain, but proof is a stub, not a real circuit)
+//! Current status:
+//!   - deposit/note/nullifier state model exists
+//!   - Groth16 verifier call path exists
+//!   - withdrawals fail closed while VK_FINAL=false
 //!
-//! Phase 2: swap verify_proof_stub for real alt_bn128 Groth16 verification.
+//! Required before live shielded withdrawals:
+//!   - final circuit artifacts and verifying key
+//!   - circuit/program hash and Merkle-root alignment
+//!   - recipient and pool binding in public inputs
 //!
 //! IS_STUB      = true
 //! MAINNET_READY = false
@@ -25,9 +27,9 @@ pub mod state;
 
 pub use processor::{commitment_hash, nullifier_hash, update_merkle_root, verify_proof_groth16};
 
-/// IS_STUB: proof verification is SHA-256 gate, not real Groth16.
+/// IS_STUB: final VK/circuit artifacts are not wired yet.
 pub const IS_STUB: bool = true;
-/// MAINNET_READY: never flip without real circuit + trusted setup + audit.
+/// MAINNET_READY: never flip without final circuit artifacts and live proof tests.
 pub const MAINNET_READY: bool = false;
 
 #[cfg(not(feature = "no-entrypoint"))]
@@ -179,9 +181,9 @@ mod tests {
         assert_ne!(c, n, "nullifier must not equal commitment");
     }
 
-    // 13. real Groth16 verify: structurally valid proof passes (off-chain path)
+    // 13. shielded withdrawals fail closed until VK_FINAL=true
     #[test]
-    fn test_proof_groth16_structural_pass() {
+    fn test_proof_groth16_fails_closed_until_vk_final() {
         use dark_shielded_verifier::{g2_generator_bytes, G1_GENERATOR_X, G1_GENERATOR_Y};
         let nullifier = nullifier_hash(&secret(), &pool_key());
         let root = update_merkle_root(&[0u8; 32], &commitment_hash(&secret(), 0), 0);
@@ -194,8 +196,8 @@ mod tests {
         proof[192..224].copy_from_slice(&G1_GENERATOR_X);
         proof[224..256].copy_from_slice(&G1_GENERATOR_Y);
 
-        // Off-chain returns true (pairing runs on-chain only); tests structure
-        assert!(verify_proof_groth16(&proof, &nullifier, &root));
+        assert!(!dark_shielded_verifier::VK_FINAL);
+        assert!(!verify_proof_groth16(&proof, &nullifier, &root));
     }
 
     // 14. proof size is 256 bytes (real Groth16)

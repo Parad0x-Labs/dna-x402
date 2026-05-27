@@ -1,6 +1,12 @@
 pragma circom 2.1.6;
 
-// ShieldedWithdraw circuit — Dark Null shielded pool
+// ShieldedWithdraw circuit - Dark Null shielded pool
+//
+// Draft status:
+//   This circuit is not a final production artifact. Before VK_FINAL can flip:
+//   - program and circuit must use the same commitment/nullifier/root hash scheme
+//   - recipient must be bound into public inputs to prevent proof redirection
+//   - pool identity must be bound into public inputs to prevent nullifier rebinding
 //
 // Proves knowledge of a secret such that:
 //   1. commitment = Poseidon2(secret, leaf_index) is in the Merkle tree with root merkle_root

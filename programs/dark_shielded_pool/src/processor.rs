@@ -5,7 +5,7 @@ use crate::state::{
     POOL_CONFIG_VERSION,
 };
 use dark_shielded_verifier::{
-    placeholder_verifying_key, verify_groth16, VK_N_PUBLIC,
+    placeholder_verifying_key, verify_groth16, VK_FINAL, VK_N_PUBLIC,
 };
 use sha2::{Digest, Sha256};
 use solana_program::{
@@ -60,14 +60,18 @@ pub fn update_merkle_root(old_root: &[u8; 32], commitment: &[u8; 32], leaf_index
 ///   [0] = nullifier     (must match on-chain nullifier slot)
 ///   [1] = merkle_root   (must match current pool root)
 ///
-/// The verifying key is the PLACEHOLDER from dark-shielded-verifier.
-/// Replace `placeholder_verifying_key()` with the final VK bytes after
-/// compiling shielded_withdraw.circom and running the trusted setup.
+/// Fails closed until the final verifying key is generated and wired.
+/// The verifier crate has the Groth16 syscall path, but its current VK is
+/// intentionally marked non-final.
 pub fn verify_proof_groth16(
     proof: &[u8; 256],
     nullifier: &[u8; 32],
     merkle_root: &[u8; 32],
 ) -> bool {
+    if !VK_FINAL {
+        return false;
+    }
+
     let vk = placeholder_verifying_key();
     let public_inputs: [[u8; 32]; VK_N_PUBLIC] = [*nullifier, *merkle_root];
     match verify_groth16(proof, &vk, &public_inputs) {
@@ -299,7 +303,7 @@ fn process_withdraw(
         return Err(ShieldedPoolError::NullifierAlreadySpent.into());
     }
 
-    // Verify the ZK proof (stub)
+    // Verify the ZK proof. This currently fails closed while VK_FINAL=false.
     if !verify_proof_groth16(&proof, &nullifier, &config.merkle_root) {
         return Err(ShieldedPoolError::ProofInvalid.into());
     }

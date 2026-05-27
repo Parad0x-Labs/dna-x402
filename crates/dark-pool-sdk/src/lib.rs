@@ -4,7 +4,7 @@
 //!   1. Generate a random note secret (stays off-chain forever)
 //!   2. Compute the commitment to deposit on-chain
 //!   3. Compute the nullifier to spend the note
-//!   4. Build the stub ZK proof for the withdrawal instruction
+//!   4. Build a placeholder proof payload for local plumbing tests
 //!
 //! IS_STUB      = true
 //! MAINNET_READY = false
@@ -120,10 +120,10 @@ pub fn note_spend_key(secret: &[u8; 32]) -> [u8; 32] {
     h.finalize().into()
 }
 
-/// Build a stub withdrawal proof for use with the on-chain program.
+/// Build a placeholder withdrawal proof for local plumbing tests.
 ///
 /// IS_STUB: the "proof" is H(domain || nullifier || merkle_root || recipient).
-/// This is replaced with a real Groth16 proof in Phase 2.
+/// Live withdrawals require a real Groth16 proof generated from final artifacts.
 pub fn create_stub_proof(
     note: &PoolNote,
     merkle_root: &[u8; 32],
@@ -134,8 +134,8 @@ pub fn create_stub_proof(
     }
     let nullifier = nullifier_hash(&note.secret, &note.pool);
 
-    // 256-byte stub proof: first 32 bytes = gate hash (same gate the on-chain
-    // placeholder VK accepts off-chain), rest zeros until real circuit is compiled.
+    // 256-byte placeholder payload: first 32 bytes = deterministic gate hash,
+    // rest zeros until real circuit artifacts are generated.
     let mut proof_bytes = [0u8; 256];
     let gate: [u8; 32] = {
         let mut h = Sha256::new();

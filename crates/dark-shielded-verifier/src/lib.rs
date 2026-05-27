@@ -1,8 +1,7 @@
-//! dark-shielded-verifier — real BN254 Groth16 on-chain verifier
+//! dark-shielded-verifier - BN254 Groth16 on-chain verifier path
 //!
-//! Implements the full Groth16 verification equation using Solana's native
-//! `alt_bn128` syscalls (BN254 curve). This is the SAME cryptography used
-//! by Tornado Cash, Zcash Sapling, and every major ZK protocol on Ethereum.
+//! Implements the Groth16 verification equation using Solana's native
+//! `alt_bn128` syscalls on the BN254 curve.
 //!
 //! Verification equation (4-pairing product-of-1 check):
 //!
@@ -35,8 +34,8 @@
 //! Replace with the output of: `snarkjs zkey export verificationkey circuit.zkey vk.json`
 //! then encode each point as described above.
 //!
-//! IS_STUB      = false  ← the VERIFICATION LOGIC is real
-//! VK_FINAL     = false  ← the VERIFYING KEY needs trusted setup + circuit compile
+//! IS_STUB      = false  - the verification logic is not a SHA gate
+//! VK_FINAL     = false  - the verifying key needs trusted setup + circuit compile
 
 /// The verification ALGORITHM is real BN254 Groth16.
 pub const IS_STUB: bool = false;
