@@ -311,7 +311,10 @@ mod tests {
     #[test]
     fn test_production_claim_false() {
         let ev = run_edge_capstone();
-        assert_eq!(ev["production_claim"], false, "production_claim must be false");
+        assert_eq!(
+            ev["production_claim"], false,
+            "production_claim must be false"
+        );
     }
 
     #[test]
@@ -354,7 +357,9 @@ mod tests {
     fn test_batch_500_batched_less_than_naive() {
         let ev = run_edge_capstone();
         let naive = ev["fee_model"]["batch_500_naive_writes"].as_u64().unwrap();
-        let batched = ev["fee_model"]["batch_500_batched_writes"].as_u64().unwrap();
+        let batched = ev["fee_model"]["batch_500_batched_writes"]
+            .as_u64()
+            .unwrap();
         assert!(batched < naive, "batched writes must be fewer than naive");
     }
 

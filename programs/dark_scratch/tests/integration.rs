@@ -304,3 +304,35 @@ fn test_scratch_len_matches_layout() {
     // version(1) + bump(1) + owner(32) + expires_at_slot(8) + tag(8) + created_at_slot(8) = 58
     assert_eq!(SCRATCH_LEN, 58);
 }
+
+#[test]
+fn test_instruction_empty_rejected() {
+    use dark_scratch::instruction::ScratchInstruction;
+    assert!(ScratchInstruction::unpack(&[]).is_err());
+}
+
+#[test]
+fn test_state_unpack_short_slice_rejected() {
+    use dark_scratch::state::ScratchAccount;
+    assert!(ScratchAccount::unpack(&[1u8; 57]).is_none());
+}
+
+#[test]
+fn test_scratch_seed_is_stable() {
+    assert_eq!(dark_scratch::SCRATCH_SEED, b"scratch");
+}
+
+#[test]
+fn test_create_instruction_preserves_full_tag() {
+    use dark_scratch::instruction::ScratchInstruction;
+    let tag = [1, 2, 3, 4, 5, 6, 7, 8];
+    let mut data = vec![0x00u8];
+    data.extend_from_slice(&9u64.to_le_bytes());
+    data.extend_from_slice(&tag);
+    let ScratchInstruction::CreateScratch { tag: parsed, .. } =
+        ScratchInstruction::unpack(&data).unwrap()
+    else {
+        panic!("wrong instruction variant");
+    };
+    assert_eq!(parsed, tag);
+}

@@ -306,3 +306,9 @@ fn test_chaff_batch_len_matches_layout() {
     // version(1) + bump(1) + count(1) + epoch(8) + payer(32) + created_at(8) = 51
     assert_eq!(CHAFF_BATCH_LEN, 51);
 }
+
+#[test]
+fn test_chaff_intent_len_matches_layout() {
+    use dark_chaff::state::CHAFF_INTENT_LEN;
+    assert_eq!(CHAFF_INTENT_LEN, 18);
+}

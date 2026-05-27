@@ -326,3 +326,38 @@ fn test_state_pack_unpack_roundtrip() {
     assert_eq!(unpacked.root, original.root);
     assert_eq!(unpacked.updated_at, original.updated_at);
 }
+
+#[test]
+fn test_state_unpack_short_slice_rejected() {
+    use dark_nullifier_banks::state::NullifierBank;
+    use solana_program::program_pack::Pack;
+    assert!(NullifierBank::unpack_from_slice(&[0u8; 10]).is_err());
+}
+
+#[test]
+fn test_state_unpack_wrong_version_rejected() {
+    use dark_nullifier_banks::state::{NullifierBank, NULLIFIER_BANK_LEN};
+    use solana_program::program_pack::Pack;
+    let mut data = vec![0u8; NULLIFIER_BANK_LEN];
+    data[0] = 9;
+    assert!(NullifierBank::unpack_from_slice(&data).is_err());
+}
+
+#[test]
+fn test_bank_and_record_lengths_match_layout() {
+    use dark_nullifier_banks::state::{NULLIFIER_BANK_LEN, NULLIFIER_RECORD_LEN};
+    assert_eq!(NULLIFIER_BANK_LEN, 55);
+    assert_eq!(NULLIFIER_RECORD_LEN, 9);
+}
+
+#[test]
+fn test_instruction_empty_rejected() {
+    use dark_nullifier_banks::instruction::DarkNullifierInstruction;
+    assert!(DarkNullifierInstruction::unpack(&[]).is_err());
+}
+
+#[test]
+fn test_instruction_unknown_tag_rejected() {
+    use dark_nullifier_banks::instruction::DarkNullifierInstruction;
+    assert!(DarkNullifierInstruction::unpack(&[0xFF]).is_err());
+}

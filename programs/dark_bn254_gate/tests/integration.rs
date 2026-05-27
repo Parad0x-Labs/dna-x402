@@ -126,3 +126,112 @@ mod tests {
         assert!(result.is_err(), "expected Err for invalid proof, got Ok");
     }
 }
+
+fn build_gate_data(prefix: [u8; 2], root: [u8; 32], nullifier: [u8; 32], amount: u64) -> Vec<u8> {
+    let mut data = vec![0u8; dark_bn254_gate::processor::INSTRUCTION_DATA_LEN];
+    data[0] = prefix[0];
+    data[1] = prefix[1];
+    data[256..288].copy_from_slice(&root);
+    data[288..320].copy_from_slice(&nullifier);
+    data[320..328].copy_from_slice(&amount.to_le_bytes());
+    data
+}
+
+#[test]
+fn test_instruction_data_len_is_exact_abi_width() {
+    assert_eq!(dark_bn254_gate::processor::INSTRUCTION_DATA_LEN, 352);
+}
+
+#[test]
+fn test_gate_record_size_matches_layout() {
+    assert_eq!(dark_bn254_gate::state::GATE_RECORD_SIZE, 81);
+}
+
+#[test]
+fn test_build_gate_data_sets_devnet_prefix() {
+    let data = build_gate_data([0xDE, 0xAD], [1u8; 32], [2u8; 32], 7);
+    assert_eq!(&data[0..2], &[0xDE, 0xAD]);
+}
+
+#[test]
+fn test_build_gate_data_places_merkle_root() {
+    let root = [0x11u8; 32];
+    let data = build_gate_data([0xDE, 0xAD], root, [2u8; 32], 7);
+    assert_eq!(&data[256..288], root.as_slice());
+}
+
+#[test]
+fn test_build_gate_data_places_nullifier() {
+    let nullifier = [0x22u8; 32];
+    let data = build_gate_data([0xDE, 0xAD], [1u8; 32], nullifier, 7);
+    assert_eq!(&data[288..320], nullifier.as_slice());
+}
+
+#[test]
+fn test_build_gate_data_amount_is_little_endian_u64_prefix() {
+    let amount = 0x0102_0304_0506_0708u64;
+    let data = build_gate_data([0xDE, 0xAD], [1u8; 32], [2u8; 32], amount);
+    assert_eq!(&data[320..328], amount.to_le_bytes().as_slice());
+    assert_eq!(&data[328..352], [0u8; 24].as_slice());
+}
+
+#[test]
+fn test_verification_record_fields_roundtrip_in_memory() {
+    let record = dark_bn254_gate::state::VerificationRecord {
+        merkle_root: [1u8; 32],
+        nullifier: [2u8; 32],
+        amount: 42,
+        verified_at_slot: 9,
+        is_verified: true,
+    };
+    assert_eq!(record.merkle_root, [1u8; 32]);
+    assert_eq!(record.nullifier, [2u8; 32]);
+    assert_eq!(record.amount, 42);
+    assert_eq!(record.verified_at_slot, 9);
+    assert!(record.is_verified);
+}
+
+#[test]
+fn test_invalid_length_error_maps_to_invalid_instruction_data() {
+    let err: solana_program::program_error::ProgramError =
+        dark_bn254_gate::error::GateError::InvalidInstructionLength.into();
+    assert_eq!(
+        err,
+        solana_program::program_error::ProgramError::InvalidInstructionData
+    );
+}
+
+#[test]
+fn test_invalid_amount_error_maps_to_invalid_instruction_data() {
+    let err: solana_program::program_error::ProgramError =
+        dark_bn254_gate::error::GateError::InvalidAmountEncoding.into();
+    assert_eq!(
+        err,
+        solana_program::program_error::ProgramError::InvalidInstructionData
+    );
+}
+
+#[test]
+fn test_failed_proof_error_maps_to_custom_one() {
+    let err: solana_program::program_error::ProgramError =
+        dark_bn254_gate::error::GateError::ProofVerificationFailed.into();
+    assert_eq!(err, solana_program::program_error::ProgramError::Custom(1));
+}
+
+#[test]
+fn test_gate_error_display_names_length_contract() {
+    let text = dark_bn254_gate::error::GateError::InvalidInstructionLength.to_string();
+    assert!(text.contains("352 bytes"));
+}
+
+#[test]
+fn test_gate_error_display_names_pairing_failure() {
+    let text = dark_bn254_gate::error::GateError::ProofVerificationFailed.to_string();
+    assert!(text.contains("Groth16"));
+}
+
+#[test]
+fn test_non_devnet_prefix_is_distinct_from_sentinel() {
+    let data = build_gate_data([0xDE, 0xAE], [1u8; 32], [2u8; 32], 1);
+    assert_ne!(&data[0..2], &[0xDE, 0xAD]);
+}

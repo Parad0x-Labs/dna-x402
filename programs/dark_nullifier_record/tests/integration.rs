@@ -169,3 +169,115 @@ mod tests {
         );
     }
 }
+
+#[test]
+fn test_record_instruction_builder_has_fixed_length() {
+    let data = dark_nullifier_record::instruction::record_nullifier_ix_data([1u8; 32]);
+    assert_eq!(
+        data.len(),
+        dark_nullifier_record::instruction::RECORD_NULLIFIER_IX_LEN
+    );
+}
+
+#[test]
+fn test_record_instruction_builder_sets_discriminator() {
+    let data = dark_nullifier_record::instruction::record_nullifier_ix_data([1u8; 32]);
+    assert_eq!(
+        data[0],
+        dark_nullifier_record::instruction::RECORD_NULLIFIER_DISCRIMINATOR
+    );
+}
+
+#[test]
+fn test_record_instruction_parser_roundtrip() {
+    let nullifier = [0x55u8; 32];
+    let data = dark_nullifier_record::instruction::record_nullifier_ix_data(nullifier);
+    assert_eq!(
+        dark_nullifier_record::instruction::parse_record_nullifier(&data),
+        Some(nullifier)
+    );
+}
+
+#[test]
+fn test_record_instruction_parser_rejects_empty() {
+    assert_eq!(
+        dark_nullifier_record::instruction::parse_record_nullifier(&[]),
+        None
+    );
+}
+
+#[test]
+fn test_record_instruction_parser_rejects_short_data() {
+    assert_eq!(
+        dark_nullifier_record::instruction::parse_record_nullifier(&[0u8; 32]),
+        None
+    );
+}
+
+#[test]
+fn test_record_instruction_parser_rejects_long_data() {
+    assert_eq!(
+        dark_nullifier_record::instruction::parse_record_nullifier(&[0u8; 34]),
+        None
+    );
+}
+
+#[test]
+fn test_record_instruction_parser_rejects_bad_discriminator() {
+    let mut data = dark_nullifier_record::instruction::record_nullifier_ix_data([1u8; 32]);
+    data[0] = 0xFF;
+    assert_eq!(
+        dark_nullifier_record::instruction::parse_record_nullifier(&data),
+        None
+    );
+}
+
+#[test]
+fn test_nullifier_record_size_matches_layout() {
+    assert_eq!(dark_nullifier_record::state::NULLIFIER_RECORD_SIZE, 41);
+}
+
+#[test]
+fn test_nullifier_record_roundtrip() {
+    let record = dark_nullifier_record::state::NullifierRecord {
+        bump: 201,
+        nullifier: [0xABu8; 32],
+        recorded_at_slot: 1234,
+    };
+    let bytes = record.to_bytes();
+    let parsed = dark_nullifier_record::state::NullifierRecord::from_bytes(&bytes).unwrap();
+    assert_eq!(parsed.bump, record.bump);
+    assert_eq!(parsed.nullifier, record.nullifier);
+    assert_eq!(parsed.recorded_at_slot, record.recorded_at_slot);
+}
+
+#[test]
+fn test_nullifier_record_from_short_slice_rejected() {
+    assert!(dark_nullifier_record::state::NullifierRecord::from_bytes(&[0u8; 40]).is_none());
+}
+
+#[test]
+fn test_nullifier_record_is_recorded_rejects_wrong_length() {
+    assert!(!dark_nullifier_record::state::NullifierRecord::is_recorded(
+        &[1u8; 40]
+    ));
+}
+
+#[test]
+fn test_nullifier_record_is_recorded_rejects_zero_record() {
+    assert!(!dark_nullifier_record::state::NullifierRecord::is_recorded(
+        &[0u8; 41]
+    ));
+}
+
+#[test]
+fn test_nullifier_record_is_recorded_accepts_nonzero_record() {
+    let record = dark_nullifier_record::state::NullifierRecord {
+        bump: 1,
+        nullifier: [1u8; 32],
+        recorded_at_slot: 2,
+    };
+    assert!(dark_nullifier_record::state::NullifierRecord::is_recorded(
+        &record.to_bytes()
+    ));
+}
