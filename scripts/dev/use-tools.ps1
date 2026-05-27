@@ -27,7 +27,7 @@ if ($paths.Count -gt 0) {
   $env:Path = ($paths -join ";") + ";" + $env:Path
 }
 
-$env:CODEX_DNA_TOOLS_ROOT = $ToolsRoot
+$env:DNA_TOOLS_ROOT = $ToolsRoot
 $env:CARGO_HOME = $CargoHome
 $env:RUSTUP_HOME = $RustupHome
 $env:PLAYWRIGHT_BROWSERS_PATH = $PlaywrightBrowsers

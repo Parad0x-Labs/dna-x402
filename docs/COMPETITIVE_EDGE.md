@@ -252,4 +252,4 @@ are documented in DARK_ZK_PRIMITIVES.md under "What Is NOT Claimed."
 
 ---
 
-*Last updated: 2026-05-26 | Branch: codex/mainnet-hardening*
+*Last updated: 2026-05-26 | Branch: mainnet-hardening*

@@ -25,8 +25,12 @@ export function toSol(lamports: bigint): string {
 
 export function runSolana(args: string[], cwd = process.cwd()): CliRunResult {
   const configured = process.env.SOLANA_CLI_PATH;
-  const workspaceSolana = path.resolve(cwd, ".tools", "solana-v1.18.26", "solana-release", "bin", process.platform === "win32" ? "solana.exe" : "solana");
-  const command = configured ?? (fs.existsSync(workspaceSolana) ? workspaceSolana : "solana");
+  const exe = process.platform === "win32" ? "solana.exe" : "solana";
+  const candidateRoots = [cwd, path.resolve(cwd, "..")];
+  const workspaceSolana = candidateRoots
+    .map((root) => path.resolve(root, ".tools", "solana-v1.18.26", "solana-release", "bin", exe))
+    .find((candidate) => fs.existsSync(candidate));
+  const command = configured ?? workspaceSolana ?? "solana";
   const cmd = `${command} ${args.join(" ")}`;
   const result = spawnSync(command, args, {
     cwd,
@@ -36,7 +40,7 @@ export function runSolana(args: string[], cwd = process.cwd()): CliRunResult {
   return {
     status: result.status ?? 1,
     stdout: result.stdout ?? "",
-    stderr: result.stderr ?? "",
+    stderr: result.stderr ?? result.error?.message ?? "",
     cmd,
   };
 }

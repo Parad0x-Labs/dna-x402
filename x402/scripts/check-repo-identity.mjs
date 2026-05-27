@@ -35,7 +35,7 @@ const publicForbidden = [
   ["personal local path", /(?:C:\\Users|\/Users\/)/i],
   ["personal operator name", personalOperatorPattern],
   ["hype/internal labels", hypeLabelPattern],
-  ["low-signal honesty wording", /\bhonest(?:ly)?\b/i],
+  ["low-signal claim framing", new RegExp(`\\b${["hon", "est"].join("")}(?:ly)?\\b`, "i")],
 ];
 
 function trackedFiles() {

@@ -363,7 +363,7 @@ function writeReport(outDir: string, input: {
     lines.push(`| ${flow.label} | ${flow.buyerLanguage} | ${flow.sellerLabel} | ${flow.settlement} | ${flow.scenario} | \`${short(flow.receiptId)}\` | ${payment} | ${anchor} | ${flow.ok ? "PASS" : "FAIL"} |`);
   }
   lines.push("");
-  lines.push("## Honest Limits");
+  lines.push("## Evidence Limits");
   lines.push("");
   lines.push("- This is a devnet proof using a 6-decimal devnet SPL test mint, not mainnet USDC.");
   lines.push("- Stream is proven as a stream-style funded-state/top-up path using the injected Streamflow-compatible verifier; it is not a live Streamflow program integration.");

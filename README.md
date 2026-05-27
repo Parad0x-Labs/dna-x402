@@ -49,6 +49,7 @@ related_repo:
   degen_use_cases: docs/DEGEN_USE_CASES.md
   anti_copytrade_alpha: docs/ANTI_COPYTRADE_ALPHA.md
   fee_saving_primitives: docs/FEE_SAVING_SOLANA_PRIMITIVES.md
+  edge_capstone_flow: docs/EDGE_CAPSTONE_FLOW.md
 canonical_repo: https://github.com/Parad0x-Labs/dna-x402
 legacy_mirror: https://github.com/Parad0x-Labs/x402-dna
 ```
@@ -202,8 +203,9 @@ Six frontier-edge primitives built for on-chain degen survival:
 Full doc: [`docs/DEGEN_USE_CASES.md`](./docs/DEGEN_USE_CASES.md)
 Fee savings: [`docs/FEE_SAVING_SOLANA_PRIMITIVES.md`](./docs/FEE_SAVING_SOLANA_PRIMITIVES.md)
 Anti-copytrading spec: [`docs/ANTI_COPYTRADE_ALPHA.md`](./docs/ANTI_COPYTRADE_ALPHA.md)
+Edge capstone flow: [`docs/EDGE_CAPSTONE_FLOW.md`](./docs/EDGE_CAPSTONE_FLOW.md)
 
-**807 Rust tests passing. 0 failures. Run:** `cargo test --workspace`
+Run the Rust regression suite with: `cargo test --workspace`
 
 ## Start Here
 

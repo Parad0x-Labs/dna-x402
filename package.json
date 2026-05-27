@@ -19,6 +19,7 @@
     "db:migrate": "npm --prefix x402 run db:migrate",
     "db:health": "npm --prefix x402 run db:health",
     "db:backup:test:postgres": "npm --prefix x402 run db:backup:test:postgres",
+    "check:style": "node scripts/check-style-terms.mjs",
     "acceptance:builder": "npm --prefix x402 run acceptance:builder",
     "acceptance:agents": "npm --prefix x402 run acceptance:agents",
     "acceptance:degen-mode": "npm --prefix x402 run acceptance:degen-mode"

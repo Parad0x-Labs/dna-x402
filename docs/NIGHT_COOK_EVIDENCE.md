@@ -1,7 +1,7 @@
 # Night Cook Evidence — Crates, Programs, Tests, Demoability
 
 > Snapshot date: 2026-05-26
-> Branch: codex/mainnet-hardening
+> Branch: mainnet-hardening
 
 ---
 

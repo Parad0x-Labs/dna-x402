@@ -144,7 +144,7 @@ cat > "${USE_TOOLS}" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 
-export CODEX_DNA_TOOLS_ROOT="${TOOLS_ROOT}"
+export DNA_TOOLS_ROOT="${TOOLS_ROOT}"
 export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS}"
 export npm_config_cache="${NPM_CACHE}"
 export CARGO_HOME="${TOOLS_ROOT}/cargo"

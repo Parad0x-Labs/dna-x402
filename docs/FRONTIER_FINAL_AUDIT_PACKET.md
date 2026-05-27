@@ -1,7 +1,7 @@
 # Dark Null — FRONTIER_FINAL Audit Sign-Off Packet
 
 **Commit:** 66765c973f0b1a9ba0a3ee7bdee87d4f85b6d186 (baseline; FRONTIER_FINAL changes staged)
-**Branch:** codex/mainnet-hardening
+**Branch:** mainnet-hardening
 **Date:** 2026-05-26
 **Network:** Solana Devnet only
 

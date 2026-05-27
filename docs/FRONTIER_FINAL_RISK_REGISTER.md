@@ -1,6 +1,6 @@
 # Dark Null — FRONTIER_FINAL Risk Register
 
-**Branch:** codex/mainnet-hardening
+**Branch:** mainnet-hardening
 **Date:** 2026-05-26
 **Network:** Solana Devnet only
 

@@ -107,6 +107,20 @@ function deterministicSignature(label: string): string {
   return bs58.encode(Buffer.from(label.padEnd(64, "0").slice(0, 64)));
 }
 
+function resolveSolanaCli(cwd: string): string {
+  if (process.env.SOLANA_CLI_PATH) {
+    return process.env.SOLANA_CLI_PATH;
+  }
+  const exe = process.platform === "win32" ? "solana.exe" : "solana";
+  for (const root of [cwd, path.resolve(cwd, "..")]) {
+    const candidate = path.resolve(root, ".tools", "solana-v1.18.26", "solana-release", "bin", exe);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return "solana";
+}
+
 function runNpmScript(cwd: string, script: string, extraArgs: string[]): { ok: boolean; stdout: string; stderr: string; command: string } {
   const args = ["run", script];
   if (extraArgs.length > 0) {
@@ -663,17 +677,18 @@ function runAnchoringEvidence(params: {
     };
   }
 
-  const confirm = spawnSync("solana", ["confirm", latest.sig, "-u", params.cluster], {
+  const solana = resolveSolanaCli(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", ".."));
+  const confirm = spawnSync(solana, ["confirm", latest.sig, "-u", params.cluster], {
     encoding: "utf8",
     env: process.env,
   });
-  fs.writeFileSync(params.outConfirmPath, `${confirm.stdout ?? ""}${confirm.stderr ?? ""}`);
+  fs.writeFileSync(params.outConfirmPath, `${confirm.stdout ?? ""}${confirm.stderr ?? ""}${confirm.error?.message ?? ""}`);
 
-  const bucketDump = spawnSync("solana", ["account", latest.bucket, "-u", params.cluster], {
+  const bucketDump = spawnSync(solana, ["account", latest.bucket, "-u", params.cluster], {
     encoding: "utf8",
     env: process.env,
   });
-  fs.writeFileSync(params.outBucketDumpPath, `${bucketDump.stdout ?? ""}${bucketDump.stderr ?? ""}`);
+  fs.writeFileSync(params.outBucketDumpPath, `${bucketDump.stdout ?? ""}${bucketDump.stderr ?? ""}${bucketDump.error?.message ?? ""}`);
 
   const ok = (confirm.status ?? 1) === 0 && (bucketDump.status ?? 1) === 0;
   return {
@@ -694,6 +709,13 @@ function runAnchoringEvidence(params: {
 }
 
 function markdownForReport(report: AuditReport): string {
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+  const publicPath = (value: string | undefined): string => {
+    if (!value) {
+      return "n/a";
+    }
+    return value.replaceAll(repoRoot, "<repo-root>");
+  };
   const lines = [
     "# Full Audit Report",
     "",
@@ -713,20 +735,20 @@ function markdownForReport(report: AuditReport): string {
     `- Anchoring evidence: ${report.anchoringEvidence.ok ? "PASS" : "FAIL"} - ${report.anchoringEvidence.message}`,
     "",
     "## Artifacts",
-    `- audit json: ${report.artifacts.auditJsonPath}`,
-    `- deploy estimate: ${report.artifacts.estimateReportPath ?? "n/a"}`,
-    `- deploy ledger: ${report.artifacts.ledgerReportPath ?? "n/a"}`,
-    `- close buffers: ${report.artifacts.closeBuffersReportPath ?? "n/a"}`,
-    `- sim 10 agents: ${report.artifacts.simulationReportPath ?? "n/a"}`,
-    `- anchor tx sigs: ${report.artifacts.anchorSignaturesPath ?? "n/a"}`,
-    `- anchor confirm: ${report.artifacts.anchorConfirmPath ?? "n/a"}`,
-    `- bucket dump: ${report.artifacts.bucketAccountDumpPath ?? "n/a"}`,
+    `- audit json: ${publicPath(report.artifacts.auditJsonPath)}`,
+    `- deploy estimate: ${publicPath(report.artifacts.estimateReportPath)}`,
+    `- deploy ledger: ${publicPath(report.artifacts.ledgerReportPath)}`,
+    `- close buffers: ${publicPath(report.artifacts.closeBuffersReportPath)}`,
+    `- sim 10 agents: ${publicPath(report.artifacts.simulationReportPath)}`,
+    `- anchor tx sigs: ${publicPath(report.artifacts.anchorSignaturesPath)}`,
+    `- anchor confirm: ${publicPath(report.artifacts.anchorConfirmPath)}`,
+    `- bucket dump: ${publicPath(report.artifacts.bucketAccountDumpPath)}`,
     "",
     "## Notes",
   ];
 
   for (const note of report.notes) {
-    lines.push(`- ${note}`);
+    lines.push(`- ${publicPath(note)}`);
   }
 
   return lines.join("\n");

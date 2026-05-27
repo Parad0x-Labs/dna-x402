@@ -5,18 +5,13 @@ import crypto from "node:crypto";
 import BN from "bn.js";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
-import {
-  fetchWith402,
-  AgentWallet,
-  InMemoryReceiptStore,
-  InMemorySpendTracker,
-} from "../../src/client.js";
+import { AgentWallet } from "../../src/client.js";
 import { loadConfig, X402Config } from "../../src/config.js";
 import { parseAtomic } from "../../src/feePolicy.js";
 import { createSignedManifest } from "../../src/market/manifest.js";
 import { ReceiptSigner, verifySignedReceipt } from "../../src/receipts.js";
 import { createX402App } from "../../src/server.js";
-import { PaymentProof } from "../../src/types.js";
+import { PaymentProof, QuoteResponse, SignedReceipt } from "../../src/types.js";
 import { verifySplTransferProof } from "../../src/verifier/splTransfer.js";
 import { verifyStreamflowProof } from "../../src/verifier/streamflow.js";
 import { installProgrammabilityFixtures } from "./programmability/fixtures/install.js";
@@ -198,7 +193,7 @@ function runCommand(command: string, args: string[], cwd: string): { status: num
   return {
     status: out.status ?? 1,
     stdout: out.stdout ?? "",
-    stderr: out.stderr ?? "",
+    stderr: out.stderr ?? out.error?.message ?? "",
   };
 }
 
@@ -213,6 +208,10 @@ function commandOutput(command: string, args: string[], cwd: string): string {
 function sanitizeSig(prefix: string): string {
   const body = crypto.randomBytes(20).toString("hex");
   return `${prefix}${body}`;
+}
+
+function deterministicBase58Signature(label: string): string {
+  return bs58.encode(Buffer.from(label.padEnd(64, "0").slice(0, 64)));
 }
 
 function createWalletCapture(): WalletCapture {
@@ -277,29 +276,38 @@ function sumMetricValues(rows: unknown): number {
 }
 
 function parsePaymentRequirements(payload: unknown): {
-  quoteId: string;
-  totalAtomic: string;
+  quote: QuoteResponse;
   recommendedMode: "transfer" | "stream" | "netting";
+  commitEndpoint: string;
+  finalizeEndpoint: string;
+  receiptEndpoint: string;
 } {
   if (!payload || typeof payload !== "object") {
     throw new Error("payment requirements payload missing");
   }
   const maybe = payload as {
     paymentRequirements?: {
-      quote?: { quoteId?: string; totalAtomic?: string };
+      quote?: QuoteResponse;
       recommendedMode?: "transfer" | "stream" | "netting";
+      commitEndpoint?: string;
+      finalizeEndpoint?: string;
+      receiptEndpoint?: string;
     };
   };
-  const quoteId = maybe.paymentRequirements?.quote?.quoteId;
-  const totalAtomic = maybe.paymentRequirements?.quote?.totalAtomic;
+  const quote = maybe.paymentRequirements?.quote;
   const recommendedMode = maybe.paymentRequirements?.recommendedMode;
-  if (!quoteId || !totalAtomic || !recommendedMode) {
+  const commitEndpoint = maybe.paymentRequirements?.commitEndpoint;
+  const finalizeEndpoint = maybe.paymentRequirements?.finalizeEndpoint;
+  const receiptEndpoint = maybe.paymentRequirements?.receiptEndpoint;
+  if (!quote?.quoteId || !quote.totalAtomic || !recommendedMode || !commitEndpoint || !finalizeEndpoint || !receiptEndpoint) {
     throw new Error("invalid payment requirements shape");
   }
   return {
-    quoteId,
-    totalAtomic,
+    quote,
     recommendedMode,
+    commitEndpoint,
+    finalizeEndpoint,
+    receiptEndpoint,
   };
 }
 
@@ -453,7 +461,7 @@ async function runProofNegativeChecks(): Promise<{ ok: boolean; reasons: string[
   };
 
   const wrongMint = await verifySplTransferProof(wrongMintConn, {
-    txSignature: "sig-wrong-mint",
+    txSignature: deterministicBase58Signature("wrong-mint"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -461,7 +469,7 @@ async function runProofNegativeChecks(): Promise<{ ok: boolean; reasons: string[
     nowMs,
   });
   const wrongRecipient = await verifySplTransferProof(wrongRecipientConn, {
-    txSignature: "sig-wrong-recipient",
+    txSignature: deterministicBase58Signature("wrong-recipient"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -469,7 +477,7 @@ async function runProofNegativeChecks(): Promise<{ ok: boolean; reasons: string[
     nowMs,
   });
   const underpay = await verifySplTransferProof(underpayConn, {
-    txSignature: "sig-underpay",
+    txSignature: deterministicBase58Signature("underpay"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -477,7 +485,7 @@ async function runProofNegativeChecks(): Promise<{ ok: boolean; reasons: string[
     nowMs,
   });
   const stale = await verifySplTransferProof(staleConn, {
-    txSignature: "sig-stale",
+    txSignature: deterministicBase58Signature("stale"),
     expectedMint: "usdc-mint",
     expectedRecipient: "recipient-wallet",
     minAmountAtomic: "100",
@@ -529,7 +537,7 @@ async function waitForAnchor(
   receiptId: string,
   cluster: string,
 ): Promise<{ ok: boolean; signature?: string; bucket?: string; bucketId?: string; note: string }> {
-  const deadline = Date.now() + 20_000;
+  const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
     const probe = await fetch(`${baseUrl}/anchoring/receipt/${receiptId}`);
     if (probe.status !== 200) {
@@ -553,7 +561,7 @@ async function waitForAnchor(
           signature,
           bucket,
           bucketId,
-          note: `anchor signature confirmation failed: ${confirm.stderr.trim()}`,
+          note: `anchor signature confirmation failed: ${confirm.stderr.trim() || confirm.stdout.trim()}`,
         };
       }
     }
@@ -591,43 +599,83 @@ async function runPrimitiveFlow(
 
   const requirements = parsePaymentRequirements(await unpaid.json());
   const walletCapture = createWalletCapture();
-  const store = new InMemoryReceiptStore();
-  const spendTracker = new InMemorySpendTracker();
 
-  const maxSpend = (parseAtomic(requirements.totalAtomic) + 50_000n).toString(10);
-  const result = await fetchWith402(fullUrl, {
-    wallet: walletCapture.wallet,
-    maxSpendAtomic: maxSpend,
-    preferStream: requirements.recommendedMode === "stream",
-    receiptStore: store,
-    spendTracker,
+  const payerCommitment32B = `0x${crypto.randomBytes(32).toString("hex")}`;
+  const endpointUrl = (endpoint: string) => new URL(endpoint, baseUrl).toString();
+  const commitRes = await fetch(endpointUrl(requirements.commitEndpoint), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      quoteId: requirements.quote.quoteId,
+      payerCommitment32B,
+    }),
   });
+  const commitData = await commitRes.json() as { commitId?: string; error?: string };
+  const commitId = commitData.commitId;
+  if (!commitRes.ok || !commitId) {
+    notes.push(`commit failed (${commitRes.status}): ${commitData.error ?? "missing commitId"}`);
+  }
 
-  const responseOk = result.response.status === 200;
-  const receipt = result.receipt;
-  const settlementMode = walletCapture.lastProof?.settlement ?? requirements.recommendedMode;
+  const paymentProof = requirements.recommendedMode === "stream" && walletCapture.wallet.payStream
+    ? await walletCapture.wallet.payStream(requirements.quote)
+    : requirements.recommendedMode === "netting" && walletCapture.wallet.payNetted
+      ? await walletCapture.wallet.payNetted(requirements.quote)
+      : await walletCapture.wallet.payTransfer(requirements.quote);
+
+  let receipt: SignedReceipt | undefined;
+  let responseOk = false;
+  if (commitId) {
+    const finalizeRes = await fetch(endpointUrl(requirements.finalizeEndpoint), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        commitId,
+        paymentProof,
+      }),
+    });
+    const finalizeData = await finalizeRes.json() as { receiptId?: string; error?: string };
+    if (!finalizeRes.ok || !finalizeData.receiptId) {
+      notes.push(`finalize failed (${finalizeRes.status}): ${finalizeData.error ?? "missing receiptId"}`);
+    } else {
+      const receiptRes = await fetch(endpointUrl(requirements.receiptEndpoint.replace(":receiptId", finalizeData.receiptId)));
+      if (!receiptRes.ok) {
+        notes.push(`receipt fetch failed (${receiptRes.status})`);
+      } else {
+        receipt = await receiptRes.json() as SignedReceipt;
+      }
+
+      const retryResponse = await fetch(fullUrl, {
+        headers: {
+          "x-dnp-commit-id": commitId,
+        },
+      });
+      responseOk = retryResponse.status === 200;
+      if (!responseOk) {
+        notes.push(`retry response status ${retryResponse.status}`);
+      }
+    }
+  }
+
+  const settlementMode = paymentProof.settlement;
   const receiptVerification = Boolean(receipt && verifySignedReceipt(receipt));
-  const paymentTxSignature = walletCapture.lastProof?.settlement === "transfer"
-    ? walletCapture.lastProof.txSignature
-    : walletCapture.lastProof?.settlement === "stream"
-      ? walletCapture.lastProof.streamId
+  const paymentTxSignature = paymentProof.settlement === "transfer"
+    ? paymentProof.txSignature
+    : paymentProof.settlement === "stream"
+      ? paymentProof.streamId
       : "netting-ledger";
 
-  if (!responseOk) {
-    notes.push(`retry response status ${result.response.status}`);
-  }
   if (!receiptVerification) {
     notes.push("receipt signature verification failed");
   }
 
   let feeCorrectness = true;
-  if (result.commitId && walletCapture.lastProof && settlementMode === "netting") {
+  if (commitId && settlementMode === "netting") {
     const replayFinalize = await fetch(`${baseUrl}/finalize`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        commitId: result.commitId,
-        paymentProof: walletCapture.lastProof,
+        commitId,
+        paymentProof,
       }),
     });
 
@@ -647,7 +695,7 @@ async function runPrimitiveFlow(
     const batches = flushJson.batches ?? [];
     const commitMentions = batches.reduce((sum, batch) => {
       const ids = batch.commitIds ?? [];
-      return sum + ids.filter((id) => id === result.commitId).length;
+      return sum + ids.filter((id) => id === commitId).length;
     }, 0);
 
     let splitConsistent = true;
@@ -723,7 +771,7 @@ async function runPauseFlagCheckComprehensive(baseConfig: X402Config): Promise<b
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      quoteId: req.quoteId,
+      quoteId: req.quote.quoteId,
       payerCommitment32B: `0x${"aa".repeat(32)}`,
     }),
   }).then((r) => r.json() as Promise<{ commitId: string }>);

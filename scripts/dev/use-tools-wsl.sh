@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export CODEX_DNA_TOOLS_ROOT="/mnt/g/DNA x402/.tools/wsl"
+export DNA_TOOLS_ROOT="/mnt/g/DNA x402/.tools/wsl"
 export PLAYWRIGHT_BROWSERS_PATH="/mnt/g/DNA x402/.tools/wsl/playwright-browsers"
 export npm_config_cache="/mnt/g/DNA x402/.tools/wsl/npm-cache"
 export CARGO_HOME="/mnt/g/DNA x402/.tools/wsl/cargo"

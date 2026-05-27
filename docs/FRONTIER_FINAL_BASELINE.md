@@ -10,7 +10,7 @@
 | Field | Value |
 |-------|-------|
 | Commit | `66765c973f0b1a9ba0a3ee7bdee87d4f85b6d186` |
-| Branch | `codex/mainnet-hardening` |
+| Branch | `mainnet-hardening` |
 | Upstream | `origin/main` (branch is ahead; untracked crates/programs not yet committed) |
 | `cargo fmt --all -- --check` | **PASS** (0 diffs after auto-format applied) |
 | `cargo test --workspace` | **304 passed, 0 failed** |

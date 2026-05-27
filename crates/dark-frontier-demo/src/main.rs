@@ -457,8 +457,8 @@ fn run_ritual_blink_gateway() -> Value {
 
     json!({
         "primitive": "ritual-blink-gateway",
-        "description": "THE FRONTIER EDGE — First-ever atomic combination of: Solana Actions/Blinks + x402 payment-required + ritual grammar + Token-2022 Transfer Hook + 33-byte HookVerdict receipt. All in one Solana transaction from a tweet-embedded link.",
-        "why_this_is_new": "No existing Solana project combines Blinks (tweet-embeddable tx links) + x402 (HTTP 402 payment gate) + ritual grammar (ordered instruction validation) + Token-2022 Transfer Hook (per-transfer CPI) + HookVerdict capsule (tamper-evident 33-byte return data) in one atomic transaction. This is the first spec for that combination.",
+        "description": "Atomic combination of Solana Actions/Blinks, x402 payment-required, ritual grammar, Token-2022 Transfer Hook, and a 33-byte HookVerdict receipt. All in one Solana transaction from a tweet-embedded link.",
+        "why_this_is_new": "The capstone combines Blinks, x402, ordered instruction validation, Token-2022 Transfer Hook, and HookVerdict capsule evidence in one transaction shape.",
         "daily_use_case": "An alpha-trader shares a Blink link in a tweet. Anyone who clicks hits a Dark Null gateway: (1) x402 fee payment required, (2) transaction MUST contain 5 ritual steps in order, (3) Token-2022 hook fires and emits HookVerdict capsule, (4) receipt chain proves all steps atomically. All from one Phantom wallet click.",
         "ceremony_layout": {
             "instruction_count": ceremony.instruction_count,
@@ -503,6 +503,7 @@ fn main() {
     let meme = run_meme_risk();
     let fee = run_fee_optimizer();
     let frontier_edge = run_ritual_blink_gateway();
+    let capstone = dark_frontier_demo::run_edge_capstone();
 
     let evidence = json!({
         "mission": "DARK_NULL_FRONTIER_EDGE_V1",
@@ -515,7 +516,7 @@ fn main() {
             "production_claim": false,
             "agent_had_private_key": false,
             "devnet_only": true,
-            "not_audited": true
+            "external_review_pending": true
         },
         "primitives": {
             "dark-alpha-receipts":    alpha,
@@ -523,23 +524,29 @@ fn main() {
             "dark-compressed-leaves": leaves,
             "dark-meme-risk":         meme,
             "dark-fee-optimizer":     fee,
-            "ritual-blink-gateway":   frontier_edge
+            "ritual-blink-gateway":   frontier_edge,
+            "edge-capstone":          capstone
+        },
+        "edge_capstone_summary": {
+            "flow": "Paid alpha reveal bound to an x402 payer hash, chained into a receipt DAG, compressed into a state root, and backed by a clean x402 adapter capsule.",
+            "daily_use": "A trader can sell a reveal without exposing the live wallet or raw mint in the evidence object. The subscriber gets a verifiable reveal tied to the payment intent.",
+            "developer_value": "One local run connects the primitives that matter: x402, alpha receipts, Blink ritual layout, compressed leaves, fee model, and service capsule."
         },
         "frontier_edge_summary": {
             "anti_copytrading": "Private alpha with x402 paywall — commitment hashes published, raw trades hidden until paid reveal",
             "swarm_capsules":   "Service nodes prove they hold no user keys, no root keys — verifiable trust without a central registry",
             "zk_compression":   "99.8% rent savings for nullifier sets and receipt trees (2,000 vs 890,880 lamports per leaf)",
             "meme_risk_oracle": "Private hash-only risk query — token identity never exposed; MemeTrans 4-signal weighted scoring",
-            "fee_optimizer":    "P-token 98.2% CU reduction + ZK Compression = Dark Null routing is the cheapest path on Solana",
-            "frontier edge":         "Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule — one click, one tweet, fully atomic"
+            "fee_optimizer":    "P-token 98.2% CU reduction + ZK Compression = low-rent routing model for Solana payments",
+            "frontier edge":         "Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict capsule — one click, one tweet, atomic transaction spec"
         },
         "what_is_genuinely_new": [
-            "First private trade receipt protocol on Solana where copycats get nothing without paying",
-            "First service capsule system that proves 'no custody' rather than trusting operator claims",
-            "First Solana leaf schema aligned to Light Protocol ZK Compression v2 without Light SDK dependency",
-            "First hash-only memecoin risk oracle — token identity is SHA256 only, no raw mint in any receipt",
-            "First fee model combining P-token (SIMD-0266) + ZK Compression savings in one estimator",
-            "First-ever Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict receipt in one atomic transaction spec"
+            "Private trade receipts where copycats get nothing without paying",
+            "Service capsules prove no custody keys instead of relying on operator reputation",
+            "Solana leaf schema aligned to Light Protocol ZK Compression v2 without Light SDK dependency",
+            "Hash-only memecoin risk oracle — token identity is SHA256 only, no raw mint in any receipt",
+            "Fee model combining P-token (SIMD-0266) + ZK Compression savings in one estimator",
+            "Capstone flow combines Blinks + x402 + ritual grammar + Token-2022 Hook + HookVerdict receipt in one atomic transaction spec"
         ]
     });
 
@@ -550,7 +557,7 @@ fn main() {
 
     println!("{}", serde_json::to_string_pretty(&evidence).unwrap());
     eprintln!("\n✅  FRONTIER_EDGE_DEMO.json written → {}", out_path);
-    eprintln!("✅  807 tests passing, 0 failed");
+    eprintln!("✅  Regression suite: cargo test --workspace");
     eprintln!("✅  6 frontier edge crates exercised");
     eprintln!("✅  FRONTIER EDGE: ritual-blink-gateway spec proven");
 }
