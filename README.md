@@ -128,6 +128,12 @@ This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path pay
 
 ## What ships in this repo
 
+### Public Frontier Workspace
+
+The full agent-commerce workspace is public in this repository, not hidden in a local-only tree. Current `main` carries a 343-member Cargo workspace: 311 crate entries, 10 Solana program entries, the TypeScript x402 package, the public builder site, and the local agent/admin UI.
+
+Start with [`docs/PUBLIC_FRONTIER_WORKSPACE.md`](./docs/PUBLIC_FRONTIER_WORKSPACE.md) for the public inventory, promoted module map, Dark Null integration points, and regression commands.
+
 ### Payments and Verification
 - x402 HTTP payment flows for APIs and agents
 - Solana settlement via netting, SPL transfers, and stream-style access flows
@@ -235,7 +241,9 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 | Path | Purpose |
 |---|---|
 | [`x402/`](./x402) | Canonical package, server, SDKs, verifier, diagnostics |
+| [`crates/`](./crates) | Rust primitive workspace for agent commerce, route privacy, receipts, fee logic, and Dark Null bridges |
 | [`programs/receipt_anchor/`](./programs/receipt_anchor) | Solana program for receipt anchoring |
+| [`programs/`](./programs) | Solana program workspace including receipt anchoring, proof gates, nullifier records, transfer hooks, and chaff |
 | [`docs/`](./docs) | Proof, security, deploy, and programmability docs |
 | [`site/`](./site) | Public docs/proof front door |
 | [`site-agent/`](./site-agent) | `/agent` onboarding and control-room UI |
