@@ -1300,6 +1300,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-agent-passport"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-agent-payment-sdk"
 version = "0.1.0"
 dependencies = [
@@ -2747,6 +2754,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-rate-proof"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-receipt-aggregator"
 version = "0.1.0"
 dependencies = [
@@ -3063,6 +3077,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-swarm-fund"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-threshold-decrypt"
 version = "0.1.0"
 dependencies = [
@@ -3238,6 +3259,13 @@ dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-x402-commit-reveal"
+version = "0.1.0"
+dependencies = [
  "sha2 0.10.9",
 ]
 

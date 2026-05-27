@@ -372,6 +372,11 @@ members = [
     "crates/dark-pool-sdk",
     # DARK_SHIELDED_VERIFIER - real BN254 Groth16 verifier using alt_bn128 syscalls
     "crates/dark-shielded-verifier",
+    # DARK_NULL_FRONTIER_V1 - agent passport, anti-MEV commit-reveal, swarm fund, ZK rate proof
+    "crates/dark-agent-passport",
+    "crates/dark-x402-commit-reveal",
+    "crates/dark-swarm-fund",
+    "crates/dark-rate-proof",
 ]
 resolver = "2"
 
