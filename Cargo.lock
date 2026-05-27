@@ -1330,6 +1330,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-amount-receipt"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-anon-credential"
 version = "0.1.0"
 dependencies = [
@@ -1969,6 +1976,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-imt-nullifier"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-intent-proof"
 version = "0.1.0"
 dependencies = [
@@ -2145,6 +2159,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-nova-receipt"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-null-token"
 version = "0.1.0"
 dependencies = [
@@ -2259,6 +2280,13 @@ dependencies = [
 
 [[package]]
 name = "dark-poseidon-bn254"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-poseidon-safe"
 version = "0.1.0"
 dependencies = [
  "sha2 0.10.9",
@@ -3248,6 +3276,13 @@ dependencies = [
  "dark-shielded-client",
  "dark-shielded-pool-core",
  "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-zk-hook"
+version = "0.1.0"
+dependencies = [
  "sha2 0.10.9",
 ]
 

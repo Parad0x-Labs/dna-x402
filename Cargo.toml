@@ -355,6 +355,12 @@ members = [
     "crates/dark-commitment-chain",
     # DARK_HTLC_RECEIPT - HTLC receipts for cross-party x402 settlements
     "crates/dark-htlc-receipt",
+    # DARK_NULL_ZK_V2 - collision-safe Poseidon, IMT nullifier set, amount receipts, Nova folds, ZK hook
+    "crates/dark-poseidon-safe",
+    "crates/dark-imt-nullifier",
+    "crates/dark-amount-receipt",
+    "crates/dark-nova-receipt",
+    "crates/dark-zk-hook",
 ]
 resolver = "2"
 
