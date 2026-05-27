@@ -1,0 +1,19 @@
+[package]
+name = "dark-shielded-pool-program"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+sha2           = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "lib"]

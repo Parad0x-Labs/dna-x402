@@ -2279,6 +2279,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-pool-sdk"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-poseidon-bn254"
 version = "0.1.0"
 dependencies = [
@@ -2925,6 +2932,17 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "dark-shielded-pool-program"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
 ]
 
 [[package]]

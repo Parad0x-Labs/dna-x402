@@ -367,6 +367,9 @@ members = [
     "crates/dark-x402-private-intent",
     "crates/dark-x402-batch-proof",
     "crates/dark-x402-compliance-proof",
+    # DARK_SHIELDED_POOL_V1 - first Solana-native fixed-denomination shielded transfer pool
+    "programs/dark_shielded_pool",
+    "crates/dark-pool-sdk",
 ]
 resolver = "2"
 
