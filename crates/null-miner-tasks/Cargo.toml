@@ -1,0 +1,14 @@
+[package]
+name = "null-miner-tasks"
+version = "0.1.0"
+edition = "2021"
+description = "External task kinds for the NULL Miner network — extends bounty-blink-jobs with real-world task types"
+license = "MIT"
+publish = false
+
+[dependencies]
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+# no extra deps — tests use std only

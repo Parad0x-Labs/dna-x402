@@ -2941,6 +2941,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-semaphore"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "dark-session-netting"
 version = "0.1.0"
 dependencies = [
@@ -5311,6 +5321,14 @@ dependencies = [
  "null-flywheel-randomizer",
  "null-flywheel-receipts",
  "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "null-miner-tasks"
+version = "0.1.0"
+dependencies = [
+ "serde",
  "sha2 0.10.9",
 ]
 

@@ -1,0 +1,172 @@
+/**
+ * null-miner-sdk
+ *
+ * Universal NULL Miner SDK — plug into any app, users earn USDC autonomously,
+ * platform collects fees, we take tx dust.
+ *
+ * First on Solana. Built on DNA x402 + Dark NULL.
+ *
+ * Quick start:
+ *   import { NullMiner } from "null-miner-sdk";
+ *   const miner = new NullMiner({ rpcUrl, hostWallet, platformId });
+ *   await miner.start();  // agent earns autonomously from here
+ *
+ * Platform adapters:
+ *   import { nullMinerMiddleware } from "null-miner-sdk/nextjs";   // Shyft-style
+ *   import { nullMinerGate }       from "null-miner-sdk/express";  // any REST API
+ *   import { nullMinerPlugin }     from "null-miner-sdk/openclaw"; // Momo-style
+ */
+
+// Core
+export { NullMiner }           from "./core/NullMiner.js";
+export { AgentPassport }       from "./core/Passport.js";
+export { AgentLoop }           from "./core/AgentLoop.js";
+
+// DNA x402 Payment Rail Surface
+export {
+  createPaymentRequirement,
+  verifyPaymentHeader,
+  anchorReceiptPayload,
+  platformFeeSplit,
+  usdcToAtomic,
+  atomicToUsdc,
+  USDC_MAINNET,
+  USDC_DEVNET,
+  NULL_TOKEN,
+  X402_VERSION,
+  MEMO_PREFIX,
+} from "./x402/index.js";
+export type {
+  X402PaymentRequirements,
+  VerifiedPayment,
+  RejectedPayment,
+  PaymentVerifyResult,
+  FeeSplit,
+  ReceiptAnchorPayload,
+  PassportX402Meta,
+  CreatePaymentRequirementOpts,
+  SolanaNetwork,
+} from "./x402/index.js";
+
+// Task Registry + Executors
+export {
+  TaskRegistry,
+  ResidentialRelayExecutor,
+  AppStoreSnapshotExecutor,
+  LocationAttestationExecutor,
+  ProtocolMaintenanceExecutor,
+} from "./tasks/TaskRegistry.js";
+
+// Types
+export type {
+  NullMinerConfig,
+  HostWallet,
+  TaskSpec,
+  TaskKind,
+  TaskProof,
+  TaskResult,
+  MinerStats,
+  PassportConfig,
+  PassportAttestation,
+  ContentGateOptions,
+  PlatformFeeConfig,
+  ProofRequirements,
+  ReputationTier,
+} from "./core/types.js";
+
+export { TaskKind as TaskKindEnum, ReputationTier as ReputationTierEnum } from "./core/types.js";
+
+// ZK primitives — BN254 Poseidon, Semaphore identity, SnarkPack receipts
+// Full API: import { poseidonHash2, generateIdentity, buildReceiptWitness } from "null-miner-sdk/zk"
+export {
+  BN254_FIELD_P,
+  fieldMod,
+  bytesToField,
+  fieldToBytes,
+  hexToField,
+  fieldToHex,
+  poseidonHash2,
+  poseidonHashHex,
+  poseidonMerkleHash,
+  sha256Field,
+} from "./zk/poseidon.js";
+export {
+  generateIdentity,
+  deriveIdentityFromKey,
+  reconstructIdentity,
+  computeIdentityCommitment,
+  computeNullifierHash,
+  buildExternalNullifier,
+  IncrementalMerkleTree,
+  buildSignalWitness,
+  computeZeroHashes,
+  SEMAPHORE_TREE_DEPTH,
+  ZERO_LEAF,
+} from "./zk/semaphore.js";
+export {
+  buildReceiptWitness,
+  computeReceiptPublicInputs,
+  buildSnarkPackBatch,
+  merkleRootPoseidon,
+} from "./zk/receipt.js";
+export type {
+  SemaphoreIdentity,
+  MerkleProof,
+  SemaphoreSignalWitness,
+} from "./zk/semaphore.js";
+export type {
+  ReceiptWitness,
+  ReceiptPublicInputs,
+  SnarkPackBatch,
+} from "./zk/receipt.js";
+
+// Privacy primitives — DKSAP stealth, Dark Pool encryption, NULL Mint blind sigs
+// Full API: import { generateStealthAddress, encryptTask, clientBlind } from "null-miner-sdk/privacy"
+export {
+  generateStealthKeyPair,
+  deriveStealthKeyPair,
+  generateStealthAddress,
+  checkStealthAddress,
+  recoverStealthSpendKey,
+} from "./privacy/stealth.js";
+export {
+  encryptTask,
+  decryptTask,
+  sealBid,
+  openBid,
+} from "./privacy/darkPool.js";
+export {
+  mintKeyGen,
+  mintSignInit,
+  mintSign,
+  clientBlind,
+  clientUnblind,
+  verifyNullToken,
+} from "./privacy/nullMint.js";
+export type {
+  StealthKeyPair,
+  StealthAddress,
+  StealthSpendKey,
+} from "./privacy/stealth.js";
+export type {
+  EncryptedTask,
+  SealedBid,
+} from "./privacy/darkPool.js";
+export type {
+  MintKeyPair,
+  MintNonce,
+  BlindedChallenge,
+  BlindingState,
+  BlindSignatureResponse,
+  UnblindedToken,
+} from "./privacy/nullMint.js";
+
+// Version
+export const SDK_VERSION      = "0.1.0";
+export const NULL_MINT        = "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump";
+export const IS_MAINNET_READY = false; // devnet only until audit
+
+export const TASK_MARKETPLACE_URL = "https://marketplace.devnet.solana.com"; // devnet
+// production: https://marketplace.null-miner.xyz  (post-audit)
+
+export * from "./vault/index.js";

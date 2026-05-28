@@ -1,0 +1,103 @@
+{
+  "name": "null-miner-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Universal NULL Miner SDK — plug into any app, users earn USDC autonomously, platform collects fees. First on Solana.",
+  "keywords": [
+    "solana",
+    "depin",
+    "x402",
+    "null",
+    "mining",
+    "agents",
+    "usdc",
+    "passive-income"
+  ],
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./nextjs": {
+      "types": "./dist/adapters/nextjs.d.ts",
+      "default": "./dist/adapters/nextjs.js"
+    },
+    "./express": {
+      "types": "./dist/adapters/express.d.ts",
+      "default": "./dist/adapters/express.js"
+    },
+    "./openclaw": {
+      "types": "./dist/adapters/openclaw.d.ts",
+      "default": "./dist/adapters/openclaw.js"
+    },
+    "./x402": {
+      "types": "./dist/x402/index.d.ts",
+      "default": "./dist/x402/index.js"
+    },
+    "./browser": {
+      "types": "./dist/adapters/browser.d.ts",
+      "default": "./dist/adapters/browser.js"
+    },
+    "./devnet": {
+      "types": "./dist/devnet/fixtures.d.ts",
+      "default": "./dist/devnet/fixtures.js"
+    },
+    "./zk": {
+      "types": "./dist/zk/index.d.ts",
+      "default": "./dist/zk/index.js"
+    },
+    "./privacy": {
+      "types": "./dist/privacy/index.d.ts",
+      "default": "./dist/privacy/index.js"
+    },
+    "./vault": {
+      "types": "./dist/vault/index.d.ts",
+      "default": "./dist/vault/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node ../../node_modules/jest/bin/jest.js",
+    "test:devnet": "tsx tests/devnet.test.ts",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.7.0",
+    "@noble/hashes": "^1.5.0",
+    "poseidon-lite": "^0.3.0"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": ">=1.95.0"
+  },
+  "peerDependenciesMeta": {
+    "@solana/web3.js": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", { "useESM": false }]
+    }
+  }
+}

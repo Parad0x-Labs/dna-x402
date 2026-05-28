@@ -141,6 +141,131 @@ pub enum FlywheelError {
 }
 
 // ---------------------------------------------------------------------------
+// NULL Miner TaskCompletion extension
+// ---------------------------------------------------------------------------
+// New event source: when a NULL Miner node completes a task, the protocol
+// converts a portion of the task USDC value into NULL token yield for the
+// host. This runs alongside the existing PremiumFeeEvent path.
+
+/// NULL Miner task completion event — triggers NULL yield for the host wallet.
+#[derive(Debug, Clone)]
+pub struct TaskCompletionEvent {
+    /// SHA-256 of the compute receipt that triggered this event.
+    pub receipt_hash: [u8; 32],
+    /// USDC value of the completed task in atomic units (6 decimals).
+    pub task_usdc_atomic: u64,
+    /// Platform ID that sourced the task (for fee attribution).
+    pub platform_id_hash: [u8; 32],
+    pub epoch: u64,
+    /// SHA256("task-completion-event-v1" || receipt_hash || task_usdc_atomic.le || epoch.le)
+    pub event_hash: [u8; 32],
+}
+
+impl TaskCompletionEvent {
+    pub fn new(
+        receipt_hash: [u8; 32],
+        task_usdc_atomic: u64,
+        platform_id_hash: [u8; 32],
+        epoch: u64,
+    ) -> Self {
+        let event_hash = compute_task_event_hash(
+            &receipt_hash,
+            task_usdc_atomic,
+            epoch,
+        );
+        Self { receipt_hash, task_usdc_atomic, platform_id_hash, epoch, event_hash }
+    }
+}
+
+/// Payout breakdown from a task completion event.
+#[derive(Debug, Clone)]
+pub struct TaskCompletionReward {
+    /// NULL atomic units to mint to the host wallet.
+    /// Derived from: task_usdc_atomic × emission_rate_bps / 10_000 / null_usdc_spot.
+    /// Placeholder: 1 NULL per 1000 USDC atomic until oracle integration.
+    pub null_to_host_placeholder: u64,
+    /// USDC atomic units flowing through the flywheel (5% of task value).
+    pub flywheel_usdc_atomic: u64,
+    /// Remaining USDC atomic after flywheel cut (95% stays with protocol/agent).
+    pub remaining_usdc_atomic: u64,
+    pub receipt_hash: [u8; 32],
+    pub epoch: u64,
+    pub mainnet_ready: bool,
+}
+
+/// Errors specific to task completion events.
+#[derive(Debug, PartialEq)]
+pub enum TaskFlywheelError {
+    ZeroTaskValue,
+    ReceiptHashAllZeros,
+    BelowMinimumTaskValue { min_atomic: u64, got: u64 },
+}
+
+impl core::fmt::Display for TaskFlywheelError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::ZeroTaskValue => write!(f, "task USDC value must be > 0"),
+            Self::ReceiptHashAllZeros => write!(f, "receipt_hash must not be all zeros"),
+            Self::BelowMinimumTaskValue { min_atomic, got } =>
+                write!(f, "task value {got} < minimum {min_atomic} atomic units"),
+        }
+    }
+}
+
+/// Minimum task value to trigger flywheel: 100 atomic = $0.0001 USDC.
+pub const MIN_TASK_USDC_ATOMIC: u64 = 100;
+/// NULL Miner flywheel rate: 500 bps = 5% of task USDC value.
+pub const NULL_MINER_FLYWHEEL_BPS: u64 = 500;
+
+/// Process a task completion event through the NULL flywheel.
+/// Returns the payout breakdown for the host.
+pub fn process_task_completion(
+    event: &TaskCompletionEvent,
+) -> Result<TaskCompletionReward, TaskFlywheelError> {
+    if event.task_usdc_atomic == 0 {
+        return Err(TaskFlywheelError::ZeroTaskValue);
+    }
+    if event.task_usdc_atomic < MIN_TASK_USDC_ATOMIC {
+        return Err(TaskFlywheelError::BelowMinimumTaskValue {
+            min_atomic: MIN_TASK_USDC_ATOMIC,
+            got: event.task_usdc_atomic,
+        });
+    }
+    if event.receipt_hash == [0u8; 32] {
+        return Err(TaskFlywheelError::ReceiptHashAllZeros);
+    }
+
+    let flywheel_usdc = (event.task_usdc_atomic * NULL_MINER_FLYWHEEL_BPS) / 10_000;
+    let remaining     = event.task_usdc_atomic.saturating_sub(flywheel_usdc);
+
+    // Placeholder NULL yield: 1 NULL per 1000 USDC atomic units through flywheel.
+    // Phase 2: replace with oracle-priced NULL/USDC spot rate.
+    let null_to_host = flywheel_usdc / 1_000;
+
+    Ok(TaskCompletionReward {
+        null_to_host_placeholder: null_to_host,
+        flywheel_usdc_atomic:     flywheel_usdc,
+        remaining_usdc_atomic:    remaining,
+        receipt_hash:             event.receipt_hash,
+        epoch:                    event.epoch,
+        mainnet_ready:            false,
+    })
+}
+
+fn compute_task_event_hash(
+    receipt_hash: &[u8; 32],
+    task_usdc_atomic: u64,
+    epoch: u64,
+) -> [u8; 32] {
+    let mut h = Sha256::new();
+    h.update(b"task-completion-event-v1");
+    h.update(receipt_hash);
+    h.update(task_usdc_atomic.to_le_bytes());
+    h.update(epoch.to_le_bytes());
+    h.finalize().into()
+}
+
+// ---------------------------------------------------------------------------
 // Core functions
 // ---------------------------------------------------------------------------
 

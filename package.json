@@ -6,7 +6,16 @@
     "@solana/web3.js": "^1.98.4",
     "tsx": "^4.19.0"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "null-miner:build":     "npm --prefix packages/null-miner-sdk run build",
+    "null-miner:test":      "npm --prefix packages/null-miner-sdk run test",
+    "marketplace:start":    "npm --prefix packages/task-marketplace-api run start",
+    "marketplace:dev":      "npm --prefix packages/task-marketplace-api run dev",
+    "extension:build":      "npm --prefix examples/null-miner-extension run build",
+    "extension:dev":        "npm --prefix examples/null-miner-extension run dev",
     "site:build": "npm --prefix site run build",
     "site-agent:dev": "npm --prefix site-agent run dev",
     "site-agent:build": "npm --prefix site-agent run build",

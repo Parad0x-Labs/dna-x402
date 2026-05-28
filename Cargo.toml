@@ -165,6 +165,8 @@ members = [
     "crates/nulla-betting-edge-demo",
     # NULL_FLYWHEEL_VAULT_V1 - premium-fee conversion  rewards vault
     "crates/null-flywheel-core",
+    # NULL Miner — external task kinds for the NULL Miner network
+    "crates/null-miner-tasks",
     # NULL_FLYWHEEL_VAULT_V1 - execution receipts for public auditability
     "crates/null-flywheel-receipts",
     # NULL_FLYWHEEL_VAULT_V1 - commit-reveal schedule randomizer
@@ -181,6 +183,8 @@ members = [
     "programs/dark_bn254_gate",
     # DARK_ZK_PRIMITIVES_V1 - Phase 3 (on-chain nullifier recorder)
     "programs/dark_nullifier_record",
+    # DARK_ZK_PRIMITIVES_V1 - Phase 4 (Semaphore group registry + nullifier store)
+    "programs/dark_semaphore",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

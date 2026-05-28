@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "NULL Miner — Earn USDC While You Browse",
+  "version": "0.1.0",
+  "description": "Your browser earns USDC autonomously. Powered by DNA x402 on Solana. First DePIN agent on Solana.",
+  "action": {
+    "default_popup":  "popup/index.html",
+    "default_title": "NULL Miner"
+  },
+  "background": {
+    "service_worker": "background/worker.ts",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://api.devnet.solana.com/*",
+    "https://marketplace.devnet.solana.com/*",
+    "https://httpbin.org/*",
+    "https://itunes.apple.com/*",
+    "https://localhost:3742/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

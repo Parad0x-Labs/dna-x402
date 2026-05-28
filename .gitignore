@@ -72,8 +72,17 @@ programs/*/target/
 # Cargo package cache — never commit registry cache
 .cargo-home/
 
-# Site exports / tarballs
+# Site exports / tarballs / packed npm artifacts
 exports/
+*.tgz
+
+# Workspace package-level lockfiles — root package-lock.json is the authority
+packages/*/package-lock.json
+
+# Test compilation artifacts (ts-jest/IDE stray output)
+packages/*/tests/*.d.ts
+packages/*/tests/*.d.ts.map
+packages/*/tests/*.js.map
 
 # Legacy Dark Null privacy workspace kept local, not part of dna-x402 repo
 /circuits/
