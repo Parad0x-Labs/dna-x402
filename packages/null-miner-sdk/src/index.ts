@@ -170,3 +170,35 @@ export const TASK_MARKETPLACE_URL = "https://marketplace.devnet.solana.com"; // 
 // production: https://marketplace.null-miner.xyz  (post-audit)
 
 export * from "./vault/index.js";
+
+// NULL Miner Loop
+export { runNullMinerTaskLoop, createMockEncryptedTask, TaskLoopSimulator } from "./tasks/NullMinerLoop.js";
+export type { TaskLoopConfig, TaskLoopResult, TaskLoopStep, EncryptedTaskPayload } from "./tasks/NullMinerLoop.js";
+
+// Liquefy Bridge
+export { createNullArchive, bridgeArchiveToAnchor, scanArchiveForAgent, mergeArchives } from "./liquefy/bridge.js";
+export type { NullArchive, NullArchiveEntry, ArchiveBridgeResult } from "./liquefy/bridge.js";
+
+// NULL Flywheel
+export { NullFlywheel, computeNullYield, buildMintAuthorizationHash } from "./flywheel/index.js";
+export type { FlywheelConfig, FlywheelYield, EpochStats } from "./flywheel/index.js";
+
+// Identity
+export {
+  createEthAgentAuthMessage,
+  formatEthPersonalSignMessage,
+  ethPersonalSignHash,
+  parseEthSignature,
+  recoverEthAddress,
+  deriveAgentAuthPda,
+  buildSecp256k1AuthInstruction,
+} from "./identity/metamask.js";
+export type { EthAgentAuthMessage, EthSignatureComponents, AgentAuthPda } from "./identity/metamask.js";
+
+// Spectre Passport v2
+export { AgentPassportV2, PassportTier, upgradePassportTier, computePassportId } from "./core/PassportV2.js";
+export type { PassportV2Config, PassportV2Attestation } from "./core/PassportV2.js";
+
+// Coalitions
+export { createCoalition, buildCoalitionSignal, verifyCoalitionThreshold, addCoalitionMember } from "./coalitions/index.js";
+export type { GuildCoalition, CoalitionMember, CoalitionSignal } from "./coalitions/index.js";

@@ -55,3 +55,14 @@ export function assertNoVaultSecretMaterial(
 
   check(payload, "$");
 }
+
+// ── Passkey Vault ─────────────────────────────────────────────────────────────
+export {
+  PASSKEY_VAULT_VERSION,
+  createPasskeyChallenge,
+  extractAssertionKeyMaterial,
+  encryptAgentKeyWithPasskey,
+  decryptAgentKeyWithPasskey,
+  createTestPasskeyAssertion,
+} from "./passkey.js";
+export type { PasskeyVaultParams, PasskeyChallenge, PasskeyAssertion } from "./passkey.js";

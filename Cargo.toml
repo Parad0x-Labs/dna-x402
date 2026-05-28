@@ -175,6 +175,8 @@ members = [
     "crates/null-flywheel-sim",
     # dark-groth16-core: real BN254 Groth16 verifier using alt_bn128_pairing
     "crates/dark-groth16-core",
+    # dark-kzg-verifier: real KZG-10 polynomial commitment verifier using alt_bn128 pairing syscalls
+    "crates/dark-kzg-verifier",
     # DARK_ZK_PRIMITIVES_V1 - on-chain BN254 Groth16 (Phase 1)
     "crates/dark-poseidon-bn254",
     "crates/dark-bn254-circuit",
@@ -185,6 +187,10 @@ members = [
     "programs/dark_nullifier_record",
     # DARK_ZK_PRIMITIVES_V1 - Phase 4 (Semaphore group registry + nullifier store)
     "programs/dark_semaphore",
+    # NULL_MINER_V1 - Token-2022 transfer hook, secp256r1 passkey vault, secp256k1 ETH auth
+    "programs/null_token_hook",
+    "programs/dark_secp256r1_vault",
+    "programs/dark_secp256k1_auth",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

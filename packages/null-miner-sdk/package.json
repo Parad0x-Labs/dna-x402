@@ -63,6 +63,18 @@
     "./vault": {
       "types": "./dist/vault/index.d.ts",
       "default": "./dist/vault/index.js"
+    },
+    "./tasks": {
+      "types": "./dist/tasks/NullMinerLoop.d.ts",
+      "default": "./dist/tasks/NullMinerLoop.js"
+    },
+    "./liquefy": {
+      "types": "./dist/liquefy/bridge.d.ts",
+      "default": "./dist/liquefy/bridge.js"
+    },
+    "./flywheel": {
+      "types": "./dist/flywheel/index.d.ts",
+      "default": "./dist/flywheel/index.js"
     }
   },
   "scripts": {

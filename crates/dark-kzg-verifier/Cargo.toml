@@ -1,0 +1,11 @@
+[package]
+name = "dark-kzg-verifier"
+version = "0.1.0"
+edition = "2021"
+description = "KZG-10 polynomial commitment scheme verifier for Solana — uses BN254 alt_bn128 pairing syscalls"
+
+[dependencies]
+solana-program = { workspace = true }
+dark-groth16-core = { path = "../dark-groth16-core" }
+
+[dev-dependencies]
