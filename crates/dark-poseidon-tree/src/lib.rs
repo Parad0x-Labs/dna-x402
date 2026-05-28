@@ -254,7 +254,7 @@ mod kani_proofs {
     #[kani::proof]
     #[kani::unwind(4)]
     fn domain_hash_never_panics() {
-        let domain: u8   = kani::any();
+        let domain: u8 = kani::any();
         let input: [u8; 32] = kani::any();
         // Call with symbolic inputs — Kani proves no path panics
         let _ = domain_hash(domain, &[input.as_ref()]);
@@ -265,7 +265,7 @@ mod kani_proofs {
     #[kani::unwind(4)]
     fn commitment_hash_never_panics() {
         let secret: [u8; 32] = kani::any();
-        let value: u64       = kani::any();
+        let value: u64 = kani::any();
         let _ = commitment_hash(&secret, value);
     }
 
@@ -274,7 +274,7 @@ mod kani_proofs {
     #[kani::unwind(4)]
     fn nullifier_hash_never_panics() {
         let secret: [u8; 32] = kani::any();
-        let root:   [u8; 32] = kani::any();
+        let root: [u8; 32] = kani::any();
         let _ = nullifier_hash(&secret, &root);
     }
 
@@ -282,7 +282,7 @@ mod kani_proofs {
     #[kani::proof]
     #[kani::unwind(4)]
     fn merkle_node_never_panics() {
-        let left:  [u8; 32] = kani::any();
+        let left: [u8; 32] = kani::any();
         let right: [u8; 32] = kani::any();
         let _ = merkle_node(&left, &right);
     }
@@ -314,8 +314,8 @@ mod kani_proofs {
     #[kani::unwind(4)]
     fn commitment_includes_value_in_preimage() {
         let secret: [u8; 32] = kani::any();
-        let value_a: u64     = kani::any();
-        let value_b: u64     = kani::any();
+        let value_a: u64 = kani::any();
+        let value_b: u64 = kani::any();
         kani::assume(value_a != value_b);
 
         // The preimages must differ because value_le_bytes are distinct
@@ -327,8 +327,10 @@ mod kani_proofs {
         pre_b.extend_from_slice(secret.as_ref());
         pre_b.extend_from_slice(&value_b.to_le_bytes());
 
-        assert_ne!(pre_a, pre_b,
-            "different values must produce different hash preimages");
+        assert_ne!(
+            pre_a, pre_b,
+            "different values must produce different hash preimages"
+        );
     }
 }
 

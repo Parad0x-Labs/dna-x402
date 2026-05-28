@@ -12,9 +12,8 @@
 ///   5. Known-vector parity — hardcoded test vectors that future Poseidon
 ///      syscall migrations must not silently break.
 use dark_poseidon_tree::{
-    commitment_hash, merkle_node, nullifier_hash, receipt_hash,
-    ReceiptLeaf, DOMAIN_COMMITMENT, DOMAIN_MERKLE_NODE, DOMAIN_NULLIFIER,
-    DOMAIN_RECEIPT,
+    commitment_hash, merkle_node, nullifier_hash, receipt_hash, ReceiptLeaf, DOMAIN_COMMITMENT,
+    DOMAIN_MERKLE_NODE, DOMAIN_NULLIFIER, DOMAIN_RECEIPT,
 };
 use proptest::prelude::*;
 
@@ -230,8 +229,8 @@ fn commitment_hash_avalanche_effect() {
     // Every single-bit flip must change at least 64 output bits (25%)
     // Well-designed hash: typically 120–140 bits change per flip
     let min_diff = *bit_change_counts.iter().min().unwrap();
-    let avg_diff: f64 = bit_change_counts.iter().sum::<u32>() as f64
-        / bit_change_counts.len() as f64;
+    let avg_diff: f64 =
+        bit_change_counts.iter().sum::<u32>() as f64 / bit_change_counts.len() as f64;
 
     assert!(
         min_diff >= 64,
@@ -253,13 +252,15 @@ fn commitment_hash_avalanche_effect() {
 #[test]
 fn known_commitment_vector() {
     let secret = [0x01u8; 32];
-    let value  = 1_000_000u64;
+    let value = 1_000_000u64;
     let expected = commitment_hash(&secret, value);
 
     // Re-compute and compare — if the implementation changes, this fails loudly
     let recomputed = commitment_hash(&secret, value);
-    assert_eq!(expected, recomputed,
-        "commitment_hash is non-deterministic across test runs — internal state leak");
+    assert_eq!(
+        expected, recomputed,
+        "commitment_hash is non-deterministic across test runs — internal state leak"
+    );
 
     // Print the vector so it can be hardcoded after first run
     println!("commitment_hash([0x01;32], 1_000_000) = {:?}", expected);
@@ -268,7 +269,7 @@ fn known_commitment_vector() {
 #[test]
 fn known_nullifier_vector() {
     let secret = [0x02u8; 32];
-    let root   = [0x03u8; 32];
+    let root = [0x03u8; 32];
     let h1 = nullifier_hash(&secret, &root);
     let h2 = nullifier_hash(&secret, &root);
     assert_eq!(h1, h2);
@@ -277,13 +278,15 @@ fn known_nullifier_vector() {
 
 #[test]
 fn known_merkle_vector() {
-    let left  = [0x10u8; 32];
+    let left = [0x10u8; 32];
     let right = [0x20u8; 32];
     let node = merkle_node(&left, &right);
     // Merkle node must NOT equal merkle_node(right, left) — ordering matters
     let reversed = merkle_node(&right, &left);
-    assert_ne!(node, reversed,
-        "merkle_node is order-insensitive — Merkle tree proofs are unsound");
+    assert_ne!(
+        node, reversed,
+        "merkle_node is order-insensitive — Merkle tree proofs are unsound"
+    );
     println!("merkle_node([0x10;32], [0x20;32]) = {node:?}");
     println!("merkle_node([0x20;32], [0x10;32]) = {reversed:?}  (must differ ✓)");
 }

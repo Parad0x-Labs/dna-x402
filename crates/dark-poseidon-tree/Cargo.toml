@@ -11,3 +11,6 @@ dark-hash-core = { path = "../dark-hash-core", features = ["sha256-fallback"] }
 [dev-dependencies]
 proptest        = { workspace = true }
 proptest-derive = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

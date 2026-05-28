@@ -14,8 +14,8 @@
 ///
 /// FIRST KNOWN SOLANA PRIVACY PROGRAM TO SHIP A χ² UNIFORMITY GUARANTEE.
 use dark_nullifier_banks::{bank_index, DOMAIN};
-use rand::{RngCore, SeedableRng};
 use rand::rngs::StdRng;
+use rand::{RngCore, SeedableRng};
 use statrs::distribution::{ChiSquared, ContinuousCDF};
 
 const SAMPLE_COUNT: usize = 256_000; // 1000 per shard on expectation
@@ -77,7 +77,7 @@ fn bank_index_routes_uniformly_epoch_max() {
 #[test]
 fn bank_index_uniformity_stable_across_five_epochs() {
     let epochs = [0u64, 1, 100, 10_000, u64::MAX];
-    let seeds  = [1u64, 2, 3, 4, 5];
+    let seeds = [1u64, 2, 3, 4, 5];
 
     for (epoch, seed) in epochs.iter().zip(seeds.iter()) {
         let (chi_sq, p_value) = chi_sq_for_epoch(*epoch, *seed);

@@ -132,13 +132,17 @@ proptest! {
 fn bank_index_handles_edge_nullifiers() {
     let zero_null = [0u8; 32];
     let ones_null = [0xFFu8; 32];
-    let mixed     = [0xABu8; 32];
+    let mixed = [0xABu8; 32];
 
     // All must produce a valid shard without panic
     for (label, null) in [("zeros", zero_null), ("ones", ones_null), ("mixed", mixed)] {
         for epoch in [0u64, 1, u64::MAX - 1, u64::MAX] {
             let idx = bank_index(&null, epoch, DOMAIN);
-            assert!(idx <= 255, "{label} nullifier at epoch {epoch} produced invalid shard {idx}");
+            assert_eq!(
+                idx,
+                bank_index(&null, epoch, DOMAIN),
+                "{label} nullifier at epoch {epoch} was not deterministic"
+            );
         }
     }
 }
@@ -157,15 +161,19 @@ fn bank_index_is_thread_safe() {
         .flat_map(|b| {
             let mut null = [0u8; 32];
             null[0] = b;
-            [0u64, 1, 999, u64::MAX].into_par_iter().map(move |epoch| {
-                bank_index(&null, epoch, DOMAIN)
-            })
+            [0u64, 1, 999, u64::MAX]
+                .into_par_iter()
+                .map(move |epoch| bank_index(&null, epoch, DOMAIN))
         })
         .collect();
 
     // 256 × 4 = 1024 results, all must be valid shards
     assert_eq!(results.len(), 1024);
-    assert!(results.iter().all(|&idx| idx <= 255));
+    let unique: std::collections::HashSet<_> = results.iter().copied().collect();
+    assert!(
+        unique.len() > 1,
+        "parallel shard routing collapsed to one shard"
+    );
 }
 
 // ── P7: Cross-epoch isolation (logic layer) ───────────────────────────────────
