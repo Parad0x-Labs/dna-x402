@@ -53,6 +53,11 @@
 - Fee split SDK enforcement (operator + protocol)
 - On-chain program accounts: all 8 programs executable on mainnet-beta
 - NULL token: Token-2022 mint live
+- **Dark Passport Tiers 0–2** — wallet-bound identity live in frontend
+  - Tier 0: Phantom-signed device identity (active today)
+  - Tier 1: P-256/WebAuthn passkey binding → `dark_secp256r1_vault` (live on-chain, UI wired)
+  - Tier 2: MetaMask/ETH address binding → `dark_secp256k1_auth` (live on-chain, UI wired)
+  - Tier 3+: Groth16 ZK reputation — Sprint 2 (requires `dark_semaphore` nullifier circuits)
 
 ---
 
