@@ -63,9 +63,14 @@ fn process_register(
         return Err(AuthError::AgentAlreadyRegistered.into());
     }
 
-    // NOTE: In production, tx must include secp256k1 precompile instruction.
-    // IS_MAINNET_READY = false → skip signature verification on devnet.
-    let _ = IS_MAINNET_READY;
+    // When compiled with --features mainnet the tx MUST include a secp256k1
+    // precompile instruction at index 0.  Devnet trust model skips this.
+    // Full recovered-address verification against eth_address is post-audit.
+    #[cfg(feature = "mainnet")]
+    {
+        let ix_sysvar = next_account_info(iter)?;
+        verify_secp256k1_precompile_presence(ix_sysvar)?;
+    }
 
     let rent     = Rent::get()?;
     let lamports = rent.minimum_balance(ETH_AGENT_RECORD_SIZE);
@@ -92,6 +97,23 @@ fn process_register(
     record.pack_into(&mut data);
 
     msg!("dark-secp256k1-auth: RegisterEthAgent");
+    Ok(())
+}
+
+/// Verify the tx contains a secp256k1 precompile instruction at index 0.
+/// Full ETH address recovery against pda_seed is deferred to post-audit.
+#[cfg(feature = "mainnet")]
+fn verify_secp256k1_precompile_presence(ix_sysvar: &AccountInfo) -> ProgramResult {
+    use solana_program::sysvar::instructions;
+    let current_idx = instructions::load_current_index_checked(ix_sysvar)? as usize;
+    if current_idx == 0 {
+        // This instruction must not be first in the tx.
+        return Err(ProgramError::InvalidInstructionData);
+    }
+    let precompile_ix = instructions::load_instruction_at_checked(0, ix_sysvar)?;
+    if precompile_ix.program_id != solana_program::secp256k1_program::id() {
+        return Err(ProgramError::InvalidInstructionData);
+    }
     Ok(())
 }
 

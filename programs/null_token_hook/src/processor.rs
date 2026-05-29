@@ -213,15 +213,22 @@ fn process_add_to_allowlist(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    // Verify the admin owns a valid config PDA.
+    // Require the hook config PDA as account[4] and verify admin is authorised.
+    let config_pda = next_account_info(iter)?;
     let (expected_config_pda, _) = Pubkey::find_program_address(
         &[b"hook-config", admin_info.key.as_ref()],
         program_id,
     );
-
-    // Config PDA is passed as account[4] (optional but strongly recommended).
-    // For devnet simplicity we derive and accept but don't require it in accounts.
-    let _ = expected_config_pda; // suppress unused warning — full check post-audit
+    if expected_config_pda != *config_pda.key {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    {
+        let data = config_pda.try_borrow_data()?;
+        let config = HookConfig::unpack_from(&data).ok_or(HookError::NotAdmin)?;
+        if config.admin != admin_info.key.to_bytes() {
+            return Err(HookError::NotAdmin.into());
+        }
+    }
 
     let (expected_al_pda, al_bump) = Pubkey::find_program_address(
         &[b"allowlist", target_wallet.key.as_ref()],

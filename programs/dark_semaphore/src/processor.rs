@@ -141,6 +141,14 @@ fn process_signal(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
+    // IS_MAINNET_READY=true gate: Groth16 ZK membership proof required.
+    // Wiring dark_bn254_gate is post-external-audit work.  Until then, Signal
+    // hard-fails in mainnet-feature builds so unverified memberships cannot land.
+    if IS_MAINNET_READY {
+        msg!("dark-semaphore: Signal requires ZK proof (dark_bn254_gate) — not wired");
+        return Err(SemaphoreError::ZkNotWired.into());
+    }
+
     // Read admin key from group record (verifies group exists and is valid).
     let admin_key = {
         let group_data = group_pda.try_borrow_data()?;

@@ -58,8 +58,8 @@ if [ "$CONFIRM" != "deploy-mainnet-pilot" ]; then
   exit 0
 fi
 
-FEATURE_ARGS=(--features "mainnet")
-echo "Building pilot binaries with --features mainnet. IS_MAINNET_READY=false on all programs until post-audit flip."
+FEATURE_ARGS=()
+echo "Building pilot binaries WITHOUT --features mainnet — IS_MAINNET_READY=false on all programs. Post-audit: rebuild per-program with --features mainnet."
 
 mkdir -p "$KEYPAIRS_DIR"
 

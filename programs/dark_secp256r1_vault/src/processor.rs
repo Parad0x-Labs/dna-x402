@@ -84,10 +84,15 @@ fn process_register(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    // NOTE: In production, verify that the transaction includes a secp256r1
-    // precompile instruction signed with p256_pubkey_x / p256_pubkey_y over
-    // challenge_hash before proceeding.  For devnet (IS_MAINNET_READY = false),
-    // this check is skipped and the client-supplied fields are trusted.
+    // When compiled with --features mainnet the tx MUST include a secp256r1
+    // (SIMD-0075) precompile instruction at index 0 verifying the P-256 assertion.
+    // Devnet skips this check (devnet trust model).
+    // Full challenge/pubkey match verification is deferred to post-audit.
+    #[cfg(feature = "mainnet")]
+    {
+        let ix_sysvar = next_account_info(iter)?;
+        verify_secp256r1_precompile_presence(ix_sysvar)?;
+    }
 
     // Derive the vault PDA: [b"passkey-vault", wallet_pubkey, credential_id_hash]
     let (expected_pda, bump) = Pubkey::find_program_address(
@@ -305,5 +310,21 @@ fn process_store_enc_key(
     record.pack_into(&mut data);
 
     msg!("dark-secp256r1-vault: EncryptedKey stored on-chain");
+    Ok(())
+}
+
+/// Verify the tx contains a secp256r1 (SIMD-0075) precompile instruction at index 0.
+/// Full challenge/pubkey verification against p256_pubkey_x/y is deferred to post-audit.
+#[cfg(feature = "mainnet")]
+fn verify_secp256r1_precompile_presence(ix_sysvar: &AccountInfo) -> ProgramResult {
+    use solana_program::sysvar::instructions;
+    let current_idx = instructions::load_current_index_checked(ix_sysvar)? as usize;
+    if current_idx == 0 {
+        return Err(ProgramError::InvalidInstructionData);
+    }
+    let precompile_ix = instructions::load_instruction_at_checked(0, ix_sysvar)?;
+    if precompile_ix.program_id != SECP256R1_PROGRAM_ID {
+        return Err(ProgramError::InvalidInstructionData);
+    }
     Ok(())
 }

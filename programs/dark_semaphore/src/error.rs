@@ -14,6 +14,8 @@ pub enum SemaphoreError {
     InvalidDepth,
     /// Account is too small for the expected state.
     AccountTooSmall,
+    /// Signal called in mainnet mode but the ZK circuit (dark_bn254_gate) is not wired.
+    ZkNotWired,
 }
 
 impl From<SemaphoreError> for ProgramError {
