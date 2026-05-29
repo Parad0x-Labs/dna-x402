@@ -1,6 +1,6 @@
 # x402 Fee Model — Mainnet-Beta Evidence
 
-_Generated: 2026-05-29T17:22:39.267Z_
+_Generated: 2026-05-29T18:52:17.221Z_
 
 ## Overview
 
@@ -49,7 +49,7 @@ The OSS config exists to prove the protocol is permissionless and freely usable 
 any Parad0x intermediation. Grant reviewers can deploy with this config to verify
 zero-fee operation.
 
-## Smoke Test Results (2026-05-29T17:22:39.267Z)
+## Smoke Test Results (2026-05-29T18:52:17.221Z)
 
 | Scenario | Status | Detail |
 |----------|--------|--------|
