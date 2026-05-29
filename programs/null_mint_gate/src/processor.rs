@@ -20,8 +20,11 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-/// Devnet-only flag. Set to true only when deploying to mainnet with a real
-/// SPL mint CPI wired in.
+/// Security gate: commercial mainnet builds keep this false until SPL mint CPI
+/// and receipt verification are audited and explicitly compiled with both features.
+#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+pub const IS_MAINNET_READY: bool = true;
+#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
 pub const IS_MAINNET_READY: bool = false;
 
 // ─────────────────────────────────────────────────────────────────────────────

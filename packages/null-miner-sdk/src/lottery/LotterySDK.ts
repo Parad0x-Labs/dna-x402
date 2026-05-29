@@ -28,6 +28,8 @@ import type { LotteryTicket, TicketBatch } from "./TicketStore.js";
 import { bridgeArchiveToAnchor } from "../liquefy/bridge.js";
 import type { ArchiveBridgeResult } from "../liquefy/bridge.js";
 
+import { lotteryConfigFromProfile } from "../config/profiles.js";
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface LotteryConfig {
@@ -76,15 +78,7 @@ export interface FallbackDrawResult {
 
 // ── Default Config ────────────────────────────────────────────────────────────
 
-export const DEFAULT_LOTTERY_CONFIG: LotteryConfig = {
-  ticketPriceNull: 10_000_000,   // 10 NULL (6 decimals)
-  houseFeeBps:     50,           // 0.5%
-  numbersCount:    5,
-  numbersRange:    30,
-  fallbackAfter:   3,
-  programId:       "LottERy1111111111111111111111111111111111111",
-  isActive:        true,
-};
+export const DEFAULT_LOTTERY_CONFIG: LotteryConfig = lotteryConfigFromProfile();
 
 // ── Player API ────────────────────────────────────────────────────────────────
 

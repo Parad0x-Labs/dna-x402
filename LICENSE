@@ -19,3 +19,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+DUAL TRACK NOTE
+
+The OSS devnet track of this software is MIT licensed as above.
+
+The commercial mainnet deployment is a Parad0x-operated configuration that can
+enable fee, NULL emission-accounting, and lottery parameters after deployment
+and review. The underlying protocol code remains MIT licensed.
+
+NULL token: 8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump (Solana mainnet)

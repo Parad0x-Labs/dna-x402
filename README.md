@@ -107,6 +107,73 @@ legacy_mirror: https://github.com/Parad0x-Labs/x402-dna
 | `/agent` front door | Active | See [`site-agent/`](./site-agent) |
 | Privacy / zk settlement | Separate repo | Use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) |
 
+## NULL Miner - Decentralized Agent Work Network
+
+Built on top of DNA x402, NULL Miner is a Solana agent-work rail for phones,
+browsers, and servers: task receipts, passkey-sealed agent keys, x402 payout
+paths, NULL emission accounting, and lottery/root primitives.
+
+**438 tests green. 6 native Solana programs in the deploy profile.**
+
+### Current public status
+
+| Surface | Status |
+|---|---|
+| OSS devnet profile | Ready to deploy with zero fees and zero NULL emission |
+| Commercial mainnet profile | Ready for pilot deploy after wallet/RPC/program-id checks |
+| `IS_MAINNET_READY` enforcement | False by default; requires both `mainnet` and `audit-verified` build features |
+| NULL token | Mainnet mint exists: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
+
+### Deploy profile programs
+
+| Program | What it does |
+|---|---|
+| `dark_semaphore` | Nullifier registry for agent work proofs |
+| `dark_secp256r1_vault` | P-256/WebAuthn passkey vault record with encrypted key material stored in a PDA |
+| `dark_secp256k1_auth` | MetaMask/ETH address to Solana agent binding via secp256k1 precompile flow |
+| `null_token_hook` | Token-2022 transfer-hook gate for passport/allowlist policy |
+| `null_lottery` | Poseidon commit-reveal lottery/root primitive with fallback-draw path |
+| `null_mint_gate` | NULL emission claim ledger with epoch caps and nullifier replay protection |
+
+### Mainnet pilot path
+
+The commercial profile can be deployed to mainnet as a capped pilot to create
+public transaction evidence and support audit/grant funding. It must not be
+marketed as audited, permissionless production, or fully enforced settlement
+until the post-audit feature gate is compiled and verified.
+
+| Feature | Pre-audit pilot | Post-audit activation |
+|---|---|---|
+| Program accounts on mainnet | Yes, after deploy txs exist | Yes |
+| Receipt/nullifier ledgers | Yes | Yes |
+| Passkey vault storage | Yes | Yes, with reviewed enforcement path |
+| NULL emission accounting | Yes | SPL mint CPI only after audit sign-off |
+| Lottery root/draw records | Yes | Token settlement/winner enforcement only after audit sign-off |
+| `IS_MAINNET_READY` | `false` | `true` only with `--features mainnet,audit-verified` |
+
+### Dual-track: OSS + Commercial
+
+| | OSS Devnet | Commercial Mainnet Pilot |
+|---|---|---|
+| House fees | 0% | 0.5% config |
+| NULL emission | Disabled | 5% accounting config |
+| Lottery ticket price | Free | 10 NULL config |
+| License | MIT | MIT code, Parad0x-operated deployment |
+| Audit gate | Off | Off until reviewed and explicitly enabled |
+| Who it serves | Builders, forks, research | Public tx evidence, capped commercial pilot |
+
+```bash
+# OSS devnet - free, MIT, zero extraction
+./scripts/deploy/devnet-oss.sh
+
+# Commercial mainnet pilot - program deployment only, audit gate remains off
+./scripts/deploy/mainnet-commercial.sh
+```
+
+Full deployment guide: [`DEPLOYMENT.md`](./DEPLOYMENT.md)
+
+---
+
 ## Product Boundary
 
 Parad0x Labs has two separate lanes:

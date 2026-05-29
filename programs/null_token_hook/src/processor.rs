@@ -19,8 +19,10 @@ use solana_program::{
 };
 
 /// When false, unapproved transfers are allowed through after the dark-pool
-/// limit check.  Set to true (post-audit) to enforce full ZK gating — any
-/// transfer that does not pass a passport or allowlist check will be rejected.
+/// limit check. Set to true only when audited enforcement is explicitly compiled.
+#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+pub const IS_MAINNET_READY: bool = true;
+#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
 pub const IS_MAINNET_READY: bool = false;
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

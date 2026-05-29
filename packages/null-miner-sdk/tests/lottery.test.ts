@@ -37,6 +37,9 @@ import {
 } from "../src/lottery/LotterySDK.js";
 import type { RoundInfo } from "../src/lottery/LotterySDK.js";
 
+import { lotteryConfigFromProfile, COMMERCIAL_PROFILE } from "../src/config/profiles.js";
+const COMMERCIAL_LOTTERY_CONFIG = lotteryConfigFromProfile(COMMERCIAL_PROFILE);
+
 import { hexToField, poseidonHash2, fieldToHex } from "../src/zk/poseidon.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -511,8 +514,8 @@ describe("TicketStore — checkBatchForWin", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("LotterySDK — DEFAULT_LOTTERY_CONFIG", () => {
-  test("houseFeeBps is 50 (0.5%)", () => {
-    expect(DEFAULT_LOTTERY_CONFIG.houseFeeBps).toBe(50);
+  test("houseFeeBps is 0 (OSS devnet — zero fees)", () => {
+    expect(DEFAULT_LOTTERY_CONFIG.houseFeeBps).toBe(0);
   });
 
   test("numbersCount is 5", () => {
@@ -656,16 +659,16 @@ describe("LotterySDK — revealAndDraw", () => {
     }
   });
 
-  test("jackpotAmount = total * (1 - 0.005)", () => {
+  test("jackpotAmount = total (OSS — zero house fee)", () => {
     const round1k = makeRoundInfo({ totalNullDeposited: 1_000 });
     const result = revealAndDraw(seed, commitment, round1k, []);
-    expect(result.jackpotAmount).toBe(995);
+    expect(result.jackpotAmount).toBe(1_000);
   });
 
-  test("houseCut = total * 0.005", () => {
+  test("houseCut = 0 (OSS — zero house fee)", () => {
     const round1k = makeRoundInfo({ totalNullDeposited: 1_000 });
     const result = revealAndDraw(seed, commitment, round1k, []);
-    expect(result.houseCut).toBe(5);
+    expect(result.houseCut).toBe(0);
   });
 });
 
@@ -860,9 +863,9 @@ describe("Full round simulation", () => {
     expect(allIds).toContain(result.winnerTicket.ticketId);
   });
 
-  test("house cut test: 10 tickets × 10_000_000 NULL = 100_000_000 total", () => {
-    const totalDeposit = 10 * DEFAULT_LOTTERY_CONFIG.ticketPriceNull; // 100_000_000 atomic = 100 NULL
-    const { jackpot, houseCut } = computeJackpot(totalDeposit, DEFAULT_LOTTERY_CONFIG.houseFeeBps);
+  test("house cut test: 10 tickets × 10_000_000 NULL = 100_000_000 total (commercial config)", () => {
+    const totalDeposit = 10 * COMMERCIAL_LOTTERY_CONFIG.ticketPriceNull; // 100_000_000 atomic = 100 NULL
+    const { jackpot, houseCut } = computeJackpot(totalDeposit, COMMERCIAL_LOTTERY_CONFIG.houseFeeBps);
 
     // 0.5% of 100_000_000 = 500_000
     expect(houseCut).toBe(500_000);

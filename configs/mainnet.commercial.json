@@ -1,0 +1,22 @@
+{
+  "track": "commercial",
+  "network": "mainnet-beta",
+  "description": "Commercial mainnet pilot - 0.5% house config, 5% NULL emission accounting.",
+  "houseFeeBps": 50,
+  "nullEmissionPct": 5,
+  "lotteryHouseFeeBps": 50,
+  "lotteryTicketPriceNull": 10000000,
+  "platformFeePct": 0,
+  "maxNullPerEpochAtomic": 1000000000000,
+  "epochDurationSlots": 432000,
+  "programs": {
+    "semaphore": "TODO_POST_DEPLOY",
+    "vault": "TODO_POST_DEPLOY",
+    "ethAuth": "TODO_POST_DEPLOY",
+    "tokenHook": "TODO_POST_DEPLOY",
+    "lottery": "TODO_POST_DEPLOY",
+    "mintGate": "TODO_POST_DEPLOY"
+  },
+  "nullMint": "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
+  "rpcUrl": "https://api.mainnet-beta.solana.com"
+}

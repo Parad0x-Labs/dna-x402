@@ -1,0 +1,21 @@
+{
+  "track": "oss",
+  "network": "devnet",
+  "description": "Open source devnet - zero fees, zero NULL extraction. MIT licensed.",
+  "houseFeeBps": 0,
+  "nullEmissionPct": 0,
+  "lotteryHouseFeeBps": 0,
+  "lotteryTicketPriceNull": 0,
+  "platformFeePct": 0,
+  "maxNullPerEpochAtomic": 0,
+  "epochDurationSlots": 432000,
+  "programs": {
+    "semaphore": "SEmBHKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "vault": "VAuLTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "ethAuth": "ETHAuxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "tokenHook": "HooKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "lottery": "LoTTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "mintGate": "MiNTGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "rpcUrl": "https://api.devnet.solana.com"
+}

@@ -66,6 +66,14 @@ audit_out_mainnet/
 site/public/proof/latest/
 site-agent/test-results/
 
+# Deploy keypairs - never commit private keys
+scripts/keypairs/**/*.json
+!scripts/keypairs/.gitkeep
+
+# Solana build artifacts
+target/deploy/*.so
+target/deploy/*.json
+
 # Solana program builds (large binaries)
 programs/*/target/
 
@@ -96,7 +104,7 @@ packages/*/tests/*.js.map
 /rust-toolchain.toml
 /AUTONOMOUS_DEPLOYMENT.md
 /BREAK_GLASS_MANUAL.md
-/DEPLOYMENT.md
+# DEPLOYMENT.md is tracked as the public deployment guide
 /DEPLOYMENT_GUIDE.md
 /DEPLOY_AND_TEST.md
 /FINAL_PROOF.py

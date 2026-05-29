@@ -79,6 +79,10 @@
     "./lottery": {
       "types": "./dist/lottery/LotterySDK.d.ts",
       "default": "./dist/lottery/LotterySDK.js"
+    },
+    "./config": {
+      "types": "./dist/config/profiles.d.ts",
+      "default": "./dist/config/profiles.js"
     }
   },
   "scripts": {

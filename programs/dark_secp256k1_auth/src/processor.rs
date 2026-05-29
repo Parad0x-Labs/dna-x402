@@ -16,7 +16,11 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-/// devnet only — skip secp256k1 precompile verification until mainnet deploy.
+/// Security gate: commercial mainnet builds keep this false until the audited
+/// enforcement path is explicitly compiled with both features.
+#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+pub const IS_MAINNET_READY: bool = true;
+#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
 pub const IS_MAINNET_READY: bool = false;
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

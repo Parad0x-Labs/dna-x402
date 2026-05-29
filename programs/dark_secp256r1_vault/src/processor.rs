@@ -28,8 +28,11 @@ const SECP256R1_PROGRAM_ID: Pubkey =
 /// The transaction is expected to include a secp256r1 precompile instruction,
 /// but this program does not verify its presence (devnet trust model).
 ///
-/// Set to true (post-audit) to require the precompile instruction in the same
-/// transaction via a runtime sysvar check before accepting a registration.
+/// Security gate: commercial mainnet builds keep this false until the audited
+/// enforcement path is explicitly compiled with both features.
+#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+pub const IS_MAINNET_READY: bool = true;
+#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
 pub const IS_MAINNET_READY: bool = false;
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

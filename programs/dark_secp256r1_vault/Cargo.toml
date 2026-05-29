@@ -6,6 +6,11 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "lib"]
 
+[features]
+default = []
+mainnet = []
+audit-verified = []
+
 [dependencies]
 solana-program = { workspace = true }
 
@@ -16,6 +21,6 @@ tokio              = { workspace = true }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(feature, values("custom-heap", "custom-panic"))',
+    'cfg(feature, values("custom-heap", "custom-panic", "mainnet", "audit-verified"))',
     'cfg(target_os, values("solana"))',
 ] }

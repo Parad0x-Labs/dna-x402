@@ -210,3 +210,17 @@ export { buyTicket, commitDraw, submitRoundTickets, revealAndDraw, executeFallba
 export type { LotteryTicket, TicketBatch, FallbackPool } from "./lottery/TicketStore.js";
 export type { LotteryConfig, RoundInfo, BuyTicketResult, RoundDrawResult, FallbackDrawResult } from "./lottery/LotterySDK.js";
 export type { DrawResult, DrawVerification } from "./lottery/DrawMachine.js";
+
+// Deployment profiles
+export {
+  OSS_PROFILE,
+  COMMERCIAL_PROFILE,
+  setProfile,
+  getProfile,
+  isCommercial,
+  isNullEmissionActive,
+  profileFingerprint,
+  lotteryConfigFromProfile,
+  flywheelConfigFromProfile,
+} from "./config/profiles.js";
+export type { NullMinerProfile, NetworkTrack, ProgramIds } from "./config/profiles.js";

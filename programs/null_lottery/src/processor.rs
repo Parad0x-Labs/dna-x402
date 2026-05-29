@@ -23,7 +23,11 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-/// Devnet-only flag. Set to true only when deploying to mainnet.
+/// Security gate: commercial mainnet builds keep this false until the audited
+/// settlement path is explicitly compiled with both features.
+#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+pub const IS_MAINNET_READY: bool = true;
+#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
 pub const IS_MAINNET_READY: bool = false;
 
 // ─────────────────────────────────────────────────────────────────────────────
