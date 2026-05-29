@@ -66,9 +66,12 @@ audit_out_mainnet/
 site/public/proof/latest/
 site-agent/test-results/
 
-# Deploy keypairs - never commit private keys
+# Deploy keypairs - NEVER commit private keys
+# These files define program IDs; leaking them enables race attacks on those addresses.
 scripts/keypairs/**/*.json
 !scripts/keypairs/.gitkeep
+**/*keypair*.json
+**/id.json
 
 # Solana build artifacts
 target/deploy/*.so

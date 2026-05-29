@@ -64,6 +64,19 @@ if [ "$CONFIRM" != "deploy-mainnet-pilot" ]; then
   exit 0
 fi
 
+# Check for orphaned buffers from any previous failed deploy — recover SOL before spending more.
+BUFFERS=$(solana program show --buffers --url "$CLUSTER_URL" 2>/dev/null | grep -c "Buffer Address" || true)
+if [ "$BUFFERS" -gt 0 ]; then
+  echo ""
+  echo "WARNING: $BUFFERS orphaned buffer account(s) found."
+  echo "Run this FIRST to recover SOL, then re-run this script:"
+  echo "  solana program close --buffers --url $CLUSTER_URL"
+  echo ""
+  echo "DO NOT run: solana program close <PROGRAM_ID> --bypass-warning"
+  echo "  That destroys deployed programs, not buffers."
+  exit 1
+fi
+
 FEATURE_ARGS=()
 echo "Building pilot binaries WITHOUT --features mainnet — IS_MAINNET_READY=false on all programs. Post-audit: rebuild per-program with --features mainnet."
 
@@ -85,6 +98,9 @@ for i in "${!PROGRAMS[@]}"; do
 
   if [ ! -f "$KP" ]; then
     solana-keygen new --no-passphrase --silent -o "$KP"
+    echo "Generated keypair: $KP"
+    echo "  IMPORTANT: back up $KP outside git before proceeding."
+    echo "  Program ID will be: $(solana-keygen pubkey "$KP")"
   fi
   if [ ! -f "$SO" ]; then
     echo "Missing binary: $SO"
@@ -92,9 +108,18 @@ for i in "${!PROGRAMS[@]}"; do
   fi
 
   PUBKEY=$(solana-keygen pubkey "$KP")
+
+  # Skip-if-already-live: avoids redundant re-deploy and buffer churn on retry.
+  if solana program show "$PUBKEY" --url "$CLUSTER_URL" >/dev/null 2>&1; then
+    echo "SKIP: $PROG already live at $PUBKEY"
+    PROGRAM_IDS+=("$PUBKEY")
+    continue
+  fi
+
   echo "Deploying $PROG to $PUBKEY..."
   solana program deploy --url "$CLUSTER_URL" --program-id "$KP" "$SO"
   solana program show "$PUBKEY" --url "$CLUSTER_URL" >/dev/null
+  echo "OK: $PROG live at $PUBKEY"
   PROGRAM_IDS+=("$PUBKEY")
 done
 
