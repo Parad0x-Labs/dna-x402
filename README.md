@@ -120,7 +120,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 | Surface | Status |
 |---|---|
 | OSS devnet profile | Ready to deploy with zero fees and zero NULL emission |
-| Commercial mainnet profile | Ready for unaudited pilot deploy after wallet/RPC/program-id checks |
+| Commercial mainnet profile | Ready for mainnet pilot deploy after wallet/RPC/program-id checks; not audited externally yet |
 | `IS_MAINNET_READY` enforcement | False by default; requires both `mainnet` and `audit-verified` build features |
 | NULL token | Mainnet mint exists: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
 
@@ -137,13 +137,14 @@ paths, NULL emission accounting, and lottery/root primitives.
 
 ### Mainnet pilot path
 
-The commercial profile can be deployed to mainnet as an unaudited pilot to
-create public transaction evidence and support audit/grant funding. This status
+The commercial profile can be deployed to mainnet as a pilot while external
+audit is pending. It creates public transaction evidence and supports
+audit/grant funding. This status
 must stay visible anywhere the pilot is promoted:
 
-- no completed third-party audit yet
-- reviewed internally by developers with automated analysis tools and regression tests
-- third-party audit planned before `audit-verified` activation
+- not audited externally yet
+- internal technical review, automated analysis tools, and regression tests completed
+- external audit planned before `audit-verified` activation
 - not audited production, not permissionless production, not fully enforced settlement
 
 The pilot may expose mainnet program accounts and public receipts before the
@@ -167,8 +168,8 @@ audit is complete. The stronger enforcement paths remain behind the
 | NULL emission | Disabled | 5% accounting config |
 | Lottery ticket price | Free | 10 NULL config |
 | License | MIT | MIT code, Parad0x-operated deployment |
-| Audit gate | Off | Off until third-party audit review and explicit activation |
-| Who it serves | Builders, forks, research | Public tx evidence, unaudited commercial pilot |
+| Audit gate | Off | Off until external audit review and explicit activation |
+| Who it serves | Builders, forks, research | Public tx evidence, commercial mainnet pilot with external audit pending |
 
 ```bash
 # OSS devnet - free, MIT, zero extraction

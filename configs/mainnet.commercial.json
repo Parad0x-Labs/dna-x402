@@ -1,7 +1,7 @@
 {
   "track": "commercial",
   "network": "mainnet-beta",
-  "description": "Unaudited commercial mainnet pilot - 0.5% house config, 5% NULL emission accounting.",
+  "description": "Commercial mainnet pilot - external audit pending; 0.5% house config, 5% NULL emission accounting.",
   "houseFeeBps": 50,
   "nullEmissionPct": 5,
   "lotteryHouseFeeBps": 50,

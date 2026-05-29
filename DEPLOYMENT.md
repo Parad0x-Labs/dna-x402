@@ -13,16 +13,16 @@
 ## Current Safety Boundary
 
 Commercial mainnet deployment means program accounts are deployed on mainnet and
-configured for the commercial profile. It does not mean third-party audited
+configured for the commercial profile. It does not mean externally audited
 production settlement is active.
 
 Mainnet pilot status must be stated plainly:
 
-- no completed third-party audit yet
-- reviewed internally by developers with automated analysis tools and cumulative regression tests
-- third-party audit planned before `audit-verified` activation
+- not audited externally yet
+- internal technical review, automated analysis tools, and cumulative regression tests completed
+- external audit planned before `audit-verified` activation
 - real SOL is spent during deploy
-- pilot users and integrators accept unaudited smart contract risk
+- pilot users and integrators accept smart contract risk before external audit completion
 
 The enforcement gate flips only when programs are built with both features:
 
@@ -100,6 +100,6 @@ solana program show <PROGRAM_ID> -u mainnet-beta
 - `scripts/keypairs/**/*.json` is gitignored; never commit private keypairs.
 - Mainnet upgrade authority should move to a multisig after deploy.
 - Commercial profile parameters are not a substitute for audited settlement.
-- Mainnet pilot language must say "unaudited" until a third-party audit is complete.
+- Mainnet pilot language must disclose that external audit is pending.
 - `null_mint_gate` records emission claims pre-audit; SPL mint CPI remains gated.
 - `null_lottery` records roots/draws pre-audit; token settlement remains gated.
