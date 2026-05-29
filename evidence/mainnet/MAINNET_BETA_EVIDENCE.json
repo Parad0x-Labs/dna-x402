@@ -1,0 +1,294 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-29T16:46:38.393Z",
+  "repo": "https://github.com/Parad0x-Labs/dna-x402",
+  "commitHash": "bba2ba6484a8e1d673d8d554476be8f8f6b929ed",
+  "cluster": "mainnet-beta",
+  "deployWallet": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "deployDate": "2026-05-29",
+  "nullToken": "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
+  "nullTokenStandard": "Token-2022",
+  "programs": [
+    {
+      "ok": true,
+      "configKey": "semaphore",
+      "programLabel": "dark_semaphore",
+      "programId": "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972456,
+      "dataLen": 75440,
+      "lamports": 526266480,
+      "explorerUrl": "https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "vault",
+      "programLabel": "dark_secp256r1_vault",
+      "programId": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972497,
+      "dataLen": 80824,
+      "lamports": 563739120,
+      "explorerUrl": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "ethAuth",
+      "programLabel": "dark_secp256k1_auth",
+      "programId": "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972541,
+      "dataLen": 73408,
+      "lamports": 512123760,
+      "explorerUrl": "https://explorer.solana.com/address/AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "tokenHook",
+      "programLabel": "null_token_hook",
+      "programId": "14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972583,
+      "dataLen": 77104,
+      "lamports": 537847920,
+      "explorerUrl": "https://explorer.solana.com/address/14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "lottery",
+      "programLabel": "null_lottery",
+      "programId": "3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972624,
+      "dataLen": 89112,
+      "lamports": 621423600,
+      "explorerUrl": "https://explorer.solana.com/address/3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "mintGate",
+      "programLabel": "null_mint_gate",
+      "programId": "5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972663,
+      "dataLen": 78040,
+      "lamports": 544362480,
+      "explorerUrl": "https://explorer.solana.com/address/5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "receiptAnchor",
+      "programLabel": "receipt_anchor",
+      "programId": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972705,
+      "dataLen": 82880,
+      "lamports": 578048880,
+      "explorerUrl": "https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "proofGate",
+      "programLabel": "dark_proof_gate_lite",
+      "programId": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972717,
+      "dataLen": 27536,
+      "lamports": 192854640,
+      "explorerUrl": "https://explorer.solana.com/address/PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2?cluster=mainnet-beta"
+    }
+  ],
+  "feeModel": {
+    "operatorFeeBps": 50,
+    "protocolFeeBps": 5,
+    "protocolFeeRecipient": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+    "enforcement": "SDK/receipt-level metadata. On-chain fee-split enforcement is sprint 2.",
+    "ossFreeFork": true,
+    "ossConfig": {
+      "operatorFeeBps": 0,
+      "protocolFeeBps": 0,
+      "description": "Zero-fee, permissionless, forkable config for OSS/grant use"
+    },
+    "description": [
+      "operatorFeeBps: set freely by each endpoint builder (0–2000 bps). Parad0x commercial default is 50 bps — this is Parad0x's own setting, not a rule for others.",
+      "protocolFeeBps: Parad0x official rail fee (0–100 bps). Commercial: 5 bps (0.05%). OSS: 0.",
+      "No backend custody. No backend signing. Payments go directly on-chain to recipient."
+    ]
+  },
+  "auditStatus": "Pre-audit capped pilot. External audit pending. IS_MAINNET_READY=false in all program binaries.",
+  "upgradeAuthority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "plannedMultisig": "Squads multisig — upgrade authority transfer planned post-audit",
+  "backendCustody": false,
+  "backendSigning": false,
+  "knownLimitations": [
+    "External security audit not yet completed. All programs built with IS_MAINNET_READY=false.",
+    "On-chain fee-split enforcement is Sprint 2 scope. Current enforcement is SDK/receipt metadata.",
+    "Upgrade authority is single wallet — Squads multisig migration planned post-audit.",
+    "USDC direct transfer smoke not run against mainnet-beta (validated in devnet CI).",
+    "Groth16 private settlement is roadmap — not in current deployed programs."
+  ],
+  "grantAsk": "External audit + mainnet hardening + on-chain fee-split enforcement",
+  "grantJustification": [
+    "First Solana stack combining x402 micropayments + Groth16 private settlement roadmap + Agent Passport with biometric key binding.",
+    "8 programs deployed to mainnet-beta. NULL token live on Token-2022.",
+    "OSS config: zero fees, permissionless, forkable.",
+    "Agent price negotiation, receipt chain linking, session keys — all first Solana implementations."
+  ],
+  "explorerLinks": {
+    "dark_semaphore": "https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta",
+    "dark_secp256r1_vault": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta",
+    "dark_secp256k1_auth": "https://explorer.solana.com/address/AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B?cluster=mainnet-beta",
+    "null_token_hook": "https://explorer.solana.com/address/14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g?cluster=mainnet-beta",
+    "null_lottery": "https://explorer.solana.com/address/3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG?cluster=mainnet-beta",
+    "null_mint_gate": "https://explorer.solana.com/address/5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1?cluster=mainnet-beta",
+    "receipt_anchor": "https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN?cluster=mainnet-beta",
+    "dark_proof_gate_lite": "https://explorer.solana.com/address/PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2?cluster=mainnet-beta"
+  },
+  "smokeTests": {
+    "receiptAnchor": {
+      "status": "passed",
+      "programId": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
+      "accountExists": true,
+      "executable": true,
+      "lamports": 1141440,
+      "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
+      "slot": 422977430,
+      "timestamp": "2026-05-29T16:46:36.481Z",
+      "note": "Read-only smoke test. No transaction submitted. Full anchoring covered by integration tests."
+    },
+    "feeReceipts": {
+      "schemaVersion": "1.0",
+      "generatedAt": "2026-05-29T16:46:36.999Z",
+      "allPassed": true,
+      "scenarios": [
+        {
+          "scenario": "commercial-config-fees",
+          "status": "PASS",
+          "detail": "operator=5000 protocol=500 total=5500 net=994500"
+        },
+        {
+          "scenario": "oss-config-fees",
+          "status": "PASS",
+          "detail": "all fees=0 net=1000000 (full amount to provider)"
+        },
+        {
+          "scenario": "dust-payment-floor-division",
+          "status": "PASS",
+          "detail": "9 atomic: fees=0 net=9 (BigInt floor division)"
+        },
+        {
+          "scenario": "deploy-wallet-not-program-id",
+          "status": "PASS",
+          "detail": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY accepted"
+        },
+        {
+          "scenario": "program-id-rejected",
+          "status": "PASS",
+          "detail": "threw as expected: Fee recipient address is a known program ID — use a treasury wallet instead: Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p"
+        }
+      ]
+    },
+    "usdc": {
+      "status": "skipped",
+      "reason": "USDC_SMOKE_SKIPPED_NOT_LAUNCH_BLOCKER",
+      "detail": "Set USDC_SMOKE_ENABLED=1 to run. Requires funded test wallet on mainnet-beta. Validated in devnet CI and integration tests.",
+      "generatedAt": "2026-05-29T16:46:37.464Z"
+    }
+  },
+  "mayhemResults": {
+    "schemaVersion": "1.0",
+    "generatedAt": "2026-05-29T16:46:37.923Z",
+    "allPassed": true,
+    "totalScenarios": 12,
+    "passedCount": 12,
+    "failedCount": 0,
+    "maxChainDepth": 4,
+    "scenarios": [
+      {
+        "scenario": 1,
+        "name": "operatorFeeBps-exceeds-2000",
+        "status": "PASS",
+        "detail": "operatorFeeBps out of range [0, 2000]: 2001"
+      },
+      {
+        "scenario": 2,
+        "name": "protocolFeeBps-exceeds-100",
+        "status": "PASS",
+        "detail": "protocolFeeBps out of range [0, 100]: 101"
+      },
+      {
+        "scenario": 3,
+        "name": "program-id-fee-recipient-rejected",
+        "status": "PASS",
+        "detail": "Fee recipient address is a known program ID — use a treasury wallet instead: Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p"
+      },
+      {
+        "scenario": 4,
+        "name": "empty-address-rejected",
+        "status": "PASS",
+        "detail": "Fee recipient address must be a non-empty string"
+      },
+      {
+        "scenario": 5,
+        "name": "invalid-base58-rejected",
+        "status": "PASS",
+        "detail": "Fee recipient address contains invalid base58 characters: 00000000000000000000000000000000"
+      },
+      {
+        "scenario": 6,
+        "name": "commercial-fees-nonzero",
+        "status": "PASS",
+        "detail": "operator=2500 protocol=250"
+      },
+      {
+        "scenario": 7,
+        "name": "oss-fees-zero",
+        "status": "PASS",
+        "detail": "totalFee=0 providerNet=500000"
+      },
+      {
+        "scenario": 8,
+        "name": "session-not-present-returns-402",
+        "status": "PASS",
+        "detail": "status=402 sessionError=\"session not found or expired\""
+      },
+      {
+        "scenario": 9,
+        "name": "parseChainDepth-undefined-is-0",
+        "status": "PASS",
+        "detail": "depth=0"
+      },
+      {
+        "scenario": 10,
+        "name": "parseChainDepth-clamped-to-max-plus-1",
+        "status": "PASS",
+        "detail": "depth=5 (MAX_CHAIN_DEPTH=4)"
+      },
+      {
+        "scenario": 11,
+        "name": "chain-depth-exceeds-max-rejected-400",
+        "status": "PASS",
+        "detail": "depth=5 → status=400"
+      },
+      {
+        "scenario": 12,
+        "name": "unknown-session-rejected-402",
+        "status": "PASS",
+        "detail": "status=402 error=\"session not found or expired\""
+      }
+    ]
+  },
+  "devnetEvidence": {
+    "note": "Devnet smoke CI job (devnet-smoke) validates full 402→pay→verify loop.",
+    "ciJobName": "devnet-smoke",
+    "programs": "Same 8 program IDs tested on devnet before mainnet promotion."
+  }
+}

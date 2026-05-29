@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-29T16:46:32.571Z",
+  "cluster": "mainnet-beta",
+  "totalPrograms": 8,
+  "verifiedCount": 8,
+  "failedCount": 0,
+  "programs": [
+    {
+      "ok": true,
+      "configKey": "semaphore",
+      "programLabel": "dark_semaphore",
+      "programId": "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972456,
+      "dataLen": 75440,
+      "lamports": 526266480,
+      "explorerUrl": "https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "vault",
+      "programLabel": "dark_secp256r1_vault",
+      "programId": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972497,
+      "dataLen": 80824,
+      "lamports": 563739120,
+      "explorerUrl": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "ethAuth",
+      "programLabel": "dark_secp256k1_auth",
+      "programId": "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972541,
+      "dataLen": 73408,
+      "lamports": 512123760,
+      "explorerUrl": "https://explorer.solana.com/address/AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "tokenHook",
+      "programLabel": "null_token_hook",
+      "programId": "14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972583,
+      "dataLen": 77104,
+      "lamports": 537847920,
+      "explorerUrl": "https://explorer.solana.com/address/14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "lottery",
+      "programLabel": "null_lottery",
+      "programId": "3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972624,
+      "dataLen": 89112,
+      "lamports": 621423600,
+      "explorerUrl": "https://explorer.solana.com/address/3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "mintGate",
+      "programLabel": "null_mint_gate",
+      "programId": "5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972663,
+      "dataLen": 78040,
+      "lamports": 544362480,
+      "explorerUrl": "https://explorer.solana.com/address/5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "receiptAnchor",
+      "programLabel": "receipt_anchor",
+      "programId": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972705,
+      "dataLen": 82880,
+      "lamports": 578048880,
+      "explorerUrl": "https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN?cluster=mainnet-beta"
+    },
+    {
+      "ok": true,
+      "configKey": "proofGate",
+      "programLabel": "dark_proof_gate_lite",
+      "programId": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
+      "executable": true,
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "lastDeployedSlot": 422972717,
+      "dataLen": 27536,
+      "lamports": 192854640,
+      "explorerUrl": "https://explorer.solana.com/address/PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2?cluster=mainnet-beta"
+    }
+  ]
+}

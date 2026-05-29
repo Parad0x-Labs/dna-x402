@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-29T16:46:36.999Z",
+  "allPassed": true,
+  "scenarios": [
+    {
+      "scenario": "commercial-config-fees",
+      "status": "PASS",
+      "detail": "operator=5000 protocol=500 total=5500 net=994500"
+    },
+    {
+      "scenario": "oss-config-fees",
+      "status": "PASS",
+      "detail": "all fees=0 net=1000000 (full amount to provider)"
+    },
+    {
+      "scenario": "dust-payment-floor-division",
+      "status": "PASS",
+      "detail": "9 atomic: fees=0 net=9 (BigInt floor division)"
+    },
+    {
+      "scenario": "deploy-wallet-not-program-id",
+      "status": "PASS",
+      "detail": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY accepted"
+    },
+    {
+      "scenario": "program-id-rejected",
+      "status": "PASS",
+      "detail": "threw as expected: Fee recipient address is a known program ID — use a treasury wallet instead: Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p"
+    }
+  ]
+}

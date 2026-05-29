@@ -31,6 +31,17 @@
     "check:style": "node scripts/check-style-terms.mjs",
     "acceptance:builder": "npm --prefix x402 run acceptance:builder",
     "acceptance:agents": "npm --prefix x402 run acceptance:agents",
-    "acceptance:degen-mode": "npm --prefix x402 run acceptance:degen-mode"
+    "acceptance:degen-mode": "npm --prefix x402 run acceptance:degen-mode",
+    "mainnet:preflight":           "bash scripts/post-mainnet/00-preflight-mainnet.sh",
+    "mainnet:deploy:safe":         "bash scripts/post-mainnet/01-deploy-mainnet-safe.sh",
+    "mainnet:verify":              "node scripts/post-mainnet/02-verify-programs-mainnet.mjs",
+    "mainnet:buffers":             "bash scripts/post-mainnet/03-check-buffers-mainnet.sh",
+    "mainnet:smoke:receipt":       "node scripts/post-mainnet/04-smoke-receipt-anchor.mjs",
+    "mainnet:smoke:x402":          "node scripts/post-mainnet/05-smoke-x402-quote-receipt.mjs",
+    "mainnet:smoke:usdc":          "node scripts/post-mainnet/06-smoke-usdc-optional.mjs",
+    "mainnet:mayhem":              "node scripts/post-mainnet/07-mainnet-mayhem.mjs",
+    "mainnet:evidence":            "node scripts/post-mainnet/08-build-grant-evidence.mjs",
+    "mainnet:authority:checklist": "bash scripts/post-mainnet/09-transfer-authority-checklist.sh",
+    "mainnet:postdeploy:all":      "npm run mainnet:verify && npm run mainnet:buffers && npm run mainnet:smoke:receipt && npm run mainnet:smoke:x402 && npm run mainnet:smoke:usdc && npm run mainnet:mayhem && npm run mainnet:evidence"
   }
 }

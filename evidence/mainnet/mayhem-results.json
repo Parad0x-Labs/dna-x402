@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-29T16:46:37.923Z",
+  "allPassed": true,
+  "totalScenarios": 12,
+  "passedCount": 12,
+  "failedCount": 0,
+  "maxChainDepth": 4,
+  "scenarios": [
+    {
+      "scenario": 1,
+      "name": "operatorFeeBps-exceeds-2000",
+      "status": "PASS",
+      "detail": "operatorFeeBps out of range [0, 2000]: 2001"
+    },
+    {
+      "scenario": 2,
+      "name": "protocolFeeBps-exceeds-100",
+      "status": "PASS",
+      "detail": "protocolFeeBps out of range [0, 100]: 101"
+    },
+    {
+      "scenario": 3,
+      "name": "program-id-fee-recipient-rejected",
+      "status": "PASS",
+      "detail": "Fee recipient address is a known program ID — use a treasury wallet instead: Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p"
+    },
+    {
+      "scenario": 4,
+      "name": "empty-address-rejected",
+      "status": "PASS",
+      "detail": "Fee recipient address must be a non-empty string"
+    },
+    {
+      "scenario": 5,
+      "name": "invalid-base58-rejected",
+      "status": "PASS",
+      "detail": "Fee recipient address contains invalid base58 characters: 00000000000000000000000000000000"
+    },
+    {
+      "scenario": 6,
+      "name": "commercial-fees-nonzero",
+      "status": "PASS",
+      "detail": "operator=2500 protocol=250"
+    },
+    {
+      "scenario": 7,
+      "name": "oss-fees-zero",
+      "status": "PASS",
+      "detail": "totalFee=0 providerNet=500000"
+    },
+    {
+      "scenario": 8,
+      "name": "session-not-present-returns-402",
+      "status": "PASS",
+      "detail": "status=402 sessionError=\"session not found or expired\""
+    },
+    {
+      "scenario": 9,
+      "name": "parseChainDepth-undefined-is-0",
+      "status": "PASS",
+      "detail": "depth=0"
+    },
+    {
+      "scenario": 10,
+      "name": "parseChainDepth-clamped-to-max-plus-1",
+      "status": "PASS",
+      "detail": "depth=5 (MAX_CHAIN_DEPTH=4)"
+    },
+    {
+      "scenario": 11,
+      "name": "chain-depth-exceeds-max-rejected-400",
+      "status": "PASS",
+      "detail": "depth=5 → status=400"
+    },
+    {
+      "scenario": 12,
+      "name": "unknown-session-rejected-402",
+      "status": "PASS",
+      "detail": "status=402 error=\"session not found or expired\""
+    }
+  ]
+}
