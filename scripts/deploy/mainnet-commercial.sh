@@ -65,7 +65,7 @@ if [ "$CONFIRM" != "deploy-mainnet-pilot" ]; then
 fi
 
 # Check for orphaned buffers from any previous failed deploy — recover SOL before spending more.
-BUFFERS=$(solana program show --buffers --url "$CLUSTER_URL" 2>/dev/null | grep -c "Buffer Address" || true)
+BUFFERS=$(solana program show --buffers --url "$CLUSTER_URL" 2>/dev/null | grep -v "Buffer Address" | grep -vc "^[[:space:]]*$" || true)
 if [ "$BUFFERS" -gt 0 ]; then
   echo ""
   echo "WARNING: $BUFFERS orphaned buffer account(s) found."
