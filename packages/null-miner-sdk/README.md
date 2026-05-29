@@ -261,9 +261,9 @@ The SDK falls back to mock tasks when the task marketplace API is unreachable �
 | Browser extension | ✅ Devnet |
 | Dark-agent-escrow (Solana program) | 🔶 Devnet (ZK stub) |
 | Groth16 ZK proofs | ❌ Phase 2 |
-| Mainnet deploy | ❌ Pending audit |
+| Mainnet deploy | ❌ Pending deployment gates |
 
-**`IS_MAINNET_READY = false`** — We ship this flag honestly. Devnet works fully. Mainnet after audit.
+**`IS_MAINNET_READY = false`** — Devnet works fully. Mainnet opens after deploy funding, final config, and smoke evidence.
 
 ---
 

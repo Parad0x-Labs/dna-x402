@@ -2026,6 +2026,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-kzg-verifier"
+version = "0.1.0"
+dependencies = [
+ "dark-groth16-core",
+ "solana-program",
+]
+
+[[package]]
 name = "dark-liquidity-proof"
 version = "0.1.0"
 dependencies = [
@@ -2919,6 +2927,26 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "dark-secp256k1-auth"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
+name = "dark-secp256r1-vault"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
  "tokio",
 ]
 
@@ -5330,6 +5358,16 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "null-token-hook"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
 ]
 
 [[package]]
