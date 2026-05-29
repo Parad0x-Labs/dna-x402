@@ -20,6 +20,19 @@ import {
 import type { StreamflowClientLike } from "../verifier/streamflow.js";
 import type { NegotiationPolicy } from "../negotiation/types.js";
 import { evaluateOffer, parseNegotiateRound } from "../negotiation/engine.js";
+import {
+  SESSION_ID_HEADER,
+  type SessionPolicy,
+  type SessionStatusResponse,
+} from "./sessionKey.js";
+import {
+  CHAIN_PARENT_HEADER,
+  CHAIN_DEPTH_HEADER,
+  MAX_CHAIN_DEPTH,
+  parseChainDepth,
+  type ChainLink,
+  type ChainResponse,
+} from "./receiptChain.js";
 
 export interface PaywallOptions {
   priceAtomic: string;
@@ -52,6 +65,15 @@ export interface PaywallOptions {
    *     },
    *   })
    */
+  /**
+   * Enable session keys on this endpoint.
+   *
+   * After the first successful payment, the server issues a session ID in
+   * the x-dnp-session-id response header.  The agent sends this header on
+   * subsequent requests and is let through without a new payment until the
+   * session expires or is exhausted.
+   */
+  session?: SessionPolicy;
   onReceiptFinalized?: (info: {
     receiptId: string;
     settlement: string;
@@ -87,6 +109,10 @@ interface QuoteRecord {
   paymentVerifier: PaymentVerifier;
   receiptSigner: ReceiptSigner;
   onPaymentVerified?: (receipt: unknown, req: Request) => void;
+  /** Receipt chain: ID of the parent receipt this payment is part of. */
+  parentReceiptId?: string;
+  /** Receipt chain depth (0 = root). */
+  chainDepth?: number;
 }
 
 interface CommitRecord {
@@ -111,6 +137,27 @@ function isBinaryBody(value: unknown): value is ArrayBuffer | ArrayBufferView {
   return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
 }
 
+interface SessionRecord {
+  sessionId: string;
+  resource: string;
+  pricePerCallAtomic: string;
+  maxCalls: number | null;
+  maxSpendAtomic: bigint | null;
+  expiresAtMs: number;
+  createdAt: string;
+  callsUsed: number;
+  spentAtomic: bigint;
+}
+
+interface ChainRecord {
+  receiptId: string;
+  parentReceiptId: string | null;
+  depth: number;
+  amountAtomic: string;
+  resource: string;
+  createdAt: string;
+}
+
 interface PaywallRuntime {
   quotes: Map<string, QuoteRecord>;
   commits: Map<string, CommitRecord>;
@@ -118,6 +165,8 @@ interface PaywallRuntime {
   paidCommits: Set<string>;
   usedTransferProofs: Map<string, string>;
   usedStreamProofs: Map<string, string>;
+  sessions: Map<string, SessionRecord>;
+  chains: Map<string, ChainRecord>;
   routesMounted: boolean;
 }
 
@@ -208,6 +257,8 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       paidCommits: new Set<string>(),
       usedTransferProofs: new Map<string, string>(),
       usedStreamProofs: new Map<string, string>(),
+      sessions: new Map<string, SessionRecord>(),
+      chains: new Map<string, ChainRecord>(),
       routesMounted: false,
     };
     locals[PAYWALL_RUNTIME_KEY] = runtime;
@@ -419,6 +470,46 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       commit.receiptId = receiptId;
       runtime?.paidCommits.add(commitId);
 
+      // ── Chain linkage ───────────────────────────────────────────────────────
+      // If this payment was made as part of a receipt chain, record the link.
+      const parentReceiptId = quote.parentReceiptId ?? null;
+      const chainDepth = quote.chainDepth ?? 0;
+      runtime?.chains.set(receiptId, {
+        receiptId,
+        parentReceiptId,
+        depth: chainDepth,
+        amountAtomic: quote.priceAtomic,
+        resource: quote.resource,
+        createdAt: new Date().toISOString(),
+      });
+
+      // ── Session creation ────────────────────────────────────────────────────
+      let newSessionId: string | undefined;
+      if (options.session?.enabled) {
+        const sessionPolicy = options.session;
+        const ttlMs = (sessionPolicy.ttlSeconds ?? 3600) * 1000;
+        newSessionId = crypto.randomUUID();
+        const maxCalls = sessionPolicy.maxCalls ?? null;
+        const maxSpendBigInt = sessionPolicy.maxSpendAtomic
+          ? BigInt(sessionPolicy.maxSpendAtomic)
+          : null;
+        runtime?.sessions.set(newSessionId, {
+          sessionId: newSessionId,
+          resource: quote.resource,
+          pricePerCallAtomic: quote.priceAtomic,
+          maxCalls,
+          maxSpendAtomic: maxSpendBigInt,
+          expiresAtMs: Date.now() + ttlMs,
+          createdAt: new Date().toISOString(),
+          callsUsed: 0,
+          spentAtomic: 0n,
+        });
+      }
+
+      const finalizePayload = newSessionId
+        ? { ...finalizeResponse, sessionId: newSessionId }
+        : finalizeResponse;
+
       // Fire the receipt-finalized hook (non-blocking — errors must not abort the response).
       if (options.onReceiptFinalized) {
         Promise.resolve(
@@ -436,7 +527,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         });
       }
 
-      routeRes.json(finalizeResponse);
+      routeRes.json(finalizePayload);
     });
 
     req.app.get("/receipt/:id", (routeReq: Request, routeRes: Response) => {
@@ -447,6 +538,72 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       }
 
       routeRes.json(createReceiptPayload(receipt));
+    });
+
+    // ── Session status endpoint ───────────────────────────────────────────────
+    req.app.get("/session/:id", (routeReq: Request, routeRes: Response) => {
+      const session = runtime?.sessions.get(routeReq.params.id as string);
+      if (!session) {
+        routeRes.status(404).json({ error: "Session not found or expired" });
+        return;
+      }
+
+      const now = Date.now();
+      const active = session.expiresAtMs > now;
+      const callsRemaining = session.maxCalls !== null
+        ? Math.max(0, session.maxCalls - session.callsUsed)
+        : null;
+      const remainingSpendAtomic = session.maxSpendAtomic !== null
+        ? String(session.maxSpendAtomic - session.spentAtomic > 0n
+            ? session.maxSpendAtomic - session.spentAtomic
+            : 0n)
+        : null;
+
+      const status: SessionStatusResponse = {
+        sessionId: session.sessionId,
+        resource: session.resource,
+        callsUsed: session.callsUsed,
+        callsRemaining,
+        spentAtomic: String(session.spentAtomic),
+        remainingSpendAtomic,
+        expiresAt: new Date(session.expiresAtMs).toISOString(),
+        active,
+      };
+      routeRes.json(status);
+    });
+
+    // ── Receipt chain endpoint ────────────────────────────────────────────────
+    req.app.get("/receipt/:id/chain", (routeReq: Request, routeRes: Response) => {
+      const startId = routeReq.params.id as string;
+      const startLink = runtime?.chains.get(startId);
+      if (!startLink) {
+        routeRes.status(404).json({ error: "Receipt chain not found" });
+        return;
+      }
+
+      // Traverse up to root.
+      const chain: ChainLink[] = [];
+      let current: ChainRecord | undefined = startLink;
+      while (current) {
+        chain.unshift({
+          receiptId: current.receiptId,
+          parentReceiptId: current.parentReceiptId,
+          depth: current.depth,
+          amountAtomic: current.amountAtomic,
+          resource: current.resource,
+          createdAt: current.createdAt,
+        });
+        current = current.parentReceiptId ? runtime?.chains.get(current.parentReceiptId) : undefined;
+      }
+
+      const totalAmount = chain.reduce((sum, l) => sum + BigInt(l.amountAtomic), 0n);
+      const response: ChainResponse = {
+        root: chain[0] as ChainLink,
+        chain,
+        totalDepth: chain.length - 1,
+        totalAmountAtomic: String(totalAmount),
+      };
+      routeRes.json(response);
     });
   }
 
@@ -493,6 +650,53 @@ export function dnaPaywall(options: PaywallOptions) {
         return;
       }
     }
+
+    // ── Session gate ──────────────────────────────────────────────────────────
+    // Check for a valid session before requiring a new payment.
+    const incomingSessionId = req.header(SESSION_ID_HEADER);
+    if (incomingSessionId) {
+      const session = runtime.sessions.get(incomingSessionId);
+      if (!session) {
+        res.status(402).json({
+          error: "payment_required",
+          sessionError: "session not found or expired",
+        });
+        return;
+      }
+      const now = Date.now();
+      if (session.expiresAtMs <= now) {
+        runtime.sessions.delete(incomingSessionId);
+        res.status(402).json({
+          error: "payment_required",
+          sessionError: "session expired",
+        });
+        return;
+      }
+      if (session.maxCalls !== null && session.callsUsed >= session.maxCalls) {
+        res.status(402).json({
+          error: "payment_required",
+          sessionError: `session exhausted (${session.callsUsed}/${session.maxCalls} calls used)`,
+        });
+        return;
+      }
+      if (
+        session.maxSpendAtomic !== null
+        && session.spentAtomic >= session.maxSpendAtomic
+      ) {
+        res.status(402).json({
+          error: "payment_required",
+          sessionError: "session spend limit reached",
+        });
+        return;
+      }
+      // Session valid — update usage and pass through.
+      session.callsUsed += 1;
+      session.spentAtomic += BigInt(session.pricePerCallAtomic);
+      res.setHeader(SESSION_ID_HEADER, incomingSessionId);
+      next();
+      return;
+    }
+    // ── End session gate ──────────────────────────────────────────────────────
 
     const commitId = req.header("x-dnp-commit-id");
     const paidCommit = commitId ? runtime.commits.get(commitId) : undefined;
@@ -654,13 +858,25 @@ export function dnaPaywall(options: PaywallOptions) {
       }
       next();
       return;
-    }
+    } // end paidCommit gate
 
     const now = new Date();
     const quoteId = crypto.randomUUID();
     const expiresAt = new Date(now.getTime() + ttl * 1000).toISOString();
     const target = requestTarget(req);
     const method = req.method.toUpperCase();
+
+    // ── Receipt chain headers ──────────────────────────────────────────────────
+    const incomingParentReceiptId = req.header(CHAIN_PARENT_HEADER) ?? undefined;
+    const incomingChainDepth = parseChainDepth(req.header(CHAIN_DEPTH_HEADER));
+    if (incomingParentReceiptId && incomingChainDepth > MAX_CHAIN_DEPTH) {
+      res.status(400).json({
+        error: "chain_depth_exceeded",
+        message: `Receipt chain depth ${incomingChainDepth} exceeds maximum ${MAX_CHAIN_DEPTH}`,
+      });
+      return;
+    }
+    // ── End chain headers ──────────────────────────────────────────────────────
 
     // ── Negotiation ────────────────────────────────────────────────────────────
     // If the endpoint has a NegotiationPolicy, check for an agent bid in the
@@ -726,6 +942,8 @@ export function dnaPaywall(options: PaywallOptions) {
       paymentVerifier,
       receiptSigner,
       onPaymentVerified: options.onPaymentVerified,
+      parentReceiptId: incomingParentReceiptId,
+      chainDepth: incomingParentReceiptId ? incomingChainDepth : undefined,
     };
     runtime.quotes.set(quoteId, quote);
 

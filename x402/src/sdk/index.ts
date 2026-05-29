@@ -42,6 +42,12 @@ export type { PaywallOptions } from "./paywall.js";
 export { fetchWithNegotiation } from "./negotiate.js";
 export type { FetchWithNegotiationOptions } from "./negotiate.js";
 
+export { createSession, fetchWithSession, getSessionStatus, SESSION_ID_HEADER } from "./sessionKey.js";
+export type { SessionPolicy, SessionHandle, SessionStatusResponse } from "./sessionKey.js";
+
+export { fetchWithChain, getReceiptChain, parseChainDepth, CHAIN_PARENT_HEADER, CHAIN_DEPTH_HEADER, MAX_CHAIN_DEPTH } from "./receiptChain.js";
+export type { ChainLink, ChainResponse, FetchWithChainOptions } from "./receiptChain.js";
+
 export type {
   NegotiationPolicy,
   NegotiationClientPolicy,
