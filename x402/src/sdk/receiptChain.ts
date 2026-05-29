@@ -87,7 +87,7 @@ export async function fetchWithChain(
 
   const { fetchWith402 } = await import("../client.js");
   return fetchWith402(url, {
-    ...(baseOptions as Parameters<typeof fetchWith402>[1]),
+    ...(baseOptions as unknown as Parameters<typeof fetchWith402>[1]),
     headers,
   });
 }
