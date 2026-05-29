@@ -125,8 +125,8 @@ paths, NULL emission accounting, and lottery/root primitives.
 | Surface | Status |
 |---|---|
 | OSS devnet profile | Ready to deploy with zero fees and zero NULL emission |
-| Commercial mainnet profile | Ready for mainnet pilot deploy after wallet/RPC/program-id checks; not audited externally yet |
-| `IS_MAINNET_READY` enforcement | False by default; flip to true post-audit with `--features mainnet` rebuild |
+| Commercial mainnet profile | Ready for mainnet pilot deploy after wallet/RPC/program-id checks; external audit pending |
+| Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
 | NULL token | Mainnet mint exists: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
 
 ### Deploy profile programs
@@ -147,14 +147,14 @@ audit is pending. It creates public transaction evidence and supports
 audit/grant funding. This status
 must stay visible anywhere the pilot is promoted:
 
-- not audited externally yet
+- external audit pending
 - internal technical review, automated analysis tools, and regression tests completed
-- external audit planned; `IS_MAINNET_READY` flips to `true` post-audit via `--features mainnet` rebuild
-- not audited production, not permissionless production, not fully enforced settlement
+- enforcement flag off until post-audit `--features mainnet` rebuild
+- pre-audit production: program accounts live, settlement paths off
 
 The pilot may expose mainnet program accounts and public receipts before the
-audit is complete. The stronger enforcement paths activate when `IS_MAINNET_READY=true`
-is compiled in after external audit sign-off.
+audit is complete. Stronger enforcement paths activate after audit sign-off
+via a `--features mainnet` rebuild.
 
 | Feature | Pre-audit pilot | Post-audit activation |
 |---|---|---|
@@ -163,7 +163,7 @@ is compiled in after external audit sign-off.
 | Passkey vault storage | Yes | Yes, with reviewed enforcement path |
 | NULL emission accounting | Yes | SPL mint CPI only after audit sign-off |
 | Lottery root/draw records | Yes | Token settlement/winner enforcement only after audit sign-off |
-| `IS_MAINNET_READY` | `false` | `true` only with `--features mainnet` post-audit rebuild |
+| Enforcement flag | `off` | `on` with `--features mainnet` post-audit rebuild |
 
 ### Dual-track: OSS + Commercial
 
