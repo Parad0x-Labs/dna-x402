@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# NULL Miner - commercial mainnet pilot deploy.
+# NULL Miner - unaudited commercial mainnet pilot deploy.
 #
 # This deploys program accounts and writes their IDs into
-# configs/mainnet.commercial.json. It does not enable audited production
-# settlement. By default IS_MAINNET_READY remains false.
+# configs/mainnet.commercial.json. It does not enable third-party audited
+# production settlement. By default IS_MAINNET_READY remains false.
 #
 # To build audited enforcement paths after review, set:
 #   AUDIT_VERIFIED=1 ./scripts/deploy/mainnet-commercial.sh
@@ -42,12 +42,15 @@ MANIFESTS=(
   "programs/null_mint_gate/Cargo.toml"
 )
 
-echo "NULL Miner commercial mainnet pilot deploy"
+echo "NULL Miner unaudited commercial mainnet pilot deploy"
 echo "Cluster: $CLUSTER_URL"
 echo "Wallet:  $(solana address --url "$CLUSTER_URL")"
 echo "Balance: $(solana balance --url "$CLUSTER_URL")"
 echo ""
-echo "This spends real SOL. Pre-audit pilot builds keep IS_MAINNET_READY=false."
+echo "This spends real SOL."
+echo "Status: no completed third-party audit yet."
+echo "Review: internal developer review, automated analysis tools, regression tests."
+echo "Pre-audit pilot builds keep IS_MAINNET_READY=false."
 echo "Type 'deploy-mainnet-pilot' to continue."
 read -r CONFIRM
 if [ "$CONFIRM" != "deploy-mainnet-pilot" ]; then

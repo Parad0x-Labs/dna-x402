@@ -120,7 +120,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 | Surface | Status |
 |---|---|
 | OSS devnet profile | Ready to deploy with zero fees and zero NULL emission |
-| Commercial mainnet profile | Ready for pilot deploy after wallet/RPC/program-id checks |
+| Commercial mainnet profile | Ready for unaudited pilot deploy after wallet/RPC/program-id checks |
 | `IS_MAINNET_READY` enforcement | False by default; requires both `mainnet` and `audit-verified` build features |
 | NULL token | Mainnet mint exists: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
 
@@ -133,14 +133,22 @@ paths, NULL emission accounting, and lottery/root primitives.
 | `dark_secp256k1_auth` | MetaMask/ETH address to Solana agent binding via secp256k1 precompile flow |
 | `null_token_hook` | Token-2022 transfer-hook gate for passport/allowlist policy |
 | `null_lottery` | Poseidon commit-reveal lottery/root primitive with fallback-draw path |
-| `null_mint_gate` | NULL emission claim ledger with epoch caps and nullifier replay protection |
+| `null_mint_gate` | NULL emission claim ledger with nullifier replay protection |
 
 ### Mainnet pilot path
 
-The commercial profile can be deployed to mainnet as a capped pilot to create
-public transaction evidence and support audit/grant funding. It must not be
-marketed as audited, permissionless production, or fully enforced settlement
-until the post-audit feature gate is compiled and verified.
+The commercial profile can be deployed to mainnet as an unaudited pilot to
+create public transaction evidence and support audit/grant funding. This status
+must stay visible anywhere the pilot is promoted:
+
+- no completed third-party audit yet
+- reviewed internally by developers with automated analysis tools and regression tests
+- third-party audit planned before `audit-verified` activation
+- not audited production, not permissionless production, not fully enforced settlement
+
+The pilot may expose mainnet program accounts and public receipts before the
+audit is complete. The stronger enforcement paths remain behind the
+`audit-verified` build feature.
 
 | Feature | Pre-audit pilot | Post-audit activation |
 |---|---|---|
@@ -159,8 +167,8 @@ until the post-audit feature gate is compiled and verified.
 | NULL emission | Disabled | 5% accounting config |
 | Lottery ticket price | Free | 10 NULL config |
 | License | MIT | MIT code, Parad0x-operated deployment |
-| Audit gate | Off | Off until reviewed and explicitly enabled |
-| Who it serves | Builders, forks, research | Public tx evidence, capped commercial pilot |
+| Audit gate | Off | Off until third-party audit review and explicit activation |
+| Who it serves | Builders, forks, research | Public tx evidence, unaudited commercial pilot |
 
 ```bash
 # OSS devnet - free, MIT, zero extraction
@@ -250,13 +258,13 @@ Acceptance:
 npm run acceptance:builder
 ```
 
-Public Beta scope: users can create paper agents, public profiles, copy settings, and builder/API integrations. Low-risk live payments are open with caps, client-side signing, emergency pause, Telegram monitoring, and visible fee waterfalls. Backend custody, backend signing, hidden fees, auto-sweep, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
+Public Beta scope: users can create paper agents, public profiles, copy settings, and builder/API integrations. Low-risk live payments are open with client-side signing, emergency pause, Telegram monitoring, and visible fee waterfalls. Backend custody, backend signing, hidden fees, auto-sweep, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
 
 ### Degen Mode
 
 Connect wallet. Pick agent. Set max pain. Let it cook.
 
-Degen Mode turns Solana trench ideas into safe DNA x402 agent primitives: fresh pair scouts, wallet stalkers, copy-the-chad agents, rug radar, pump radar, paper ape labs, and paid signal rooms. The useful parts are scanner, signal, paper-sim, and trade-intent shapes. The unsafe parts stay out: no pasted private keys, no backend custody, no backend signing, no fake PnL, no guaranteed-profit claims, and no uncapped auto-live execution.
+Degen Mode turns Solana trench ideas into safe DNA x402 agent primitives: fresh pair scouts, wallet stalkers, copy-the-chad agents, rug radar, pump radar, paper ape labs, and paid signal rooms. The useful parts are scanner, signal, paper-sim, and trade-intent shapes. The unsafe parts stay out: no pasted private keys, no backend custody, no backend signing, no fake PnL, no guaranteed-profit claims, and no unrestricted autonomous live execution.
 
 ## Degen-Native Use Cases
 

@@ -5,7 +5,7 @@
 **Applicant:** Parad0x Labs
 **Track:** Developer tooling, agent payments, DePIN infrastructure
 **Ask:** Audit funding, target $25,000-$40,000 USD equivalent in SOL
-**Stage:** Tested local/devnet-ready stack, mainnet pilot deploy prepared
+**Stage:** Tested local/devnet-ready stack, unaudited mainnet pilot deploy prepared
 
 ## What We Built
 
@@ -18,6 +18,10 @@ profile. The same public code can be tested without protocol fees, while the
 Parad0x-operated pilot can generate public transaction evidence for audit and
 grant review.
 
+The mainnet pilot is not third-party audited. It has internal developer review,
+automated analysis tooling, cumulative regression tests, and an explicit
+post-audit activation gate.
+
 ## Native Solana Programs
 
 | Program | Scope |
@@ -27,7 +31,7 @@ grant review.
 | `dark_secp256k1_auth` | ETH address to Solana agent binding via secp256k1 precompile flow |
 | `null_token_hook` | Token-2022 transfer-hook gate for passport/allowlist policy |
 | `null_lottery` | Poseidon commit-reveal lottery/root primitive with fallback-draw path |
-| `null_mint_gate` | NULL emission claim ledger with epoch caps and nullifier replay protection |
+| `null_mint_gate` | NULL emission claim ledger with nullifier replay protection |
 
 ## TypeScript SDK
 
@@ -40,8 +44,8 @@ flywheel emission accounting, privacy helpers, and deployment profiles.
 - Agent payments need low-friction wallets, policy, receipts, and replay-safe
   accounting.
 - The OSS profile gives builders a zero-fee way to inspect and fork the rail.
-- The commercial profile gives Solana-visible transaction evidence without
-  changing the public code path.
+- The commercial profile gives Solana-visible transaction evidence before the
+  third-party audit is complete, with the unaudited status disclosed.
 - The audit gate is explicit: `IS_MAINNET_READY` stays false until programs are
   compiled with both `mainnet` and `audit-verified`.
 
@@ -52,6 +56,7 @@ flywheel emission accounting, privacy helpers, and deployment profiles.
 - Program keypairs are ignored from git.
 - Mainnet deployment scripts are prepared for sequential deployment and config
   ID stamping.
+- Pilot status is explicit: no completed third-party audit yet.
 - NULL token exists on Solana mainnet:
   `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`.
 
@@ -68,7 +73,7 @@ Focus areas:
 - Passkey and secp256k1 precompile verification paths.
 - Token-2022 hook bypass vectors.
 - Lottery root/draw manipulation resistance.
-- NULL emission caps and SPL mint CPI activation.
+- NULL emission accounting and SPL mint CPI activation.
 
 ## Funding Use
 
@@ -76,7 +81,7 @@ Focus areas:
 |---|---|
 | Professional smart contract audit | $30,000 target |
 | Mainnet deployment and verification budget | Up to $1,000 equivalent |
-| Initial capped pilot liquidity and operating buffer | Up to $2,000 equivalent |
+| Initial pilot liquidity and operating buffer | Up to $2,000 equivalent |
 | Total target | About $33,000 |
 
 ## Links

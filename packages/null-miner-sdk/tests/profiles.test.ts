@@ -35,6 +35,10 @@ test("commercial profile uses mainnet-beta track", () => {
   expect(COMMERCIAL_PROFILE.network).toBe("mainnet-beta");
 });
 
+test("commercial profile labels the pilot as unaudited", () => {
+  expect(COMMERCIAL_PROFILE.description.toLowerCase()).toContain("unaudited");
+});
+
 test("commercial profile has pilot fee and emission accounting config", () => {
   expect(COMMERCIAL_PROFILE.houseFeeBps).toBe(50);
   expect(COMMERCIAL_PROFILE.nullEmissionPct).toBe(5);
