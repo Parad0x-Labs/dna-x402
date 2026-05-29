@@ -1,12 +1,24 @@
 /**
  * Paywall fee computation — operator + protocol split.
  *
- * Both fees are deducted from the listed priceAtomic (provider pays the fee,
- * not the payer).  This matches the waterfall.ts model:
+ * Fee model (two independent parties):
  *
- *   totalAtomic    = priceAtomic          (what the payer sends — unchanged)
- *   feeAtomic      = operatorFee + protocolFee
- *   providerNet    = priceAtomic - feeAtomic  (what the endpoint owner receives)
+ *   operatorFee  → whoever runs the paid endpoint (app builder sets operatorFeeBps freely)
+ *   protocolFee  → Parad0x treasury (fixed at 5 bps on the official commercial rail)
+ *
+ * Both fees are deducted from priceAtomic — the payer sends the listed price unchanged:
+ *
+ *   totalAtomic   = priceAtomic          (what the payer sends)
+ *   feeAtomic     = operatorFee + protocolFee
+ *   providerNet   = priceAtomic - feeAtomic  (what the service provider keeps)
+ *
+ * Typical configs:
+ *   OSS / grant / free path       operatorFeeBps: 0,  protocolFeeBps: 0
+ *   Parad0x commercial default    operatorFeeBps: 50, protocolFeeBps: 5  (0.5% + 0.05%)
+ *   Third-party builder           operatorFeeBps: <their choice>, protocolFeeBps: 5
+ *
+ * The 50 bps operator default is Parad0x's own setting for Parad0x-run endpoints.
+ * Other builders set their own operatorFeeBps — there is no global rule.
  *
  * All arithmetic is BigInt floor division matching the `bps()` helper in
  * waterfall.ts:  fee = (amount * feeBps) / 10_000  (floors toward zero).
@@ -34,8 +46,11 @@ function applyBps(amount: bigint, feeBps: number): bigint {
  * Compute operator and protocol fees for a paywall quote.
  *
  * @param priceAtomic    - The listed price (total payer sends).
- * @param operatorFeeBps - Endpoint operator's fee in basis points (0–2000, default 0).
- * @param protocolFeeBps - Parad0x protocol treasury fee in basis points (0–100, default 0).
+ * @param operatorFeeBps - Endpoint builder's fee (0–2000 bps). Each builder sets this
+ *                         independently. Parad0x's own commercial default is 50 bps (0.5%)
+ *                         — that is NOT a global cap or requirement for other builders.
+ * @param protocolFeeBps - Parad0x official rail fee (0–100 bps). The official commercial
+ *                         config uses 5 bps (0.05%). OSS / grant configs use 0.
  *
  * Returned amounts are decimal strings.  All are "0" when both feeBps are 0.
  *

@@ -101,9 +101,16 @@ export interface PaywallOptions {
 
   // ── Fee split ──────────────────────────────────────────────────────────────
   /**
-   * Endpoint operator fee in basis points (1 bps = 0.01%).
-   * Deducted from priceAtomic before the provider receives the balance.
-   * Range: 0–2000 (0–20%). Default: 0.
+   * Fee collected by whoever runs this endpoint, in basis points (1 bps = 0.01%).
+   * Each app builder sets this independently — there is no global default.
+   *
+   * Examples:
+   *   free endpoint            0
+   *   light API wrapper        10  (0.1%)
+   *   Parad0x commercial rail  50  (0.5%) — Parad0x's own default, not a rule
+   *   high-value agent service up to 2000 (20%)
+   *
+   * Range: 0–2000. Default: 0.
    */
   operatorFeeBps?: number;
   /**
@@ -113,14 +120,16 @@ export interface PaywallOptions {
    */
   operatorFeeRecipient?: string;
   /**
-   * Parad0x protocol treasury fee in basis points.
-   * Range: 0–100 (0–1%). Default: 0.
-   * Set to 5 (0.05%) for mainnet commercial deployments.
+   * Parad0x official protocol rail fee in basis points.
+   * Only applies when using the official Parad0x commercial config path.
+   * OSS / grant / devnet configs set this to 0 — the SDK is free to fork and use.
+   *
+   * Range: 0–100 (max 1%). Parad0x commercial default: 5 (0.05%).
    */
   protocolFeeBps?: number;
   /**
-   * Wallet address receiving the protocol fee.
-   * Defaults to the Parad0x treasury address if not set and protocolFeeBps > 0.
+   * Wallet address receiving the Parad0x protocol fee.
+   * Defaults to the Parad0x treasury when protocolFeeBps > 0.
    * Must NOT be a Solana program ID.
    */
   protocolFeeRecipient?: string;

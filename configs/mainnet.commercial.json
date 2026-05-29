@@ -1,7 +1,7 @@
 {
   "track": "commercial",
   "network": "mainnet-beta",
-  "description": "Commercial mainnet pilot - external audit pending; 0.5% operator fee + 0.05% protocol fee.",
+  "description": "Parad0x commercial mainnet pilot. operatorFeeBps=50 is Parad0x's own default for Parad0x-run endpoints — not a rule for third-party builders. protocolFeeBps=5 (0.05%) is the Parad0x official rail fee on all commercial deployments. OSS/grant path uses 0/0.",
   "houseFeeBps": 50,
   "nullEmissionPct": 5,
   "lotteryHouseFeeBps": 50,
