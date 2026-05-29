@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-29T17:20:20.305Z",
+  "command": "solana program show --buffers -u mainnet-beta",
+  "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "cluster": "mainnet-beta",
+  "status": "clean",
+  "orphanBufferCount": 0,
+  "note": "No orphan deploy buffers. All buffer SOL recovered during deploy."
+}

@@ -2,5 +2,5 @@
   "status": "skipped",
   "reason": "USDC_SMOKE_SKIPPED_NOT_LAUNCH_BLOCKER",
   "detail": "Set USDC_SMOKE_ENABLED=1 to run. Requires funded test wallet on mainnet-beta. Validated in devnet CI and integration tests.",
-  "generatedAt": "2026-05-29T16:46:37.464Z"
+  "generatedAt": "2026-05-29T17:22:39.911Z"
 }

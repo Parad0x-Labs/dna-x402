@@ -1,8 +1,8 @@
 # DNA x402 — Mainnet-Beta Launch Report
 
 **Date:** 2026-05-29
-**Commit:** `bba2ba6484a8e1d673d8d554476be8f8f6b929ed`
-**Generated:** 2026-05-29T16:46:38.393Z
+**Commit:** `bffb184c7aa52cfc9fea03c4f1c4e30182568f6f`
+**Generated:** 2026-05-29T17:28:30.125Z
 
 ---
 
@@ -54,10 +54,12 @@
 - On-chain program accounts: all 8 programs executable on mainnet-beta
 - NULL token: Token-2022 mint live
 - **Dark Passport Tiers 0–2** — wallet-bound identity live in frontend
-  - Tier 0: Phantom-signed device identity (active today)
-  - Tier 1: P-256/WebAuthn passkey binding → `dark_secp256r1_vault` (live on-chain, UI wired)
-  - Tier 2: MetaMask/ETH address binding → `dark_secp256k1_auth` (live on-chain, UI wired)
-  - Tier 3+: Groth16 ZK reputation — Sprint 2 (requires `dark_semaphore` nullifier circuits)
+  - Tier 0: Phantom-signed device identity (active)
+  - Tier 1: P-256/WebAuthn passkey → `dark_secp256r1_vault` (live on-chain, UI wired)
+  - Tier 2: MetaMask/ETH binding → `dark_secp256k1_auth` (live on-chain, UI wired)
+  - Tier 3: ZK reputation (Sprint 2 — Groth16 circuits)
+- **Real mainnet write smoke** — `dark_proof_gate_lite` RecordVerifiedClaim confirmed on-chain
+  - TX: `8owZaj13aCbFNYqsRhUdxgBfRDFsr4SDeJqPn5FLZmUh3xCmzSJ2PkX4iwxQAUxZUNyGdkrA3bouLXs456p2tAS`
 
 ---
 

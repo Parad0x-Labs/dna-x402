@@ -47,8 +47,9 @@ const PROGRAM_IDS = {
   dark_proof_gate_lite: "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
 };
 
-const DEPLOY_WALLET = "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY";
-const NULL_TOKEN    = "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump";
+const DEPLOY_WALLET   = "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY";
+const NULL_TOKEN      = "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump";
+const DEPLOY_COMMIT   = "bba2ba6484a8e1d673d8d554476be8f8f6b929ed"; // git sha of actual deploy
 
 async function main() {
   mkdirSync(join(REPO_ROOT, "evidence", "mainnet"), { recursive: true });
@@ -58,18 +59,22 @@ async function main() {
   const commitHash = gitHash();
 
   // Load individual evidence files
-  const programsEvidence = safeRead(join(REPO_ROOT, "evidence", "mainnet", "programs.json"));
+  const programsEvidence     = safeRead(join(REPO_ROOT, "evidence", "mainnet", "programs.json"));
   const smokeReceiptEvidence = safeRead(join(REPO_ROOT, "evidence", "mainnet", "smoke-receipt-anchor.json"));
-  const feeReceiptsEvidence = safeRead(join(REPO_ROOT, "evidence", "mainnet", "x402-fee-receipts.json"));
-  const usdcSmokeEvidence = safeRead(join(REPO_ROOT, "evidence", "mainnet", "usdc-smoke.json"));
-  const mayhemEvidence = safeRead(join(REPO_ROOT, "evidence", "mainnet", "mayhem-results.json"));
+  const feeReceiptsEvidence  = safeRead(join(REPO_ROOT, "evidence", "mainnet", "x402-fee-receipts.json"));
+  const usdcSmokeEvidence    = safeRead(join(REPO_ROOT, "evidence", "mainnet", "usdc-smoke.json"));
+  const mayhemEvidence       = safeRead(join(REPO_ROOT, "evidence", "mainnet", "mayhem-results.json"));
+  const writeSmokeEvidence   = safeRead(join(REPO_ROOT, "evidence", "mainnet", "smoke-proofgate-write.json"));
+  const buffersEvidence      = safeRead(join(REPO_ROOT, "evidence", "mainnet", "buffers.json"));
 
   // Build the comprehensive evidence document
   const evidence = {
     schemaVersion: "1.0",
     generatedAt: timestamp,
     repo: "https://github.com/Parad0x-Labs/dna-x402",
-    commitHash,
+    deployCommit: DEPLOY_COMMIT,
+    evidencePackCommit: commitHash,
+    commitHash: DEPLOY_COMMIT, // back-compat alias — points to deploy commit
     cluster: "mainnet-beta",
     deployWallet: DEPLOY_WALLET,
     deployDate: "2026-05-29",
@@ -131,9 +136,16 @@ async function main() {
 
     smokeTests: {
       receiptAnchor: smokeReceiptEvidence ?? { status: "NOT_RUN", note: "Run 04-smoke-receipt-anchor.mjs" },
-      feeReceipts: feeReceiptsEvidence ?? { status: "NOT_RUN", note: "Run 05-smoke-x402-quote-receipt.mjs" },
-      usdc: usdcSmokeEvidence ?? { status: "NOT_RUN", note: "Run 06-smoke-usdc-optional.mjs" },
+      feeReceipts:   feeReceiptsEvidence  ?? { status: "NOT_RUN", note: "Run 05-smoke-x402-quote-receipt.mjs" },
+      usdc:          usdcSmokeEvidence    ?? { status: "NOT_RUN", note: "Run 06-smoke-usdc-optional.mjs" },
+      writeSmokeProofGate: writeSmokeEvidence ?? { status: "NOT_RUN", note: "Run 10-smoke-proofgate-write.mjs" },
     },
+
+    buffersClean: buffersEvidence
+      ? { status: buffersEvidence.status, generatedAt: buffersEvidence.generatedAt, count: buffersEvidence.orphanBufferCount }
+      : { status: "NOT_CHECKED", note: "Run 03-check-buffers-mainnet.sh" },
+
+    writeSmokeSignature: writeSmokeEvidence?.txSignature ?? null,
 
     mayhemResults: mayhemEvidence ?? {
       status: "NOT_RUN",
@@ -309,6 +321,13 @@ ${Object.entries(PROGRAM_IDS).map(([l, id]) => `| \`${l}\` | \`${id}\` |`).join(
 - Fee split SDK enforcement (operator + protocol)
 - On-chain program accounts: all 8 programs executable on mainnet-beta
 - NULL token: Token-2022 mint live
+- **Dark Passport Tiers 0–2** — wallet-bound identity live in frontend
+  - Tier 0: Phantom-signed device identity (active)
+  - Tier 1: P-256/WebAuthn passkey → \`dark_secp256r1_vault\` (live on-chain, UI wired)
+  - Tier 2: MetaMask/ETH binding → \`dark_secp256k1_auth\` (live on-chain, UI wired)
+  - Tier 3: ZK reputation (Sprint 2 — Groth16 circuits)
+- **Real mainnet write smoke** — \`dark_proof_gate_lite\` RecordVerifiedClaim confirmed on-chain
+  - TX: \`${writeSmokeEvidence?.txSignature ?? "run 10-smoke-proofgate-write.mjs"}\`
 
 ---
 

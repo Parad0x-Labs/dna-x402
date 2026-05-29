@@ -1,7 +1,9 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-05-29T16:46:38.393Z",
+  "generatedAt": "2026-05-29T17:28:30.125Z",
   "repo": "https://github.com/Parad0x-Labs/dna-x402",
+  "deployCommit": "bba2ba6484a8e1d673d8d554476be8f8f6b929ed",
+  "evidencePackCommit": "bffb184c7aa52cfc9fea03c4f1c4e30182568f6f",
   "commitHash": "bba2ba6484a8e1d673d8d554476be8f8f6b929ed",
   "cluster": "mainnet-beta",
   "deployWallet": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
@@ -160,13 +162,13 @@
       "executable": true,
       "lamports": 1141440,
       "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
-      "slot": 422977430,
-      "timestamp": "2026-05-29T16:46:36.481Z",
+      "slot": 422982881,
+      "timestamp": "2026-05-29T17:22:38.662Z",
       "note": "Read-only smoke test. No transaction submitted. Full anchoring covered by integration tests."
     },
     "feeReceipts": {
       "schemaVersion": "1.0",
-      "generatedAt": "2026-05-29T16:46:36.999Z",
+      "generatedAt": "2026-05-29T17:22:39.267Z",
       "allPassed": true,
       "scenarios": [
         {
@@ -200,12 +202,36 @@
       "status": "skipped",
       "reason": "USDC_SMOKE_SKIPPED_NOT_LAUNCH_BLOCKER",
       "detail": "Set USDC_SMOKE_ENABLED=1 to run. Requires funded test wallet on mainnet-beta. Validated in devnet CI and integration tests.",
-      "generatedAt": "2026-05-29T16:46:37.464Z"
+      "generatedAt": "2026-05-29T17:22:39.911Z"
+    },
+    "writeSmokeProofGate": {
+      "schemaVersion": "1.0",
+      "generatedAt": "2026-05-29T17:20:06.436Z",
+      "program": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
+      "cluster": "mainnet-beta",
+      "rpc": "https://api.mainnet-beta.solana.com",
+      "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "claimHash": "832f955a88a84387bda9bd41d662c16ab0651fa9f5c257b7bc0a943ba5c77ffe",
+      "smokeDomain": "dna-x402-mainnet-beta-smoke-2026-05-29-proofgate",
+      "instructionBytes": "00832f955a88a84387bda9bd41d662c16ab0651fa9f5c257b7bc0a943ba5c77ffe10",
+      "statementKind": "0x10 (ReceiptRedeem)",
+      "writeType": "real-mainnet-tx",
+      "txSignature": "8owZaj13aCbFNYqsRhUdxgBfRDFsr4SDeJqPn5FLZmUh3xCmzSJ2PkX4iwxQAUxZUNyGdkrA3bouLXs456p2tAS",
+      "explorerUrl": "https://explorer.solana.com/tx/8owZaj13aCbFNYqsRhUdxgBfRDFsr4SDeJqPn5FLZmUh3xCmzSJ2PkX4iwxQAUxZUNyGdkrA3bouLXs456p2tAS?cluster=mainnet-beta",
+      "status": "CONFIRMED",
+      "error": null,
+      "note": "Real mainnet-beta tx. dark_proof_gate_lite stub: validates accounts, logs claim, returns Ok(). No account allocation (IS_MAINNET_READY=false)."
     }
   },
+  "buffersClean": {
+    "status": "clean",
+    "generatedAt": "2026-05-29T17:20:20.305Z",
+    "count": 0
+  },
+  "writeSmokeSignature": "8owZaj13aCbFNYqsRhUdxgBfRDFsr4SDeJqPn5FLZmUh3xCmzSJ2PkX4iwxQAUxZUNyGdkrA3bouLXs456p2tAS",
   "mayhemResults": {
     "schemaVersion": "1.0",
-    "generatedAt": "2026-05-29T16:46:37.923Z",
+    "generatedAt": "2026-05-29T17:22:40.470Z",
     "allPassed": true,
     "totalScenarios": 12,
     "passedCount": 12,
