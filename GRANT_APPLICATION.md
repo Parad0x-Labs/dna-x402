@@ -66,6 +66,8 @@ flywheel emission accounting, privacy helpers, and deployment profiles.
 
 ## Why This Grant — Two Work Tracks
 
+We are seeking audit funding to move from evidence-backed public beta / devnet validation to audited mainnet production. This grant is not a rubber-stamp of production readiness — it is funding to complete the external audit that would justify removing beta caps.
+
 ### Track 1 — ZK Program Fix (60–100 hours)
 Fix `dark_bn254_gate` and `dark_shielded_pool` to be production-grade:
 - Remove 0xDE 0xAD unconditional bypass; wire real Groth16 verifying key

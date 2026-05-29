@@ -113,7 +113,7 @@ Built on top of DNA x402, NULL Miner is a Solana agent-work rail for phones,
 browsers, and servers: task receipts, passkey-sealed agent keys, x402 payout
 paths, NULL emission accounting, and lottery/root primitives.
 
-**First Solana implementation combining: x402 micropayment rail + Groth16 private settlement with on-chain receipt anchoring + Agent Passport with biometric key binding (WebAuthn/MetaMask) — in one open-source codebase.**
+**First known open-source Solana stack combining x402-style HTTP payments, signed/anchored receipts, optional Dark Null private receipt settlement, and agent identity/work rails in one public developer workspace.**
 
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
 > Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.

@@ -39,6 +39,18 @@ export type {
 export { dnaPaywall, apiKeyGuard } from "./paywall.js";
 export type { PaywallOptions } from "./paywall.js";
 
+export { fetchWithNegotiation } from "./negotiate.js";
+export type { FetchWithNegotiationOptions } from "./negotiate.js";
+
+export type {
+  NegotiationPolicy,
+  NegotiationClientPolicy,
+  NegotiationAdvertisement,
+  NegotiationCounter,
+  NegotiationResponse,
+  NegotiateOfferResult,
+} from "../negotiation/types.js";
+
 export { dnaSeller, dnaPrice } from "./seller.js";
 export type { DnaSellerOptions } from "./seller.js";
 

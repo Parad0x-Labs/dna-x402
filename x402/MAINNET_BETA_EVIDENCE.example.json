@@ -1,0 +1,38 @@
+{
+  "schema": "dna-x402-mainnet-open-beta-evidence-v1",
+  "release_commit": "REPLACE_WITH_40_HEX_RELEASE_COMMIT",
+  "beta": {
+    "status": "open-beta",
+    "risk_disclosure": "unaudited-open-beta",
+    "production_claims_allowed": false,
+    "max_daily_payment_volume_atomic": "100000000000",
+    "kill_switch_enabled": true,
+    "operator_custody": false,
+    "fee_mode": "direct-split"
+  },
+  "programs": {
+    "dark_semaphore": "REPLACE_WITH_DEPLOYED_PROGRAM_ID",
+    "dark_secp256r1_vault": "REPLACE_WITH_DEPLOYED_PROGRAM_ID",
+    "dark_secp256k1_auth": "REPLACE_WITH_DEPLOYED_PROGRAM_ID",
+    "null_token_hook": "REPLACE_WITH_DEPLOYED_PROGRAM_ID",
+    "null_lottery": "REPLACE_WITH_DEPLOYED_PROGRAM_ID",
+    "null_mint_gate": "REPLACE_WITH_DEPLOYED_PROGRAM_ID"
+  },
+  "deploy": {
+    "cluster": "mainnet-beta",
+    "config_profile": "mainnet-commercial",
+    "upgrade_authority_policy": "REPLACE_WITH_locked_OR_multisig_OR_timelock-multisig",
+    "pause_authority": "REPLACE_WITH_PAUSE_AUTHORITY_PUBKEY"
+  },
+  "audit": {
+    "status": "pending",
+    "external_audit_required_before_production": true,
+    "notes": "No production claim until external audit passes. This evidence covers capped public beta only."
+  },
+  "artifacts": {
+    "checksums_path": "dist/release/SHA256SUMS",
+    "checksums_sha256": "REPLACE_WITH_SHA256SUMS_SHA256",
+    "sbom_path": "dist/release/sbom.cdx.json",
+    "sbom_sha256": "REPLACE_WITH_SBOM_SHA256"
+  }
+}

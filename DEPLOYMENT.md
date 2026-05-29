@@ -1,5 +1,20 @@
 # Deployment Guide
 
+## Go / No-Go Table
+
+| Use Case | Status |
+|---|---|
+| Dev/test/devnet | GO |
+| Public beta docs and SDK | GO |
+| Capped mainnet pilot (with MAINNET_BETA_EVIDENCE.json passing) | CONDITIONAL GO |
+| Unlimited production settlement | NO-GO — external audit required |
+| Backend/operator key custody | NO-GO |
+| High-risk autonomous fund movement | NO-GO |
+| Betting/wagering with live fund movement | NO-GO |
+| dark_bn254_gate or dark_shielded_pool | NO-GO — ZK stub programs excluded from pilot |
+
+---
+
 ## Two Tracks
 
 | | OSS Devnet | Commercial Mainnet Pilot |

@@ -18,6 +18,8 @@ import {
   verificationFailureStatus,
 } from "./paymentSupport.js";
 import type { StreamflowClientLike } from "../verifier/streamflow.js";
+import type { NegotiationPolicy } from "../negotiation/types.js";
+import { evaluateOffer, parseNegotiateRound } from "../negotiation/engine.js";
 
 export interface PaywallOptions {
   priceAtomic: string;
@@ -36,6 +38,17 @@ export interface PaywallOptions {
   apiKeyHeader?: string;
   apiKeys?: Set<string>;
   onPaymentVerified?: (receipt: unknown, req: Request) => void;
+  /**
+   * Enable agent price negotiation on this endpoint.
+   *
+   * When set, agents may bid below the listed priceAtomic.  The server counters
+   * at `floorPriceAtomic` if the bid is too low, or accepts and issues the quote
+   * at the agreed price.  Up to `maxRounds` rounds of back-and-forth are allowed
+   * before the server falls back to a take-it-or-leave-it quote at floor price.
+   *
+   * floorPriceAtomic must be <= priceAtomic.
+   */
+  negotiation?: NegotiationPolicy;
 }
 
 interface QuoteRecord {
@@ -609,11 +622,60 @@ export function dnaPaywall(options: PaywallOptions) {
     const expiresAt = new Date(now.getTime() + ttl * 1000).toISOString();
     const target = requestTarget(req);
     const method = req.method.toUpperCase();
-    const memoHash = hashHex(`${quoteId}:${method}:${target}:${options.priceAtomic}:${expiresAt}`);
+
+    // ── Negotiation ────────────────────────────────────────────────────────────
+    // If the endpoint has a NegotiationPolicy, check for an agent bid in the
+    // x-dnp-offer header.  Three outcomes:
+    //   1. No offer header → advertise negotiability in the 402, issue quote at listed price.
+    //   2. Offer accepted (>= floor) → issue quote at agreed price, no negotiation block.
+    //   3. Offer rejected (< floor, round < maxRounds) → return 402 counter with NO quote;
+    //      agent must retry.  On the final round we accept at floor unconditionally.
+    const offerHeader = req.header("x-dnp-offer");
+    const negotiateRound = parseNegotiateRound(req.header("x-dnp-negotiate-round"));
+
+    let effectivePriceAtomic = options.priceAtomic;
+    let negotiationAdvertisement: object | undefined;
+
+    if (options.negotiation?.enabled) {
+      const policy = options.negotiation;
+
+      if (offerHeader) {
+        const result = evaluateOffer(offerHeader, options.priceAtomic, policy, negotiateRound);
+        if (result.accepted) {
+          effectivePriceAtomic = result.agreedPriceAtomic;
+          // No negotiation block attached — quote already reflects agreed price.
+        } else {
+          // Counter-offer: return 402 with negotiation block only, no paymentRequirements.
+          res.status(402).json({
+            error: "payment_required",
+            negotiation: {
+              enabled: true,
+              floorPriceAtomic: policy.floorPriceAtomic,
+              listedPriceAtomic: options.priceAtomic,
+              counterPriceAtomic: result.counterPriceAtomic,
+              round: result.nextRound,
+              maxRounds: policy.maxRounds ?? 2,
+            },
+          });
+          return;
+        }
+      } else {
+        // No bid — advertise that negotiation is possible so agents know to send x-dnp-offer.
+        negotiationAdvertisement = {
+          enabled: true,
+          floorPriceAtomic: policy.floorPriceAtomic,
+          listedPriceAtomic: options.priceAtomic,
+          maxRounds: policy.maxRounds ?? 2,
+        };
+      }
+    }
+    // ── End negotiation ────────────────────────────────────────────────────────
+
+    const memoHash = hashHex(`${quoteId}:${method}:${target}:${effectivePriceAtomic}:${expiresAt}`);
 
     const quote: QuoteRecord = {
       quoteId,
-      priceAtomic: options.priceAtomic,
+      priceAtomic: effectivePriceAtomic,
       mint,
       recipient: options.recipient,
       expiresAt,
@@ -632,13 +694,14 @@ export function dnaPaywall(options: PaywallOptions) {
 
     res.status(402).json({
       error: "payment_required",
+      ...(negotiationAdvertisement ? { negotiation: negotiationAdvertisement } : {}),
       paymentRequirements: {
         version: "x402-dnp-v1",
         quote: {
           quoteId,
-          amount: options.priceAtomic,
+          amount: effectivePriceAtomic,
           feeAtomic: "0",
-          totalAtomic: options.priceAtomic,
+          totalAtomic: effectivePriceAtomic,
           mint,
           recipient: options.recipient,
           expiresAt,
@@ -649,7 +712,7 @@ export function dnaPaywall(options: PaywallOptions) {
           scheme: "solana-spl",
           network,
           mint,
-          maxAmount: options.priceAtomic,
+          maxAmount: effectivePriceAtomic,
           recipient: options.recipient,
           mode,
         })),
