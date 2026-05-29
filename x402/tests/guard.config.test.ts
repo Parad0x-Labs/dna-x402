@@ -377,7 +377,7 @@ describe("DNA Guard config", () => {
       CLUSTER: "mainnet-beta",
       SOLANA_RPC_URL: "https://mainnet.helius-rpc.com/?api-key=redacted",
       X402_ENABLE_PROD_MONEY: "1",
-      X402_PROD_MONEY_CHECKLIST_REF: "docs/DNA_X402_LIVE_GATE_CHECKLISTS.md#public-low-risk-api-data-feed-tool-pilot",
+      X402_PROD_MONEY_CHECKLIST_REF: "docs/DNA_X402_LIVE_GATE_CHECKLISTS.md#low-risk-data-feed-pilot-gate",
       X402_ENABLE_DIRECT_SPLIT_FEES: "1",
       X402_DIRECT_SPLIT_GATE_REF: "docs/DNA_X402_LIVE_GATE_CHECKLISTS.md#direct-split-fee-gate",
       X402_PLATFORM_FEE_MODE: "direct_split",
