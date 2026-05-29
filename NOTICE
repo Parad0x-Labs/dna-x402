@@ -1,0 +1,26 @@
+NULL Miner SDK and dna-x402 — Copyright 2026 Parad0x Labs
+Licensed under the MIT License.
+
+This software includes or depends on the following third-party components:
+
+solana-program, solana-sdk, solana-program-test
+  Copyright Solana Labs / Anza Technology
+  Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
+
+poseidon-lite
+  MIT License — https://github.com/vimwitch/poseidon-lite
+
+@noble/curves, @noble/hashes
+  MIT License — https://github.com/paulmillr/noble-curves
+
+@solana/web3.js
+  MIT License — https://github.com/solana-labs/solana-web3.js
+
+groth16-solana (used in Dark-Null-Protocol)
+  Apache License 2.0
+
+anchor-lang, anchor-spl (used in Dark-Null-Protocol)
+  Apache License 2.0 — https://github.com/coral-xyz/anchor
+
+spl-token-2022, spl-transfer-hook-interface
+  Apache License 2.0 — https://github.com/solana-labs/solana-program-library

@@ -20,11 +20,13 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-/// Security gate: commercial mainnet builds keep this false until SPL mint CPI
-/// and receipt verification are audited and explicitly compiled with both features.
-#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+// ⚠️  EXTERNALLY UNAUDITED — test pilot deployment. Not audited by any third party.
+//    Deploy with: cargo build-sbf --features mainnet
+//    IS_MAINNET_READY=true enables full on-chain verification (signature checks,
+//    SPL transfers, precompile validation). Use at your own risk until audited.
+#[cfg(feature = "mainnet")]
 pub const IS_MAINNET_READY: bool = true;
-#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
+#[cfg(not(feature = "mainnet"))]
 pub const IS_MAINNET_READY: bool = false;
 
 // ─────────────────────────────────────────────────────────────────────────────

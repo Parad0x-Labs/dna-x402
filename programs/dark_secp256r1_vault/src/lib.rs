@@ -10,6 +10,9 @@
 //!   3. This program trusts the tx-level ordering: if the precompile instruction is
 //!      present and successful, the P-256 assertion is valid.
 //!
+//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
+//!    Deploy: `cargo build-sbf --features mainnet`
+//!
 //! Devnet flow (IS_MAINNET_READY = false):
 //!   Signature verification is skipped.  The program trusts the client-supplied fields.
 //!

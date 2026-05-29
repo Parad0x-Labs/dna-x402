@@ -113,6 +113,11 @@ Built on top of DNA x402, NULL Miner is a Solana agent-work rail for phones,
 browsers, and servers: task receipts, passkey-sealed agent keys, x402 payout
 paths, NULL emission accounting, and lottery/root primitives.
 
+**First Solana implementation combining: x402 micropayment rail + Groth16 private settlement with on-chain receipt anchoring + Agent Passport with biometric key binding (WebAuthn/MetaMask) — in one open-source codebase.**
+
+> Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
+> Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.
+
 **438 tests green. 6 native Solana programs in the deploy profile.**
 
 ### Current public status
@@ -121,7 +126,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 |---|---|
 | OSS devnet profile | Ready to deploy with zero fees and zero NULL emission |
 | Commercial mainnet profile | Ready for mainnet pilot deploy after wallet/RPC/program-id checks; not audited externally yet |
-| `IS_MAINNET_READY` enforcement | False by default; requires both `mainnet` and `audit-verified` build features |
+| `IS_MAINNET_READY` enforcement | False by default; flip to true post-audit with `--features mainnet` rebuild |
 | NULL token | Mainnet mint exists: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
 
 ### Deploy profile programs
@@ -132,7 +137,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 | `dark_secp256r1_vault` | P-256/WebAuthn passkey vault record with encrypted key material stored in a PDA |
 | `dark_secp256k1_auth` | MetaMask/ETH address to Solana agent binding via secp256k1 precompile flow |
 | `null_token_hook` | Token-2022 transfer-hook gate for passport/allowlist policy |
-| `null_lottery` | Poseidon commit-reveal lottery/root primitive with fallback-draw path |
+| `null_lottery` | Keccak/SHA-256 commit-reveal lottery/root primitive with fallback-draw path |
 | `null_mint_gate` | NULL emission claim ledger with nullifier replay protection |
 
 ### Mainnet pilot path
@@ -144,12 +149,12 @@ must stay visible anywhere the pilot is promoted:
 
 - not audited externally yet
 - internal technical review, automated analysis tools, and regression tests completed
-- external audit planned before `audit-verified` activation
+- external audit planned; `IS_MAINNET_READY` flips to `true` post-audit via `--features mainnet` rebuild
 - not audited production, not permissionless production, not fully enforced settlement
 
 The pilot may expose mainnet program accounts and public receipts before the
-audit is complete. The stronger enforcement paths remain behind the
-`audit-verified` build feature.
+audit is complete. The stronger enforcement paths activate when `IS_MAINNET_READY=true`
+is compiled in after external audit sign-off.
 
 | Feature | Pre-audit pilot | Post-audit activation |
 |---|---|---|
@@ -158,7 +163,7 @@ audit is complete. The stronger enforcement paths remain behind the
 | Passkey vault storage | Yes | Yes, with reviewed enforcement path |
 | NULL emission accounting | Yes | SPL mint CPI only after audit sign-off |
 | Lottery root/draw records | Yes | Token settlement/winner enforcement only after audit sign-off |
-| `IS_MAINNET_READY` | `false` | `true` only with `--features mainnet,audit-verified` |
+| `IS_MAINNET_READY` | `false` | `true` only with `--features mainnet` post-audit rebuild |
 
 ### Dual-track: OSS + Commercial
 

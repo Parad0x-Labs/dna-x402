@@ -5,6 +5,9 @@
 //! per-claim and per-epoch caps, and records the emission. SPL mint CPI remains
 //! gated behind IS_MAINNET_READY=true and must be wired before live minting.
 //!
+//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
+//!    Deploy: `cargo build-sbf --features mainnet`
+//!
 //! IS_MAINNET_READY = false:
 //!   - SPL mint CPI is skipped.
 //!   - Emission is proven by the AgentEmissionRecord PDA on-chain.

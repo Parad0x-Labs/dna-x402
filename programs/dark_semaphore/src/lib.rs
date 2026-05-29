@@ -13,6 +13,9 @@
 //!   - NullifierRecord PDA: marks a nullifier hash as spent (replay prevention)
 //!   - Admin can update the Merkle root after off-chain insertion
 //!
+//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
+//!    Deploy: `cargo build-sbf --features mainnet`
+//!
 //! Devnet deployment: externally-verified pattern.
 //! Full ZK: replace Signal instruction with a Groth16 proof verification
 //! via the dark_bn254_gate program (post-audit, pending circuit compile).

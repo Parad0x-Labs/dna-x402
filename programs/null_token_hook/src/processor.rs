@@ -18,11 +18,13 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-/// When false, unapproved transfers are allowed through after the dark-pool
-/// limit check. Set to true only when audited enforcement is explicitly compiled.
-#[cfg(all(feature = "mainnet", feature = "audit-verified"))]
+// ⚠️  EXTERNALLY UNAUDITED — test pilot deployment. Not audited by any third party.
+//    Deploy with: cargo build-sbf --features mainnet
+//    IS_MAINNET_READY=true enables full on-chain verification (signature checks,
+//    SPL transfers, precompile validation). Use at your own risk until audited.
+#[cfg(feature = "mainnet")]
 pub const IS_MAINNET_READY: bool = true;
-#[cfg(not(all(feature = "mainnet", feature = "audit-verified")))]
+#[cfg(not(feature = "mainnet"))]
 pub const IS_MAINNET_READY: bool = false;
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

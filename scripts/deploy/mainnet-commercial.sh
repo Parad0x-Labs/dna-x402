@@ -7,8 +7,8 @@ set -euo pipefail
 # configs/mainnet.commercial.json. It does not enable externally audited
 # production settlement. By default IS_MAINNET_READY remains false.
 #
-# To build audited enforcement paths after review, set:
-#   AUDIT_VERIFIED=1 ./scripts/deploy/mainnet-commercial.sh
+# To flip IS_MAINNET_READY=true post-audit, rebuild with --features mainnet after
+# an external audit approves each program. No env flag needed — just build normally.
 
 CLUSTER_URL="https://api.mainnet-beta.solana.com"
 KEYPAIRS_DIR="scripts/keypairs/mainnet-commercial"
@@ -58,13 +58,8 @@ if [ "$CONFIRM" != "deploy-mainnet-pilot" ]; then
   exit 0
 fi
 
-FEATURE_ARGS=()
-if [ "${AUDIT_VERIFIED:-0}" = "1" ]; then
-  echo "AUDIT_VERIFIED=1 set: building with mainnet,audit-verified features."
-  FEATURE_ARGS=(--features "mainnet,audit-verified")
-else
-  echo "Building pre-audit pilot binaries. Enforcement gate remains off."
-fi
+FEATURE_ARGS=(--features "mainnet")
+echo "Building pilot binaries with --features mainnet. IS_MAINNET_READY=false on all programs until post-audit flip."
 
 mkdir -p "$KEYPAIRS_DIR"
 

@@ -146,8 +146,8 @@ export class BrowserMiner {
     this.storage = storage;
     this.config  = {
       allowedTasks:        config.allowedTasks        ?? Object.values(TaskKind),
-      minRewardUsdc:       config.minRewardUsdc        ?? 0.001,
-      maxTasksPerHour:     config.maxTasksPerHour      ?? 60,
+      minRewardUsdc:       config.minRewardUsdc        ?? 0,
+      maxTasksPerHour:     config.maxTasksPerHour      ?? Number.MAX_SAFE_INTEGER,
       dryRun:              config.dryRun               ?? false,
       nullEmissionRatePct: config.nullEmissionRatePct  ?? 5,
       onEarn:              config.onEarn               ?? (() => {}),
@@ -199,7 +199,7 @@ export class BrowserMiner {
       } catch (err) {
         this.config.onError(err instanceof Error ? err : new Error(String(err)));
       }
-      await sleep(30_000);
+      await sleep(5_000);
     }
   }
 

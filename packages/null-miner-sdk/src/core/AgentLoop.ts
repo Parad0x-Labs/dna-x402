@@ -27,9 +27,9 @@ import { TaskKind, ReputationTier } from "./types.js";
 import { AgentPassport } from "./Passport.js";
 import { TaskRegistry } from "../tasks/TaskRegistry.js";
 
-const DEFAULT_POLL_INTERVAL_MS = 30_000;   // 30s between scans
-const DEFAULT_MIN_REWARD_USDC  = 0.001;
-const DEFAULT_MAX_TASKS_PER_HR = 60;
+const DEFAULT_POLL_INTERVAL_MS  = 5_000;              // 5s between scans — no artificial throttle
+const DEFAULT_MIN_REWARD_USDC   = 0;                  // accept any task by default
+const DEFAULT_MAX_TASKS_PER_HR  = Number.MAX_SAFE_INTEGER; // uncapped — configure per deployment
 const DEFAULT_NULL_EMISSION_PCT = 5;
 
 export class AgentLoop {

@@ -1,8 +1,13 @@
 //! dark-null-lottery — Provably-fair NULL lottery with commit-reveal randomness
 //!
-//! Commit-reveal randomness via Poseidon-compatible hashing.
+//! Commit-reveal randomness via Keccak/SHA-256 (solana_program::hash::hashv + keccak::hashv).
+//! Note: doc previously said "Poseidon-compatible" — corrected. Poseidon is used off-chain
+//! in the TypeScript DrawMachine. The on-chain draw uses Keccak for cheaper compute.
 //! Off-chain tickets (Liquefy bridge pattern), 1 tx per 5-min round.
 //! House fee: 0.5% (50 bps).
+//!
+//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
+//!    Deploy: `cargo build-sbf --features mainnet`
 //!
 //! IS_MAINNET_READY = false:
 //!   - secp / SPL token transfers are skipped.

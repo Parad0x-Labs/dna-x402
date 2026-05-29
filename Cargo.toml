@@ -392,6 +392,12 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+version   = "0.1.0"
+edition   = "2021"
+license   = "MIT"
+authors   = ["Parad0x Labs"]
+
 [workspace.dependencies]
 solana-program      = "=1.18.26"
 solana-sdk          = "=1.18.26"

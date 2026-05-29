@@ -12,7 +12,14 @@
 //!   0x03                   AddToAllowlist   [flags: u64]                   (9 bytes)
 //!   0x04                   RemoveFromAllowlist                              (1 byte)
 //!
-//! IS_MAINNET_READY = false — devnet only.
+//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
+//!    Deploy: `cargo build-sbf --features mainnet`
+//!
+//! IS_MAINNET_READY = false (default): permissive pass-through mode.
+//!   Transfers not on the allowlist are permitted up to dark_pool_limit_atomic.
+//!   Safe for pilot: the existing NULL token (8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump)
+//!   is standard SPL — Token-2022 hooks cannot be registered on it without a new Token-2022 mint.
+//! IS_MAINNET_READY = true: allowlist strictly enforced; unapproved wallets blocked.
 
 use solana_program::{
     account_info::AccountInfo,

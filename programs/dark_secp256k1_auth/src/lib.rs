@@ -11,6 +11,9 @@
 //!   3. This program derives the EthAgentRecord PDA using the client-supplied
 //!      `pda_seed` and verifies the precompile ran successfully (tx ordering).
 //!
+//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
+//!    Deploy: `cargo build-sbf --features mainnet`
+//!
 //! Devnet flow (IS_MAINNET_READY = false):
 //!   Signature verification is skipped.  The `pda_seed` supplied by the client
 //!   is trusted as encoding the ETH address (last 20 bytes of pda_seed).
