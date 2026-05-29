@@ -22,6 +22,10 @@ import {
   generateVaultSalt,
   splitVaultBlob,
   assembleVaultBlob,
+  buildStoreEncryptedKeyInstruction,
+  parseEncryptedKeyFromVaultRecord,
+  encryptAndPrepareForChain,
+  decryptAgentKeyFromVaultRecord,
 } from "../src/vault/index.js";
 import type { PasskeyVaultParams } from "../src/vault/index.js";
 
@@ -306,5 +310,134 @@ describe("Chunk splitting with passkey-encrypted vault", () => {
     const { vault } = await makePasskeyVault();
     const { manifest } = splitVaultBlob(vault);
     expect(manifest.version).toBe(PASSKEY_VAULT_VERSION);
+  });
+});
+
+// ── G. On-Chain Vault Helpers ─────────────────────────────────────────────────
+
+describe("On-chain vault helpers", () => {
+  const NONCE  = new Uint8Array(12).fill(0xaa);
+  const CT     = new Uint8Array(64).fill(0xbb);
+  const TAG    = new Uint8Array(16).fill(0xcc);
+
+  // buildStoreEncryptedKeyInstruction
+
+  test("buildStoreEncryptedKeyInstruction: first byte is 0x04", () => {
+    const ix = buildStoreEncryptedKeyInstruction(NONCE, CT, TAG);
+    expect(ix[0]).toBe(0x04);
+  });
+
+  test("buildStoreEncryptedKeyInstruction: total length is 93", () => {
+    const ix = buildStoreEncryptedKeyInstruction(NONCE, CT, TAG);
+    expect(ix.length).toBe(93);
+  });
+
+  test("buildStoreEncryptedKeyInstruction: nonce at bytes 1-12", () => {
+    const ix = buildStoreEncryptedKeyInstruction(NONCE, CT, TAG);
+    expect(Array.from(ix.slice(1, 13))).toEqual(Array.from(NONCE));
+  });
+
+  test("buildStoreEncryptedKeyInstruction: ciphertext at bytes 13-76", () => {
+    const ix = buildStoreEncryptedKeyInstruction(NONCE, CT, TAG);
+    expect(Array.from(ix.slice(13, 77))).toEqual(Array.from(CT));
+  });
+
+  test("buildStoreEncryptedKeyInstruction: tag at bytes 77-92", () => {
+    const ix = buildStoreEncryptedKeyInstruction(NONCE, CT, TAG);
+    expect(Array.from(ix.slice(77, 93))).toEqual(Array.from(TAG));
+  });
+
+  test("buildStoreEncryptedKeyInstruction: throws on wrong nonce length", () => {
+    expect(() =>
+      buildStoreEncryptedKeyInstruction(new Uint8Array(11), CT, TAG),
+    ).toThrow(/nonce must be 12 bytes/);
+  });
+
+  test("buildStoreEncryptedKeyInstruction: throws on wrong ciphertext length", () => {
+    expect(() =>
+      buildStoreEncryptedKeyInstruction(NONCE, new Uint8Array(32), TAG),
+    ).toThrow(/ciphertext must be 64 bytes/);
+  });
+
+  // parseEncryptedKeyFromVaultRecord
+
+  test("parseEncryptedKeyFromVaultRecord: returns null for 138-byte buffer", () => {
+    const buf = new Uint8Array(138).fill(0xcc);
+    expect(parseEncryptedKeyFromVaultRecord(buf)).toBeNull();
+  });
+
+  test("parseEncryptedKeyFromVaultRecord: returns null if has_enc_key = 0", () => {
+    const buf = new Uint8Array(231);
+    buf[0]   = 0xcc;
+    buf[230] = 0;   // has_enc_key = 0
+    expect(parseEncryptedKeyFromVaultRecord(buf)).toBeNull();
+  });
+
+  test("parseEncryptedKeyFromVaultRecord: returns null if wrong discriminant", () => {
+    const buf = new Uint8Array(231);
+    buf[0]   = 0x01; // wrong discriminant
+    buf[230] = 1;
+    expect(parseEncryptedKeyFromVaultRecord(buf)).toBeNull();
+  });
+
+  test("parseEncryptedKeyFromVaultRecord: parses valid 231-byte buffer", () => {
+    const buf = new Uint8Array(231);
+    buf[0]   = 0xcc;
+    buf[230] = 1;
+    // Fill nonce, ciphertext, tag regions with identifiable bytes
+    buf.fill(0x11, 138, 150);  // nonce
+    buf.fill(0x22, 150, 214);  // ciphertext
+    buf.fill(0x33, 214, 230);  // tag
+    const result = parseEncryptedKeyFromVaultRecord(buf);
+    expect(result).not.toBeNull();
+    expect(Array.from(result!.nonce)).toEqual(new Array(12).fill(0x11));
+    expect(Array.from(result!.ciphertext)).toEqual(new Array(64).fill(0x22));
+    expect(Array.from(result!.tag)).toEqual(new Array(16).fill(0x33));
+  });
+
+  // encryptAndPrepareForChain
+
+  test("encryptAndPrepareForChain: instruction is 93 bytes", async () => {
+    const assertion = createTestPasskeyAssertion(BASE_PASSKEY_PARAMS, SEED_A);
+    const keypair   = new Uint8Array(64).fill(0x07);
+    const { instruction } = await encryptAndPrepareForChain(keypair, assertion, BASE_PASSKEY_PARAMS);
+    expect(instruction.length).toBe(93);
+  });
+
+  test("encryptAndPrepareForChain: instruction[0] is 0x04", async () => {
+    const assertion = createTestPasskeyAssertion(BASE_PASSKEY_PARAMS, SEED_A);
+    const keypair   = new Uint8Array(64).fill(0x08);
+    const { instruction } = await encryptAndPrepareForChain(keypair, assertion, BASE_PASSKEY_PARAMS);
+    expect(instruction[0]).toBe(0x04);
+  });
+
+  test("encryptAndPrepareForChain + parseEncryptedKeyFromVaultRecord: round-trip", async () => {
+    const assertion       = createTestPasskeyAssertion(BASE_PASSKEY_PARAMS, SEED_A);
+    const originalKeypair = new Uint8Array(64);
+    // Fill with recognisable random-ish bytes
+    for (let i = 0; i < 64; i++) originalKeypair[i] = (i * 7 + 13) & 0xff;
+
+    const { encryptedKey } = await encryptAndPrepareForChain(
+      originalKeypair, assertion, BASE_PASSKEY_PARAMS,
+    );
+
+    // Build a fake 231-byte VaultRecord PDA buffer
+    const pdaBuf = new Uint8Array(231);
+    pdaBuf[0]   = 0xcc;  // discriminant
+    pdaBuf[230] = 1;      // has_enc_key = 1
+    pdaBuf.set(encryptedKey.nonce,      138);
+    pdaBuf.set(encryptedKey.ciphertext, 150);
+    pdaBuf.set(encryptedKey.tag,        214);
+
+    // Verify parseEncryptedKeyFromVaultRecord round-trips nonce/ct/tag
+    const parsed = parseEncryptedKeyFromVaultRecord(pdaBuf);
+    expect(parsed).not.toBeNull();
+    expect(uint8ToHex(parsed!.nonce)).toBe(uint8ToHex(encryptedKey.nonce));
+    expect(uint8ToHex(parsed!.ciphertext)).toBe(uint8ToHex(encryptedKey.ciphertext));
+    expect(uint8ToHex(parsed!.tag)).toBe(uint8ToHex(encryptedKey.tag));
+
+    // Verify decryptAgentKeyFromVaultRecord decrypts back to original bytes
+    const decrypted = await decryptAgentKeyFromVaultRecord(pdaBuf, assertion, BASE_PASSKEY_PARAMS);
+    expect(uint8ToHex(decrypted)).toBe(uint8ToHex(originalKeypair));
   });
 });

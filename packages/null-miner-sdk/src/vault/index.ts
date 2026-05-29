@@ -64,5 +64,9 @@ export {
   encryptAgentKeyWithPasskey,
   decryptAgentKeyWithPasskey,
   createTestPasskeyAssertion,
+  buildStoreEncryptedKeyInstruction,
+  parseEncryptedKeyFromVaultRecord,
+  encryptAndPrepareForChain,
+  decryptAgentKeyFromVaultRecord,
 } from "./passkey.js";
-export type { PasskeyVaultParams, PasskeyChallenge, PasskeyAssertion } from "./passkey.js";
+export type { PasskeyVaultParams, PasskeyChallenge, PasskeyAssertion, OnChainEncryptedKey } from "./passkey.js";

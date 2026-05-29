@@ -92,6 +92,10 @@ mod tests {
             challenge_hash:     [0x40u8; 32],
             registered_at:      1_000_000,
             version:            VAULT_VERSION,
+            enc_key_nonce:      [0u8; 12],
+            enc_key_ciphertext: [0u8; 64],
+            enc_key_tag:        [0u8; 16],
+            has_enc_key:        0,
         };
 
         let mut buf = [0u8; VAULT_RECORD_SIZE];
@@ -124,8 +128,8 @@ mod tests {
 
     #[test]
     fn vault_record_size_is_correct() {
-        // 1 (disc) + 32 (wallet) + 32 (cred_hash) + 32 (agent) + 32 (challenge) + 8 (slot) + 1 (ver)
-        assert_eq!(VAULT_RECORD_SIZE, 138);
+        // 1+32+32+32+32+8+1 (legacy 138) + 12 (nonce) + 64 (ciphertext) + 16 (tag) + 1 (has_enc_key)
+        assert_eq!(VAULT_RECORD_SIZE, 231);
     }
 
     #[test]

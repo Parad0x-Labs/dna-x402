@@ -75,6 +75,10 @@
     "./flywheel": {
       "types": "./dist/flywheel/index.d.ts",
       "default": "./dist/flywheel/index.js"
+    },
+    "./lottery": {
+      "types": "./dist/lottery/LotterySDK.d.ts",
+      "default": "./dist/lottery/LotterySDK.js"
     }
   },
   "scripts": {

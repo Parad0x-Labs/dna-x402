@@ -2208,6 +2208,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-null-lottery"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
+name = "dark-null-mint-gate"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "dark-null-token"
 version = "0.1.0"
 dependencies = [

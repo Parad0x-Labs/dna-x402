@@ -43,6 +43,13 @@ export interface NullArchive {
   totalEntries:  number;
   /** Count of non-decoy entries. */
   realEntries:   number;
+  /**
+   * Decentralized storage URI for this archive (optional — undefined until uploaded).
+   * Can be an Arweave TX ID (ar://...), IPFS CID (ipfs://...), or Shadow Drive URL.
+   * The Merkle root is anchored on-chain; the URI is the off-chain data location
+   * for auditing and agent scanning without a server.
+   */
+  storageUri?:   string;
 }
 
 /** Result of bridging an archive to a receipt_anchor instruction. */
@@ -207,4 +214,57 @@ function _generateDecoys(count: number, platformId: string): NullArchiveEntry[] 
     });
   }
   return decoys;
+}
+
+// ── Decentralized Storage Helpers ─────────────────────────────────────────────
+
+/**
+ * Attach a decentralized storage URI to an existing archive.
+ * URI can be an Arweave TX ID (ar://...), IPFS CID (ipfs://...), or Shadow Drive URL.
+ *
+ * The Merkle root is already anchored on-chain — the URI is the off-chain data location
+ * for auditing and agent scanning. Agents don't need our server to find their receipts.
+ */
+export function withStorageUri(archive: NullArchive, uri: string): NullArchive {
+  return { ...archive, storageUri: uri };
+}
+
+/**
+ * Encode an archive to a compact JSON Buffer for upload to Arweave/IPFS/Shadow Drive.
+ * Non-decoy entries only are included to minimize upload size.
+ *
+ * Format: JSON with fields: archiveId, merkleRoot, createdAt, entries (non-decoy only)
+ */
+export function encodeArchiveForStorage(archive: NullArchive): Buffer {
+  const payload = {
+    archiveId:   archive.archiveId,
+    merkleRoot:  archive.merkleRoot,
+    createdAt:   archive.createdAt,
+    entries:     archive.entries.filter(e => !e.isDecoy).map(e => ({
+      taskId:            e.taskId,
+      nullifierHash:     e.nullifierHash,
+      receiptCommitment: e.receiptCommitment,
+      agentPassportId:   e.agentPassportId,
+      platformId:        e.platformId,
+      amountAtomic:      e.amountAtomic,
+      timestamp:         e.timestamp,
+    })),
+  };
+  return Buffer.from(JSON.stringify(payload));
+}
+
+/**
+ * Build Arweave tags for a .null archive upload.
+ * These tags make archives discoverable by archiveId and merkleRoot on Arweave's GraphQL.
+ */
+export function buildArweaveUploadTags(archive: NullArchive): Array<{ name: string; value: string }> {
+  return [
+    { name: "Content-Type",    value: "application/json" },
+    { name: "App-Name",        value: "null-miner-sdk" },
+    { name: "Archive-Id",      value: archive.archiveId },
+    { name: "Merkle-Root",     value: archive.merkleRoot },
+    { name: "Created-At",      value: archive.createdAt.toString() },
+    { name: "Entry-Count",     value: archive.realEntries.toString() },
+    { name: "Protocol",        value: "dark-null-archive-v1" },
+  ];
 }

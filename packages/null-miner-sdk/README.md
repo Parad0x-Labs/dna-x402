@@ -240,7 +240,7 @@ Higher reputation → access to higher-paying task tiers:
 git clone https://github.com/Parad0x-Labs/dna-x402
 cd packages/null-miner-sdk
 npm install
-npm test         # 44 unit tests
+npm test         # 418 unit tests
 npm run test:devnet  # live devnet integration (requires SOL)
 ```
 
@@ -259,6 +259,11 @@ The SDK falls back to mock tasks when the task marketplace API is unreachable �
 | Browser adapter | ✅ Devnet |
 | Task marketplace API | ✅ Devnet |
 | Browser extension | ✅ Devnet |
+| On-chain encrypted vault storage | ✅ Devnet |
+| Direct receipt-anchor callback | ✅ Devnet |
+| Liquefy archive storage payloads | ✅ Devnet |
+| NULL mint-gate claim ledger | 🔶 Devnet (SPL mint CPI gated) |
+| NULL lottery root primitive | 🔶 Devnet (settlement gated) |
 | Dark-agent-escrow (Solana program) | 🔶 Devnet (ZK stub) |
 | Groth16 ZK proofs | ❌ Phase 2 |
 | Mainnet deploy | ❌ Pending deployment gates |

@@ -306,6 +306,164 @@ export async function decryptAgentKeyWithPasskey(
   return base64ToUint8(envelope.agentSecretKeyBase64);
 }
 
+// ── On-Chain Vault Helpers (decentralized storage) ────────────────────────────
+
+/**
+ * Build the instruction data for StoreEncryptedKey (0x04) on dark_secp256r1_vault.
+ *
+ * Layout: [0x04, nonce[12], ciphertext[64], tag[16]] = 93 bytes
+ *
+ * @param nonce      — 12-byte AES-256-GCM nonce from encryptAgentKeyWithPasskey
+ * @param ciphertext — 64-byte AES-256-GCM ciphertext (encrypted 64-byte ed25519 keypair)
+ * @param tag        — 16-byte GCM authentication tag
+ */
+export function buildStoreEncryptedKeyInstruction(
+  nonce: Uint8Array,      // 12 bytes
+  ciphertext: Uint8Array, // 64 bytes
+  tag: Uint8Array,        // 16 bytes
+): Uint8Array {
+  if (nonce.length !== 12) throw new Error(`nonce must be 12 bytes, got ${nonce.length}`);
+  if (ciphertext.length !== 64) throw new Error(`ciphertext must be 64 bytes, got ${ciphertext.length}`);
+  if (tag.length !== 16) throw new Error(`tag must be 16 bytes, got ${tag.length}`);
+  const buf = new Uint8Array(93);
+  buf[0] = 0x04;
+  buf.set(nonce, 1);
+  buf.set(ciphertext, 13);
+  buf.set(tag, 77);
+  return buf;
+}
+
+/**
+ * Parse encrypted key fields from raw VaultRecord PDA bytes.
+ * Handles both old (138-byte) and new (231-byte) layouts.
+ *
+ * Offsets (from state.rs):
+ *   OFF_ENC_KEY_NONCE  = 138  [138..150]
+ *   OFF_ENC_KEY_CT     = 150  [150..214]
+ *   OFF_ENC_KEY_TAG    = 214  [214..230]
+ *   OFF_HAS_ENC_KEY    = 230  [230..231]
+ */
+export interface OnChainEncryptedKey {
+  nonce:      Uint8Array; // 12 bytes
+  ciphertext: Uint8Array; // 64 bytes
+  tag:        Uint8Array; // 16 bytes
+}
+
+export function parseEncryptedKeyFromVaultRecord(
+  rawPdaBytes: Uint8Array,
+): OnChainEncryptedKey | null {
+  if (rawPdaBytes.length < 231) return null;         // old layout or not a vault
+  if (rawPdaBytes[0] !== 0xcc) return null;           // wrong discriminant
+  if (rawPdaBytes[230] !== 1) return null;            // has_enc_key = 0 (not yet stored)
+  return {
+    nonce:      rawPdaBytes.slice(138, 150),
+    ciphertext: rawPdaBytes.slice(150, 214),
+    tag:        rawPdaBytes.slice(214, 230),
+  };
+}
+
+/**
+ * Full pipeline: encrypt an agent keypair with passkey + build the on-chain instruction.
+ *
+ * Performs direct AES-256-GCM encryption of the raw 64-byte keypair (no JSON wrapper),
+ * so the on-chain ciphertext is exactly 64 bytes and the tag is exactly 16 bytes.
+ *
+ * Returns:
+ *   encryptedKey — the OnChainEncryptedKey (nonce, ciphertext, tag)
+ *   instruction  — 93-byte Uint8Array ready to be submitted to dark_secp256r1_vault 0x04
+ *
+ * Usage:
+ *   const { instruction } = await encryptAndPrepareForChain(agentKeypairBytes, assertion, params);
+ *   // Submit instruction to Solana (the caller handles the transaction)
+ *
+ * Note: agentKeypairBytes must be exactly 64 bytes (ed25519 private + public key).
+ *       AES-256-GCM on 64-byte input yields 64-byte ciphertext + 16-byte tag (80 bytes total).
+ *       A deterministic HKDF salt is derived from params so the key can be re-derived on-chain.
+ */
+export async function encryptAndPrepareForChain(
+  agentKeypairBytes: Uint8Array, // 64 bytes: ed25519 private + public key
+  assertion: PasskeyAssertion,
+  params: PasskeyVaultParams,
+): Promise<{ encryptedKey: OnChainEncryptedKey; instruction: Uint8Array }> {
+  if (agentKeypairBytes.length !== 64) {
+    throw new Error(`agentKeypairBytes must be 64 bytes, got ${agentKeypairBytes.length}`);
+  }
+  // Derive a deterministic HKDF salt from params.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createHash } = require("crypto") as typeof import("crypto");
+  const salt = new Uint8Array(
+    createHash("sha256")
+      .update("on-chain-vault-salt-v1")
+      .update(params.walletPubkey)
+      .update(params.vaultId)
+      .digest(),
+  );
+  const keyMaterial = extractAssertionKeyMaterial(assertion);
+  const aesKey      = await derivePasskeyVaultKey(keyMaterial, salt, params);
+  const aad         = buildPasskeyAAD(params);
+  const nonce       = webCrypto().getRandomValues(new Uint8Array(12));
+  // Encrypt raw 64-byte keypair → AES-GCM produces 64-byte ciphertext + 16-byte tag = 80 bytes
+  const rawEncBuf: ArrayBuffer = await sub().encrypt(
+    { name: "AES-GCM", iv: nonce, additionalData: aad },
+    aesKey,
+    agentKeypairBytes,
+  );
+  const rawEnc   = new Uint8Array(rawEncBuf); // 80 bytes
+  const ctBytes  = rawEnc.slice(0, 64);       // ciphertext
+  const tagBytes = rawEnc.slice(64, 80);      // GCM auth tag
+  const instruction = buildStoreEncryptedKeyInstruction(nonce, ctBytes, tagBytes);
+  return {
+    encryptedKey: { nonce, ciphertext: ctBytes, tag: tagBytes },
+    instruction,
+  };
+}
+
+/**
+ * Decrypt an agent keypair from on-chain VaultRecord PDA data using a passkey assertion.
+ *
+ * @param rawPdaBytes — raw bytes from the VaultRecord PDA account on Solana
+ * @param assertion   — fresh WebAuthn/passkey assertion from the user's device
+ * @param params      — vault params (same rpId, credentialId, walletPubkey used at registration)
+ */
+export async function decryptAgentKeyFromVaultRecord(
+  rawPdaBytes: Uint8Array,
+  assertion: PasskeyAssertion,
+  params: PasskeyVaultParams,
+): Promise<Uint8Array> {
+  const encKey = parseEncryptedKeyFromVaultRecord(rawPdaBytes);
+  if (!encKey) {
+    throw new Error("No encrypted key found in VaultRecord PDA (has_enc_key = 0 or wrong layout)");
+  }
+  // Re-derive the same deterministic HKDF salt used during encryptAndPrepareForChain.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createHash } = require("crypto") as typeof import("crypto");
+  const salt = new Uint8Array(
+    createHash("sha256")
+      .update("on-chain-vault-salt-v1")
+      .update(params.walletPubkey)
+      .update(params.vaultId)
+      .digest(),
+  );
+  const keyMaterial = extractAssertionKeyMaterial(assertion);
+  const aesKey      = await derivePasskeyVaultKey(keyMaterial, salt, params);
+  const aad         = buildPasskeyAAD(params);
+  // Reconstruct the 80-byte AES-GCM output: ciphertext[64] || tag[16]
+  const combined = new Uint8Array(80);
+  combined.set(encKey.ciphertext, 0);
+  combined.set(encKey.tag, 64);
+  let plaintextBuf: ArrayBuffer;
+  try {
+    plaintextBuf = await sub().decrypt(
+      { name: "AES-GCM", iv: encKey.nonce, additionalData: aad },
+      aesKey,
+      combined,
+    );
+  } catch {
+    throw new Error("Vault decryption failed — wrong passkey assertion or tampered ciphertext");
+  }
+  return new Uint8Array(plaintextBuf);
+}
+
 // ── Test helper ───────────────────────────────────────────────────────────────
 
 /**

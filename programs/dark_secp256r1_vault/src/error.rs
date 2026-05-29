@@ -16,18 +16,21 @@ pub enum VaultError {
     InvalidInstruction,
     /// The caller is not the wallet owner recorded in the vault.
     NotOwner,
+    /// An encrypted key is already stored in this vault — overwrite is not allowed.
+    KeyAlreadyStored,
 }
 
 impl From<VaultError> for ProgramError {
     fn from(e: VaultError) -> Self {
         ProgramError::Custom(match e {
-            VaultError::InvalidAssertion      => 0x4001,
+            VaultError::InvalidAssertion       => 0x4001,
             VaultError::VaultAlreadyRegistered => 0x4002,
-            VaultError::WrongCredentialId     => 0x4003,
-            VaultError::ReplayedChallenge     => 0x4004,
-            VaultError::VaultNotFound         => 0x4005,
-            VaultError::InvalidInstruction    => 0x4006,
-            VaultError::NotOwner              => 0x4007,
+            VaultError::WrongCredentialId      => 0x4003,
+            VaultError::ReplayedChallenge      => 0x4004,
+            VaultError::VaultNotFound          => 0x4005,
+            VaultError::InvalidInstruction     => 0x4006,
+            VaultError::NotOwner               => 0x4007,
+            VaultError::KeyAlreadyStored       => 0x4008,
         })
     }
 }

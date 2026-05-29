@@ -6,8 +6,8 @@
  *
  * Token flow:
  *   TaskComplete → x402 receipt → receipt_anchor on-chain →
- *   flywheel router computes NULL yield → blind-sign mint authorization →
- *   host wallet receives NULL (via nullMint blind signature protocol)
+ *   flywheel router computes NULL yield -> mint-gate claim commitment ->
+ *   host wallet receives NULL after the active beta/mainnet mint path approves the claim
  */
 
 import { createHash } from "crypto";
@@ -33,7 +33,7 @@ export interface FlywheelYield {
   usdcEarned: number;
   /** NULL tokens to mint. */
   nullYield: number;
-  /** Blind-sign authorization hash (hex). Used by the mint server to authorize minting. */
+  /** Claim authorization hash (hex). Used by the on-chain mint gate or a gated beta minter. */
   mintAuthorizationHash: string;
   /** Current epoch identifier. */
   epochId: number;

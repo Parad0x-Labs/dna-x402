@@ -191,6 +191,8 @@ members = [
     "programs/null_token_hook",
     "programs/dark_secp256r1_vault",
     "programs/dark_secp256k1_auth",
+    "programs/null_lottery",
+    "programs/null_mint_gate",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

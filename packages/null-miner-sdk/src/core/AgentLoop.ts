@@ -60,6 +60,7 @@ export class AgentLoop {
       nullEmissionRatePct: config.nullEmissionRatePct ?? DEFAULT_NULL_EMISSION_PCT,
       onEarn:             config.onEarn              ?? (() => {}),
       onError:            config.onError             ?? ((e) => console.error("[NullMiner]", e)),
+      onReceiptReady:     config.onReceiptReady      ?? undefined,
       ...config,
     } as Required<NullMinerConfig>;
 
@@ -276,7 +277,16 @@ export class AgentLoop {
 
     const base = this.marketplaceBase();
     if (!base) {
-      // Devnet mock — no real API call, no on-chain anchor.
+      // Build receipt anchor instruction for direct-to-Solana submission.
+      // The host can provide onReceiptReady to submit without going through our server.
+      const anchorIx = this._buildReceiptAnchorInstruction(task, proof);
+      if (this.config.onReceiptReady && anchorIx) {
+        try {
+          await this.config.onReceiptReady(anchorIx);
+        } catch {
+          // Non-fatal: anchor submission is best-effort in devnet
+        }
+      }
       return task.rewardUsdc * 0.9;
     }
 
@@ -296,6 +306,30 @@ export class AgentLoop {
     }
     const result = await resp.json() as { usdcEarned?: number };
     return result.usdcEarned ?? task.rewardUsdc * 0.9;
+  }
+
+  private _buildReceiptAnchorInstruction(task: TaskSpec, proof: TaskProof): Uint8Array | null {
+    try {
+      // Receipt hash = SHA-256("agent-receipt-v1:" + proof.outputHash + ":" + task.taskId)
+      const receiptHash = createHash("sha256")
+        .update("agent-receipt-v1:")
+        .update(proof.outputHash)
+        .update(":")
+        .update(task.taskId)
+        .digest();
+      // 34-byte anchor instruction: [0x01, 0x00, sha256("receipt-anchor-v1" + receiptHash)[32]]
+      const anchor32 = createHash("sha256")
+        .update("receipt-anchor-v1")
+        .update(receiptHash)
+        .digest();
+      const ix = new Uint8Array(34);
+      ix[0] = 0x01;
+      ix[1] = 0x00;
+      ix.set(anchor32, 2);
+      return ix;
+    } catch {
+      return null;
+    }
   }
 
   // ── Devnet Mock Tasks ─────────────────────────────────────────────────────

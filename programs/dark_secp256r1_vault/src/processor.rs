@@ -53,6 +53,8 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Pr
             process_verify_signal(program_id, accounts, challenge_hash, new_challenge_hash),
         VaultInstruction::RevokePasskeyVault =>
             process_revoke(program_id, accounts),
+        VaultInstruction::StoreEncryptedKey { nonce, ciphertext, tag } =>
+            process_store_enc_key(program_id, accounts, nonce, ciphertext, tag),
     }
 }
 
@@ -129,6 +131,10 @@ fn process_register(
         challenge_hash,
         registered_at:      slot,
         version:            VAULT_VERSION,
+        enc_key_nonce:      [0u8; 12],
+        enc_key_ciphertext: [0u8; 64],
+        enc_key_tag:        [0u8; 16],
+        has_enc_key:        0,
     };
 
     let mut data = vault_pda.try_borrow_mut_data()?;
@@ -230,5 +236,69 @@ fn process_revoke(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResul
     data.fill(0);
 
     msg!("dark-secp256r1-vault: Vault revoked and zeroed");
+    Ok(())
+}
+
+// ── StoreEncryptedKey ─────────────────────────────────────────────────────────
+
+fn process_store_enc_key(
+    program_id: &Pubkey,
+    accounts:   &[AccountInfo],
+    nonce:      [u8; 12],
+    ciphertext: [u8; 64],
+    tag:        [u8; 16],
+) -> ProgramResult {
+    let iter         = &mut accounts.iter();
+    let vault_pda    = next_account_info(iter)?;
+    let wallet_owner = next_account_info(iter)?;
+
+    if !wallet_owner.is_signer {
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+
+    // Unpack the existing record — fail if the vault does not exist or is corrupt.
+    let mut record = {
+        let data = vault_pda.try_borrow_data()?;
+        VaultRecord::unpack_from(&data).ok_or(VaultError::VaultNotFound)?
+    };
+
+    // Verify the vault belongs to the signer.
+    if record.wallet_pubkey != wallet_owner.key.to_bytes() {
+        return Err(VaultError::NotOwner.into());
+    }
+
+    // Verify the PDA is correctly derived.
+    let (expected_pda, _) = Pubkey::find_program_address(
+        &[
+            b"passkey-vault",
+            wallet_owner.key.as_ref(),
+            &record.credential_id_hash,
+        ],
+        program_id,
+    );
+    if expected_pda != *vault_pda.key {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    // Immutability: once an encrypted key is stored, refuse further writes.
+    if record.has_enc_key == 1 {
+        return Err(VaultError::KeyAlreadyStored.into());
+    }
+
+    // If this is a legacy 138-byte account, resize it to fit the new fields.
+    if vault_pda.data_len() < VAULT_RECORD_SIZE {
+        vault_pda.realloc(VAULT_RECORD_SIZE, false)?;
+    }
+
+    // Write the encrypted key material.
+    record.enc_key_nonce      = nonce;
+    record.enc_key_ciphertext = ciphertext;
+    record.enc_key_tag        = tag;
+    record.has_enc_key        = 1;
+
+    let mut data = vault_pda.try_borrow_mut_data()?;
+    record.pack_into(&mut data);
+
+    msg!("dark-secp256r1-vault: EncryptedKey stored on-chain");
     Ok(())
 }

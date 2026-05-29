@@ -116,6 +116,15 @@ export interface NullMinerConfig {
   onEarn?: (result: TaskResult) => void;
   /** Called on error. Default: console.error. */
   onError?: (err: Error, taskId?: string) => void;
+  /**
+   * Called when a receipt anchor instruction is ready for on-chain submission.
+   * Provides a 34-byte Uint8Array: [0x01, 0x00, sha256_anchor[32]].
+   * When set, the AgentLoop will build the instruction in the devnet mock path
+   * and invoke this callback so the host can submit directly to Solana —
+   * no marketplace server required.
+   * Non-fatal: if this callback throws, the task is still considered complete.
+   */
+  onReceiptReady?: (instructionData: Uint8Array) => Promise<void>;
 }
 
 export interface HostWallet {

@@ -202,3 +202,11 @@ export type { PassportV2Config, PassportV2Attestation } from "./core/PassportV2.
 // Coalitions
 export { createCoalition, buildCoalitionSignal, verifyCoalitionThreshold, addCoalitionMember } from "./coalitions/index.js";
 export type { GuildCoalition, CoalitionMember, CoalitionSignal } from "./coalitions/index.js";
+
+// NULL Lottery
+export { buildCommitment, revealDraw, verifyDraw, checkWin as checkLotteryWin, generateSeed, buildFallbackWinnerIndex } from "./lottery/DrawMachine.js";
+export { createTicket, batchTicketsToArchive, buildFallbackPool, findFallbackWinner, checkBatchForWin, buildBatchRoot } from "./lottery/TicketStore.js";
+export { buyTicket, commitDraw, submitRoundTickets, revealAndDraw, executeFallbackDraw, computeJackpot, buildClaimReceipt, DEFAULT_LOTTERY_CONFIG } from "./lottery/LotterySDK.js";
+export type { LotteryTicket, TicketBatch, FallbackPool } from "./lottery/TicketStore.js";
+export type { LotteryConfig, RoundInfo, BuyTicketResult, RoundDrawResult, FallbackDrawResult } from "./lottery/LotterySDK.js";
+export type { DrawResult, DrawVerification } from "./lottery/DrawMachine.js";

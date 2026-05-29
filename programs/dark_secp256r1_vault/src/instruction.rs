@@ -45,6 +45,20 @@ pub enum VaultInstruction {
     ///   [0] vault_pda     (writable)
     ///   [1] wallet_owner  (signer)
     RevokePasskeyVault,
+
+    /// Store AES-256-GCM encrypted agent key in the vault PDA.
+    /// Once stored, the key is immutable — this instruction will fail if called again.
+    ///
+    /// Data: [0x04, nonce[12], ciphertext[64], tag[16]] = 93 bytes total
+    ///
+    /// Accounts:
+    ///   [0] vault_pda    (writable)
+    ///   [1] wallet_owner (signer)
+    StoreEncryptedKey {
+        nonce:      [u8; 12],
+        ciphertext: [u8; 64],
+        tag:        [u8; 16],
+    },
 }
 
 impl VaultInstruction {
@@ -84,6 +98,18 @@ impl VaultInstruction {
                 Ok(Self::VerifyPasskeySignal { challenge_hash, new_challenge_hash })
             }
             0x03 => Ok(Self::RevokePasskeyVault),
+            0x04 => {
+                if rest.len() < 92 {
+                    return Err(VaultError::InvalidInstruction.into());
+                }
+                let mut nonce      = [0u8; 12];
+                let mut ciphertext = [0u8; 64];
+                let mut tag        = [0u8; 16];
+                nonce.copy_from_slice(&rest[0..12]);
+                ciphertext.copy_from_slice(&rest[12..76]);
+                tag.copy_from_slice(&rest[76..92]);
+                Ok(Self::StoreEncryptedKey { nonce, ciphertext, tag })
+            }
             _ => Err(VaultError::InvalidInstruction.into()),
         }
     }

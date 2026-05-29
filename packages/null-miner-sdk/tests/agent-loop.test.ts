@@ -517,3 +517,105 @@ describe("Proof validation — defaults to reject on mismatch (Fix 5)", () => {
     ).resolves.toBeGreaterThan(0);
   });
 });
+
+// ── onReceiptReady: server-free direct-to-Solana path ────────────────────────
+
+describe("onReceiptReady: direct on-chain proof path", () => {
+  const SPEND_KEY = "e".repeat(64);
+  const mockWalletRR = {
+    publicKey: "NULLminerTest1111111111111111111111111111111",
+    signTransaction: async (tx: unknown) => tx,
+  };
+
+  const TASK: TaskSpec = {
+    taskId:         "d".repeat(64),
+    kind:           "protocol_maintenance" as TK,
+    rewardUsdc:     0.005,
+    expiresAtSlot:  999_999_999,
+    proofRequirements: { expectedProofHash: "d".repeat(64) },
+  };
+
+  const PROOF = {
+    taskId:         TASK.taskId,
+    kind:           TASK.kind,
+    outputHash:     "d".repeat(64),   // matches expectedProofHash
+    agentPassportId: "x".repeat(64),
+    timestamp:      Date.now(),
+  };
+
+  test("onReceiptReady: called in server-free mode when provided", async () => {
+    let called = false;
+    const passport = new AgentPassport({ spendKey: SPEND_KEY });
+    const loop = new AgentLoop(
+      {
+        rpcUrl:     "https://api.devnet.solana.com",
+        hostWallet: mockWalletRR,
+        platformId: "t",
+        dryRun:     false,
+        allowProofMismatchInDev: true,
+        onReceiptReady: async (_ix: Uint8Array) => { called = true; },
+      },
+      passport,
+    );
+    await (loop as unknown as Record<string, (...a: unknown[]) => Promise<void>>)["submitProof"](TASK, PROOF);
+    expect(called).toBe(true);
+  });
+
+  test("onReceiptReady: receives 34-byte Uint8Array", async () => {
+    let received: Uint8Array | null = null;
+    const passport = new AgentPassport({ spendKey: SPEND_KEY });
+    const loop = new AgentLoop(
+      {
+        rpcUrl:     "https://api.devnet.solana.com",
+        hostWallet: mockWalletRR,
+        platformId: "t",
+        dryRun:     false,
+        allowProofMismatchInDev: true,
+        onReceiptReady: async (ix: Uint8Array) => { received = ix; },
+      },
+      passport,
+    );
+    await (loop as unknown as Record<string, (...a: unknown[]) => Promise<void>>)["submitProof"](TASK, PROOF);
+    expect(received).not.toBeNull();
+    expect(received!.length).toBe(34);
+  });
+
+  test("onReceiptReady: first byte is 0x01", async () => {
+    let received: Uint8Array | null = null;
+    const passport = new AgentPassport({ spendKey: SPEND_KEY });
+    const loop = new AgentLoop(
+      {
+        rpcUrl:     "https://api.devnet.solana.com",
+        hostWallet: mockWalletRR,
+        platformId: "t",
+        dryRun:     false,
+        allowProofMismatchInDev: true,
+        onReceiptReady: async (ix: Uint8Array) => { received = ix; },
+      },
+      passport,
+    );
+    await (loop as unknown as Record<string, (...a: unknown[]) => Promise<void>>)["submitProof"](TASK, PROOF);
+    expect(received![0]).toBe(0x01);
+  });
+
+  test("onReceiptReady: non-fatal if callback throws", async () => {
+    const passport = new AgentPassport({ spendKey: SPEND_KEY });
+    const loop = new AgentLoop(
+      {
+        rpcUrl:     "https://api.devnet.solana.com",
+        hostWallet: mockWalletRR,
+        platformId: "t",
+        dryRun:     false,
+        allowProofMismatchInDev: true,
+        onReceiptReady: async (_ix: Uint8Array) => {
+          throw new Error("simulated Solana RPC failure");
+        },
+      },
+      passport,
+    );
+    // Should resolve (not reject) — the callback failure is swallowed
+    await expect(
+      (loop as unknown as Record<string, (...a: unknown[]) => Promise<void>>)["submitProof"](TASK, PROOF)
+    ).resolves.toBeGreaterThan(0);
+  });
+});
