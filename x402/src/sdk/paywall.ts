@@ -39,6 +39,28 @@ export interface PaywallOptions {
   apiKeys?: Set<string>;
   onPaymentVerified?: (receipt: unknown, req: Request) => void;
   /**
+   * Called immediately after a payment is finalized and the receipt is stored.
+   * Fires before the HTTP response is sent.  Use this to anchor the receipt
+   * to the proof gate program or any external audit log.
+   *
+   * Example:
+   *   const proofGate = new ProofGateClient(conn, new PublicKey(PROOF_GATE_PROGRAM_ID));
+   *   dnaPaywall({
+   *     ...,
+   *     onReceiptFinalized: async ({ receiptId, txSignature }) => {
+   *       await proofGate.anchorReceipt(payer, receiptId, txSignature);
+   *     },
+   *   })
+   */
+  onReceiptFinalized?: (info: {
+    receiptId: string;
+    settlement: string;
+    amountAtomic: string;
+    mint: string;
+    txSignature?: string;
+    streamId?: string;
+  }) => void | Promise<void>;
+  /**
    * Enable agent price negotiation on this endpoint.
    *
    * When set, agents may bid below the listed priceAtomic.  The server counters
@@ -396,6 +418,23 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       commit.finalized = true;
       commit.receiptId = receiptId;
       runtime?.paidCommits.add(commitId);
+
+      // Fire the receipt-finalized hook (non-blocking — errors must not abort the response).
+      if (options.onReceiptFinalized) {
+        Promise.resolve(
+          options.onReceiptFinalized({
+            receiptId,
+            settlement: proof.settlement,
+            amountAtomic: quote.priceAtomic,
+            mint: quote.mint,
+            txSignature: verification.txSignature,
+            streamId: verification.streamId,
+          }),
+        ).catch((err: unknown) => {
+          // Log but swallow — payment is finalized regardless of anchor outcome.
+          console.error("[dnaPaywall] onReceiptFinalized error (non-fatal):", err);
+        });
+      }
 
       routeRes.json(finalizeResponse);
     });

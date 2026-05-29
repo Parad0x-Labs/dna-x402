@@ -113,6 +113,23 @@ export type {
   DnaX402SettlementPath,
 } from "../privacy/darkNull.js";
 
+export {
+  ProofGateClient,
+  getClaimPda,
+  buildRecordClaimData,
+  decodeClaimRecord,
+  hashReceiptPayload,
+  hashString,
+  hashBytes,
+  STATEMENT_KIND,
+  CLAIM_RECORD_LEN,
+} from "./proofGate.js";
+export type {
+  StatementKind,
+  ClaimRecord,
+  RecordClaimResult,
+} from "./proofGate.js";
+
 export { LiquefyVaultExporter } from "../bridge/liquefy/exporter.js";
 export { LiquefySidecar } from "../bridge/liquefy/sidecar.js";
 export {

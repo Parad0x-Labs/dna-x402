@@ -15,7 +15,9 @@
     "ethAuth": "TODO_POST_DEPLOY",
     "tokenHook": "TODO_POST_DEPLOY",
     "lottery": "TODO_POST_DEPLOY",
-    "mintGate": "TODO_POST_DEPLOY"
+    "mintGate": "TODO_POST_DEPLOY",
+    "receiptAnchor": "TODO_POST_DEPLOY",
+    "proofGate": "TODO_POST_DEPLOY"
   },
   "nullMint": "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
   "rpcUrl": "https://api.mainnet-beta.solana.com"

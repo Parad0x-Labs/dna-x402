@@ -22,6 +22,8 @@ PROGRAMS=(
   "null_token_hook"
   "null_lottery"
   "null_mint_gate"
+  "receipt_anchor"
+  "dark_proof_gate_lite"
 )
 
 BINARY_NAMES=(
@@ -31,6 +33,8 @@ BINARY_NAMES=(
   "null_token_hook"
   "dark_null_lottery"
   "dark_null_mint_gate"
+  "receipt_anchor"
+  "dark_proof_gate_lite"
 )
 
 MANIFESTS=(
@@ -40,6 +44,8 @@ MANIFESTS=(
   "programs/null_token_hook/Cargo.toml"
   "programs/null_lottery/Cargo.toml"
   "programs/null_mint_gate/Cargo.toml"
+  "programs/receipt_anchor/Cargo.toml"
+  "programs/dark_proof_gate_lite/Cargo.toml"
 )
 
 echo "NULL Miner commercial mainnet pilot deploy"
@@ -100,12 +106,14 @@ for i in "${!PROGRAMS[@]}"; do
     const fs = require('fs');
     const cfg = JSON.parse(fs.readFileSync('$CONFIG', 'utf8'));
     const keyMap = {
-      dark_semaphore: 'semaphore',
+      dark_semaphore:       'semaphore',
       dark_secp256r1_vault: 'vault',
-      dark_secp256k1_auth: 'ethAuth',
-      null_token_hook: 'tokenHook',
-      null_lottery: 'lottery',
-      null_mint_gate: 'mintGate',
+      dark_secp256k1_auth:  'ethAuth',
+      null_token_hook:      'tokenHook',
+      null_lottery:         'lottery',
+      null_mint_gate:       'mintGate',
+      receipt_anchor:       'receiptAnchor',
+      dark_proof_gate_lite: 'proofGate',
     };
     cfg.programs[keyMap['$PROG']] = '$ID';
     fs.writeFileSync('$CONFIG', JSON.stringify(cfg, null, 2) + '\n');

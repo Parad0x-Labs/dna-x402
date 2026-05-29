@@ -10,12 +10,16 @@
   "maxNullPerEpochAtomic": 0,
   "epochDurationSlots": 432000,
   "programs": {
-    "semaphore": "SEmBHKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "vault": "VAuLTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "ethAuth": "ETHAuxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "tokenHook": "HooKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "lottery": "LoTTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "mintGate": "MiNTGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "semaphore": "ADwL3SdoVofz9Geb89asG5UP7gjH5B7B48m3Kj8Xtzpa",
+    "vault": "2TwExMAZgihab5H9Smyf5hMk71uGgvEfDEQco6Yd9zoV",
+    "ethAuth": "2xH4kMweMsNwmTW9amyzkNCJWDuqcJ6XzbUXhYNchMV9",
+    "tokenHook": "3tmvVJxhwUsLEE217enz1CMYpn1ir2g9ysj2M5ZkboAN",
+    "lottery": "FbsPcWiEao3iU1ephRJggpJX8TWjGVsu7iXFGcyS8uSz",
+    "mintGate": "2M9DwyFg8Fxtn9S45peEieUWK697KZhube6j5gFDMiYa",
+    "receiptAnchor": "CPQ8Y1bdRiadxLMhrQG14Atc3E5eNJhqwPX1nXtH1Mst",
+    "proofGate": "nYyXgf9wVCH6u82vTG65k7vk359URwcz4GampvEZGne"
   },
-  "rpcUrl": "https://api.devnet.solana.com"
+  "rpcUrl": "https://api.devnet.solana.com",
+  "deployedAt": "2026-05-29T00:00:00Z",
+  "deployerWallet": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY"
 }
