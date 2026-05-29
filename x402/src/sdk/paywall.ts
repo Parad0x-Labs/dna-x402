@@ -26,6 +26,11 @@ import {
   type SessionStatusResponse,
 } from "./sessionKey.js";
 import {
+  computePaywallFees,
+  assertFeeRecipientNotProgramId,
+  type PaywallFeeResult,
+} from "../fees/paywallFee.js";
+import {
   CHAIN_PARENT_HEADER,
   CHAIN_DEPTH_HEADER,
   MAX_CHAIN_DEPTH,
@@ -93,6 +98,32 @@ export interface PaywallOptions {
    * floorPriceAtomic must be <= priceAtomic.
    */
   negotiation?: NegotiationPolicy;
+
+  // ── Fee split ──────────────────────────────────────────────────────────────
+  /**
+   * Endpoint operator fee in basis points (1 bps = 0.01%).
+   * Deducted from priceAtomic before the provider receives the balance.
+   * Range: 0–2000 (0–20%). Default: 0.
+   */
+  operatorFeeBps?: number;
+  /**
+   * Wallet address receiving the operator fee.
+   * Defaults to `recipient` if not set.
+   * Must NOT be a Solana program ID — use a treasury wallet.
+   */
+  operatorFeeRecipient?: string;
+  /**
+   * Parad0x protocol treasury fee in basis points.
+   * Range: 0–100 (0–1%). Default: 0.
+   * Set to 5 (0.05%) for mainnet commercial deployments.
+   */
+  protocolFeeBps?: number;
+  /**
+   * Wallet address receiving the protocol fee.
+   * Defaults to the Parad0x treasury address if not set and protocolFeeBps > 0.
+   * Must NOT be a Solana program ID.
+   */
+  protocolFeeRecipient?: string;
 }
 
 interface QuoteRecord {
@@ -113,6 +144,12 @@ interface QuoteRecord {
   parentReceiptId?: string;
   /** Receipt chain depth (0 = root). */
   chainDepth?: number;
+  /** Fee breakdown computed at quote time. */
+  fees: PaywallFeeResult;
+  /** Operator fee recipient address (wallet, not program). */
+  operatorFeeRecipient: string;
+  /** Protocol fee recipient address (Parad0x treasury). */
+  protocolFeeRecipient: string;
 }
 
 interface CommitRecord {
@@ -232,8 +269,8 @@ function issueDeliveryReceipt(
     payerCommitment32B: commit.payerCommitment,
     recipient: quote.recipient,
     mint: quote.mint,
-    amountAtomic: quote.priceAtomic,
-    feeAtomic: "0",
+    amountAtomic: quote.fees.providerNetAtomic,
+    feeAtomic: quote.fees.totalFeeAtomic,
     totalAtomic: quote.priceAtomic,
     settlement: paymentReceipt.signedReceipt.payload.settlement,
     settledOnchain: paymentReceipt.signedReceipt.payload.settledOnchain,
@@ -364,8 +401,8 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       const verification = await quote.paymentVerifier.verify({
         quoteId: quote.quoteId,
         resource: quote.resource,
-        amountAtomic: quote.priceAtomic,
-        feeAtomic: "0",
+        amountAtomic: quote.fees.providerNetAtomic,
+        feeAtomic: quote.fees.totalFeeAtomic,
         totalAtomic: quote.priceAtomic,
         mint: quote.mint,
         recipient: quote.recipient,
@@ -445,8 +482,8 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
           payerCommitment32B: commit.payerCommitment,
           recipient: quote.recipient,
           mint: quote.mint,
-          amountAtomic: quote.priceAtomic,
-          feeAtomic: "0",
+          amountAtomic: quote.fees.providerNetAtomic,
+          feeAtomic: quote.fees.totalFeeAtomic,
           totalAtomic: quote.priceAtomic,
           settlement: proof.settlement,
           settledOnchain: verification.settledOnchain,
@@ -516,7 +553,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
           options.onReceiptFinalized({
             receiptId,
             settlement: proof.settlement,
-            amountAtomic: quote.priceAtomic,
+            amountAtomic: quote.fees.providerNetAtomic,
             mint: quote.mint,
             txSignature: verification.txSignature,
             streamId: verification.streamId,
@@ -621,6 +658,9 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
  *   2. Agent pays, gets commitId
  *   3. GET /api/inference with x-dnp-commit-id header -> 200
  */
+// Default Parad0x protocol treasury — receives protocolFee when protocolFeeBps > 0.
+const PARAD0X_TREASURY = "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY";
+
 export function dnaPaywall(options: PaywallOptions) {
   const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
   const ttl = options.quoteTtlSeconds ?? 180;
@@ -634,6 +674,24 @@ export function dnaPaywall(options: PaywallOptions) {
     paymentVerifier: options.paymentVerifier,
   });
   const receiptSigner = options.receiptSigner ?? ReceiptSigner.generate();
+
+  // ── Fee config validation (fail-fast at startup, not per-request) ──────────
+  const operatorFeeBps = options.operatorFeeBps ?? 0;
+  const protocolFeeBps = options.protocolFeeBps ?? 0;
+  const resolvedOperatorFeeRecipient = options.operatorFeeRecipient ?? options.recipient;
+  const resolvedProtocolFeeRecipient = options.protocolFeeRecipient ?? (protocolFeeBps > 0 ? PARAD0X_TREASURY : options.recipient);
+
+  // Validate fee recipients are wallet addresses, not program IDs.
+  // We pass an empty set here — integrators with configs should validate at deploy time.
+  if (operatorFeeBps > 0) {
+    assertFeeRecipientNotProgramId(resolvedOperatorFeeRecipient);
+  }
+  if (protocolFeeBps > 0) {
+    assertFeeRecipientNotProgramId(resolvedProtocolFeeRecipient);
+  }
+  // Pre-validate fee bps ranges (throws immediately if misconfigured).
+  computePaywallFees(options.priceAtomic, operatorFeeBps, protocolFeeBps);
+  // ── End fee config validation ──────────────────────────────────────────────
 
   return function paywallMiddleware(req: Request, res: Response, next: NextFunction): void {
     const runtime = getRuntime(req, options);
@@ -928,6 +986,9 @@ export function dnaPaywall(options: PaywallOptions) {
 
     const memoHash = hashHex(`${quoteId}:${method}:${target}:${effectivePriceAtomic}:${expiresAt}`);
 
+    // Recompute fees against the negotiated price (may differ from options.priceAtomic).
+    const quoteFees = computePaywallFees(effectivePriceAtomic, operatorFeeBps, protocolFeeBps);
+
     const quote: QuoteRecord = {
       quoteId,
       priceAtomic: effectivePriceAtomic,
@@ -944,6 +1005,9 @@ export function dnaPaywall(options: PaywallOptions) {
       onPaymentVerified: options.onPaymentVerified,
       parentReceiptId: incomingParentReceiptId,
       chainDepth: incomingParentReceiptId ? incomingChainDepth : undefined,
+      fees: quoteFees,
+      operatorFeeRecipient: resolvedOperatorFeeRecipient,
+      protocolFeeRecipient: resolvedProtocolFeeRecipient,
     };
     runtime.quotes.set(quoteId, quote);
 
@@ -957,13 +1021,26 @@ export function dnaPaywall(options: PaywallOptions) {
         quote: {
           quoteId,
           amount: effectivePriceAtomic,
-          feeAtomic: "0",
-          totalAtomic: effectivePriceAtomic,
+          feeAtomic: quoteFees.totalFeeAtomic,
+          totalAtomic: effectivePriceAtomic,  // payer sends priceAtomic; fees deducted from it
+          providerNetAtomic: quoteFees.providerNetAtomic,
           mint,
           recipient: options.recipient,
           expiresAt,
           settlement,
           memoHash,
+          ...(operatorFeeBps > 0 || protocolFeeBps > 0
+            ? {
+                feeBreakdown: {
+                  operatorFeeAtomic: quoteFees.operatorFeeAtomic,
+                  operatorFeeBps,
+                  operatorFeeRecipient: resolvedOperatorFeeRecipient,
+                  protocolFeeAtomic: quoteFees.protocolFeeAtomic,
+                  protocolFeeBps,
+                  protocolFeeRecipient: resolvedProtocolFeeRecipient,
+                },
+              }
+            : {}),
         },
         accepts: settlement.map((mode) => ({
           scheme: "solana-spl",

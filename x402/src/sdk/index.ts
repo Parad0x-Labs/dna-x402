@@ -86,6 +86,8 @@ export { WebhookService } from "./webhook.js";
 export type { WebhookPayload, WebhookDeliveryResult, WebhookServiceOptions } from "./webhook.js";
 
 export * from "../fees/waterfall.js";
+export { computePaywallFees, assertFeeRecipientNotProgramId } from "../fees/paywallFee.js";
+export type { PaywallFeeResult } from "../fees/paywallFee.js";
 
 export { AuditLogger } from "../logging/audit.js";
 export type { AuditEntry, AuditEventKind, AuditLoggerOptions } from "../logging/audit.js";

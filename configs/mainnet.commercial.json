@@ -1,12 +1,15 @@
 {
   "track": "commercial",
   "network": "mainnet-beta",
-  "description": "Commercial mainnet pilot - external audit pending; 0.5% house config, 5% NULL emission accounting.",
+  "description": "Commercial mainnet pilot - external audit pending; 0.5% operator fee + 0.05% protocol fee.",
   "houseFeeBps": 50,
   "nullEmissionPct": 5,
   "lotteryHouseFeeBps": 50,
   "lotteryTicketPriceNull": 10000000,
   "platformFeePct": 0,
+  "operatorFeeBps": 50,
+  "protocolFeeBps": 5,
+  "protocolFeeRecipient": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
   "maxNullPerEpochAtomic": 1000000000000,
   "epochDurationSlots": 432000,
   "programs": {
