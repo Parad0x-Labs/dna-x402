@@ -60,6 +60,55 @@ jobs:
       - name: Test site-agent
         run: npm --prefix site-agent test -- --reporter=line
 
+  devnet-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: x402/package-lock.json
+
+      - name: Install x402
+        run: npm --prefix x402 ci
+
+      - name: Build x402
+        run: npm --prefix x402 run build
+
+      - name: Start x402 server (file storage, netting enabled for CI)
+        run: |
+          export UNSAFE_UNVERIFIED_NETTING_ENABLED=1
+          export PORT=8080
+          node x402/dist/server.js &
+          echo $! > /tmp/x402-server.pid
+
+      - name: Wait for server health
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080/health && break
+            echo "Waiting for server... ($i/20)"
+            sleep 2
+          done
+          curl -sf http://localhost:8080/health || (echo "Server failed to start" && exit 1)
+
+      - name: Run devnet smoke (netting mode, no keypair needed)
+        run: npx tsx x402/scripts/audit/devnet-smoke.ts --base-url http://localhost:8080 --out-dir audit_out
+
+      - name: Show smoke results
+        if: always()
+        run: cat audit_out/devnet_smoke.json 2>/dev/null || true
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devnet-smoke-${{ github.sha }}
+          path: audit_out/
+
   receipt-anchor:
     runs-on: ubuntu-latest
     steps:
