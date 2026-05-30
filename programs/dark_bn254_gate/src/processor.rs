@@ -48,7 +48,10 @@ extern crate alloc;
 /// # Verification modes
 ///
 /// 1. **Devnet test mode** (`proof[0..2] == [0xDE, 0xAD]`):
-///    Accepted unconditionally. Use for devnet smoke tests.
+///    Accepted unconditionally — **only when compiled with the `devnet-test`
+///    feature**. A standard `cargo build-sbf` (the mainnet artifact) does NOT
+///    contain this branch, so the sentinel can never bypass verification on a
+///    deployed binary.
 ///
 /// 2. **Real proof path** (all other proofs):
 ///    - Parses `proof[0..256]` as `Groth16Proof { A: G1(64B), B: G2(128B), C: G1(64B) }`.
@@ -56,19 +59,36 @@ extern crate alloc;
 ///    - Runs `alt_bn128_pairing` with 4 pairs (768 bytes).
 ///    - Returns `true` iff the pairing product equals 1.
 ///
-/// The VK is the `devnet_vk()` placeholder until a trusted setup is completed.
+/// # Fail-closed invariant
+///
+/// `devnet_vk()` is a placeholder from no trusted setup and is cryptographically
+/// forgeable (alpha = beta = delta = generators, gamma_abc = [infinity] → an
+/// attacker can pick `A = G1 + C`, `B = G2` to satisfy the pairing). Until a real
+/// ceremony VK is wired and `mainnet_ready` is `true`, this function rejects every
+/// proof. This makes "held back until audit" an enforced code property, not a
+/// policy note.
 fn verify_bn254_proof(
     proof: &[u8; 256],
     _merkle_root: &[u8; 32],
     _nullifier: &[u8; 32],
     _amount: u64,
 ) -> bool {
-    // ── Devnet test mode ──────────────────────────────────────────────────────
-    if proof[0] == 0xDE && proof[1] == 0xAD {
-        return true;
+    // ── Devnet test mode (feature-gated; absent from mainnet artifacts) ───────
+    #[cfg(feature = "devnet-test")]
+    {
+        if proof[0] == 0xDE && proof[1] == 0xAD {
+            return true;
+        }
     }
 
-    // ── Real Groth16 pairing path ─────────────────────────────────────────────
+    let vk = devnet_vk();
+
+    // ── Fail closed: no production trusted-setup VK is wired yet ──────────────
+    if !vk.mainnet_ready {
+        return false;
+    }
+
+    // ── Real Groth16 pairing path (unreachable until a mainnet_ready VK) ──────
     // Parse proof: [A: 64, B: 128, C: 64]
     let a_bytes: [u8; 64] = proof[0..64].try_into().unwrap_or([0u8; 64]);
     let b_bytes: [u8; 128] = proof[64..192].try_into().unwrap_or([0u8; 128]);
@@ -77,8 +97,6 @@ fn verify_bn254_proof(
     let a = g1_from_bytes(&a_bytes);
     let b = g2_from_bytes(&b_bytes);
     let c = g1_from_bytes(&c_bytes);
-
-    let vk = devnet_vk();
 
     // vk_x = gamma_abc[0] (0 public inputs — constant term only)
     let vk_x = vk.gamma_abc[0];
@@ -141,12 +159,15 @@ pub fn process_instruction(
             .map_err(|_| GateError::InvalidAmountEncoding)?,
     );
 
-    // 3. Verify proof (devnet test mode OR real BN254 Groth16 pairing)
+    // 3. Verify proof (real BN254 Groth16 pairing; sentinel only under devnet-test)
+    #[cfg(feature = "devnet-test")]
     let mode = if proof_bytes[0] == 0xDE && proof_bytes[1] == 0xAD {
         "devnet-test"
     } else {
         "groth16-bn254"
     };
+    #[cfg(not(feature = "devnet-test"))]
+    let mode = "groth16-bn254";
 
     if !verify_bn254_proof(proof_bytes, merkle_root, nullifier, amount) {
         return Err(GateError::ProofVerificationFailed.into());

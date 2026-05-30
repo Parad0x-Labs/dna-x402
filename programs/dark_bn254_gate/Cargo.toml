@@ -6,6 +6,14 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "lib"]
 
+[features]
+# Default build is fail-closed: no proof is ever accepted until a real
+# trusted-setup verifying key is wired (vk.mainnet_ready = true).
+default = []
+# Compiles in the 0xDE/0xAD devnet sentinel bypass for smoke tests ONLY.
+# Never enable this for a mainnet build artifact.
+devnet-test = []
+
 [dependencies]
 solana-program   = { workspace = true }
 dark-groth16-core = { path = "../../crates/dark-groth16-core" }

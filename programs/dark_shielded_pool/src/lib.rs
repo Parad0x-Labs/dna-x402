@@ -10,12 +10,26 @@
 //! Current status:
 //!   - deposit/note/nullifier state model exists
 //!   - Groth16 verifier call path exists
-//!   - withdrawals fail closed while VK_FINAL=false
+//!   - withdrawals fail closed while VK_FINAL=false (verify_proof_groth16 → false)
 //!
-//! Required before live shielded withdrawals:
-//!   - final circuit artifacts and verifying key
-//!   - circuit/program hash and Merkle-root alignment
-//!   - recipient and pool binding in public inputs
+//! Blockers before live shielded withdrawals (verified, precise — grant sprint scope):
+//!   1. HASH SCHEME MISMATCH. circuits/shielded_withdraw.circom commits and
+//!      nullifies with Poseidon(2); this program (processor.rs) uses SHA-256
+//!      ("dark-pool-commit-v1" / "dark-pool-null-v1"). A real proof for the
+//!      circuit can never verify against on-chain state. Pick ONE field-friendly
+//!      hash (Poseidon over BN254 Fr) and use it on both sides.
+//!   2. MERKLE ROOT IS A HASH CHAIN, NOT A TREE. update_merkle_root computes
+//!      H(old_root || commitment || index) — a rolling chain. The circuit proves
+//!      Poseidon-tree *membership* (TREE_DEPTH=20). You cannot produce a tree
+//!      membership path for a hash chain. Deposit must build an incremental
+//!      Poseidon Merkle tree whose root the circuit can open.
+//!   3. RECIPIENT NOT BOUND. The circuit exposes only [nullifier, merkle_root]
+//!      as public inputs. A valid proof in the mempool can be front-run and
+//!      redirected to any recipient. Bind recipient (and pool id) into the
+//!      circuit's public inputs.
+//!   4. NO TRUSTED SETUP. No production VK exists. Requires a multi-party
+//!      ceremony (single-party setup = whoever runs it can forge withdrawals).
+//!      Then external audit before MAINNET_READY can flip.
 //!
 //! IS_STUB      = true
 //! MAINNET_READY = false

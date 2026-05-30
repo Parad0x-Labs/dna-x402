@@ -53,10 +53,13 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // Test 1: valid devnet test proof (0xDE 0xAD prefix) is accepted
+    // Test 1: valid devnet test proof (0xDE 0xAD prefix) is accepted —
+    // ONLY when compiled with the `devnet-test` feature. The mainnet artifact
+    // (default features) must NOT accept this sentinel; see Test 1b.
     // -----------------------------------------------------------------------
+    #[cfg(feature = "devnet-test")]
     #[tokio::test]
-    async fn test_valid_test_proof_accepted() {
+    async fn test_valid_test_proof_accepted_with_devnet_feature() {
         let program_id = Pubkey::new_unique();
         let (mut banks_client, payer, recent_blockhash) = program_test(program_id).start().await;
 
@@ -73,6 +76,35 @@ mod tests {
 
         let result = banks_client.process_transaction(tx).await;
         assert!(result.is_ok(), "expected Ok, got: {:?}", result);
+    }
+
+    // -----------------------------------------------------------------------
+    // Test 1b: FAIL-CLOSED REGRESSION. With default features (the mainnet
+    // build), the 0xDE 0xAD sentinel must be REJECTED — the bypass is compiled
+    // out and the placeholder VK is not mainnet_ready, so no proof passes.
+    // -----------------------------------------------------------------------
+    #[cfg(not(feature = "devnet-test"))]
+    #[tokio::test]
+    async fn test_sentinel_rejected_without_devnet_feature() {
+        let program_id = Pubkey::new_unique();
+        let (mut banks_client, payer, recent_blockhash) = program_test(program_id).start().await;
+
+        let ix_data = build_ix_data([0xDE, 0xAD], [1u8; 32], [2u8; 32], 1_000u64);
+
+        let ix = Instruction {
+            program_id,
+            accounts: vec![AccountMeta::new_readonly(payer.pubkey(), true)],
+            data: ix_data,
+        };
+
+        let mut tx = Transaction::new_with_payer(&[ix], Some(&payer.pubkey()));
+        tx.sign(&[&payer], recent_blockhash);
+
+        let result = banks_client.process_transaction(tx).await;
+        assert!(
+            result.is_err(),
+            "fail-closed violated: sentinel accepted without devnet-test feature"
+        );
     }
 
     // -----------------------------------------------------------------------
