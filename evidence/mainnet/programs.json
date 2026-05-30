@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-05-29T18:52:06.585Z",
+  "generatedAt": "2026-05-30T18:15:56.481Z",
   "cluster": "mainnet-beta",
   "totalPrograms": 8,
   "verifiedCount": 8,
@@ -25,9 +25,9 @@
       "programId": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
       "executable": true,
       "authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
-      "lastDeployedSlot": 422972497,
-      "dataLen": 80824,
-      "lamports": 563739120,
+      "lastDeployedSlot": 423142843,
+      "dataLen": 97208,
+      "lamports": 677771760,
       "explorerUrl": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta"
     },
     {

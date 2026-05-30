@@ -5,7 +5,7 @@
   "executable": true,
   "lamports": 1141440,
   "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
-  "slot": 422996421,
-  "timestamp": "2026-05-29T18:52:16.422Z",
+  "slot": 423209006,
+  "timestamp": "2026-05-30T18:15:58.756Z",
   "note": "Read-only smoke test. No transaction submitted. Full anchoring covered by integration tests."
 }
