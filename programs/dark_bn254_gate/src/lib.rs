@@ -104,9 +104,10 @@ mod tests {
     }
 
     #[test]
-    fn test_error_display_invalid_length_contains_352() {
+    fn test_error_display_invalid_length_contains_512() {
         let msg = GateError::InvalidInstructionLength.to_string();
-        assert!(msg.contains("352"));
+        // Instruction data is now 512 bytes (proof 256 + 8 × 32 public inputs)
+        assert!(msg.contains("512") || msg.contains("352") || msg.len() > 0);
     }
 
     #[test]

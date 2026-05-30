@@ -38,6 +38,9 @@ use solana_program::alt_bn128::prelude::{
 
 // ── BN254 constants ───────────────────────────────────────────────────────────
 
+/// Null-proof verifying key (real, from null_proof_final.zkey — single-party ceremony).
+pub mod null_proof_vk;
+
 /// BN254 base field prime Fp (big-endian, 32 bytes).
 ///
 /// Source: `ark-bn254` Fp modulus limbs (little-endian u64):

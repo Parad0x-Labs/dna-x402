@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-30T23:21:25.856Z",
+  "test": "dark_bn254_gate-real-groth16-devnet",
+  "cluster": "devnet",
+  "program": "7tNhEf9KcoLpbDsioR9Ud9qo9km8nAFTJrGrYLvknAxL",
+  "circuit": "NullProofV2 (MiMCSponge commitment + nullifier + 7-level Merkle tree)",
+  "vkSource": "null_proof_final.zkey (single-party ceremony, disclosed pilot)",
+  "publicInputs": [
+    "21260859212802281091863686367661377984066769844065718321274175068829072532590",
+    "20771749344370779171742970368265706730294924718458058226975588733415774772728",
+    "16592576418919036804106147633901944981094649374524182982969277443114172065406",
+    "1000000",
+    "1339673755198158349044581307228491536",
+    "22690724228668807036942595891182575392",
+    "44041774702139455724840610475136659248",
+    "65392825175610104412738625059090743104"
+  ],
+  "txSignature": "eqXnUbPBTiAJBxU9gtpubUmXVw38rfmScqBPyPaAStNB5NHYX4u9eWTVPd4r1MhnTc354EnA5dgRSRwzzsGLwM6",
+  "explorer": "https://explorer.solana.com/tx/eqXnUbPBTiAJBxU9gtpubUmXVw38rfmScqBPyPaAStNB5NHYX4u9eWTVPd4r1MhnTc354EnA5dgRSRwzzsGLwM6?cluster=devnet",
+  "result": "CONFIRMED — real Groth16 proof verified on-chain",
+  "honestCaveats": [
+    "Single-party ceremony — not trustless. Run multi-party ceremony before mainnet trust.",
+    "Pilot disclosure: this is a pre-audit devnet deployment.",
+    "Proof generated client-side with snarkjs. On-chain verifier uses alt_bn128_pairing syscall."
+  ]
+}

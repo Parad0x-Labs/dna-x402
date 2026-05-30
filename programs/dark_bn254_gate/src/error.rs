@@ -14,7 +14,7 @@ impl fmt::Display for GateError {
             GateError::InvalidInstructionLength => {
                 write!(
                     f,
-                    "dark_bn254_gate: instruction data must be exactly 352 bytes"
+                    "dark_bn254_gate: instruction data must be exactly 512 bytes (proof[256] + 8 public inputs[32 each])"
                 )
             }
             GateError::ProofVerificationFailed => {
