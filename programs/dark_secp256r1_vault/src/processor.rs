@@ -85,14 +85,22 @@ fn process_register(
     }
 
     // When compiled with --features mainnet the tx MUST include a secp256r1
-    // (SIMD-0075) precompile instruction at index 0 verifying the P-256 assertion.
-    // Devnet skips this check (devnet trust model).
-    // Full challenge/pubkey match verification is deferred to post-audit.
+    // (SIMD-0075) precompile instruction at index 0. We extract the pubkey the
+    // precompile cryptographically verified and require it to match the P-256
+    // key supplied here — binding the vault to a key that actually signed.
+    // Devnet skips this (devnet trust model) and stores no P-256 binding.
     #[cfg(feature = "mainnet")]
-    {
+    let (p256_compressed, has_p256) = {
         let ix_sysvar = next_account_info(iter)?;
-        verify_secp256r1_precompile_presence(ix_sysvar)?;
-    }
+        let verified_pubkey = verify_and_extract_precompile_pubkey(ix_sysvar)?;
+        let expected = crate::secp256r1::compress_xy(&_p256_pubkey_x, &_p256_pubkey_y);
+        if verified_pubkey != expected {
+            return Err(VaultError::PasskeyPubkeyMismatch.into());
+        }
+        (expected, 1u8)
+    };
+    #[cfg(not(feature = "mainnet"))]
+    let (p256_compressed, has_p256) = ([0u8; 33], 0u8);
 
     // Derive the vault PDA: [b"passkey-vault", wallet_pubkey, credential_id_hash]
     let (expected_pda, bump) = Pubkey::find_program_address(
@@ -145,12 +153,14 @@ fn process_register(
         enc_key_ciphertext: [0u8; 64],
         enc_key_tag:        [0u8; 16],
         has_enc_key:        0,
+        p256_compressed,
+        has_p256,
     };
 
     let mut data = vault_pda.try_borrow_mut_data()?;
     record.pack_into(&mut data);
 
-    msg!("dark-secp256r1-vault: RegisterPasskeyVault slot={}", slot);
+    msg!("dark-secp256r1-vault: RegisterPasskeyVault slot={} bound_p256={}", slot, has_p256);
     Ok(())
 }
 
@@ -196,6 +206,18 @@ fn process_verify_signal(
     // Verify the challenge matches — prevents replay of old assertions.
     if record.challenge_hash != challenge_hash {
         return Err(VaultError::ReplayedChallenge.into());
+    }
+
+    // Mainnet: require a secp256r1 precompile (index 0) proving the bound passkey
+    // signed exactly this challenge. This is the real "sign in with Face ID" check:
+    // same P-256 key as registration, fresh signature over the live challenge.
+    #[cfg(feature = "mainnet")]
+    {
+        if record.has_p256 != 1 {
+            return Err(VaultError::PasskeyNotBound.into());
+        }
+        let ix_sysvar = next_account_info(iter)?;
+        verify_precompile_signal(ix_sysvar, &record.p256_compressed, &challenge_hash)?;
     }
 
     // Advance the challenge to prevent reuse of this assertion.
@@ -313,10 +335,13 @@ fn process_store_enc_key(
     Ok(())
 }
 
-/// Verify the tx contains a secp256r1 (SIMD-0075) precompile instruction at index 0.
-/// Full challenge/pubkey verification against p256_pubkey_x/y is deferred to post-audit.
+/// Load the secp256r1 (SIMD-0075) precompile instruction at index 0 and return
+/// the compressed pubkey it cryptographically verified. The vault instruction
+/// must not itself be at index 0 (the precompile occupies it).
 #[cfg(feature = "mainnet")]
-fn verify_secp256r1_precompile_presence(ix_sysvar: &AccountInfo) -> ProgramResult {
+fn verify_and_extract_precompile_pubkey(
+    ix_sysvar: &AccountInfo,
+) -> Result<[u8; 33], ProgramError> {
     use solana_program::sysvar::instructions;
     let current_idx = instructions::load_current_index_checked(ix_sysvar)? as usize;
     if current_idx == 0 {
@@ -325,6 +350,35 @@ fn verify_secp256r1_precompile_presence(ix_sysvar: &AccountInfo) -> ProgramResul
     let precompile_ix = instructions::load_instruction_at_checked(0, ix_sysvar)?;
     if precompile_ix.program_id != SECP256R1_PROGRAM_ID {
         return Err(ProgramError::InvalidInstructionData);
+    }
+    let verified = crate::secp256r1::parse_single_verified(&precompile_ix.data, 0)?;
+    Ok(verified.pubkey_compressed)
+}
+
+/// Verify that the index-0 secp256r1 precompile proves `expected_pubkey` signed
+/// exactly `expected_message` (the live challenge). Used by the recurring
+/// sign-in (VerifyPasskeySignal).
+#[cfg(feature = "mainnet")]
+fn verify_precompile_signal(
+    ix_sysvar: &AccountInfo,
+    expected_pubkey: &[u8; 33],
+    expected_message: &[u8; 32],
+) -> ProgramResult {
+    use solana_program::sysvar::instructions;
+    let current_idx = instructions::load_current_index_checked(ix_sysvar)? as usize;
+    if current_idx == 0 {
+        return Err(ProgramError::InvalidInstructionData);
+    }
+    let precompile_ix = instructions::load_instruction_at_checked(0, ix_sysvar)?;
+    if precompile_ix.program_id != SECP256R1_PROGRAM_ID {
+        return Err(ProgramError::InvalidInstructionData);
+    }
+    let verified = crate::secp256r1::parse_single_verified(&precompile_ix.data, 0)?;
+    if &verified.pubkey_compressed != expected_pubkey {
+        return Err(VaultError::PasskeyPubkeyMismatch.into());
+    }
+    if verified.message != expected_message {
+        return Err(VaultError::ChallengeNotSigned.into());
     }
     Ok(())
 }

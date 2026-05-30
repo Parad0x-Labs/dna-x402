@@ -16,9 +16,11 @@
 ///   enc_key_ciphertext[64] — AES-256-GCM ciphertext of ed25519 keypair
 ///   enc_key_tag[16]       — AES-256-GCM authentication tag
 ///   has_enc_key[1]        — 0 = not yet stored, 1 = stored
+///   p256_compressed[33]   — bound P-256 passkey (compressed), 0 in devnet mode
+///   has_p256[1]           — 0 = no bound passkey, 1 = secp256r1-verified binding
 ///
-/// Size: 1 + 32 + 32 + 32 + 32 + 8 + 1 + 12 + 64 + 16 + 1 = 231 bytes
-pub const VAULT_RECORD_SIZE: usize = 231;
+/// Size: 1 + 32 + 32 + 32 + 32 + 8 + 1 + 12 + 64 + 16 + 1 + 33 + 1 = 265 bytes
+pub const VAULT_RECORD_SIZE: usize = 265;
 pub const VAULT_DISC: [u8; 1] = [0xCC];
 pub const VAULT_VERSION: u8 = 1;
 
@@ -34,9 +36,13 @@ pub const OFF_ENC_KEY_NONCE:      usize = 138;  // [138..150]
 pub const OFF_ENC_KEY_CT:         usize = 150;  // [150..214]
 pub const OFF_ENC_KEY_TAG:        usize = 214;  // [214..230]
 pub const OFF_HAS_ENC_KEY:        usize = 230;  // [230..231]
+pub const OFF_P256_COMPRESSED:    usize = 231;  // [231..264]
+pub const OFF_HAS_P256:           usize = 264;  // [264..265]
 
 /// Size of the legacy (v1) vault record without encrypted key fields.
 const VAULT_RECORD_LEGACY_SIZE: usize = 138;
+/// Size of the v2 record (with enc-key fields, before the P-256 binding fields).
+const VAULT_RECORD_V2_SIZE: usize = 231;
 
 pub struct VaultRecord {
     pub disc:               [u8; 1],
@@ -50,6 +56,8 @@ pub struct VaultRecord {
     pub enc_key_ciphertext: [u8; 64],
     pub enc_key_tag:        [u8; 16],
     pub has_enc_key:        u8,
+    pub p256_compressed:    [u8; 33],
+    pub has_p256:           u8,
 }
 
 impl VaultRecord {
@@ -65,6 +73,8 @@ impl VaultRecord {
         dst[OFF_ENC_KEY_CT..OFF_ENC_KEY_CT + 64].copy_from_slice(&self.enc_key_ciphertext);
         dst[OFF_ENC_KEY_TAG..OFF_ENC_KEY_TAG + 16].copy_from_slice(&self.enc_key_tag);
         dst[OFF_HAS_ENC_KEY] = self.has_enc_key;
+        dst[OFF_P256_COMPRESSED..OFF_P256_COMPRESSED + 33].copy_from_slice(&self.p256_compressed);
+        dst[OFF_HAS_P256] = self.has_p256;
     }
 
     pub fn unpack_from(src: &[u8]) -> Option<Self> {
@@ -89,12 +99,21 @@ impl VaultRecord {
         let mut enc_key_ciphertext = [0u8; 64];
         let mut enc_key_tag        = [0u8; 16];
         let mut has_enc_key        = 0u8;
+        let mut p256_compressed    = [0u8; 33];
+        let mut has_p256           = 0u8;
 
-        if src.len() >= VAULT_RECORD_SIZE {
+        // v2 fields (enc key) present once the record reaches 231 bytes.
+        if src.len() >= VAULT_RECORD_V2_SIZE {
             enc_key_nonce.copy_from_slice(&src[OFF_ENC_KEY_NONCE..OFF_ENC_KEY_NONCE + 12]);
             enc_key_ciphertext.copy_from_slice(&src[OFF_ENC_KEY_CT..OFF_ENC_KEY_CT + 64]);
             enc_key_tag.copy_from_slice(&src[OFF_ENC_KEY_TAG..OFF_ENC_KEY_TAG + 16]);
             has_enc_key = src[OFF_HAS_ENC_KEY];
+        }
+
+        // v3 fields (P-256 binding) present once the record reaches 265 bytes.
+        if src.len() >= VAULT_RECORD_SIZE {
+            p256_compressed.copy_from_slice(&src[OFF_P256_COMPRESSED..OFF_P256_COMPRESSED + 33]);
+            has_p256 = src[OFF_HAS_P256];
         }
 
         Some(Self {
@@ -109,6 +128,8 @@ impl VaultRecord {
             enc_key_ciphertext,
             enc_key_tag,
             has_enc_key,
+            p256_compressed,
+            has_p256,
         })
     }
 }

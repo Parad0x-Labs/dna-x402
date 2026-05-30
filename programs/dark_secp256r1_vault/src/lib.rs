@@ -3,18 +3,27 @@
 //! Binds a WebAuthn/passkey credential (secp256r1 / P-256) to a Solana agent public key.
 //! Each vault is uniquely identified by the wallet pubkey and the SHA-256 of the credential ID.
 //!
-//! Production flow (IS_MAINNET_READY = true):
-//!   1. The transaction includes a secp256r1 precompile instruction (SIMD-0075).
-//!   2. The precompile verifies the P-256 signature and writes its result to the
-//!      Secp256r1SigVerify sysvar before this instruction runs.
-//!   3. This program trusts the tx-level ordering: if the precompile instruction is
-//!      present and successful, the P-256 assertion is valid.
+//! Production flow (IS_MAINNET_READY = true, `--features mainnet`):
+//!   1. The transaction includes a secp256r1 precompile instruction (SIMD-0075)
+//!      at index 0. The runtime verifies the P-256 signature before this program runs.
+//!   2. Register: this program parses the precompile instruction, extracts the
+//!      compressed pubkey it verified, and requires it to equal the P-256 key the
+//!      caller is registering. The bound pubkey is persisted in the vault.
+//!   3. VerifyPasskeySignal (sign-in): this program requires a fresh precompile
+//!      assertion proving the SAME bound pubkey signed EXACTLY the live challenge,
+//!      then rotates the challenge. Replay and key-substitution both fail closed.
+//!
+//! v1 scope (honest): the precompile message is the 32-byte challenge — i.e. a
+//! P-256 key (biometric-gated in the client) signs the challenge directly. Full
+//! WebAuthn authenticatorData/clientDataJSON parsing on-chain is the audit-scope
+//! enhancement; it is NOT done here.
 //!
 //! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
 //!    Deploy: `cargo build-sbf --features mainnet`
 //!
-//! Devnet flow (IS_MAINNET_READY = false):
-//!   Signature verification is skipped.  The program trusts the client-supplied fields.
+//! Devnet flow (IS_MAINNET_READY = false, default):
+//!   Signature verification is skipped and no P-256 binding is stored. The program
+//!   trusts client-supplied fields (devnet trust model only).
 //!
 //! Instruction layout:
 //!   0x01  RegisterPasskeyVault  [agent_pubkey[32], credential_id_hash[32],
@@ -33,6 +42,7 @@ use solana_program::{
 pub mod error;
 pub mod instruction;
 pub mod processor;
+pub mod secp256r1;
 pub mod state;
 
 entrypoint!(process_instruction);
@@ -60,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_vault_record_size() {
-        assert_eq!(VAULT_RECORD_SIZE, 231);
+        assert_eq!(VAULT_RECORD_SIZE, 265);
     }
 
     // ── pack / unpack roundtrip with enc key fields ───────────────────────────
@@ -70,6 +80,10 @@ mod tests {
         let nonce:      [u8; 12] = [0x11; 12];
         let ciphertext: [u8; 64] = [0x22; 64];
         let tag:        [u8; 16] = [0x33; 16];
+
+        let mut p256 = [0u8; 33];
+        p256[0] = 0x02;
+        for i in 1..33 { p256[i] = i as u8; }
 
         let record = VaultRecord {
             disc:               VAULT_DISC,
@@ -83,6 +97,8 @@ mod tests {
             enc_key_ciphertext: ciphertext,
             enc_key_tag:        tag,
             has_enc_key:        1,
+            p256_compressed:    p256,
+            has_p256:           1,
         };
 
         let mut buf = [0u8; VAULT_RECORD_SIZE];
@@ -96,6 +112,8 @@ mod tests {
         assert_eq!(unpacked.enc_key_tag, tag);
         assert_eq!(unpacked.wallet_pubkey, [0xAA; 32]);
         assert_eq!(unpacked.registered_at, 999_u64);
+        assert_eq!(unpacked.has_p256, 1);
+        assert_eq!(unpacked.p256_compressed, p256);
     }
 
     // ── instruction unpack 0x04 valid ─────────────────────────────────────────

@@ -96,6 +96,8 @@ mod tests {
             enc_key_ciphertext: [0u8; 64],
             enc_key_tag:        [0u8; 16],
             has_enc_key:        0,
+            p256_compressed:    [0u8; 33],
+            has_p256:           0,
         };
 
         let mut buf = [0u8; VAULT_RECORD_SIZE];
@@ -128,8 +130,9 @@ mod tests {
 
     #[test]
     fn vault_record_size_is_correct() {
-        // 1+32+32+32+32+8+1 (legacy 138) + 12 (nonce) + 64 (ciphertext) + 16 (tag) + 1 (has_enc_key)
-        assert_eq!(VAULT_RECORD_SIZE, 231);
+        // legacy 138 + 12 (nonce) + 64 (ciphertext) + 16 (tag) + 1 (has_enc_key) = 231
+        // + 33 (p256_compressed) + 1 (has_p256) = 265
+        assert_eq!(VAULT_RECORD_SIZE, 265);
     }
 
     #[test]

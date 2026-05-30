@@ -18,6 +18,14 @@ pub enum VaultError {
     NotOwner,
     /// An encrypted key is already stored in this vault — overwrite is not allowed.
     KeyAlreadyStored,
+    /// The secp256r1 precompile-verified pubkey does not match the supplied P-256 key.
+    PasskeyPubkeyMismatch,
+    /// This vault has no bound P-256 passkey (registered in devnet mode).
+    PasskeyNotBound,
+    /// The signed message does not equal the challenge being consumed.
+    ChallengeNotSigned,
+    /// The secp256r1 precompile instruction data is malformed.
+    MalformedPrecompile,
 }
 
 impl From<VaultError> for ProgramError {
@@ -31,6 +39,10 @@ impl From<VaultError> for ProgramError {
             VaultError::InvalidInstruction     => 0x4006,
             VaultError::NotOwner               => 0x4007,
             VaultError::KeyAlreadyStored       => 0x4008,
+            VaultError::PasskeyPubkeyMismatch  => 0x4009,
+            VaultError::PasskeyNotBound        => 0x400A,
+            VaultError::ChallengeNotSigned     => 0x400B,
+            VaultError::MalformedPrecompile    => 0x400C,
         })
     }
 }
