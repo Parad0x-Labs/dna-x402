@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-30T08:53:46.126Z",
+  "test": "devnet-faceid-p256-e2e",
+  "cluster": "devnet",
+  "program": "2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2",
+  "vaultPda": "BDY5VQfKBLfZkYerotnKUR75FzbvPfnCJ3LQp9yomJnD",
+  "crypto": "secp256r1 / P-256, SIMD-0075 precompile, ECDSA-SHA256, low-S",
+  "results": {
+    "register": {
+      "pass": true,
+      "signature": "4iPwyRS5WmHhGJW4Zfj7wJXofDzPFyZZ9XE3NufxzAGpUBEF9sofBEp1RRd5FajNx9jKB6vwjt3jWrFMrUmGJDmA",
+      "explorer": "https://explorer.solana.com/tx/4iPwyRS5WmHhGJW4Zfj7wJXofDzPFyZZ9XE3NufxzAGpUBEF9sofBEp1RRd5FajNx9jKB6vwjt3jWrFMrUmGJDmA?cluster=devnet"
+    },
+    "signin": {
+      "pass": true,
+      "signature": "3jqtSnXVefoeZswaVZCRWd3db8aQaEEvuKqbYVvrqJjSSsc3phE5R4peHpY2kEtKYsTkfG3BtqBMJQ2UjHHAC1D5",
+      "explorer": "https://explorer.solana.com/tx/3jqtSnXVefoeZswaVZCRWd3db8aQaEEvuKqbYVvrqJjSSsc3phE5R4peHpY2kEtKYsTkfG3BtqBMJQ2UjHHAC1D5?cluster=devnet"
+    },
+    "rejectWrongMessage": {
+      "pass": true,
+      "expectedError": "0x400b ChallengeNotSigned"
+    },
+    "rejectWrongKey": {
+      "pass": true,
+      "expectedError": "0x4009 PasskeyPubkeyMismatch"
+    }
+  },
+  "allPass": true,
+  "honestCaveats": [
+    "Real on-chain P-256 verification via the Agave secp256r1 precompile — proven on devnet, replayable.",
+    "v1: the precompile message IS the 32-byte challenge (P-256 key signs it directly). Full WebAuthn authenticatorData parsing on-chain is the audit-scope enhancement.",
+    "EXTERNALLY UNAUDITED test pilot. Identity binding only — no funds custody.",
+    "Mainnet vault (3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi) still runs devnet-mode until the in-place --features mainnet upgrade."
+  ]
+}
