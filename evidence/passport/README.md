@@ -33,6 +33,15 @@ and Explorer links.
   data section starting at offset 16. Self-contained (`instruction_index` = the
   precompile's own tx index, or `u16::MAX`).
 
+## Browser test (real Phantom + Face ID)
+
+`scripts/passport/faceid-browser-test.html` is a self-contained page that runs the
+full flow in a real browser: connect Phantom (devnet), create a Face ID passkey
+(WebAuthn biometric gate + WebCrypto P-256), register on-chain, and sign in. Serve
+it locally (`npm run passport:serve`) and open the printed URL with Phantom set to
+devnet. This is the browser-level validation before the production widget wiring
+and the mainnet flip.
+
 ## Honest scope
 
 - **Real, replayable, on-chain** P-256 verification on devnet.

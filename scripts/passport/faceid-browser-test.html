@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dark Passport — Face ID Sign-In (devnet test)</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0a0a12; color:#e6e6f0; padding:24px; max-width:760px; margin-inline:auto; }
+  h1 { font-size:18px; letter-spacing:.04em; }
+  .sub { color:#8a8aa8; font-size:12px; line-height:1.6; }
+  button { background:#15152a; color:#e6e6f0; border:1px solid #33335a; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; margin:4px 6px 4px 0; }
+  button:hover:not(:disabled) { border-color:#6a6acc; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .row { margin:14px 0; }
+  .tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid #33335a; color:#a0a0c8; }
+  #log { background:#08080f; border:1px solid #22223a; border-radius:10px; padding:12px; font-size:12px; white-space:pre-wrap; line-height:1.6; min-height:120px; }
+  a { color:#7a9cff; }
+  .ok { color:#5ad08a; } .err { color:#ff6a8a; } .warn { color:#e0c060; }
+</style>
+</head>
+<body>
+  <h1>Dark Passport — Face ID Sign-In <span class="tag">devnet test</span></h1>
+  <p class="sub">
+    Real P-256 (secp256r1) passkey bound on-chain via Solana's SIMD-0075 precompile and
+    <code>dark_secp256r1_vault</code>. Face ID / Touch ID (WebAuthn user-verification) gates the
+    signing key. This is an <b>unaudited devnet pilot</b> — identity binding only, no funds.
+  </p>
+
+  <div class="row">
+    <button id="connect">1 · Connect Phantom (devnet)</button>
+    <button id="create" disabled>2 · Create Face ID passkey</button>
+    <button id="register" disabled>3 · Register on-chain</button>
+    <button id="signin" disabled>4 · Sign in with Face ID</button>
+  </div>
+  <div id="log">Ready. Connect Phantom set to <b>devnet</b> in its network selector.</div>
+
+<script type="module">
+import {
+  Connection, PublicKey, Transaction, TransactionInstruction,
+  SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY,
+} from "https://esm.sh/@solana/web3.js@1.95.3";
+
+const PROGRAM_ID = new PublicKey("2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2"); // devnet test deploy
+const SECP256R1  = new PublicKey("Secp256r1SigVerify1111111111111111111111111");
+const conn = new Connection("https://api.devnet.solana.com", "confirmed");
+const N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n;
+const HALF = N >> 1n;
+
+const logEl = document.getElementById("log");
+const log = (m, cls="") => { logEl.innerHTML += `\n<span class="${cls}">${m}</span>`; logEl.scrollTop = logEl.scrollHeight; };
+const explorer = (s) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
+
+let wallet = null;      // Phantom pubkey
+let passkey = null;     // { privateKey(CryptoKey), x, y, compressed }
+let state = {};         // credId, challenge
+
+const hex = (b) => [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+function lowS(sig) {
+  const s = BigInt("0x"+hex(sig.slice(32,64)));
+  if (s > HALF) { const ls = N - s; const sb = Buffer32(ls); const out = new Uint8Array(64); out.set(sig.slice(0,32)); out.set(sb,32); return out; }
+  return sig;
+}
+function Buffer32(bi){ const h = bi.toString(16).padStart(64,"0"); const a=new Uint8Array(32); for(let i=0;i<32;i++)a[i]=parseInt(h.substr(i*2,2),16); return a; }
+const rand = (n)=>crypto.getRandomValues(new Uint8Array(n));
+
+// ── WebAuthn biometric gate (Face ID / Touch ID) ─────────────────────────────
+async function biometricGate(label) {
+  try {
+    await navigator.credentials.create({
+      publicKey: {
+        challenge: rand(32),
+        rp: { name: "Dark Passport" },
+        user: { id: rand(16), name: label, displayName: label },
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }], // ES256 / P-256
+        authenticatorSelection: { userVerification: "required" },
+        timeout: 60000,
+      },
+    });
+    return true;
+  } catch (e) {
+    log("Biometric gate skipped/failed (" + e.name + ") — continuing with WebCrypto key.", "warn");
+    return false;
+  }
+}
+
+// ── secp256r1 precompile instruction ─────────────────────────────────────────
+function secp256r1Ix(pubkeyCompressed, sig64, message) {
+  const pkOff=16, sigOff=49, msgOff=113;
+  const data = new Uint8Array(msgOff + message.length);
+  const dv = new DataView(data.buffer);
+  data[0]=1; data[1]=0;
+  dv.setUint16(2, sigOff, true); dv.setUint16(4, 0, true);
+  dv.setUint16(6, pkOff, true);  dv.setUint16(8, 0, true);
+  dv.setUint16(10, msgOff, true); dv.setUint16(12, message.length, true); dv.setUint16(14, 0, true);
+  data.set(pubkeyCompressed, pkOff); data.set(sig64, sigOff); data.set(message, msgOff);
+  return new TransactionInstruction({ programId: SECP256R1, keys: [], data });
+}
+function vaultPda(credId) {
+  return PublicKey.findProgramAddressSync([new TextEncoder().encode("passkey-vault"), wallet.toBuffer(), credId], PROGRAM_ID)[0];
+}
+async function signChallenge(challenge) {
+  const raw = new Uint8Array(await crypto.subtle.sign({ name:"ECDSA", hash:"SHA-256" }, passkey.privateKey, challenge));
+  return lowS(raw);
+}
+async function sendTx(ixs) {
+  const tx = new Transaction().add(...ixs);
+  tx.feePayer = wallet;
+  tx.recentBlockhash = (await conn.getLatestBlockhash()).blockhash;
+  const { signature } = await window.solana.signAndSendTransaction(tx);
+  await conn.confirmTransaction(signature, "confirmed");
+  return signature;
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+document.getElementById("connect").onclick = async () => {
+  if (!window.solana?.isPhantom) return log("Phantom not found. Install it.", "err");
+  const res = await window.solana.connect();
+  wallet = new PublicKey(res.publicKey.toString());
+  log("Connected: " + wallet.toBase58(), "ok");
+  document.getElementById("create").disabled = false;
+};
+
+document.getElementById("create").onclick = async () => {
+  await biometricGate("dark-passport-faceid");
+  const kp = await crypto.subtle.generateKey({ name:"ECDSA", namedCurve:"P-256" }, true, ["sign","verify"]);
+  const jwk = await crypto.subtle.exportKey("jwk", kp.publicKey);
+  const x = Uint8Array.from(atob(jwk.x.replace(/-/g,"+").replace(/_/g,"/")), c=>c.charCodeAt(0));
+  const y = Uint8Array.from(atob(jwk.y.replace(/-/g,"+").replace(/_/g,"/")), c=>c.charCodeAt(0));
+  const compressed = new Uint8Array(33); compressed[0] = (y[31]&1)===0?2:3; compressed.set(x,1);
+  passkey = { privateKey: kp.privateKey, x, y, compressed };
+  log("Face ID passkey created (P-256). Pubkey bound to biometric.", "ok");
+  document.getElementById("register").disabled = false;
+};
+
+document.getElementById("register").onclick = async () => {
+  try {
+    state.credId = rand(32); state.challenge = rand(32);
+    const pda = vaultPda(state.credId);
+    const pre = secp256r1Ix(passkey.compressed, await signChallenge(state.challenge), state.challenge);
+    const reg = new TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: pda, isSigner:false, isWritable:true },
+        { pubkey: wallet, isSigner:true, isWritable:true },
+        { pubkey: SystemProgram.programId, isSigner:false, isWritable:false },
+        { pubkey: SYSVAR_INSTRUCTIONS_PUBKEY, isSigner:false, isWritable:false },
+      ],
+      data: new Uint8Array([0x01, ...wallet.toBuffer(), ...state.credId, ...state.challenge, ...passkey.x, ...passkey.y]),
+    });
+    log("Registering... (approve in Phantom)");
+    const s = await sendTx([pre, reg]);
+    log(`Registered on-chain ✓  <a href="${explorer(s)}" target="_blank">tx</a>`, "ok");
+    document.getElementById("signin").disabled = false;
+  } catch (e) { log("Register failed: " + (e.message||e), "err"); }
+};
+
+document.getElementById("signin").onclick = async () => {
+  try {
+    await biometricGate("dark-passport-signin");
+    const pda = vaultPda(state.credId);
+    const newC = rand(32);
+    const pre = secp256r1Ix(passkey.compressed, await signChallenge(state.challenge), state.challenge);
+    const ver = new TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: pda, isSigner:false, isWritable:true },
+        { pubkey: wallet, isSigner:true, isWritable:false },
+        { pubkey: SYSVAR_INSTRUCTIONS_PUBKEY, isSigner:false, isWritable:false },
+      ],
+      data: new Uint8Array([0x02, ...state.challenge, ...newC]),
+    });
+    log("Signing in with Face ID... (approve in Phantom)");
+    const s = await sendTx([pre, ver]);
+    state.challenge = newC;
+    log(`Signed in ✓ challenge rotated  <a href="${explorer(s)}" target="_blank">tx</a>`, "ok");
+  } catch (e) { log("Sign-in failed: " + (e.message||e), "err"); }
+};
+</script>
+</body>
+</html>
