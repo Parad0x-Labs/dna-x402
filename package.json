@@ -42,6 +42,7 @@
     "mainnet:mayhem":              "node scripts/post-mainnet/07-mainnet-mayhem.mjs",
     "mainnet:evidence":            "node scripts/post-mainnet/08-build-grant-evidence.mjs",
     "mainnet:authority:checklist": "bash scripts/post-mainnet/09-transfer-authority-checklist.sh",
-    "mainnet:postdeploy:all":      "npm run mainnet:verify && npm run mainnet:buffers && npm run mainnet:smoke:receipt && npm run mainnet:smoke:x402 && npm run mainnet:smoke:usdc && npm run mainnet:mayhem && npm run mainnet:evidence"
+    "mainnet:postdeploy:all":      "npm run mainnet:verify && npm run mainnet:buffers && npm run mainnet:smoke:receipt && npm run mainnet:smoke:x402 && npm run mainnet:smoke:usdc && npm run mainnet:mayhem && npm run mainnet:evidence",
+    "zk:demo":                     "node scripts/zk/01-groth16-proof-demo.mjs"
   }
 }

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-30T08:18:21.968Z",
+  "demo": "groth16-null-proof",
+  "curve": "bn254",
+  "protocol": "groth16",
+  "circuit": {
+    "source": "dark-null-protocol/circuits/null_proof.circom",
+    "relation": "MiMCSponge commitment(7) + nullifier(1) + 7-level Merkle tree",
+    "publicInputs": 8,
+    "bindsPublic": [
+      "amount",
+      "receiver_token_part_0",
+      "receiver_token_part_1",
+      "mint_part_0",
+      "mint_part_1"
+    ],
+    "derivedOutputs": [
+      "commitment",
+      "nullifier",
+      "root"
+    ]
+  },
+  "result": {
+    "proofGenerated": true,
+    "validProofVerified": true,
+    "tamperedProofRejected": true,
+    "tamperedSignal": "amount"
+  },
+  "artifactHashes": {
+    "circuit": "1570d0a916b6839412cfb89ebfdbb322f2804791a90b2a10e56c3bccdfa97fd7",
+    "r1cs": "fd0dea3b317a39b47fbf60125591eeb94529d15bf39b6905044a8075a87d6cb6",
+    "zkey": "36f8c17c27383f3b450c168152d68d9cfa87445c0f51a4dcedc58790e9448a10",
+    "wasm": "b58bfb6ab1286e5ddb78a690234b70b494fb6afe121f44de0d058dd9d93db225",
+    "vkJson": "6abfff44d3516d44321b1d9be8f545751bd643f4f6d04ae25b881ba43133d63a",
+    "proofJson": "1f7c85a2a9facea3a7c3fa9eee686915cc9660681f54355b0d09271d75a09812",
+    "publicJson": "de6ad6ef98ee2eb8bdcbfdcaef93f4aafb4a4e6e55f7a0e53898fc37c192caf1"
+  },
+  "onChainVerifier": {
+    "crate": "groth16-solana",
+    "rustVk": "dark-null-protocol/src/verifying_key.rs",
+    "status": "fail-closed pending audit — dark_bn254_gate rejects all proofs until a mainnet_ready VK is wired"
+  },
+  "honestCaveats": [
+    "Real Groth16 proof on BN254 — generated and verified locally, reproducible.",
+    "Proving key is a LOCAL DEVELOPMENT setup, NOT a public multi-party ceremony (see dark-null-protocol/CEREMONY.md). Not mainnet trust by itself.",
+    "This is OFF-CHAIN proof gen + verification. On-chain verifier is fail-closed pending audit.",
+    "Proves: the ZK pipeline is real, not vaporware. Does NOT prove: audited, mainnet-ready, or safe fund settlement."
+  ]
+}
