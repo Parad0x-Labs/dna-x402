@@ -19,3 +19,12 @@ export { importKey, generateKey, encryptBlob, decryptBlob, serializeBlob, deseri
 export type { EncryptedBlob }                     from "./encrypt.js";
 export { buildAnchorIxData, batchHash, RECEIPT_ANCHOR_PROGRAM_ID } from "./anchor.js";
 export type { BatchAnchorPayload }                from "./anchor.js";
+export {
+  StreamingMerkleBuilder,
+  MerkleTree,
+  buildReceiptRoot,
+  verifyProof,
+  verifyReceiptInBatch,
+  rootHex,
+} from "./merkle.js";
+export type { MerkleProof } from "./merkle.js";
