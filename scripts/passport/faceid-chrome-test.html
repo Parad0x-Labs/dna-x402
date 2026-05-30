@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dark Passport — Passkey Sign-In (Loop)</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0a0a12; color:#e6e6f0; padding:24px; max-width:760px; margin-inline:auto; }
+  h1 { font-size:18px; letter-spacing:.04em; }
+  .sub { color:#8a8aa8; font-size:12px; line-height:1.6; }
+  button { background:#15152a; color:#e6e6f0; border:1px solid #33335a; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; margin:4px 6px 4px 0; }
+  button:hover:not(:disabled) { border-color:#6a6acc; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .row { margin:14px 0; }
+  .tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid #33335a; color:#a0a0c8; }
+  #log { background:#08080f; border:1px solid #22223a; border-radius:10px; padding:12px; font-size:12px; white-space:pre-wrap; line-height:1.6; min-height:120px; }
+  a { color:#7a9cff; }
+  .ok { color:#5ad08a; } .err { color:#ff6a8a; } .warn { color:#e0c060; }
+</style>
+</head>
+<body>
+  <h1>Dark Passport — Passkey Sign-In <span class="tag">devnet · no wallet</span></h1>
+  <p class="sub">
+    Open this in <b>Chrome</b> so your fingerprint works. A P-256 (secp256r1) passkey is bound
+    on-chain via Solana's SIMD-0075 precompile + <code>dark_secp256r1_vault</code>. This page
+    signs with its own throwaway devnet key (no Phantom needed). Unaudited devnet pilot — identity only, no funds.
+  </p>
+
+  <div class="row">
+    <button id="create">1 · Create passkey (fingerprint)</button>
+    <button id="register" disabled>2 · Register on-chain</button>
+    <button id="signin" disabled>3 · Sign in (Loop)</button>
+  </div>
+  <div id="log">Loading throwaway devnet key…</div>
+
+<script type="module">
+import {
+  Connection, Keypair, PublicKey, Transaction, TransactionInstruction,
+  SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY,
+} from "https://esm.sh/@solana/web3.js@1.95.3";
+
+const PROGRAM_ID = new PublicKey("2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2");
+const SECP256R1  = new PublicKey("Secp256r1SigVerify1111111111111111111111111");
+const conn = new Connection("https://api.devnet.solana.com", "confirmed");
+const N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n;
+const HALF = N >> 1n;
+
+// Paste a funded DEVNET throwaway secret-key array here before serving.
+// Generate one and fund it, e.g.:
+//   node -e "const{Keypair}=require('@solana/web3.js');const k=Keypair.generate();console.log(k.publicKey.toBase58());console.log(JSON.stringify([...k.secretKey]))"
+//   solana transfer <PUBKEY> 1 --url devnet --allow-unfunded-recipient
+// NEVER embed a real or mainnet key — this file is served publicly. Devnet only.
+const DEMO_SECRET = []; // <-- 64-number devnet throwaway secret key
+const DEMO = Keypair.fromSecretKey(Uint8Array.from(DEMO_SECRET));
+
+const logEl = document.getElementById("log");
+const log = (m, cls="") => { logEl.innerHTML += `\n<span class="${cls}">${m}</span>`; logEl.scrollTop = logEl.scrollHeight; };
+const explorer = (s) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
+const hex = (b) => [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const rand = (n)=>crypto.getRandomValues(new Uint8Array(n));
+function Buffer32(bi){ const h=bi.toString(16).padStart(64,"0"); const a=new Uint8Array(32); for(let i=0;i<32;i++)a[i]=parseInt(h.substr(i*2,2),16); return a; }
+function lowS(sig){ const s=BigInt("0x"+hex(sig.slice(32,64))); if(s>HALF){const o=new Uint8Array(64);o.set(sig.slice(0,32));o.set(Buffer32(N-s),32);return o;} return sig; }
+
+let passkey=null, state={};
+
+async function biometricGate(label){
+  try{
+    await navigator.credentials.create({ publicKey:{
+      challenge:rand(32), rp:{name:"Dark Passport"},
+      user:{id:rand(16),name:label,displayName:label},
+      pubKeyCredParams:[{type:"public-key",alg:-7}],
+      authenticatorSelection:{userVerification:"required"}, timeout:60000,
+    }});
+    log("Fingerprint verified ✓","ok"); return true;
+  }catch(e){ log("Biometric skipped ("+e.name+") — continuing.","warn"); return false; }
+}
+function secp256r1Ix(pub, sig, msg){
+  const pkOff=16,sigOff=49,msgOff=113;
+  const data=new Uint8Array(msgOff+msg.length); const dv=new DataView(data.buffer);
+  data[0]=1; data[1]=0;
+  dv.setUint16(2,sigOff,true); dv.setUint16(4,0,true); dv.setUint16(6,pkOff,true); dv.setUint16(8,0,true);
+  dv.setUint16(10,msgOff,true); dv.setUint16(12,msg.length,true); dv.setUint16(14,0,true);
+  data.set(pub,pkOff); data.set(sig,sigOff); data.set(msg,msgOff);
+  return new TransactionInstruction({ programId:SECP256R1, keys:[], data });
+}
+const pda=(credId)=>PublicKey.findProgramAddressSync([new TextEncoder().encode("passkey-vault"),DEMO.publicKey.toBuffer(),credId],PROGRAM_ID)[0];
+async function sign(ch){ const raw=new Uint8Array(await crypto.subtle.sign({name:"ECDSA",hash:"SHA-256"},passkey.privateKey,ch)); return lowS(raw); }
+async function send(ixs){
+  const tx=new Transaction().add(...ixs);
+  tx.feePayer=DEMO.publicKey; tx.recentBlockhash=(await conn.getLatestBlockhash()).blockhash;
+  tx.sign(DEMO);
+  const sig=await conn.sendRawTransaction(tx.serialize(),{skipPreflight:false});
+  await conn.confirmTransaction(sig,"confirmed"); return sig;
+}
+
+(async()=>{
+  try{ const bal=await conn.getBalance(DEMO.publicKey); log(`Ready. Demo wallet ${DEMO.publicKey.toBase58().slice(0,8)}… balance ${(bal/1e9).toFixed(3)} SOL`,"ok"); }
+  catch{ log("Could not load balance (RPC).","warn"); }
+})();
+
+document.getElementById("create").onclick=async()=>{
+  await biometricGate("dark-passport");
+  const kp=await crypto.subtle.generateKey({name:"ECDSA",namedCurve:"P-256"},true,["sign","verify"]);
+  const jwk=await crypto.subtle.exportKey("jwk",kp.publicKey);
+  const x=Uint8Array.from(atob(jwk.x.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+  const y=Uint8Array.from(atob(jwk.y.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+  const compressed=new Uint8Array(33); compressed[0]=(y[31]&1)===0?2:3; compressed.set(x,1);
+  passkey={privateKey:kp.privateKey,x,y,compressed};
+  log("Passkey created (P-256), bound to your fingerprint.","ok");
+  document.getElementById("register").disabled=false;
+};
+document.getElementById("register").onclick=async()=>{
+  try{
+    state.credId=rand(32); state.challenge=rand(32);
+    const pre=secp256r1Ix(passkey.compressed, await sign(state.challenge), state.challenge);
+    const reg=new TransactionInstruction({ programId:PROGRAM_ID, keys:[
+      {pubkey:pda(state.credId),isSigner:false,isWritable:true},
+      {pubkey:DEMO.publicKey,isSigner:true,isWritable:true},
+      {pubkey:SystemProgram.programId,isSigner:false,isWritable:false},
+      {pubkey:SYSVAR_INSTRUCTIONS_PUBKEY,isSigner:false,isWritable:false},
+    ], data:new Uint8Array([0x01,...DEMO.publicKey.toBuffer(),...state.credId,...state.challenge,...passkey.x,...passkey.y]) });
+    log("Registering on-chain…");
+    const s=await send([pre,reg]);
+    log(`Registered ✓  <a href="${explorer(s)}" target="_blank">tx</a>`,"ok");
+    document.getElementById("signin").disabled=false;
+  }catch(e){ log("Register failed: "+(e.message||e)+(e.logs?" | "+e.logs.slice(-2).join(" / "):""),"err"); }
+};
+document.getElementById("signin").onclick=async()=>{
+  try{
+    await biometricGate("dark-passport-signin");
+    const newC=rand(32);
+    const pre=secp256r1Ix(passkey.compressed, await sign(state.challenge), state.challenge);
+    const ver=new TransactionInstruction({ programId:PROGRAM_ID, keys:[
+      {pubkey:pda(state.credId),isSigner:false,isWritable:true},
+      {pubkey:DEMO.publicKey,isSigner:true,isWritable:false},
+      {pubkey:SYSVAR_INSTRUCTIONS_PUBKEY,isSigner:false,isWritable:false},
+    ], data:new Uint8Array([0x02,...state.challenge,...newC]) });
+    log("Signing in (Loop)…");
+    const s=await send([pre,ver]); state.challenge=newC;
+    log(`Signed in ✓ challenge rotated  <a href="${explorer(s)}" target="_blank">tx</a>`,"ok");
+  }catch(e){ log("Sign-in failed: "+(e.message||e)+(e.logs?" | "+e.logs.slice(-2).join(" / "):""),"err"); }
+};
+</script>
+</body>
+</html>

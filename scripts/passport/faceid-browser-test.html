@@ -49,6 +49,7 @@ const HALF = N >> 1n;
 
 const logEl = document.getElementById("log");
 const log = (m, cls="") => { logEl.innerHTML += `\n<span class="${cls}">${m}</span>`; logEl.scrollTop = logEl.scrollHeight; };
+const errStr = (e) => { let s = e?.message || String(e); if (e?.logs?.length) s += " | logs: " + e.logs.slice(-3).join(" / "); if (e?.code !== undefined) s += ` [code ${e.code}]`; return s; };
 const explorer = (s) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
 
 let wallet = null;      // Phantom pubkey
@@ -107,9 +108,12 @@ async function sendTx(ixs) {
   const tx = new Transaction().add(...ixs);
   tx.feePayer = wallet;
   tx.recentBlockhash = (await conn.getLatestBlockhash()).blockhash;
-  const { signature } = await window.solana.signAndSendTransaction(tx);
-  await conn.confirmTransaction(signature, "confirmed");
-  return signature;
+  // Phantom only SIGNS; the page submits. Avoids Phantom's send-side rejection
+  // of the secp256r1 precompile instruction.
+  const signed = await window.solana.signTransaction(tx);
+  const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
+  await conn.confirmTransaction(sig, "confirmed");
+  return sig;
 }
 
 // ── Buttons ──────────────────────────────────────────────────────────────────
@@ -152,7 +156,7 @@ document.getElementById("register").onclick = async () => {
     const s = await sendTx([pre, reg]);
     log(`Registered on-chain ✓  <a href="${explorer(s)}" target="_blank">tx</a>`, "ok");
     document.getElementById("signin").disabled = false;
-  } catch (e) { log("Register failed: " + (e.message||e), "err"); }
+  } catch (e) { log("Register failed: " + errStr(e), "err"); }
 };
 
 document.getElementById("signin").onclick = async () => {
@@ -174,7 +178,7 @@ document.getElementById("signin").onclick = async () => {
     const s = await sendTx([pre, ver]);
     state.challenge = newC;
     log(`Signed in ✓ challenge rotated  <a href="${explorer(s)}" target="_blank">tx</a>`, "ok");
-  } catch (e) { log("Sign-in failed: " + (e.message||e), "err"); }
+  } catch (e) { log("Sign-in failed: " + errStr(e), "err"); }
 };
 </script>
 </body>

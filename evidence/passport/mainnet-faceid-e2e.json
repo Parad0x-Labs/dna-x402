@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-30",
+  "test": "mainnet-faceid-p256-e2e",
+  "cluster": "mainnet-beta",
+  "program": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
+  "programLabel": "dark_secp256r1_vault",
+  "crypto": "secp256r1 / P-256, SIMD-0075 precompile, ECDSA-SHA256, low-S",
+  "upgrade": {
+    "deploySignature": "5zRwpb9KD5zHSmxogWPJkM91epssw2fr1t3ZNt6W1XYG7EKu3TJi27QLEB8mJbSzQ8Ma2fw99cJK5E8EGCot51Ap",
+    "dataLength": 97208,
+    "deployedSlot": 423142843,
+    "upgradeAuthority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+    "feature": "mainnet (IS_MAINNET_READY=true) — real on-chain P-256 verification"
+  },
+  "results": {
+    "register": {
+      "pass": true,
+      "signature": "28sEcKdS8VwSvUtG796BJDoATQoysHnHN3edNMnk3V3vNPThuNtjyKUD7mkLPH1QUb1HJ3X6JPNMPkPkckJnVj1P",
+      "explorer": "https://explorer.solana.com/tx/28sEcKdS8VwSvUtG796BJDoATQoysHnHN3edNMnk3V3vNPThuNtjyKUD7mkLPH1QUb1HJ3X6JPNMPkPkckJnVj1P?cluster=mainnet-beta"
+    },
+    "signin": {
+      "pass": true,
+      "signature": "295YoPdoXbs2NMfftcRu8pa1vEjdhQbRcKNQVaoV88s5XeX5DVFhnY8ZhksEkH8Wpm82dswQo7xnNgf2mZXHj6mJ",
+      "explorer": "https://explorer.solana.com/tx/295YoPdoXbs2NMfftcRu8pa1vEjdhQbRcKNQVaoV88s5XeX5DVFhnY8ZhksEkH8Wpm82dswQo7xnNgf2mZXHj6mJ?cluster=mainnet-beta"
+    },
+    "rejectWrongKey": { "pass": true, "rejectedError": "0x4009 PasskeyPubkeyMismatch" }
+  },
+  "alsoProvenOn": {
+    "devnet": "2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2",
+    "device": "Solana Seeker (Chrome) — real fingerprint -> register -> Loop sign-in, chain logged 'Signal verified'"
+  },
+  "honestClaims": {
+    "canSay": "Biometric-gated passkey (P-256/secp256r1) bound on-chain with challenge-rotation sign-in, LIVE on Solana mainnet. Real fingerprint, real tx, wrong key rejected on-chain.",
+    "doNotSay": [
+      "Face ID (Seeker is Android = fingerprint)",
+      "first passkey on Solana (passkey wallets exist; novelty is the agent-passport + Loop combo)",
+      "audited or production-secure (this is a disclosed unaudited mainnet pilot)"
+    ]
+  },
+  "pilotStatus": "Disclosed unaudited mainnet pilot. Identity binding only — no funds custody. Reversible (upgrade authority retained). Funds/ZK programs remain fail-closed until audit.",
+  "knownLimitation": "Phantom in-app browser cannot sign txs containing the secp256r1 precompile. Working client today: no-wallet page in Chrome, or a passkey-native wallet / Mobile Wallet Adapter (follow-up)."
+}
