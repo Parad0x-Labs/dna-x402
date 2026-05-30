@@ -46,6 +46,7 @@
     "zk:demo":                     "node scripts/zk/01-groth16-proof-demo.mjs",
     "passport:devnet:faceid":      "node scripts/passport/01-devnet-faceid-e2e.mjs",
     "passport:devnet:webcrypto":   "node scripts/passport/02-devnet-faceid-webcrypto.mjs",
-    "passport:serve":              "node scripts/passport/serve.mjs"
+    "passport:serve":              "node scripts/passport/serve.mjs",
+    "demo:agent-economy":          "node scripts/demo/01-ai-agent-economy.mjs"
   }
 }

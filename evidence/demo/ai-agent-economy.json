@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-30T21:36:11.071Z",
+  "demo": "ai-agent-economy",
+  "cluster": "mainnet-beta",
+  "receipts": [
+    {
+      "version": "1.0",
+      "receiptId": "receipt_9a74ec21100c3282",
+      "agentId": "agent-001",
+      "passportId": "33fa448647e70c52abd12bc6e5c676b87a549599a6eedec5b5db3068721dbf93",
+      "txSignature": "DEMO_5a6ab8f4cc7e4590e60df09b1a7e364b",
+      "amount": "1000",
+      "cluster": "mainnet-beta",
+      "timestamp": "2026-05-30T21:36:10.334Z",
+      "program": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN"
+    },
+    {
+      "version": "1.0",
+      "receiptId": "receipt_24dfaec44b03e43c",
+      "agentId": "agent-002",
+      "passportId": "33fa448647e70c52abd12bc6e5c676b87a549599a6eedec5b5db3068721dbf93",
+      "txSignature": "DEMO_edd369c01bbb25652d9c1bc598e2a3e2",
+      "amount": "1000",
+      "cluster": "mainnet-beta",
+      "timestamp": "2026-05-30T21:36:10.343Z",
+      "program": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN"
+    },
+    {
+      "version": "1.0",
+      "receiptId": "receipt_ce84b25c6e67a81d",
+      "agentId": "agent-003",
+      "passportId": "33fa448647e70c52abd12bc6e5c676b87a549599a6eedec5b5db3068721dbf93",
+      "txSignature": "DEMO_40a9b9cb9a736f0e288f72f87b5510fd",
+      "amount": "1000",
+      "cluster": "mainnet-beta",
+      "timestamp": "2026-05-30T21:36:10.346Z",
+      "program": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN"
+    }
+  ],
+  "merkleRoot": "8bf5b5d4930667ff728e661d9336fa34ff4c08207e5239fb9117aecd3b2243a5",
+  "anchorTx": null,
+  "anchorExplorer": null,
+  "passportId": "33fa448647e70c52abd12bc6e5c676b87a549599a6eedec5b5db3068721dbf93",
+  "programs": {
+    "receiptAnchor": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+    "passportVault": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi"
+  },
+  "whatThisProves": [
+    "AI agents discovered a paid API endpoint via HTTP 402",
+    "Agents paid via x402 and received the resource",
+    "Receipts are anchored on Solana as a Merkle root (32 bytes)",
+    "Agent identity is Dark Passport (SHA-256 wallet binding)",
+    "No backend custody, no intermediate signers"
+  ]
+}
