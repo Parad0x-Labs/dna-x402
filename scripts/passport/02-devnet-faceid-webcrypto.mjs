@@ -17,14 +17,15 @@ import {
 import { PublicKey } from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey(process.argv[2] ?? "2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2");
-const RPC = "https://api.devnet.solana.com";
+const RPC = process.env.FACEID_RPC ?? "https://api.devnet.solana.com";
+const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 
 async function main() {
   const keyPath = execSync("solana config get", { encoding: "utf8" }).match(/Keypair Path:\s+(.+)/)[1].trim();
   const wallet = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(keyPath, "utf8"))));
   const conn = new Connection(RPC, "confirmed");
 
-  console.log("\n=== Devnet Face ID via WebCrypto (browser ceremony) ===");
+  console.log(`\n=== Face ID via WebCrypto (browser ceremony) — ${CLUSTER} ===`);
   console.log("Program:", PROGRAM_ID.toBase58());
 
   // The browser ceremony: generate a P-256 passkey (biometric-gated in-browser).
@@ -72,8 +73,8 @@ async function main() {
 
   const allPass = r1 && n1 && s1;
   console.log(`\n${allPass ? "PASS" : "FAIL"}: WebCrypto (browser) Face ID ceremony verified on-chain.`);
-  if (results.register) console.log("register:", `https://explorer.solana.com/tx/${results.register}?cluster=devnet`);
-  if (results.signin) console.log("signin  :", `https://explorer.solana.com/tx/${results.signin}?cluster=devnet`);
+  if (results.register) console.log("register:", `https://explorer.solana.com/tx/${results.register}?cluster=${CLUSTER}`);
+  if (results.signin) console.log("signin  :", `https://explorer.solana.com/tx/${results.signin}?cluster=${CLUSTER}`);
   process.exit(allPass ? 0 : 1);
 }
 main().catch((e) => { console.error("Fatal:", e); process.exit(1); });
