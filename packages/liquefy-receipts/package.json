@@ -1,0 +1,18 @@
+{
+  "name": "@dna-x402/liquefy-receipts",
+  "version": "0.1.0",
+  "description": "Columnar compression + bilateral netting + AES-256-GCM encryption for x402 payment receipt batches. 1000 receipts → 1 on-chain anchor tx.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test tests/liquefy-receipts.test.mjs"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
