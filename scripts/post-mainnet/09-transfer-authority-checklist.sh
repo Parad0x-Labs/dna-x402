@@ -100,7 +100,7 @@ if [ "${CONFIRM_TRANSFER:-}" = "YES" ]; then
   for PROG in "${PROGRAM_ORDER[@]}"; do
     ID="${PROGRAMS[$PROG]}"
     echo "Transferring $PROG ($ID) to $NEW_AUTHORITY..."
-    if solana program set-upgrade-authority "$ID" --new-upgrade-authority "$NEW_AUTHORITY" -u mainnet-beta; then
+    if solana program set-upgrade-authority "$ID" --new-upgrade-authority "$NEW_AUTHORITY" --skip-new-upgrade-authority-signer-check -u mainnet-beta; then
       # Verify immediately after each transfer
       ACTUAL_AUTH=$(solana program show "$ID" -u mainnet-beta 2>/dev/null | grep -i "Authority" | head -1 | awk '{print $NF}' || echo "unknown")
       if [ "$ACTUAL_AUTH" = "$NEW_AUTHORITY" ]; then
