@@ -14,6 +14,10 @@ pub enum AuthError {
     AgentNotFound,
     /// The caller is not the agent_pubkey stored in the record.
     NotOwner,
+    /// The secp256k1 precompile instruction data is malformed.
+    MalformedPrecompile,
+    /// The precompile-verified ETH address doesn't match the supplied pda_seed.
+    EthAddressMismatch,
 }
 
 impl From<AuthError> for ProgramError {
@@ -25,6 +29,8 @@ impl From<AuthError> for ProgramError {
             AuthError::InvalidInstruction     => 0x5004,
             AuthError::AgentNotFound          => 0x5005,
             AuthError::NotOwner               => 0x5006,
+            AuthError::MalformedPrecompile    => 0x5007,
+            AuthError::EthAddressMismatch     => 0x5008,
         })
     }
 }

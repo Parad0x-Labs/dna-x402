@@ -33,6 +33,7 @@ use solana_program::{
 pub mod error;
 pub mod instruction;
 pub mod processor;
+pub mod secp256k1;
 pub mod state;
 
 entrypoint!(process_instruction);
