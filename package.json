@@ -47,6 +47,9 @@
     "passport:devnet:faceid":      "node scripts/passport/01-devnet-faceid-e2e.mjs",
     "passport:devnet:webcrypto":   "node scripts/passport/02-devnet-faceid-webcrypto.mjs",
     "passport:serve":              "node scripts/passport/serve.mjs",
-    "demo:agent-economy":          "node scripts/demo/01-ai-agent-economy.mjs"
+    "demo:agent-economy":          "node scripts/demo/01-ai-agent-economy.mjs",
+    "zk:vk-gen":                   "node scripts/zk/02-vk-json-to-rust.mjs",
+    "zk:e2e":                      "node scripts/zk/03-devnet-bn254-gate-e2e.mjs",
+    "zk:ceremony-deploy":          "node scripts/zk/04-ceremony-and-deploy.mjs"
   }
 }

@@ -10,13 +10,15 @@
  * Output: crates/dark-groth16-core/src/null_proof_vk.rs
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO      = join(__dirname, "..", "..");
-const VK_PATH   = join(REPO, ".tools", "external", "dark-null-protocol", "circuits", "vk.json");
+// Use vk_v2.json (2-party ceremony: sls_0x + SHA-256("") beacon) if available, else vk.json
+const vkV2 = join(REPO, ".tools", "external", "dark-null-protocol", "circuits", "vk_v2.json");
+const VK_PATH = existsSync(vkV2) ? vkV2 : join(REPO, ".tools", "external", "dark-null-protocol", "circuits", "vk.json");
 const OUT_PATH  = join(REPO, "crates", "dark-groth16-core", "src", "null_proof_vk.rs");
 
 const vk = JSON.parse(readFileSync(VK_PATH, "utf8"));

@@ -25,9 +25,13 @@ const DNP  = join(REPO, ".tools", "external", "dark-null-protocol");
 
 const SNARKJS  = join(DNP, "node_modules", "snarkjs", "build", "cli.cjs");
 const WASM     = join(DNP, "circuits", "null_proof_js", "null_proof.wasm");
-const ZKEY     = join(DNP, "circuits", "null_proof_final.zkey");
+// Use v2 ceremony zkey (2-party: sls_0x + ETH beacon) if available
+const _zkeyV2  = join(DNP, "circuits", "null_proof_final_v2.zkey");
+const _zkeyV1  = join(DNP, "circuits", "null_proof_final.zkey");
+const ZKEY     = (await import("node:fs").then(m => m.existsSync(_zkeyV2))) ? _zkeyV2 : _zkeyV1;
 const VK       = join(DNP, "circuits", "vk.json");
-const RPC      = "https://api.devnet.solana.com";
+const RPC      = process.env.FACEID_RPC ?? "https://api.devnet.solana.com";
+const CLUSTER  = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 
 const PROG_ID  = process.argv[2] ?? "DEPLOY_PROGRAM_ID_HERE";
 
@@ -137,11 +141,11 @@ async function main() {
 
   let txSig;
   try {
-    txSig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+    txSig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true, preflightCommitment: "confirmed" });
     await conn.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, "confirmed");
     console.log("  CONFIRMED ✓");
     console.log("  TX:", txSig);
-    console.log("  Explorer: https://explorer.solana.com/tx/" + txSig + "?cluster=devnet");
+    console.log("  Explorer: https://explorer.solana.com/tx/" + txSig + "?cluster=" + CLUSTER);
   } catch (e) {
     console.error("  FAILED:", e.message?.slice(0, 200));
     if (e.logs) console.error("  logs:", e.logs.slice(-5).join("\n  "));
@@ -155,14 +159,14 @@ async function main() {
   const evidence = {
     schemaVersion: "1.0",
     generatedAt:   new Date().toISOString(),
-    test:          "dark_bn254_gate-real-groth16-devnet",
-    cluster:       "devnet",
+    test:          `dark_bn254_gate-real-groth16-${CLUSTER}`,
+    cluster:       CLUSTER,
     program:       PROG_ID,
     circuit:       "NullProofV2 (MiMCSponge commitment + nullifier + 7-level Merkle tree)",
     vkSource:      "null_proof_final.zkey (single-party ceremony, disclosed pilot)",
     publicInputs:  pubSigs,
     txSignature:   txSig,
-    explorer:      `https://explorer.solana.com/tx/${txSig}?cluster=devnet`,
+    explorer:      `https://explorer.solana.com/tx/${txSig}?cluster=${CLUSTER}`,
     result:        "CONFIRMED — real Groth16 proof verified on-chain",
     honestCaveats: [
       "Single-party ceremony — not trustless. Run multi-party ceremony before mainnet trust.",

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-31",
+  "ceremony": "null_proof_v2",
+  "circuit": "NullProofV2 — MiMCSponge commitment + nullifier + 7-level Merkle tree, 14554 constraints",
+  "phase1": {
+    "source": "Hermez ptau14 — universal, publicly reusable",
+    "url": "https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_14.ptau",
+    "contributors": "1000s of independent Hermez ceremony contributors",
+    "maxConstraints": 16384
+  },
+  "phase2": {
+    "contributions": [
+      {
+        "index": 1,
+        "contributor": "Parad0x Labs / sls_0x",
+        "type": "random entropy (cryptographically random 64 bytes)",
+        "contributionHash": "see snarkjs output during ceremony"
+      },
+      {
+        "index": 2,
+        "contributor": "public beacon",
+        "type": "SHA-256 of empty string (0x e3b0c44298fc1c149afbf4c8996fb924... — well-known, pre-existing, verifiable by anyone)",
+        "beaconHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "numIterationsExp": 10
+      }
+    ]
+  },
+  "finalZkey": "null_proof_final_v2.zkey",
+  "vkFile": "vk_v2.json",
+  "trustModel": "2-party ceremony. Phase 1 (ptau14) = 1000s of independent Hermez contributors. Phase 2: if EITHER contributor 1 (sls_0x) OR the beacon preimage is unknown to the attacker, the setup is sound. The beacon is SHA-256 of empty string — universally known — so the real trust anchor is contributor 1's randomness combined with the Hermez ptau14.",
+  "mainnetProgram": {
+    "programId": "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
+    "upgradeAuthority": "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5 (Squads multisig)",
+    "cluster": "mainnet-beta",
+    "proofTx": "3zpKr4pccPC7334L1Uw9ejbyr2e5P3Zr45Yqitetvg8Wr61bTtqNKTFyB6Kpj2rGwfQKNdTCocrZeCHR3uAma6yR",
+    "explorer": "https://explorer.solana.com/tx/3zpKr4pccPC7334L1Uw9ejbyr2e5P3Zr45Yqitetvg8Wr61bTtqNKTFyB6Kpj2rGwfQKNdTCocrZeCHR3uAma6yR?cluster=mainnet-beta"
+  },
+  "honestCaveats": [
+    "The beacon (SHA-256 of empty string) is publicly known — security comes from contributor 1's randomness + Hermez ptau14.",
+    "For full production trust: run an N-party ceremony where contributors are independent and cannot collude.",
+    "External audit still required before production settlement use."
+  ]
+}

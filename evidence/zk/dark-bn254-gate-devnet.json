@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-05-30T23:21:25.856Z",
-  "test": "dark_bn254_gate-real-groth16-devnet",
-  "cluster": "devnet",
-  "program": "7tNhEf9KcoLpbDsioR9Ud9qo9km8nAFTJrGrYLvknAxL",
+  "generatedAt": "2026-05-31T06:00:35.001Z",
+  "test": "dark_bn254_gate-real-groth16-mainnet-beta",
+  "cluster": "mainnet-beta",
+  "program": "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
   "circuit": "NullProofV2 (MiMCSponge commitment + nullifier + 7-level Merkle tree)",
   "vkSource": "null_proof_final.zkey (single-party ceremony, disclosed pilot)",
   "publicInputs": [
@@ -16,8 +16,8 @@
     "44041774702139455724840610475136659248",
     "65392825175610104412738625059090743104"
   ],
-  "txSignature": "eqXnUbPBTiAJBxU9gtpubUmXVw38rfmScqBPyPaAStNB5NHYX4u9eWTVPd4r1MhnTc354EnA5dgRSRwzzsGLwM6",
-  "explorer": "https://explorer.solana.com/tx/eqXnUbPBTiAJBxU9gtpubUmXVw38rfmScqBPyPaAStNB5NHYX4u9eWTVPd4r1MhnTc354EnA5dgRSRwzzsGLwM6?cluster=devnet",
+  "txSignature": "3zpKr4pccPC7334L1Uw9ejbyr2e5P3Zr45Yqitetvg8Wr61bTtqNKTFyB6Kpj2rGwfQKNdTCocrZeCHR3uAma6yR",
+  "explorer": "https://explorer.solana.com/tx/3zpKr4pccPC7334L1Uw9ejbyr2e5P3Zr45Yqitetvg8Wr61bTtqNKTFyB6Kpj2rGwfQKNdTCocrZeCHR3uAma6yR?cluster=mainnet-beta",
   "result": "CONFIRMED — real Groth16 proof verified on-chain",
   "honestCaveats": [
     "Single-party ceremony — not trustless. Run multi-party ceremony before mainnet trust.",
