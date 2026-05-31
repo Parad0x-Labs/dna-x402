@@ -1,0 +1,33 @@
+[package]
+name = "dark-bls12-381-credential"
+version = "0.1.0"
+edition = "2021"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BLS12-381 Credential Aggregation — first open-source BLS12-381 program on Solana
+#
+# SIMD-0388 adds BLS12-381 native syscalls via:
+#   sol_curve_group_op(curve_id=5, ...)   — G1 arithmetic
+#   sol_curve_group_op(curve_id=6, ...)   — G2 arithmetic
+#   sol_curve_pairing_map(curve_id=4, ...) — BLS12-381 pairing
+#
+# Feature gate: b1sgUiJ3qu7hYm3tNDyyqZNQd6gLGJmJppnLNa93PCQ
+#   LIVE on devnet (epoch 1059)
+#   NOT yet on mainnet — deploy to devnet, flip to mainnet Q3 2026.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+# Enable actual pairing verify (requires SIMD-0388 syscalls live)
+bls12-381-pairing = []
+
+[dependencies]
+solana-program = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk         = { workspace = true }
+tokio              = { workspace = true }

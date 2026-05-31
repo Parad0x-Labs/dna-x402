@@ -1516,6 +1516,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-bls12-381-credential"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "dark-bn254-circuit"
 version = "0.1.0"
 dependencies = [

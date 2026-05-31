@@ -10,8 +10,35 @@ use crate::error::GateError;
 
 /// Instruction data layout — NullProofV2 circuit, 8 public inputs:
 ///   proof[256]              — BN254 Groth16 proof (A:64 B:128 C:64)
-///   commitment[32]          — MiMCSponge(secret, leaf_index)
-///   nullifier[32]           — MiMCSponge(secret, pool_key_field)
+///   commitment[32]          — Poseidon(secret, leaf_index)      [see note below]
+///   nullifier[32]           — Poseidon(secret, pool_key_field)  [see note below]
+///
+/// HASH SCHEME NOTE — MiMC k=0 cross-function collision vulnerability (blocks deployment):
+///
+///   This file previously described commitment and nullifier as MiMCSponge(…).
+///   The actual on-chain circuit (circuits/shielded_withdraw.circom) uses Poseidon(2)
+///   for BOTH functions. This comment corrects that mismatch.
+///
+///   IF MiMCSponge with k=0 were used for both roles, a critical collision would
+///   exist: MiMCSponge(x, y, k=0) is a single parameterisation. When the same
+///   function and domain key (k=0) compute both commitment and nullifier, an attacker
+///   who knows the input to the commitment can trivially construct a nullifier that
+///   hashes to the same value. That means:
+///     - The nullifier for note A can equal the commitment for note B if the inputs align.
+///     - A single ZK proof could be replayed to spend two different notes.
+///     - Double-spend via nullifier reuse becomes possible without knowledge of the secret.
+///
+///   The Poseidon(2) circuit avoids this by using structurally different input orderings
+///   (leaf_index vs pool_key_field as the second input), but the two hashes still share
+///   the same Poseidon function with no domain separator. This is marginal safety —
+///   the correct fix (circuit update required, off-chain Circom change) is to add an
+///   explicit domain tag as a third input:
+///     commitment = Poseidon(1, secret, leaf_index)     // domain=1
+///     nullifier  = Poseidon(2, secret, pool_key_field) // domain=2
+///
+///   This change CANNOT be made in Rust alone. It requires updating
+///   circuits/shielded_withdraw.circom, re-running the trusted setup, and
+///   regenerating the verifying key. It blocks VK_FINAL from flipping to true.
 ///   root[32]                — Merkle root of the commitment tree
 ///   amount[32]              — u64 le, zero-padded (payment amount)
 ///   receiver_token_part0[32] — first half of receiver token address (field element)

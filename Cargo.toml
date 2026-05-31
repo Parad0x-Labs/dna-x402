@@ -173,6 +173,9 @@ members = [
     "crates/null-flywheel-randomizer",
     # NULL_FLYWHEEL_VAULT_V1 - simulation demo binary
     "crates/null-flywheel-sim",
+    # BLS12_381_CREDENTIAL - first open-source BLS12-381 credential aggregation program on Solana
+    # SIMD-0388 BLS12-381 syscalls LIVE on devnet (epoch 1059), feature gate b1sgUiJ3qu7hYm3tNDyyqZNQd6gLGJmJppnLNa93PCQ
+    "programs/dark_bls12_381_credential",
     # dark-groth16-core: real BN254 Groth16 verifier using alt_bn128_pairing
     "crates/dark-groth16-core",
     # dark-kzg-verifier: real KZG-10 polynomial commitment verifier using alt_bn128 pairing syscalls

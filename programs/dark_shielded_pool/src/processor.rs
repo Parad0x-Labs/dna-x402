@@ -195,6 +195,16 @@ fn process_deposit(
     accounts:   &[AccountInfo],
     commitment: [u8; 32],
 ) -> ProgramResult {
+    // SAFETY GATE: while IS_STUB=true the ZK circuit, hash scheme (SHA-256 vs
+    // Poseidon), Merkle root construction, and verifying key are all in draft
+    // state. Withdrawals already fail closed (VK_FINAL=false), but without
+    // this guard deposits would still be accepted — creating a silent honeypot
+    // where funds enter but can never leave. Reject all deposits until the
+    // ceremony + external audit complete and IS_STUB is flipped to false.
+    if crate::IS_STUB {
+        return Err(ShieldedPoolError::StubNotReady.into());
+    }
+
     let iter = &mut accounts.iter();
     let pool_config_info = next_account_info(iter)?;
     let pool_vault_info  = next_account_info(iter)?;

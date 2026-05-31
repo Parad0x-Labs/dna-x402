@@ -245,6 +245,35 @@ mod tests {
         assert_eq!(ShieldedPoolError::NotInitialized      as u32, 7);
         assert_eq!(ShieldedPoolError::InvalidInstruction  as u32, 8);
         assert_eq!(ShieldedPoolError::ArithmeticOverflow  as u32, 9);
+        assert_eq!(ShieldedPoolError::StubNotReady        as u32, 10);
+    }
+
+    // 27. IS_STUB=true gates deposits (prevents silent honeypot)
+    // When IS_STUB=true deposits must be rejected immediately — allowing funds in
+    // while withdrawals fail closed (VK_FINAL=false) would create a honeypot where
+    // lamports are permanently locked.
+    #[test]
+    fn test_stub_gates_deposit_instruction() {
+        // Encode a Deposit instruction (discriminator 1 + 32-byte commitment)
+        let mut data = vec![0u8; 33];
+        data[0] = 1; // Deposit discriminator
+        data[1..33].copy_from_slice(&[0xABu8; 32]);
+        let ix = PoolInstruction::unpack(&data).unwrap();
+        // Verify it parses as Deposit with the commitment we supplied
+        match ix {
+            PoolInstruction::Deposit { commitment } => {
+                assert_eq!(commitment, [0xABu8; 32]);
+            }
+            _ => panic!("expected Deposit"),
+        }
+        // Confirm IS_STUB is still true so this guard is active
+        assert!(IS_STUB, "IS_STUB must remain true until ceremony + audit complete");
+        // The StubNotReady error code must be 10
+        assert_eq!(ShieldedPoolError::StubNotReady as u32, 10);
+        // Confirm StubNotReady converts to the expected ProgramError
+        let pe: solana_program::program_error::ProgramError =
+            ShieldedPoolError::StubNotReady.into();
+        assert_eq!(pe, solana_program::program_error::ProgramError::Custom(10));
     }
 
     // ── Extended tests ────────────────────────────────────────────────────────

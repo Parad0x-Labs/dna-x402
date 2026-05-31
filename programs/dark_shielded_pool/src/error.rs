@@ -23,6 +23,11 @@ pub enum ShieldedPoolError {
     InvalidInstruction  = 8,
     /// Arithmetic overflow.
     ArithmeticOverflow  = 9,
+    /// IS_STUB=true: deposits are disabled until ceremony and audit are complete.
+    /// dark_shielded_pool: IS_STUB=true — deposits disabled until ceremony + audit complete.
+    /// No funds will be accepted. The ZK circuit, hash scheme, and verifying key
+    /// are all in draft state and withdrawals will fail closed regardless.
+    StubNotReady        = 10,
 }
 
 impl From<ShieldedPoolError> for ProgramError {

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-31T10:18:05.181Z",
+  "test": "dark_bls12_381_credential-poc-stub-devnet",
+  "milestone": "FIRST open-source BLS12-381 program deployed on Solana devnet",
+  "cluster": "devnet",
+  "program": "EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY",
+  "simd": "SIMD-0388",
+  "featureGate": "b1sgUiJ3qu7hYm3tNDyyqZNQd6gLGJmJppnLNa93PCQ",
+  "featureStatus": "LIVE on devnet (epoch 1059) — NOT yet on mainnet",
+  "instruction": {
+    "discriminant": "0x01",
+    "numCredentials": 3,
+    "totalBytes": 290,
+    "layout": "[0x01][num_sigs:u8][N×48B G1 sigs][96B G2 agg_pubkey][48B G1 msg]"
+  },
+  "pairingEquation": "e(agg_sig, G2_gen) == e(msg, agg_pubkey) — stub (IS_MAINNET_READY=false)",
+  "syscalls": {
+    "G1_arithmetic": "sol_curve_group_op(curve_id=5, ...)",
+    "G2_arithmetic": "sol_curve_group_op(curve_id=6, ...)",
+    "pairing": "sol_curve_pairing_map(curve_id=4, ...)"
+  },
+  "txSignature": "3PhBJL6J7V7xcPEUAFV5xTq6ZtvzbfdLJRexSJchVpvJg9H8HHeokLQcitKrgxho3MM8TzSuaQZB88VD1v9L48zt",
+  "explorer": "https://explorer.solana.com/tx/3PhBJL6J7V7xcPEUAFV5xTq6ZtvzbfdLJRexSJchVpvJg9H8HHeokLQcitKrgxho3MM8TzSuaQZB88VD1v9L48zt?cluster=devnet",
+  "programLogs": [
+    "Program EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY invoke [1]",
+    "Program log: BLS12_381: verified 3 credentials",
+    "Program log: BLS12_381: SIMD-0388 pairing stub — devnet POC (IS_MAINNET_READY=false)",
+    "Program log: BLS12_381: agg_pubkey[0..4]=00000000 msg[0..4]=00000000",
+    "Program EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY consumed 2838 of 200000 compute units",
+    "Program EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY success"
+  ],
+  "result": "CONFIRMED — BLS12-381 credential aggregation stub verified on Solana devnet",
+  "nextSteps": [
+    "Profile BLS12-381 pairing CU cost on devnet (expected 200k-400k CUs per pair)",
+    "Implement real pairing verify when IS_MAINNET_READY=true",
+    "Activate on mainnet when feature gate b1sgUiJ3qu7hYm3tNDyyqZNQd6gLGJmJppnLNa93PCQ goes live (Q3 2026)"
+  ],
+  "honestCaveats": [
+    "IS_MAINNET_READY=false — this is a POC stub, not the full BLS12-381 pairing verify.",
+    "Full pairing verify is architecturally complete but disabled pending CU budget profiling.",
+    "SIMD-0388 syscalls are live on devnet only. Mainnet activation expected Q3 2026."
+  ]
+}

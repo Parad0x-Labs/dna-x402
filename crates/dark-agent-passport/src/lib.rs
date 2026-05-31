@@ -247,6 +247,34 @@ pub fn create_attestation(
         return Err(PassportError::ClaimExceedsActual);
     }
 
+    // STUB LEAK WARNING (IS_STUB=true): the proof field is a 64-byte stub composed of:
+    //   proof[0..32]  = SHA-256 gate over (domain || passport_id || reputation_root || claims)
+    //   proof[32..64] = reputation_root verbatim
+    //
+    // Embedding reputation_root verbatim in the attestation bytes is safe here ONLY
+    // because this is a stub — the verifier already has the reputation_root (it passes
+    // it into verify_attestation) and checks proof[32..64] == reputation_root to detect
+    // tampering. No new information leaks to the verifier beyond what they already hold.
+    //
+    // HOWEVER: when IS_STUB is flipped to false and replaced by a Groth16 proof, this
+    // field MUST NOT embed reputation_root in plaintext. A Groth16 attestation should
+    // commit to reputation_root as a circuit public input — never expose it as raw bytes.
+    // Embedding it verbatim in a production attestation:
+    //   (a) leaks the rolling hash of all payment receipts to the verifier,
+    //   (b) makes the attestation forgeable — anyone who knows reputation_root can
+    //       construct a fake proof[0..32] by re-hashing the same inputs, bypassing the
+    //       ZK guarantee entirely if the verifier trusts a reputation_root passed by
+    //       the prover rather than one fetched from an authoritative on-chain source.
+    //
+    // Gate: this code path is safe while IS_STUB=true and attestations are used only
+    // in off-chain trust contexts (not on-chain program calls). Any on-chain use before
+    // IS_STUB flips is a security regression.
+    //
+    // TODO (Phase 2): replace this 64-byte SHA-256 stub with a Groth16 proof where:
+    //   public inputs = [passport_id, claim_min_receipts, claim_min_score, claim_active_since]
+    //   private inputs = [reputation_root, all receipt hashes that open the Merkle root]
+    debug_assert!(IS_STUB, "proof[32..64] must not embed reputation_root verbatim in non-stub mode");
+
     let mut proof = [0u8; 64];
     let gate: [u8; 32] = {
         let mut h = Sha256::new();
