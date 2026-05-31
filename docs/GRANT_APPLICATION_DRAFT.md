@@ -20,15 +20,16 @@ The first Solana stack combining x402 micropayments, a Groth16 private settlemen
 
 ---
 
-## Technical Achievement (Confirmed First on Solana)
+## Technical Achievement
 
-DNA x402 is the first Solana implementation to combine:
+DNA x402 is, to our knowledge, the first open-source Solana stack to combine
+all of the following in one codebase:
 
 1. **x402 HTTP payment protocol** — HTTP 402-based micropayments for AI agents, with a full quote→commit→finalize→receipt flow on Solana/USDC. Agents pay endpoints autonomously, without human-in-the-loop authorization.
 
-2. **Agent price negotiation** — first x402 implementation where agents bid autonomously below the listed price. The server counters at a configurable floor; agents accept or walk. Up to configurable max rounds.
+2. **Agent price negotiation** — an x402 flow where agents bid autonomously below the listed price. The server counters at a configurable floor; agents accept or walk. Up to configurable max rounds.
 
-3. **Receipt chain linking** — multi-agent payment graphs. When agent A subcontracts to agent B which subcontracts to agent C, every payment receipt references its parent. The full chain is traversable on-chain via `dark_proof_gate_lite`. First Solana implementation.
+3. **Receipt chain linking** — multi-agent payment graphs. When agent A subcontracts to agent B which subcontracts to agent C, every payment receipt references its parent. The full chain is traversable on-chain via `dark_proof_gate_lite`.
 
 4. **Groth16 private settlement roadmap** — `dark_semaphore` and `dark_proof_gate_lite` are deployed with the cryptographic primitives for Semaphore-style zero-knowledge receipt anchoring. Full verifier integration is next sprint.
 
@@ -113,7 +114,7 @@ The current deployment is a **capped pilot**: controlled endpoint builders, limi
 
 2. AI agents are the next major Solana consumer. x402 solves the core UX problem: agents can pay for services autonomously, without human wallet approval, at sub-cent granularity, with verifiable receipts.
 
-3. The Agent Passport (secp256r1 + secp256k1 programs) enables biometric-authenticated agents — the first on Solana. Users authorize agents with Face ID / Touch ID, not seed phrases.
+3. The Agent Passport (secp256r1 + secp256k1 programs) enables biometric-authenticated agents on Solana. Users authorize agents with Face ID / Touch ID, not seed phrases.
 
 4. Receipt chain linking enables multi-agent economic graphs that are auditable on-chain. This is new infrastructure for Solana that does not exist elsewhere.
 
