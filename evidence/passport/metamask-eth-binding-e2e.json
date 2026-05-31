@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-31T08:15:52.159Z",
+  "test": "metamask-eth-binding-mainnet-beta",
+  "cluster": "mainnet-beta",
+  "program": "9iwkuaWJPCuA1qeXvXU4xTtbGCqsRni4fbxjQgng7m5a",
+  "results": {
+    "register": {
+      "pass": true,
+      "signature": "4FBbYfjcXQneHLwg6YtWCzgXdcPUKQ697RdhRL94k91sCYMSEfRRiVBfSDbzUZxYyF4XNSNrfeDCFYHTKvv92aZc"
+    },
+    "rejectWrong": {
+      "pass": true,
+      "expectedError": "0x5008 EthAddressMismatch"
+    }
+  },
+  "allPass": true,
+  "honestCaveats": [
+    "Real secp256k1 signature over a message, ETH address recovered on-chain.",
+    "Unaudited mainnet pilot — identity binding only, no funds."
+  ]
+}

@@ -9,27 +9,29 @@
 //! instruction data so the auth program can bind it to a Solana wallet.
 //!
 //! Layout (one signature, self-contained):
-//!   [0]     num_signatures (u8)  — must be 1
-//!   [1..3]  signature_offset (u16 LE)
-//!   [3..5]  signature_instruction_index (u16 LE) — must = self or MAX
-//!   [5..7]  eth_address_offset (u16 LE)
-//!   [7..9]  eth_address_instruction_index (u16 LE)
-//!   [9..11] message_data_offset (u16 LE)
-//!   [11..13] message_data_size (u16 LE)
-//!   [13..15] message_instruction_index (u16 LE)
-//!   [..]   data section: signature(64B) | eth_address(20B) | message(variable)
+//!   [0]      num_signatures (u8)       — must be 1
+//!   [1..3]   signature_offset (u16 LE)
+//!   [3]      sig_instruction_index (u8) — must = self or 0xFF
+//!   [4..6]   eth_address_offset (u16 LE)
+//!   [6]      addr_instruction_index (u8)
+//!   [7..9]   message_data_offset (u16 LE)
+//!   [9..11]  message_data_size (u16 LE)
+//!   [11]     msg_instruction_index (u8)
+//!   [..]     data section: signature(65B r||s||recov) | eth_address(20B) | message(variable)
 
 use solana_program::program_error::ProgramError;
 use crate::error::AuthError;
 
 /// Length of ETH address (Keccak256(pubkey)[12..]).
 pub const ETH_ADDRESS_LEN: usize = 20;
-/// Length of secp256k1 signature (r||s).
-pub const SIG_LEN: usize = 64;
+/// Length of secp256k1 signature in the precompile: r(32)||s(32)||recovery_id(1) = 65 bytes.
+pub const SIG_LEN: usize = 65;
 
 const OFFSETS_START: usize = 1;
-const OFFSETS_LEN: usize = 14; // 7 × u16
-const CURRENT_IX_SENTINEL: u16 = u16::MAX;
+/// secp256k1 offsets struct = [sig_off:u16][sig_ix:u8][addr_off:u16][addr_ix:u8]
+///                             [msg_off:u16][msg_sz:u16][msg_ix:u8] = 11 bytes
+const OFFSETS_LEN: usize = 11;
+const CURRENT_IX_SENTINEL: u8 = u8::MAX;
 
 fn read_u16_le(data: &[u8], at: usize) -> Result<u16, ProgramError> {
     let lo = data.get(at).ok_or(AuthError::MalformedPrecompile)?;
@@ -58,16 +60,18 @@ pub fn parse_single_verified(
         return Err(AuthError::MalformedPrecompile.into());
     }
 
+    // Parse 11-byte offsets struct: u16/u8/u16/u8/u16/u16/u8
     let o = OFFSETS_START;
     let sig_off  = read_u16_le(data, o)? as usize;
-    let sig_ix   = read_u16_le(data, o + 2)?;
-    let addr_off = read_u16_le(data, o + 4)? as usize;
-    let addr_ix  = read_u16_le(data, o + 6)?;
-    let _msg_off = read_u16_le(data, o + 8)?;
-    let _msg_sz  = read_u16_le(data, o + 10)?;
-    let msg_ix   = read_u16_le(data, o + 12)?;
+    let sig_ix   = *data.get(o + 2).ok_or(AuthError::MalformedPrecompile)?;
+    let addr_off = read_u16_le(data, o + 3)? as usize;
+    let addr_ix  = *data.get(o + 5).ok_or(AuthError::MalformedPrecompile)?;
+    let _msg_off = read_u16_le(data, o + 6)?;
+    let _msg_sz  = read_u16_le(data, o + 8)?;
+    let msg_ix   = *data.get(o + 10).ok_or(AuthError::MalformedPrecompile)?;
 
-    let references_self = |ix: u16| ix == self_index || ix == CURRENT_IX_SENTINEL;
+    let self_ix_u8 = self_index as u8;
+    let references_self = |ix: u8| ix == self_ix_u8 || ix == CURRENT_IX_SENTINEL;
     if !references_self(sig_ix) || !references_self(addr_ix) || !references_self(msg_ix) {
         return Err(AuthError::MalformedPrecompile.into());
     }
@@ -90,23 +94,22 @@ pub fn parse_single_verified(
 mod tests {
     use super::*;
 
-    fn build_buf(eth_addr: &[u8; 20], sig: &[u8; 64], msg: &[u8], ix: u16) -> Vec<u8> {
-        // layout: [1][offsets:14][sig:64][eth_addr:20][msg:N]
-        let sig_off  = 15usize;
-        let addr_off = sig_off + 64;
+    fn build_buf(eth_addr: &[u8; 20], sig: &[u8; 65], msg: &[u8], ix: u8) -> Vec<u8> {
+        // secp256k1 offsets: [sig_off:u16][sig_ix:u8][addr_off:u16][addr_ix:u8][msg_off:u16][msg_sz:u16][msg_ix:u8]
+        let sig_off  = 12usize; // 1 + 11
+        let addr_off = sig_off + 65;
         let msg_off  = addr_off + 20;
 
         let mut d = Vec::new();
         d.push(1u8); // num_signatures
-        // offsets (7 × u16 LE)
-        d.extend_from_slice(&(sig_off as u16).to_le_bytes());
-        d.extend_from_slice(&ix.to_le_bytes());
-        d.extend_from_slice(&(addr_off as u16).to_le_bytes());
-        d.extend_from_slice(&ix.to_le_bytes());
-        d.extend_from_slice(&(msg_off as u16).to_le_bytes());
-        d.extend_from_slice(&(msg.len() as u16).to_le_bytes());
-        d.extend_from_slice(&ix.to_le_bytes());
-        // data
+        d.extend_from_slice(&(sig_off as u16).to_le_bytes()); // sig_off u16
+        d.push(ix);                                            // sig_ix u8
+        d.extend_from_slice(&(addr_off as u16).to_le_bytes()); // addr_off u16
+        d.push(ix);                                            // addr_ix u8
+        d.extend_from_slice(&(msg_off as u16).to_le_bytes()); // msg_off u16
+        d.extend_from_slice(&(msg.len() as u16).to_le_bytes()); // msg_sz u16
+        d.push(ix);                                            // msg_ix u8
+        // data section
         d.extend_from_slice(sig);
         d.extend_from_slice(eth_addr);
         d.extend_from_slice(msg);
@@ -116,7 +119,7 @@ mod tests {
     #[test]
     fn parses_eth_address_correctly() {
         let addr = [0xABu8; 20];
-        let sig  = [0x11u8; 64];
+        let sig  = [0x11u8; 65];
         let msg  = [0x22u8; 32];
         let buf  = build_buf(&addr, &sig, &msg, 0);
         let v = parse_single_verified(&buf, 0).expect("must parse");
@@ -126,20 +129,20 @@ mod tests {
     #[test]
     fn accepts_sentinel_ix_index() {
         let addr = [0x01u8; 20];
-        let buf  = build_buf(&addr, &[0u8; 64], &[0u8; 4], u16::MAX);
+        let buf  = build_buf(&addr, &[0u8; 65], &[0u8; 4], u8::MAX);
         let v = parse_single_verified(&buf, 0).expect("sentinel must parse");
         assert_eq!(v.eth_address, addr);
     }
 
     #[test]
     fn rejects_cross_instruction_reference() {
-        let buf = build_buf(&[0u8; 20], &[0u8; 64], &[0u8; 4], 5);
+        let buf = build_buf(&[0u8; 20], &[0u8; 65], &[0u8; 4], 5);
         assert!(parse_single_verified(&buf, 0).is_err());
     }
 
     #[test]
     fn rejects_multi_signature() {
-        let mut buf = build_buf(&[0u8; 20], &[0u8; 64], &[0u8; 4], 0);
+        let mut buf = build_buf(&[0u8; 20], &[0u8; 65], &[0u8; 4], 0);
         buf[0] = 2;
         assert!(parse_single_verified(&buf, 0).is_err());
     }
