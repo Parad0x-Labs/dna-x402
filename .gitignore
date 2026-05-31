@@ -158,3 +158,4 @@ packages/*/tests/*.js.map
 /docs/ARCHITECTURE.md
 /docs/SETUP.md
 /HANDOVER.md
+evidence/demo/archive-key.hex

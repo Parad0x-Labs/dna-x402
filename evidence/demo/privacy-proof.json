@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-31T11:09:20.714Z",
+  "demo": "privacy-proof",
+  "dataNote": "ALL SYNTHETIC — fake agents, fake tx hashes, no real data",
+  "receiptCount": 1000,
+  "rawBytes": 347891,
+  "compressedBytes": 5255,
+  "compressionRatio": 66,
+  "encryptedBytes": 5283,
+  "encryption": "AES-256-GCM",
+  "keyNote": "key saved to evidence/demo/archive-key.hex — NOT committed to git",
+  "privacyProof": {
+    "withoutKey": "ciphertext is unreadable gibberish — decompressReceipts() throws",
+    "withKey": "all 1000 receipts recovered perfectly",
+    "bitPerfect": true
+  }
+}
