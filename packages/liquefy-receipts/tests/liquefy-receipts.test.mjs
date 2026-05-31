@@ -146,14 +146,13 @@ test("wrong key fails to decrypt", async () => {
 
 // ── anchor tests ──────────────────────────────────────────────────────────────
 
-test("buildAnchorIxData starts with 0x42 discriminant", () => {
-  const data = buildAnchorIxData({
-    batchBytes: new Uint8Array([1, 2, 3]),
-    receiptCount: 3,
-    epochId: 1000,
-    encrypted: false,
-  });
-  assert.equal(data[0], 0x42);
+test("buildAnchorIxData: version=0x01, flags=0x00, 34 bytes total", () => {
+  const commitment = new Uint8Array(32).fill(0xAB);
+  const data = buildAnchorIxData(commitment);
+  assert.equal(data.length, 34);
+  assert.equal(data[0], 0x01);   // INSTRUCTION_VERSION_V1
+  assert.equal(data[1], 0x00);   // flags: no bucket
+  assert.deepEqual(data.slice(2), commitment);
 });
 
 test("batchHash is deterministic", () => {
@@ -174,12 +173,10 @@ test("full pipeline: 500 receipts → net → compress → encrypt → anchor pa
   const blob   = await encryptBlob(compressed, key);
   const ser    = serializeBlob(blob);
 
-  const ixData = buildAnchorIxData({
-    batchBytes:   ser,
-    receiptCount: receipts.length,
-    epochId:      Math.floor(Date.now() / 86_400_000),
-    encrypted:    true,
-  });
+  // Anchor: SHA-256 hash of the encrypted blob → 32-byte commitment → 34-byte ix
+  const { createHash } = await import("node:crypto");
+  const commitment = new Uint8Array(createHash("sha256").update(ser).digest());
+  const ixData = buildAnchorIxData(commitment);
 
   const rawSize = new TextEncoder().encode(JSON.stringify(receipts)).length;
   const ratio   = rawSize / compressed.length;
@@ -187,7 +184,8 @@ test("full pipeline: 500 receipts → net → compress → encrypt → anchor pa
 
   assert.ok(ratio > 10);
   assert.ok(nets.length < receipts.length);
-  assert.equal(ixData[0], 0x42);
+  assert.equal(ixData.length, 34);
+  assert.equal(ixData[0], 0x01); // INSTRUCTION_VERSION_V1
 
   // verify round-trip survives the full pipeline
   const deser     = deserializeBlob(ser);

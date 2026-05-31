@@ -495,7 +495,34 @@ export function runtimeGatesForConfig(config: Partial<X402Config>): X402RuntimeG
   };
 }
 
+export function assertMainnetEnvReadiness(env: NodeJS.ProcessEnv = process.env): void {
+  // Only enforce in production. Explicit VITEST or NODE_ENV=test bypasses this.
+  const nodeEnv = (env.NODE_ENV ?? "").toLowerCase();
+  if (nodeEnv !== "production" || env.VITEST || process.env.VITEST) {
+    return;
+  }
+  const missing: string[] = [];
+  if (!env.CLUSTER || env.CLUSTER.toLowerCase() === "devnet") {
+    missing.push("CLUSTER (must be set to mainnet, not devnet)");
+  }
+  if (!env.SOLANA_RPC_URL || env.SOLANA_RPC_URL.toLowerCase().includes("devnet")) {
+    missing.push("SOLANA_RPC_URL (must be a mainnet RPC endpoint, not devnet)");
+  }
+  if (!env.USDC_MINT || env.USDC_MINT === DEFAULT_USDC_DEVNET) {
+    missing.push("USDC_MINT (must be set to the mainnet USDC mint, not the devnet default)");
+  }
+  if (!env.PAYMENT_RECIPIENT || env.PAYMENT_RECIPIENT === DEFAULT_DEVNET_PAYMENT_RECIPIENT) {
+    missing.push("PAYMENT_RECIPIENT (must be set to a real mainnet recipient, not the devnet default)");
+  }
+  if (missing.length > 0) {
+    throw new Error(
+      `Production startup blocked — the following env vars are missing or still set to devnet values:\n- ${missing.join("\n- ")}`
+    );
+  }
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
+  assertMainnetEnvReadiness(env);
   const parsed = schema.parse(env);
   const runtimeGates = normalizeRuntimeGates(parsed);
   const realChainDrill = normalizeRealChainDrill(parsed);
@@ -870,7 +897,7 @@ export function validateMainnetReadiness(config: X402Config): string[] {
   }
 
   const gates = runtimeGatesForConfig(config);
-  if (config.allowInsecure !== false) {
+  if (config.allowInsecure) {
     issues.push("ALLOW_INSECURE must be disabled on mainnet.");
   }
   if (!config.adminSecret || config.adminSecret.length < MIN_PRODUCTION_SECRET_LENGTH) {

@@ -24,34 +24,43 @@ export interface BatchAnchorPayload {
 }
 
 /**
- * Build the instruction data for the receipt_anchor program.
+ * Build the instruction data for a single anchor.
  *
- * Layout:
- *   [discriminant 1B = 0x42 "batch"]
- *   [epochId 4B LE]
- *   [receiptCount 4B LE]
- *   [flags 1B: bit0 = encrypted]
- *   [batchHash 32B SHA-256 of batchBytes]
- *   [batchLen 4B LE]
- *   [batchBytes]
+ * Layout: [0x01][0x00][32 bytes SHA-256 commitment] = 34 bytes total
  */
-export function buildAnchorIxData(p: BatchAnchorPayload): Uint8Array {
-  const hash = new Uint8Array(
-    Buffer.from(createHash("sha256").update(p.batchBytes).digest())
-  );
-  const total = 1 + 4 + 4 + 1 + 32 + 4 + p.batchBytes.length;
-  const out   = new Uint8Array(total);
-  const dv    = new DataView(out.buffer);
-  let off     = 0;
+export function buildAnchorIxData(commitment32: Uint8Array): Uint8Array {
+  if (commitment32.length !== 32) {
+    throw new RangeError(`commitment32 must be exactly 32 bytes, got ${commitment32.length}`);
+  }
+  const out = new Uint8Array(34);
+  out[0] = 0x01;
+  out[1] = 0x00;
+  out.set(commitment32, 2);
+  return out;
+}
 
-  out[off++]  = 0x42; // discriminant "batch"
-  dv.setUint32(off, p.epochId, true);     off += 4;
-  dv.setUint32(off, p.receiptCount, true); off += 4;
-  out[off++]  = p.encrypted ? 0x01 : 0x00;
-  out.set(hash, off); off += 32;
-  dv.setUint32(off, p.batchBytes.length, true); off += 4;
-  out.set(p.batchBytes, off);
-
+/**
+ * Build the instruction data for a batch anchor.
+ *
+ * Layout: [0x01][count N][N × 32 bytes commitments] = 2 + N*32 bytes
+ * Count must be between 2 and 32 inclusive.
+ */
+export function buildAnchorBatchIxData(commitments: Uint8Array[]): Uint8Array {
+  const count = commitments.length;
+  if (count < 2 || count > 32) {
+    throw new RangeError(`batch size must be 2–32, got ${count}`);
+  }
+  for (let i = 0; i < count; i++) {
+    if (commitments[i].length !== 32) {
+      throw new RangeError(`commitment[${i}] must be exactly 32 bytes, got ${commitments[i].length}`);
+    }
+  }
+  const out = new Uint8Array(2 + count * 32);
+  out[0] = 0x01;
+  out[1] = count;
+  for (let i = 0; i < count; i++) {
+    out.set(commitments[i], 2 + i * 32);
+  }
   return out;
 }
 

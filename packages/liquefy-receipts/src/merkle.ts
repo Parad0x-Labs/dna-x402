@@ -80,7 +80,7 @@ export class StreamingMerkleBuilder {
     for (let i = 0; i < this.stack.length; i++) {
       const node = this.stack[i];
       if (node === null) continue;
-      carry = carry === null ? node : hashInternal(node, carry);
+      carry = carry === null ? node : hashInternal(node, carry); // node=larger/older block goes LEFT
     }
     return carry ?? ZERO;
   }
@@ -111,7 +111,7 @@ export class MerkleTree {
         if (i + 1 < current.length) {
           next.push(hashInternal(current[i], current[i + 1]));
         } else {
-          next.push(current[i]); // odd node: pass straight up, no duplication
+          next.push(current[i]); // odd node: pass straight up (matches StreamingMerkleBuilder)
         }
       }
       this.layers.push(next);

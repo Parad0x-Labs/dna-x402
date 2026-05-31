@@ -5,7 +5,6 @@ import type { StreamflowClientLike } from "../verifier/streamflow.js";
 
 export type SupportedNetwork = "solana-devnet" | "solana-mainnet";
 
-const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com";
 export const DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 export const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
@@ -16,6 +15,8 @@ export interface PaymentSupportOptions {
   streamflowClient?: StreamflowClientLike;
   paymentVerifier?: PaymentVerifier;
 }
+
+const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com"; // for network INFERENCE only, not for actual connections
 
 export function inferPaymentNetwork(
   explicit?: SupportedNetwork,
@@ -47,7 +48,15 @@ export function createPaymentVerifier(options: PaymentSupportOptions): PaymentVe
     return options.paymentVerifier;
   }
 
-  const connection = new Connection(options.rpcUrl ?? DEFAULT_SOLANA_RPC_URL, "confirmed");
+  const DEVNET_RPC = "https://api.devnet.solana.com";
+  if (!options.rpcUrl) {
+    if (process.env.NODE_ENV === "production" && !process.env.VITEST) {
+      throw new Error("rpcUrl is required in production — do not use devnet defaults");
+    }
+    // Non-production: fall back to devnet with a warning
+    console.warn("[x402] rpcUrl not set — falling back to devnet. Set rpcUrl for production use.");
+  }
+  const connection = new Connection(options.rpcUrl ?? DEVNET_RPC, "confirmed");
   return new SolanaPaymentVerifier(connection, {
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.allowUnverifiedNetting,

@@ -70,7 +70,7 @@ function encodeColumn(values: unknown[]): Uint8Array {
     const payload: number[] = [TYPE_NUMERIC];
     let prev = 0n;
     for (const v of values) {
-      const n = BigInt(v as number | bigint | null ?? 0);
+      const n = (v == null ? 0n : BigInt(v as number | bigint));
       const delta = n - prev;
       prev = n;
       // pack as 8-byte signed LE
@@ -221,7 +221,9 @@ function unpack(frame: Uint8Array): { rowCount: number; columns: Map<string, Uin
 /** Compress an array of x402 receipts into a compact binary frame. */
 export function compressReceipts(receipts: X402Receipt[]): Uint8Array {
   if (receipts.length === 0) return new Uint8Array(0);
-  const keys = Object.keys(receipts[0]);
+  const keySet = new Set<string>()
+  for (const r of receipts) for (const k of Object.keys(r)) keySet.add(k)
+  const keys = [...keySet];
   const columns = new Map<string, Uint8Array>();
   for (const key of keys) {
     columns.set(key, encodeColumn(receipts.map(r => r[key])));
