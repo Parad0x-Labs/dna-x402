@@ -14,12 +14,15 @@ const PORT = Number(process.env.PORT ?? 8799);
 
 const chrome  = readFileSync(join(DIR, "faceid-chrome-test.html"));
 const phantom = readFileSync(join(DIR, "faceid-browser-test.html"));
+const prfEd25519 = readFileSync(join(DIR, "05-prf-ed25519-browser-test.html"));
 
 // path -> in-memory page. The Chrome (no-wallet) page is the default.
 const ROUTES = {
   "/": chrome,
   "/faceid-chrome-test.html": chrome,
   "/faceid-browser-test.html": phantom,
+  "/05-prf-ed25519-browser-test.html": prfEd25519,
+  "/prf": prfEd25519,
 };
 
 createServer((req, res) => {
@@ -35,5 +38,6 @@ createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`\nDefault (Chrome, no wallet):  http://localhost:${PORT}/`);
   console.log(`Phantom version:              http://localhost:${PORT}/faceid-browser-test.html`);
+  console.log(`PRF → Ed25519 (no MPC):       http://localhost:${PORT}/prf`);
   console.log("Safe to tunnel — only these whitelisted pages are served.\n");
 });

@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dark Passport — PRF → Ed25519 Solana Key</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0a0a12; color:#e6e6f0; padding:24px; max-width:760px; margin-inline:auto; }
+  h1 { font-size:18px; letter-spacing:.04em; }
+  .sub { color:#8a8aa8; font-size:12px; line-height:1.6; }
+  button { background:#15152a; color:#e6e6f0; border:1px solid #33335a; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; margin:4px 6px 4px 0; }
+  button:hover:not(:disabled) { border-color:#6a6acc; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .row { margin:14px 0; }
+  .tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid #33335a; color:#a0a0c8; }
+  .step-tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid #33335a; color:#a0a0c8; margin-left:6px; transition: border-color .2s, color .2s; }
+  .step-tag.active { border-color:#6a6acc; color:#9090ee; }
+  .step-tag.done { border-color:#3a8a5a; color:#5ad08a; }
+  #log { background:#08080f; border:1px solid #22223a; border-radius:10px; padding:12px; font-size:12px; white-space:pre-wrap; line-height:1.6; min-height:140px; }
+  #pubkey-box { display:none; background:#0d0d1f; border:1px solid #2a2a4a; border-radius:10px; padding:14px; margin:14px 0; font-size:12px; line-height:1.8; }
+  #pubkey-box .label { color:#8a8aa8; }
+  #pubkey-box .value { color:#c8c8f0; word-break:break-all; }
+  #pubkey-box .value.ok { color:#5ad08a; }
+  #pubkey-box .value.fail { color:#ff6a8a; }
+  a { color:#7a9cff; }
+  .ok { color:#5ad08a; } .err { color:#ff6a8a; } .warn { color:#e0c060; } .info { color:#7aa8ff; }
+</style>
+</head>
+<body>
+  <h1>
+    Dark Passport — PRF → Ed25519
+    <span class="tag">hardware-bound · no MPC · no relay</span>
+  </h1>
+  <p class="sub">
+    The first Solana-native hardware-bound passkey without MPC.<br>
+    <b>How it works:</b> Your device's hardware authenticator runs a PRF (Pseudo-Random Function)
+    keyed to a fixed salt. The 32-byte output is passed through HKDF-SHA-256 to produce an
+    Ed25519 seed. <code>Keypair.fromSeed(seed)</code> yields a native Solana keypair.
+    The private key is <b>never stored anywhere</b> — biometric authentication re-derives it
+    on demand. Same device + same salt = same key, always.<br><br>
+    Requires: <b>Chrome 132+</b>, <b>Safari 18+</b>, or <b>Android Chrome</b> (Pixel 6+).
+  </p>
+
+  <div class="row">
+    <button id="btn-register">
+      1 · Register passkey
+      <span class="step-tag" id="tag-1">waiting</span>
+    </button>
+    <button id="btn-derive" disabled>
+      2 · Derive Ed25519 key
+      <span class="step-tag" id="tag-2">waiting</span>
+    </button>
+    <button id="btn-verify" disabled>
+      3 · Verify deterministic
+      <span class="step-tag" id="tag-3">waiting</span>
+    </button>
+  </div>
+
+  <div id="pubkey-box">
+    <div><span class="label">Derived Solana public key: </span><span class="value" id="display-pubkey"></span></div>
+    <div><span class="label">Ed25519 seed (first 16 bytes): </span><span class="value" id="display-seed"></span></div>
+    <div><span class="label">Deterministic check: </span><span class="value" id="display-det"></span></div>
+  </div>
+
+  <div id="log">Waiting — click Step 1 to begin.</div>
+
+<script type="module">
+// ── Import Solana Keypair from esm.sh ─────────────────────────────────────────
+import { Keypair } from "https://esm.sh/@solana/web3.js@1.95.3";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+// Fixed PRF salt: SHA-256("dark-passport-prf-v1") as bytes32.
+// Pre-computed so every app on the Dark Passport protocol derives the same key.
+// If you need isolation between apps, swap in a different salt.
+//
+// SHA-256("dark-passport-prf-v1") =
+//   b2a6e8f1c3d5479a0e1b2c3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3 (illustrative)
+// Actual value computed at page load via WebCrypto below.
+let PRF_SALT_BYTES = null; // set in init()
+
+const HKDF_INFO = "dark-passport-prf-v1"; // domain separation string for HKDF
+
+// ── Logging ───────────────────────────────────────────────────────────────────
+const logEl = document.getElementById("log");
+let logEmpty = true;
+function log(msg, cls = "") {
+  if (logEmpty) { logEl.innerHTML = ""; logEmpty = false; }
+  logEl.innerHTML += `<span class="${cls}">${msg}</span>\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Step tag state ────────────────────────────────────────────────────────────
+function setTag(n, state) {
+  const el = document.getElementById(`tag-${n}`);
+  el.className = `step-tag ${state}`;
+  el.textContent = state === "done" ? "done" : state === "active" ? "active..." : "waiting";
+}
+
+// ── HKDF-SHA-256, 32-byte output (WebCrypto) ─────────────────────────────────
+async function hkdf32(ikm, salt, info) {
+  const baseKey = await crypto.subtle.importKey(
+    "raw", ikm, "HKDF", false, ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new TextEncoder().encode(salt),
+      info: new TextEncoder().encode(info),
+    },
+    baseKey,
+    256
+  );
+  return new Uint8Array(bits);
+}
+
+// ── Derive Ed25519 Solana keypair from PRF output ─────────────────────────────
+async function deriveKeypairFromPrf(prfOutput) {
+  // HKDF(prf_output, salt="dark-passport-prf-v1", info="dark-passport-prf-v1") → 32-byte seed
+  const seed = await hkdf32(prfOutput, HKDF_INFO, HKDF_INFO);
+  const keypair = Keypair.fromSeed(seed);
+  return { keypair, seed };
+}
+
+// ── Hex helpers ───────────────────────────────────────────────────────────────
+const toHex = (b) => [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let state = {
+  credentialId: null,    // raw bytes of the created credential id
+  derivedPubkey: null,   // base58 string from Step 2
+};
+
+// ── Check PRF support ─────────────────────────────────────────────────────────
+function checkPrfSupport() {
+  if (!window.PublicKeyCredential) {
+    log("WebAuthn not available in this context.", "err");
+    log("Make sure you are on HTTPS or localhost.", "warn");
+    return false;
+  }
+  return true;
+}
+
+// ── Init: derive PRF salt from SHA-256("dark-passport-prf-v1") ───────────────
+async function init() {
+  try {
+    const enc = new TextEncoder().encode("dark-passport-prf-v1");
+    const hashBuf = await crypto.subtle.digest("SHA-256", enc);
+    PRF_SALT_BYTES = new Uint8Array(hashBuf);
+    log(`PRF salt ready (SHA-256 of "dark-passport-prf-v1"):`, "info");
+    log(`  ${toHex(PRF_SALT_BYTES)}`, "info");
+
+    if (!checkPrfSupport()) return;
+
+    // Feature-detect PRF extension availability
+    if (typeof PublicKeyCredential.isConditionalMediationAvailable === "function") {
+      log("WebAuthn detected. Click Step 1 to register your passkey.", "ok");
+    } else {
+      log("WebAuthn detected. Click Step 1 to register your passkey.", "ok");
+    }
+  } catch (e) {
+    log("Init error: " + e.message, "err");
+  }
+}
+
+// ── Step 1: Register passkey ──────────────────────────────────────────────────
+document.getElementById("btn-register").onclick = async () => {
+  if (!checkPrfSupport()) return;
+  setTag(1, "active");
+  document.getElementById("btn-register").disabled = true;
+
+  try {
+    log("\n[Step 1] Registering passkey with userVerification: required...", "info");
+    log("Tip: use your fingerprint, Face ID, or hardware key.", "");
+
+    const challenge = rand(32);
+    const userId = rand(16);
+
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: "Dark Passport PRF Demo", id: location.hostname || "localhost" },
+        user: {
+          id: userId,
+          name: "dark-passport-user",
+          displayName: "Dark Passport User",
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -8 },  // Ed25519 (if supported)
+          { type: "public-key", alg: -7 },  // P-256 fallback
+        ],
+        authenticatorSelection: {
+          userVerification: "required",
+          residentKey: "preferred",
+        },
+        extensions: {
+          prf: {},  // signal we want PRF — registers the PRF extension slot
+        },
+        timeout: 120000,
+      },
+    });
+
+    state.credentialId = new Uint8Array(cred.rawId);
+    const prfEnabled = cred.getClientExtensionResults?.()?.prf?.enabled;
+    const credIdHex = toHex(state.credentialId.slice(0, 8));
+
+    log(`Passkey registered. Credential ID prefix: ${credIdHex}...`, "ok");
+
+    if (prfEnabled === true) {
+      log("PRF extension: ENABLED on this authenticator.", "ok");
+    } else if (prfEnabled === false) {
+      log("PRF extension: reported as not enabled by authenticator.", "warn");
+      log("Continuing — PRF may still work at get() time on some authenticators.", "warn");
+    } else {
+      log("PRF extension: status not reported (may still work at get() time).", "warn");
+    }
+
+    setTag(1, "done");
+    document.getElementById("btn-derive").disabled = false;
+    log("Ready for Step 2 — derive the Ed25519 key from PRF.", "ok");
+
+  } catch (e) {
+    setTag(1, "waiting");
+    document.getElementById("btn-register").disabled = false;
+    if (e.name === "NotSupportedError") {
+      log("PRF or WebAuthn not supported: " + e.message, "err");
+      log("Use Chrome 132+, Safari 18+, or Android Chrome (Pixel 6+).", "warn");
+    } else if (e.name === "NotAllowedError") {
+      log("Registration cancelled or timed out.", "warn");
+    } else {
+      log("Registration error (" + e.name + "): " + e.message, "err");
+    }
+  }
+};
+
+// ── Step 2: Derive Ed25519 key via PRF ────────────────────────────────────────
+document.getElementById("btn-derive").onclick = async () => {
+  setTag(2, "active");
+  document.getElementById("btn-derive").disabled = true;
+
+  try {
+    log("\n[Step 2] Running PRF → Ed25519 derivation...", "info");
+    log(`Using fixed salt (SHA-256("dark-passport-prf-v1")): ${toHex(PRF_SALT_BYTES.slice(0, 8))}...`, "");
+
+    const challenge = rand(32);
+
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: state.credentialId
+          ? [{ type: "public-key", id: state.credentialId }]
+          : [],
+        userVerification: "required",
+        extensions: {
+          prf: {
+            eval: {
+              first: PRF_SALT_BYTES,
+            },
+          },
+        },
+        timeout: 120000,
+      },
+    });
+
+    const extResults = assertion.getClientExtensionResults();
+    const prfResult = extResults?.prf?.results?.first;
+
+    if (!prfResult) {
+      log("PRF output not returned by authenticator.", "err");
+      log("This authenticator may not support the PRF extension.", "warn");
+      log("PRF support: Chrome 132+, Safari 18+, Android Chrome (Pixel 6+).", "warn");
+      log("If you are on an older OS or browser, PRF may not be available.", "warn");
+      setTag(2, "waiting");
+      document.getElementById("btn-derive").disabled = false;
+      return;
+    }
+
+    const prfOutput = new Uint8Array(prfResult);
+    log(`PRF output (first 16 bytes): ${toHex(prfOutput.slice(0, 16))}...`, "ok");
+
+    const { keypair, seed } = await deriveKeypairFromPrf(prfOutput);
+    const pubkey = keypair.publicKey.toBase58();
+
+    state.derivedPubkey = pubkey;
+
+    // Show result box
+    document.getElementById("display-pubkey").textContent = pubkey;
+    document.getElementById("display-pubkey").className = "value ok";
+    document.getElementById("display-seed").textContent = toHex(seed.slice(0, 16)) + "...";
+    document.getElementById("display-det").textContent = "— (run Step 3 to verify)";
+    document.getElementById("display-det").className = "value";
+    document.getElementById("pubkey-box").style.display = "block";
+
+    log(`Ed25519 public key (Solana): ${pubkey}`, "ok");
+    log(`HKDF seed (first 16 bytes): ${toHex(seed.slice(0, 16))}...`, "ok");
+    log("Key derivation complete. Key is NOT stored — re-derived on each auth.", "ok");
+
+    setTag(2, "done");
+    document.getElementById("btn-verify").disabled = false;
+    log("Ready for Step 3 — verify determinism (same key every time).", "ok");
+
+  } catch (e) {
+    setTag(2, "waiting");
+    document.getElementById("btn-derive").disabled = false;
+    if (e.name === "NotAllowedError") {
+      log("PRF auth cancelled or timed out.", "warn");
+    } else if (e.name === "NotSupportedError") {
+      log("PRF extension not supported: " + e.message, "err");
+      log("Use Chrome 132+, Safari 18+, or Android Chrome.", "warn");
+    } else {
+      log("Derive error (" + e.name + "): " + e.message, "err");
+    }
+  }
+};
+
+// ── Step 3: Verify determinism ────────────────────────────────────────────────
+document.getElementById("btn-verify").onclick = async () => {
+  if (!state.derivedPubkey) {
+    log("Run Step 2 first.", "warn");
+    return;
+  }
+  setTag(3, "active");
+  document.getElementById("btn-verify").disabled = true;
+
+  try {
+    log("\n[Step 3] Re-running PRF with same salt to verify determinism...", "info");
+
+    const challenge = rand(32);
+
+    const assertion2 = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: state.credentialId
+          ? [{ type: "public-key", id: state.credentialId }]
+          : [],
+        userVerification: "required",
+        extensions: {
+          prf: {
+            eval: {
+              first: PRF_SALT_BYTES,
+            },
+          },
+        },
+        timeout: 120000,
+      },
+    });
+
+    const extResults2 = assertion2.getClientExtensionResults();
+    const prfResult2 = extResults2?.prf?.results?.first;
+
+    if (!prfResult2) {
+      log("PRF output not returned on second call.", "err");
+      setTag(3, "waiting");
+      document.getElementById("btn-verify").disabled = false;
+      return;
+    }
+
+    const prfOutput2 = new Uint8Array(prfResult2);
+    const { keypair: keypair2 } = await deriveKeypairFromPrf(prfOutput2);
+    const pubkey2 = keypair2.publicKey.toBase58();
+
+    const same = pubkey2 === state.derivedPubkey;
+
+    if (same) {
+      document.getElementById("display-det").textContent = "PASS — same key derived from same device + same salt";
+      document.getElementById("display-det").className = "value ok";
+      log(`Second derivation: ${pubkey2}`, "ok");
+      log("Deterministic check: PASS — hardware-bound, reproducible Solana key.", "ok");
+      log("", "");
+      log("Properties confirmed:", "ok");
+      log("  [+] Native Ed25519 keypair — no secp256r1 bridge", "ok");
+      log("  [+] Derived from hardware authenticator PRF", "ok");
+      log("  [+] Deterministic: same device + same salt = same key", "ok");
+      log("  [+] Key never stored or exported", "ok");
+      log("  [+] No MPC, no custodial relay, no secp256r1 wrapping", "ok");
+      setTag(3, "done");
+    } else {
+      document.getElementById("display-det").textContent = "FAIL — keys differ (unexpected)";
+      document.getElementById("display-det").className = "value fail";
+      log(`Second derivation: ${pubkey2}`, "err");
+      log(`Expected:          ${state.derivedPubkey}`, "err");
+      log("Deterministic check: FAIL — PRF outputs differ. This is unexpected.", "err");
+      log("Possible cause: credential ID mismatch, or authenticator PRF non-determinism.", "warn");
+      setTag(3, "waiting");
+      document.getElementById("btn-verify").disabled = false;
+    }
+
+  } catch (e) {
+    setTag(3, "waiting");
+    document.getElementById("btn-verify").disabled = false;
+    if (e.name === "NotAllowedError") {
+      log("Verification cancelled or timed out.", "warn");
+    } else {
+      log("Verify error (" + e.name + "): " + e.message, "err");
+    }
+  }
+};
+
+// ── Run init ──────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

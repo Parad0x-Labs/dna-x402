@@ -113,9 +113,8 @@ if (USE_ARWEAVE) {
     const { default: Irys } = await import("@irys/sdk");
     const keyPath = execSync("solana config get", { encoding: "utf8" })
       .match(/Keypair Path:\s+(.+)/)?.[1]?.trim();
-    const solanaKey = Buffer.from(
-      Uint8Array.from(JSON.parse(readFileSync(keyPath, "utf8")))
-    ).toString("hex");
+    // Irys expects the raw secret key as a Uint8Array (64 bytes)
+    const solanaKey = Uint8Array.from(JSON.parse(readFileSync(keyPath, "utf8")));
 
     const irys = new Irys({
       network: "mainnet",
