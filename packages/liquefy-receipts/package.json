@@ -1,18 +1,39 @@
 {
-  "name": "@dna-x402/liquefy-receipts",
+  "name": "@parad0x_labs/liquefy-receipts",
   "version": "0.1.0",
-  "description": "Columnar compression + bilateral netting + AES-256-GCM encryption for x402 payment receipt batches. 1000 receipts → 1 on-chain anchor tx.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Columnar compression + bilateral netting + AES-256-GCM for x402 receipt batches. 1000 receipts → 1 on-chain anchor tx. Used in Parad0x Labs DNA x402.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "test": "node --test tests/liquefy-receipts.test.mjs"
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
   },
+  "files": [
+    "src/",
+    "tests/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test tests/liquefy-receipts.test.mjs tests/merkle.test.mjs"
+  },
+  "keywords": [
+    "solana", "x402", "compression", "receipts", "merkle",
+    "netting", "aes-256-gcm", "columnar", "liquefy", "dna-x402",
+    "ai-agents", "payments", "zstd", "blockchain"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/liquefy-receipts",
+  "license": "MIT",
   "dependencies": {
     "fflate": "^0.8.2"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

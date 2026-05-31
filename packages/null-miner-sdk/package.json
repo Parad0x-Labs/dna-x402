@@ -1,5 +1,5 @@
 {
-  "name": "null-miner-sdk",
+  "name": "@parad0x_labs/null-miner-sdk",
   "version": "0.1.0",
   "type": "module",
   "description": "Universal NULL Miner SDK — plug into any app, users earn USDC autonomously, platform collects fees. First on Solana.",
@@ -100,7 +100,9 @@
     "@solana/web3.js": ">=1.95.0"
   },
   "peerDependenciesMeta": {
-    "@solana/web3.js": { "optional": true }
+    "@solana/web3.js": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -117,7 +119,12 @@
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "transform": {
-      "^.+\\.tsx?$": ["ts-jest", { "useESM": false }]
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "useESM": false
+        }
+      ]
     }
   }
 }
