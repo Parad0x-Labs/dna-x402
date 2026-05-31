@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-05-31T10:03:58.578Z",
+  "receiptCount": 86400,
+  "netSettlements": 20,
+  "rawBytes": 32740771,
+  "compressedBytes": 393859,
+  "compressionRatio": 83,
+  "uploadedBytes": 393887,
+  "merkleRoot": "6489974f17b3f9008d734122c51240158b93362db2780a2f0c5d79538afa989c",
+  "arweaveTxId": "ARWEAVE_TX_WOULD_GO_HERE_WHEN_--arweave_FLAG_PASSED",
+  "arweaveUrl": null,
+  "solanaTx": "59nvCrumHX6o1AYyLAhKNmWGRucwRnHxo2v3HMCZZMdAdjrSSEFEFRuyQH7RgEmyzx5bkj4fPKv19dPVJT3GmjA8",
+  "solanaExplorer": "https://explorer.solana.com/tx/59nvCrumHX6o1AYyLAhKNmWGRucwRnHxo2v3HMCZZMdAdjrSSEFEFRuyQH7RgEmyzx5bkj4fPKv19dPVJT3GmjA8?cluster=mainnet-beta",
+  "costUsd": "~0.001",
+  "privacyModel": "AES-256-GCM encrypted before upload. Arweave stores ciphertext. Key held by agent only.",
+  "proofModel": "SHA-256 Merkle root of plaintext anchored on Solana. Verifiable without decrypting."
+}
