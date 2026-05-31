@@ -1,11 +1,13 @@
-# DNA x402: Turn Any API Into Agent-Ready Commerce
+<p align="center">
+  <img src="./docs/assets/github-header-dna-x402.png" alt="DNA x402 - Agent-ready API payments on Solana" width="100%" />
+</p>
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Chain: Solana](https://img.shields.io/badge/Chain-Solana-14F195?style=flat-square)
 ![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
 ![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
 
-![DNA x402 Header](./docs/assets/dna-header.svg)
+# DNA x402: Turn Any API Into Agent-Ready Commerce
 
 **Any API can become a paid endpoint. Any agent can quote, pay, verify, and continue in one machine-readable loop.**
 
