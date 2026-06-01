@@ -111,6 +111,9 @@ const spendQuerySchema = z.object({
   apiKeyId: z.string().min(1).optional(),
 });
 
+// TODO: Full fix requires binding ALL guard subjects to signed identities.
+// Priority order: (1) verified payment proof payer wallet, (2) HMAC API key principal, (3) signed agent passport. Raw headers are hints only and must never gate financial limits.
+
 // SECURITY: trustLevel indicates whether the actor identity has been verified.
 // "header"   — identity comes verbatim from request headers (x-dna-buyer-id,
 //              x-dna-agent-id, x-dna-wallet, x-dna-api-key-id).  Any client
@@ -126,18 +129,43 @@ const spendQuerySchema = z.object({
 // token, spend ceilings can be bypassed by forging these headers.
 export type DnaGuardActorTrustLevel = "header" | "verified";
 
-function defaultActorFromRequest(req: Request): DnaGuardActor & { trustLevel: DnaGuardActorTrustLevel } {
+// guardIdentitySource tracks the source of the actor identity used for this guard context.
+// "header"        — identity from client-supplied request headers (untrusted, forgeable).
+// "payment_proof" — identity derived from a verified on-chain payment proof.
+// "api_key"       — identity bound to an HMAC-verified API key principal.
+// A spend ceiling enforced against a "header" source is not tamper-proof and MUST log a warning.
+export type GuardIdentitySource = "header" | "payment_proof" | "api_key";
+
+export interface DnaGuardContext {
+  actor: DnaGuardActor;
+  guardIdentitySource: GuardIdentitySource;
+}
+
+function defaultActorFromRequest(req: Request): DnaGuardActor & { trustLevel: DnaGuardActorTrustLevel; guardIdentitySource: GuardIdentitySource } {
   const header = (name: string) => req.header(name) ?? undefined;
   // UNTRUSTED: values below come directly from client-supplied headers.
   // They must NOT be used as authoritative identities for spend-ceiling
   // enforcement without first verifying them via a payment proof, API key,
   // or session.  See DnaGuardActorTrustLevel above.
+  const verifiedPayerWallet: string | undefined = (req as Request & { _verifiedPayerWallet?: string })._verifiedPayerWallet;
+  const guardIdentitySource: GuardIdentitySource = verifiedPayerWallet ? "payment_proof" : "header";
+  if (verifiedPayerWallet) {
+    return {
+      buyerId: verifiedPayerWallet,
+      walletAddress: verifiedPayerWallet,
+      agentId: header("x-dna-agent-id"),
+      apiKeyId: header("x-dna-api-key-id"),
+      trustLevel: "verified",
+      guardIdentitySource,
+    };
+  }
   return {
     buyerId: header("x-dna-buyer-id"),
     walletAddress: header("x-dna-wallet"),
     agentId: header("x-dna-agent-id"),
     apiKeyId: header("x-dna-api-key-id"),
     trustLevel: "header",
+    guardIdentitySource,
   };
 }
 
@@ -328,6 +356,15 @@ export function createDnaGuard(options: DnaGuardControllerOptions = {}): DnaGuar
 
       try {
         if (amountAtomic) {
+          // SECURITY: warn when spend ceilings are enforced against an unverified header-sourced identity.
+          // Header values are client-supplied and can be forged. Spend ceilings gated on them are not
+          // tamper-proof until replaced by verified identities (payment proof, API key, agent passport).
+          const actorSource: GuardIdentitySource = (actor as { guardIdentitySource?: GuardIdentitySource }).guardIdentitySource ?? "header";
+          if (spendCeilings && actorSource === "header") {
+            console.warn(
+              `[guard] identitySource=header for spend ceiling check — identity is unverified and may be forged (providerId=${providerId} endpointId=${endpointId})`,
+            );
+          }
           const spendDecision: DnaGuardSpendDecision | undefined = spendCeilings
             ? ledger.checkSpend(actor, amountAtomic, spendCeilings)
             : undefined;
@@ -342,6 +379,7 @@ export function createDnaGuard(options: DnaGuardControllerOptions = {}): DnaGuar
               meta: {
                 enforced: failMode === "fail-closed",
                 blocked: spendDecision.blocked,
+                identitySource: actorSource,
               },
             });
             if (failMode === "fail-closed") {

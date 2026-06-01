@@ -352,6 +352,12 @@ fn process_deposit(
         return Err(ShieldedPoolError::ZeroCommitment.into());
     }
 
+    // Minimum deposit prevents liveness DoS by making window exhaustion attacks expensive.
+    // Attacker must spend LEAF_WINDOW * MINIMUM_DEPOSIT to halt the pool.
+    if config.denomination < crate::MINIMUM_DEPOSIT_LAMPORTS {
+        return Err(ShieldedPoolError::BelowMinimumDeposit.into());
+    }
+
     let leaf_index = config.note_count;
     let clock = Clock::get()?;
     let rent  = Rent::get()?;

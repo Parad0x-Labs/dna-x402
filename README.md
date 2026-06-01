@@ -127,6 +127,8 @@ Seven new packages on top of the payment rail:
 | [`@parad0x_labs/blind-access`](./packages/blind-access) | Buyer pays once, receives N access tokens. Server cannot link which buyer spent which token. Phase 2: RSA blind signatures. |
 | [`@parad0x_labs/session-channels`](./packages/session-channels) | 200 micro-actions in a session → one compressed receipt batch → one Solana anchor. For bots, devices, and agents with high action frequency. |
 | [`docs/SNARKPACK_BATCH_SETTLEMENT.md`](./docs/SNARKPACK_BATCH_SETTLEMENT.md) | Spec: batch N Groth16 proofs into one aggregate verification. 100 agent payment proofs in one tx. Requires SIMD-0302 (G2 ops, PR #549 open). |
+| [`@parad0x_labs/royalty-waterfalls`](./packages/royalty-waterfalls) | Recursive fee attribution for derivative agents. Agent B uses Agent A's signal — downstream receipt carries sourceReceiptHash + fee split. No custody, receipt-based only. |
+| [`@parad0x_labs/pay-to-receive`](./packages/pay-to-receive) | Charge for inbound attention. Sender pays to have their payload received, processed, or acted on. Receipt binds ciphertextHash + delivery proof. Bots, rooms, agents. |
 
 ---
 

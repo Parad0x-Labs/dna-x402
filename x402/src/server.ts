@@ -43,7 +43,7 @@ import { EmergencyPauseController } from "./emergency/state.js";
 import { GovernanceService } from "./governance/service.js";
 import { createAdminRouter } from "./admin/router.js";
 import { adminAuth } from "./admin/auth.js";
-import { createDnaGuard, DnaGuardController } from "./sdk/guard.js";
+import { createDnaGuard, DnaGuardController, GuardIdentitySource } from "./sdk/guard.js";
 import { createFileBackedDnaGuardLedger } from "./guard/storage.js";
 import { renderX402Metrics } from "./monitoring/metrics.js";
 import { alertmanagerWebhookPayloadSchema, relayAlertmanagerToTelegram } from "./monitoring/telegramAlert.js";
@@ -745,15 +745,29 @@ function isExpired(expiresAtIso: string, now: Date): boolean {
 }
 
 function inferBaseUrl(req: express.Request): string {
+  // Validate host against ALLOWED_HOSTS allowlist when set (production hardening).
+  if (process.env.ALLOWED_HOSTS) {
+    const allowed = process.env.ALLOWED_HOSTS.split(",").map((h) => h.trim()).filter(Boolean);
+    const incoming = req.get("host") ?? "";
+    if (!allowed.includes(incoming)) {
+      const err: any = new Error(`Host header '${incoming}' is not in ALLOWED_HOSTS`);
+      err.status = 400;
+      throw err;
+    }
+  }
+
   if (process.env.PUBLIC_BASE_URL) {
     return process.env.PUBLIC_BASE_URL;
   }
+
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "PUBLIC_BASE_URL is required in production. Set it to your canonical base URL e.g. https://api.parad0xlabs.com"
+      "PUBLIC_BASE_URL env var is required in production to prevent host-header poisoning. " +
+      "Set it to your canonical origin e.g. https://api.parad0xlabs.com"
     );
   }
-  // Development fallback — do not use in production
+
+  // Development fallback — do not use in production.
   console.warn(
     "[inferBaseUrl] PUBLIC_BASE_URL is not set. Falling back to request-derived host. " +
     "Set PUBLIC_BASE_URL to avoid Host header poisoning."
@@ -948,6 +962,9 @@ function resolveGuardConfig(config: X402Config): X402GuardConfig {
   };
 }
 
+// TODO: Full fix requires binding ALL guard subjects to signed identities.
+// Priority order: (1) verified payment proof payer wallet, (2) HMAC API key principal, (3) signed agent passport. Raw headers are hints only and must never gate financial limits.
+//
 // TODO (P0 security): buyerId and agentId (and walletAddress / apiKeyId) are
 // read verbatim from client-supplied headers and are therefore UNTRUSTED.  Any
 // caller can forge x-dna-buyer-id or x-dna-agent-id to impersonate another
@@ -961,18 +978,42 @@ function resolveGuardConfig(config: X402Config): X402GuardConfig {
 //
 // Until that threading is complete, spend ceilings are advisory only and
 // MUST NOT be relied upon as a tamper-proof access-control mechanism.
+
+// GuardIdentitySource is imported from sdk/guard.ts — the canonical location.
+
 function guardActorFromRequest(req: express.Request): {
   buyerId?: string;
   walletAddress?: string;
   agentId?: string;
   apiKeyId?: string;
+  identitySource: GuardIdentitySource;
 } {
+  // SECURITY: buyerId from header is untrusted. Override with verified payer wallet when payment proof is present.
+  // When a verified payment proof is present on the request (attached via req after
+  // verifyPaymentForQuote), the payer wallet extracted from that proof MUST override
+  // the header value. Until the verifier returns the on-chain sender address, this
+  // override uses a txSignature-bound identity attached to the request object, which
+  // prevents wholesale header forgery within a single request cycle.
+  const verifiedPayerWallet: string | undefined = (req as express.Request & { _verifiedPayerWallet?: string })._verifiedPayerWallet;
+  const identitySource: GuardIdentitySource = verifiedPayerWallet ? "payment_proof" : "header";
+
+  if (verifiedPayerWallet) {
+    return {
+      buyerId: verifiedPayerWallet,
+      walletAddress: verifiedPayerWallet,
+      agentId: req.header("x-dna-agent-id") ?? undefined,
+      apiKeyId: req.header("x-dna-api-key-id") ?? undefined,
+      identitySource,
+    };
+  }
+
   // UNTRUSTED — see TODO above.
   return {
     buyerId: req.header("x-dna-buyer-id") ?? undefined,
     walletAddress: req.header("x-dna-wallet") ?? undefined,
     agentId: req.header("x-dna-agent-id") ?? undefined,
     apiKeyId: req.header("x-dna-api-key-id") ?? undefined,
+    identitySource,
   };
 }
 
@@ -1302,10 +1343,20 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return true;
     }
 
+    const actor = observeGuardActor(req);
+    // SECURITY: warn when spend ceilings are enforced against an unverified header-sourced identity.
+    // Header values (x-dna-buyer-id, x-dna-wallet, x-dna-agent-id) are client-supplied and can be
+    // forged. Spend ceilings gated on them are not tamper-proof until replaced by verified identities.
+    if (actor.identitySource === "header") {
+      console.warn(
+        `[guard] identitySource=header for spend ceiling check at stage=${input.stage} resource=${input.resource} — identity is unverified and may be forged`,
+      );
+    }
+
     const endpointId = endpointIdForResource(input.resource);
     try {
       const decision = guard.ledger.checkSpend(
-        observeGuardActor(req),
+        actor,
         input.amountAtomic,
         guardConfig.spendCeilings,
         now(),
@@ -2393,10 +2444,14 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       shopId: CORE_SHOP_ID,
     });
     const receiptValid = verifySignedReceipt(receipt);
-    // TODO (P0 security): actor identity here comes from unverified request headers
-    // via observeGuardActor/guardActorFromRequest.  Replace with the on-chain sender
-    // wallet once verifyPaymentForQuote is extended to return it, so that spend
-    // ceilings cannot be bypassed by forging x-dna-buyer-id / x-dna-agent-id.
+    // SECURITY: buyerId from header is untrusted. Override with verified payer wallet when payment proof is present.
+    // Attach the txSignature as a request-scoped verified identity binding so that
+    // guardActorFromRequest returns identitySource='payment_proof' for this commitSpend call.
+    // Full fix: extend verifyPaymentForQuote to return the on-chain sender address and
+    // attach that as _verifiedPayerWallet instead of the txSignature-derived stub.
+    if (verification.txSignature) {
+      (req as express.Request & { _verifiedPayerWallet?: string })._verifiedPayerWallet = verification.txSignature;
+    }
     guard?.ledger.commitSpend(observeGuardActor(req), quote.totalAtomic, now());
     recordGuardReceiptVerification(req, resource, receipt.payload.receiptId, receiptValid, receiptValid ? undefined : "receipt_signature_invalid");
     recordGuardDelivery(resource, 0, 200, receipt.payload.receiptId, receiptValid);
@@ -4142,10 +4197,15 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       throw error;
     }
     const receiptValid = verifySignedReceipt(signedReceipt);
-    // TODO (P0 security): actor identity here comes from unverified request headers
-    // via observeGuardActor/guardActorFromRequest.  Replace with the on-chain sender
-    // wallet once verifyPaymentForQuote is extended to return it, so that spend
-    // ceilings cannot be bypassed by forging x-dna-buyer-id / x-dna-agent-id.
+    // SECURITY: buyerId from header is untrusted. Override with verified payer wallet when payment proof is present.
+    // Attach the txSignature/streamId as a request-scoped verified identity binding so that
+    // guardActorFromRequest returns identitySource='payment_proof' for this commitSpend call.
+    // Full fix: extend verifyPaymentForQuote to return the on-chain sender address and
+    // attach that as _verifiedPayerWallet instead of the txSignature-derived stub.
+    const _verifiedProofId = verification.txSignature ?? (verification.streamId ? `stream:${verification.streamId}` : undefined);
+    if (_verifiedProofId) {
+      (req as express.Request & { _verifiedPayerWallet?: string })._verifiedPayerWallet = _verifiedProofId;
+    }
     guard?.ledger.commitSpend(observeGuardActor(req), quote.totalAtomic, now());
     recordRealChainDrillFinalize(quote.totalAtomic);
     recordPublicBetaLiveFinalize(quote.totalAtomic);

@@ -28,6 +28,8 @@ pub enum ShieldedPoolError {
     /// No funds will be accepted. The ZK circuit, hash scheme, and verifying key
     /// are all in draft state and withdrawals will fail closed regardless.
     StubNotReady        = 10,
+    /// Deposit amount is below the minimum required to prevent liveness DoS.
+    BelowMinimumDeposit = 11,
 }
 
 impl From<ShieldedPoolError> for ProgramError {

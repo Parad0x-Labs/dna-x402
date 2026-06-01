@@ -87,6 +87,33 @@ interface ReceiptRecord {
   signedReceipt: SignedReceipt;
 }
 
+/** Safe base-URL helper — prevents Host-header poisoning. */
+function safeBaseUrl(req: Request): string {
+  if (process.env.ALLOWED_HOSTS) {
+    const allowed = process.env.ALLOWED_HOSTS.split(",").map((h) => h.trim()).filter(Boolean);
+    const incoming = req.get("host") ?? "";
+    if (!allowed.includes(incoming)) {
+      const err: any = new Error(`Host header '${incoming}' is not in ALLOWED_HOSTS`);
+      err.status = 400;
+      throw err;
+    }
+  }
+  if (process.env.PUBLIC_BASE_URL) {
+    return process.env.PUBLIC_BASE_URL;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "PUBLIC_BASE_URL env var is required in production to prevent host-header poisoning. " +
+      "Set it to your canonical origin e.g. https://api.parad0xlabs.com"
+    );
+  }
+  console.warn(
+    "[safeBaseUrl] PUBLIC_BASE_URL is not set. Falling back to request-derived host. " +
+    "Set PUBLIC_BASE_URL to avoid Host header poisoning."
+  );
+  return `${req.protocol}://${req.get("host")}`;
+}
+
 function isJsonRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -641,8 +668,7 @@ export function dnaPrice(
     }
 
     // Issue quote
-    const host = req.get("host") ?? "localhost";
-    const baseUrl = `${req.protocol}://${host}`;
+    const baseUrl = safeBaseUrl(req);
     const quote = seller.createQuote(requestTarget(req), priceAtomic, baseUrl, req.method);
 
     res.status(402).json({

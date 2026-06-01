@@ -1,5 +1,13 @@
 //! dark-shielded-pool - fixed-denomination shielded transfer pool prototype
 //!
+//! ROOT AUTHORITY NOTE:
+//!   Root authority is currently single-key (see docs/DARK_NULL_ROOT_MULTISIG.md
+//!   for the multisig migration plan). Squads multisig 9M949Afy... is used as
+//!   the interim authority. A full M-of-N timelock + fraud-proof mechanism is
+//!   planned but not yet implemented. Do NOT set MAINNET_READY=true until the
+//!   multisig root update path (ProposeUpdateRoot + timelock + ChallengeRoot) is
+//!   deployed and the Squads vault is confirmed as the on-chain authority.
+//!
 //! Privacy architecture:
 //!   1. Deposit `denomination` lamports and record H(secret || leaf_index) on-chain
 //!   2. Withdraw by presenting: nullifier + ZK proof + recipient (any address)
@@ -45,6 +53,9 @@ pub use processor::{commitment_hash, nullifier_hash, update_merkle_root, verify_
 pub const IS_STUB: bool = true;
 /// MAINNET_READY: never flip without final circuit artifacts and live proof tests.
 pub const MAINNET_READY: bool = false;
+/// Minimum deposit prevents liveness DoS by making window exhaustion attacks expensive.
+/// Attacker must spend LEAF_WINDOW * MINIMUM_DEPOSIT to halt the pool.
+pub const MINIMUM_DEPOSIT_LAMPORTS: u64 = 100_000;
 
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_program::{account_info::AccountInfo, entrypoint, entrypoint::ProgramResult, pubkey::Pubkey};

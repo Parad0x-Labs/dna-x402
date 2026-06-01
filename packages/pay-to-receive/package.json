@@ -1,0 +1,52 @@
+{
+  "name": "@parad0x_labs/pay-to-receive",
+  "version": "0.1.0",
+  "description": "Pay-to-Receive Channels for DNA x402 — sell inbound attention and delivery guarantees. Senders pay to have payloads received, processed, or decrypted by bots, agents, or webhooks.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "tests/"
+  ],
+  "scripts": {
+    "test": "node --experimental-vm-modules --test tests/pay-to-receive.test.mjs"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "pay-to-receive",
+    "inbound-payments",
+    "delivery-receipt",
+    "agent",
+    "webhook",
+    "attention",
+    "dna-x402",
+    "parad0x-labs",
+    "usdc",
+    "micro-payments"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/pay-to-receive",
+  "license": "MIT",
+  "peerDependencies": {
+    "@solana/web3.js": "^1.98.4"
+  },
+  "peerDependenciesMeta": {
+    "@solana/web3.js": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
