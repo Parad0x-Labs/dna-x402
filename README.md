@@ -130,6 +130,7 @@ Seven new packages on top of the payment rail:
 | [`@parad0x_labs/royalty-waterfalls`](./packages/royalty-waterfalls) | Recursive fee attribution for derivative agents. Agent B uses Agent A's signal — downstream receipt carries sourceReceiptHash + fee split. No custody, receipt-based only. |
 | [`@parad0x_labs/pay-to-receive`](./packages/pay-to-receive) | Charge for inbound attention. Sender pays to have their payload received, processed, or acted on. Receipt binds ciphertextHash + delivery proof. Bots, rooms, agents. |
 | [`@parad0x_labs/mcp-server`](./packages/mcp-server) | MCP server exposing the full stack to Claude Desktop, Cursor, Windsurf, and any MCP-compatible agent. Tools: x402_get_quote, anchor_receipt, lookup_passport, build_outcome_receipt, compress_receipts, get_stack_status, private_compute. |
+| [`@parad0x_labs/context-capsule`](./packages/context-capsule) | Compress LLM session history 83x before injecting into context. 98% token cost reduction per agent session. searchCapsule finds relevant messages without decompressing full history. |
 
 ---
 
