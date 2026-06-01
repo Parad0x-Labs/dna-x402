@@ -394,3 +394,7 @@ None of these are shipped. All of them are buildable from the current foundation
 ## License
 
 MIT - Parad0x Labs
+
+<p align="center">
+  <img src="./docs/assets/github-footer-parad0xlabs.png" alt="NULL - Parad0xLabs open source systems" width="100%" />
+</p>
