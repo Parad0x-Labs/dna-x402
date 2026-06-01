@@ -1,0 +1,46 @@
+{
+  "name": "@parad0x_labs/zk-access",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ZK Access Receipts — signed credential system for agent tier access proofs. Phase 1: Ed25519 credentials. Phase 2: Groth16 'prove tier >= X' circuit.",
+  "keywords": [
+    "solana",
+    "zk",
+    "groth16",
+    "agents",
+    "x402",
+    "access-control",
+    "credentials",
+    "ed25519",
+    "bn254"
+  ],
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "node ../../node_modules/jest/bin/jest.js"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.7.0",
+    "@noble/hashes": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}

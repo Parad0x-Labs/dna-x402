@@ -1,0 +1,56 @@
+{
+  "name": "@parad0x_labs/receipt-dag",
+  "version": "0.1.0",
+  "description": "Anti-equivocation DAG for x402 agent receipts. Append-only, tamper-evident history; two receipts from the same agent with the same sequenceNonce is cryptographic proof of cheating.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "dag",
+    "receipts",
+    "anti-equivocation",
+    "merkle",
+    "agents",
+    "dna-x402",
+    "append-only",
+    "tamper-evident"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/receipt-dag",
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "peerDependencies": {
+    "@solana/web3.js": ">=1.95.0"
+  },
+  "peerDependenciesMeta": {
+    "@solana/web3.js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

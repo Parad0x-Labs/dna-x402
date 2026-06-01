@@ -1,0 +1,35 @@
+{
+  "name": "@parad0x_labs/outcome-receipts",
+  "version": "0.1.0",
+  "description": "Creator-signed, chain-anchored outcome receipts for x402 signal/task deliveries. Positive outcomes carry an optional success fee; all claims are on-chain provable via receipt_anchor.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "keywords": [
+    "solana", "x402", "outcome", "receipts", "signals", "agents",
+    "dna-x402", "parad0x-labs", "proof-of-outcome", "blockchain",
+    "success-fee", "creator-signed"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/outcome-receipts",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

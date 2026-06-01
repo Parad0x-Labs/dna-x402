@@ -1,0 +1,38 @@
+{
+  "name": "@parad0x_labs/agent-reputation",
+  "version": "0.1.0",
+  "description": "ZK-ready agent reputation anchored on Solana via receipt_anchor — no buyer or receipt data revealed",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.91.0"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.91.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "agent-reputation",
+    "zero-knowledge",
+    "zk",
+    "groth16",
+    "receipt-anchor",
+    "parad0x-labs"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parad0x-labs/dna-x402"
+  }
+}

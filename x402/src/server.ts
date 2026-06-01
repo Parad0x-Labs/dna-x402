@@ -745,6 +745,19 @@ function isExpired(expiresAtIso: string, now: Date): boolean {
 }
 
 function inferBaseUrl(req: express.Request): string {
+  if (process.env.PUBLIC_BASE_URL) {
+    return process.env.PUBLIC_BASE_URL;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "PUBLIC_BASE_URL is required in production. Set it to your canonical base URL e.g. https://api.parad0xlabs.com"
+    );
+  }
+  // Development fallback — do not use in production
+  console.warn(
+    "[inferBaseUrl] PUBLIC_BASE_URL is not set. Falling back to request-derived host. " +
+    "Set PUBLIC_BASE_URL to avoid Host header poisoning."
+  );
   return `${req.protocol}://${req.get("host")}`;
 }
 
@@ -2448,6 +2461,22 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     },
   }));
   app.use(requireHttpsMiddleware({ allowInsecure: config.allowInsecure ?? false }));
+
+  // Host header validation — rejects requests with an unrecognised Host in production
+  if (process.env.NODE_ENV === "production" && process.env.ALLOWED_HOSTS) {
+    const allowedHosts = new Set(
+      process.env.ALLOWED_HOSTS.split(",").map((h) => h.trim()).filter(Boolean)
+    );
+    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const host = req.get("host") ?? "";
+      if (!allowedHosts.has(host)) {
+        res.status(400).json({ error: "Host not allowed" });
+        return;
+      }
+      next();
+    });
+  }
+
   app.use("/market", marketRouter);
 
   const adminRouter = createAdminRouter({

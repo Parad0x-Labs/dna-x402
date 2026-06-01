@@ -1,0 +1,36 @@
+{
+  "name": "@parad0x_labs/blind-access",
+  "version": "0.1.0",
+  "description": "Blind Access Receipts — HMAC-SHA256 anonymous API tokens for x402-gated services. Phase 1 server-side unlinkability; Phase 2 roadmap: Chaum RSA / BLS blind sigs.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test tests/blind-access.test.mjs"
+  },
+  "keywords": [
+    "solana", "x402", "blind-token", "anonymous", "api-access",
+    "hmac", "receipts", "dna-x402", "parad0x-labs", "privacy",
+    "ai-agents", "payments", "unlinkability"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/blind-access",
+  "license": "MIT",
+  "dependencies": {},
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
