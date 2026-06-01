@@ -5,7 +5,9 @@
 ![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
 ![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
 
-![DNA x402 Header](./docs/assets/dna-header.svg)
+<p align="center">
+  <img src="./docs/assets/github-header-dna-x402.png" alt="Parad0x Labs" width="100%" />
+</p>
 
 **Any API can become a paid endpoint. Any agent can quote, pay, verify, and continue in one machine-readable loop.**
 
@@ -401,6 +403,10 @@ None of these are shipped. All of them are buildable from the current foundation
 
 - Privacy settlement lane: [`Parad0x-Labs/Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol)
 - Full stack map: [`docs/PARADOX_STACK.md`](./docs/PARADOX_STACK.md)
+
+<p align="center">
+  <img src="./docs/assets/github-footer-parad0xlabs.png" alt="NULL — Parad0x Labs open source systems" width="100%" />
+</p>
 
 ## License
 
