@@ -1,0 +1,21 @@
+{
+  "name": "@parad0x_labs/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for the Parad0x Labs stack — x402 payments, receipt anchoring, agent identity, Liquefy compression",
+  "type": "module",
+  "bin": { "parad0x-mcp": "./dist/index.js" },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "node --experimental-strip-types src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@solana/web3.js": "^1.98.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": { "node": ">=22" }
+}
