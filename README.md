@@ -94,6 +94,23 @@ legacy_mirror: https://github.com/Parad0x-Labs/x402-dna
 | on-chain auditability | `receipt_anchor` and VERIFIED semantics |
 | privacy settlement | optional Dark Null receipt path, or use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) directly |
 
+## If you already built agent payment infrastructure
+
+Already have a pay-per-request system, an agent billing gateway, or a
+GPU/compute marketplace on Solana? You don't need to rebuild anything.
+
+| If your stack has... | What DNA x402 adds |
+|---|---|
+| Your own 402 payment handler | x402-standard adapter — your agents reach every x402-gated API without code changes |
+| Off-chain settlement records | `receipt_anchor` + Liquefy — 83× compressed receipts, permanent Merkle root on Solana, tamper-proof billing history |
+| Ed25519 agent keys | Dark Passport — hardware-bind those keys to a Secure Enclave or passkey, on-chain provable identity |
+| GPU/compute operators claiming hardware | NullLive — continuous hardware-attested proof heartbeat, verifiable on Solana |
+| Per-request USDC settlement | Compressed audit trail — 1M payment receipts → 32 bytes on-chain, $0.001/day |
+
+These are additive layers. Drop them in alongside what you already ship.
+
+---
+
 ## Why it gets attention
 
 - **Turns any API into agent commerce** instead of another API-key integration
