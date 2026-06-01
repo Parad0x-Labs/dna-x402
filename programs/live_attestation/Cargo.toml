@@ -1,0 +1,21 @@
+[package]
+name    = "live-attestation"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+# ⚠️  EXTERNALLY UNAUDITED — proof-of-concept pilot.
+# IS_MAINNET_READY = false until audit + ceremony complete.
+#
+# Deploy: cargo build-sbf [--features mainnet]
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default     = []
+no-entrypoint = []
+mainnet     = []
+
+[dependencies]
+solana-program = { workspace = true }

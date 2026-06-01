@@ -1,0 +1,29 @@
+{
+  "name": "@parad0x_labs/nulllive-sdk",
+  "version": "0.1.0",
+  "description": "NullLive — continuous hardware attestation SDK for live streams",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "solana",
+    "attestation",
+    "livestream",
+    "arweave",
+    "x402",
+    "nulllive"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@solana/web3.js": "^1.98.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.4.0"
+  }
+}
