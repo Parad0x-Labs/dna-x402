@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "liquefy-openclaw-integration"
+version = "1.2.0"
+description = "OpenClaw operator integration: Dark Null bridge, per-receipt anchoring, Agent Passport binding for Liquefy TraceVaults."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "Parad0x Labs", email = "labs@parad0x.io" }]
+keywords = [
+  "liquefy", "openclaw", "dark-null", "agent-passport", "x402",
+  "solana", "zk-proofs", "groth16", "tracevault", "dna",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Security :: Cryptography",
+]
+dependencies = [
+  "zstandard>=0.21.0",
+  "cryptography>=41.0.0",
+]
+
+[project.optional-dependencies]
+solana = [
+  "solders>=0.18.0",
+  "requests>=2.28.0",
+]
+
+[project.urls]
+Homepage   = "https://github.com/Parad0x-Labs/dna-x402"
+Repository = "https://github.com/Parad0x-Labs/dna-x402"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["plugins*"]
