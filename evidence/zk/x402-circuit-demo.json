@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-01T20:06:30.253Z",
+  "demo": "x402-access-circuit",
+  "circuit": "circuits/x402_access.circom",
+  "curve": "bn254",
+  "protocol": "groth16",
+  "mode": "SIMULATION",
+  "publicInputs": {
+    "commitment": "0x0162b3ec57c7252d7350078148ce80eada1a4e57bd2514ee733206de7c6e671c",
+    "threshold": "100",
+    "nullifier": "0x0847905a76e5f17264dcc15031baa5bf0efa21b04e5272c174cfc8eb3d682526"
+  },
+  "circuitRelation": [
+    "Poseidon(secret, agent_id) == commitment  [binding]",
+    "Poseidon(secret, nonce)    == nullifier   [anti-replay]",
+    "balance >= threshold                       [tier gate]",
+    "balance < 2^64                             [overflow guard]"
+  ],
+  "result": {
+    "proofGenerated": false,
+    "validProofVerified": false,
+    "tamperedProofRejected": false
+  },
+  "onChainVerifier": {
+    "program": "dark_bn254_gate",
+    "network": "Solana mainnet",
+    "syscall": "alt_bn128_pairing",
+    "estimatedCU": 150000,
+    "payloadBytes": 352
+  },
+  "noirPath": {
+    "toolchain": "reilabs/sunspot",
+    "status": "experimental — unaudited, no MPC ceremony",
+    "proofSystem": "Groth16 (via gnark, same BN254 curve)",
+    "requiredVersion": "noir 1.0.0-beta.18",
+    "blocker": "No security audit, no production ceremony",
+    "reference": "docs/NOIR_X402_CIRCUIT.md"
+  },
+  "honestCaveats": [
+    "Poseidon hash in test vectors uses SHA-256 stub, not real Poseidon. Real proofs require circomlibjs.",
+    "Phase-2 zkey is a local setup — not an audited MPC ceremony. Run ceremony before mainnet.",
+    "No on-chain submission in this demo. See verifyAccessProof() in packages/x402-circuit/src/index.ts.",
+    "Noir path documented but not executed. Sunspot unaudited as of 2026-06-01."
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "@parad0x_labs/x402-circuit",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ZK access proof for x402 payment gating — prove tier authorization without revealing wallet or balance. Groth16 BN254. On-chain: dark_bn254_gate (Solana mainnet).",
+  "keywords": [
+    "solana",
+    "zk",
+    "groth16",
+    "bn254",
+    "x402",
+    "agents",
+    "access-control",
+    "circom",
+    "noir",
+    "privacy",
+    "payment-gating"
+  ],
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "node ../../node_modules/jest/bin/jest.js"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.5.0"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.98.0"
+  },
+  "peerDependenciesMeta": {
+    "@solana/web3.js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}
