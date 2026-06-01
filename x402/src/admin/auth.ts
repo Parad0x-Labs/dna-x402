@@ -6,13 +6,15 @@ export interface AdminAuthOptions {
   allowInsecure?: boolean;
 }
 
-function readAdminToken(req: Request): string | undefined {
-  const headerToken = req.header("x-admin-token");
-  if (headerToken) {
-    return headerToken;
+function readAdminToken(req: Request, res: Response): string | undefined {
+  if (req.query.adminToken !== undefined) {
+    res.status(400).json({
+      error: "insecure_token_transport",
+      message: "Admin token must be sent in x-admin-token header, not query string.",
+    });
+    return undefined;
   }
-  const queryToken = req.query.adminToken;
-  return typeof queryToken === "string" ? queryToken : undefined;
+  return req.header("x-admin-token");
 }
 
 function constantTimeEquals(actual: string, expected: string): boolean {
@@ -36,7 +38,8 @@ export function adminAuth(options: AdminAuthOptions) {
       return;
     }
 
-    const token = readAdminToken(req);
+    const token = readAdminToken(req, res);
+    if (res.headersSent) return;
     if (!token || !constantTimeEquals(token, secret)) {
       res.status(403).json({ error: "forbidden", message: "Invalid admin token" });
       return;

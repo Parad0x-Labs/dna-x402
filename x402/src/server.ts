@@ -690,8 +690,15 @@ function inferNetworkLabel(rpcUrl: string): "solana-devnet" | "solana-mainnet" {
 
 function chooseRecommendedMode(quote: Quote, config: X402Config): SettlementMode {
   const total = parseAtomic(quote.totalAtomic);
-  if (config.unsafeUnverifiedNettingEnabled && shouldUseNetting(config.feePolicy, total) && quote.settlement.includes("netting")) {
-    return "netting";
+  if (config.unsafeUnverifiedNettingEnabled) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "UNSAFE_UNVERIFIED_NETTING_ENABLED cannot be true in production. This flag is for local development only.",
+      );
+    }
+    if (shouldUseNetting(config.feePolicy, total) && quote.settlement.includes("netting")) {
+      return "netting";
+    }
   }
   if (quote.resource.includes("stream") && quote.settlement.includes("stream")) {
     return "stream";
@@ -928,12 +935,26 @@ function resolveGuardConfig(config: X402Config): X402GuardConfig {
   };
 }
 
+// TODO (P0 security): buyerId and agentId (and walletAddress / apiKeyId) are
+// read verbatim from client-supplied headers and are therefore UNTRUSTED.  Any
+// caller can forge x-dna-buyer-id or x-dna-agent-id to impersonate another
+// identity and bypass spend ceilings.
+//
+// Full fix: replace these header values with the verified payer wallet address
+// extracted from the on-chain payment proof once verifyPaymentForQuote confirms
+// the transaction.  The verifier must be extended to return the on-chain sender
+// address, and that address should be used as the authoritative walletAddress
+// (and, where applicable, buyerId) passed to checkSpend / commitSpend.
+//
+// Until that threading is complete, spend ceilings are advisory only and
+// MUST NOT be relied upon as a tamper-proof access-control mechanism.
 function guardActorFromRequest(req: express.Request): {
   buyerId?: string;
   walletAddress?: string;
   agentId?: string;
   apiKeyId?: string;
 } {
+  // UNTRUSTED — see TODO above.
   return {
     buyerId: req.header("x-dna-buyer-id") ?? undefined,
     walletAddress: req.header("x-dna-wallet") ?? undefined,
@@ -1099,6 +1120,11 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const guardConfig = resolveGuardConfig(config);
   const feeLedgerStore = deps.feeLedgerStore ?? createFeeLedgerStore(config);
 
+  if (config.unsafeUnverifiedNettingEnabled && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "UNSAFE_UNVERIFIED_NETTING_ENABLED cannot be true in production. This flag is for local development only.",
+    );
+  }
   const connection = new Connection(config.solanaRpcUrl, "confirmed");
   const paymentVerifier = deps.paymentVerifier ?? new SolanaPaymentVerifier(connection, {
     allowUnverifiedNetting: config.unsafeUnverifiedNettingEnabled,
@@ -1106,7 +1132,17 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   });
   const receiptSigner = deps.receiptSigner ?? (config.receiptSigningSecret
     ? ReceiptSigner.fromBase58Secret(config.receiptSigningSecret)
-    : ReceiptSigner.generate());
+    : (() => {
+        if (process.env.NODE_ENV === "production") {
+          throw new Error(
+            "RECEIPT_SIGNING_SECRET is required in production. Set this env var to a stable 32+ char secret."
+          );
+        }
+        console.warn(
+          "WARNING: Using ephemeral receipt signer. Receipts will not verify after restart. Set RECEIPT_SIGNING_SECRET for stable receipts."
+        );
+        return ReceiptSigner.generate();
+      })());
   const nettingLedger = deps.nettingLedger ?? new NettingLedger({
     settleThresholdAtomic: config.nettingThresholdAtomic,
     settleIntervalMs: config.nettingIntervalMs,
@@ -2344,6 +2380,10 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       shopId: CORE_SHOP_ID,
     });
     const receiptValid = verifySignedReceipt(receipt);
+    // TODO (P0 security): actor identity here comes from unverified request headers
+    // via observeGuardActor/guardActorFromRequest.  Replace with the on-chain sender
+    // wallet once verifyPaymentForQuote is extended to return it, so that spend
+    // ceilings cannot be bypassed by forging x-dna-buyer-id / x-dna-agent-id.
     guard?.ledger.commitSpend(observeGuardActor(req), quote.totalAtomic, now());
     recordGuardReceiptVerification(req, resource, receipt.payload.receiptId, receiptValid, receiptValid ? undefined : "receipt_signature_invalid");
     recordGuardDelivery(resource, 0, 200, receipt.payload.receiptId, receiptValid);
@@ -4073,6 +4113,10 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       throw error;
     }
     const receiptValid = verifySignedReceipt(signedReceipt);
+    // TODO (P0 security): actor identity here comes from unverified request headers
+    // via observeGuardActor/guardActorFromRequest.  Replace with the on-chain sender
+    // wallet once verifyPaymentForQuote is extended to return it, so that spend
+    // ceilings cannot be bypassed by forging x-dna-buyer-id / x-dna-agent-id.
     guard?.ledger.commitSpend(observeGuardActor(req), quote.totalAtomic, now());
     recordRealChainDrillFinalize(quote.totalAtomic);
     recordPublicBetaLiveFinalize(quote.totalAtomic);

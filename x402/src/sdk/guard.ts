@@ -111,13 +111,33 @@ const spendQuerySchema = z.object({
   apiKeyId: z.string().min(1).optional(),
 });
 
-function defaultActorFromRequest(req: Request): DnaGuardActor {
+// SECURITY: trustLevel indicates whether the actor identity has been verified.
+// "header"   — identity comes verbatim from request headers (x-dna-buyer-id,
+//              x-dna-agent-id, x-dna-wallet, x-dna-api-key-id).  Any client
+//              can forge these values; spend ceilings enforced against them
+//              are NOT tamper-proof.
+// "verified" — caller has bound the actor to a cryptographically verified
+//              identity (e.g. a confirmed on-chain payment proof, a signed
+//              API-key challenge, or an authenticated session).  Spend
+//              ceilings are authoritative only at this trust level.
+//
+// TODO (P0): until every code path that calls checkSpend / commitSpend passes
+// a "verified" actor derived from an on-chain payment proof or signed auth
+// token, spend ceilings can be bypassed by forging these headers.
+export type DnaGuardActorTrustLevel = "header" | "verified";
+
+function defaultActorFromRequest(req: Request): DnaGuardActor & { trustLevel: DnaGuardActorTrustLevel } {
   const header = (name: string) => req.header(name) ?? undefined;
+  // UNTRUSTED: values below come directly from client-supplied headers.
+  // They must NOT be used as authoritative identities for spend-ceiling
+  // enforcement without first verifying them via a payment proof, API key,
+  // or session.  See DnaGuardActorTrustLevel above.
   return {
     buyerId: header("x-dna-buyer-id"),
     walletAddress: header("x-dna-wallet"),
     agentId: header("x-dna-agent-id"),
     apiKeyId: header("x-dna-api-key-id"),
+    trustLevel: "header",
   };
 }
 

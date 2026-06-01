@@ -892,6 +892,14 @@ export function validateMainnetReadiness(config: X402Config): string[] {
   const issues: string[] = [];
   issues.push(...validateRuntimeGateConfig(config));
 
+  // Guard: unsafeUnverifiedNettingEnabled must never be true in production,
+  // even if the RPC URL does not contain "mainnet" in its hostname.
+  if (config.unsafeUnverifiedNettingEnabled && process.env.NODE_ENV === "production") {
+    issues.push(
+      "UNSAFE_UNVERIFIED_NETTING_ENABLED cannot be true in production. This flag is for local development only.",
+    );
+  }
+
   if (!isMainnetConfig(config)) {
     return issues;
   }
