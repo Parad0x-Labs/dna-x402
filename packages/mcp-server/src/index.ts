@@ -5,7 +5,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { createHash, createHmac, randomBytes } from "crypto";
+import { createHash, createHmac, randomBytes, createCipheriv, createSecretKey } from "crypto";
 import { deflateSync } from "zlib";
 import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction } from "@solana/web3.js";
 
@@ -355,6 +355,105 @@ function compressReceipts(receipts: object[]): object {
   };
 }
 
+async function privateCompute(params: {
+  plaintext_input: string;
+  executor_endpoint: string;
+  encryption_key_hex?: string;
+  anchor?: boolean;
+  rpc_url?: string;
+}): Promise<object> {
+  const { plaintext_input, executor_endpoint, encryption_key_hex, anchor, rpc_url } = params;
+
+  // Step 1: Generate or use provided 32-byte AES-256 key
+  let rawKeyBytes: Uint8Array;
+  if (encryption_key_hex) {
+    if (!/^[0-9a-fA-F]{64}$/.test(encryption_key_hex)) {
+      return { error: "encryption_key_hex must be exactly 64 hex characters (32 bytes)" };
+    }
+    rawKeyBytes = new Uint8Array(Buffer.from(encryption_key_hex, "hex"));
+  } else {
+    rawKeyBytes = new Uint8Array(randomBytes(32));
+  }
+  const keyHex = Buffer.from(rawKeyBytes).toString("hex");
+  const secretKey = createSecretKey(rawKeyBytes);
+
+  // Step 2: Encrypt with AES-256-GCM (12-byte nonce prefix)
+  const nonceBytes = new Uint8Array(randomBytes(12));
+  const cipher = createCipheriv("aes-256-gcm", secretKey, nonceBytes);
+  const encPart1 = cipher.update(plaintext_input, "utf8") as unknown as Uint8Array;
+  const encPart2 = cipher.final() as unknown as Uint8Array;
+  const authTagBuf = cipher.getAuthTag() as unknown as Uint8Array;
+  const nonceCast = Buffer.from(nonceBytes) as unknown as Uint8Array;
+  // Layout: [12-byte nonce][16-byte auth tag][ciphertext]
+  const encryptedBlob = Buffer.concat([nonceCast, authTagBuf, encPart1, encPart2]);
+  const encryptedInputBase64 = encryptedBlob.toString("base64");
+
+  // Step 3: Compute input_hash = sha256(plaintext_input)
+  const inputHash = sha256hex(plaintext_input);
+
+  // Step 4: POST to executor_endpoint
+  let executorResponse: object = { status: "unreachable", note: "Executor endpoint could not be reached; local hashes recorded." };
+  try {
+    const res = await fetch(executor_endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ciphertext: encryptedInputBase64, input_hash: inputHash }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const text = await res.text().catch(() => "");
+    try {
+      executorResponse = JSON.parse(text) as object;
+    } catch {
+      executorResponse = { raw: text, http_status: res.status };
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    executorResponse = { status: "unreachable", error: msg, note: "Executor endpoint could not be reached; local hashes recorded." };
+  }
+
+  // Step 5: result_hash = sha256(JSON.stringify(executorResponse))
+  const resultHash = sha256hex(JSON.stringify(executorResponse));
+
+  // Step 6: Optionally anchor (input_hash + result_hash) on Solana
+  let commitmentTx: string | undefined;
+  let explorerUrl: string | undefined;
+
+  if (anchor) {
+    // Commitment = sha256(input_hash_bytes + result_hash_bytes)
+    const ihBuf = Buffer.from(inputHash, "hex") as unknown as Uint8Array;
+    const rhBuf = Buffer.from(resultHash, "hex") as unknown as Uint8Array;
+    const combined = Buffer.concat([ihBuf, rhBuf]) as unknown as Uint8Array;
+    const commitmentHex = createHash("sha256").update(combined).digest("hex");
+
+    const anchorResult = await anchorReceipt(
+      commitmentHex,
+      rpc_url ?? process.env.SOLANA_RPC_URL ?? DEFAULT_RPC
+    ) as Record<string, unknown>;
+
+    if (anchorResult.solana_tx) {
+      commitmentTx = anchorResult.solana_tx as string;
+      explorerUrl = anchorResult.explorer_url as string;
+    } else if (anchorResult.error) {
+      commitmentTx = `anchor_failed: ${anchorResult.error}`;
+    }
+  }
+
+  // Step 7: Return all fields
+  const output: Record<string, unknown> = {
+    encrypted_input_base64: encryptedInputBase64,
+    input_hash: inputHash,
+    executor_response: executorResponse,
+    result_hash: resultHash,
+    key_hex: keyHex,
+    protocol_note: "executor received ciphertext only — plaintext never left client",
+  };
+
+  if (commitmentTx !== undefined) output.commitment_tx = commitmentTx;
+  if (explorerUrl !== undefined) output.explorer_url = explorerUrl;
+
+  return output;
+}
+
 function getStackStatus(): object {
   return {
     programs: [
@@ -550,6 +649,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {},
         },
       },
+      {
+        name: "private_compute",
+        description:
+          "Run a computation via an executor endpoint without exposing plaintext inputs. Agent encrypts locally, sends ciphertext, executor returns encrypted result + result hash. Commit (input_hash, result_hash) on Solana. Executor never sees plaintext.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            plaintext_input: {
+              type: "string",
+              description: "The sensitive input (JSON string or text) to encrypt before sending",
+            },
+            executor_endpoint: {
+              type: "string",
+              description: "URL of the executor API that receives the ciphertext",
+            },
+            encryption_key_hex: {
+              type: "string",
+              description: "Optional 32-byte AES-256 key as 64 hex characters. Generated if not provided.",
+            },
+            anchor: {
+              type: "boolean",
+              description: "If true, commit (input_hash, result_hash) to Solana via receipt_anchor",
+            },
+            rpc_url: {
+              type: "string",
+              description: "Solana RPC URL (default: mainnet-beta public RPC)",
+            },
+          },
+          required: ["plaintext_input", "executor_endpoint"],
+        },
+      },
     ],
   };
 });
@@ -610,6 +740,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_stack_status": {
         result = getStackStatus();
+        break;
+      }
+
+      case "private_compute": {
+        result = await privateCompute(
+          args as {
+            plaintext_input: string;
+            executor_endpoint: string;
+            encryption_key_hex?: string;
+            anchor?: boolean;
+            rpc_url?: string;
+          }
+        );
         break;
       }
 

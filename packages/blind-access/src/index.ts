@@ -14,7 +14,7 @@
  *   unlinkability but not cryptographic unlinkability.
  */
 
-import { createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes, createCipheriv, createDecipheriv, createHash } from "node:crypto";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -199,4 +199,170 @@ export function buildRedeemPayload(token: BlindToken): RedeemPayload {
     hmac: token.hmac,
     redeemedAt: new Date().toISOString(),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Private Compute Protocol
+// ---------------------------------------------------------------------------
+
+/**
+ * Private Compute Protocol
+ *
+ * Pattern borrowed from FHE commitment-chaining:
+ * 1. Agent encrypts inputs locally (AES-256-GCM)
+ * 2. Only ciphertext + input_hash sent to executor
+ * 3. Executor returns encrypted_result + result_hash
+ * 4. Agent decrypts locally — executor never saw plaintext
+ * 5. (input_hash, result_hash) committed to Solana via receipt_anchor
+ *
+ * Use cases: private inference calls, blind signal delivery,
+ * sensitive agent state without exposing to any server.
+ */
+
+export interface PrivateComputeSession {
+  sessionId: string;
+  /** 32-byte AES-256 key, hex encoded */
+  keyHex: string;
+  /** sha256 of plaintext input, hex encoded */
+  inputHash: string;
+  /** AES-256-GCM encrypted input; 12-byte nonce prepended, then ciphertext+tag, base64 encoded */
+  encryptedInputBase64: string;
+  createdAt: number;
+  executorEndpoint?: string;
+  /** sha256 of JSON.stringify(executorResponse), hex encoded */
+  resultHash?: string;
+  /** Solana anchor tx signature if committed on-chain */
+  commitmentTx?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Private Compute helpers
+// ---------------------------------------------------------------------------
+
+/** sha256(data) → hex string */
+function sha256Hex(data: string | Buffer): string {
+  return createHash("sha256").update(data).digest("hex");
+}
+
+/** sha256(data) → Buffer */
+function sha256Buf(data: Buffer): Buffer {
+  return createHash("sha256").update(data).digest();
+}
+
+/**
+ * AES-256-GCM encrypt.
+ * Returns Buffer: [ 12-byte nonce | ciphertext | 16-byte auth tag ]
+ */
+function aesGcmEncrypt(plaintextUtf8: string, keyHex: string): Buffer {
+  const key = Buffer.from(keyHex, "hex");
+  if (key.length !== 32) {
+    throw new TypeError("keyHex must encode exactly 32 bytes for AES-256");
+  }
+  const nonce = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, nonce);
+  const encrypted = Buffer.concat([cipher.update(plaintextUtf8, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([nonce, encrypted, tag]);
+}
+
+/**
+ * AES-256-GCM decrypt.
+ * Expects Buffer: [ 12-byte nonce | ciphertext | 16-byte auth tag ]
+ */
+function aesGcmDecrypt(ciphertextBuf: Buffer, keyHex: string): string {
+  const key = Buffer.from(keyHex, "hex");
+  if (key.length !== 32) {
+    throw new TypeError("keyHex must encode exactly 32 bytes for AES-256");
+  }
+  const nonce = ciphertextBuf.subarray(0, 12);
+  const tag = ciphertextBuf.subarray(ciphertextBuf.length - 16);
+  const ciphertext = ciphertextBuf.subarray(12, ciphertextBuf.length - 16);
+  const decipher = createDecipheriv("aes-256-gcm", key, nonce);
+  decipher.setAuthTag(tag);
+  return decipher.update(ciphertext) + decipher.final("utf8");
+}
+
+// ---------------------------------------------------------------------------
+// Public API — Private Compute Protocol
+// ---------------------------------------------------------------------------
+
+/**
+ * createPrivateComputeSession — agent calls this before sending work to an executor.
+ *
+ * Encrypts the plaintext input locally using AES-256-GCM and records the
+ * sha256 input hash. The executor receives only the ciphertext and hash;
+ * it never sees the plaintext.
+ *
+ * @param plaintextInput  The raw input string (prompt, signal, agent state, etc.)
+ * @param keyHex          Optional 32-byte hex AES-256 key. Generated if omitted.
+ * @returns               A PrivateComputeSession ready to send (minus executor fields).
+ */
+export function createPrivateComputeSession(
+  plaintextInput: string,
+  keyHex?: string
+): PrivateComputeSession {
+  const resolvedKeyHex = keyHex ?? randomBytes(32).toString("hex");
+  const sessionId = randomBytes(16).toString("hex");
+  const inputHash = sha256Hex(plaintextInput);
+  const encryptedBuf = aesGcmEncrypt(plaintextInput, resolvedKeyHex);
+  const encryptedInputBase64 = encryptedBuf.toString("base64");
+
+  return {
+    sessionId,
+    keyHex: resolvedKeyHex,
+    inputHash,
+    encryptedInputBase64,
+    createdAt: Date.now(),
+  };
+}
+
+/**
+ * finalizeSession — agent calls this after receiving a response from the executor.
+ *
+ * Records the result hash (sha256 of the JSON-serialised executor response).
+ * After finalisation, `buildCommitmentHash` can produce the on-chain anchor value.
+ *
+ * @param session           An existing PrivateComputeSession.
+ * @param executorResponse  Raw response from the executor (any JSON-serialisable value).
+ * @returns                 Updated session with `resultHash` set.
+ */
+export function finalizeSession(
+  session: PrivateComputeSession,
+  executorResponse: unknown
+): PrivateComputeSession {
+  const resultHash = sha256Hex(JSON.stringify(executorResponse));
+  return { ...session, resultHash };
+}
+
+/**
+ * buildCommitmentHash — produces the 32-byte value anchored on Solana.
+ *
+ * Commitment = sha256(inputHash + resultHash)
+ *
+ * Both the agent and any third-party verifier can recompute this from the
+ * public (inputHash, resultHash) pair without ever needing the plaintext.
+ *
+ * @param session  A finalised PrivateComputeSession (must have resultHash).
+ * @returns        32-byte Uint8Array suitable for Solana instruction data.
+ */
+export function buildCommitmentHash(session: PrivateComputeSession): Uint8Array {
+  if (!session.resultHash) {
+    throw new Error("Session must be finalised (resultHash missing). Call finalizeSession first.");
+  }
+  return sha256Buf(Buffer.from(session.inputHash + session.resultHash, "utf8"));
+}
+
+/**
+ * decryptResult — agent decrypts an encrypted result returned by the executor.
+ *
+ * The executor encrypts its response with the session key before returning it,
+ * so no intermediary (relay, load-balancer, logging pipeline) ever sees plaintext.
+ *
+ * @param encryptedResultBase64  Base64-encoded AES-256-GCM payload (nonce-prepended).
+ * @param keyHex                 32-byte hex AES-256 key from the session.
+ * @returns                      Decrypted plaintext string.
+ */
+export function decryptResult(encryptedResultBase64: string, keyHex: string): string {
+  const buf = Buffer.from(encryptedResultBase64, "base64");
+  return aesGcmDecrypt(buf, keyHex);
 }
