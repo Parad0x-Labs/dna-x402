@@ -23,6 +23,16 @@ https://github.com/Parad0x-Labs/dna-x402
 
 `Parad0x-Labs/x402-dna` is a legacy mirror. Public links, install instructions, and builder docs should point to `dna-x402`.
 
+## 💸 What you could build with it
+
+You don't need to be a protocol nerd to use this. A few ways people put it to work:
+
+- 🔌 **Got an API?** Add a few lines and charge per call — paid in USDC the second it's used. No Stripe account, no chargebacks, no monthly fee.
+- 🤖 **Got a bot or a data feed?** Sell it per hit. The buyer's bot pays yours automatically — machine to machine, no invoices.
+- 🧠 **Building an AI agent?** Let it earn its own keep: hold a wallet, charge for its work, settle on-chain.
+
+You keep your keys — the rail just handles the money. *(Not investment advice; what you build and charge is up to you.)*
+
 ### How this fits the Parad0x stack
 
 Parad0x Labs builds Web0 on Solana — money and agents that settle themselves. **You are here: 💸 Payments.**
