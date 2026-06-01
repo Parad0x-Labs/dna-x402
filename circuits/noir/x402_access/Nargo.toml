@@ -1,0 +1,7 @@
+[package]
+name = "x402_access"
+type = "bin"
+authors = ["Parad0x Labs"]
+compiler_version = ">=1.0.0"
+
+[dependencies]

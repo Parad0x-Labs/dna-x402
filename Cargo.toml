@@ -186,6 +186,8 @@ members = [
     # DARK_ZK_PRIMITIVES_V1 - Phase 2 (proof bundle generator + on-chain gate)
     "crates/dark-bn254-proof-gen",
     "programs/dark_bn254_gate",
+    # X402_ACCESS_GATE - x402 payment tier access proof verifier (3 public inputs: commitment, threshold, nullifier)
+    "programs/dark_x402_access_gate",
     # DARK_ZK_PRIMITIVES_V1 - Phase 3 (on-chain nullifier recorder)
     "programs/dark_nullifier_record",
     # DARK_ZK_PRIMITIVES_V1 - Phase 4 (Semaphore group registry + nullifier store)
@@ -196,6 +198,9 @@ members = [
     "programs/dark_secp256k1_auth",
     "programs/null_lottery",
     "programs/null_mint_gate",
+    "programs/live_attestation",
+    # SOULBOUND_AGENT_PASSPORT - NonTransferable Token-2022 credential + PermanentDelegate revocation
+    "programs/agent_credential_mint",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

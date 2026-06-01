@@ -1,0 +1,304 @@
+{
+  "fixture": "agent-session-100",
+  "original_tokens": 7583,
+  "capsule_tokens": 53,
+  "saved_tokens": 7530,
+  "savings_percent": 99.3,
+  "recovery_score_percent": 100,
+  "runtime_ms": 29,
+  "questions_total": 30,
+  "questions_passed": 30,
+  "passed_gates": true,
+  "gate_savings_ok": true,
+  "gate_recovery_ok": true,
+  "gate_runtime_ok": true,
+  "per_question": [
+    {
+      "question": "Which TypeScript source files were changed during this session?",
+      "passed": true,
+      "matched_keywords": [
+        "compress.ts",
+        "merkle.ts",
+        "anchor.ts"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What function in anchor.ts submits the Solana transaction?",
+      "passed": true,
+      "matched_keywords": [
+        "anchorReceipts",
+        "anchor.ts"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What is the npm package name for this module?",
+      "passed": true,
+      "matched_keywords": [
+        "@parad0x_labs",
+        "receipt-anchor"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What is the canonical field ordering used in compressReceipt?",
+      "passed": true,
+      "matched_keywords": [
+        "amount",
+        "paymentId",
+        "compress.ts"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What interface is defined in compress.ts to represent a payment receipt?",
+      "passed": true,
+      "matched_keywords": [
+        "Receipt",
+        "paymentId",
+        "amount"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What was the BigInt bug found in compress.ts and what exactly crashed?",
+      "passed": true,
+      "matched_keywords": [
+        "BigInt(null)",
+        "TypeError",
+        "null"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "How was the BigInt null crash in compress.ts fixed?",
+      "passed": true,
+      "matched_keywords": [
+        "0n",
+        "BigInt",
+        "null"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What was wrong with the hash combination order in merkle.ts?",
+      "passed": true,
+      "matched_keywords": [
+        "carry",
+        "node",
+        "hashPair"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "How was the merkle.ts hash order bug fixed?",
+      "passed": true,
+      "matched_keywords": [
+        "hashPair",
+        "right",
+        "left"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Which specific Merkle tests failed because of the wrong hash combination order?",
+      "passed": true,
+      "matched_keywords": [
+        "two-leaf",
+        "four-leaf",
+        "AssertionError"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What error is thrown when trying to build a Merkle root from an empty array?",
+      "passed": true,
+      "matched_keywords": [
+        "Cannot build Merkle root",
+        "empty leaves"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Why was Poseidon rejected in favour of SHA-256 for the Merkle tree?",
+      "passed": true,
+      "matched_keywords": [
+        "SHA-256",
+        "Poseidon",
+        "slower"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Why was storing full receipt data on-chain rejected?",
+      "passed": true,
+      "matched_keywords": [
+        "32-byte",
+        "root",
+        "expensive"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What is the on-chain instruction format for receipt_anchor?",
+      "passed": true,
+      "matched_keywords": [
+        "34 bytes",
+        "0x01",
+        "0x00"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Why was SHA-256 chosen over Keccak-256 for this project?",
+      "passed": true,
+      "matched_keywords": [
+        "SHA-256",
+        "Solana",
+        "Keccak"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Why does the program ID come from environment variables rather than being hard-coded in source?",
+      "passed": true,
+      "matched_keywords": [
+        ".env",
+        "RECEIPT_ANCHOR_PROGRAM_ID",
+        "hard-coded"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "How many tests passed after both bugs were fixed?",
+      "passed": true,
+      "matched_keywords": [
+        "31",
+        "passed"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What is the name of the top-level test suite used in the test output?",
+      "passed": true,
+      "matched_keywords": [
+        "receipt-anchor"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What is the exact command to run the tests once without watch mode?",
+      "passed": true,
+      "matched_keywords": [
+        "vitest run"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "How many tests are in the receipt-anchor > merkle sub-suite?",
+      "passed": true,
+      "matched_keywords": [
+        "5",
+        "merkle"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What are the highest-priority remaining TODOs for this project?",
+      "passed": true,
+      "matched_keywords": [
+        "Arweave",
+        "darkSecp256r1",
+        "grant"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What needs to be wired into the anchorReceipts function for production authentication?",
+      "passed": true,
+      "matched_keywords": [
+        "darkSecp256r1",
+        "vault",
+        "login"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What must be completed before Liquefy integration can be implemented?",
+      "passed": true,
+      "matched_keywords": [
+        "Arweave",
+        "upload"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What external grant application remains to be submitted?",
+      "passed": true,
+      "matched_keywords": [
+        "Solana Foundation",
+        "grant"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What types of files must never be committed to the repository?",
+      "passed": true,
+      "matched_keywords": [
+        "keypair",
+        ".env",
+        "private keys"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Where must private keys be stored according to the project security constraints?",
+      "passed": true,
+      "matched_keywords": [
+        ".env",
+        "private keys"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What is the exact byte layout requirement for the receipt_anchor instruction?",
+      "passed": true,
+      "matched_keywords": [
+        "34 bytes",
+        "0x01",
+        "0x00"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What security gap exists in anchorReceipts that must be resolved before production?",
+      "passed": true,
+      "matched_keywords": [
+        "darkSecp256r1",
+        "authentication",
+        "keypair"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What cargo command was used to build the Solana on-chain program?",
+      "passed": true,
+      "matched_keywords": [
+        "cargo build-sbf",
+        "receipt_anchor.so"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What was the solana CLI command used to deploy the compiled program to devnet?",
+      "passed": true,
+      "matched_keywords": [
+        "solana program deploy",
+        "--url devnet"
+      ],
+      "missing_keywords": []
+    }
+  ],
+  "timestamp": "2026-06-01T21:07:32.346Z"
+}

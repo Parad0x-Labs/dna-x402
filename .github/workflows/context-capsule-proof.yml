@@ -1,0 +1,29 @@
+name: Context Capsule Public Proof
+
+on:
+  push:
+    paths:
+      - 'packages/context-capsule/**'
+  workflow_dispatch:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install
+      - name: Unit tests
+        run: node --test packages/context-capsule/tests/context-capsule.test.mjs
+      - name: Quality tests
+        run: node --test packages/context-capsule/tests/context-capsule-quality.test.mjs
+      - name: Public benchmark
+        run: node --experimental-strip-types packages/context-capsule/scripts/bench-public.ts
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: packages/context-capsule/bench/results/

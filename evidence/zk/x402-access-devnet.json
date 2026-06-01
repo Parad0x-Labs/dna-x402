@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-01T21:05:50.010Z",
+  "test": "x402-access-circuit-devnet-e2e",
+  "cluster": "devnet",
+  "program": "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6",
+  "circuit": "x402_access.circom — Poseidon commitment + nullifier + balance range check",
+  "curve": "bn254",
+  "protocol": "groth16",
+  "vkSource": "x402_access_final.zkey (single-party ceremony 2026-06-01, Parad0x Labs)",
+  "publicInputs": {
+    "commitment": "3058340958650756850333278030845923471182880899951380702275913973811505220565",
+    "threshold": "100",
+    "nullifier": "13245343514578030741594369900290446682530842171781363792498777812991056803829"
+  },
+  "circuitRelation": [
+    "C1: Poseidon(secret=42, agent_id=7) == commitment=30583409586507568503...  [binding]",
+    "C2: Poseidon(secret=42, nonce=12345) == nullifier=13245343514578030741...  [anti-replay]",
+    "C3: balance=500 >= threshold=100  [tier gate: PASS]",
+    "C4: balance < 2^64  [overflow guard: PASS]"
+  ],
+  "offChainVerification": {
+    "validProofVerified": true,
+    "tamperedProofRejected": true
+  },
+  "txSignature": "2qQFe4Bh32cLXDyrCmyjTrgcUSM6rtkxB36rZ4utm45RZRDcX6UWw2jJZ33Cj1wspYRVFvrB1DXwZco2cEDB157u",
+  "explorer": "https://explorer.solana.com/tx/2qQFe4Bh32cLXDyrCmyjTrgcUSM6rtkxB36rZ4utm45RZRDcX6UWw2jJZ33Cj1wspYRVFvrB1DXwZco2cEDB157u?cluster=devnet",
+  "result": "CONFIRMED — real Groth16 proof verified on-chain via dark_x402_access_gate",
+  "noirPath": {
+    "toolchain": "reilabs/sunspot",
+    "status": "blocked — nargo and Go not installed",
+    "fallback": "Circom x402_access.circom (this script) — working on devnet",
+    "noirSource": "circuits/noir/x402_access/src/main.nr",
+    "proofSystem": "Groth16 BN254 (same curve, same verifier math — just different frontend)"
+  },
+  "honestCaveats": [
+    "Single-party ceremony — not trustless. Run multi-party ceremony before mainnet.",
+    "Devnet deployment. Program: dark_x402_access_gate with x402_access VK embedded.",
+    "Proof generated client-side with snarkjs. On-chain verifier uses alt_bn128_pairing syscall.",
+    "Noir frontend (Sunspot) blocked: nargo + Go missing. Circuit source in circuits/noir/."
+  ]
+}

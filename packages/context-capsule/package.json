@@ -16,7 +16,9 @@
     "tests/"
   ],
   "scripts": {
-    "test": "node --test tests/context-capsule.test.mjs"
+    "test": "node --test tests/context-capsule.test.mjs",
+    "bench:public": "node --experimental-strip-types scripts/bench-public.ts",
+    "test:quality": "node --test tests/context-capsule-quality.test.mjs"
   },
   "keywords": [
     "llm", "context-compression", "ai-agents", "token-savings",

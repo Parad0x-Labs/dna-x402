@@ -41,6 +41,9 @@ use solana_program::alt_bn128::prelude::{
 /// Null-proof verifying key (real, from null_proof_final.zkey — single-party ceremony).
 pub mod null_proof_vk;
 
+/// x402 access circuit verifying key (Poseidon commitment + threshold + nullifier).
+pub mod x402_access_vk;
+
 /// BN254 base field prime Fp (big-endian, 32 bytes).
 ///
 /// Source: `ark-bn254` Fp modulus limbs (little-endian u64):

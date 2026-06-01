@@ -1,0 +1,19 @@
+[package]
+name = "dark-x402-access-gate"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+
+[dependencies]
+solana-program    = { workspace = true }
+dark-groth16-core = { path = "../../crates/dark-groth16-core" }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }

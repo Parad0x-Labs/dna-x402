@@ -70,6 +70,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent-credential-mint"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-token-2022 3.0.5",
+ "tokio",
+]
+
+[[package]]
 name = "agent-flight-recorder"
 version = "0.1.0"
 dependencies = [
@@ -3352,6 +3364,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-x402-access-gate"
+version = "0.1.0"
+dependencies = [
+ "dark-groth16-core",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "dark-x402-batch-proof"
 version = "0.1.0"
 dependencies = [
@@ -5061,6 +5084,13 @@ name = "litemap"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
+
+[[package]]
+name = "live-attestation"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+]
 
 [[package]]
 name = "lock-scheduler"
