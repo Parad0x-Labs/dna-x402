@@ -9,7 +9,9 @@
   <img src="./docs/assets/github-header-dna-x402.png" alt="Parad0x Labs" width="100%" />
 </p>
 
-**Any API can become a paid endpoint. Any agent can quote, pay, verify, and continue in one machine-readable loop.**
+**Think Stripe — but for AI agents paying each other, not humans paying websites.**
+
+An agent calls an API. The API charges USDC. The agent pays automatically and gets a receipt. No accounts, no API keys, no humans in the loop. The receipt is permanent and verifiable on Solana.
 
 **Quote. Pay. Verify. Receipt. Anchor.**
 
