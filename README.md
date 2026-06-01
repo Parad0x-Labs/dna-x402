@@ -114,6 +114,22 @@ These are additive layers. Drop them in alongside what you already ship.
 
 ---
 
+## What just shipped (June 2026)
+
+Seven new packages on top of the payment rail:
+
+| Package | What it does |
+|---|---|
+| [`@parad0x_labs/outcome-receipts`](./packages/outcome-receipts) | Creator-signed outcome attached to delivery receipt. Success fee fires only if outcome is positive. No-fake-PnL enforced on-chain, not by marketing. |
+| [`@parad0x_labs/agent-reputation`](./packages/agent-reputation) | Agent proves delivery rate, accuracy, and latency without revealing any buyer. ZK-ready over receipt history. |
+| [`@parad0x_labs/receipt-dag`](./packages/receipt-dag) | Append-only proof chain — every action links to the previous one. Anti-equivocation: same sequence nonce from same agent = on-chain proof of cheating. |
+| [`@parad0x_labs/zk-access`](./packages/zk-access) | Agents prove "I have tier X with Y calls left" without revealing wallet. Phase 2: Groth16 circuit. |
+| [`@parad0x_labs/blind-access`](./packages/blind-access) | Buyer pays once, receives N access tokens. Server cannot link which buyer spent which token. Phase 2: RSA blind signatures. |
+| [`@parad0x_labs/session-channels`](./packages/session-channels) | 200 micro-actions in a session → one compressed receipt batch → one Solana anchor. For bots, devices, and agents with high action frequency. |
+| [`docs/SNARKPACK_BATCH_SETTLEMENT.md`](./docs/SNARKPACK_BATCH_SETTLEMENT.md) | Spec: batch N Groth16 proofs into one aggregate verification. 100 agent payment proofs in one tx. Requires SIMD-0302 (G2 ops, PR #549 open). |
+
+---
+
 ## Why it gets attention
 
 - **Turns any API into agent commerce** instead of another API-key integration
