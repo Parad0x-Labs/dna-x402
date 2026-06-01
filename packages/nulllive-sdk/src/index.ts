@@ -238,7 +238,7 @@ export function buildBatchRoot(packets: AttestationPacket[]): Uint8Array {
  * Build the AnchorAttestation instruction data buffer.
  *
  * Layout (89 bytes):
- *   [0]       discriminant = 0x01
+ *   [0]       discriminant = 0x02  (IX_ANCHOR_ATTESTATION)
  *   [1..32]   session_id       (32 bytes)
  *   [33..64]  merkle_root      (32 bytes)
  *   [65..68]  batch_start_ts   (u32 LE)
@@ -300,7 +300,7 @@ export function buildAnchorIxData(params: {
  * Build the StartStream instruction data buffer.
  *
  * Layout (66 bytes):
- *   [0]       discriminant = 0x00
+ *   [0]       discriminant = 0x01  (IX_START_STREAM)
  *   [1..32]   session_id        (32 bytes)
  *   [33..64]  device_pubkey     (32 bytes)
  *   [65]      attestation_level (u8)
@@ -346,7 +346,7 @@ export function buildStartStreamIxData(params: {
  * Build the EndStream instruction data buffer.
  *
  * Layout (33 bytes):
- *   [0]      discriminant = 0x02
+ *   [0]      discriminant = 0x03  (IX_END_STREAM)
  *   [1..32]  session_id (32 bytes)
  *
  * Total: 1 + 32 = 33 bytes.

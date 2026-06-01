@@ -11,7 +11,7 @@ A proof heartbeat: if the hardware signature stops, the badge goes dark.
 
 Every 5–30 seconds, the client signs a hash of the current frame with the device key and emits an attestation packet. Every 1–5 minutes, a batch of packets is assembled into a Merkle tree, stored permanently on Arweave via Irys, and the Merkle root is anchored on Solana via the `live_attestation` program. Viewers see a badge that reflects the freshness of the last successful anchor — it either updates or goes dark.
 
-Nothing here runs on a server that could be gamed after the fact. The chain of custody lives on-chain and on Arweave; NullLive does not custody it.
+Verification does not require trusting our server. The chain of custody lives on-chain and on Arweave — neither can be retroactively altered. The client app, Solana RPC, and Irys/Arweave indexing are still software dependencies, but none of them can rewrite a committed anchor.
 
 ---
 
@@ -29,7 +29,7 @@ The stream output was signed by this application using a device-held key at capt
 
 ### Level 2 — TeeCamera
 
-The frame passed through a trusted camera capture path before signing. On iOS this is the Secure Enclave; on Android it is CameraX with a TEE-backed key; on Qualcomm devices it can be the Content Integrity framework.
+The signing key is bound to a platform TEE-backed camera capture path where the OS provides that guarantee. On Android this is CameraX with a TEE-backed key; on Qualcomm devices it can be the Content Integrity framework. On iOS, Secure Enclave provides key custody — camera-path binding depends on which Apple APIs expose that guarantee; treat this as TEE key custody, not automatic camera-origin proof.
 
 **What this proves:** The frame was captured via the OS camera subsystem and the signing key is bound to that capture path. Arbitrary in-memory injection or frame substitution from userland is prevented by the TEE boundary.
 

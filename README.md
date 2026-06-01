@@ -349,6 +349,8 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 | [`x402/`](./x402) | Canonical package, server, SDKs, verifier, diagnostics |
 | [`crates/`](./crates) | Rust primitive workspace for agent commerce, route privacy, receipts, fee logic, and Dark Null bridges |
 | [`programs/receipt_anchor/`](./programs/receipt_anchor) | Solana program for receipt anchoring |
+| [`programs/live_attestation/`](./programs/live_attestation) | **NullLive** — continuous hardware attestation for live streams. Signed frame batches anchored on Solana every 1–5 min. Badge goes dark when heartbeat stops. See [`docs/NULLLIVE_README.md`](./docs/NULLLIVE_README.md) |
+| [`packages/nulllive-sdk/`](./packages/nulllive-sdk) | TypeScript SDK for NullLive attestation packets, Merkle batch roots, and Solana instruction builders (`@parad0x_labs/nulllive-sdk`) |
 | [`programs/`](./programs) | Solana program workspace including receipt anchoring, proof gates, nullifier records, transfer hooks, and chaff |
 | [`docs/`](./docs) | Proof, security, deploy, and programmability docs |
 | [`site/`](./site) | Public docs/proof front door |
