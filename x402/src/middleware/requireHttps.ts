@@ -40,7 +40,7 @@ export function requireHttpsMiddleware(options: { allowInsecure: boolean }): (re
       if (trustProxy || isDev) {
         proto = req.protocol; // Express has already resolved x-forwarded-proto safely
       } else {
-        proto = req.socket.encrypted ? "https" : "http"; // raw connection, cannot be faked
+        proto = (req.socket as { encrypted?: boolean }).encrypted ? "https" : "http"; // raw connection, cannot be faked
       }
     }
 
