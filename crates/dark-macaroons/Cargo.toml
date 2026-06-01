@@ -7,7 +7,7 @@ description = "Caveated spending credentials for no-custody agent wallets."
 [dependencies]
 sha2       = { workspace = true }
 hmac       = "0.12"
-digest     = "0.10"
+digest     = "0.11"
 serde      = { workspace = true }
 serde_json = { workspace = true }
 

@@ -2056,7 +2056,7 @@ dependencies = [
 name = "dark-macaroons"
 version = "0.1.0"
 dependencies = [
- "digest 0.10.7",
+ "digest 0.11.3",
  "hmac 0.12.1",
  "serde",
  "serde_json",
