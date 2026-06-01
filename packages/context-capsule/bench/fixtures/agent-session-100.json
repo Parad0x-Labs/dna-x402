@@ -161,6 +161,42 @@
   },
   {
     "role": "user",
+    "content": "use Redis for caching the session data"
+  },
+  {
+    "role": "assistant",
+    "content": "Got it, I'll implement Redis for session caching. I'll add the ioredis dependency and wire up a Redis client in the session layer to cache the session data there."
+  },
+  {
+    "role": "user",
+    "content": "How large do you expect the session data payloads to be?"
+  },
+  {
+    "role": "assistant",
+    "content": "Typical session payloads are small — a few hundred bytes of JSON per session. Agent passport data, auth tokens, and request state. Redis handles this easily, well under its 512MB per-key limit."
+  },
+  {
+    "role": "user",
+    "content": "Should the Redis cache have a TTL on session entries?"
+  },
+  {
+    "role": "assistant",
+    "content": "Yes, set a TTL of 24 hours on session entries to prevent stale data buildup. Use Redis SETEX or the ioredis set option with ex: 86400. Expired sessions are evicted automatically."
+  },
+  {
+    "role": "user",
+    "content": "What eviction policy should the Redis instance use?"
+  },
+  {
+    "role": "user",
+    "content": "actually scratch that — use Postgres instead, Redis adds infrastructure complexity"
+  },
+  {
+    "role": "assistant",
+    "content": "Understood, switching to Postgres for session storage. The Redis approach is abandoned. I'll use a Postgres table for session data — keeps the infrastructure footprint minimal since Postgres is already in the stack. No additional Redis service needed."
+  },
+  {
+    "role": "user",
     "content": "What is the exact command to run the tests?"
   },
   {
