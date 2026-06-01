@@ -106,6 +106,7 @@ GPU/compute marketplace on Solana? You don't need to rebuild anything.
 | Ed25519 agent keys | Dark Passport — hardware-bind those keys to a Secure Enclave or passkey, on-chain provable identity |
 | GPU/compute operators claiming hardware | NullLive — continuous hardware-attested proof heartbeat, verifiable on Solana |
 | Per-request USDC settlement | Compressed audit trail — 1M payment receipts → 32 bytes on-chain, $0.001/day |
+| Inference market or compute routing layer | x402 + receipt_anchor — agents pay for compute per-call, receipts prove delivery, permanent audit trail. Settlement infrastructure under your market structure |
 | Private signal API behind a key or token gate | x402 paywall — replace key management with per-call USDC. Agents pay the signal endpoint directly, no subscriptions, no admin |
 | Autonomous trading agents with no audit trail | `receipt_anchor` — every signal → filter → execution event anchored permanently on Solana. Verifiable strategy history, no centralized log |
 
