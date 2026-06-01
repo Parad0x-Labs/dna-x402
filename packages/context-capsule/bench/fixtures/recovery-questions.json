@@ -178,5 +178,71 @@
     "question": "What was the solana CLI command used to deploy the compiled program to devnet?",
     "required_keywords": ["solana program deploy", "--url devnet"],
     "category": "commands"
+  },
+  {
+    "id": 31,
+    "question": "What was the FINAL decision on the storage system?",
+    "required_keywords": ["postgres"],
+    "category": "corrections",
+    "note": "Should NOT contain Redis — if Redis appears without correction context, correction was lost"
+  },
+  {
+    "id": 32,
+    "question": "Was the storage decision corrected at any point?",
+    "required_keywords": ["correct", "changed", "revised", "postgres", "redis"],
+    "category": "corrections"
+  },
+  {
+    "id": 33,
+    "question": "What was the original storage choice before the correction?",
+    "required_keywords": ["redis"],
+    "category": "corrections"
+  },
+  {
+    "id": 34,
+    "question": "What security constraint was explicitly stated as a rule not to violate?",
+    "required_keywords": ["keypair", "private", "commit", "git"],
+    "category": "corrections"
+  },
+  {
+    "id": 35,
+    "question": "If earlier messages said to use one approach and later messages said use a different approach, which approach should be used?",
+    "required_keywords": ["later", "final", "recent", "correction", "updated"],
+    "category": "corrections"
+  },
+  {
+    "id": 36,
+    "question": "When instructions conflict across different points in the conversation, which instruction takes precedence?",
+    "required_keywords": ["later", "last", "override", "supersede"],
+    "category": "corrections",
+    "note": "Tests instruction ordering — the later instruction always wins"
+  },
+  {
+    "id": 37,
+    "question": "What reason was given for abandoning the original storage approach in favour of the corrected one?",
+    "required_keywords": ["complexity", "infrastructure", "postgres"],
+    "category": "corrections",
+    "note": "Tests topic-specific correction with rationale — Redis was abandoned due to infrastructure complexity"
+  },
+  {
+    "id": 38,
+    "question": "Which storage technology was explicitly rejected and what was the stated reason for rejecting it?",
+    "required_keywords": ["redis", "complexity", "abandoned"],
+    "category": "corrections",
+    "note": "Tests what was rejected and why — Redis rejected for adding infrastructure complexity"
+  },
+  {
+    "id": 39,
+    "question": "What is the final, settled decision on session storage — not an intermediate proposal, but the concluded choice?",
+    "required_keywords": ["postgres", "final", "session"],
+    "category": "corrections",
+    "note": "Tests final vs intermediate decisions — Postgres is the final answer, Redis was only an intermediate proposal"
+  },
+  {
+    "id": 40,
+    "question": "Was the phrase 'scratch that' or an equivalent retraction used at any point, and what did it retract?",
+    "required_keywords": ["scratch", "redis", "retract"],
+    "category": "corrections",
+    "note": "Tests detection of explicit mid-session retraction markers — 'scratch that' cancels the Redis instruction"
   }
 ]
