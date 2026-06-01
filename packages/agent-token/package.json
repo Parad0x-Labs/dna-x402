@@ -1,0 +1,34 @@
+{
+  "name": "@parad0x_labs/agent-token",
+  "version": "0.1.0",
+  "description": "PumpFun token per registered agent — market cap drives discovery, 90% trading fees to creator",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "pumpfun",
+    "agent-token",
+    "bonding-curve",
+    "mcp",
+    "parad0x-labs"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parad0x-labs/dna-x402"
+  }
+}

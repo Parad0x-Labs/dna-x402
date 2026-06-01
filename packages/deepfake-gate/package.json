@@ -1,0 +1,57 @@
+{
+  "name": "@parad0x_labs/deepfake-gate",
+  "version": "0.1.0",
+  "description": "x402-gated deepfake / AI-content detection for DNA x402 — monetise EU AI Act compliance at the protocol layer.",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src/"
+  ],
+  "scripts": {
+    "test": "node --experimental-vm-modules --test tests/deepfake-gate.test.mjs"
+  },
+  "keywords": [
+    "deepfake",
+    "ai-detection",
+    "synthid",
+    "bitmind",
+    "hive",
+    "x402",
+    "eu-ai-act",
+    "nulllive",
+    "solana",
+    "usdc",
+    "micropayments",
+    "dna-x402",
+    "parad0x-labs",
+    "content-authenticity"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/deepfake-gate",
+  "license": "MIT",
+  "peerDependencies": {
+    "@parad0x_labs/nulllive-sdk": "^0.1.0",
+    "@solana/web3.js": "^1.98.0"
+  },
+  "peerDependenciesMeta": {
+    "@parad0x_labs/nulllive-sdk": {
+      "optional": true
+    },
+    "@solana/web3.js": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.4.0"
+  }
+}

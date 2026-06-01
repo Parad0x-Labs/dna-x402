@@ -1,0 +1,46 @@
+{
+  "name": "@parad0x_labs/stream-income",
+  "version": "0.1.0",
+  "description": "Passive income streaming: x402 agent earnings auto-stream to NULL stakers via Solana SPL + Streamflow",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.91.0"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.91.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "streamflow",
+    "passive-income",
+    "null-staker",
+    "spl-token",
+    "agent-payments",
+    "parad0x-labs",
+    "dna-x402"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parad0x-labs/dna-x402"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "@parad0x_labs/wormhole-x402",
+  "version": "0.1.0",
+  "description": "Wormhole x402 cross-chain solver. Base/EVM agents pay via 402 → Wormhole bridges intent to Solana → USDC paid and receipt anchored permanently. Solver earns 0.1% spread; NULL stakers back the float.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "wormhole",
+    "cross-chain",
+    "solver",
+    "usdc",
+    "bridge",
+    "vaa",
+    "agents",
+    "base",
+    "dna-x402",
+    "receipt-anchor",
+    "null-token"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/wormhole-x402",
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "peerDependencies": {
+    "@solana/web3.js": ">=1.95.0"
+  },
+  "peerDependenciesMeta": {
+    "@solana/web3.js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

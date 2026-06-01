@@ -133,6 +133,11 @@ Seven new packages on top of the payment rail:
 | [`@parad0x_labs/pay-to-receive`](./packages/pay-to-receive) | Charge for inbound attention. Sender pays to have their payload received, processed, or acted on. Receipt binds ciphertextHash + delivery proof. Bots, rooms, agents. |
 | [`@parad0x_labs/mcp-server`](./packages/mcp-server) | MCP server exposing the full stack to Claude Desktop, Cursor, Windsurf, and any MCP-compatible agent. Tools: x402_get_quote, anchor_receipt, lookup_passport, build_outcome_receipt, compress_receipts, get_stack_status, private_compute. |
 | [`@parad0x_labs/context-capsule`](./packages/context-capsule) | Compress LLM session history 83x before injecting into context. 98% token cost reduction per agent session. searchCapsule finds relevant messages without decompressing full history. |
+| [`@parad0x_labs/stream-income`](./packages/stream-income) | Agent earns from x402 calls, proceeds auto-stream to NULL stakers. Passive income rail. |
+| [`@parad0x_labs/wormhole-x402`](./packages/wormhole-x402) | Cross-chain x402 solver. Base agent pays, Solana receipt anchored permanently. 0.1% solver spread. |
+| [`@parad0x_labs/deepfake-gate`](./packages/deepfake-gate) | x402 paywall on deepfake detection APIs. EU AI Act demand. Dual-layer with NullLive. |
+| [`@parad0x_labs/agent-token`](./packages/agent-token) | PumpFun token per agent. Market cap drives discovery. 90% trading fees to creator. |
+| [`docs/ZK_COMPRESSION_RECEIPT_LOG.md`](./docs/ZK_COMPRESSION_RECEIPT_LOG.md) | ZK Compression V2 receipt log. 10M receipts near-zero cost. EU AI Act audit trail. |
 
 ---
 
