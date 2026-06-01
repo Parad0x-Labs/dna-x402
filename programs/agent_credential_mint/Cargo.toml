@@ -1,0 +1,28 @@
+[package]
+name = "agent-credential-mint"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+mainnet = []
+
+[dependencies]
+solana-program  = { workspace = true }
+spl-token-2022  = { workspace = true }
+sha2            = { workspace = true }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("custom-heap", "custom-panic", "mainnet"))',
+    'cfg(target_os, values("solana"))',
+] }
