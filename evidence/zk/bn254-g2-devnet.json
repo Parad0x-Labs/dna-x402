@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-02T04:08:38.961Z",
+  "test": "dark_bn254_g2_ref-devnet-e2e",
+  "milestone": "FIRST BN254 G2 program using live SIMD-0302 syscalls on Solana devnet",
+  "cluster": "devnet",
+  "program": "7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd",
+  "simd": "SIMD-0302",
+  "featureGate": "bn1hKNURMGQaQoEVxahcEAcqiX3NwRs6hgKKNSLeKxH",
+  "featureStatus": "LIVE on devnet (epoch 1058+) — NOT yet on mainnet",
+  "design": {
+    "description": "No hardcoded G2 constants in the deployed program. Beta_g2 and gamma_g2 supplied at call time — enables single program to verify any Groth16 circuit.",
+    "syscalls": {
+      "G2Add": "sol_alt_bn128_group_op(opcode=4, input=256B, output=128B)",
+      "G2Mul": "sol_alt_bn128_group_op(opcode=6, input=160B, output=128B)",
+      "Pairing": "alt_bn128_pairing (existing opcode 3) with dynamic G2 points"
+    },
+    "encoding": "EIP-197: [x_im:32BE][x_re:32BE][y_im:32BE][y_re:32BE] = 128 bytes per G2 point"
+  },
+  "g2AddTest": {
+    "instruction": "0x01",
+    "inputBytes": 257,
+    "description": "G2_gen + G2_gen",
+    "txSignature": "3gedufB3XgtsgqhKJK9vY3qcAypj8doP6z83LzN1jFJixMKHF6KevrQiRe4EFNKYCYhmzMEuGL7bwS6wZ6AyW8YW",
+    "explorer": "https://explorer.solana.com/tx/3gedufB3XgtsgqhKJK9vY3qcAypj8doP6z83LzN1jFJixMKHF6KevrQiRe4EFNKYCYhmzMEuGL7bwS6wZ6AyW8YW?cluster=devnet",
+    "resultHex": "203e205db4f19b37b60121b83a7333706db86431c6d835849957ed8c3928ad7927dc7234fd11d3e8c36c59277c3e6f149d5cd3cfa9a62aee49f8130962b4b3b9195e8aa5b7827463722b8c153931579d3505566b4edf48d498e185f0509de15204bb53b8977e5f92a0bc372742c4830944a59b4fe6b1c0466e2a6dad122b5d2e",
+    "logs": [
+      "Program 7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd invoke [1]",
+      "Program log: dark_bn254_g2_ref: G2Add — ALT_BN128_G2_ADD (opcode 4)",
+      "Program log: G2Add result: 203e205db4f19b37b60121b83a7333706db86431c6d835849957ed8c3928ad7927dc7234fd11d3e8c36c59277c3e6f149d5cd3cfa9a62aee49f8130962b4b3b9195e8aa5b7827463722b8c153931579d3505566b4edf48d498e185f0509de15204bb53b8977e5f92a0bc372742c4830944a59b4fe6b1c0466e2a6dad122b5d2e",
+      "Program 7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd consumed 4274 of 200000 compute units",
+      "Program 7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd success"
+    ]
+  },
+  "g2MulTest": {
+    "instruction": "0x02",
+    "inputBytes": 161,
+    "description": "2 * G2_gen",
+    "scalar": "0x0000...0002 (big-endian 32B)",
+    "txSignature": "fHTEZxsQJtBnTFtwhXzXW8RBmRpSyp8CsyTGn3B3uuhdbcUH3NYbV8mSuBhyPh3FLr9g8gSLmpoWjQnP5veRep5",
+    "explorer": "https://explorer.solana.com/tx/fHTEZxsQJtBnTFtwhXzXW8RBmRpSyp8CsyTGn3B3uuhdbcUH3NYbV8mSuBhyPh3FLr9g8gSLmpoWjQnP5veRep5?cluster=devnet",
+    "resultHex": "203e205db4f19b37b60121b83a7333706db86431c6d835849957ed8c3928ad7927dc7234fd11d3e8c36c59277c3e6f149d5cd3cfa9a62aee49f8130962b4b3b9195e8aa5b7827463722b8c153931579d3505566b4edf48d498e185f0509de15204bb53b8977e5f92a0bc372742c4830944a59b4fe6b1c0466e2a6dad122b5d2e",
+    "logs": [
+      "Program 7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd invoke [1]",
+      "Program log: dark_bn254_g2_ref: G2Mul — ALT_BN128_G2_MUL (opcode 6)",
+      "Program log: G2Mul result: 203e205db4f19b37b60121b83a7333706db86431c6d835849957ed8c3928ad7927dc7234fd11d3e8c36c59277c3e6f149d5cd3cfa9a62aee49f8130962b4b3b9195e8aa5b7827463722b8c153931579d3505566b4edf48d498e185f0509de15204bb53b8977e5f92a0bc372742c4830944a59b4fe6b1c0466e2a6dad122b5d2e",
+      "Program 7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd consumed 19400 of 200000 compute units",
+      "Program 7JchQFr5MESd7VfBU5DHT5XB5hswm1GvbAWUc3Tm6Fdd success"
+    ]
+  },
+  "verification": {
+    "equation": "G2Add(G, G) == G2Mul(G, 2) — BN254 group law",
+    "result": "MATCH"
+  },
+  "groupLawVerified": true,
+  "result": "CONFIRMED — BN254 G2 operations verified on Solana devnet via SIMD-0302"
+}

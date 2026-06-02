@@ -176,6 +176,11 @@ members = [
     # BLS12_381_CREDENTIAL - first open-source BLS12-381 credential aggregation program on Solana
     # SIMD-0388 BLS12-381 syscalls LIVE on devnet (epoch 1059), feature gate b1sgUiJ3qu7hYm3tNDyyqZNQd6gLGJmJppnLNa93PCQ
     "programs/dark_bls12_381_credential",
+    # SIMD-0302 BN254 G2 reference implementation
+    # Feature gate: bn1hKNURMGQaQoEVxahcEAcqiX3NwRs6hgKKNSLeKxH
+    # Devnet: live since epoch 1058 | Testnet: live since epoch 954
+    # Demonstrates: G2_ADD (opcode 4), G2_MUL (opcode 6), Groth16 with dynamic G2 VK
+    "programs/dark_bn254_g2_ref",
     # dark-groth16-core: real BN254 Groth16 verifier using alt_bn128_pairing
     "crates/dark-groth16-core",
     # dark-kzg-verifier: real KZG-10 polynomial commitment verifier using alt_bn128 pairing syscalls

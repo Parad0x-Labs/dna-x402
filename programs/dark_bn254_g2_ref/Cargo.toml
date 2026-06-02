@@ -1,0 +1,33 @@
+[package]
+name = "dark-bn254-g2-ref"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+# ── BN254 G2 Reference Implementation — SIMD-0302 ────────────────────────────
+# Feature gate: bn1hKNURMGQaQoEVxahcEAcqiX3NwRs6hgKKNSLeKxH
+# Devnet epoch 1058 | Testnet epoch 954
+#
+# Demonstrates three new BN254 G2 syscalls:
+#   ALT_BN128_G2_ADD = 4   (sol_alt_bn128_group_op opcode 4)
+#   ALT_BN128_G2_MUL = 6   (sol_alt_bn128_group_op opcode 6)
+#   alt_bn128_pairing      (full Groth16 with DYNAMIC G2 points)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+# ark-bn254 provides the native (off-chain/test) G2 arithmetic backend.
+# On-chain (BPF target_os = "solana") the program calls sol_alt_bn128_group_op
+# opcodes 4 and 6 directly; ark is compiled out for the on-chain build via
+# #[cfg(not(target_os = "solana"))] guards in lib.rs.
+ark-bn254     = { version = "0.4", default-features = false }
+ark-ec        = { version = "0.4", default-features = false }
+ark-ff        = { version = "0.4", default-features = false }
+ark-serialize = { version = "0.4", default-features = false }

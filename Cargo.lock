@@ -1546,6 +1546,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-bn254-g2-ref"
+version = "0.1.0"
+dependencies = [
+ "ark-bn254",
+ "ark-ec",
+ "ark-ff",
+ "ark-serialize",
+ "solana-program",
+]
+
+[[package]]
 name = "dark-bn254-gate"
 version = "0.1.0"
 dependencies = [
