@@ -118,7 +118,7 @@ These are additive layers. Drop them in alongside what you already ship.
 
 ## What just shipped (June 2026)
 
-Seven new packages on top of the payment rail:
+20+ packages shipped across payments, privacy, compression, identity, and Web0:
 
 | Package | What it does |
 |---|---|
@@ -192,7 +192,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
 > Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.
 
-**438 tests green. 6 native Solana programs in the deploy profile.**
+**1551 tests green. 9 programs live on Solana mainnet-beta. 20+ packages shipped.**
 
 ### Current public status
 
