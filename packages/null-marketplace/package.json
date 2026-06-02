@@ -1,0 +1,43 @@
+{
+  "name": "@parad0x_labs/null-marketplace",
+  "version": "0.1.0",
+  "description": "The .null task marketplace SDK — post tasks, pay in NULL, get proof-anchored deliverables",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --forceExit",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "null",
+    "x402",
+    "solana",
+    "task-marketplace",
+    "agent-economy",
+    "work-proof",
+    "arweave",
+    "parad0x"
+  ],
+  "author": "Parad0x Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.0.0",
+    "typescript": "^6.0.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", { "useESM": false }]
+    }
+  }
+}

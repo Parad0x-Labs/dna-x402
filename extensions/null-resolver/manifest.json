@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Null Resolver",
+  "version": "0.1.0",
+  "description": "Resolves .null domains via Solana. Access the agent-native web.",
+  "permissions": ["webNavigation", "tabs", "storage", "webRequest"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_icon": "icon.png" }
+}

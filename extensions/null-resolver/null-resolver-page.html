@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>.null — Not Registered</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: #0a0a0f;
+      color: #e0e0e0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .glyph {
+      font-size: 72px;
+      line-height: 1;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #333, #1a1a2e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      user-select: none;
+    }
+
+    .domain-badge {
+      display: inline-block;
+      background: #111;
+      border: 1px solid #2a2a3e;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-family: "Courier New", monospace;
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 28px;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ccc;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .cta-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #00ff9d, #0084ff);
+      color: #000;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.1s;
+      margin-bottom: 32px;
+    }
+
+    .cta-link:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .features {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .feature-pill {
+      background: #111;
+      border: 1px solid #1a1a2e;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 11px;
+      color: #444;
+      letter-spacing: 0.4px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #1a1a2e;
+      margin: 28px 0;
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: #333;
+    }
+
+    .footer-note a {
+      color: #444;
+      text-decoration: none;
+    }
+
+    .footer-note a:hover {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="glyph">&#8709;</div>
+
+    <div class="domain-badge" id="domain-display">.null</div>
+
+    <h1>This .null domain is not registered yet.</h1>
+
+    <p class="subtitle">
+      .null domains live permanently on Solana — no renewals, no censorship, no middlemen.<br>
+      Be the first to claim this one.
+    </p>
+
+    <a id="register-link" href="https://parad0xlabs.com/null-register" class="cta-link">
+      Register at parad0xlabs.com/null-register
+    </a>
+
+    <div class="features">
+      <span class="feature-pill">Permanent</span>
+      <span class="feature-pill">Censorship-resistant</span>
+      <span class="feature-pill">Powered by NULL token</span>
+      <span class="feature-pill">On Solana</span>
+    </div>
+
+    <hr class="divider" />
+
+    <p class="footer-note">
+      Resolved by <a href="https://parad0xlabs.com" target="_blank">Parad0x Labs</a> Null Resolver extension &middot;
+      <a href="https://parad0xlabs.com" target="_blank">Learn more</a>
+    </p>
+  </div>
+
+  <script>
+    // Extract domain name from query string
+    const params = new URLSearchParams(window.location.search);
+    const domain = params.get("domain");
+    if (domain) {
+      const badge = document.getElementById("domain-display");
+      badge.textContent = domain + ".null";
+
+      const link = document.getElementById("register-link");
+      link.href =
+        "https://parad0xlabs.com/null-register?name=" +
+        encodeURIComponent(domain);
+    }
+  </script>
+</body>
+</html>
