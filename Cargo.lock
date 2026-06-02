@@ -16,7 +16,7 @@ dependencies = [
 name = "account-fee-heatmap"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -24,7 +24,7 @@ name = "account-lock-alchemy"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -73,7 +73,7 @@ dependencies = [
 name = "agent-credential-mint"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -87,14 +87,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "agent-kill-switch"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -103,7 +103,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -112,7 +112,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -175,14 +175,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "alpha-leak-meter"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -200,7 +200,7 @@ dependencies = [
 name = "alt-fog-vault"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -533,7 +533,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -544,7 +544,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -618,7 +618,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -776,7 +776,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -887,7 +887,7 @@ dependencies = [
 name = "caveat-engine"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -920,7 +920,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1007,7 +1007,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1047,14 +1047,14 @@ version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "compute-coupon-market"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1073,7 +1073,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -1117,6 +1117,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4c78c047431fee22c1a7bb92e00ad095a02a983affe4d8a72e2a2c62c1b94f3"
 
 [[package]]
+name = "const-oid"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+
+[[package]]
 name = "constant_time_eq"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1126,7 +1132,7 @@ checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 name = "copy-sniper-sim"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1136,7 +1142,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -1146,7 +1152,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1180,7 +1186,7 @@ name = "cpi-firewall"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1317,7 +1323,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1326,7 +1332,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1335,14 +1341,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-agent-passport"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1353,7 +1359,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1362,7 +1368,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1371,7 +1377,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -1379,7 +1385,7 @@ dependencies = [
 name = "dark-amount-receipt"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1388,7 +1394,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1397,7 +1403,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1406,7 +1412,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1415,7 +1421,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1424,7 +1430,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1433,7 +1439,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1442,7 +1448,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1451,7 +1457,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1460,7 +1466,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1469,7 +1475,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1479,7 +1485,7 @@ dependencies = [
  "dark-groth16-core",
  "dark-stealth-address",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1488,7 +1494,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1497,7 +1503,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1506,7 +1512,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1515,7 +1521,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1524,7 +1530,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1542,7 +1548,7 @@ name = "dark-bn254-circuit"
 version = "0.1.0"
 dependencies = [
  "dark-poseidon-bn254",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1575,7 +1581,7 @@ dependencies = [
  "dark-poseidon-bn254",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1584,7 +1590,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1593,7 +1599,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1602,7 +1608,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1618,7 +1624,7 @@ name = "dark-capability-registry"
 version = "0.1.0"
 dependencies = [
  "dark-module-abi",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1637,7 +1643,7 @@ name = "dark-coalition-proof"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1646,7 +1652,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1655,7 +1661,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1663,7 +1669,7 @@ name = "dark-commitment-chain"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1672,7 +1678,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1681,7 +1687,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1690,7 +1696,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1699,7 +1705,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1708,7 +1714,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -1719,7 +1725,7 @@ dependencies = [
  "dark-compression-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1739,7 +1745,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1750,7 +1756,7 @@ dependencies = [
  "dark-wasm-compute",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1760,7 +1766,7 @@ dependencies = [
  "dark-wasm-compute",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1769,7 +1775,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1778,7 +1784,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1787,7 +1793,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1796,7 +1802,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1805,7 +1811,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1814,7 +1820,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1823,7 +1829,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1832,7 +1838,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1841,7 +1847,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1850,7 +1856,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1859,7 +1865,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1868,7 +1874,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1877,7 +1883,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1886,7 +1892,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1896,7 +1902,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1905,7 +1911,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1914,7 +1920,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1923,7 +1929,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1932,7 +1938,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1946,7 +1952,7 @@ dependencies = [
  "dark-swarm-capsule",
  "ritual-blink-gateway",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1963,14 +1969,14 @@ dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-gift-notes"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1979,7 +1985,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -1988,7 +1994,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2005,14 +2011,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-hash-core"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2021,7 +2027,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2030,7 +2036,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2039,14 +2045,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-imt-nullifier"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2055,7 +2061,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2072,7 +2078,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2083,7 +2089,7 @@ dependencies = [
  "hmac 0.12.1",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2092,7 +2098,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -2102,7 +2108,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2111,7 +2117,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2120,7 +2126,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2129,7 +2135,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2137,7 +2143,7 @@ name = "dark-mev-shield"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2146,7 +2152,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2155,14 +2161,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-module-abi"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2172,7 +2178,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2181,7 +2187,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2190,7 +2196,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2199,7 +2205,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2210,7 +2216,7 @@ dependencies = [
  "dark-shielded-pool-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2221,7 +2227,7 @@ dependencies = [
  "dark-shielded-pool-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2230,14 +2236,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-nova-receipt"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2266,7 +2272,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2291,7 +2297,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2301,7 +2307,7 @@ dependencies = [
  "dark-nullifier-banks",
  "dark-x402-nullifier-bridge",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -2311,7 +2317,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2330,7 +2336,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2339,7 +2345,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2348,7 +2354,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2357,7 +2363,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2366,7 +2372,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2375,28 +2381,28 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-pool-sdk"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-poseidon-bn254"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-poseidon-safe"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2406,7 +2412,7 @@ dependencies = [
  "dark-hash-core",
  "proptest",
  "proptest-derive",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2415,7 +2421,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2424,7 +2430,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2433,7 +2439,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2442,7 +2448,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2451,7 +2457,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2460,7 +2466,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2469,7 +2475,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2477,7 +2483,7 @@ name = "dark-private-airdrop"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2486,7 +2492,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2495,7 +2501,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2504,7 +2510,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2513,7 +2519,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2522,7 +2528,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2531,7 +2537,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2539,7 +2545,7 @@ name = "dark-private-dutch-auction"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2548,7 +2554,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2557,7 +2563,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2566,7 +2572,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2575,7 +2581,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2584,7 +2590,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2593,7 +2599,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2602,7 +2608,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2611,7 +2617,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2620,7 +2626,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2629,7 +2635,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2638,7 +2644,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2647,7 +2653,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2656,7 +2662,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2665,7 +2671,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2674,7 +2680,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2683,7 +2689,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2692,7 +2698,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2703,7 +2709,7 @@ dependencies = [
  "dark-stealth-address",
  "dark-withdrawal-bundle",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2712,7 +2718,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2721,7 +2727,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2730,7 +2736,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2739,7 +2745,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2755,7 +2761,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2763,7 +2769,7 @@ name = "dark-proof-of-innocence"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2772,7 +2778,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2781,7 +2787,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2790,7 +2796,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2800,7 +2806,7 @@ dependencies = [
  "dark-proof-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2809,7 +2815,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2818,7 +2824,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2827,7 +2833,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2836,7 +2842,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2845,14 +2851,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-rate-proof"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2861,7 +2867,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2870,7 +2876,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2879,7 +2885,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2888,7 +2894,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2912,7 +2918,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2921,7 +2927,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2930,7 +2936,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2939,7 +2945,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2948,7 +2954,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2957,7 +2963,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-client",
  "solana-sdk",
 ]
@@ -2966,7 +2972,7 @@ dependencies = [
 name = "dark-ritual-transfer-hook"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
  "spl-tlv-account-resolution 0.5.1",
  "spl-transfer-hook-interface 0.4.1",
@@ -3009,7 +3015,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3018,7 +3024,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3035,7 +3041,7 @@ dependencies = [
 name = "dark-session-netting"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3044,7 +3050,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3055,7 +3061,7 @@ dependencies = [
  "dark-shielded-pool-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3064,7 +3070,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3074,7 +3080,7 @@ dependencies = [
  "dark-poseidon-bn254",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3082,7 +3088,7 @@ name = "dark-shielded-pool-program"
 version = "0.1.0"
 dependencies = [
  "dark-shielded-verifier",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -3093,7 +3099,7 @@ dependencies = [
 name = "dark-shielded-verifier"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -3103,7 +3109,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3112,7 +3118,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3121,7 +3127,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3129,7 +3135,7 @@ name = "dark-sliding-window-budget"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3138,7 +3144,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3146,7 +3152,7 @@ name = "dark-sparse-merkle"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3155,7 +3161,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3164,7 +3170,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3173,7 +3179,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3183,7 +3189,7 @@ dependencies = [
  "dark-groth16-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3192,7 +3198,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3201,7 +3207,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -3209,7 +3215,7 @@ dependencies = [
 name = "dark-swarm-fund"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3218,7 +3224,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3226,7 +3232,7 @@ name = "dark-threshold-nullifier"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3236,7 +3242,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3245,7 +3251,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3254,7 +3260,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3263,7 +3269,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3272,14 +3278,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-tip-notes"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3288,7 +3294,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3297,7 +3303,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3306,7 +3312,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3315,7 +3321,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3324,7 +3330,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3333,7 +3339,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3342,7 +3348,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3351,7 +3357,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3360,7 +3366,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3371,7 +3377,7 @@ dependencies = [
  "dark-merkle-accumulator",
  "dark-poseidon-bn254",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3389,7 +3395,7 @@ dependencies = [
 name = "dark-x402-batch-proof"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3399,21 +3405,21 @@ dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-x402-commit-reveal"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-x402-compliance-proof"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3422,7 +3428,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3433,7 +3439,7 @@ dependencies = [
  "dark-x402-server-mock",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-client",
  "solana-sdk",
  "solana-transaction-status",
@@ -3447,7 +3453,7 @@ dependencies = [
  "dark-x402-core",
  "dark-x402-nullifier-bridge",
  "hex",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -3459,7 +3465,7 @@ dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -3467,7 +3473,7 @@ dependencies = [
 name = "dark-x402-private-intent"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3477,21 +3483,21 @@ dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-x402-session-key"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-x402-stealth"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3506,14 +3512,14 @@ dependencies = [
  "dark-shielded-client",
  "dark-shielded-pool-core",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-zk-hook"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3522,7 +3528,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3531,7 +3537,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3540,7 +3546,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3549,7 +3555,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3558,7 +3564,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3567,7 +3573,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3576,7 +3582,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3585,7 +3591,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3594,7 +3600,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3603,7 +3609,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3612,7 +3618,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3621,7 +3627,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3633,14 +3639,14 @@ dependencies = [
  "dark-poseidon-bn254",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark_ritual_gate"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -3703,7 +3709,7 @@ checksum = "a4ae5f15dda3c708c0ade84bfee31ccab44a3da4f88015ed22f63732abe300c8"
 name = "degen-api-meter"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3712,7 +3718,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3730,7 +3736,7 @@ dependencies = [
  "scratch-slot-leasing",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "shape-pool-pass",
  "sleep-earn-watcher",
  "useful-chaff-market",
@@ -3742,7 +3748,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6919815d73839e7ad218de758883aae3a257ba6759ce7a9992501efbb53d705c"
 dependencies = [
- "const-oid",
+ "const-oid 0.7.1",
 ]
 
 [[package]]
@@ -3830,6 +3836,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
 dependencies = [
  "block-buffer 0.12.0",
+ "const-oid 0.10.2",
  "crypto-common 0.2.2",
  "ctutils",
 ]
@@ -3858,7 +3865,7 @@ dependencies = [
 name = "dispute-receipt-oracle"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -4042,7 +4049,7 @@ checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
 name = "feature-commit-reveal"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -4057,7 +4064,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -4067,7 +4074,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -4078,7 +4085,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -4334,7 +4341,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -4483,7 +4490,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -4921,7 +4928,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5270,7 +5277,7 @@ name = "model-output-receipts"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5359,7 +5366,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5368,7 +5375,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5393,14 +5400,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "null-flywheel-randomizer"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5409,7 +5416,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5420,7 +5427,7 @@ dependencies = [
  "null-flywheel-randomizer",
  "null-flywheel-receipts",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5428,7 +5435,7 @@ name = "null-miner-tasks"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5452,14 +5459,14 @@ dependencies = [
  "hint-ladder-market",
  "sealed-pick-x402-wall",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "nullifier-bank-planner"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5676,7 +5683,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -5789,7 +5796,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -5923,7 +5930,7 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 name = "poison-receipts"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6105,14 +6112,14 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
 name = "pvp-prediction-receipts"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6440,7 +6447,7 @@ version = "0.1.0"
 dependencies = [
  "dark-poseidon-tree",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6449,7 +6456,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6460,7 +6467,7 @@ dependencies = [
  "proptest",
  "proptest-derive",
  "rand 0.8.6",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6509,7 +6516,7 @@ version = "0.1.0"
 name = "rent-bounty-hunter"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6517,7 +6524,7 @@ name = "rent-delta-proof"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6527,7 +6534,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -6537,7 +6544,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6660,7 +6667,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -6674,7 +6681,7 @@ dependencies = [
  "ritual-token-factory",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-client",
  "solana-sdk",
  "spl-token-2022 3.0.5",
@@ -6689,7 +6696,7 @@ dependencies = [
  "ritual-proof-capsule",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6698,7 +6705,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6707,7 +6714,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6717,7 +6724,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -6728,7 +6735,7 @@ dependencies = [
  "ed25519-dalek",
  "rand 0.8.6",
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6737,7 +6744,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6746,7 +6753,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6755,7 +6762,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6764,7 +6771,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -6780,7 +6787,7 @@ dependencies = [
  "ritual-shape-market",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6789,7 +6796,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -6804,7 +6811,7 @@ dependencies = [
  "serde",
  "serde_json",
  "session-note-channel",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "spend-shadows",
 ]
 
@@ -6996,7 +7003,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -7033,7 +7040,7 @@ dependencies = [
 name = "sealed-fee-quotes"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -7043,7 +7050,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -7189,7 +7196,7 @@ dependencies = [
 name = "session-loss-fuse"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -7198,7 +7205,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -7237,6 +7244,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha2"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.3.0",
+ "digest 0.11.3",
+]
+
+[[package]]
 name = "sha3"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7264,7 +7282,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-sdk",
 ]
 
@@ -7274,7 +7292,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -7284,7 +7302,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -7372,7 +7390,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -8544,7 +8562,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -8969,7 +8987,7 @@ dependencies = [
 name = "strategy-cloak-delay"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -9025,7 +9043,7 @@ dependencies = [
  "ed25519-dalek",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -9156,7 +9174,7 @@ dependencies = [
 name = "telegram-command-receipts"
 version = "0.1.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -9346,7 +9364,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "thiserror",
 ]
 
@@ -9603,7 +9621,7 @@ dependencies = [
  "serde",
  "serde_json",
  "session-note-channel",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-client",
  "solana-sdk",
  "spend-shadows",
@@ -9740,7 +9758,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]

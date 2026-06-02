@@ -5,5 +5,5 @@ edition = "2021"
 description = "Private Dutch auction — committed bids, only winner's amount revealed"
 
 [dependencies]
-sha2  = "0.10"
+sha2  = "0.11"
 serde = { version = "1", features = ["derive"] }

@@ -5,5 +5,5 @@ edition = "2021"
 description = "k-of-n threshold nullifier requiring k parties to collaborate before the nullifier is producible"
 
 [dependencies]
-sha2  = "0.10"
+sha2  = "0.11"
 serde = { version = "1", features = ["derive"] }

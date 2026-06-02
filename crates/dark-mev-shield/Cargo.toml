@@ -5,5 +5,5 @@ edition = "2021"
 description = "Anti-MEV time-locked commit-reveal with chaff — prevent sandwich attacks on committed trade intents"
 
 [dependencies]
-sha2  = "0.10"
+sha2  = "0.11"
 serde = { version = "1", features = ["derive"] }

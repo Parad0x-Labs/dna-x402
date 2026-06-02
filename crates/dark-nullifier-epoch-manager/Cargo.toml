@@ -7,6 +7,6 @@ description = "Manages nullifier submission lifecycle: epoch detection, bank ini
 [dependencies]
 dark-x402-nullifier-bridge = { path = "../dark-x402-nullifier-bridge" }
 dark-nullifier-banks       = { path = "../../programs/dark_nullifier_banks", features = ["no-entrypoint"] }
-sha2                       = "0.10"
+sha2                       = "0.11"
 serde                      = { version = "1", features = ["derive"] }
 solana-program             = "=1.18.26"

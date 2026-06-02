@@ -8,5 +8,5 @@ description = "Assembles the complete on-chain withdrawal payload: note → Merk
 dark-poseidon-bn254      = { path = "../dark-poseidon-bn254" }
 dark-merkle-accumulator  = { path = "../dark-merkle-accumulator" }
 dark-groth16-core        = { path = "../dark-groth16-core" }
-sha2                     = "0.10"
+sha2                     = "0.11"
 serde                    = { version = "1", features = ["derive"] }

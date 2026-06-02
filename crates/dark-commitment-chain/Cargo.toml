@@ -5,5 +5,5 @@ edition = "2021"
 description = "Hash-linked commitment chain for private balance proofs — audit without revealing amounts"
 
 [dependencies]
-sha2  = "0.10"
+sha2  = "0.11"
 serde = { version = "1", features = ["derive"] }
