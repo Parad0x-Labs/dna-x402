@@ -12,6 +12,6 @@ path  = "src/main.rs"
 dark-x402-core             = { path = "../dark-x402-core" }
 dark-x402-nullifier-bridge = { path = "../dark-x402-nullifier-bridge" }
 dark-groth16-core          = { path = "../dark-groth16-core" }
-sha2                       = "0.10"
+sha2                       = "0.11"
 solana-program             = "=1.18.26"
 hex                        = "0.4"

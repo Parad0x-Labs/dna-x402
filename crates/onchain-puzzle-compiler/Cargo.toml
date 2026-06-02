@@ -5,6 +5,6 @@ edition = "2021"
 description = "Compile messages into verifiable Solana ritual tx plans — on-chain cryptographic prophecy"
 
 [dependencies]
-sha2 = "0.10"
+sha2 = "0.11"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

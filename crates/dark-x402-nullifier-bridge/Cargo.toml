@@ -7,7 +7,7 @@ description = "Bridges x402 HTTP payment receipts to Solana on-chain nullifier b
 [dependencies]
 dark-x402-core      = { path = "../dark-x402-core" }
 dark-nullifier-banks = { path = "../../programs/dark_nullifier_banks", features = ["no-entrypoint"] }
-sha2                = "0.10"
+sha2                = "0.11"
 serde               = { version = "1", features = ["derive"] }
 serde_json          = "1"
 solana-program      = "=1.18.26"

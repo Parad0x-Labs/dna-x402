@@ -5,5 +5,5 @@ edition = "2021"
 description = "Agent coalition collective spending proof — prove threshold met without revealing members"
 
 [dependencies]
-sha2  = "0.10"
+sha2  = "0.11"
 serde = { version = "1", features = ["derive"] }

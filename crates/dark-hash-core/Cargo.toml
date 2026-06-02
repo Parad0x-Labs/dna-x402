@@ -10,7 +10,7 @@ poseidon-mock = []
 # poseidon-real = ["dep:solana-poseidon"]  # blocked: requires BPF runtime
 
 [dependencies]
-sha2 = { version = "0.10", optional = true }
+sha2 = { version = "0.11", optional = true }
 
 [dev-dependencies]
-sha2 = "0.10"
+sha2 = "0.11"

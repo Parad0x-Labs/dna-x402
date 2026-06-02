@@ -8,5 +8,5 @@ description = "Complete private x402 payment pipeline: BN254 ECDH stealth addres
 dark-stealth-address    = { path = "../dark-stealth-address" }
 dark-withdrawal-bundle  = { path = "../dark-withdrawal-bundle" }
 dark-merkle-accumulator = { path = "../dark-merkle-accumulator" }
-sha2                    = "0.10"
+sha2                    = "0.11"
 serde                   = { version = "1", features = ["derive"] }

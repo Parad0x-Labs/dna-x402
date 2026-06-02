@@ -5,5 +5,5 @@ edition = "2021"
 description = "Sparse Merkle tree with O(depth) inclusion and non-membership proofs — nullifier-compatible"
 
 [dependencies]
-sha2  = "0.10"
+sha2  = "0.11"
 serde = { version = "1", features = ["derive"] }
