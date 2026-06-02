@@ -191,7 +191,7 @@ version = "0.1.0"
 dependencies = [
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.9.4",
  "solana-sdk",
  "statrs",
 ]
@@ -530,7 +530,7 @@ checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 name = "betting-alpha-receipts"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -541,7 +541,7 @@ dependencies = [
 name = "betting-proofboard"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -615,7 +615,7 @@ dependencies = [
 name = "blink-work-board"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1070,7 +1070,7 @@ dependencies = [
 name = "confidential-amount-watch"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1139,7 +1139,7 @@ dependencies = [
 name = "copy-sniper-tax-trap"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1356,7 +1356,7 @@ name = "dark-agent-payment-sdk"
 version = "0.1.0"
 dependencies = [
  "agent-shielded-capsule",
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1615,7 +1615,7 @@ dependencies = [
 name = "dark-bundle-cloak"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "solana-sdk",
 ]
 
@@ -1899,7 +1899,7 @@ dependencies = [
 name = "dark-fee-commitment"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -2175,7 +2175,7 @@ dependencies = [
 name = "dark-mpc-ceremony"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -2281,7 +2281,7 @@ version = "0.1.0"
 dependencies = [
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.9.4",
  "rayon",
  "solana-program",
  "solana-program-test",
@@ -2904,7 +2904,7 @@ dependencies = [
  "kolmogorov_smirnov",
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.9.4",
  "reqwest 0.12.4",
  "serde_json",
  "solana-sdk",
@@ -3239,7 +3239,7 @@ dependencies = [
 name = "dark-threshold-sig"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4071,7 +4071,7 @@ dependencies = [
 name = "fee-rebate-for-solvers"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4082,7 +4082,7 @@ dependencies = [
 name = "fee-weather-market"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4487,7 +4487,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 name = "hint-ladder-market"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -5793,7 +5793,7 @@ dependencies = [
 name = "p-token-roi-bot"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -6466,7 +6466,7 @@ dependencies = [
  "dark-poseidon-tree",
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.9.4",
  "sha2 0.11.0",
 ]
 
@@ -6531,7 +6531,7 @@ dependencies = [
 name = "rent-graveyard-index"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -6721,7 +6721,7 @@ dependencies = [
 name = "ritual-mev-insurance"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -6733,7 +6733,7 @@ name = "ritual-precompile-braid"
 version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "sha2 0.11.0",
 ]
@@ -7047,7 +7047,7 @@ dependencies = [
 name = "sealed-pick-x402-wall"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -7299,7 +7299,7 @@ dependencies = [
 name = "shape-subscription"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -9361,7 +9361,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 name = "token-arcade-factory"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.9.4",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -9615,7 +9615,7 @@ dependencies = [
  "chaff-economy",
  "no-custody-attestation",
  "onchain-puzzle-compiler",
- "rand 0.8.6",
+ "rand 0.9.4",
  "receipt-souls",
  "roadmap-commitments",
  "serde",
