@@ -15,7 +15,7 @@
     "@solana/web3.js": "^1.98.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   },
   "engines": { "node": ">=22" }
 }
