@@ -1,6 +1,6 @@
 {
   "name": "@parad0x_labs/context-capsule",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "LLM token compression layer for nulla-local and OpenClaw agents. Compress session history before injection — stop paying for full history on every call.",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -30,6 +30,9 @@
     "url": "https://github.com/Parad0x-Labs/dna-x402"
   },
   "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/context-capsule",
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=22.0.0"

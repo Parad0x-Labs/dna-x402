@@ -1,0 +1,43 @@
+{
+  "name": "@parad0x_labs/openclaw-context-capsule",
+  "version": "1.2.0",
+  "description": "context-capsule ContextEngine for OpenClaw — 99.3% token reduction with recovery-score gate. Works with Ollama, GPT, Mistral, Claude.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "files": [
+    "src/",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "context-compression",
+    "llm",
+    "token-savings",
+    "ollama",
+    "context-capsule"
+  ],
+  "openclaw": {
+    "extensions": [
+      "./src/index.ts"
+    ],
+    "compat": {
+      "pluginApi": "1.x"
+    },
+    "build": {
+      "openclawVersion": ">=1.0.0"
+    }
+  },
+  "dependencies": {
+    "@parad0x_labs/context-capsule": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  }
+}
