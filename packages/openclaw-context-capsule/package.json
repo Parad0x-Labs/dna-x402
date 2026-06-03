@@ -1,6 +1,6 @@
 {
   "name": "@parad0x_labs/openclaw-context-capsule",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "context-capsule ContextEngine for OpenClaw — 99.3% token reduction with recovery-score gate. Works with Ollama, GPT, Mistral, Claude.",
   "type": "module",
   "main": "./src/index.ts",
@@ -30,7 +30,7 @@
     }
   },
   "dependencies": {
-    "@parad0x_labs/context-capsule": "^1.0.0"
+    "@parad0x_labs/context-capsule": "1.0.0"
   },
   "engines": {
     "node": ">=22"
