@@ -5,12 +5,15 @@
  * reduction while keeping a verbatim tail of recent messages for coherence.
  * Sessions under the minMessages threshold pass through unchanged.
  *
- * Data handling (v1.1.0):
+ * Data handling (v1.2.0):
  *   All message content is passed through an inline vault-scan gate before
- *   reaching the compression library. The gate strips API keys, tokens,
- *   credentials, PII, and card numbers, replacing them with typed placeholders.
- *   No matched values are logged — only category counts. Compression runs
- *   locally; nothing is transmitted to external services.
+ *   reaching the compression library OR the model on any code path, including
+ *   short sessions, the verbatim tail, and compression error fallbacks.
+ *   The gate strips API keys, tokens, credentials, PII, and card numbers,
+ *   replacing them with typed placeholders. No matched values are logged —
+ *   only category counts. Compression runs locally; nothing is transmitted
+ *   to external services. On compression failure the plugin is fail-closed:
+ *   vault-scanned (redacted) messages are returned with a visible console.warn.
  */
 
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
@@ -155,7 +158,7 @@ class ContextCapsuleEngine implements ContextEngine {
   readonly info: ContextEngineInfo = {
     id: "context-capsule",
     name: "Context Capsule",
-    version: "1.1.0",
+    version: "1.2.0",
     ownsCompaction: false,
     turnMaintenanceMode: "background",
   };
@@ -225,11 +228,19 @@ class ContextCapsuleEngine implements ContextEngine {
       const capsule = await compressContext(safeMessages);
       const injected = await injectCapsule(capsule);
       summaryText = typeof injected === "string" ? injected : JSON.stringify(injected);
-    } catch {
-      // Fallback: skip compression, return original messages
+    } catch (err) {
+      // Compression failed — fall back to vault-scanned messages so the vault
+      // guarantee is NEVER broken by a compression error (fail-closed, not fail-open).
+      // Emit a visible warning so the operator knows compression was skipped.
+      console.warn(
+        "[context-capsule] Compression failed — falling back to scanned-but-uncompressed messages. " +
+          "Vault redaction still applied; no secrets exposed. " +
+          "Check @parad0x_labs/context-capsule for root cause.",
+        err instanceof Error ? err.message : String(err),
+      );
       return {
-        messages,
-        estimatedTokens: estimateTokens(messages),
+        messages: scannedMessages,
+        estimatedTokens: estimateTokens(scannedMessages),
         promptAuthority: "preassembly_may_overflow",
       };
     }
