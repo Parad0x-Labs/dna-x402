@@ -1,7 +1,7 @@
 {
   "name": "@parad0x_labs/openclaw-context-capsule",
-  "version": "1.3.1",
-  "description": "context-capsule ContextEngine for OpenClaw — 99.3% token reduction with recovery-score gate. Works with Ollama, GPT, Mistral, Claude.",
+  "version": "1.4.0",
+  "description": "Self-contained OpenClaw context engine that compresses long agent session history (> 20 messages) into a compact capsule before the model call, keeping the last 10 messages verbatim. Cuts token cost on long chats with any model. No external runtime dependencies; no network, file, or on-chain access.",
   "type": "module",
   "main": "./src/index.ts",
   "files": [
@@ -28,9 +28,6 @@
     "build": {
       "openclawVersion": ">=1.0.0"
     }
-  },
-  "dependencies": {
-    "@parad0x_labs/context-capsule": "1.0.0"
   },
   "engines": {
     "node": ">=22"

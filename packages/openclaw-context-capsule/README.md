@@ -1,7 +1,10 @@
 # context-capsule — OpenClaw ContextEngine plugin
 
-Compresses agent session history before it reaches the LLM using
-[`@parad0x_labs/context-capsule`](https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/context-capsule).
+Compresses agent session history before it reaches the LLM. **Self-contained:**
+the compression core is vendored inline (`src/compression.ts`) — no external
+runtime dependency, and no network, file-system, or on-chain access. It uses
+only Node's built-in `zlib` and `crypto`.
+
 Sessions under 20 messages pass through unchanged. Longer sessions have their
 older history compressed into a capsule summary (injected as a system message)
 while the last 10 messages are kept verbatim — giving the model full coherence
@@ -24,9 +27,10 @@ on recent turns without paying for the full transcript.
 >   user/assistant content will influence the model from the system role after
 >   compression.
 >
-> - **The `@parad0x_labs/context-capsule` dependency** must be resolvable in
->   your environment. Verify its source and provenance before deploying in
->   production.
+> - **No external runtime dependency.** The compression core is vendored inline
+>   (`src/compression.ts`), so there is nothing external to resolve or verify.
+>   The standalone `@parad0x_labs/context-capsule` library on npm is optional and
+>   only relevant for non-OpenClaw use.
 
 **Most useful for:** local models (Ollama, LM Studio) and GPT-4 where context
 cost matters. Claude users with a 200k context window and built-in compaction

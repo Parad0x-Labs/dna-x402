@@ -5,15 +5,21 @@
  * reduction while keeping a verbatim tail of recent messages for coherence.
  * Sessions under the minMessages threshold pass through unchanged.
  *
- * Data handling (v1.2.0):
+ * Self-contained (v1.4.0):
+ *   The compression core is vendored inline (./compression.ts) — there is no
+ *   external runtime dependency. The plugin makes no network requests, no
+ *   file-system access, and no on-chain calls. Everything runs locally.
+ *
+ * Data handling:
  *   All message content is passed through an inline vault-scan gate before
- *   reaching the compression library OR the model on any code path, including
+ *   reaching the compression core OR the model on any code path, including
  *   short sessions, the verbatim tail, and compression error fallbacks.
  *   The gate strips API keys, tokens, credentials, PII, and card numbers,
  *   replacing them with typed placeholders. No matched values are logged —
- *   only category counts. Compression runs locally; nothing is transmitted
- *   to external services. On compression failure the plugin is fail-closed:
+ *   only category counts. On compression failure the plugin is fail-closed:
  *   vault-scanned (redacted) messages are returned with a visible console.warn.
+ *   Redaction is best-effort pattern matching, not a guarantee — do not rely on
+ *   it as sole protection for highly sensitive sessions.
  */
 
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
@@ -25,8 +31,9 @@ import type {
   IngestResult,
 } from "openclaw/plugin-sdk/context-engine";
 import type { AgentMessage } from "openclaw/plugin-sdk/agent-harness-runtime";
-// @ts-expect-error — external package, types may not be present at build time
-import { compressContext, injectCapsule } from "@parad0x_labs/context-capsule";
+// Self-contained vendored compression core — no external runtime dependency.
+// Only zlib + SHA-256, no network/file I/O. See ./compression.ts for provenance.
+import { compressContext, injectCapsule } from "./compression";
 
 // ---------------------------------------------------------------------------
 // Inline vault-scan gate (ported from tools/liquefy_redact.py)
@@ -158,7 +165,7 @@ class ContextCapsuleEngine implements ContextEngine {
   readonly info: ContextEngineInfo = {
     id: "context-capsule",
     name: "Context Capsule",
-    version: "1.2.0",
+    version: "1.3.0",
     ownsCompaction: false,
     turnMaintenanceMode: "background",
   };
@@ -235,7 +242,7 @@ class ContextCapsuleEngine implements ContextEngine {
       console.warn(
         "[context-capsule] Compression failed — falling back to scanned-but-uncompressed messages. " +
           "Vault redaction still applied; no secrets exposed. " +
-          "Check @parad0x_labs/context-capsule for root cause.",
+          "See ./compression.ts for the compression core.",
         err instanceof Error ? err.message : String(err),
       );
       return {
@@ -290,9 +297,15 @@ export default definePluginEntry({
   id: "context-capsule",
   name: "Context Capsule",
   description:
-    "99.3% token reduction on agent sessions via @parad0x_labs/context-capsule. " +
-    "Works with Ollama, LM Studio, GPT-4, Mistral, and Claude. " +
-    "Public benchmark with recovery-score gate in CI.",
+    "Context engine that compresses long agent session history (default: > 20 " +
+    "messages) into a compact capsule before the model call, keeping the most " +
+    "recent 10 messages verbatim. Use it to cut token cost on long-running chat " +
+    "sessions with any model (Ollama, LM Studio, GPT, Mistral, Claude). It " +
+    "activates only as the registered context engine for sessions past the " +
+    "message threshold — it is NOT a command, has no keyword triggers, makes no " +
+    "network or file-system calls, and does no on-chain anchoring. Do NOT use it " +
+    "where exact verbatim transcript fidelity is required, as older history is " +
+    "summarized. Compression and best-effort secret redaction run fully locally.",
   register(api) {
     api.registerContextEngine("context-capsule", (_ctx) => new ContextCapsuleEngine());
   },
