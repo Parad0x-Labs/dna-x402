@@ -1,218 +1,82 @@
 // Null Resolver — background service worker
-// Intercepts .null domain navigation and resolves via Solana null_registrar program.
+// Intercepts .null domain navigation and resolves via the Solana
+// null_registrar program. Pure codec/helpers live in codec.js, which is shared
+// verbatim with the Node test suite (test/codec.test.js).
+
+importScripts("codec.js"); // provides base58Encode, buildDomainFilters, decodeContentHash, ...
 
 // ---------------------------------------------------------------------------
-// Constants
+// Config (overridable via chrome.storage.sync)
 // ---------------------------------------------------------------------------
 
-const NULL_REGISTRAR_PROGRAM_ID = "NuLLRegistrar1111111111111111111111111111111"; // placeholder
+// Set this to the deployed null_registrar program ID. Until the program is
+// deployed (devnet/mainnet) and this is set, resolution returns null — the
+// resolver is wired but has nothing to resolve against yet.
+const DEFAULT_PROGRAM_ID = "NuLLRegistrar1111111111111111111111111111111"; // placeholder — NOT deployed
 const DEFAULT_RPC = "https://api.mainnet-beta.solana.com";
 const ARWEAVE_GATEWAY = "https://arweave.net";
 
-// PDA seed prefix matches on-chain: b"null-domain"
-const PDA_SEED_PREFIX = "null-domain";
-
-// ---------------------------------------------------------------------------
-// Storage helpers
-// ---------------------------------------------------------------------------
-
-async function getRpcUrl() {
+async function getConfig() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get({ rpcUrl: DEFAULT_RPC }, (items) => {
-      resolve(items.rpcUrl);
-    });
+    chrome.storage.sync.get(
+      {
+        rpcUrl: DEFAULT_RPC,
+        programId: DEFAULT_PROGRAM_ID,
+        arweaveGateway: ARWEAVE_GATEWAY,
+      },
+      (items) => resolve(items)
+    );
   });
 }
 
 // ---------------------------------------------------------------------------
-// Base58 encode a Uint8Array
+// Solana RPC
 // ---------------------------------------------------------------------------
 
-const BASE58_ALPHABET =
-  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-function base58Encode(bytes) {
-  let digits = [0];
-  for (let i = 0; i < bytes.length; i++) {
-    let carry = bytes[i];
-    for (let j = 0; j < digits.length; j++) {
-      carry += digits[j] << 8;
-      digits[j] = carry % 58;
-      carry = Math.floor(carry / 58);
-    }
-    while (carry > 0) {
-      digits.push(carry % 58);
-      carry = Math.floor(carry / 58);
-    }
-  }
-  // Leading zeros
-  let result = "";
-  for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
-    result += "1";
-  }
-  for (let i = digits.length - 1; i >= 0; i--) {
-    result += BASE58_ALPHABET[digits[i]];
-  }
-  return result;
-}
-
-function base58Decode(str) {
-  const bytes = [0];
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    const idx = BASE58_ALPHABET.indexOf(char);
-    if (idx < 0) throw new Error("Invalid base58 character: " + char);
-    let carry = idx;
-    for (let j = 0; j < bytes.length; j++) {
-      carry += bytes[j] * 58;
-      bytes[j] = carry & 0xff;
-      carry >>= 8;
-    }
-    while (carry > 0) {
-      bytes.push(carry & 0xff);
-      carry >>= 8;
-    }
-  }
-  // Leading '1's => leading zeros
-  for (let i = 0; i < str.length && str[i] === "1"; i++) {
-    bytes.push(0);
-  }
-  return new Uint8Array(bytes.reverse());
-}
-
-// ---------------------------------------------------------------------------
-// SHA-256 via Web Crypto (available in service workers)
-// ---------------------------------------------------------------------------
-
-async function sha256(data) {
-  return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
-}
-
-// ---------------------------------------------------------------------------
-// Derive PDA  ["null-domain", name_bytes]  off-curve bump search
-// This is a simplified Ed25519 off-curve check; for production use
-// @solana/web3.js PublicKey.findProgramAddress via an injected module.
-// ---------------------------------------------------------------------------
-
-async function findProgramAddress(seeds, programId) {
-  const programIdBytes = base58Decode(programId);
-
-  for (let bump = 255; bump >= 0; bump--) {
-    try {
-      const bumpByte = new Uint8Array([bump]);
-
-      // Concatenate: seed1 + seed2 + ... + bumpByte + programIdBytes + "ProgramDerivedAddress"
-      const marker = new TextEncoder().encode("ProgramDerivedAddress");
-      const parts = [...seeds, bumpByte, programIdBytes, marker];
-      const totalLen = parts.reduce((acc, p) => acc + p.length, 0);
-      const combined = new Uint8Array(totalLen);
-      let offset = 0;
-      for (const part of parts) {
-        combined.set(part, offset);
-        offset += part.length;
-      }
-
-      const hash = await sha256(combined);
-
-      // Check that the point is NOT on the Ed25519 curve (off-curve = valid PDA)
-      if (isOffCurve(hash)) {
-        return { address: base58Encode(hash), bump };
-      }
-    } catch (_) {
-      // continue
-    }
-  }
-  throw new Error("Could not find valid PDA bump");
-}
-
-// Simplified off-curve check: in practice, use a proper Ed25519 library.
-// This heuristic rejects ~50% of hashes; good enough for the demo.
-// For production, bundle tweetnacl or @solana/web3.js.
-function isOffCurve(bytes) {
-  // Ed25519 field prime p = 2^255 - 19
-  // A point is on-curve if it has a valid y-coordinate square root.
-  // Rough heuristic: treat as off-curve if the high bit of bytes[31] is set
-  // when the rest of the value is in range — not cryptographically precise,
-  // but sufficient as a placeholder until a real library is bundled.
-  return (bytes[31] & 0x80) === 0;
-}
-
-// ---------------------------------------------------------------------------
-// Solana RPC helpers
-// ---------------------------------------------------------------------------
-
-async function getAccountInfo(pubkey, rpcUrl) {
-  const body = JSON.stringify({
-    jsonrpc: "2.0",
-    id: 1,
-    method: "getAccountInfo",
-    params: [pubkey, { encoding: "base64" }],
-  });
-
+async function rpc(rpcUrl, method, params) {
   const res = await fetch(rpcUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body,
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
   });
-
   if (!res.ok) throw new Error("RPC HTTP error: " + res.status);
   const json = await res.json();
   if (json.error) throw new Error("RPC error: " + JSON.stringify(json.error));
-  return json.result?.value ?? null;
+  return json.result;
 }
 
-// ---------------------------------------------------------------------------
-// Decode NullDomain account
-// Account layout (matches null_registrar on-chain struct):
-//   8  bytes — Anchor discriminator
-//   4  bytes — name length (u32 LE)
-//   N  bytes — name UTF-8
-//   32 bytes — content_hash [u8; 32]
-//   8  bytes — registered_at (i64 LE)
-//   32 bytes — owner Pubkey
-// ---------------------------------------------------------------------------
-
-function decodeNullDomainAccount(base64Data) {
-  const raw = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-  let cursor = 8; // skip discriminator
-
-  const nameLen = new DataView(raw.buffer).getUint32(cursor, true);
-  cursor += 4;
-  cursor += nameLen; // skip name
-
-  const contentHash = raw.slice(cursor, cursor + 32);
-  return contentHash;
+// Find the NullDomain account for `name` by matching its stored bytes directly
+// (getProgramAccounts + memcmp). No client-side PDA derivation required.
+// Returns the base64 account data, or null if not registered.
+async function fetchDomainAccount(name, rpcUrl, programId) {
+  const filters = buildDomainFilters(name);
+  if (!filters) return null; // name too long for the 64-byte field
+  const accounts = await rpc(rpcUrl, "getProgramAccounts", [
+    programId,
+    { encoding: "base64", filters },
+  ]);
+  if (!accounts || accounts.length === 0) return null;
+  const data = accounts[0].account && accounts[0].account.data;
+  return Array.isArray(data) ? data[0] : data;
 }
-
-// ---------------------------------------------------------------------------
-// Main resolver
-// ---------------------------------------------------------------------------
 
 async function resolveNullDomain(name) {
-  const rpcUrl = await getRpcUrl();
+  const { rpcUrl, programId, arweaveGateway } = await getConfig();
 
-  // Derive PDA
-  const nameBytes = new TextEncoder().encode(name);
-  const prefixBytes = new TextEncoder().encode(PDA_SEED_PREFIX);
-  const { address: pda } = await findProgramAddress(
-    [prefixBytes, nameBytes],
-    NULL_REGISTRAR_PROGRAM_ID
-  );
-
-  // Fetch account
-  const accountInfo = await getAccountInfo(pda, rpcUrl);
-  if (!accountInfo || !accountInfo.data) {
-    return null; // not registered
+  // Program not configured/deployed yet — nothing to resolve against.
+  if (!programId || programId === DEFAULT_PROGRAM_ID) {
+    console.warn("[Null Resolver] programId not set — deploy null_registrar and set it in options.");
+    return null;
   }
 
-  const base64Data =
-    typeof accountInfo.data === "string"
-      ? accountInfo.data
-      : accountInfo.data[0];
+  const base64Data = await fetchDomainAccount(name, rpcUrl, programId);
+  if (!base64Data) return null; // not registered
 
-  const contentHash = decodeNullDomainAccount(base64Data);
+  const contentHash = decodeContentHash(base64Data);
+  if (!contentHash) return null; // malformed account
+
   const arweaveTxId = base58Encode(contentHash);
-  return `${ARWEAVE_GATEWAY}/${arweaveTxId}`;
+  return `${arweaveGateway}/${arweaveTxId}`;
 }
 
 // ---------------------------------------------------------------------------
