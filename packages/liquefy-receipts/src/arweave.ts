@@ -3,9 +3,17 @@
  *
  * Privacy model:
  *   - Arweave stores encrypted ciphertext — public but unreadable without the key
- *   - Solana stores the Merkle root of the PLAINTEXT + the Arweave tx ID
- *   - The root proves the batch existed and is structured correctly, without revealing content
- *   - ZK proofs check against the on-chain root — agent proves properties without revealing data
+ *   - The encrypted blob carries a per-batch secret S. Every Merkle leaf is a
+ *     SALTED commitment SHA-256(0x00 || 0x02 || salt_i || canonical(receipt_i)),
+ *     salt_i = HKDF(S, i). Without S the public on-chain root cannot be
+ *     brute-forced from low-entropy receipt fields (amount, sender, timestamp …).
+ *   - Solana stores that salted Merkle root + the Arweave tx ID — proving the
+ *     batch existed and is well-structured, without revealing content.
+ *   - To open one receipt the key holder reveals (salt_i, receipt_i) + its path;
+ *     all other leaves stay hidden.
+ *
+ * Note: the ZK membership proofs are a SEPARATE construction (Poseidon over
+ * receipt commitments in null-miner-sdk/src/zk), not this SHA-256 archive root.
  *
  * No server. No S3. No database. Nothing to delete. Nothing to subpoena.
  *
@@ -57,12 +65,39 @@ export function unpackEncrypted(packed: Uint8Array): { nonce: Uint8Array; cipher
   return { nonce: packed.slice(0, 12), ciphertext: packed.slice(12) };
 }
 
+// ── Archive plaintext framing: [batchSecret(32) || compressed] ────────────────
+// The per-batch salt secret is encrypted TOGETHER with the compressed blob, so
+// the key holder recovers it on decrypt to re-derive per-leaf salts and open
+// inclusion proofs. It must never appear on-chain or in an Arweave tag.
+
+/** Byte length of the per-batch secret prepended to the compressed blob before encryption. */
+export const ARCHIVE_BATCH_SECRET_BYTES = 32;
+
+/** Frame the per-batch salt secret in front of the compressed blob (encrypted together). */
+export function packArchivePlaintext(batchSecret: Uint8Array, compressed: Uint8Array): Uint8Array {
+  if (batchSecret.length !== ARCHIVE_BATCH_SECRET_BYTES) {
+    throw new RangeError(`batchSecret must be ${ARCHIVE_BATCH_SECRET_BYTES} bytes, got ${batchSecret.length}`);
+  }
+  const out = new Uint8Array(ARCHIVE_BATCH_SECRET_BYTES + compressed.length);
+  out.set(batchSecret, 0);
+  out.set(compressed, ARCHIVE_BATCH_SECRET_BYTES);
+  return out;
+}
+
+/** Split a decrypted archive plaintext back into the per-batch secret and the compressed blob. */
+export function unpackArchivePlaintext(plaintext: Uint8Array): { batchSecret: Uint8Array; compressed: Uint8Array } {
+  return {
+    batchSecret: plaintext.slice(0, ARCHIVE_BATCH_SECRET_BYTES),
+    compressed:  plaintext.slice(ARCHIVE_BATCH_SECRET_BYTES),
+  };
+}
+
 // ── Archive result ────────────────────────────────────────────────────────────
 
 export interface ArchiveResult {
   /** Arweave transaction ID — permanent pointer to the encrypted blob */
   arweaveTxId:   string;
-  /** SHA-256 of the compressed plaintext — what goes on Solana */
+  /** Salted SHA-256 Merkle root over the receipts — what goes on Solana */
   merkleRoot:    string; // 64-char hex
   /** Compressed plaintext size (before encryption) */
   compressedBytes: number;
@@ -96,17 +131,23 @@ export async function archiveReceipts(
   // 1. Compress with Liquefy Columnar Gun
   const compressed = compressReceipts(receipts);
 
-  // 2. Build Merkle root of the PLAINTEXT (this goes on Solana — proves structure without content)
-  const root    = buildReceiptRoot(receipts);
+  // 2. Fresh per-batch secret S. Blinds every Merkle leaf so the PUBLIC on-chain
+  //    root can't be brute-forced from low-entropy receipt fields. S is stored
+  //    ONLY inside the encrypted blob below — never on-chain, never in a tag.
+  const batchSecret = randomBytes(32);
+
+  // 3. Salted Merkle root (this goes on Solana — proves structure without content)
+  const root    = buildReceiptRoot(receipts, batchSecret);
   const rootStr = rootHex(root);
 
-  // 3. Encrypt for Arweave (Arweave stores ciphertext — unreadable without the key)
-  const { ciphertext, nonce } = await encryptBlob(compressed, rawKey);
+  // 4. Encrypt [S || compressed] for Arweave. The key holder recovers S to
+  //    derive per-leaf salts and open inclusion proofs; the public sees only ciphertext.
+  const { ciphertext, nonce } = await encryptBlob(packArchivePlaintext(batchSecret, compressed), rawKey);
   const packed = packEncrypted(nonce, ciphertext);
 
   const originalBytes = new TextEncoder().encode(JSON.stringify(receipts)).length;
 
-  // 4. Upload to Arweave via Irys
+  // 5. Upload to Arweave via Irys
   const { default: Irys } = await import("@irys/sdk");
 
   // Load the Solana keypair from the CLI wallet
