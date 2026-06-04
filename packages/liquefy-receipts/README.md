@@ -36,11 +36,16 @@ const compressed = compressReceipts(receipts);
 const key  = await generateKey();
 const blob = await encryptBlob(compressed, key);
 
-// Build Merkle root (streaming, O(log N) memory — any batch → 32 bytes)
-const root = buildReceiptRoot(receipts);
+// Build Merkle root (streaming, O(log N) memory — any batch → 32 bytes).
+// Pass a 32-byte per-batch secret to get SALTED leaves so the public on-chain
+// root can't be brute-forced from low-entropy receipt fields. Keep the secret
+// with the encrypted blob (e.g. archiveReceipts() stores it inside the ciphertext).
+import { randomBytes } from "node:crypto";
+const batchSecret = randomBytes(32);
+const root = buildReceiptRoot(receipts, batchSecret);   // omit batchSecret for the legacy unsalted root
 
-// Verify any receipt is in the batch
-const proof    = new MerkleTree(receipts).proof(42);
+// Verify any receipt is in the batch (a salted tree's proofs carry their per-leaf salt)
+const proof    = new MerkleTree(receipts, batchSecret).proof(42);
 const verified = verifyReceiptInBatch(receipts[42], proof);
 
 // Anchor instruction for receipt_anchor program (live on Solana mainnet)
@@ -60,6 +65,7 @@ const ixData = buildAnchorIxData({
 | **Bilateral netting** | 1M agent receipts → ~4,950 net settlements before anchor |
 | **AES-256-GCM** | Private amounts — only transacting parties see values |
 | **Streaming Merkle** | O(log N) memory — 36B receipts → 32 bytes on-chain |
+| **Salted hiding leaves** | Per-leaf salt (HKDF from a per-batch secret) blinds the public root — low-entropy receipt fields can't be brute-forced from the on-chain commitment |
 | **Inclusion proofs** | Anyone can verify any receipt is in the batch |
 | **Anchor instruction** | Builds instruction for `receipt_anchor` (Solana mainnet `6HSRGivd...`) |
 

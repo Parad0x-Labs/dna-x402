@@ -26,5 +26,11 @@ export {
   verifyProof,
   verifyReceiptInBatch,
   rootHex,
+  hashLeafBytes,
+  hashInternal,
+  hashSaltedLeaf,
+  deriveLeafSalt,
+  canonicalReceiptBytes,
+  LEAF_SALT_BYTES,
 } from "./merkle.js";
 export type { MerkleProof } from "./merkle.js";
