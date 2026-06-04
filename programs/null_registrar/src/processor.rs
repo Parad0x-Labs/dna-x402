@@ -124,9 +124,12 @@ fn process_register(
     let _treasury   = next_account_info(iter)?;   // NULL treasury ATA (future SPL CPI)
     let sys_prog    = next_account_info(iter)?;   // system program
 
-    // Verify domain PDA
+    // Verify domain PDA — seed is the printable bytes only (max 32 bytes, no
+    // null-padding). Solana enforces a 32-byte per-seed limit; using the full
+    // 64-byte name buffer would exceed that limit. The printable slice is
+    // unique per name so PDA uniqueness is preserved.
     let (domain_pda, bump) =
-        Pubkey::find_program_address(&[DOMAIN_SEED, &name], program_id);
+        Pubkey::find_program_address(&[DOMAIN_SEED, &name[..printable_len]], program_id);
     if domain_acct.key != &domain_pda {
         return Err(ProgramError::InvalidArgument);
     }
@@ -155,7 +158,8 @@ fn process_register(
         );
     }
 
-    // Create domain PDA
+    // Create domain PDA — signer seeds must match find_program_address seeds
+    // (printable bytes only, not the full 64-byte padded buffer).
     let rent         = Rent::get()?;
     let lamports_req = rent.minimum_balance(NULL_DOMAIN_SIZE);
     invoke_signed(
@@ -167,7 +171,7 @@ fn process_register(
             program_id,
         ),
         &[payer.clone(), domain_acct.clone(), sys_prog.clone()],
-        &[&[DOMAIN_SEED, &name, &[bump]]],
+        &[&[DOMAIN_SEED, &name[..printable_len], &[bump]]],
     )?;
 
     // Write domain state
@@ -219,9 +223,10 @@ fn process_update_content(
     let owner       = next_account_info(iter)?;   // [signer]
     let domain_acct = next_account_info(iter)?;   // [writable] NullDomain PDA
 
-    // Verify PDA address
+    // Verify PDA address — printable bytes only (see process_register comment)
+    let printable_len = validate_name(&name)?;
     let (domain_pda, _bump) =
-        Pubkey::find_program_address(&[DOMAIN_SEED, &name], program_id);
+        Pubkey::find_program_address(&[DOMAIN_SEED, &name[..printable_len]], program_id);
     if domain_acct.key != &domain_pda {
         return Err(ProgramError::InvalidArgument);
     }
@@ -259,8 +264,9 @@ fn process_transfer(
     let owner       = next_account_info(iter)?;   // [signer]
     let domain_acct = next_account_info(iter)?;   // [writable] NullDomain PDA
 
+    let printable_len_t = validate_name(&name)?;
     let (domain_pda, _bump) =
-        Pubkey::find_program_address(&[DOMAIN_SEED, &name], program_id);
+        Pubkey::find_program_address(&[DOMAIN_SEED, &name[..printable_len_t]], program_id);
     if domain_acct.key != &domain_pda {
         return Err(ProgramError::InvalidArgument);
     }
@@ -295,8 +301,9 @@ fn process_resolve(
     let iter        = &mut accounts.iter();
     let domain_acct = next_account_info(iter)?;   // [readonly] NullDomain PDA
 
+    let printable_len_r = validate_name(&name)?;
     let (domain_pda, _bump) =
-        Pubkey::find_program_address(&[DOMAIN_SEED, &name], program_id);
+        Pubkey::find_program_address(&[DOMAIN_SEED, &name[..printable_len_r]], program_id);
     if domain_acct.key != &domain_pda {
         return Err(ProgramError::InvalidArgument);
     }
