@@ -140,6 +140,33 @@ describe("DNA Guard middleware and router", () => {
     expect(auditLog.query({ kind: "GUARD_SPEND_BLOCKED" })).toHaveLength(1);
   });
 
+  it("rejects spend ceilings enforced against a forgeable header identity in fail-closed mode (P0)", () => {
+    const auditLog = new AuditLogger({ stdout: false });
+    const guard = createDnaGuard({ auditLog });
+    // No custom actor -> defaultActorFromRequest derives identity from the forgeable x-dna-* headers
+    // and tags guardIdentitySource="header"; a spoofed buyer would otherwise sit under the ceiling.
+    const protectedRoute = guard.protect({
+      providerId: "seller-p0",
+      endpointId: "chat",
+      amountAtomic: "10",
+      spendCeilings: { buyerAtomic: "1000000" },
+      failMode: "fail-closed",
+    });
+
+    const req = makeRequest({ headers: { "x-dna-buyer-id": "forged-buyer" }, path: "/p0" });
+    const res = makeResponse();
+    const nextCalled = runMiddleware(protectedRoute, req, res, (_req, response) => {
+      response.json({ ok: true });
+    });
+
+    expect(nextCalled).toBe(false);
+    expect((res as unknown as MockResponse).statusCode).toBe(403);
+    expect((res as unknown as MockResponse).body).toMatchObject({
+      error: "dna_guard_unverified_identity",
+      reason: "spend_ceiling_requires_verified_identity",
+    });
+  });
+
   it("fails open on guard runtime errors and exposes receipt verification state", () => {
     const auditLog = new AuditLogger({ stdout: false });
     const guard = createDnaGuard({ auditLog });
