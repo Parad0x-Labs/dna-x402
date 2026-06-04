@@ -12,10 +12,9 @@ importScripts("codec.js"); // provides base58Encode, buildDomainFilters, decodeC
 // Set this to the deployed null_registrar program ID. Until the program is
 // deployed (devnet/mainnet) and this is set, resolution returns null — the
 // resolver is wired but has nothing to resolve against yet.
-// Deployed on Solana devnet 2026-06-04. Switch to mainnet program ID when
-// null_registrar is audited and promoted to mainnet.
-const DEFAULT_PROGRAM_ID = "3mqpDJ6c84nVDwGPHEbtH5vbaDqRtPidAK5JX5KRzBB4"; // devnet
-const DEFAULT_RPC = "https://api.devnet.solana.com";
+// Deployed on Solana mainnet 2026-06-04.
+const DEFAULT_PROGRAM_ID = "GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8"; // mainnet
+const DEFAULT_RPC = "https://api.mainnet-beta.solana.com";
 const ARWEAVE_GATEWAY = "https://arweave.net";
 
 async function getConfig() {
