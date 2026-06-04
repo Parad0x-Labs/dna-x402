@@ -9,25 +9,122 @@
  * - Inclusion proofs: anyone can verify any receipt is in the batch.
  *
  * Algorithm: online binary Merkle tree (keep only log2(N) pending nodes).
- * Each leaf = SHA-256(JSON.stringify(receipt)).
- * Each internal node = SHA-256(left || right).
+ * Hashing is domain-separated per RFC-6962 §2.1 to block the second-preimage
+ * attack (presenting an internal node as a leaf, or vice-versa):
+ *   leaf hash     = SHA-256(0x00 || JSON.stringify(receipt))
+ *   internal node = SHA-256(0x01 || left || right)
  */
 
-import { createHash } from "node:crypto";
+import { createHash, hkdfSync } from "node:crypto";
 import type { X402Receipt } from "./compress.js";
 
 const ZERO = Buffer.alloc(32, 0);
+
+// RFC-6962 §2.1 domain-separation prefixes. Hashing leaves and internal nodes in
+// distinct domains means a leaf hash and an internal-node hash can never collide
+// over the same bytes — this is what blocks the second-preimage forgery where an
+// attacker presents an internal node's (left || right) preimage as a leaf.
+const LEAF_PREFIX     = Buffer.from([0x00]);
+const INTERNAL_PREFIX = Buffer.from([0x01]);
 
 function sha256(data: Buffer | Uint8Array): Buffer {
   return createHash("sha256").update(data).digest();
 }
 
-function hashInternal(left: Buffer, right: Buffer): Buffer {
-  return sha256(Buffer.concat([left, right]));
+/** RFC-6962 leaf hash over raw bytes: SHA-256(0x00 || data). */
+export function hashLeafBytes(data: Buffer | Uint8Array): Buffer {
+  return sha256(Buffer.concat([LEAF_PREFIX, data]));
+}
+
+/** RFC-6962 internal-node hash: SHA-256(0x01 || left || right). */
+export function hashInternal(left: Buffer, right: Buffer): Buffer {
+  return sha256(Buffer.concat([INTERNAL_PREFIX, left, right]));
 }
 
 function hashLeaf(receipt: X402Receipt): Buffer {
-  return sha256(Buffer.from(JSON.stringify(receipt)));
+  return hashLeafBytes(Buffer.from(JSON.stringify(receipt)));
+}
+
+// ── Salted (hiding) leaf commitment — v2 ──────────────────────────────────────
+//
+// The bare v1 leaf SHA-256(0x00 || JSON.stringify(receipt)) is a DETERMINISTIC
+// commitment over low-entropy, publicly-observable fields: amount, sender,
+// receiver, timestamp and programId all mirror an on-chain Solana payment.
+// Anyone holding the public on-chain root plus an inclusion proof can therefore
+// brute-force / confirm a receipt's contents offline — defeating the
+// encryption-at-rest story (you never have to decrypt the Arweave blob).
+//
+// v2 blinds each leaf with a secret per-leaf salt:
+//   leaf_i = SHA-256(0x00 || 0x02 || salt_i || canonical(receipt_i))
+//   salt_i = HKDF-SHA256(batchSecret, "liquefy-leaf-salt-v1" || u64_be(i))
+// The batchSecret lives ONLY inside the encrypted Arweave blob; without it the
+// public root reveals nothing about low-entropy fields. Opening leaf i reveals
+// (salt_i, receipt_i) only — the one-way per-leaf derivation keeps every other
+// leaf hidden, so selective disclosure stays selective.
+
+/** v2 leaf scheme tag — sits INSIDE the 0x00 RFC-6962 leaf domain. */
+const LEAF_SCHEME_V2 = Buffer.from([0x02]);
+const SALT_DOMAIN    = "liquefy-leaf-salt-v1";
+/** Per-leaf salt length in bytes. */
+export const LEAF_SALT_BYTES = 32;
+
+/**
+ * Deterministic, canonical, bigint-safe byte encoding of a receipt.
+ *
+ * Unlike JSON.stringify this (a) sorts object keys so insertion order is
+ * irrelevant, (b) encodes bigint and integer numbers identically — so an
+ * `amount` typed as 1000n or 1000 yields the same leaf, surviving the
+ * bigint→Number coercion in decompressReceipts, and (c) never throws on bigint
+ * (JSON.stringify(1n) throws). Strings stay quoted so a numeric field can never
+ * collide with its stringified form.
+ */
+export function canonicalReceiptBytes(receipt: X402Receipt): Buffer {
+  return Buffer.from(canonicalize(receipt), "utf8");
+}
+
+function canonicalize(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  switch (typeof value) {
+    case "bigint":  return value.toString();
+    case "number":  return Number.isFinite(value) ? numToCanonical(value) : "null";
+    case "boolean": return value ? "true" : "false";
+    case "string":  return JSON.stringify(value);
+    case "object": {
+      if (Array.isArray(value)) return "[" + value.map(canonicalize).join(",") + "]";
+      const obj  = value as Record<string, unknown>;
+      const keys = Object.keys(obj).sort();
+      return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalize(obj[k])).join(",") + "}";
+    }
+    default: return "null";
+  }
+}
+
+/** Integers (number or bigint) share one canonical form so the type never forks the leaf. */
+function numToCanonical(n: number): string {
+  return Number.isInteger(n) ? BigInt(n).toString() : n.toString();
+}
+
+/**
+ * Derive the per-leaf salt for `index` from a 32-byte batch secret via HKDF-SHA256.
+ * One-way: revealing one salt leaks neither the batch secret nor any other salt.
+ */
+export function deriveLeafSalt(batchSecret: Buffer | Uint8Array, index: number): Buffer {
+  if (!Number.isInteger(index) || index < 0) {
+    throw new RangeError(`leaf index must be a non-negative integer, got ${index}`);
+  }
+  const info = Buffer.alloc(SALT_DOMAIN.length + 8);
+  info.write(SALT_DOMAIN, 0, "utf8");
+  info.writeBigUInt64BE(BigInt(index), SALT_DOMAIN.length);
+  return Buffer.from(hkdfSync("sha256", batchSecret, Buffer.alloc(0), info, LEAF_SALT_BYTES));
+}
+
+/**
+ * v2 salted leaf hash: SHA-256(0x00 || 0x02 || salt || canonical(receipt)).
+ * The salt sits inside the 0x00 leaf domain, so RFC-6962 leaf/internal
+ * second-preimage separation is preserved.
+ */
+export function hashSaltedLeaf(receipt: X402Receipt, salt: Buffer | Uint8Array): Buffer {
+  return hashLeafBytes(Buffer.concat([LEAF_SCHEME_V2, Buffer.from(salt), canonicalReceiptBytes(receipt)]));
 }
 
 // ── Streaming builder ─────────────────────────────────────────────────────────
@@ -45,6 +142,11 @@ export class StreamingMerkleBuilder {
     this.count++;
   }
 
+  /**
+   * Push a precomputed leaf hash directly. The caller must domain-separate it
+   * with {@link hashLeafBytes} (SHA-256(0x00 || data)); feeding a bare SHA-256 of
+   * the data would reopen the second-preimage attack this tree guards against.
+   */
   addRaw(leafHash: Buffer): void {
     this.pushLeaf(leafHash);
     this.count++;
@@ -96,9 +198,23 @@ export class StreamingMerkleBuilder {
 export class MerkleTree {
   private leaves: Buffer[];
   private layers: Buffer[][];
+  private salts: (Buffer | null)[];
 
-  constructor(receipts: X402Receipt[]) {
-    this.leaves = receipts.map(hashLeaf);
+  /**
+   * @param receipts    the batch
+   * @param batchSecret optional — when supplied, leaves are v2 SALTED commitments
+   *                    (salt_i = deriveLeafSalt(batchSecret, i)) and every proof
+   *                    carries its per-leaf salt. Omit for the legacy unsalted v1
+   *                    tree (kept only for back-compat with already-anchored roots).
+   */
+  constructor(receipts: X402Receipt[], batchSecret?: Buffer | Uint8Array) {
+    if (batchSecret) {
+      this.salts  = receipts.map((_, i) => deriveLeafSalt(batchSecret, i));
+      this.leaves = receipts.map((r, i) => hashSaltedLeaf(r, this.salts[i]!));
+    } else {
+      this.salts  = receipts.map(() => null);
+      this.leaves = receipts.map(hashLeaf);
+    }
     this.layers = [this.leaves];
     this.build();
   }
@@ -147,6 +263,7 @@ export class MerkleTree {
       }
       idx = Math.floor(idx / 2);
     }
+    const salt = this.salts[index];
     return {
       leaf: this.leaves[index],
       index,
@@ -155,6 +272,7 @@ export class MerkleTree {
       passThrough,
       root:     this.root(),
       treeSize: this.leaves.length,
+      ...(salt ? { salt } : {}),
     };
   }
 }
@@ -169,6 +287,7 @@ export interface MerkleProof {
   passThrough: boolean[]; // true at level L = this node was unpaired, passed straight up
   root:        Buffer;    // the tree root
   treeSize:    number;    // total leaves
+  salt?:       Buffer;    // v2 only: per-leaf salt, revealed so a verifier can recompute the salted leaf
 }
 
 /**
@@ -194,7 +313,9 @@ export function verifyProof(proof: MerkleProof): boolean {
  * Verify a receipt is in a batch by computing its leaf hash and checking the proof.
  */
 export function verifyReceiptInBatch(receipt: X402Receipt, proof: MerkleProof): boolean {
-  const leaf = hashLeaf(receipt);
+  // A salted (v2) proof binds the receipt through its revealed per-leaf salt;
+  // an unsalted (v1) proof falls back to the legacy bare-JSON leaf.
+  const leaf = proof.salt ? hashSaltedLeaf(receipt, proof.salt) : hashLeaf(receipt);
   return leaf.equals(proof.leaf) && verifyProof(proof);
 }
 
@@ -203,10 +324,19 @@ export function verifyReceiptInBatch(receipt: X402Receipt, proof: MerkleProof): 
 /**
  * Build a Merkle root from a receipt array — in-memory, straightforward.
  * For large batches (>1M), use StreamingMerkleBuilder instead.
+ *
+ * @param batchSecret optional 32-byte secret. When supplied, leaves are v2
+ *   SALTED commitments (salt_i = deriveLeafSalt(batchSecret, i)) so the public
+ *   root cannot be brute-forced from low-entropy receipt fields. Omit for the
+ *   legacy unsalted v1 root.
  */
-export function buildReceiptRoot(receipts: X402Receipt[]): Buffer {
+export function buildReceiptRoot(receipts: X402Receipt[], batchSecret?: Buffer | Uint8Array): Buffer {
   const builder = new StreamingMerkleBuilder();
-  for (const r of receipts) builder.add(r);
+  if (batchSecret) {
+    receipts.forEach((r, i) => builder.addRaw(hashSaltedLeaf(r, deriveLeafSalt(batchSecret, i))));
+  } else {
+    for (const r of receipts) builder.add(r);
+  }
   return builder.root();
 }
 
