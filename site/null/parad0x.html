@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>parad0x.null — Parad0x Labs on Web0</title>
+  <meta name="description" content="Parad0x Labs on Web0. Censorship-resistant. Solana-owned. No ICANN. No registrar. Just code." />
+  <style>
+    :root {
+      --bg:      #0a0a0f;
+      --surface: #111118;
+      --border:  #1e1e2e;
+      --accent:  #7c3aed;
+      --accent2: #06b6d4;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --green:   #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 40px;
+    }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .domain {
+      font-size: 13px;
+      color: var(--accent2);
+      margin-bottom: 32px;
+      letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(14px, 2vw, 18px);
+      color: var(--muted);
+      text-align: center;
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 56px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 840px;
+      margin-bottom: 56px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card-icon { font-size: 24px; margin-bottom: 12px; }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .card-desc  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .stack {
+      width: 100%;
+      max-width: 560px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+    .stack-title { font-size: 11px; color: var(--muted); margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; }
+    .stack-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .stack-row:last-child { border-bottom: none; }
+    .stack-label { color: var(--muted); }
+    .stack-value { color: var(--accent2); word-break: break-all; text-align: right; max-width: 60%; }
+    .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 48px; }
+    .link {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 12px;
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .link:hover { border-color: var(--accent); color: var(--accent); }
+    .footer { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.8; }
+    .footer a { color: var(--accent2); text-decoration: none; }
+    .pill {
+      display: inline-block;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.3);
+      color: #a78bfa;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="badge">
+    <span class="dot"></span>
+    Live on Solana devnet · Web0
+  </div>
+
+  <h1>Parad0x Labs</h1>
+  <div class="domain">parad0x.null</div>
+
+  <p class="tagline">
+    Building the agentic internet. Payment rail, ZK identity, censorship-resistant domains —
+    all on Solana. This page lives on Arweave. No server. No ICANN. No registrar.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">DNA x402</div>
+      <div class="card-desc">Agent-to-agent USDC micropayments on Solana. HTTP 402 as a payment rail. 9 programs on mainnet.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">Dark Null</div>
+      <div class="card-desc">ZK shielded pool — 256-byte verifier, 128-byte Groth16 proof. Privacy without compromise.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🪪</div>
+      <div class="card-title">Agent Passport</div>
+      <div class="card-desc">Cryptographic agent identity. Anonymous reputation proofs. No login, no account, just math.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌐</div>
+      <div class="card-title">.null Domains</div>
+      <div class="card-desc">Solana PDA names for agents and humans. Resolves to Arweave content. Seizure-resistant by design.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🗜️</div>
+      <div class="card-title">Liquefy</div>
+      <div class="card-desc">33–61× JSON compression. 1.4–6× vs Zstd. 23 codecs benchmarked. Built for agent receipts.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🤖</div>
+      <div class="card-title">NULLA Mesh</div>
+      <div class="card-desc">Local LLMs collaborate on tasks. Earn NULL tokens for real work. DePIN for inference.</div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="stack-title">On-chain identity</div>
+    <div class="stack-row">
+      <span class="stack-label">Domain</span>
+      <span class="stack-value">parad0x.null</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-label">Namespace</span>
+      <span class="stack-value">null_registrar (devnet)</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-label">Program</span>
+      <span class="stack-value">3mqpDJ6c84nVDwGPHEbtH5vbaDqRtPidAK5JX5KRzBB4</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-label">Owner</span>
+      <span class="stack-value">F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-label">Content</span>
+      <span class="stack-value">Arweave (permanent)</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-label">$NULL</span>
+      <span class="stack-value">8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump</span>
+    </div>
+  </div>
+
+  <div class="links">
+    <a class="link" href="https://github.com/Parad0x-Labs/dna-x402">GitHub</a>
+    <a class="link" href="https://parad0xlabs.com">parad0xlabs.com</a>
+    <a class="link" href="https://x.com/Parad0x_Labs">@Parad0x_Labs</a>
+    <a class="link" href="https://clawhub.ai/parad0x-labs">ClawHub Skills</a>
+  </div>
+
+  <div class="footer">
+    <span class="pill">Public Beta</span> · Non-custodial · Audit scheduled Q3 2026<br/><br/>
+    This page is stored permanently on <a href="https://arweave.org">Arweave</a>
+    and resolved via the <a href="https://github.com/Parad0x-Labs/dna-x402/tree/main/extensions/null-resolver">Null Resolver</a> Chrome extension.<br/>
+    No server. No CDN. No shutdown vector.<br/><br/>
+    <a href="https://explorer.solana.com/address/3mqpDJ6c84nVDwGPHEbtH5vbaDqRtPidAK5JX5KRzBB4?cluster=devnet">View domain on Solana Explorer →</a>
+  </div>
+
+</body>
+</html>
