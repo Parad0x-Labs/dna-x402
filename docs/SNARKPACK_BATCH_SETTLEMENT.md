@@ -98,7 +98,7 @@ A Node.js / Rust binary that:
 - Accepts N Groth16 proof bundles (matching our existing 256-byte proof format from
   `dark-bn254-proof-gen`).
 - Loads the SnarkPack SRS (a structured reference string with G1 and G2 commitment keys — can be
-  derived from the Powers of Tau ceremony output already in `evidence/ceremony/`).
+  derived from the Powers of Tau ceremony output already in `evidence/zk/`).
 - Runs the GIPA reduction to produce the aggregate proof blob.
 - Outputs: `{ aggregate_proof: Uint8Array, merged_pub_inputs: Uint8Array[], srs_digest: string }`.
 
