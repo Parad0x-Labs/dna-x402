@@ -1,0 +1,15 @@
+{
+  "test": "dark_nullifier_record-onchain-e2e",
+  "cluster": "devnet",
+  "program": "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
+  "pdaSeed": "[\"null_record\", nullifier(32)]",
+  "tests": {
+    "recordPositive": {
+      "result": "CONFIRMED",
+      "tx": "263dWdnBNJM4Bydz2ASvZdFRqRsTMKmyop4SiKjbQ8SdUXwYjNtNqHvQhWM6Uop6AfVJyRGsTaCis4KDSD953Qjw"
+    },
+    "doubleSpendSame": "REJECTED Custom(10)",
+    "zeroNullifier": "REJECTED Custom(11)"
+  },
+  "explorer": "https://explorer.solana.com/tx/263dWdnBNJM4Bydz2ASvZdFRqRsTMKmyop4SiKjbQ8SdUXwYjNtNqHvQhWM6Uop6AfVJyRGsTaCis4KDSD953Qjw?cluster=devnet"
+}

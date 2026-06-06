@@ -179,6 +179,7 @@ SDK → `npm publish` both → upload to ClawHub as two separate listings.
 | **`null_registrar`** (v1) | **`H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm`** | **deployer** | **2026-06-06** |
 | **`null_auction`** | **`7uxLhqLzkEzPpkvdmTwqgL3g66yq2aMBS5QgcjaZZEaw`** | **deployer** | **2026-06-06** |
 | **`dark_x402_access_gate`** | **`EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS`** | **deployer** | **2026-06-06** |
+| **`dark_nullifier_record`** | **`24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65`** | **deployer** | **2026-06-06** |
 | `dna_x402_main` (receipt anchor used by SDK) | `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` | 7wWKi3S3 ✓ controlled | earlier |
 
 **$NULL token mint:** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` (Token-2022)
