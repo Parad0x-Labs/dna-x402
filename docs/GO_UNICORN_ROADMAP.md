@@ -6,9 +6,22 @@ only; rejected-hype dropped; claims bounded by `mainnet_ready` flags.*
 
 ---
 
-## 1. MUST-FIX before devnet deploy of `dark_x402_access_gate`
+## 0. Deploy status (2026-06-06)
 
-**The real verifier path is correct — safe to deploy to devnet.**
+`dark_x402_access_gate` — the real `alt_bn128` Groth16 verifier — is **deployed and proven on both clusters**:
+
+| Cluster | Program ID | On-chain e2e |
+|---|---|---|
+| devnet | `7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6` | real proof CONFIRMED; forged + tampered + zero REJECTED |
+| mainnet-beta | `EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS` | real proof CONFIRMED (`buzjYCxF…`); forged + tampered + zero REJECTED |
+
+Evidence: `evidence/zk/x402-access-{devnet,mainnet-beta}.json`. Upgrade authority `F6Fr2Sn6…P72BY`.
+The cryptography is live and enforcing on mainnet. The trust gaps below (single-party VK, no
+nullifier persistence, prover-chosen threshold) still gate any *trusted production* claim.
+
+## 1. MUST-FIX before *mainnet trust* of `dark_x402_access_gate`
+
+**The real verifier path is correct — deployed to devnet + mainnet; the gaps below are about trust, not correctness.**
 
 Re-confirmed against source: `dark-groth16-core::groth16_verify` implements
 `e(A,B)·e(-α,β)·e(-vk_x,γ)·e(-C,δ)=1` correctly; the `x402_access_vk` constants byte-match
@@ -89,9 +102,9 @@ Confidential Transfers hide only the amount. The defensible win is the **converg
 bundles** — x402 wiring + on-chain ZK access-gating + a `.null` identity bound *inside* the
 Groth16 commitment (`Poseidon(secret, agent_id)`) + recipient-unlinkable receipts on the *same
 BN254 curve* — credible precisely because the repo enforces this honesty in code: a real,
-tested `alt_bn128` Groth16 verifier + private access circuit on **devnet**, `.null` registrar on
-**mainnet**, ceremony + private receipts as the funded roadmap — **not** "live private payments
-on mainnet."
+tested `alt_bn128` Groth16 verifier + private access circuit on **devnet + mainnet** (forged
+proofs rejected on-chain), `.null` registrar on **mainnet**, ceremony + private receipts as the
+funded roadmap — **not** "live private payments on mainnet."
 
 ---
 
@@ -115,7 +128,7 @@ Raw `snarkjs` (p0tion is sunset; artifacts are snarkjs-compatible either way):
 ## 6. Sequenced roadmap
 
 **THIS WEEK — devnet + cheap credibility (no blockers):**
-1. Deploy `dark_x402_access_gate` to devnet (verifier confirmed correct).
+1. ~~Deploy `dark_x402_access_gate` to devnet~~ — **DONE**: deployed + on-chain e2e-proven on devnet AND mainnet (§0).
 2. **Add the positive E2E CI test** (highest leverage, ~1 day): parse a real `proof.json`+
    `public.json` → wire format → assert `groth16_verify == Ok(true)`. Would have caught every
    VK mismatch. (G2 conversion: `x_im←c1, x_re←c0, y_im←c1, y_re←c0`, 32-byte BE.)
