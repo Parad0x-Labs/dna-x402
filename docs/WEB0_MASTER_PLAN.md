@@ -89,14 +89,18 @@ them addressable as one thing.
 | `core/credits/proof_of_work.py` | nulla-local | bb2f398 | ✅ WorkProof minted per task, tradeable (3-layer anti-cheat) |
 | `core/compute/rental_market.py` | nulla-local | bb2f398 | ✅ CPU/GPU/Apple Silicon rental for NULL |
 
-### 4b. null_registrar — deployed addresses (2026-06-04)
+### 4b. null_registrar — deployed addresses (v1, reconciled 2026-06-06)
 
 | Network | Program ID | Config PDA | parad0x.null PDA |
 |---|---|---|---|
-| **Mainnet** | `GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8` | `FaJ3NmZYw99uJDRWtheMwmPPihuF8xydpCHxQtZeG2P8` | `CxtZviKgFBaMNxuaY9hoczPvppRs1RpZih2pjGK6ykZZ` |
-| **Devnet** | `3mqpDJ6c84nVDwGPHEbtH5vbaDqRtPidAK5JX5KRzBB4` | `E1FSZjmaTjJjEAsxsv4Bz5B3kRyBo8N2FmEpLNvSxqgz` | `ApsGmZ1d8rgxxzD6EJ9EG38L7MeCq3rcLqyqEbkAChxU` |
+| **Mainnet** | `H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm` | `BQTxsYxocM2ZC3Wb2pVdnyzTPduBcNhKojhBenR6AXYG` | `DRDHB6HfXuBWW3gQKd3BJpxw86jb2WJL7mYmfMJazS45` |
+| **Devnet** | `GQPitYUne8e5PwoAbGt1jZMdf3mA6cmeJLndtnPoitJh` | `2hosEo8Zb4LMsy3ComEvZLJKBGnp75BrSCF89QeVDnsx` | `8Rrt5EbR2dc6yXg2mpoPtuA85soBJSV2A4WYXbPNXwp5` |
 
-Deployer: `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY` (same as all other programs)
+Deployer / upgrade authority: `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY` (verified on-chain). All four PDAs above verified owned by the live v1 registrar.
+
+> **v0 is CLOSED — do not use.** The first deploy (`GRasGMtZsv…` mainnet / `3mqpDJ6c…` devnet)
+> used the 154-byte schema and was closed (programdata reclaimed). Its orphaned config/domain
+> PDAs (`FaJ3NmZY`/`CxtZviKg`, `E1FSZjma`/`ApsGmZ1d`) still resolve but are dead.
 
 **Bug fixed on deploy:** the original program used the full 64-byte padded name
 buffer as PDA seed, exceeding Solana's 32-byte per-seed limit. Fixed to use
@@ -111,8 +115,8 @@ created correctly. Pilot mode until post-audit.
 
 | | |
 |---|---|
-| **Arweave TX (mainnet page)** | `_iXQ46orH9XAo_N1-lEVOasVwCdI1D86fo-ZYhjwfas` |
-| **URL** | https://arweave.net/_iXQ46orH9XAo_N1-lEVOasVwCdI1D86fo-ZYhjwfas |
+| **Arweave TX (mainnet page)** | `jgvIdsbI3vScGSw-w5rhxCZvH0yu0_08gnzIluyXyz8` (canonical — read from on-chain PDA `DRDHB6Hf…`) |
+| **URL** | https://arweave.net/jgvIdsbI3vScGSw-w5rhxCZvH0yu0_08gnzIluyXyz8 |
 | **Content hash** | SHA-256 of the Arweave TX ID, stored in the NullDomain PDA |
 | **Source** | `site/null/parad0x.html` in dna-x402 repo |
 | **UpdateContent sig** | `3XXmTt8wwQKjYBpHpfXF2YPEDLpXuxMEFWPo2YpDKo4...` |
@@ -126,8 +130,8 @@ Arweave devnet page (first upload) also exists at:
 |---|---|
 | **Source** | `extensions/null-resolver/` |
 | **Zip (Web Store ready)** | `dist/null-resolver-extension.zip` (15.3 KB) |
-| **DEFAULT_PROGRAM_ID** | `GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8` (mainnet) |
-| **DEFAULT_RPC** | `https://api.mainnet-beta.solana.com` |
+| **PROGRAM_ID** | `H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm` (v1 mainnet — already set in `null-resolver-page.js`) |
+| **RPC** | browser-safe pool: `solana-rpc.publicnode.com` + fallbacks (`api.mainnet-beta.solana.com` 403s on a browser Origin) |
 | **Web Store status** | ⏳ Pending submission (zip ready, needs manual upload) |
 
 **To load locally:** `chrome://extensions` → Developer mode → Load unpacked →
@@ -161,22 +165,28 @@ SDK → `npm publish` both → upload to ClawHub as two separate listings.
 
 ## 5. All mainnet programs — full registry (2026-06-04)
 
-| Program | Mainnet Address | Deployed |
-|---|---|---|
-| `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | 2026-05-29 |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | 2026-05-29 |
-| `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | 2026-05-29 |
-| `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | 2026-05-29 |
-| `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | 2026-05-29 |
-| `null_mint_gate` | `5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1` | 2026-05-29 |
-| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | 2026-05-29 |
-| `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | 2026-05-29 |
-| **`null_registrar`** | **`GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8`** | **2026-06-04** |
-| DNA x402 main | `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` | earlier |
+| Program | Mainnet Address | Authority | Deployed |
+|---|---|---|---|
+| `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | multisig | 2026-05-29 |
+| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | multisig | 2026-05-29 |
+| `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | multisig | 2026-05-29 |
+| `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | multisig | 2026-05-29 |
+| `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | multisig | 2026-05-29 |
+| `null_mint_gate` | `5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1` | multisig | 2026-05-29 |
+| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | multisig | 2026-05-29 |
+| `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | multisig | 2026-05-29 |
+| `dark_bn254_gate` | `GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd` | multisig | 2026-05-29 |
+| **`null_registrar`** (v1) | **`H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm`** | **deployer** | **2026-06-06** |
+| **`null_auction`** | **`7uxLhqLzkEzPpkvdmTwqgL3g66yq2aMBS5QgcjaZZEaw`** | **deployer** | **2026-06-06** |
+| **`dark_x402_access_gate`** | **`EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS`** | **deployer** | **2026-06-06** |
+| `dna_x402_main` (receipt anchor used by SDK) | `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` | ⚠ 7wWKi3S3 | earlier |
 
-**$NULL token mint:** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`
-**Deployer:** `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`
-**Upgrade authority:** same deployer (Squads multisig migration planned post-audit)
+**$NULL token mint:** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` (Token-2022)
+**Deployer** (authority = "deployer" above): `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`
+**Squads multisig** (authority = "multisig" above): `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` — controls the 2026-05-29 batch.
+**⚠ Authority note (reconciled 2026-06-06):** the 2026-05-29 batch is already under the Squads
+multisig (not the deployer). `dna_x402_main` (`9bPBmDNn`, the receipt anchor the x402 SDK calls)
+is under `7wWKi3S3…` — undocumented; **confirm custody.**
 
 ---
 
