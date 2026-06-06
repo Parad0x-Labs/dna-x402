@@ -179,14 +179,14 @@ SDK → `npm publish` both → upload to ClawHub as two separate listings.
 | **`null_registrar`** (v1) | **`H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm`** | **deployer** | **2026-06-06** |
 | **`null_auction`** | **`7uxLhqLzkEzPpkvdmTwqgL3g66yq2aMBS5QgcjaZZEaw`** | **deployer** | **2026-06-06** |
 | **`dark_x402_access_gate`** | **`EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS`** | **deployer** | **2026-06-06** |
-| `dna_x402_main` (receipt anchor used by SDK) | `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` | ⚠ 7wWKi3S3 | earlier |
+| `dna_x402_main` (receipt anchor used by SDK) | `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` | 7wWKi3S3 ✓ controlled | earlier |
 
 **$NULL token mint:** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` (Token-2022)
 **Deployer** (authority = "deployer" above): `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`
 **Squads multisig** (authority = "multisig" above): `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` — controls the 2026-05-29 batch.
-**⚠ Authority note (reconciled 2026-06-06):** the 2026-05-29 batch is already under the Squads
-multisig (not the deployer). `dna_x402_main` (`9bPBmDNn`, the receipt anchor the x402 SDK calls)
-is under `7wWKi3S3…` — undocumented; **confirm custody.**
+**Authority note (reconciled 2026-06-06):** the 2026-05-29 batch is under the Squads multisig
+(not the deployer). `dna_x402_main` (`9bPBmDNn`, the receipt anchor the x402 SDK calls) is under
+`7wWKi3S3…` — **controlled by founder** (key recovered + backed up to the offline vault 2026-06-06).
 
 ---
 
