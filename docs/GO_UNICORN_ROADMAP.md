@@ -132,13 +132,21 @@ Raw `snarkjs` (p0tion is sunset; artifacts are snarkjs-compatible either way):
 2. **Add the positive E2E CI test** (highest leverage, ~1 day): parse a real `proof.json`+
    `public.json` → wire format → assert `groth16_verify == Ok(true)`. Would have caught every
    VK mismatch. (G2 conversion: `x_im←c1, x_re←c0, y_im←c1, y_re←c0`, 32-byte BE.)
-3. Proof compression 256→128 bytes (mainnet syscalls live since v1.16) — X-PAYMENT header win.
+3. Proof compression 256→128 bytes — **BLOCKED on mainnet** (verified 2026-06-06): the proof's
+   B-point is G2, so on-chain decompression needs the alt_bn128 **G2 syscalls (SIMD-0302)** —
+   active on devnet (epoch 1058) but **inactive on mainnet** (same gate that blocks Dark Passport
+   phase-2). Provable on devnet now; ships to mainnet only once SIMD-0302 activates there. The
+   uncompressed 352-byte path is the production path today (~93k CU, ~$0.0007/verify).
 4. Ceremony Step 0 (fix the power-20 header).
 5. Drop/rename the Tier-A stubs.
 
 **THIS MONTH — build the wedge + de-risk:**
-6. Wedge #1: caveat `(payment_id, resource_id)` + stealth field; deploy `dark_nullifier_record`
-   (= F-1-1 fix); wire `allowed_relayer_class`; e2e vs the published x402 attacks.
+6. Wedge #1: caveat `(payment_id, resource_id)` + stealth field; ~~deploy `dark_nullifier_record`
+   (= F-1-1 fix)~~ — **DONE 2026-06-06**: `dark_nullifier_record` live on mainnet
+   (`24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65`), seed hardened to the full 32-byte nullifier,
+   on-chain-proven (record OK / double-spend `Custom(10)` / zero `Custom(11)`). **Remaining:** wire
+   `dark_x402_access_gate` to CPI it on verify (makes each access proof single-use); caveat fields;
+   `allowed_relayer_class`; e2e vs the published x402 attacks.
 7. Wedge #2: `StealthReceipt` + view-key indexer; finalize one-time spend-key derivation.
 8. **Swap to audited crates**: `dark-groth16-core` internals → **Lightprotocol/groth16-solana**
    (audited, backs sp1-solana); on-chain Poseidon → **light-poseidon** (Veridise-audited,
