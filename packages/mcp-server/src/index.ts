@@ -350,6 +350,49 @@ async function lookupPassport(
   };
 }
 
+async function checkNullifier(
+  nullifier: string,
+  rpcUrl = DEFAULT_RPC
+): Promise<object> {
+  // Accept a 64-char hex string OR a decimal BN254 field element.
+  const s = nullifier.trim();
+  let hex: string;
+  if (/^[0-9a-fA-F]{64}$/.test(s)) {
+    hex = s.toLowerCase();
+  } else if (/^[0-9]+$/.test(s)) {
+    hex = BigInt(s).toString(16).padStart(64, "0");
+    if (hex.length !== 64) return { error: "nullifier out of range — must fit in 32 bytes" };
+  } else {
+    return { error: "nullifier must be a 64-char hex string or a decimal field element" };
+  }
+
+  try {
+    const nullifierBytes = Buffer.from(hex, "hex");
+    const program = new PublicKey(PROGRAMS.dark_nullifier_record);
+    // Single-use record PDA — matches the on-chain seed [b"null_record", nullifier_be_32].
+    const [recordPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("null_record"), nullifierBytes],
+      program
+    );
+    const connection = new Connection(rpcUrl, "confirmed");
+    const info = await connection.getAccountInfo(recordPda);
+    const spent = info !== null && info.data.length > 0;
+    return {
+      nullifier_hex: hex,
+      record_pda: recordPda.toBase58(),
+      spent,
+      program: PROGRAMS.dark_nullifier_record,
+      explorer_url: explorerAccount(recordPda.toBase58()),
+      note: spent
+        ? "Nullifier already recorded on-chain — this proof has been spent (single-use exhausted)."
+        : "No record found — this nullifier has not been used yet.",
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: `Nullifier lookup failed: ${msg}` };
+  }
+}
+
 function buildOutcomeReceipt(params: {
   receipt_id: string;
   outcome: "positive" | "negative" | "neutral";
@@ -729,6 +772,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "check_nullifier",
+        description:
+          "Check whether a privacy-proof nullifier has already been spent on Solana (single-use enforcement). Read-only: derives the dark_nullifier_record PDA and checks if it exists on-chain. No signing, no funds.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            nullifier: {
+              type: "string",
+              description: "The nullifier as a 64-char hex string OR a decimal BN254 field element (e.g. the reputation_nullifier public input).",
+            },
+            rpc_url: {
+              type: "string",
+              description: "Solana RPC URL (default: mainnet-beta). Use a devnet RPC to check the devnet stack.",
+            },
+          },
+          required: ["nullifier"],
+        },
+      },
+      {
         name: "get_stack_status",
         description: "Get the current status of all Parad0x Labs mainnet programs",
         inputSchema: {
@@ -824,6 +886,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "compress_receipts": {
         const { receipts } = args as { receipts: object[] };
         result = compressReceipts(receipts);
+        break;
+      }
+
+      case "check_nullifier": {
+        const { nullifier, rpc_url } = args as { nullifier: string; rpc_url?: string };
+        result = await checkNullifier(
+          nullifier,
+          rpc_url ?? process.env.SOLANA_RPC_URL ?? DEFAULT_RPC
+        );
         break;
       }
 
