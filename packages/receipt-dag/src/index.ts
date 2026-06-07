@@ -66,6 +66,23 @@ function sha256buf(data: Buffer | Uint8Array): Buffer {
   return createHash("sha256").update(data).digest();
 }
 
+// RFC-6962 §2.1 domain separation for the batch Merkle tree: leaves are hashed
+// with a 0x00 prefix and internal nodes with a 0x01 prefix, so a leaf hash can
+// never be presented as an internal node (or vice-versa) to forge an inclusion
+// proof — the second-preimage attack.
+const LEAF_PREFIX     = Buffer.from([0x00]);
+const INTERNAL_PREFIX = Buffer.from([0x01]);
+
+/** RFC-6962 leaf hash: SHA-256(0x00 || data). */
+function hashLeafBytes(data: Buffer | Uint8Array): Buffer {
+  return sha256buf(Buffer.concat([LEAF_PREFIX, data]));
+}
+
+/** RFC-6962 internal-node hash: SHA-256(0x01 || left || right). */
+function hashInternal(left: Buffer, right: Buffer): Buffer {
+  return sha256buf(Buffer.concat([INTERNAL_PREFIX, left, right]));
+}
+
 /**
  * Derive the canonical receiptId from its immutable fields.
  * receiptId = SHA-256(agentPubkey || ":" || sequenceNonce || ":" || actionHash)
@@ -222,8 +239,9 @@ export const RECEIPT_ANCHOR_PROGRAM_ID = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3
 /**
  * Build a Merkle root over a DAG receipt batch.
  *
- * Each leaf = SHA-256(JSON.stringify(receipt)).
- * Internal nodes = SHA-256(left || right).
+ * Hashing is domain-separated per RFC-6962 §2.1 (blocks second-preimage forgery):
+ *   leaf hash     = SHA-256(0x00 || JSON.stringify(receipt))
+ *   internal node = SHA-256(0x01 || left || right)
  * Uses a streaming O(log N) algorithm: safe for arbitrarily large batches.
  *
  * @returns 32-byte Buffer containing the Merkle root.
@@ -242,14 +260,14 @@ export function buildDagMerkleRoot(receipts: DagReceipt[]): Buffer {
         stack[level] = carry;
         return;
       }
-      carry = sha256buf(Buffer.concat([pending, carry]));
+      carry = hashInternal(pending, carry);
       stack[level] = null;
     }
     stack.push(carry);
   }
 
   for (const r of receipts) {
-    const leaf = sha256buf(Buffer.from(JSON.stringify(r), "utf8"));
+    const leaf = hashLeafBytes(Buffer.from(JSON.stringify(r), "utf8"));
     pushLeaf(leaf);
   }
 
@@ -258,7 +276,7 @@ export function buildDagMerkleRoot(receipts: DagReceipt[]): Buffer {
   for (let i = 0; i < stack.length; i++) {
     const node = stack[i];
     if (node === null) continue;
-    carry = carry === null ? node : sha256buf(Buffer.concat([node, carry]));
+    carry = carry === null ? node : hashInternal(node, carry);
   }
   return carry ?? Buffer.alloc(32, 0);
 }
