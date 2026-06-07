@@ -20,7 +20,8 @@
     "lottery": "3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG",
     "mintGate": "5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1",
     "receiptAnchor": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
-    "proofGate": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2"
+    "proofGate": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
+    "nullRegistrar": "GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8"
   },
   "nullMint": "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
   "rpcUrl": "https://api.mainnet-beta.solana.com"

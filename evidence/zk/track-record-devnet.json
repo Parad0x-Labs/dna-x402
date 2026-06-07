@@ -1,0 +1,33 @@
+{
+  "test": "dark_reputation_gate-onchain-e2e",
+  "cluster": "devnet",
+  "program": "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
+  "circuit": "track_record.circom",
+  "params": {
+    "K": 4,
+    "depth": 10
+  },
+  "curve": "bn254",
+  "protocol": "groth16",
+  "publicInputs": {
+    "root": "11463251968254121236711504162277588162328149292779076201572602260057368696069",
+    "min_count": "3",
+    "min_volume": "16999",
+    "window_start": "1772224000",
+    "reputation_nullifier": "14901078870336021611641481375190271073657433149918888406589784457265475784487",
+    "agent_commitment": "11243981942130162485267496951323442793562194148639775265172618442287945879859"
+  },
+  "nullifierRecordPda": "DrPtnthJwHUNxfdfWHZuo9v6Gcr1nMwQ5UfkVWEtm325",
+  "tests": {
+    "offChainVerify": "PASS",
+    "onChainRealProof": {
+      "result": "CONFIRMED",
+      "tx": "2k6YrtYabE6BQ9HKDBqeXnAz2HbdzrCxqBxQTewkHv6JjY3E7UMZaSb3Enc73mYAf5wAB25qri5ivCjCQmrQgcwy"
+    },
+    "onChainReplaySameNullifier": "REJECTED (single-use)",
+    "onChainForged": "REJECTED",
+    "onChainTamperedMinVolume": "REJECTED",
+    "onChainZero": "REJECTED"
+  },
+  "explorer": "https://explorer.solana.com/tx/2k6YrtYabE6BQ9HKDBqeXnAz2HbdzrCxqBxQTewkHv6JjY3E7UMZaSb3Enc73mYAf5wAB25qri5ivCjCQmrQgcwy?cluster=devnet"
+}

@@ -1,19 +1,23 @@
 //! ZK Transfer Hook verifier logic for Dark Null.
 //!
-//! Pure-Rust hook verification logic called by a Token-2022 Transfer Hook
-//! program. The hook receives a compressed Groth16 proof (128 bytes) and two
-//! public inputs, verifies the proof on-chain via the `alt_bn128` pairing
-//! syscall, then checks the nullifier PDA before approving the transfer.
+//! Pure-Rust hook verification logic intended to be called by a Token-2022
+//! Transfer Hook program. In the finished design the hook receives a compressed
+//! Groth16 proof (128 bytes) and two public inputs, verifies the proof on-chain
+//! via the `alt_bn128` pairing syscall, then checks the nullifier PDA before
+//! approving the transfer.
 //!
-//! This is the **first-in-world** ZK-gated Transfer Hook design for Solana.
-//! Solana Token-2022 explicitly cannot combine Transfer Hooks with the native
-//! Confidential Transfer extension — a custom ZK hook is the only path to
-//! programmable-condition + amount-privacy on SPL tokens.
+//! ⚠️  STATUS: STUB — NOT A WORKING ZK GATE.
+//!   `IS_STUB = true`, `MAINNET_READY = false`.
+//!   The Groth16 pairing check is NOT implemented. Because a security gate with
+//!   no verifier must never approve anything, `verify_hook_proof` FAILS CLOSED:
+//!   in stub mode it returns `HookError::StubVerifierDisabled` and can NEVER emit
+//!   an `approved` verdict. (A previous version returned `approved: true` for any
+//!   non-zero proof — a forgeable gate. That has been removed.)
+//!   Do not describe this as a working/"first-in-world" ZK hook until the real
+//!   alt_bn128 verifier lands and is audited.
 //!
-//! Estimated on-chain cost: ~166,000 CU
-//!   (~150,000 Groth16 verify + ~16,000 hook/nullifier overhead)
-//!
-//! `IS_STUB = true`, `MAINNET_READY = false`.
+//! Estimated on-chain cost once implemented: ~166,000 CU
+//!   (~150,000 Groth16 verify + ~16,000 hook/nullifier overhead).
 
 use sha2::{Digest, Sha256};
 
@@ -21,7 +25,7 @@ use sha2::{Digest, Sha256};
 pub const HOOK_PROOF_SIZE: usize = 128;
 /// Number of public inputs: nullifier_hash + program_commitment.
 pub const HOOK_PUBLIC_INPUTS: usize = 2;
-/// Estimated CU cost for the full hook verification path.
+/// Estimated CU cost for the full hook verification path (once implemented).
 pub const HOOK_ESTIMATED_CU: u32 = 166_000;
 pub const HOOK_VERSION: u8 = 1;
 pub const IS_STUB: bool = true;
@@ -41,7 +45,8 @@ pub struct HookProof {
 
 #[derive(Debug, Clone)]
 pub struct HookVerdict {
-    /// Whether the transfer is approved.
+    /// Whether the transfer is approved. Only ever `true` once a real proof
+    /// has actually been verified (never in stub mode).
     pub approved: bool,
     /// Echoed nullifier hash (for PDA write).
     pub nullifier_hash: [u8; 32],
@@ -59,8 +64,11 @@ pub enum HookError {
     ZeroNullifier,
     /// All-zero program commitment — invalid.
     ZeroProgram,
-    /// Proof structural check failed (stub: always passes if non-zero).
+    /// Proof structural check failed.
     ProofInvalid,
+    /// The verifier is a stub (no Groth16 pairing wired). Fails closed: the gate
+    /// refuses to approve until a real verifier is implemented and audited.
+    StubVerifierDisabled,
 }
 
 fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
@@ -73,8 +81,14 @@ fn sha256_multi(parts: &[&[u8]]) -> [u8; 32] {
 
 /// Verify a ZK hook proof.
 ///
-/// In production this calls `solana_program::alt_bn128::alt_bn128_pairing`
-/// for the Groth16 check. In stub mode it verifies structural integrity only.
+/// Production behaviour (when `IS_STUB == false`): run
+/// `solana_program::alt_bn128::alt_bn128_pairing` over (A, B, alpha, beta, gamma,
+/// delta, C) for the Groth16 check, and only on success construct an approved
+/// `HookVerdict`.
+///
+/// Stub behaviour (current): structural (non-zero) checks run, then the verifier
+/// FAILS CLOSED with `StubVerifierDisabled`. It cannot return an approval, so a
+/// forged or garbage proof can never pass.
 pub fn verify_hook_proof(proof: &HookProof) -> Result<HookVerdict, HookError> {
     if proof.compressed_proof == [0u8; HOOK_PROOF_SIZE] {
         return Err(HookError::ZeroProof);
@@ -85,8 +99,17 @@ pub fn verify_hook_proof(proof: &HookProof) -> Result<HookVerdict, HookError> {
     if proof.program_commitment == [0u8; 32] {
         return Err(HookError::ZeroProgram);
     }
-    // Stub: any non-zero proof passes structural check.
-    // Production: run alt_bn128 multi-pairing over (A, B, alpha, beta, gamma, delta, C).
+
+    // SECURITY — FAIL CLOSED.
+    // No real Groth16 verification is wired (IS_STUB). A security gate with no
+    // verifier must never approve. Deny via error so no integration can mistake
+    // this stub for a working ZK gate. When the real alt_bn128 verifier is added
+    // (IS_STUB -> false), replace this with the pairing check + an approved verdict.
+    if IS_STUB || !MAINNET_READY {
+        return Err(HookError::StubVerifierDisabled);
+    }
+
+    // ── real verification path (reached only once IS_STUB == false) ───────────
     let verification_hash = sha256_multi(&[
         b"dark-hook-verdict-v1",
         &proof.compressed_proof,
@@ -178,40 +201,33 @@ mod tests {
         assert_eq!(verify_hook_proof(&p).unwrap_err(), HookError::ZeroProgram);
     }
 
+    // ── FAIL-CLOSED guarantees ────────────────────────────────────────────────
+
     #[test]
-    fn test_valid_proof_returns_ok() {
-        assert!(verify_hook_proof(&valid_proof()).is_ok());
+    fn test_stub_fails_closed_on_structurally_valid_proof() {
+        // The whole point: a structurally valid (non-zero) proof must NOT be
+        // approved while the verifier is a stub. It must deny via error.
+        assert_eq!(
+            verify_hook_proof(&valid_proof()).unwrap_err(),
+            HookError::StubVerifierDisabled
+        );
     }
 
     #[test]
-    fn test_verdict_approved_true() {
-        let v = verify_hook_proof(&valid_proof()).unwrap();
-        assert!(v.approved);
+    fn test_stub_never_returns_an_approved_verdict() {
+        // There is no input that yields an approved verdict in stub mode.
+        let p = valid_proof();
+        assert!(verify_hook_proof(&p).is_err());
     }
 
     #[test]
-    fn test_verdict_nullifier_matches() {
-        let v = verify_hook_proof(&valid_proof()).unwrap();
-        assert_eq!(v.nullifier_hash, nh());
+    fn test_is_stub_true() {
+        assert!(IS_STUB);
     }
 
     #[test]
-    fn test_verdict_program_matches() {
-        let v = verify_hook_proof(&valid_proof()).unwrap();
-        assert_eq!(v.program_commitment, pc());
-    }
-
-    #[test]
-    fn test_verification_hash_nonzero() {
-        let v = verify_hook_proof(&valid_proof()).unwrap();
-        assert_ne!(v.verification_hash, [0u8; 32]);
-    }
-
-    #[test]
-    fn test_verification_hash_deterministic() {
-        let v1 = verify_hook_proof(&valid_proof()).unwrap();
-        let v2 = verify_hook_proof(&valid_proof()).unwrap();
-        assert_eq!(v1.verification_hash, v2.verification_hash);
+    fn test_mainnet_ready_false() {
+        assert!(!MAINNET_READY);
     }
 
     #[test]
@@ -223,17 +239,5 @@ mod tests {
     fn test_make_test_proof_nonzero() {
         let p = valid_proof();
         assert_ne!(p.compressed_proof, [0u8; HOOK_PROOF_SIZE]);
-    }
-
-    #[test]
-    fn test_mainnet_ready_false() {
-        let p = valid_proof();
-        assert!(!p.mainnet_ready);
-    }
-
-    #[test]
-    fn test_is_stub_true() {
-        let p = valid_proof();
-        assert!(p.is_stub);
     }
 }

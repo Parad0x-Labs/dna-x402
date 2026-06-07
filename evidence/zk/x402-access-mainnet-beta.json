@@ -1,7 +1,7 @@
 {
   "test": "x402_access-gate-onchain-e2e",
-  "cluster": "devnet",
-  "program": "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6",
+  "cluster": "mainnet-beta",
+  "program": "EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS",
   "circuit": "x402_access.circom",
   "curve": "bn254",
   "protocol": "groth16",
@@ -16,11 +16,11 @@
     "offChainVerify": "PASS",
     "onChainRealProof": {
       "result": "CONFIRMED",
-      "tx": "3j3Gx7dEvLys4J4wG4MNbokyKnhE7MAYj3MNjUgZWwsiwxbHeihnNxUt8D4zrSpdJGXsrUM8ahCtM5NbqoZ7CSNc"
+      "tx": "buzjYCxFGNy8eDVesjbQLr6kxrdZnAqdkectk6UApJTwbkRwFhkSAUWPSuS8L6UxpMtrn24RoTwKSnAx7z19kPd"
     },
     "onChainForgedProof": "REJECTED",
     "onChainTamperedThreshold": "REJECTED",
     "onChainZeroProof": "REJECTED"
   },
-  "explorer": "https://explorer.solana.com/tx/3j3Gx7dEvLys4J4wG4MNbokyKnhE7MAYj3MNjUgZWwsiwxbHeihnNxUt8D4zrSpdJGXsrUM8ahCtM5NbqoZ7CSNc?cluster=devnet"
+  "explorer": "https://explorer.solana.com/tx/buzjYCxFGNy8eDVesjbQLr6kxrdZnAqdkectk6UApJTwbkRwFhkSAUWPSuS8L6UxpMtrn24RoTwKSnAx7z19kPd?cluster=mainnet-beta"
 }

@@ -71,13 +71,13 @@ pub fn process_instruction(
     }
 
     // -----------------------------------------------------------------------
-    // 4. Derive the PDA — seed: [b"null_record", nullifier[0..8]].
-    //    Using the first 8 bytes of the nullifier distributes records
-    //    across 2^64 possible prefix buckets, mirroring the sharded layout
-    //    used by dark-nullifier-banks.
+    // 4. Derive the PDA — seed: [b"null_record", nullifier (full 32 bytes)].
+    //    The full nullifier is the seed (32 bytes = the max single-seed length),
+    //    so every distinct nullifier maps to a unique PDA. A prefix seed would
+    //    let two different nullifiers collide and falsely trip AlreadyRecorded.
     // -----------------------------------------------------------------------
-    let null_prefix = &nullifier[0..8];
-    let seeds: &[&[u8]] = &[SEED_PREFIX, null_prefix];
+    let null_seed = &nullifier[..];
+    let seeds: &[&[u8]] = &[SEED_PREFIX, null_seed];
     let (derived_pda, bump) = Pubkey::find_program_address(seeds, program_id);
 
     if derived_pda != *record_pda.key {
@@ -99,7 +99,7 @@ pub fn process_instruction(
     let lamports_needed = rent.minimum_balance(NULLIFIER_RECORD_SIZE);
 
     let bump_seed = [bump];
-    let signer_seeds: &[&[u8]] = &[SEED_PREFIX, null_prefix, &bump_seed];
+    let signer_seeds: &[&[u8]] = &[SEED_PREFIX, null_seed, &bump_seed];
 
     invoke_signed(
         &system_instruction::create_account(

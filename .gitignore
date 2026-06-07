@@ -159,3 +159,11 @@ packages/*/tests/*.js.map
 /docs/SETUP.md
 /HANDOVER.md
 evidence/demo/archive-key.hex
+programs/dark_x402_access_gate/mainnet-keypair.json
+circuits/out/*.zkey
+circuits/out/*.ptau
+circuits/out/*_js/
+circuits/out/*.r1cs
+circuits/out/*.sym
+circuits/out/*.wtns
+ceremony/transcript/**/*.zkey

@@ -193,6 +193,10 @@ members = [
     "programs/dark_bn254_gate",
     # X402_ACCESS_GATE - x402 payment tier access proof verifier (3 public inputs: commitment, threshold, nullifier)
     "programs/dark_x402_access_gate",
+    # REPUTATION_GATE - private track-record proof verifier (6 public inputs: root, min_count, min_volume, window_start, nullifier, agent_commitment)
+    "programs/dark_reputation_gate",
+    # RECEIPT_COMMITMENT_TREE - incremental Poseidon Merkle tree of receipt commitments (the leaf-writer / root source)
+    "programs/receipt_commitment_tree",
     # DARK_ZK_PRIMITIVES_V1 - Phase 3 (on-chain nullifier recorder)
     "programs/dark_nullifier_record",
     # DARK_ZK_PRIMITIVES_V1 - Phase 4 (Semaphore group registry + nullifier store)
@@ -206,6 +210,8 @@ members = [
     "programs/live_attestation",
     # SOULBOUND_AGENT_PASSPORT - NonTransferable Token-2022 credential + PermanentDelegate revocation
     "programs/agent_credential_mint",
+    # NULL_REGISTRAR — .null domain name system on Solana
+    "programs/null_registrar",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

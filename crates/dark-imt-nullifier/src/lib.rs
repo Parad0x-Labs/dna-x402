@@ -9,9 +9,11 @@
 //!   - IMT:       327 Poseidon hashes per 4-value batch → ~197k CU in-circuit
 //!   - Savings: **8×**
 //!
-//! No Solana implementation of an IMT nullifier set exists prior to this crate.
-//!
-//! `IS_STUB = true`, `MAINNET_READY = false`.
+//! ⚠️  STATUS: STUB — `IS_STUB = true`, `MAINNET_READY = false`.
+//!   `verify_non_membership` binds the proof to the in-memory tree (forge-safe for
+//!   the full-tree case), but the on-chain Merkle-inclusion path against a stored
+//!   root is still TODO. Do not market as a finished/"first" primitive until the
+//!   Merkle proof path lands and is audited. CU figures below are estimates.
 
 use sha2::{Digest, Sha256};
 
@@ -186,13 +188,30 @@ impl IMT {
         })
     }
 
-    /// Verify a non-membership proof: check the bracketing invariant.
-    /// In production this also verifies the Merkle inclusion proof for the low nullifier.
+    /// Verify a non-membership proof against THIS tree.
+    ///
+    /// SECURITY: the claimed `low_nullifier` must be the genuine node at the
+    /// claimed index in this tree. Without that binding, an attacker could forge
+    /// an arbitrary low node that brackets the target value and falsely prove
+    /// non-membership (→ double-spend). The previous version checked only the
+    /// bracketing invariant and was forgeable.
+    ///
+    /// (A light-client / on-chain variant that holds only the root would instead
+    /// verify a Merkle inclusion proof of `low_nullifier` against `self.root`.
+    /// Here we hold the full node set, so we bind directly. That Merkle-proof
+    /// path is still TODO before mainnet — `IS_STUB = true`.)
     pub fn verify_non_membership(
         &self,
         nullifier: &[u8; 32],
         proof: &IMTNonMembershipProof,
     ) -> bool {
+        // Bind the proof to the real tree state.
+        let idx = proof.low_nullifier_index as usize;
+        match self.nodes.get(idx) {
+            Some(node) if *node == proof.low_nullifier => {}
+            _ => return false,
+        }
+        // Bracketing invariant: low.value < target < low.next_value.
         let low = &proof.low_nullifier;
         low.value < *nullifier && *nullifier < low.next_value
     }
