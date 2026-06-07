@@ -13,8 +13,16 @@ on-chain-proven end-to-end (K=4, depth-10 POC):
 - circuit `track_record.circom` (12,100 constraints), VK in `dark-groth16-core::track_record_vk`,
   e2e `scripts/zk/track-record-e2e.mjs`, evidence `evidence/zk/track-record-devnet.json`.
 
-**Remaining before mainnet:** (1) the settlement-layer leaf-writer below — the one architectural
-call; (2) multi-party ceremony + public ptau (same gate as the access gate); (3) scale K/depth.
+**Full stack proven (2026-06-07):** `receipt_commitment_tree`
+(`8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas`, devnet) maintains the incremental Poseidon root
+via the `sol_poseidon` syscall (constant cost — frontier + root history only, no leaves on-chain).
+e2e `scripts/zk/full-stack-e2e.mjs`: insert receipts on-chain → the on-chain root **matches the
+circuit's circomlib root byte-for-byte** → the gate verifies a track-record proof against that
+on-chain root → single-use. tree → root → proof → gate all agree.
+
+**Remaining before mainnet:** (1) point the tree `authority` at your real x402 settlement signer
+(one config — the leaf-writer is built, generic); (2) multi-party ceremony + public ptau (same as
+the access gate); (3) scale K/depth.
 
 ## Reuses (already deployed)
 | Piece | ID | Role here |

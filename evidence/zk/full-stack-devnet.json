@@ -1,0 +1,13 @@
+{
+  "test": "private-reputation-full-stack",
+  "cluster": "devnet",
+  "receipt_commitment_tree": "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas",
+  "dark_reputation_gate": "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
+  "dark_nullifier_record": "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
+  "tree_pda": "4DGAKnqMigMMaVxk45ktnZxggXrFFzhEp66W1jLxfaXi",
+  "receipts": 4,
+  "totalVolume": "19000",
+  "rootMatch": "on-chain sol_poseidon root == off-chain circomlib root",
+  "gate_verify_tx": "5S8xRCfisov8fV7ifurCR1Trs84ZGibxu45nwcpHcaEfEJPcSHLdfJQhtUVWhHFd4uBgwVCnEaMied1SzX5GvCbA",
+  "explorer": "https://explorer.solana.com/tx/5S8xRCfisov8fV7ifurCR1Trs84ZGibxu45nwcpHcaEfEJPcSHLdfJQhtUVWhHFd4uBgwVCnEaMied1SzX5GvCbA?cluster=devnet"
+}
