@@ -356,14 +356,36 @@ export function createDnaGuard(options: DnaGuardControllerOptions = {}): DnaGuar
 
       try {
         if (amountAtomic) {
-          // SECURITY: warn when spend ceilings are enforced against an unverified header-sourced identity.
-          // Header values are client-supplied and can be forged. Spend ceilings gated on them are not
-          // tamper-proof until replaced by verified identities (payment proof, API key, agent passport).
-          const actorSource: GuardIdentitySource = (actor as { guardIdentitySource?: GuardIdentitySource }).guardIdentitySource ?? "header";
-          if (spendCeilings && actorSource === "header") {
-            console.warn(
-              `[guard] identitySource=header for spend ceiling check — identity is unverified and may be forged (providerId=${providerId} endpointId=${endpointId})`,
-            );
+          // SECURITY (P0): the default request extractor sets guardIdentitySource="header" when it
+          // reads the client-supplied x-dna-* headers, which are forgeable. Enforcing a per-identity
+          // spend ceiling against a forgeable identity is not tamper-proof — a caller can rotate the
+          // headers to mint a fresh identity and reset the ceiling on every request. A forgeable
+          // identity must never be treated as authoritative for a financial limit: fail-closed
+          // deployments reject it; fail-open deployments record the gap but stay permissive (they
+          // explicitly opt into that risk). A custom integrator-supplied actor that omits
+          // guardIdentitySource is the integrator's own contract and is left untouched.
+          const rawIdentitySource: GuardIdentitySource | undefined =
+            (actor as { guardIdentitySource?: GuardIdentitySource }).guardIdentitySource;
+          const actorSource: GuardIdentitySource = rawIdentitySource ?? "header";
+          if (spendCeilings && rawIdentitySource === "header") {
+            recordGuardEvent("GUARD_SPEND_BLOCKED", {
+              providerId,
+              endpointId,
+              actor,
+              amountAtomic,
+              reason: "spend_ceiling_unverified_identity",
+              meta: {
+                enforced: failMode === "fail-closed",
+                identitySource: actorSource,
+              },
+            });
+            if (failMode === "fail-closed") {
+              failClosed(403, {
+                error: "dna_guard_unverified_identity",
+                reason: "spend_ceiling_requires_verified_identity",
+              });
+              return;
+            }
           }
           const spendDecision: DnaGuardSpendDecision | undefined = spendCeilings
             ? ledger.checkSpend(actor, amountAtomic, spendCeilings)
