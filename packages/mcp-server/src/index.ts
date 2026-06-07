@@ -14,9 +14,12 @@ import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction } f
 // ---------------------------------------------------------------------------
 
 // Live on Solana mainnet-beta — verified against evidence/mainnet + evidence/zk.
+// Full private-reputation stack live as of 2026-06-07 (reputation gate + commitment tree launched).
 const PROGRAMS = {
   dark_x402_access_gate: "EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS",
   dark_nullifier_record: "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
+  dark_reputation_gate: "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
+  receipt_commitment_tree: "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas",
   receipt_anchor: "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
   dark_secp256r1_vault: "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
   dark_secp256k1_auth: "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
@@ -26,12 +29,10 @@ const PROGRAMS = {
   dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
 } as const;
 
-// Proven on devnet — the private-reputation stack; mainnet deploy gated on the ceremony.
+// Devnet-only addresses that differ from mainnet (the access gate has a separate devnet id;
+// reputation gate, tree, and nullifier share the same id on both clusters).
 const DEVNET_PROGRAMS = {
   dark_x402_access_gate: "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6",
-  dark_reputation_gate: "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
-  receipt_commitment_tree: "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas",
-  dark_nullifier_record: "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
 } as const;
 
 const EXPLORER_BASE = "https://explorer.solana.com";
@@ -621,10 +622,10 @@ function getStackStatus(): object {
         description: "NULL SPL token — native currency of the Parad0x Labs protocol economy",
       },
     ],
-    devnet_reputation_stack: {
-      note: "Private track-record proof — proven on devnet; mainnet deploy gated on the trusted-setup ceremony.",
-      dark_reputation_gate: DEVNET_PROGRAMS.dark_reputation_gate,
-      receipt_commitment_tree: DEVNET_PROGRAMS.receipt_commitment_tree,
+    private_reputation_stack: {
+      note: "Private track-record proof — LIVE on mainnet as of 2026-06-07. Single-party VK until the trusted-setup ceremony finalizes (same status as the access gate).",
+      dark_reputation_gate: PROGRAMS.dark_reputation_gate,
+      receipt_commitment_tree: PROGRAMS.receipt_commitment_tree,
     },
     packages: [
       "@parad0x_labs/mcp-server",
