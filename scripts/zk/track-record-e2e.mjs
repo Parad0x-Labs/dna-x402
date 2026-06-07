@@ -44,7 +44,7 @@ const randFr = () => BigInt("0x" + randomBytes(31).toString("hex")) % P;
 async function main() {
   if (!PROGRAM_ID) throw new Error("--program <ID> required");
   const { poseidon2, poseidon3, poseidon5 } = await import("poseidon-lite");
-  const { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } = await import("@solana/web3.js");
+  const { Connection, Keypair, PublicKey, Transaction, TransactionInstruction, SystemProgram } = await import("@solana/web3.js");
 
   // ── identity + receipts ────────────────────────────────────────────────────
   const secret = randFr(), agent_id = randFr(), epoch = 42n;
@@ -123,10 +123,20 @@ async function main() {
   const payer = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(keyPath, "utf8"))));
   const conn = new Connection(RPC, "confirmed");
   const pid = new PublicKey(PROGRAM_ID);
+  // single-use enforcement: the gate CPIs dark_nullifier_record to record reputation_nullifier
+  const NULLIFIER_RECORD = new PublicKey("24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65");
+  const nullifierBytes = decToBytes32(pub[4]); // reputation_nullifier, big-endian 32
+  const [recordPda] = PublicKey.findProgramAddressSync([Buffer.from("null_record"), nullifierBytes], NULLIFIER_RECORD);
+  const keys = [
+    { pubkey: payer.publicKey,        isSigner: true,  isWritable: true  },
+    { pubkey: NULLIFIER_RECORD,        isSigner: false, isWritable: false },
+    { pubkey: recordPda,               isSigner: false, isWritable: true  },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+  ];
   const mkTx = async (data) => {
     const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
     const tx = new Transaction({ blockhash, lastValidBlockHeight, feePayer: payer.publicKey })
-      .add(new TransactionInstruction({ programId: pid, keys: [{ pubkey: payer.publicKey, isSigner: true, isWritable: false }], data }));
+      .add(new TransactionInstruction({ programId: pid, keys, data }));
     tx.sign(payer); return { tx, blockhash, lastValidBlockHeight };
   };
 
@@ -145,10 +155,11 @@ async function main() {
   const forged = Buffer.concat([Buffer.from(Array.from({ length: 256 }, (_, i) => (i * 7 + 3) & 0xff)), pubBytes]);
   const tampered = Buffer.concat([proofBytes, decToBytes32(pub[0]), decToBytes32(pub[1]), decToBytes32((BigInt(pub[2]) + 10n ** 18n).toString()), ...pub.slice(3).map((s) => decToBytes32(s))]);
   const zero = Buffer.concat([Buffer.alloc(256), pubBytes]);
+  const n0 = await simRej("replay-same-nullifier", realData); // single-use: nullifier already recorded
   const n1 = await simRej("forged-proof", forged);
   const n2 = await simRej("tampered-min_volume", tampered);
   const n3 = await simRej("zero-proof", zero);
-  const pass = n1 && n2 && n3;
+  const pass = n0 && n1 && n2 && n3;
   if (!pass) { console.error("SECURITY FAIL"); await rm(tmp, { recursive: true, force: true }); process.exit(1); }
 
   mkdirSync(EVID, { recursive: true });
@@ -156,7 +167,8 @@ async function main() {
     test: "dark_reputation_gate-onchain-e2e", cluster: CLUSTER, program: PROGRAM_ID,
     circuit: "track_record.circom", params: { K, depth: DEPTH }, curve: "bn254", protocol: "groth16",
     publicInputs: { root: pub[0], min_count: pub[1], min_volume: pub[2], window_start: pub[3], reputation_nullifier: pub[4], agent_commitment: pub[5] },
-    tests: { offChainVerify: "PASS", onChainRealProof: { result: "CONFIRMED", tx: sig }, onChainForged: "REJECTED", onChainTamperedMinVolume: "REJECTED", onChainZero: "REJECTED" },
+    nullifierRecordPda: recordPda.toBase58(),
+    tests: { offChainVerify: "PASS", onChainRealProof: { result: "CONFIRMED", tx: sig }, onChainReplaySameNullifier: "REJECTED (single-use)", onChainForged: "REJECTED", onChainTamperedMinVolume: "REJECTED", onChainZero: "REJECTED" },
     explorer: `https://explorer.solana.com/tx/${sig}?cluster=${CLUSTER}`,
   }, null, 2) + "\n");
   await rm(tmp, { recursive: true, force: true });
