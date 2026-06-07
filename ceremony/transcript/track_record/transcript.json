@@ -1,0 +1,31 @@
+{
+  "circuit": "track_record",
+  "r1cs_sha256": "55541d165775ef7d9326d2caf41cb7389bc1e9964415ce74f22f68b37870b09b",
+  "ptau": "pot16_final.ptau",
+  "mode": "DEMO — simulated contributors + placeholder beacon. A trustless ceremony needs independent humans + a committed beacon (see README).",
+  "contributions": [
+    {
+      "index": 1,
+      "name": "Contributor 1",
+      "zkey_sha256": "a7516b94592e4e66b025c378396886b867af11c81928ff8c166ce30577d715f1"
+    },
+    {
+      "index": 2,
+      "name": "Contributor 2",
+      "zkey_sha256": "3af689fa311fe5349d9cfe66ed72322cb0f3fe42fac7f46b2afe11f9b8754961"
+    },
+    {
+      "index": 3,
+      "name": "Contributor 3",
+      "zkey_sha256": "b094f1c7108175a10ef5319e7ec7a60c743a59406fceaed0e06982e54a130616"
+    }
+  ],
+  "beacon": {
+    "hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+    "iterations": 10,
+    "note": "DEMO placeholder — production: a PRE-COMMITTED future Solana block hash or drand round"
+  },
+  "final_zkey_sha256": "50869e2755524dc0eed1755b4c5d54d6a72a7930685a5222637789b9ff10bd23",
+  "verify": "ZKey Ok!",
+  "vk_sha256": "c98ef706d9f5d4f7ce862a87b33ca1a6d49acfb4d8a0acfeee79bf701c4f0fa9"
+}

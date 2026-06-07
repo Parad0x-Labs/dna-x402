@@ -166,3 +166,4 @@ circuits/out/*_js/
 circuits/out/*.r1cs
 circuits/out/*.sym
 circuits/out/*.wtns
+ceremony/transcript/**/*.zkey
