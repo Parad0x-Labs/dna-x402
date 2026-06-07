@@ -1,0 +1,48 @@
+{
+  "event": "private-reputation-stack-mainnet-launch",
+  "cluster": "mainnet-beta",
+  "date": "2026-06-07",
+  "deployer": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "upgrade_authority": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "binary_provenance": "dumped from the green-tested devnet programs (byte-identical to the binaries that passed the devnet mayhem suite); same program keypairs reused so addresses match across clusters",
+  "programs": {
+    "dark_reputation_gate": {
+      "address": "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
+      "deploy_signature": "3mSELUcvjP3mq24rgE7C35NVz61pjYTmGYD2oyX63NabSFoEeVj1gTzCCo7fKK9ekUc6xyhgGPDi7cqCmFvLY7ek",
+      "data_length_bytes": 40832,
+      "sha256": "c496eac4c7f9afe6cc0144e118e6b432bef74a5f21c0c9de94d2d7b326e6452d",
+      "rent_sol": 0.2853948,
+      "explorer": "https://explorer.solana.com/address/9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp?cluster=mainnet-beta"
+    },
+    "receipt_commitment_tree": {
+      "address": "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas",
+      "deploy_signature": "3o8g9LanufikE4r8TzEF36bFhtqo6ojPW2xUCdGy9XBkeAA4LPkjKcLoHgsaAfoYUvjoPRSFRRPERJ9Ve1oveXR7",
+      "data_length_bytes": 76376,
+      "sha256": "64d5d867b347a52599da345a36f6fda845ac87b17eebff1b588e93118a443fad",
+      "rent_sol": 0.53278104,
+      "explorer": "https://explorer.solana.com/address/8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas?cluster=mainnet-beta"
+    }
+  },
+  "cost": {
+    "balance_before_sol": 1.744276226,
+    "balance_after_sol": 0.923192506,
+    "total_spent_sol": 0.82108372,
+    "recoverable_rent_sol": 0.81817584,
+    "sunk_fees_sol": 0.00290788,
+    "sol_usd_at_launch": 60,
+    "total_usd": 49.3
+  },
+  "devnet_test_provenance": {
+    "full_stack": "evidence/zk/full-stack-devnet.json",
+    "reputation_gate": "evidence/zk/track-record-devnet.json",
+    "note": "tree->root->proof->gate proven on devnet; forged/tampered/replay/double-spend/zero all REJECTED before launch"
+  },
+  "vk_trust": "single-party VK until the trusted-setup ceremony finalizes — same trust status as dark_x402_access_gate, already on mainnet",
+  "stack_now_live_on_mainnet": [
+    "dark_x402_access_gate (EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS)",
+    "dark_nullifier_record (24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65)",
+    "dark_reputation_gate (9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp)",
+    "receipt_commitment_tree (8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas)",
+    "receipt_anchor (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN)"
+  ]
+}
