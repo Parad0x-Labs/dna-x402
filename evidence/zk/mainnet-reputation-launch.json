@@ -32,6 +32,11 @@
     "sol_usd_at_launch": 60,
     "total_usd": 49.3
   },
+  "mainnet_verify": {
+    "note": "Live-fire proof on mainnet after launch: a real private-track-record proof verified on the mainnet reputation gate (with nullifier CPI). replay/forged/tampered all REJECTED on mainnet. The zero-proof case was throttled by the public RPC (429) before submission — infra, not program; trivially rejected + already proven on devnet.",
+    "positive_confirmed_sig": "4eJCm2G9bmJWCnHJsHuYTqMondXSTW6DkctGmxNkxxppaKTjBoxWGwDZ187EetWcgw8zEdoE6CEfUjEXng6UEd4t",
+    "rejected_on_mainnet": ["replay-same-nullifier (Custom 10)", "forged-proof (Custom 1)", "tampered-min_volume (Custom 1)"]
+  },
   "devnet_test_provenance": {
     "full_stack": "evidence/zk/full-stack-devnet.json",
     "reputation_gate": "evidence/zk/track-record-devnet.json",
