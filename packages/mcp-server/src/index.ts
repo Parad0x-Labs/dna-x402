@@ -13,13 +13,25 @@ import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction } f
 // Constants
 // ---------------------------------------------------------------------------
 
+// Live on Solana mainnet-beta — verified against evidence/mainnet + evidence/zk.
 const PROGRAMS = {
+  dark_x402_access_gate: "EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS",
+  dark_nullifier_record: "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
   receipt_anchor: "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
   dark_secp256r1_vault: "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
   dark_secp256k1_auth: "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
-  dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
   dark_semaphore: "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
   null_token: "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
+  // demo/stub — NOT a real verifier (hardcoded proof bypass); see get_stack_status.
+  dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
+} as const;
+
+// Proven on devnet — the private-reputation stack; mainnet deploy gated on the ceremony.
+const DEVNET_PROGRAMS = {
+  dark_x402_access_gate: "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6",
+  dark_reputation_gate: "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
+  receipt_commitment_tree: "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas",
+  dark_nullifier_record: "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
 } as const;
 
 const EXPLORER_BASE = "https://explorer.solana.com";
@@ -510,6 +522,20 @@ function getStackStatus(): object {
   return {
     programs: [
       {
+        name: "dark_x402_access_gate",
+        address: PROGRAMS.dark_x402_access_gate,
+        status: "live (mainnet) — VK single-party until the trusted-setup ceremony finalizes",
+        explorer_url: explorerAccount(PROGRAMS.dark_x402_access_gate),
+        description: "Groth16 BN254 access gate — prove funded + authorized WITHOUT revealing wallet or balance. On-chain verify via alt_bn128_pairing (~93k CU, ~$0.0007).",
+      },
+      {
+        name: "dark_nullifier_record",
+        address: PROGRAMS.dark_nullifier_record,
+        status: "live",
+        explorer_url: explorerAccount(PROGRAMS.dark_nullifier_record),
+        description: "Single-use / anti-replay — records a nullifier PDA so each proof is spendable exactly once.",
+      },
+      {
         name: "receipt_anchor",
         address: PROGRAMS.receipt_anchor,
         status: "live",
@@ -552,6 +578,11 @@ function getStackStatus(): object {
         description: "NULL SPL token — native currency of the Parad0x Labs protocol economy",
       },
     ],
+    devnet_reputation_stack: {
+      note: "Private track-record proof — proven on devnet; mainnet deploy gated on the trusted-setup ceremony.",
+      dark_reputation_gate: DEVNET_PROGRAMS.dark_reputation_gate,
+      receipt_commitment_tree: DEVNET_PROGRAMS.receipt_commitment_tree,
+    },
     packages: [
       "@parad0x_labs/mcp-server",
       "@parad0x_labs/null-miner-sdk",
