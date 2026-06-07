@@ -5,6 +5,17 @@ whole history in the clear; this lets an agent prove **"I have a real payment tr
 bar X"** while revealing nothing else. Unblocks receipt-backed reputation/lending without doxxing
 the agent's business. Reuses primitives already live on mainnet.*
 
+## STATUS — built + proven on devnet (2026-06-07)
+`dark_reputation_gate` is **live on devnet** (`9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp`) and
+on-chain-proven end-to-end (K=4, depth-10 POC):
+- real track-record proof **CONFIRMED**; **replay-same-nullifier REJECTED `Custom(10)`** (single-use
+  via CPI to `dark_nullifier_record`); forged + tampered-min_volume + zero all **REJECTED**.
+- circuit `track_record.circom` (12,100 constraints), VK in `dark-groth16-core::track_record_vk`,
+  e2e `scripts/zk/track-record-e2e.mjs`, evidence `evidence/zk/track-record-devnet.json`.
+
+**Remaining before mainnet:** (1) the settlement-layer leaf-writer below — the one architectural
+call; (2) multi-party ceremony + public ptau (same gate as the access gate); (3) scale K/depth.
+
 ## Reuses (already deployed)
 | Piece | ID | Role here |
 |---|---|---|
