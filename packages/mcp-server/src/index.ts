@@ -76,6 +76,39 @@ function loadKeypair(): Keypair | null {
 }
 
 // ---------------------------------------------------------------------------
+// Zero-trust hardening — local-first, the LLM is untrusted
+//
+// This server runs on the agent's OWN machine (stdio). It never hosts anything,
+// never custodies funds, and never lets key material reach the model context.
+//   1. WRITES OFF BY DEFAULT: signing/submitting a tx needs the operator to opt
+//      in on this machine (PARAD0X_MCP_ALLOW_WRITE=1) AND a per-call confirm:true.
+//   2. NO SECRETS TO THE LLM: every tool result is scrubbed of key material
+//      before it leaves this process; a short fingerprint is kept for correlation.
+// ---------------------------------------------------------------------------
+
+const ALLOW_WRITE = process.env.PARAD0X_MCP_ALLOW_WRITE === "1";
+
+const SECRET_FIELD =
+  /(^|_)(key_hex|secret|secret_key|private_key|privatekey|mnemonic|seed|keypair|signing_key)($|_)/i;
+
+function redactForLlm(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactForLlm);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (SECRET_FIELD.test(k) && typeof v === "string") {
+        out[k] = "[REDACTED — stays on this machine, never sent to the model]";
+        out[`${k}_fingerprint`] = sha256hex(v).slice(0, 16);
+      } else {
+        out[k] = redactForLlm(v);
+      }
+    }
+    return out;
+  }
+  return value;
+}
+
+// ---------------------------------------------------------------------------
 // Tool implementations
 // ---------------------------------------------------------------------------
 
@@ -158,7 +191,8 @@ async function x402GetQuote(
 
 async function anchorReceipt(
   receiptHashHex: string,
-  rpcUrl = DEFAULT_RPC
+  rpcUrl = DEFAULT_RPC,
+  confirm = false
 ): Promise<object> {
   if (!/^[0-9a-fA-F]{64}$/.test(receiptHashHex)) {
     return { error: "receipt_hash_hex must be exactly 64 hex characters (32 bytes)" };
@@ -175,6 +209,24 @@ async function anchorReceipt(
       slot: 0,
       dry_run: true,
       note: "SOLANA_KEYPAIR env var not set. Set it to a JSON array of 64 bytes to submit real transactions. This is a dry-run response showing the output format.",
+    };
+  }
+
+  // Zero-trust write-guard: a key is present, but do NOT submit unless the
+  // operator enabled writes on THIS machine AND the agent confirmed this call.
+  if (!ALLOW_WRITE || !confirm) {
+    return {
+      preview: true,
+      would_submit: {
+        program: PROGRAMS.receipt_anchor,
+        instruction: "anchor(0x00)",
+        receipt_hash_hex: receiptHashHex,
+        fee_payer: keypair.publicKey.toBase58(),
+      },
+      blocked_reason: !ALLOW_WRITE
+        ? "writes disabled — operator must set PARAD0X_MCP_ALLOW_WRITE=1 on this machine"
+        : "confirm:true required to submit a real transaction",
+      note: "No transaction was sent. This is a preview of exactly what WOULD be submitted.",
     };
   }
 
@@ -481,9 +533,9 @@ function getStackStatus(): object {
       {
         name: "dark_bn254_gate",
         address: PROGRAMS.dark_bn254_gate,
-        status: "live",
+        status: "stub — do not use",
         explorer_url: explorerAccount(PROGRAMS.dark_bn254_gate),
-        description: "BN254 / Groth16 zk-proof gate — on-chain ZK verification",
+        description: "DEPRECATED demo gate with a hardcoded proof bypass — NOT a real verifier. Superseded by dark_x402_access_gate (real Groth16 BN254). Listed for transparency only.",
       },
       {
         name: "dark_semaphore",
@@ -555,7 +607,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "anchor_receipt",
         description:
-          "Anchor a 32-byte receipt hash permanently on Solana mainnet via receipt_anchor program",
+          "Anchor a 32-byte receipt hash permanently on Solana mainnet via the receipt_anchor program. Read-only by default: returns a PREVIEW unless the operator enabled writes (PARAD0X_MCP_ALLOW_WRITE=1) AND you pass confirm:true.",
         inputSchema: {
           type: "object",
           properties: {
@@ -566,6 +618,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             rpc_url: {
               type: "string",
               description: "Solana RPC URL (default: mainnet-beta public RPC)",
+            },
+            confirm: {
+              type: "boolean",
+              description: "Must be true to actually submit. Without it the tool returns a preview only (no transaction sent).",
             },
           },
           required: ["receipt_hash_hex"],
@@ -698,13 +754,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "anchor_receipt": {
-        const { receipt_hash_hex, rpc_url } = args as {
+        const { receipt_hash_hex, rpc_url, confirm } = args as {
           receipt_hash_hex: string;
           rpc_url?: string;
+          confirm?: boolean;
         };
         result = await anchorReceipt(
           receipt_hash_hex,
-          rpc_url ?? process.env.SOLANA_RPC_URL ?? DEFAULT_RPC
+          rpc_url ?? process.env.SOLANA_RPC_URL ?? DEFAULT_RPC,
+          confirm === true
         );
         break;
       }
@@ -761,7 +819,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     return {
-      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(redactForLlm(result), null, 2) }],
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
