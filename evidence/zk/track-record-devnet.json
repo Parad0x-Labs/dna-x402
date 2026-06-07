@@ -1,0 +1,31 @@
+{
+  "test": "dark_reputation_gate-onchain-e2e",
+  "cluster": "devnet",
+  "program": "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
+  "circuit": "track_record.circom",
+  "params": {
+    "K": 4,
+    "depth": 10
+  },
+  "curve": "bn254",
+  "protocol": "groth16",
+  "publicInputs": {
+    "root": "1671630887838441289392988561651152939473966987732844013681820653590960614290",
+    "min_count": "3",
+    "min_volume": "16999",
+    "window_start": "1772224000",
+    "reputation_nullifier": "5459800646872631784459918253434578765229678129221846137083690681358232842743",
+    "agent_commitment": "2945260479176316803388590460094554837507645682542870550381941059087886153419"
+  },
+  "tests": {
+    "offChainVerify": "PASS",
+    "onChainRealProof": {
+      "result": "CONFIRMED",
+      "tx": "4z9kQhSfCvph9Uq5njPWnNA1xkCFf5UYidpDiyaCR8ByZ4xQHzwBo8LaEwYra63GtG2Ks5V99YubFmuZ5pQuNK4r"
+    },
+    "onChainForged": "REJECTED",
+    "onChainTamperedMinVolume": "REJECTED",
+    "onChainZero": "REJECTED"
+  },
+  "explorer": "https://explorer.solana.com/tx/4z9kQhSfCvph9Uq5njPWnNA1xkCFf5UYidpDiyaCR8ByZ4xQHzwBo8LaEwYra63GtG2Ks5V99YubFmuZ5pQuNK4r?cluster=devnet"
+}
