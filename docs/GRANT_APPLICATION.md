@@ -51,7 +51,7 @@ All 8 programs deployed 2026-05-29 to Solana mainnet-beta, all verified executab
 
 We do not claim to be first with passkeys on Solana, first with ZK on Solana, or first with x402 (Coinbase and others exist). What we believe is new:
 
-**First Solana x402 micropayment rail for AI agents.** No prior Solana implementation closes the loop: agent makes a request, receives a 402, pays on Solana, resource is delivered — without backend custody or intermediate signers.
+**To our knowledge, the first known open-source Solana stack to combine x402 + Groth16 private settlement + Agent Passport.** We are not aware of a prior Solana implementation that closes the loop — agent makes a request, receives a 402, pays on Solana, resource is delivered, without backend custody or intermediate signers — as a single permissively-licensed stack alongside biometric agent identity and compressed private receipts.
 
 **First biometric passkey identity verification on Solana with challenge-rotation sign-in.** A P-256 public key bound to a PDA via SIMD-0075 precompile, with per-request challenge rotation, tested on real hardware (Solana Seeker). This is agent identity attestation — distinct from passkey wallets.
 

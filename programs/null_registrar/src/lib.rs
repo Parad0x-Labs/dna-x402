@@ -1,8 +1,9 @@
 //! null-registrar — .null domain name registrar for Solana
 //!
 //! The .null namespace belongs to no government, ICANN, or corporation.
-//! Domains are registered by burning/transferring NULL tokens and resolve
-//! to Arweave/IPFS content hashes — permanent, unstoppable, agent-native.
+//! Domains are registered by paying a fee that TRANSFERS to the protocol
+//! treasury (never burned), and resolve to Arweave/IPFS content hashes —
+//! permanent, unstoppable, agent-native.
 //!
 //! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
 //!    Deploy: `cargo build-sbf --features mainnet`

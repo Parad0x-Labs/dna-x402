@@ -4,7 +4,8 @@
  * Universal NULL Miner SDK — plug into any app, users earn USDC autonomously,
  * platform collects fees, we take tx dust.
  *
- * First on Solana. Built on DNA x402 + Dark NULL.
+ * To our knowledge, the first known open-source Solana stack to COMBINE
+ * x402 + Groth16 private settlement + Agent Passport. Built on DNA x402 + Dark NULL.
  *
  * Quick start:
  *   import { NullMiner } from "null-miner-sdk";

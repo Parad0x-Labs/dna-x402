@@ -1,8 +1,13 @@
-# Full Audit Report
+# Devnet Smoke-Test Report
+
+> This is an automated devnet smoke/integration test of deploy, pause-flag, and
+> anchoring behavior — **not a security audit**. It has not been performed by any
+> third-party auditor and must not be cited as a security review. The programs are
+> UNAUDITED. "PASS" below means the smoke-test steps ran successfully on devnet.
 
 Generated: 2026-05-27T04:00:40.822Z
 Cluster: devnet
-Overall: PASS
+Overall: PASS (smoke test)
 
 ## Steps
 - Deploy estimate: PASS - Deploy estimate report generated
@@ -16,7 +21,7 @@ Overall: PASS
 - Anchoring evidence: PASS - Anchoring evidence confirmed for 3hjamjwumezcJs6d7aiHiPNbUBTD9VvAVnZHxkuUm68h9exw1ANXhFUHMnwNKhHW1aTTYMiBTecWvBJZn6UqwQSN
 
 ## Artifacts
-- audit json: <repo-root>\reports\audit-2026-05-27T04-00-23.174Z.json
+- smoke-test json: <repo-root>\reports\audit-2026-05-27T04-00-23.174Z.json
 - deploy estimate: <repo-root>\reports\estimate-deploy-cost-2026-05-27T04-00-23.174Z.json
 - deploy ledger: <repo-root>\reports\deploy-ledger-2026-05-14T11-26-56.475Z.json
 - close buffers: <repo-root>\reports\close-buffers-2026-05-27T04-00-23.174Z.json
