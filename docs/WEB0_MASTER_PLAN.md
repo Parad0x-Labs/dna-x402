@@ -211,12 +211,15 @@ SDK → `npm publish` both → upload to ClawHub as two separate listings.
 - $NULL is **fixed supply, not minted/emitted** — launched ~6mo ago on pump.fun.
 - Vault is `NOT_PRODUCTION` / devnet — nothing live yet.
 
-### `.null` registration → NULL demand
+### `.null` registration → protocol treasury (utility, not price)
 
-Every `.null` domain costs NULL to register (when `IS_MAINNET_READY = true`):
+Every `.null` domain costs a registration fee (SOL-priced, ~0.01 SOL, config-set,
+free in pilot). The fee **transfers to the protocol treasury** to fund operations —
+it is **never burned**, and this is a **utility** flow, not a supply/demand or
+price-appreciation mechanism. **No buy-pressure / price language** (Phase 1 rule):
 ```
-Agent needs identity → buys NULL → pays fee → domain minted forever
-→ protocol earns NULL → backs ecosystem → more agents → more NULL demand
+Agent needs identity → pays registration fee → domain minted forever
+→ fee accrues to protocol treasury → funds protocol operations
 ```
 
 ### DePIN angle — "NULL Mining Network"
@@ -267,8 +270,9 @@ Liquefy 33–61× JSON, 1.4–6× vs Zstd · Agent Passport T0-2 · x402 receipt
 "first to COMBINE x402+Groth16+Passport+receipt anchoring" · nebula VMAF 88.1 ·
 parad0x.null live on Arweave (permanent, seizure-resistant).
 
-**RED:** "audited" · "first x402/shielded pool" · buyback/price language (Phase 1) ·
-invented ratios. Always say: *"Public Beta, non-custodial, capped, audit Q3 2026."*
+**RED:** "audited" · "audit scheduled" / any audit date · "first x402/shielded pool" ·
+buyback/price language (Phase 1) · invented ratios. Always say: *"Public Beta,
+non-custodial, capped, unaudited (not yet audited)."*
 
 ---
 

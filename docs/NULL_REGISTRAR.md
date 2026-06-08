@@ -90,27 +90,27 @@ Emits the current `content_hash` as a program log for indexers and RPC callers. 
 
 ---
 
-## The NULL Flywheel
+## Registration Fees → Protocol Treasury
 
-Registration costs NULL tokens. Every `.null` domain minted is demand for NULL:
+Registration costs a fee (SOL-priced, ~0.01 SOL, config-set, free during the pilot). The fee **transfers to the protocol treasury** and is **never burned**. This is a **utility** flow that funds protocol operations — it is **not** a token supply/demand, buy-pressure, or price-appreciation mechanism:
 
 ```
 Agent needs identity
        |
        v
-Buys NULL on market
+Pays registration fee
        |
        v
-Pays registration fee → NULL treasury
+Fee transfers → protocol treasury (never burned)
        |
        v
 Domain minted on-chain forever
        |
        v
-Protocol earns NULL → backs ecosystem
+Treasury funds protocol operations
 ```
 
-The more agents, the more domains. The more domains, the more NULL demand. The treasury accumulates NULL that backs protocol operations and NULL Mining rewards.
+The more agents, the more domains registered. Fees accrue to the treasury to fund protocol operations. No buy-pressure, burn, or price-appreciation claims are made.
 
 ---
 
