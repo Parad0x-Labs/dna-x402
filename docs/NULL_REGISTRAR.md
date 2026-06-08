@@ -1,5 +1,10 @@
 # .null Domain Registrar
 
+> ⚠️ **Legacy/illustrative.** This documents the v1 (NULL-priced, `IS_MAINNET_READY`) design.
+> The **live mainnet** registrar is **v2** — **SOL-priced (~0.01 SOL all-in), config-driven via
+> `SetConfig`, free during the pilot** — at `H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm`.
+> See the canonical v2 source/spec in the web0-internal repo.
+
 **Program**: `programs/null_registrar`
 **Status**: Pre-audit pilot — `IS_MAINNET_READY = false`
 
