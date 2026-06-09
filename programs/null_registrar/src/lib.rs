@@ -5,6 +5,12 @@
 //! treasury (never burned), and resolve to Arweave/IPFS content hashes —
 //! permanent, unstoppable, agent-native.
 //!
+//! ⚠️  LEGACY / ILLUSTRATIVE SOURCE — NOT the live mainnet program.
+//!     This is the v1 design (NULL-priced, IS_MAINNET_READY gate). The LIVE mainnet
+//!     registrar is v2 — SOL-priced (~0.01 SOL all-in), config-driven via SetConfig,
+//!     free during the pilot — at H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm.
+//!     Canonical v2 source/spec: the web0-internal repo. Do NOT deploy this v1 source.
+//!
 //! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
 //!    Deploy: `cargo build-sbf --features mainnet`
 //!
