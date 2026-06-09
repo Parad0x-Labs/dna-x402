@@ -98,19 +98,16 @@ export function MyNames() {
                 className="flex items-center justify-between gap-3 px-4 py-4 border-b border-line last:border-b-0"
               >
                 <div className="min-w-0">
-                  {/* The on-chain record stores sha256(name), not the plaintext
-                      name, so we identify each domain by its account address.
-                      Plaintext-name resolution is a phase-2 indexer feature. */}
                   <div className="font-mono text-sm text-ink truncate">
+                    <span className="text-acc font-bold">{n.name}</span>.null
                     <a
-                      className="hover:text-acc"
+                      className="text-faint hover:text-acc ml-2 text-[11px]"
                       href={solscanAddr(n.pda)}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      {shortAddr(n.pda)}
+                      ↗ {shortAddr(n.pda)}
                     </a>
-                    <span className="text-faint"> · .null domain account</span>
                   </div>
                 </div>
                 <span

@@ -53,19 +53,28 @@ export async function checkAvailability(
 }
 
 export interface OwnedName {
+  name: string;
   pda: string;
   owner: string;
+}
+
+/** Decode the plaintext .null name from a NullDomain account: the 64-byte name
+ *  field lives at offset 1 (printable chars before the first 0x00). */
+function decodeName(data: Uint8Array): string {
+  const raw = data.subarray(1, 65);
+  let end = raw.indexOf(0);
+  if (end === -1) end = raw.length;
+  let s = "";
+  for (let i = 0; i < end; i++) s += String.fromCharCode(raw[i]);
+  return s;
 }
 
 /**
  * getProgramAccounts on the registrar with a memcmp filter on the owner field
  * (NullDomain owner @ offset 65 == the connected wallet). Returns the PDA list.
  *
- * NOTE: the on-chain record does NOT store the plaintext name (only sha256(name)
- * via the PDA), so we cannot reverse a PDA back to its human name here. The MVP
- * therefore lists each owned domain by its account (PDA) address. Resolving the
- * plaintext name would need either an off-chain index or a name supplied by the
- * user — that's a phase-2 item (see TODOs).
+ * The plaintext name IS stored on-chain (64-byte name field @ offset 1), so we
+ * decode + return it — each owned domain shows as its real name, e.g. "chat".
  */
 export async function getOwnedNames(
   conn: Connection,
@@ -80,7 +89,12 @@ export async function getOwnedNames(
 
   return accounts
     .filter((a) => a.account.data.length > 0 && a.account.data[0] === NULL_DOMAIN_DISC)
-    .map((a) => ({ pda: a.pubkey.toBase58(), owner: owner.toBase58() }));
+    .map((a) => ({
+      name: decodeName(a.account.data),
+      pda: a.pubkey.toBase58(),
+      owner: owner.toBase58(),
+    }))
+    .sort((x, y) => x.name.localeCompare(y.name));
 }
 
 /** Read the connected wallet's $NULL balance (atomic) from its Token-2022 ATA.
