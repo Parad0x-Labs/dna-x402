@@ -1896,6 +1896,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-fedimint-ecash"
+version = "0.1.0"
+dependencies = [
+ "curve25519-dalek",
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.9.9",
+]
+
+[[package]]
+name = "dark-fedimint-redeem-program"
+version = "0.1.0"
+dependencies = [
+ "curve25519-dalek",
+ "dark-fedimint-ecash",
+ "rand 0.8.6",
+ "sha2 0.9.9",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "dark-fee-commitment"
 version = "0.1.0"
 dependencies = [

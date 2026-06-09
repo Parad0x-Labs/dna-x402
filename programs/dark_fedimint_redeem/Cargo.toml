@@ -1,0 +1,29 @@
+[package]
+name = "dark-fedimint-redeem-program"
+version = "0.1.0"
+edition = "2021"
+description = "On-chain redeem for federated eNULL ecash — verify threshold BDHKE DLEQ + nullifier-unseen, release one denom of locked reserve (DEVNET, unaudited)."
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+# Real Ristretto BDHKE verify (DLEQ), no_std — NOT the SHA256 stub. Used for the
+# host-test fallback + shared constants; on-chain point ops use sol_curve_*.
+dark-fedimint-ecash = { path = "../../crates/dark-fedimint-ecash", default-features = false }
+# Scalar reduction (from_bytes_mod_order_wide) + host-fallback point parsing.
+# Point arithmetic on-chain is via syscalls, so the stack-heavy basepoint tables
+# are never reached.
+curve25519-dalek = { version = "3.2.1", default-features = false, features = ["u64_backend"] }
+sha2 = "0.9"
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk          = { workspace = true }
+tokio               = { workspace = true }
+dark-fedimint-ecash = { path = "../../crates/dark-fedimint-ecash" }
+rand                = "0.8"
+
+[lib]
+crate-type = ["cdylib", "lib"]

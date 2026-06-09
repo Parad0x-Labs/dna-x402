@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-09T19:27:34.449Z",
+  "test": "federated-enull-bdhke-ecash-redeem",
+  "cluster": "devnet",
+  "program": "BPkhipF5jTTTCwL3bLGjuwnU9F99yBRRES5ToeigRTyb",
+  "mintConfig": "D3QDAwNGsA8CacUVqQTY3MPAa4xkBDQeGdVbPBnNs92N",
+  "reserveVault": "392t1PRJjvatUCw9NgRYD61ytbZoMK3VShpkYt5DuDSE",
+  "denominationLamports": 100000000,
+  "federation": {
+    "n": 5,
+    "t": 3,
+    "scheme": "joint-Feldman DKG + threshold BDHKE + threshold (FROST-style) DLEQ over Ristretto"
+  },
+  "groupKey": "16d734ec060913ddb982e4044b03889e3ce13a0b8c55e9d565e798f9d307f736",
+  "crypto": "Chaumian BDHKE over Ristretto (curve25519-dalek 3.2.1 host-side). On-chain redeem verifies a Chaum-Pedersen DLEQ that C=k*Y under the stored group key K using Solana's native sol_curve_* Ristretto syscalls (~52k CU) — no Groth16, no trusted setup.",
+  "initSig": "5ywC7F5wJZ48z7Gv2Kho8sMVggU67TufEd6DVY3u8L6Ngq3WotwKX6sSzk1kmHneBUcPWsGytGaahkEUGK2kwyZe",
+  "scenarios": [
+    {
+      "name": "valid_redeem",
+      "status": "PASS",
+      "sig": "3PPg4mHA1DuuQHfmNsUsdPwTBu57yERP8PDwrTKpxH5AiiSQC54z4nWBVW1q16n65iN8tMQrszZwF9sMsfdmNM6L",
+      "recipient": "Gze6eNLzZiTNyuTN3StC2C8edVeGtmz94TFRji1bWvEF",
+      "delta": 100000000,
+      "nullifier": "6824e865e87e373105af11606b76b94573268e1b0c485e02b74b986a4d0debbe",
+      "groupKey": "16d734ec060913ddb982e4044b03889e3ce13a0b8c55e9d565e798f9d307f736",
+      "signers": "3-of-3-of-5"
+    },
+    {
+      "name": "double_spend_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "2p9ePGFrpEzap5Pta7AdtekCduoPmpkXnrGBtHEjnvrktyzvW7A2oYynduHsD4f6zrsyKVgXN88jnq92j8uLeeMN",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "forged_token_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "3D3FbkePi8yyZRsd8QoC1UjF9tJBYn15B7Jz5scX6yEgrBpfqmPBDbnNNY2U7fx4Fzb1nsh14xEpdQ4extwp31DA",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 5
+          }
+        ]
+      }
+    },
+    {
+      "name": "under_threshold_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "pDQSfWgQZ71nQmuGLxeZEBwgXo6D9cxfYdDd7w2Lg23wjrFiLniPbNc3sSF8TWCdxrqKNMuDJRAGKkfbhAGMJzE",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 5
+          }
+        ]
+      },
+      "localDleq": false
+    },
+    {
+      "name": "wrong_nullifier_pda_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "38HJkXwPJsMDzXFgJtqzsgG1y16nrus8CyL4gbSTqsSZ1WqopwKKQPu6u9dpXpAVZk2FQsFUcNiFWeZFsNSAgi4M",
+      "err": {
+        "InstructionError": [
+          1,
+          "InvalidArgument"
+        ]
+      }
+    },
+    {
+      "name": "foreign_federation_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "E54uB1YacH8yUnLQxpzq9mL5ggdZQgnHEeeYndEQZUEymvFmYcYyvVCYiyjfVmmskSXWGP81WQggv9ejHcYYRPC",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 5
+          }
+        ]
+      },
+      "note": "issued2 has a fresh DKG group key K2 != stored K1; chain binds to its own federation"
+    }
+  ],
+  "overall": "PASS",
+  "keystone": "A 3-of-5 guardian federation (DKG so no single party holds the mint key k) blind-signed a bearer token via threshold BDHKE; the user unblinded it; the on-chain redeem verified a real Ristretto DLEQ that C=k*Y under the federation's stored group key K and released one denomination of the locked reserve. A double-spend, a forged C, an UNDER-THRESHOLD token (only t-1 guardians), a wrong nullifier-PDA, and a foreign-federation token were all rejected on-chain.",
+  "honestCaveats": [
+    "DEVNET / library only, UNAUDITED, mainnet_ready=false throughout.",
+    "The federation is cryptographically real (Feldman DKG + Lagrange threshold BDHKE + FROST-style threshold DLEQ) but SINGLE-PROCESS simulated: all guardian shares are generated/used in one host process by enull_mint. Per-guardian network transport (each guardian on its own host) is a documented follow-up. The trust model achieved is fewer-than-k-of-N (not single custodian): forging/over-issuing requires k colluding guardians.",
+    "The locked reserve is SOL lamports for this e2e; a locked-USDC SPL vault is a drop-in follow-up (same redeem logic, SPL transfer instead of a lamport move).",
+    "Recipient is a plaintext pubkey here; a NullPay stealth recipient is a documented stub/follow-up.",
+    "Hash-to-curve uses Ristretto from_uniform_bytes (Elligator); constant-timeness of the host path is best-effort, not audited."
+  ],
+  "explorer": {
+    "program": "https://explorer.solana.com/address/BPkhipF5jTTTCwL3bLGjuwnU9F99yBRRES5ToeigRTyb?cluster=devnet"
+  }
+}

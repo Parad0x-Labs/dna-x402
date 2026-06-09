@@ -1,5 +1,8 @@
 [workspace]
 members = [
+    # FEDERATED eNULL — Chaumian BDHKE ecash, k-of-n guardian federation (DEVNET)
+    "crates/dark-fedimint-ecash",
+    "programs/dark_fedimint_redeem",
     "programs/receipt_anchor",
     "programs/dark_nullifier_banks",
     "programs/dark_compressed_receipts",
