@@ -16,11 +16,18 @@ import {
   ataOf,
 } from "./null-sdk";
 
+// Default to a fast KEYLESS public RPC — api.mainnet-beta.solana.com is slow +
+// heavily rate-limited (429s). publicnode needs no signup. For production, set
+// NEXT_PUBLIC_RPC_URL to a Helius/Triton/QuickNode endpoint for max speed.
 export const DEFAULT_RPC =
-  process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com";
+  process.env.NEXT_PUBLIC_RPC_URL || "https://solana-rpc.publicnode.com";
 
+// Reuse one Connection (keeps its keep-alive fetch agent) instead of building a
+// fresh one on every keystroke.
+let _conn: Connection | null = null;
 export function getConnection(): Connection {
-  return new Connection(DEFAULT_RPC, "confirmed");
+  if (!_conn) _conn = new Connection(DEFAULT_RPC, "confirmed");
+  return _conn;
 }
 
 export type Availability =
