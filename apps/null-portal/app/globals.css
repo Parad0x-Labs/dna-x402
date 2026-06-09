@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0b0e13;
+  color: #eff3f8;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  /* soft accent glow at the top, same as the parad0x.null landing page */
+  background-image: radial-gradient(
+    1100px 520px at 50% -300px,
+    rgba(45, 212, 160, 0.06),
+    transparent 70%
+  );
+  background-attachment: fixed;
+}
+
+/* faint solid grid — low key, not neon (matches site/parad0x-null) */
+.web0-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.5;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 50% at 50% 0%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 75% 50% at 50% 0%, #000, transparent 75%);
+}
+
+/* blinking terminal caret */
+.caret {
+  display: inline-block;
+  width: 4px;
+  height: 0.82em;
+  background: #2dd4a0;
+  margin-left: 5px;
+  vertical-align: -2px;
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #1c2430;
+  border-top-color: #2dd4a0;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
