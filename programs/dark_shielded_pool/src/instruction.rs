@@ -7,7 +7,8 @@ use solana_program::pubkey::Pubkey;
 ///   0x00 InitPool   { denomination: u64 }                         — 1 + 8 = 9 bytes
 ///   0x01 Deposit    { commitment: [u8;32] }                        — 1 + 32 = 33 bytes
 ///   0x02 Withdraw   { nullifier:[u8;32], root:[u8;32],
-///                     proof:[u8;256], recipient:[u8;32] }          — 1+32+32+256+32 = 353 bytes
+///                     proof:[u8;256], recipient:[u8;32],
+///                     relayer:[u8;32], fee:u64 }                    — 1+32+32+256+32+32+8 = 393 bytes
 ///   0x03 PausePool  {}                                             — 1 byte
 ///   0x04 ResumePool {}                                             — 1 byte
 #[derive(Debug, PartialEq)]
@@ -23,13 +24,21 @@ pub enum PoolInstruction {
     Deposit { commitment: [u8; 32] },
 
     /// Withdraw `denomination` lamports by presenting a ZK proof and fresh nullifier.
+    /// DARK RELAY RAIL: the payout splits — recipient gets `denomination - fee`,
+    /// the relayer (the submitter that fronts gas/rent) gets `fee`. Both `relayer`
+    /// and `fee` are bound in the v3 proof, so neither the relayer nor a front-runner
+    /// can redirect the funds or inflate the fee.
     ///
     /// `root` is the Merkle root the proof was generated against; it must be the
     /// pool's current root or one of the recent roots. It is also the `merkle_root`
     /// public input fed to the Groth16 verifier.
     ///
+    /// `relayer` must equal the `fee_payer` signer's pubkey (the relayer reimburses
+    /// itself for the gas/rent it fronted). `fee` is the reimbursement in lamports;
+    /// the proof enforces `fee <= MAX_FEE` and `fee <= denomination`.
+    ///
     /// Accounts: [pool_config (mut), pool_vault (mut), nullifier_record (mut PDA),
-    ///            recipient (mut), fee_payer (signer, mut), system_program]
+    ///            recipient (mut), fee_payer/relayer (signer, mut), system_program]
     Withdraw {
         nullifier: [u8; 32],
         /// Merkle root the proof opens (must be a known recent root).
@@ -37,6 +46,11 @@ pub enum PoolInstruction {
         /// 256-byte Groth16 proof: [A:G1(64B), B:G2(128B), C:G1(64B)].
         proof: [u8; 256],
         recipient: Pubkey,
+        /// Relayer wallet bound in the proof — reimbursed `fee` lamports. Must equal
+        /// the fee_payer signer.
+        relayer: Pubkey,
+        /// Relayer reimbursement in lamports (proof-bound: <= MAX_FEE, <= denomination).
+        fee: u64,
     },
 
     /// Pause all deposits and withdrawals (authority only).
@@ -50,8 +64,8 @@ pub enum PoolInstruction {
     ResumePool,
 }
 
-/// Withdraw instruction wire length: 1 + 32 + 32 + 256 + 32.
-pub const WITHDRAW_IX_LEN: usize = 1 + 32 + 32 + 256 + 32; // 353
+/// Withdraw instruction wire length: 1 + 32 + 32 + 256 + 32 + 32 + 8.
+pub const WITHDRAW_IX_LEN: usize = 1 + 32 + 32 + 256 + 32 + 32 + 8; // 393
 
 impl PoolInstruction {
     pub fn unpack(data: &[u8]) -> Result<Self, ProgramError> {
@@ -82,11 +96,16 @@ impl PoolInstruction {
                 let proof: [u8; 256] = data[65..321].try_into().unwrap();
                 let recipient_bytes: [u8; 32] = data[321..353].try_into().unwrap();
                 let recipient = Pubkey::from(recipient_bytes);
+                let relayer_bytes: [u8; 32] = data[353..385].try_into().unwrap();
+                let relayer = Pubkey::from(relayer_bytes);
+                let fee = u64::from_le_bytes(data[385..393].try_into().unwrap());
                 Ok(Self::Withdraw {
                     nullifier,
                     root,
                     proof,
                     recipient,
+                    relayer,
+                    fee,
                 })
             }
             0x03 => Ok(Self::PausePool),
@@ -112,12 +131,16 @@ impl PoolInstruction {
                 root,
                 proof,
                 recipient,
+                relayer,
+                fee,
             } => {
                 let mut v = vec![0x02];
                 v.extend_from_slice(nullifier);
                 v.extend_from_slice(root);
                 v.extend_from_slice(proof.as_ref());
                 v.extend_from_slice(recipient.as_ref());
+                v.extend_from_slice(relayer.as_ref());
+                v.extend_from_slice(&fee.to_le_bytes());
                 v
             }
             Self::PausePool => vec![0x03],

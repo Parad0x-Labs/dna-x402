@@ -4,7 +4,7 @@ use crate::state::{
     NoteLeaf, NullifierRecord, PoolConfig, NOTE_LEAF_LEN, NULLIFIER_RECORD_LEN, POOL_CONFIG_LEN,
     POOL_CONFIG_VERSION,
 };
-use dark_groth16_core::shielded_withdraw_v2_vk::shielded_withdraw_v2_vk;
+use dark_groth16_core::shielded_withdraw_v3_vk::shielded_withdraw_v3_vk;
 use dark_groth16_core::{groth16_verify, proof_from_bytes};
 use dark_poseidon_real::{
     commitment as poseidon_commitment, merkle_node, nullifier as poseidon_nullifier,
@@ -96,26 +96,40 @@ pub fn insert_leaf(
     current_hash
 }
 
-// ─── Groth16 verification (v2 circuit, 4 public inputs) ──────────────────────
+// ─── Groth16 verification (v3 circuit, 7 public inputs) ──────────────────────
 
-/// Verify a shielded_withdraw_v2 Groth16 proof against the single-party devnet
-/// VK using the real BN254 `alt_bn128` pairing syscall.
+/// Convert a u64 lamport value to a 32-byte big-endian field element (matches the
+/// circuit, which takes `fee`/`denomination` as plain field-element decimals).
+fn u64_to_field(v: u64) -> [u8; 32] {
+    let mut out = [0u8; 32];
+    out[24..32].copy_from_slice(&v.to_be_bytes());
+    out
+}
+
+/// Verify a shielded_withdraw_v3 Groth16 proof against the devnet VK using the real
+/// BN254 `alt_bn128` pairing syscall (DARK RELAY RAIL — relayer + fee bound).
 ///
 /// Public inputs, in the circuit's `public [...]` order:
-///   [0] nullifier, [1] merkle_root, [2] recipient (reduced), [3] pool_id (reduced)
+///   [0] nullifier, [1] merkle_root, [2] recipient (reduced), [3] pool_id (reduced),
+///   [4] relayer (reduced), [5] fee, [6] denomination
 ///
-/// `recipient` and `pool_id` are reduced into the BN254 scalar field so a raw
-/// 32-byte pubkey that exceeds `r` still maps to the same scalar the prover used.
+/// `recipient`, `pool_id`, `relayer` are reduced into the BN254 scalar field so a
+/// raw 32-byte pubkey that exceeds `r` still maps to the same scalar the prover used.
+/// `fee` and `denomination` are small u64 values mapped to big-endian field elements.
+#[allow(clippy::too_many_arguments)]
 pub fn verify_proof_groth16(
     proof: &[u8; 256],
     nullifier: &[u8; 32],
     merkle_root: &[u8; 32],
     recipient: &[u8; 32],
     pool_id: &[u8; 32],
+    relayer: &[u8; 32],
+    fee: u64,
+    denomination: u64,
 ) -> bool {
-    let vk = shielded_withdraw_v2_vk();
-    // gamma_abc.len() must be 5 (4 public inputs + constant term).
-    if vk.gamma_abc.len() != 5 {
+    let vk = shielded_withdraw_v3_vk();
+    // gamma_abc.len() must be 8 (7 public inputs + constant term).
+    if vk.gamma_abc.len() != 8 {
         return false;
     }
     let public_inputs = [
@@ -123,6 +137,9 @@ pub fn verify_proof_groth16(
         *merkle_root,
         reduce_be_to_field(recipient),
         reduce_be_to_field(pool_id),
+        reduce_be_to_field(relayer),
+        u64_to_field(fee),
+        u64_to_field(denomination),
     ];
     let parsed = proof_from_bytes(proof);
     matches!(groth16_verify(&vk, &parsed, &public_inputs), Ok(true))
@@ -155,7 +172,11 @@ pub fn process_instruction(
             root,
             proof,
             recipient,
-        } => process_withdraw(program_id, accounts, nullifier, root, proof, recipient),
+            relayer,
+            fee,
+        } => process_withdraw(
+            program_id, accounts, nullifier, root, proof, recipient, relayer, fee,
+        ),
         PoolInstruction::PausePool => process_pause(program_id, accounts, true),
         PoolInstruction::ResumePool => process_pause(program_id, accounts, false),
     }
@@ -369,15 +390,18 @@ fn process_withdraw(
     proven_root: [u8; 32],
     proof: [u8; 256],
     recipient: Pubkey,
+    relayer: Pubkey,
+    fee: u64,
 ) -> ProgramResult {
     let iter = &mut accounts.iter();
     let pool_config_info = next_account_info(iter)?;
     let pool_vault_info = next_account_info(iter)?;
     let nullifier_rec_info = next_account_info(iter)?;
     let recipient_info = next_account_info(iter)?;
-    // Fee-payer (relayer) — funds the nullifier-record PDA rent and signs the tx.
-    // The recipient never has to sign or pre-fund anything; the proof binds the
-    // recipient so a relayer cannot redirect the funds.
+    // Fee-payer (relayer) — funds the nullifier-record PDA rent, signs the tx, AND
+    // is reimbursed `fee` lamports from the pool. The recipient never has to sign or
+    // pre-fund anything; the proof binds the recipient AND the relayer + fee, so a
+    // relayer cannot redirect the funds or inflate its own reimbursement.
     let fee_payer_info = next_account_info(iter)?;
     let system_program = next_account_info(iter)?;
 
@@ -394,6 +418,18 @@ fn process_withdraw(
     }
     if recipient != *recipient_info.key {
         return Err(ProgramError::InvalidArgument);
+    }
+    // The relayer bound in the proof MUST be the signer reimbursing itself. This
+    // ties the proof's relayer public input to the account that actually receives
+    // `fee`, so a third party cannot replay someone else's proof and pocket the fee.
+    if relayer != *fee_payer_info.key {
+        return Err(ProgramError::InvalidArgument);
+    }
+    // Defense-in-depth: the circuit already enforces fee <= MAX_FEE and fee <=
+    // denomination, but reject an over-denomination fee here too so a malformed
+    // instruction never underflows the payout before the proof is even checked.
+    if fee > config.denomination {
+        return Err(ShieldedPoolError::FeeExceedsDenomination.into());
     }
 
     // The proven root (from instruction data) must be the current root or one of
@@ -414,15 +450,21 @@ fn process_withdraw(
         return Err(ShieldedPoolError::NullifierAlreadySpent.into());
     }
 
-    // Verify the ZK proof against the PROVEN root (recipient + pool_id bound).
+    // Verify the ZK proof against the PROVEN root. The v3 proof binds recipient,
+    // pool_id, relayer, fee, and the pool's denomination — so the payout split
+    // (recipient gets denom - fee, relayer gets fee) is fixed by the proof.
     let recipient_field: [u8; 32] = recipient_info.key.to_bytes();
     let pool_id_field: [u8; 32] = pool_config_info.key.to_bytes();
+    let relayer_field: [u8; 32] = fee_payer_info.key.to_bytes();
     if !verify_proof_groth16(
         &proof,
         &nullifier,
         &proven_root,
         &recipient_field,
         &pool_id_field,
+        &relayer_field,
+        fee,
+        config.denomination,
     ) {
         return Err(ShieldedPoolError::ProofInvalid.into());
     }
@@ -464,14 +506,26 @@ fn process_withdraw(
     };
     NullifierRecord::pack(record, &mut nullifier_rec_info.data.borrow_mut())?;
 
-    // Pay the denomination: pool_vault → recipient (direct lamport move).
+    // DARK RELAY RAIL 2-way payout (proof-bound split): pool_vault →
+    //   recipient += denomination - fee
+    //   relayer   += fee
+    // The fee <= denomination invariant is enforced by the circuit AND re-checked
+    // above, so the subtraction never underflows.
+    let payout = config
+        .denomination
+        .checked_sub(fee)
+        .ok_or(ShieldedPoolError::FeeExceedsDenomination)?;
     **pool_vault_info.lamports.borrow_mut() -= config.denomination;
-    **recipient_info.lamports.borrow_mut() += config.denomination;
+    **recipient_info.lamports.borrow_mut() += payout;
+    **fee_payer_info.lamports.borrow_mut() += fee;
 
     msg!(
-        "ShieldedPool v2: withdraw denomination={} -> {}",
+        "ShieldedPool v3: withdraw denom={} payout={} fee={} recipient={} relayer={}",
         config.denomination,
-        recipient
+        payout,
+        fee,
+        recipient,
+        relayer
     );
     Ok(())
 }

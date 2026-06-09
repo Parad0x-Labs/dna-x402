@@ -274,7 +274,7 @@ mod tests {
         assert_eq!(ix, PoolInstruction::unpack(&ix.pack()).unwrap());
     }
 
-    // Withdraw round-trip now includes the root field.
+    // Withdraw round-trip now includes the root, relayer, and fee fields (v3).
     #[test]
     fn test_instruction_withdraw_roundtrip() {
         use solana_program::pubkey::Pubkey;
@@ -283,6 +283,8 @@ mod tests {
             root: [0xEEu8; 32],
             proof: [0xCCu8; 256],
             recipient: Pubkey::from([0xDDu8; 32]),
+            relayer: Pubkey::from([0x11u8; 32]),
+            fee: 1_000_000,
         };
         let bytes = ix.pack();
         assert_eq!(bytes.len(), crate::instruction::WITHDRAW_IX_LEN);

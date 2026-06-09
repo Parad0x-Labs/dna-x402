@@ -85,6 +85,13 @@ fn run() {
 
     let pool_key_raw = from_hex32(scenario["poolKeyHex"].as_str().unwrap());
     let recipient_raw = from_hex32(scenario["recipientHex"].as_str().unwrap());
+    // Optional relayer (DARK RELAY RAIL v3). Defaults to all-zero if absent so the
+    // v2 callers keep working unchanged.
+    let relayer_raw = scenario
+        .get("relayerHex")
+        .and_then(|v| v.as_str())
+        .map(from_hex32)
+        .unwrap_or([0u8; 32]);
     let spend_index = scenario["spendIndex"].as_u64().unwrap();
     let secrets: Vec<[u8; 32]> = scenario["secretsHex"]
         .as_array()
@@ -97,6 +104,7 @@ fn run() {
     // on-chain program applies before using them as Poseidon inputs / public scalars.
     let pool_key_field = reduce_be_to_field(&pool_key_raw);
     let recipient_field = reduce_be_to_field(&recipient_raw);
+    let relayer_field = reduce_be_to_field(&relayer_raw);
 
     // Build the incremental tree exactly as the chain does, collecting leaves.
     let mut tree = IncrementalTree::new();
@@ -129,6 +137,7 @@ fn run() {
         "leafIndex": spend_index,
         "poolKeyField": be_to_dec(&pool_key_field),
         "recipientField": be_to_dec(&recipient_field),
+        "relayerField": be_to_dec(&relayer_field),
         "merkleRoot": be_to_dec(&root),
         "nullifier": be_to_dec(&null),
         "pathElements": pe_dec,
@@ -144,8 +153,10 @@ fn run() {
             "nullifierHex": hex::encode(null),
             "recipientFieldHex": hex::encode(recipient_field),
             "poolIdFieldHex": hex::encode(pool_key_field),
+            "relayerFieldHex": hex::encode(relayer_field),
             "recipientRawHex": hex::encode(recipient_raw),
             "poolKeyRawHex": hex::encode(pool_key_raw),
+            "relayerRawHex": hex::encode(relayer_raw),
             "bn254FrHex": hex::encode(BN254_FR),
             "u64LeafIndexBeHex": hex::encode(u64_to_be32(spend_index)),
         }

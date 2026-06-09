@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-09T19:18:17.770Z",
+  "test": "dark_relay_rail-denomination-buckets",
+  "cluster": "devnet",
+  "program": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
+  "buckets": [
+    {
+      "denomLamports": "100000000",
+      "denomSol": 0.1,
+      "authority": "FnZMqTcVwSTHQ1vWtYcvEvc7sVt1H5a1aNQGqSaxeMcR",
+      "poolConfig": "4u7QQfSSjd3xtm2m2yckBouo5pW63TmhSKxYz7ZwmabK",
+      "poolVault": "9tUhkjUDuswcPUqFYxto81Wbscjo6kZPAYskbhTAJwtt",
+      "initSig": "4EYz7aZWPNTRT53XPFGvaEAB5uZ9XefLugxqm5V4t8ELYbDBZKGC6LK1H5pzguvXdoN1GHe147K9U2YrDT4mJFdb",
+      "status": "initialized"
+    },
+    {
+      "denomLamports": "1000000000",
+      "denomSol": 1,
+      "authority": "GJQckk1LRq1ucbw6NYePVBg3WkdBGPJm8n7UUEvpwQHS",
+      "poolConfig": "HTc49AwvveByVjvU1umchXBSaVAS6nRXLoWL2runVQBu",
+      "poolVault": "7LhguTS1H6jJGp4p5rhtyNSwXS6AboR4e5jhJZeBymfz",
+      "initSig": "PmdYgNxqGykGYReMVn1iPSk9EdZrM3zLh2s1tP2NY4P9tkJgeTBg583oUFqpkKdaxdDBg6e4GfachrSStgnyDvi",
+      "status": "initialized"
+    },
+    {
+      "denomLamports": "10000000000",
+      "denomSol": 10,
+      "authority": "D6AD2xZo1yJgXSHPPQCbSjLHtP3a5uZ1A7ATKHAKm1j9",
+      "poolConfig": "7XZnjjs9H95nZS5Tu2F9aggcvUQD85YNxUKsuL2VrrVC",
+      "poolVault": "Br5yyVUbXU2U2trifXc9UYhoNtf5BKkgatLutpUQgbef",
+      "initSig": "5Yov8Gw9NuDkFvh2ZsEfzejCDGXNGfkftJnfReFD6SCKtT53Ve9ysHccvyge99aEhMDEd3j41LEhPFaVUDb578Ej",
+      "status": "initialized"
+    }
+  ],
+  "amountPrivacy": "Fixed denominations hide amounts: every note in a bucket is identical, so a withdrawal reveals only the bucket, never the user's balance or exact transfer amount.",
+  "arbitraryAmountSplitting": {
+    "method": "Greedy decomposition over the available buckets (largest-first), one shielded note per unit. Each note is deposited + withdrawn independently, so the on-chain footprint is a set of identical bucket operations.",
+    "example": {
+      "amountSol": 12.3,
+      "decomposition": [
+        {
+          "denomSol": 10,
+          "count": 1
+        },
+        {
+          "denomSol": 1,
+          "count": 2
+        },
+        {
+          "denomSol": 0.1,
+          "count": 3
+        }
+      ],
+      "remainderLamports": "0"
+    },
+    "note": "A non-representable remainder (smaller than the smallest bucket) is either paid transparently or rounded by the wallet; arbitrary-precision privacy requires a smallest-bucket dust denomination."
+  }
+}

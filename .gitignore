@@ -177,3 +177,8 @@ build/zk/package.json
 build/zk/ceremony/
 build/zk/out/
 build/zk/e2e/
+
+# Dark Relay Rail (v3) ceremony — keep the committable deliverables (final zkey +
+# vk.json + transcript_v3.json + intermediate contribution zkeys), but NEVER commit
+# the large public ptau (290 MB, freely re-downloadable from Hermez) or any entropy.
+ceremony/shielded_withdraw_v3/*.ptau
