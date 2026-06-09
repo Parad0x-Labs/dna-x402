@@ -1,62 +1,76 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-06-09T19:16:10.332Z",
+  "generatedAt": "2026-06-09T19:57:28.344Z",
   "test": "dark_relay_rail-v3-relayer-fee-zk-withdraw",
   "cluster": "devnet",
   "program": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
-  "poolConfig": "9uxjJNM3q94tgDfEK7QL2qXZkaYYSEkVxQNYXpMiCmkV",
-  "poolVault": "CnXDJ3WxGpM338XS2PBLokYBJvW3UYgoa375DNcSUdra",
+  "poolConfig": "7wZk3PiUEWVsWtStC32r4SmbV7EMhUWiFUX5Vpik4ryR",
+  "poolVault": "Du2xPoD3R65TNso9F5SUdbapTrSnU5EUzXVj6J9TK2xJ",
   "denominationLamports": 100000000,
   "relayerFeeLamports": 1000000,
-  "vkMode": "pilot",
+  "vkMode": "ceremony",
   "circuit": "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
-  "vk": "shielded_withdraw_v3_vk (SINGLE-PARTY / DEVNET PILOT / NOT TRUSTLESS)",
-  "initSig": "5pAwkP3p7savXsJWFgpcNGT7zXtPzT7PPXi6YYNxJBGYvN5ct3LTAjbE9aCTRdijm89EW98EtoQeTnjcnjSLKkVA",
-  "onChainRootAfterDeposits": "2ae2e36619365f046ed29bf62d0b5ab8246c5d19eb437d4219d7bdc4ebebd0f4",
-  "coreCircuitRoot": "2ae2e36619365f046ed29bf62d0b5ab8246c5d19eb437d4219d7bdc4ebebd0f4",
+  "vk": "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope)",
+  "initSig": "4DxeB3S5TKc7ZTowd79XLgH4FzS6cXViDvr3rZQzSMqDqSp4oth9hV2v6QnsQy3eA6Fvfv4BcXMxdAmG9wfYwuYS",
+  "onChainRootAfterDeposits": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
+  "coreCircuitRoot": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
   "rootsMatch": true,
   "scenarios": [
     {
       "name": "root_consistency",
       "status": "PASS",
-      "root": "2ae2e36619365f046ed29bf62d0b5ab8246c5d19eb437d4219d7bdc4ebebd0f4",
+      "root": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
       "deposits": [
-        "3tzTGmm1CEJGmjbM4LAiRyGLL7k88GHfhmRQiTYLBMqtCsvdi2Vk9kXbrWPHhj1vK13RSB6bv3zVE7HjeoPopKaN",
-        "54be2LKMwFMk6oCCzjjcCA13Hf6mjC4KfsiBRqc46858J2eyukkLQWYFoMp28735ciz3W8HDEewqE5ERTQ7UpxbE"
+        "42mtRTFvyD87cpNVkEBXLhzn7Aap9yX7RYq2J9TDXCx23UgkHYNneoCWUoVAHwJsworhjfNsbqHi7qXT66xh1cxB",
+        "3yREcgnh9Z5YfQZqFiqWd6sH5xv9TSoKGPbyJHz4w9qxFaguC4KjWyEM3Bze8P9wa1wQ1rBs6L25Xn7eDfwYf7vD"
       ]
     },
     {
       "name": "valid_relayer_withdraw",
       "status": "PASS",
-      "sig": "3rzPdtQjHqULobkWgWtmbLpkZajmTsbyaHMfzjeSMNLwMNiG3Nw2Pfht6h3yHscL2GGqqZHjHewSFkQGoGWZqN4E",
-      "recipient": "5j2gVbqUeQz8VCTAXexfR6MYjQP93Sm1A99Tzic8Ccd6",
-      "relayer": "4eZh54QsByRVkJceyYKJ3nhXp6GFT1ETRMCFciqx4tbb",
+      "sig": "64Zpd39vpSEEYovMDRjaYUQ6Y4xptUJQBn2Jw4UuvaJpjjQRBjFTbRzUjssG9fD8LBU2sf5suWfob9ynaWvw1eA",
+      "recipient": "CENhSBCeZCDCKrGQTMVyjZCd8M7MqEaqi2y6DgRnkYtW",
+      "relayer": "AeC9SmCssHzp8mQYieVvXTn4wnBF8tkmCaw7FRPJo7FZ",
       "recipientDelta": 99000000,
       "relayerDelta": -181240,
       "fee": 1000000,
       "payout": 99000000,
       "recipientSigned": false,
-      "nullifier": "182ed69a5b1cf9d84d73e19ddf9347579da933622731c252923c599ff58039cc"
+      "nullifier": "122d3cf33101706d39f2981ac25ddc2f9fab1ebf64c0945758d2d56c3180fdf4"
     },
     {
       "name": "double_spend_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": null,
-      "err": null
+      "sig": "5kyUxhzXSgUTW6J2iebSFPC3A15gVMJWG3VabUASgBC5FhbDb7iFx58XHP56JwruxmxZStMYsE8SsLp2Zv2BvZpa",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      }
     },
     {
       "name": "wrong_root_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": null,
-      "err": null
+      "sig": "4Vxj4b4MvxxXNjfSZdrDYruCqhXVJ4q1ufMdhXGkbYhHrCi95kvxEGoex6p3Fn9NiLbnfZq5Y9Wf7pdeySkDboBY",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      }
     },
     {
       "name": "wrong_recipient_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "5Ndekr8LTqWWFaoVwUqjBcgH3uXwTwEeZo1dXVLGzznCDt2X4W5iKGCjs9nKuKsN8jXCn7yEXxzidA6e9gnvCEUn",
+      "sig": "5LDZfL91WEssZKaru3tiLUCRhAzBEQVPCn2Vpx5hrSkVYrpY9VrMh9B9wvfBKbqiTKFanhhZJa39ff6VeHZirGUL",
       "err": {
         "InstructionError": [
           1,
@@ -76,7 +90,7 @@
       "name": "relayer_mismatch_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "2pYLTEZHScGiviJZawyLjke61VggYbjdLE7MVPvJfEgfFQNm9Y7WxJwMK1txvkqsNFZ52dBa99KajUoLZv25nhFF",
+      "sig": "3oWbwSY7Hr4JcfEJPt2TfWb37YJWhMJdnqRq5WXG6q8fSap4s5VTMnxxnrgTxCnH7zCE5R6eSAuM4kscM8Dejttm",
       "err": {
         "InstructionError": [
           1,
@@ -89,14 +103,14 @@
     {
       "name": "second_valid_withdraw",
       "status": "PASS",
-      "sig": "3moimotfPiBmYiPZYGXn1DMDoPVGHxBzFWk1WXxCN5gEowzweSSpXb9SM2ubzv3WhMXmw9Wa9sGwStPawKrEw4nH",
+      "sig": "3ypTqGiddQyyWR9AmwqUZN38x5bAjekU8JJBTkMRAW3MH9LaHqRPK7Fk1HT1JFR83C7m1kQ2QkysixKVtDSkYVsa",
       "recipientDelta": 99000000
     }
   ],
   "overall": "PASS",
   "keystone": "A real snarkjs Groth16 V3 proof (relayer + fee bound) verified ON-CHAIN (alt_bn128 pairing syscall) against a Merkle root the program built with the sol_poseidon syscall. A permissionless RELAYER (fee_payer != recipient) submitted the withdraw and was reimbursed the proof-bound fee; the recipient received denom-fee and never signed. Double-spend / wrong-root / wrong-recipient / over-fee / relayer-mismatch all reverted.",
   "honestCaveats": [
-    "SINGLE-PARTY trusted setup — NOT trustless. Use --vk-mode ceremony for the multi-party (dry-run) VK.",
+    "Ceremony VK is a BEACON-SEALED DRY RUN: multiple SIMULATED-independent phase-2 contributions (one machine, varied entropy) finalized with a FIXED, already-published drand beacon (round 6000000). The public beacon adds unpredictability nobody controls, but this is NOT yet fully trustless — real trustlessness needs the simulated contributors replaced by independent humans (see ceremony/CONTRIBUTING_V3.md). Claim: 'beacon-sealed multi-contribution ceremony (dry-run); awaiting independent contributors.'",
     "UNAUDITED devnet pilot. mainnet_ready=false throughout.",
     "Stealth recipient (NullPay) NOT integrated — recipient is a plain wallet here. Documented as a follow-up stub.",
     "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count==0) for deterministic Merkle-path rebuild."
@@ -187,6 +201,103 @@
       ],
       "program": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
       "generatedAt": "2026-06-09T19:16:10.332Z"
+    },
+    "ceremony": {
+      "overall": "PASS",
+      "scenarios": [
+        {
+          "name": "root_consistency",
+          "status": "PASS",
+          "root": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
+          "deposits": [
+            "42mtRTFvyD87cpNVkEBXLhzn7Aap9yX7RYq2J9TDXCx23UgkHYNneoCWUoVAHwJsworhjfNsbqHi7qXT66xh1cxB",
+            "3yREcgnh9Z5YfQZqFiqWd6sH5xv9TSoKGPbyJHz4w9qxFaguC4KjWyEM3Bze8P9wa1wQ1rBs6L25Xn7eDfwYf7vD"
+          ]
+        },
+        {
+          "name": "valid_relayer_withdraw",
+          "status": "PASS",
+          "sig": "64Zpd39vpSEEYovMDRjaYUQ6Y4xptUJQBn2Jw4UuvaJpjjQRBjFTbRzUjssG9fD8LBU2sf5suWfob9ynaWvw1eA",
+          "recipient": "CENhSBCeZCDCKrGQTMVyjZCd8M7MqEaqi2y6DgRnkYtW",
+          "relayer": "AeC9SmCssHzp8mQYieVvXTn4wnBF8tkmCaw7FRPJo7FZ",
+          "recipientDelta": 99000000,
+          "relayerDelta": -181240,
+          "fee": 1000000,
+          "payout": 99000000,
+          "recipientSigned": false,
+          "nullifier": "122d3cf33101706d39f2981ac25ddc2f9fab1ebf64c0945758d2d56c3180fdf4"
+        },
+        {
+          "name": "double_spend_rejected",
+          "status": "PASS",
+          "reverted": true,
+          "sig": "5kyUxhzXSgUTW6J2iebSFPC3A15gVMJWG3VabUASgBC5FhbDb7iFx58XHP56JwruxmxZStMYsE8SsLp2Zv2BvZpa",
+          "err": {
+            "InstructionError": [
+              1,
+              {
+                "Custom": 3
+              }
+            ]
+          }
+        },
+        {
+          "name": "wrong_root_rejected",
+          "status": "PASS",
+          "reverted": true,
+          "sig": "4Vxj4b4MvxxXNjfSZdrDYruCqhXVJ4q1ufMdhXGkbYhHrCi95kvxEGoex6p3Fn9NiLbnfZq5Y9Wf7pdeySkDboBY",
+          "err": {
+            "InstructionError": [
+              1,
+              {
+                "Custom": 12
+              }
+            ]
+          }
+        },
+        {
+          "name": "wrong_recipient_rejected",
+          "status": "PASS",
+          "reverted": true,
+          "sig": "5LDZfL91WEssZKaru3tiLUCRhAzBEQVPCn2Vpx5hrSkVYrpY9VrMh9B9wvfBKbqiTKFanhhZJa39ff6VeHZirGUL",
+          "err": {
+            "InstructionError": [
+              1,
+              {
+                "Custom": 4
+              }
+            ]
+          }
+        },
+        {
+          "name": "over_fee_proof_rejected",
+          "status": "PASS",
+          "circuitRejected": true,
+          "note": "fee=0.06 SOL > MAX_FEE=0.05 SOL; LessEqThan constraint fails witness gen"
+        },
+        {
+          "name": "relayer_mismatch_rejected",
+          "status": "PASS",
+          "reverted": true,
+          "sig": "3oWbwSY7Hr4JcfEJPt2TfWb37YJWhMJdnqRq5WXG6q8fSap4s5VTMnxxnrgTxCnH7zCE5R6eSAuM4kscM8Dejttm",
+          "err": {
+            "InstructionError": [
+              1,
+              {
+                "Custom": 4
+              }
+            ]
+          }
+        },
+        {
+          "name": "second_valid_withdraw",
+          "status": "PASS",
+          "sig": "3ypTqGiddQyyWR9AmwqUZN38x5bAjekU8JJBTkMRAW3MH9LaHqRPK7Fk1HT1JFR83C7m1kQ2QkysixKVtDSkYVsa",
+          "recipientDelta": 99000000
+        }
+      ],
+      "program": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
+      "generatedAt": "2026-06-09T19:57:28.344Z"
     }
   }
 }

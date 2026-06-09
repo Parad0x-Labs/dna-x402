@@ -56,8 +56,15 @@ advance:
 snarkjs zkey beacon shielded_withdraw_v3_{N}.zkey shielded_withdraw_v3_final.zkey \
   <BEACON_HEX> 10 -n="drand Final Beacon"
 ```
-The dry-run script fetches a **real** drand round live to prove this end-to-end; a real
-run uses the **pre-committed** round.
+The dry-run script (`run-ceremony-v3.mjs`) uses a **FIXED, already-published** drand round
+**baked into the script** — currently **round 6000000** (League of Entropy default chain,
+resolved 2026-04-05), randomness
+`642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114`. It does **not** fetch
+`latest` and **never waits on a future round**; it optionally re-fetches that **same fixed
+round** only to confirm the baked value still matches drand (the baked value is
+authoritative). This models the real flow: a coordinator **pre-commits** a round number
+before the ceremony so it cannot be ground. A real run swaps in whatever round was
+pre-committed for that ceremony.
 
 ## Verify — anyone, independently
 ```bash
@@ -67,8 +74,9 @@ snarkjs zkey verify shielded_withdraw_v3.r1cs powersOfTau28_hez_final_14.ptau \
 Then cross-check, against `ceremony/shielded_withdraw_v3/transcript_v3.json`:
 1. `r1cs_sha256` matches the published `circuits/shielded_withdraw_v3.circom` build.
 2. Every contribution's `zkey_sha256` matches that contributor's published attestation.
-3. The `beacon.round` matches the **pre-committed** drand round, and the randomness
-   matches `https://api.drand.sh/<chain>/public/<round>`.
+3. The `beacon.round` matches the **fixed pre-committed** drand round in the transcript
+   (6000000 for this dry run), and its randomness matches
+   `https://api.drand.sh/<chain>/public/<round>` (a SPECIFIC past round, not `latest`).
 4. `verify` reproduces `ZKey Ok!`.
 
 ## Flip to mainnet (only after this ceremony + an external audit)

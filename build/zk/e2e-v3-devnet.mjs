@@ -364,7 +364,7 @@ async function main() {
     vkMode: VK_MODE,
     circuit: "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
     vk: VK_MODE === "ceremony"
-      ? "shielded_withdraw_v3_vk (MULTI-PARTY CEREMONY — public ptau + independent contributions + drand beacon; trustless target, devnet pilot scope)"
+      ? "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope)"
       : "shielded_withdraw_v3_vk (SINGLE-PARTY / DEVNET PILOT / NOT TRUSTLESS)",
     initSig,
     onChainRootAfterDeposits: rootAfter,
@@ -380,8 +380,8 @@ async function main() {
       "and never signed. Double-spend / wrong-root / wrong-recipient / over-fee / relayer-mismatch all reverted.",
     honestCaveats: [
       VK_MODE === "ceremony"
-        ? "Ceremony VK is from a DRY RUN: multiple SIMULATED-independent contributions + a REAL drand beacon. Real trustlessness needs independent human contributors (see ceremony/README.md)."
-        : "SINGLE-PARTY trusted setup — NOT trustless. Use --vk-mode ceremony for the multi-party (dry-run) VK.",
+        ? "Ceremony VK is a BEACON-SEALED DRY RUN: multiple SIMULATED-independent phase-2 contributions (one machine, varied entropy) finalized with a FIXED, already-published drand beacon (round 6000000). The public beacon adds unpredictability nobody controls, but this is NOT yet fully trustless — real trustlessness needs the simulated contributors replaced by independent humans (see ceremony/CONTRIBUTING_V3.md). Claim: 'beacon-sealed multi-contribution ceremony (dry-run); awaiting independent contributors.'"
+        : "SINGLE-PARTY trusted setup — NOT trustless. Use --vk-mode ceremony for the beacon-sealed multi-contribution (dry-run) VK.",
       "UNAUDITED devnet pilot. mainnet_ready=false throughout.",
       "Stealth recipient (NullPay) NOT integrated — recipient is a plain wallet here. Documented as a follow-up stub.",
       "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count==0) for deterministic Merkle-path rebuild.",
