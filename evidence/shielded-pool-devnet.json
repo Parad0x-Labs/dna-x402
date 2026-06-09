@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-09T15:05:29.812Z",
+  "test": "dark_shielded_pool-v2-real-poseidon-zk-withdraw",
+  "cluster": "devnet",
+  "program": "8iZFKnKTReSvhKrmrVoZ8fk2H1g3avCPZt9YVtoCkZuA",
+  "poolConfig": "BXK2MzDJ3NYx5HkKvWPKqRCzBbLRNBfwComjcpjtx3r5",
+  "poolVault": "8jEoMVxor3G1o7DNfxiDg2hrpo4Dzhh46wyzpXvdPDsV",
+  "denominationLamports": 100000000,
+  "circuit": "shielded_withdraw_v2.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id bound)",
+  "vk": "shielded_withdraw_v2_vk (SINGLE-PARTY / DEVNET PILOT / NOT TRUSTLESS)",
+  "initSig": "5ZbL6YetdMYX2Z6Ys3crKPdhrbJKGcUWJbSCGayWHLgNs18YyzwfeaATcG3MS9QovBwq4xyzE4aRYnsySZoTd7S7",
+  "onChainRootAfterDeposits": "0cf1de45b8c59c9c54aac743a78aefff8f719b2e5db3d4fe6383d2842f9bcce2",
+  "coreCircuitRoot": "0cf1de45b8c59c9c54aac743a78aefff8f719b2e5db3d4fe6383d2842f9bcce2",
+  "rootsMatch": true,
+  "scenarios": [
+    {
+      "name": "root_consistency",
+      "status": "PASS",
+      "root": "0cf1de45b8c59c9c54aac743a78aefff8f719b2e5db3d4fe6383d2842f9bcce2",
+      "deposits": [
+        "5oS73M1yA5NL8yAop5TTtonyHaHdmYaXJrhqG4NvhK1euWc9VyBAQSj7naoNwMao7cEJ7DbKLm51osYuLMe8ibN6",
+        "3LZpRXZcxTyobX1tBu4bhqkCzHM3pg7RbGqNq1j3NtRG1UyzCuxarccSkUEzCv5MQ4dJEPjMALbp4cBCvB4iUrLh"
+      ]
+    },
+    {
+      "name": "valid_withdraw",
+      "status": "PASS",
+      "sig": "m2ouWeTwkyxhV1JBvTBTFaFHE3bHsCmsfwLYs7vTC9cVSxhURwp2bThQcz81tBY5U6fAb8LxA38wwcidM3fucBK",
+      "recipient": "2pH2oTWvs48CbvJBBxPm5a1FBMNq4hn3yuYm7Q1hs1kG",
+      "delta": 100000000,
+      "nullifier": "0a4eadc08c5ddb506f3c7e6022869fb3103fae119714646c5ed9fb02ff8b1f96"
+    },
+    {
+      "name": "double_spend_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "tbBPSk2Mk9ZZasBJr6o9Cqd4KJdEC1Aux7wnteBEtfBaTQKt6k4ewd1JhyNEHrJaNFH4twuB9Gx2VdLsfDohAoz",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong_root_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "2ZKs8dRXffuEMtLoNpmU64YyGmuoRWvbB8ZwgVnoNkidn9eVaM1eQ96pucoPZL1bDF2RPQAStAbd8SBwXD8kz3ft",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong_recipient_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "VwxbrMXqDgZ7YEnXMs2avXfpvoAACDcL8LUnNZExZ86mPbs5VqYsnScfUnuAqdLAyYTCooR4xZzJ6jn9W3Fa4h3",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      }
+    },
+    {
+      "name": "second_valid_withdraw",
+      "status": "PASS",
+      "sig": "5DEkLsmHLeyp4MZCtxqHeyB26cwBY85rysnUL3cejkACbcFpxxVeQgNV8b13VYtRK5wB6cpFCURJjFVDh9MYad2j",
+      "delta": 100000000
+    }
+  ],
+  "overall": "PASS",
+  "keystone": "A real snarkjs Groth16 proof for shielded_withdraw_v2 verified ON-CHAIN (alt_bn128 pairing syscall) against a Merkle root the program built with the sol_poseidon syscall. The core/circuit-computed root byte-matched the on-chain root. => on-chain Poseidon == circuit Poseidon, confirmed in-VM.",
+  "honestCaveats": [
+    "SINGLE-PARTY trusted setup — NOT trustless. A multi-party ceremony with a pre-committed beacon is required before any trust/mainnet use.",
+    "UNAUDITED devnet pilot. mainnet_ready=false throughout.",
+    "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count starts at 0) for deterministic Merkle-path rebuild."
+  ],
+  "explorer": {
+    "program": "https://explorer.solana.com/address/8iZFKnKTReSvhKrmrVoZ8fk2H1g3avCPZt9YVtoCkZuA?cluster=devnet"
+  }
+}

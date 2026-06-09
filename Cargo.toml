@@ -187,6 +187,10 @@ members = [
     "crates/dark-kzg-verifier",
     # DARK_ZK_PRIMITIVES_V1 - on-chain BN254 Groth16 (Phase 1)
     "crates/dark-poseidon-bn254",
+    # REAL circomlib-matching BN254 Poseidon (light-poseidon). Byte-matches the
+    # circom circuits — the keystone that unblocks the shielded pool. Replaces
+    # the dark-poseidon-bn254 SHA-256 stub for proof-compatible hashing.
+    "crates/dark-poseidon-real",
     "crates/dark-bn254-circuit",
     # DARK_ZK_PRIMITIVES_V1 - Phase 2 (proof bundle generator + on-chain gate)
     "crates/dark-bn254-proof-gen",

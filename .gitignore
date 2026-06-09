@@ -167,3 +167,13 @@ circuits/out/*.r1cs
 circuits/out/*.sym
 circuits/out/*.wtns
 ceremony/transcript/**/*.zkey
+
+# shielded_withdraw_v2 build pipeline — transient artifacts only.
+# The committed deliverables live under ceremony/shielded_withdraw_v2/
+# (final zkey + vk.json + wasm + transcript). Everything below is regenerable.
+build/zk/node_modules/
+build/zk/package-lock.json
+build/zk/package.json
+build/zk/ceremony/
+build/zk/out/
+build/zk/e2e/

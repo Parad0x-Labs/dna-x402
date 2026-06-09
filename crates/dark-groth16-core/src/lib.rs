@@ -47,6 +47,11 @@ pub mod x402_access_vk;
 /// Track-record circuit verifying key (Poseidon receipt-Merkle membership + count/volume/window).
 pub mod track_record_vk;
 
+/// ShieldedWithdraw v2 verifying key (Poseidon commitment/nullifier + 20-level
+/// Poseidon Merkle membership + recipient/pool_id binding). Single-party devnet
+/// pilot VK — `mainnet_ready = false`.
+pub mod shielded_withdraw_v2_vk;
+
 /// BN254 base field prime Fp (big-endian, 32 bytes).
 ///
 /// Source: `ark-bn254` Fp modulus limbs (little-endian u64):
