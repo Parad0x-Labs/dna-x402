@@ -1,210 +1,214 @@
-// dark-shielded-pool-core — note commitment scheme and Merkle-root tracking
-// All state designed for on-chain PDA storage — no off-chain validators required.
-// NOT_PRODUCTION — devnet design only — no audit — mainnet_ready = false
+//! dark-shielded-pool-core — incremental Poseidon Merkle tree + recent-roots ring
+//! for the Dark Null shielded pool (v2, matching `shielded_withdraw_v2.circom`).
+//!
+//! # What changed from the v1 stub
+//!
+//! The previous version hashed notes with SHA-256 and accumulated commitments
+//! with `SHA256("pool-root-v1" || c0 || c1 || ...)` — a fold, not a tree. A real
+//! circom proof (Poseidon, fixed-depth Merkle membership) could never verify
+//! against that. This module now provides the REAL primitives:
+//!
+//!   * `commitment = Poseidon(3)(DOMAIN_COMMIT=1, secret, leaf_index)`
+//!   * `nullifier  = Poseidon(3)(DOMAIN_NULLIF=2, secret, pool_key_field)`
+//!   * a fixed-depth (`TREE_DEPTH = 20`) **incremental** Poseidon Merkle tree
+//!     (Tornado-style `filled_subtrees` + `zeros`), whose root the circuit opens;
+//!   * a ring of the last `RECENT_ROOTS` roots so a proof against a slightly
+//!     stale root still verifies (deposits between proof-gen and submit).
+//!
+//! All hashing delegates to `dark-poseidon-real`, which byte-matches circomlib
+//! and the `sol_poseidon` Bn254X5/BigEndian syscall. So a root computed here
+//! equals a root the on-chain program computes with the syscall, which equals
+//! the root the circuit proves membership against.
+//!
+//! `no_std`-friendly hashing (no host-only deps) so the on-chain program can use
+//! the same insert logic via the syscall backend.
+//!
+//! NOT_PRODUCTION — devnet design only — no audit — `mainnet_ready = false`.
 
-use dark_poseidon_bn254::{note_commitment as poseidon_note_commitment, nullifier_hash};
-use sha2::{Digest, Sha256};
+use dark_poseidon_real::{commitment as poseidon_commitment, merkle_node, nullifier as poseidon_nullifier};
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+/// Merkle tree depth — must equal the circuit's `ShieldedWithdraw(20)`.
+pub const TREE_DEPTH: usize = 20;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Note {
-    pub commitment: [u8; 32],
-    pub value: u64,
-    pub randomness: [u8; 32],
-    pub recipient_hash: [u8; 32],
-    pub deposited_at_slot: u64,
+/// Number of recent roots kept in the ring buffer. A withdrawal proof is
+/// accepted if its root matches ANY of the last `RECENT_ROOTS` roots.
+///
+/// Kept modest (16) to bound on-chain `PoolConfig` size and the SBF stack frame
+/// when (un)packing it; still a generous window for proofs generated against a
+/// root that is a few deposits stale.
+pub const RECENT_ROOTS: usize = 16;
+
+/// `commitment = Poseidon(3)(DOMAIN_COMMIT=1, secret, leaf_index)`.
+pub fn commitment(secret: &[u8; 32], leaf_index: u64) -> [u8; 32] {
+    poseidon_commitment(secret, leaf_index)
 }
 
+/// `nullifier = Poseidon(3)(DOMAIN_NULLIF=2, secret, pool_key_field)`.
+pub fn nullifier(secret: &[u8; 32], pool_key_field: &[u8; 32]) -> [u8; 32] {
+    poseidon_nullifier(secret, pool_key_field)
+}
+
+/// The "zero subtree" hashes: `zeros[0] = 0`, `zeros[i] = Poseidon(zeros[i-1], zeros[i-1])`.
+///
+/// `zeros[i]` is the root of a fully-empty subtree of height `i`. Used to fill
+/// the right side of the tree before real leaves arrive — identical convention
+/// to the circuit's empty-leaf padding (leaf default = field 0).
+pub fn zero_hashes() -> [[u8; 32]; TREE_DEPTH + 1] {
+    let mut zeros = [[0u8; 32]; TREE_DEPTH + 1];
+    for i in 1..=TREE_DEPTH {
+        zeros[i] = merkle_node(&zeros[i - 1], &zeros[i - 1]);
+    }
+    zeros
+}
+
+/// Incremental fixed-depth Poseidon Merkle tree state.
+///
+/// Stores only `filled_subtrees[TREE_DEPTH]` and `next_index` — O(depth) state,
+/// not O(2^depth). This is exactly what the on-chain `PoolConfig` would persist
+/// (here we keep the full subtree array in one struct for the host helper; the
+/// on-chain version stores the root + an analogous compact representation).
 #[derive(Debug, Clone)]
-pub struct NullifierRecord {
-    pub nullifier: [u8; 32],
-    pub spent_at_slot: u64,
-    pub withdrawal_amount: u64,
+pub struct IncrementalTree {
+    /// Rightmost filled node at each level (Tornado convention).
+    pub filled_subtrees: [[u8; 32]; TREE_DEPTH],
+    /// Current root.
+    pub root: [u8; 32],
+    /// Number of leaves inserted so far (also the next leaf index).
+    pub next_index: u64,
+    zeros: [[u8; 32]; TREE_DEPTH + 1],
 }
 
-#[derive(Debug, Clone)]
-pub struct PoolState {
-    pub merkle_root: [u8; 32],
-    pub note_count: u64,
-    pub total_deposited: u64,
-    pub total_withdrawn: u64,
-    pub mainnet_ready: bool, // always false
-}
-
-impl Default for PoolState {
+impl Default for IncrementalTree {
     fn default() -> Self {
-        PoolState {
-            merkle_root: [0u8; 32],
-            note_count: 0,
-            total_deposited: 0,
-            total_withdrawn: 0,
-            mainnet_ready: false,
+        Self::new()
+    }
+}
+
+impl IncrementalTree {
+    /// Empty tree: every level filled with the corresponding zero-subtree hash,
+    /// root = `zeros[TREE_DEPTH]`.
+    pub fn new() -> Self {
+        let zeros = zero_hashes();
+        let mut filled_subtrees = [[0u8; 32]; TREE_DEPTH];
+        for i in 0..TREE_DEPTH {
+            filled_subtrees[i] = zeros[i];
+        }
+        IncrementalTree {
+            filled_subtrees,
+            root: zeros[TREE_DEPTH],
+            next_index: 0,
+            zeros,
+        }
+    }
+
+    /// Insert a leaf at `next_index`, update `filled_subtrees` and `root`.
+    /// Returns the index the leaf was inserted at.
+    pub fn insert(&mut self, leaf: [u8; 32]) -> u64 {
+        let index = self.next_index;
+        assert!(index < (1u64 << TREE_DEPTH), "tree is full");
+
+        let mut current_index = index;
+        let mut current_hash = leaf;
+
+        for i in 0..TREE_DEPTH {
+            let (left, right) = if current_index & 1 == 0 {
+                // current node is a left child: sibling on the right is still empty
+                self.filled_subtrees[i] = current_hash;
+                (current_hash, self.zeros[i])
+            } else {
+                // current node is a right child: sibling on the left is filled
+                (self.filled_subtrees[i], current_hash)
+            };
+            current_hash = merkle_node(&left, &right);
+            current_index >>= 1;
+        }
+
+        self.root = current_hash;
+        self.next_index += 1;
+        index
+    }
+
+    /// Rebuild the full set of leaf commitments into a fresh tree and produce the
+    /// Merkle authentication path (siblings + left/right bits) for `leaf_index`.
+    ///
+    /// `leaves` is the dense list of commitments in insertion order. Empty slots
+    /// past `leaves.len()` are the zero leaf. Returns `(path_elements, path_index, root)`.
+    pub fn path_for(
+        leaves: &[[u8; 32]],
+        leaf_index: u64,
+    ) -> ([[u8; 32]; TREE_DEPTH], [u8; TREE_DEPTH], [u8; 32]) {
+        let zeros = zero_hashes();
+        // Build each level explicitly so we can read off siblings.
+        // level 0 = leaves padded to a power that covers leaf_index.
+        let mut level: Vec<[u8; 32]> = leaves.to_vec();
+
+        let mut path_elements = [[0u8; 32]; TREE_DEPTH];
+        let mut path_index = [0u8; TREE_DEPTH];
+        let mut idx = leaf_index as usize;
+
+        for depth in 0..TREE_DEPTH {
+            // sibling of idx at this level
+            let sibling_idx = idx ^ 1;
+            let sibling = level
+                .get(sibling_idx)
+                .copied()
+                .unwrap_or(zeros[depth]);
+            path_elements[depth] = sibling;
+            path_index[depth] = (idx & 1) as u8; // 0 = leaf on left, 1 = leaf on right
+            // hash up to next level
+            let next_len = (level.len() + 1) / 2;
+            let mut next = Vec::with_capacity(next_len);
+            for j in 0..next_len {
+                let l = level.get(2 * j).copied().unwrap_or(zeros[depth]);
+                let r = level.get(2 * j + 1).copied().unwrap_or(zeros[depth]);
+                next.push(merkle_node(&l, &r));
+            }
+            level = next;
+            idx /= 2;
+        }
+        let root = level.first().copied().unwrap_or(zeros[TREE_DEPTH]);
+        (path_elements, path_index, root)
+    }
+}
+
+/// Fixed-capacity ring of recent Merkle roots.
+///
+/// On every deposit the new root is pushed. A withdrawal is valid if its proof's
+/// root matches the current root OR any of the last `RECENT_ROOTS` roots. This
+/// mirrors what the on-chain `PoolConfig` stores (a `[[u8;32]; RECENT_ROOTS]`
+/// ring + a head cursor).
+#[derive(Debug, Clone)]
+pub struct RecentRoots {
+    pub roots: [[u8; 32]; RECENT_ROOTS],
+    pub head: u8,
+    pub count: u8,
+}
+
+impl Default for RecentRoots {
+    fn default() -> Self {
+        RecentRoots {
+            roots: [[0u8; 32]; RECENT_ROOTS],
+            head: 0,
+            count: 0,
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum PoolError {
-    NullifierAlreadySpent,
-    InsufficientValue,
-    InvalidCommitment,
-    NoteNotFound,
-    AmountOverflow,
-}
-
-// ---------------------------------------------------------------------------
-// Core functions
-// ---------------------------------------------------------------------------
-
-/// Build a `Note` with a computed commitment.
-///
-/// Commitment = `poseidon_bn254(DOMAIN_COMMITMENT || value_le || randomness || recipient_hash)`
-/// delegated to `dark-poseidon-bn254::note_commitment`.
-pub fn create_note(
-    value: u64,
-    randomness: &[u8; 32],
-    recipient_hash: &[u8; 32],
-    slot: u64,
-) -> Note {
-    let commitment = poseidon_note_commitment(value, randomness, recipient_hash);
-    Note {
-        commitment,
-        value,
-        randomness: *randomness,
-        recipient_hash: *recipient_hash,
-        deposited_at_slot: slot,
-    }
-}
-
-/// Recompute the commitment from a note's fields and check it matches the stored one.
-pub fn verify_note_commitment(note: &Note) -> bool {
-    let expected = poseidon_note_commitment(note.value, &note.randomness, &note.recipient_hash);
-    expected == note.commitment
-}
-
-/// Commitment accumulator standing in for a full Merkle tree in this devnet design.
-///
-/// `SHA256("pool-root-v1" || commitment_0 || commitment_1 || …)`
-///
-/// In production this would be a proper incremental Merkle tree whose root is
-/// stored in a PDA.  For testing purposes a fold over all commitments suffices.
-pub fn compute_merkle_root(commitments: &[[u8; 32]]) -> [u8; 32] {
-    let mut hasher = Sha256::new();
-    hasher.update(b"pool-root-v1");
-    for c in commitments {
-        hasher.update(c);
-    }
-    hasher.finalize().into()
-}
-
-/// Validate, create the note, add its commitment to the accumulator, and update pool state.
-///
-/// Returns the freshly created `Note` or a `PoolError`.
-pub fn prepare_deposit(
-    pool: &mut PoolState,
-    value: u64,
-    randomness: &[u8; 32],
-    recipient_hash: &[u8; 32],
-    slot: u64,
-    existing_commitments: &mut Vec<[u8; 32]>,
-) -> Result<Note, PoolError> {
-    if value == 0 {
-        return Err(PoolError::InsufficientValue);
+impl RecentRoots {
+    pub fn push(&mut self, root: [u8; 32]) {
+        self.roots[self.head as usize] = root;
+        self.head = ((self.head as usize + 1) % RECENT_ROOTS) as u8;
+        if (self.count as usize) < RECENT_ROOTS {
+            self.count += 1;
+        }
     }
 
-    let new_total = pool
-        .total_deposited
-        .checked_add(value)
-        .ok_or(PoolError::AmountOverflow)?;
-
-    let note = create_note(value, randomness, recipient_hash, slot);
-
-    existing_commitments.push(note.commitment);
-    pool.merkle_root = compute_merkle_root(existing_commitments);
-    pool.note_count += 1;
-    pool.total_deposited = new_total;
-
-    Ok(note)
-}
-
-/// Verify the note is present in the commitment set, check the nullifier has not
-/// been spent, then return `(nullifier, new_merkle_root)`.
-///
-/// The caller is responsible for appending the returned `NullifierRecord` to the
-/// nullifier store (mirrors what an on-chain instruction handler would do with PDAs).
-pub fn prepare_withdrawal(
-    pool: &mut PoolState,
-    note: &Note,
-    secret: &[u8; 32],
-    amount: u64,
-    nullifier_records: &[NullifierRecord],
-    existing_commitments: &[[u8; 32]],
-) -> Result<([u8; 32], [u8; 32]), PoolError> {
-    // 1. Commitment must be valid.
-    if !verify_note_commitment(note) {
-        return Err(PoolError::InvalidCommitment);
+    pub fn contains(&self, root: &[u8; 32]) -> bool {
+        if *root == [0u8; 32] {
+            return false;
+        }
+        self.roots[..self.count as usize].iter().any(|r| r == root)
     }
-
-    // 2. Note commitment must exist in the pool.
-    if !existing_commitments.contains(&note.commitment) {
-        return Err(PoolError::NoteNotFound);
-    }
-
-    // 3. Withdrawal amount must not exceed note value.
-    if amount > note.value {
-        return Err(PoolError::InsufficientValue);
-    }
-
-    // 4. Compute nullifier.
-    let nullifier = nullifier_hash(&note.commitment, secret, &pool.merkle_root);
-
-    // 5. Double-spend check.
-    if is_nullifier_spent(&nullifier, nullifier_records) {
-        return Err(PoolError::NullifierAlreadySpent);
-    }
-
-    // 6. Update pool state.
-    let new_withdrawn = pool
-        .total_withdrawn
-        .checked_add(amount)
-        .ok_or(PoolError::AmountOverflow)?;
-    pool.total_withdrawn = new_withdrawn;
-
-    // Root is unchanged by a withdrawal in this accumulator model; we recompute
-    // to keep the value current with whatever commitments slice was passed in.
-    let new_root = compute_merkle_root(existing_commitments);
-    pool.merkle_root = new_root;
-
-    Ok((nullifier, new_root))
-}
-
-/// Check whether a nullifier already exists in the nullifier store.
-pub fn is_nullifier_spent(nullifier: &[u8; 32], records: &[NullifierRecord]) -> bool {
-    records.iter().any(|r| &r.nullifier == nullifier)
-}
-
-/// Return a JSON summary of pool stats.
-///
-/// Never exposes raw note secrets or private fields.
-pub fn pool_stats_json(pool: &PoolState) -> serde_json::Value {
-    serde_json::json!({
-        "merkle_root": hex_encode(&pool.merkle_root),
-        "note_count": pool.note_count,
-        "total_deposited": pool.total_deposited,
-        "total_withdrawn": pool.total_withdrawn,
-        "mainnet_ready": pool.mainnet_ready,
-    })
-}
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -215,336 +219,126 @@ fn hex_encode(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
 
-    fn test_slot() -> u64 {
-        100
+    fn secret(byte: u8) -> [u8; 32] {
+        let mut s = [0u8; 32];
+        s[0] = 0x01;
+        s[31] = byte;
+        s
     }
 
-    fn test_randomness() -> [u8; 32] {
-        [0xABu8; 32]
-    }
-
-    fn test_recipient() -> [u8; 32] {
-        [0x11u8; 32]
-    }
-
-    fn test_secret() -> [u8; 32] {
-        [0x99u8; 32]
-    }
-
-    // 1. create_note then verify_note_commitment returns true
     #[test]
-    fn test_note_commitment_verifies() {
-        let note = create_note(
-            1_000_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-        );
-        assert!(
-            verify_note_commitment(&note),
-            "fresh note commitment must verify"
-        );
+    fn zero_hashes_chain_is_deterministic_and_nonzero_above_0() {
+        let z = zero_hashes();
+        assert_eq!(z[0], [0u8; 32], "zeros[0] is the zero leaf");
+        for i in 1..=TREE_DEPTH {
+            assert_ne!(z[i], [0u8; 32], "zeros[{}] must be nonzero", i);
+            assert_eq!(z[i], merkle_node(&z[i - 1], &z[i - 1]));
+        }
     }
 
-    // 2. Mutate note.value → verify_note_commitment returns false
     #[test]
-    fn test_wrong_value_invalidates_commitment() {
-        let mut note = create_note(
-            1_000_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-        );
-        note.value += 1; // tamper
-        assert!(
-            !verify_note_commitment(&note),
-            "tampered value must invalidate commitment"
-        );
+    fn empty_tree_root_equals_zeros_top() {
+        let t = IncrementalTree::new();
+        let z = zero_hashes();
+        assert_eq!(t.root, z[TREE_DEPTH]);
+        assert_eq!(t.next_index, 0);
     }
 
-    // 3. prepare_deposit increments total_deposited
     #[test]
-    fn test_deposit_increments_pool() {
-        let mut pool = PoolState::default();
-        let mut commitments: Vec<[u8; 32]> = Vec::new();
-
-        let value = 500_000_000u64;
-        prepare_deposit(
-            &mut pool,
-            value,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .expect("deposit should succeed");
-
-        assert_eq!(pool.total_deposited, value);
-        assert_eq!(pool.note_count, 1);
-        assert_eq!(commitments.len(), 1);
+    fn insert_changes_root_and_advances_index() {
+        let mut t = IncrementalTree::new();
+        let r0 = t.root;
+        let c0 = commitment(&secret(0xAA), 0);
+        let idx = t.insert(c0);
+        assert_eq!(idx, 0);
+        assert_eq!(t.next_index, 1);
+        assert_ne!(t.root, r0, "root must change after first insert");
     }
 
-    // 4. After prepare_withdrawal the nullifier is present in the records
     #[test]
-    fn test_withdrawal_marks_nullifier() {
-        let mut pool = PoolState::default();
-        let mut commitments: Vec<[u8; 32]> = Vec::new();
-
-        let note = prepare_deposit(
-            &mut pool,
-            1_000_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-
-        let mut nullifier_records: Vec<NullifierRecord> = Vec::new();
-
-        let (nullifier, _root) = prepare_withdrawal(
-            &mut pool,
-            &note,
-            &test_secret(),
-            1_000_000,
-            &nullifier_records,
-            &commitments,
-        )
-        .unwrap();
-
-        // Caller would persist this record; we do so manually here.
-        nullifier_records.push(NullifierRecord {
-            nullifier,
-            spent_at_slot: test_slot(),
-            withdrawal_amount: 1_000_000,
-        });
-
-        assert!(is_nullifier_spent(&nullifier, &nullifier_records));
-    }
-
-    // 5. Same nullifier twice → NullifierAlreadySpent
-    #[test]
-    fn test_double_spend_rejected() {
-        let mut pool = PoolState::default();
-        let mut commitments: Vec<[u8; 32]> = Vec::new();
-
-        let note = prepare_deposit(
-            &mut pool,
-            1_000_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-
-        let mut nullifier_records: Vec<NullifierRecord> = Vec::new();
-
-        let (nullifier, _root) = prepare_withdrawal(
-            &mut pool,
-            &note,
-            &test_secret(),
-            1_000_000,
-            &nullifier_records,
-            &commitments,
-        )
-        .unwrap();
-
-        nullifier_records.push(NullifierRecord {
-            nullifier,
-            spent_at_slot: test_slot(),
-            withdrawal_amount: 1_000_000,
-        });
-
-        // Second attempt must fail.
-        let result = prepare_withdrawal(
-            &mut pool,
-            &note,
-            &test_secret(),
-            1_000_000,
-            &nullifier_records,
-            &commitments,
-        );
-
-        assert_eq!(result, Err(PoolError::NullifierAlreadySpent));
-    }
-
-    // 6. PoolState default has mainnet_ready = false
-    #[test]
-    fn test_pool_mainnet_ready_always_false() {
-        let pool = PoolState::default();
-        assert!(
-            !pool.mainnet_ready,
-            "mainnet_ready must always be false in devnet design"
+    fn incremental_root_matches_full_rebuild() {
+        // Insert N leaves incrementally; independently rebuild via path_for and
+        // compare the root. They MUST agree (same Poseidon, same tree shape).
+        let mut t = IncrementalTree::new();
+        let mut leaves = Vec::new();
+        for i in 0..5u64 {
+            let c = commitment(&secret(i as u8 + 1), i);
+            leaves.push(c);
+            t.insert(c);
+        }
+        let (_pe, _pi, rebuilt_root) = IncrementalTree::path_for(&leaves, 0);
+        assert_eq!(
+            t.root, rebuilt_root,
+            "incremental root must equal full-rebuild root"
         );
     }
 
-    // Extended tests -----------------------------------------------------------
-
     #[test]
-    fn test_note_commitment_nonzero() {
-        let note = create_note(
-            1_000_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-        );
-        assert_ne!(note.commitment, [0u8; 32]);
+    fn merkle_path_verifies_against_root() {
+        // Build a tree, get the path for a specific leaf, then re-walk the path
+        // by hand exactly as the circuit's MerkleProof gadget does, and confirm
+        // it lands on the tree root.
+        let mut leaves = Vec::new();
+        let mut t = IncrementalTree::new();
+        for i in 0..7u64 {
+            let c = commitment(&secret(i as u8 + 10), i);
+            leaves.push(c);
+            t.insert(c);
+        }
+        let target = 3u64;
+        let (path_elements, path_index, root) = IncrementalTree::path_for(&leaves, target);
+        assert_eq!(root, t.root);
+
+        // Re-walk: hashes[0] = leaf; at each level mux on path_index then hash.
+        let mut cur = leaves[target as usize];
+        for d in 0..TREE_DEPTH {
+            let sib = path_elements[d];
+            cur = if path_index[d] == 0 {
+                merkle_node(&cur, &sib) // leaf on left
+            } else {
+                merkle_node(&sib, &cur) // leaf on right
+            };
+        }
+        assert_eq!(cur, root, "hand-walked path must reach the root");
     }
 
     #[test]
-    fn test_merkle_root_nonzero_after_deposit() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        prepare_deposit(
-            &mut pool,
-            500_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        assert_ne!(pool.merkle_root, [0u8; 32]);
+    fn recent_roots_ring_contains_pushed() {
+        let mut rr = RecentRoots::default();
+        let a = [1u8; 32];
+        let b = [2u8; 32];
+        rr.push(a);
+        rr.push(b);
+        assert!(rr.contains(&a));
+        assert!(rr.contains(&b));
+        assert!(!rr.contains(&[3u8; 32]));
+        assert!(!rr.contains(&[0u8; 32]), "zero root never matches");
     }
 
     #[test]
-    fn test_merkle_root_changes_on_second_deposit() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        prepare_deposit(
-            &mut pool,
-            500_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        let root1 = pool.merkle_root;
-        prepare_deposit(
-            &mut pool,
-            300_000,
-            &[0xBBu8; 32],
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        assert_ne!(pool.merkle_root, root1);
+    fn recent_roots_ring_evicts_oldest() {
+        let mut rr = RecentRoots::default();
+        for i in 0..(RECENT_ROOTS as u8 + 5) {
+            let mut r = [0u8; 32];
+            r[0] = i + 1; // never zero
+            rr.push(r);
+        }
+        // first 5 pushed roots evicted
+        let mut oldest = [0u8; 32];
+        oldest[0] = 1;
+        assert!(!rr.contains(&oldest), "oldest root should be evicted");
+        let mut newest = [0u8; 32];
+        newest[0] = RECENT_ROOTS as u8 + 5;
+        assert!(rr.contains(&newest));
     }
 
     #[test]
-    fn test_pool_stats_json_mainnet_ready_false() {
-        let pool = PoolState::default();
-        let json = pool_stats_json(&pool);
-        assert_eq!(json["mainnet_ready"], false);
-    }
-
-    #[test]
-    fn test_deposit_zero_value_fails() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        let result = prepare_deposit(
-            &mut pool,
-            0,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        );
-        assert_eq!(result, Err(PoolError::InsufficientValue));
-    }
-
-    #[test]
-    fn test_pool_total_deposited_accumulates() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        prepare_deposit(
-            &mut pool,
-            100_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        prepare_deposit(
-            &mut pool,
-            200_000,
-            &[0xBBu8; 32],
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        assert_eq!(pool.total_deposited, 300_000);
-    }
-
-    #[test]
-    fn test_pool_note_count_accumulates() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        prepare_deposit(
-            &mut pool,
-            100_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        prepare_deposit(
-            &mut pool,
-            200_000,
-            &[0xBBu8; 32],
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        assert_eq!(pool.note_count, 2);
-    }
-
-    #[test]
-    fn test_withdrawal_exceeds_note_value_fails() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        let note = prepare_deposit(
-            &mut pool,
-            100_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        let result =
-            prepare_withdrawal(&mut pool, &note, &test_secret(), 100_001, &[], &commitments);
-        assert_eq!(result, Err(PoolError::InsufficientValue));
-    }
-
-    #[test]
-    fn test_compute_merkle_root_empty_deterministic() {
-        let r1 = compute_merkle_root(&[]);
-        let r2 = compute_merkle_root(&[]);
-        assert_eq!(r1, r2);
-    }
-
-    #[test]
-    fn test_pool_stats_json_note_count() {
-        let mut pool = PoolState::default();
-        let mut commitments = Vec::new();
-        prepare_deposit(
-            &mut pool,
-            500_000,
-            &test_randomness(),
-            &test_recipient(),
-            test_slot(),
-            &mut commitments,
-        )
-        .unwrap();
-        let json = pool_stats_json(&pool);
-        assert_eq!(json["note_count"], 1);
+    fn commitment_and_nullifier_match_poseidon_real() {
+        let s = secret(0x7E);
+        assert_eq!(commitment(&s, 9), poseidon_commitment(&s, 9));
+        // pool_key_field MUST be a canonical BN254 Fr element (< r). High byte
+        // 0x10 keeps 0x1010..10 well under the modulus r ~= 0x3064...
+        let pk = [0x10u8; 32];
+        assert_eq!(nullifier(&s, &pk), poseidon_nullifier(&s, &pk));
     }
 }

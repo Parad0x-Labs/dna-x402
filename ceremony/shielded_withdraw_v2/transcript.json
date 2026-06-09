@@ -1,0 +1,12 @@
+{
+  "circuit": "shielded_withdraw_v2",
+  "mode": "single-party / devnet pilot / NOT trustless",
+  "power": 13,
+  "r1cs_sha256": "e7b5a35a89c684ba37285cb7d67886df220b49a5ad3b7911fc0063947079b718",
+  "zkey_final_sha256": "e278e936fd5d8558dffb9a9b8bad48958c8d1ed1900ab812f4d10035efabac47",
+  "vk_sha256": "40fb605c0fd02ae1efe39ae66818855e06140eb18d1c242e7dca5f793554b0df",
+  "n_public": 4,
+  "verify": "ZKey Ok!",
+  "note": "Entropy (toxic waste) generated in-process and never written to disk. A trustless deployment requires a multi-party ceremony with a pre-committed beacon.",
+  "generatedAt": "2026-06-09T14:34:44.598Z"
+}

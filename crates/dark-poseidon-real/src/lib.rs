@@ -44,6 +44,20 @@ pub const DOMAIN_NULLIF: u64 = 2;
 /// Size of a BN254 Fr field element, big-endian.
 pub const FIELD_SIZE: usize = 32;
 
+/// BN254 **scalar** field modulus `r` (big-endian, 32 bytes).
+///
+/// `r = 21888242871839275222246405745257275088548364400416034343698204186575808495617`
+///    = `0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001`
+///
+/// A 32-byte value (e.g. a Solana pubkey) interpreted big-endian can exceed `r`.
+/// `light-poseidon` and the `sol_poseidon` syscall both REJECT inputs `>= r`
+/// (`InputLargerThanModulus`). Any arbitrary 32-byte value used as a Poseidon
+/// input or Groth16 public scalar must therefore be reduced into `[0, r)` first.
+pub const BN254_FR: [u8; 32] = [
+    0x30, 0x64, 0x4e, 0x72, 0xe1, 0x31, 0xa0, 0x29, 0xb8, 0x50, 0x45, 0xb6, 0x81, 0x81, 0x58, 0x5d,
+    0x28, 0x33, 0xe8, 0x48, 0x79, 0xb9, 0x70, 0x91, 0x43, 0xe1, 0xf5, 0x93, 0xf0, 0x00, 0x00, 0x01,
+];
+
 #[cfg(feature = "real")]
 mod real_backend {
     /// `false` — this is the real circomlib-matching Poseidon, not the SHA-256 stub.
@@ -56,6 +70,55 @@ mod real_backend {
         let mut out = [0u8; 32];
         out[24..32].copy_from_slice(&x.to_be_bytes());
         out
+    }
+
+    /// Compare two 32-byte big-endian values: `true` iff `a >= b`.
+    fn ge_be(a: &[u8; 32], b: &[u8; 32]) -> bool {
+        for i in 0..32 {
+            if a[i] != b[i] {
+                return a[i] > b[i];
+            }
+        }
+        true // equal
+    }
+
+    /// `a - b` for 32-byte big-endian values, assuming `a >= b`.
+    fn sub_be(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+        let mut out = [0u8; 32];
+        let mut borrow: i16 = 0;
+        for i in (0..32).rev() {
+            let d = a[i] as i16 - b[i] as i16 - borrow;
+            if d < 0 {
+                out[i] = (d + 256) as u8;
+                borrow = 1;
+            } else {
+                out[i] = d as u8;
+                borrow = 0;
+            }
+        }
+        out
+    }
+
+    /// Reduce an arbitrary 32-byte big-endian value into the canonical BN254
+    /// scalar field `[0, r)` by repeated conditional subtraction.
+    ///
+    /// A 256-bit value is at most `~7.4 * r`, so this loops at most a handful of
+    /// times — cheap enough for the SBF runtime and constant in practice. Use this
+    /// for any 32-byte blob (Solana pubkey, hash) that must become a Poseidon
+    /// input or a Groth16 public scalar; without it `light-poseidon` / the
+    /// `sol_poseidon` syscall reject the input as `InputLargerThanModulus`.
+    pub fn reduce_be_to_field(bytes: &[u8; 32]) -> [u8; 32] {
+        let mut v = *bytes;
+        // r > 2^253, so the quotient floor(2^256 / r) < 8; bound the loop generously.
+        let mut guard = 0;
+        while ge_be(&v, &super::BN254_FR) {
+            v = sub_be(&v, &super::BN254_FR);
+            guard += 1;
+            if guard > 16 {
+                break; // unreachable for 256-bit inputs; defensive
+            }
+        }
+        v
     }
 
     // ── Two backends, identical output bytes ────────────────────────────────────
@@ -175,6 +238,11 @@ mod stub_backend {
         let mut out = [0u8; 32];
         out[24..32].copy_from_slice(&x.to_be_bytes());
         out
+    }
+
+    /// Stub parity: the SHA-256 backend has no field, so reduction is identity.
+    pub fn reduce_be_to_field(bytes: &[u8; 32]) -> [u8; 32] {
+        *bytes
     }
 
     pub fn commitment(secret: &[u8; 32], leaf_index: u64) -> [u8; 32] {
@@ -311,6 +379,50 @@ mod match_tests {
     #[test]
     fn is_not_stub() {
         assert!(!IS_STUB, "real backend must report IS_STUB = false");
+    }
+
+    #[test]
+    fn reduce_be_to_field_leaves_small_values_untouched() {
+        // A value already < r is returned unchanged.
+        let small = be32("000000000000000000000000000000000000000000000000ab54a98ceb1f0ad2");
+        assert_eq!(reduce_be_to_field(&small), small);
+    }
+
+    #[test]
+    fn reduce_be_to_field_brings_oversized_under_modulus() {
+        // 0xFFFF...FF is way above r; reduced value must be < r and equal
+        // (2^256 - 1) mod r. light-poseidon must then ACCEPT it as a canonical input.
+        let big = [0xFFu8; 32];
+        let reduced = reduce_be_to_field(&big);
+        // reduced < r  (strict): not >= r
+        assert!(
+            reduced != BN254_FR && {
+                // reduced < BN254_FR via lexicographic BE compare
+                let mut lt = false;
+                for i in 0..32 {
+                    if reduced[i] != BN254_FR[i] {
+                        lt = reduced[i] < BN254_FR[i];
+                        break;
+                    }
+                }
+                lt
+            },
+            "reduced value must be strictly < r"
+        );
+        // It must now be a valid Poseidon input (light-poseidon rejects >= r).
+        let _ = nullifier(&[1u8; 32], &reduced); // must not panic
+        // Cross-check against an independent bignum reference: (2^256-1) mod r.
+        let expected = be32("0e0a77c19a07df2f666ea36f7879462e36fc76959f60cd29ac96341c4ffffffa");
+        assert_eq!(reduced, expected, "(2^256-1) mod r mismatch");
+    }
+
+    #[test]
+    fn pubkey_like_high_byte_0x33_now_usable() {
+        // 0x3333..33 > r (r starts 0x3064..). Raw use panics; reduced use works.
+        let raw = [0x33u8; 32];
+        let reduced = reduce_be_to_field(&raw);
+        assert_ne!(reduced, raw, "0x33.. exceeds r so must change under reduction");
+        let _ = commitment_fe(&[2u8; 32], &reduced); // must not panic
     }
 
     /// CROSS-CHECK: the EXACT on-chain entry point

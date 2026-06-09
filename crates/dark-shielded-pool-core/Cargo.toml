@@ -4,7 +4,21 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dark-poseidon-bn254 = { path = "../dark-poseidon-bn254" }
-sha2 = "0.11"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# Real circomlib-matching BN254 Poseidon (default feature `real`). The host
+# build uses light-poseidon; the SBF build uses the sol_poseidon syscall. Both
+# byte-match the circom circuit, so a root computed here == the on-chain root.
+dark-poseidon-real = { path = "../dark-poseidon-real" }
+
+# `witness-gen` binary only (off-chain prover-spec generator for the e2e).
+serde      = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+hex        = { version = "0.4", optional = true }
+
+[features]
+default = []
+# Pulls the deps needed by src/bin/witness_spec.rs (host-only tool).
+witness-gen = ["dep:serde", "dep:serde_json", "dep:hex"]
+
+[[bin]]
+name = "witness_spec"
+required-features = ["witness-gen"]

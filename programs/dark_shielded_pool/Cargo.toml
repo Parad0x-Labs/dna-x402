@@ -7,9 +7,13 @@ edition = "2021"
 no-entrypoint = []
 
 [dependencies]
-solana-program        = { workspace = true }
-sha2                  = { workspace = true }
-dark-shielded-verifier = { path = "../../crates/dark-shielded-verifier" }
+solana-program          = { workspace = true }
+# Real circomlib-matching BN254 Poseidon (sol_poseidon syscall on SBF).
+dark-poseidon-real      = { path = "../../crates/dark-poseidon-real" }
+# Incremental Poseidon Merkle tree + recent-roots ring (shared host/on-chain).
+dark-shielded-pool-core = { path = "../../crates/dark-shielded-pool-core" }
+# Real BN254 Groth16 verifier (alt_bn128 pairing syscall) + the v2 VK.
+dark-groth16-core       = { path = "../../crates/dark-groth16-core" }
 
 [dev-dependencies]
 solana-program-test = { workspace = true }

@@ -30,6 +30,9 @@ pub enum ShieldedPoolError {
     StubNotReady        = 10,
     /// Deposit amount is below the minimum required to prevent liveness DoS.
     BelowMinimumDeposit = 11,
+    /// The Merkle root the proof was generated against is not the current root
+    /// nor any of the recent roots the pool tracks.
+    UnknownRoot = 12,
 }
 
 impl From<ShieldedPoolError> for ProgramError {

@@ -2001,7 +2001,9 @@ dependencies = [
 name = "dark-groth16-core"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "serde",
+ "serde_json",
  "solana-program",
 ]
 
@@ -3100,18 +3102,19 @@ dependencies = [
 name = "dark-shielded-pool-core"
 version = "0.1.0"
 dependencies = [
- "dark-poseidon-bn254",
+ "dark-poseidon-real",
+ "hex",
  "serde",
  "serde_json",
- "sha2 0.11.0",
 ]
 
 [[package]]
 name = "dark-shielded-pool-program"
 version = "0.1.0"
 dependencies = [
- "dark-shielded-verifier",
- "sha2 0.11.0",
+ "dark-groth16-core",
+ "dark-poseidon-real",
+ "dark-shielded-pool-core",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
