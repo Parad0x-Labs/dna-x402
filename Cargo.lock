@@ -2399,6 +2399,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-poseidon-real"
+version = "0.1.0"
+dependencies = [
+ "ark-bn254",
+ "ark-ff",
+ "hex",
+ "light-poseidon",
+ "sha2 0.10.9",
+ "solana-program",
+]
+
+[[package]]
 name = "dark-poseidon-safe"
 version = "0.1.0"
 dependencies = [
@@ -2919,6 +2931,17 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+]
+
+[[package]]
+name = "dark-reputation-gate"
+version = "0.1.0"
+dependencies = [
+ "dark-groth16-core",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
 ]
 
 [[package]]
@@ -5439,6 +5462,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "null-registrar"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "null-token-hook"
 version = "0.1.0"
 dependencies = [
@@ -6438,6 +6471,16 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "receipt-commitment-tree"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
  "tokio",
 ]
 

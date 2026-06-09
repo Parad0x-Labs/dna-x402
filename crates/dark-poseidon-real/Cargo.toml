@@ -1,0 +1,52 @@
+[package]
+name = "dark-poseidon-real"
+version = "0.1.0"
+edition = "2021"
+description = "Real circomlib-compatible BN254 Poseidon for Dark Null shielded pool — byte-matches the circom circuits (devnet/library only, unaudited)."
+
+# Real circomlib-matching BN254 Poseidon (Light Protocol). SBF-compatible,
+# pure-Rust arkworks backend. This is the path forward.
+# The SHA-256 stub remains available behind the `stub` feature for comparison.
+[features]
+default = ["real"]
+# `real` activates the optional deps. Cargo only pulls the ones whose target
+# `cfg` matches: light-poseidon/ark-* on the host, solana-program on SBF.
+real = ["dep:light-poseidon", "dep:ark-bn254", "dep:ark-ff", "dep:solana-program"]
+stub = ["dep:sha2"]
+
+[dependencies]
+# Legacy SHA-256 stub backend (feature `stub` only).
+sha2 = { version = "0.10", optional = true }
+
+# HOST backend (cargo test, off-chain prover/indexer): Light Protocol's
+# circomlib-compatible BN254 Poseidon. Matches
+# node_modules/circomlib/circuits/poseidon.circom byte-for-byte. Pure Rust,
+# but overflows the SBF stack — so it is host-only (NOT compiled for Solana).
+# Pinned to 0.2.0 (ark 0.4 family) to match the workspace lockfile.
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+light-poseidon = { version = "=0.2.0", optional = true }
+ark-bn254 = { version = "0.4.0", optional = true }
+ark-ff = { version = "0.4.2", optional = true }
+
+# ON-CHAIN backend (target_os = "solana"): the `sol_poseidon` syscall via
+# solana-program. Same Bn254X5 circomlib parameters and big-endian encoding as
+# light-poseidon, so it produces identical output bytes — but the heavy
+# parameter tables live in the validator, keeping us within the SBF stack limit.
+[target.'cfg(target_os = "solana")'.dependencies]
+solana-program = { version = "=1.18.26", optional = true }
+
+# `target_os = "solana"` is a valid cfg only under the Solana toolchain; declare
+# it so host `cargo check`'s check-cfg lint does not warn about it.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
+
+[dev-dependencies]
+hex = "0.4"
+
+# Host-only: lets the cross-check test call the SAME on-chain entry point
+# (`solana_program::poseidon::hashv`) the SBF backend uses and assert it equals
+# the circomlibjs vectors. On the host, hashv falls back to light-poseidon
+# internally (verified in solana-program 1.18.26 src/poseidon.rs), so this
+# proves the on-chain function name maps to the proven-matching implementation.
+[target.'cfg(not(target_os = "solana"))'.dev-dependencies]
+solana-program = "=1.18.26"
