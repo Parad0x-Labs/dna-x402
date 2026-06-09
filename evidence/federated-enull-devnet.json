@@ -1,36 +1,36 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-06-09T19:27:34.449Z",
+  "generatedAt": "2026-06-09T22:40:39.560Z",
   "test": "federated-enull-bdhke-ecash-redeem",
   "cluster": "devnet",
   "program": "BPkhipF5jTTTCwL3bLGjuwnU9F99yBRRES5ToeigRTyb",
-  "mintConfig": "D3QDAwNGsA8CacUVqQTY3MPAa4xkBDQeGdVbPBnNs92N",
-  "reserveVault": "392t1PRJjvatUCw9NgRYD61ytbZoMK3VShpkYt5DuDSE",
+  "mintConfig": "58tu92M7SQ7Sxy19RH5GE37e7gAdr5hwmtHoqfU3Y7kM",
+  "reserveVault": "FHK5AotkzsSumxTqMiz5j2GnJC1rqMfwpJAG8F3v9jhT",
   "denominationLamports": 100000000,
   "federation": {
     "n": 5,
     "t": 3,
     "scheme": "joint-Feldman DKG + threshold BDHKE + threshold (FROST-style) DLEQ over Ristretto"
   },
-  "groupKey": "16d734ec060913ddb982e4044b03889e3ce13a0b8c55e9d565e798f9d307f736",
+  "groupKey": "5ef1aff76eb4f754834b2169cf774ec85065891f63b7f6d0f8e40abf91110268",
   "crypto": "Chaumian BDHKE over Ristretto (curve25519-dalek 3.2.1 host-side). On-chain redeem verifies a Chaum-Pedersen DLEQ that C=k*Y under the stored group key K using Solana's native sol_curve_* Ristretto syscalls (~52k CU) — no Groth16, no trusted setup.",
-  "initSig": "5ywC7F5wJZ48z7Gv2Kho8sMVggU67TufEd6DVY3u8L6Ngq3WotwKX6sSzk1kmHneBUcPWsGytGaahkEUGK2kwyZe",
+  "initSig": "4zcVAqGgyFgVTSeybs7RVrC1y8qn8KnJwhgY6zZxnaCiTrXBUbo2L3x91i5gGqmNbjXHwtZcK4ky5WRxcGSEA1kt",
   "scenarios": [
     {
       "name": "valid_redeem",
       "status": "PASS",
-      "sig": "3PPg4mHA1DuuQHfmNsUsdPwTBu57yERP8PDwrTKpxH5AiiSQC54z4nWBVW1q16n65iN8tMQrszZwF9sMsfdmNM6L",
-      "recipient": "Gze6eNLzZiTNyuTN3StC2C8edVeGtmz94TFRji1bWvEF",
+      "sig": "2n8nP3sFqzwtxFBG8bxciH2xf91HkAp2Fbo6LeDYH8KccbHuE38gZmd762SXQt49HwMaHJHSPFnN3Db1uSqJPkrc",
+      "recipient": "L9aLyASBaRYKYvqE4T9rEEHXiCqxHGqURhrZbcw7LH4",
       "delta": 100000000,
-      "nullifier": "6824e865e87e373105af11606b76b94573268e1b0c485e02b74b986a4d0debbe",
-      "groupKey": "16d734ec060913ddb982e4044b03889e3ce13a0b8c55e9d565e798f9d307f736",
+      "nullifier": "6f379f21b4d9e2042aa15d523ecff597fa5f6011c1bc53bf04670d624e8706b4",
+      "groupKey": "5ef1aff76eb4f754834b2169cf774ec85065891f63b7f6d0f8e40abf91110268",
       "signers": "3-of-3-of-5"
     },
     {
       "name": "double_spend_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "2p9ePGFrpEzap5Pta7AdtekCduoPmpkXnrGBtHEjnvrktyzvW7A2oYynduHsD4f6zrsyKVgXN88jnq92j8uLeeMN",
+      "sig": "2QY5C5qytg5hKRQxbX5sK9a2VqAa2YpUb8WQTfxk432YrPDGL7SeQw7pVkuvSiWNc2GtsTCFq2V34NcgLJsNPwb3",
       "err": {
         "InstructionError": [
           1,
@@ -44,7 +44,7 @@
       "name": "forged_token_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "3D3FbkePi8yyZRsd8QoC1UjF9tJBYn15B7Jz5scX6yEgrBpfqmPBDbnNNY2U7fx4Fzb1nsh14xEpdQ4extwp31DA",
+      "sig": "3dyBgqynjtaSZyA99J3CZgauLSekemxmjNsik5SnjiTE4yLomyCqk3JaLRuUUmd5ngE5H3NVVtqWFHxH5oAzB9av",
       "err": {
         "InstructionError": [
           1,
@@ -58,7 +58,7 @@
       "name": "under_threshold_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "pDQSfWgQZ71nQmuGLxeZEBwgXo6D9cxfYdDd7w2Lg23wjrFiLniPbNc3sSF8TWCdxrqKNMuDJRAGKkfbhAGMJzE",
+      "sig": "3n6ncei5BP58zPttEhEezB8TtPwoxBEo4x9mZ34jf3XTwZtrzLcB6k9BWStoEPYeJP6ydrAKTRjBFLwDmjGcSw7b",
       "err": {
         "InstructionError": [
           1,
@@ -73,7 +73,7 @@
       "name": "wrong_nullifier_pda_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "38HJkXwPJsMDzXFgJtqzsgG1y16nrus8CyL4gbSTqsSZ1WqopwKKQPu6u9dpXpAVZk2FQsFUcNiFWeZFsNSAgi4M",
+      "sig": "5nVAGaBnvnNe4sC7M31Brn9XsHK6cBeBcpS8MApkfRZNb356kzMjmiFdD8iZ8HzH39ioVLbFDySc1PeDFdf6a1Hs",
       "err": {
         "InstructionError": [
           1,
@@ -85,15 +85,8 @@
       "name": "foreign_federation_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "E54uB1YacH8yUnLQxpzq9mL5ggdZQgnHEeeYndEQZUEymvFmYcYyvVCYiyjfVmmskSXWGP81WQggv9ejHcYYRPC",
-      "err": {
-        "InstructionError": [
-          1,
-          {
-            "Custom": 5
-          }
-        ]
-      },
+      "sig": null,
+      "err": null,
       "note": "issued2 has a fresh DKG group key K2 != stored K1; chain binds to its own federation"
     }
   ],
