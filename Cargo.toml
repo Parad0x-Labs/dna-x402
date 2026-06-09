@@ -70,6 +70,8 @@ members = [
     "crates/dark-nullifier-epoch-manager",
     "crates/dark-withdrawal-bundle",
     "crates/dark-stealth-address",
+    # NullPay - ed25519 native-signing stealth addresses (pay-by-.null-name, recipient-unlinkable)
+    "crates/dark-stealth-ed25519",
     "crates/dark-private-x402",
     "crates/dark-sparse-merkle",
     # WAVE_16_PRIMITIVES - commitment chain, threshold nullifier, batch stealth scan, dutch auction, coalition proof, sliding budget, selective disclosure

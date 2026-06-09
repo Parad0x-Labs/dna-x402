@@ -1,9 +1,41 @@
-# shielded_withdraw_v2 — ZK build pipeline (DEVNET pilot)
+# shielded_withdraw v2 / v3 — ZK build pipeline (DEVNET pilot)
 
-End-to-end pipeline that compiles `circuits/shielded_withdraw_v2.circom`, runs a
+End-to-end pipeline that compiles the `shielded_withdraw` circuits, runs a
 **single-party** trusted setup, generates real Groth16 proofs, and drives the
 on-chain `dark_shielded_pool` program through a full devnet deposit → ZK-withdraw
 flow.
+
+## v3 — DARK RELAY RAIL (relayer + in-proof fee)
+
+`shielded_withdraw_v3.circom` extends v2 with `relayer`, `fee`, `denomination` public
+inputs and constraints `payout = denomination - fee`, `fee <= MAX_FEE (0.05 SOL)`,
+`fee <= denomination`. The program does a 2-way payout (recipient `denom - fee`,
+relayer `fee`) → a permissionless, incentive-bound relayer market.
+
+```bash
+cd build/zk
+# circom v2.1.x must be the iden3 Rust circom (NOT the deprecated npm circom 0.5.x).
+circom shielded_withdraw_v3.circom --r1cs --wasm --sym -l node_modules -o out
+
+node run-setup-v3.mjs                 # single-party pilot VK (devnet)  -> out/...v3_vk.json
+node vk-to-rust-v3.mjs                # -> crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs
+cargo-build-sbf --manifest-path ../../programs/dark_shielded_pool/Cargo.toml
+solana program deploy ../../target/deploy/dark_shielded_pool_program.so \
+  --program-id ../../target/deploy/dark_shielded_pool_program-keypair.json --url devnet
+
+node init-buckets-devnet.mjs <PROGRAM_ID>     # 0.1 / 1 / 10 SOL denomination buckets
+node e2e-v3-devnet.mjs <PROGRAM_ID>           # full relayer-fee e2e -> evidence/dark-relay-rail-devnet.json
+```
+
+Trustless VK (multi-party ceremony, public ptau + drand beacon):
+`node ceremony/run-ceremony-v3.mjs --contribs 3 --power 14` (see `ceremony/CONTRIBUTING_V3.md`).
+
+---
+
+## v2 (legacy)
+
+The v2 pipeline (`shielded_withdraw_v2.circom`, `run-setup.mjs`, `vk-to-rust.mjs`,
+`prove.mjs`, `e2e-devnet.mjs`) remains for reference.
 
 > **SINGLE-PARTY / DEVNET PILOT / NOT TRUSTLESS.** One party runs the entire
 > ceremony, so whoever runs it could forge withdrawals. A multi-party ceremony

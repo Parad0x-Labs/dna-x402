@@ -33,6 +33,10 @@ pub enum ShieldedPoolError {
     /// The Merkle root the proof was generated against is not the current root
     /// nor any of the recent roots the pool tracks.
     UnknownRoot = 12,
+    /// The relayer `fee` exceeds the pool denomination (would underflow the
+    /// recipient payout). The v3 circuit also rejects this, but we fail closed
+    /// before the subtraction.
+    FeeExceedsDenomination = 13,
 }
 
 impl From<ShieldedPoolError> for ProgramError {

@@ -52,6 +52,12 @@ pub mod track_record_vk;
 /// pilot VK — `mainnet_ready = false`.
 pub mod shielded_withdraw_v2_vk;
 
+/// ShieldedWithdraw v3 verifying key (DARK RELAY RAIL). v2 + in-proof relayer fee:
+/// public inputs add `relayer`, `fee`, `denomination`; the proof binds the relayer
+/// and constrains payout = denomination - fee with fee <= MAX_FEE. Devnet only —
+/// `mainnet_ready = false`.
+pub mod shielded_withdraw_v3_vk;
+
 /// BN254 base field prime Fp (big-endian, 32 bytes).
 ///
 /// Source: `ark-bn254` Fp modulus limbs (little-endian u64):

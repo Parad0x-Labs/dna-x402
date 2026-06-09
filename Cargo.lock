@@ -3244,6 +3244,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-stealth-ed25519"
+version = "0.1.0"
+dependencies = [
+ "curve25519-dalek",
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "dark-stealth-note"
 version = "0.1.0"
 dependencies = [

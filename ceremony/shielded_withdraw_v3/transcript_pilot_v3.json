@@ -1,0 +1,12 @@
+{
+  "circuit": "shielded_withdraw_v3",
+  "mode": "single-party / devnet pilot / NOT trustless",
+  "power": 13,
+  "r1cs_sha256": "261a711512701a9e38dba2ef86c29d628a5b594b7c275dd6e3a428c398daa128",
+  "zkey_final_sha256": "cf4fcf8a1ab8b9fbd00c753c009c7729730322b80716545e60cbe4b2132a020c",
+  "vk_sha256": "efd0b0eaa5068b024681ac016c8b0384aa9202710f2f38bede17d218614310f7",
+  "n_public": 7,
+  "verify": "ZKey Ok!",
+  "note": "Entropy (toxic waste) generated in-process and never written to disk. The TRUSTLESS VK comes from ceremony/run-ceremony-v3.mjs (public ptau + multiple independent contributions + drand beacon).",
+  "generatedAt": "2026-06-09T19:05:15.857Z"
+}

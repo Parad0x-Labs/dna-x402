@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-09T20:13:30.037Z",
+  "test": "nullpay-ed25519-stealth",
+  "cluster": "devnet",
+  "program": "CpNbE8yec5UQJGTVsiTiQpKFhXfDKQZuGWMzMyFtKkME",
+  "steps": [
+    {
+      "step": "init_registry",
+      "sig": "2UdXK5e47ZjP1sPZAXqGS6TpMcHLuU4GgrchsrDRR1BxZkcY8amqgipFYSQ4J2fKSeAurwqToUha2mtNzrbcosMY"
+    },
+    {
+      "step": "register",
+      "name": "stealthtest1.null",
+      "sig": "5jk5oYoiw32QWTxzNfYdzgt6c9RZfk7TrspNfNmUebT5Ds69kEUCkAT2dxePoTRtNkwxCegyu2Uhw72gAyXb5ebd",
+      "domainPDA": "C1FLxLiJAeGjXMKGt7LNHnYAGxyoBqAC1DbaJbxKxP9R"
+    },
+    {
+      "step": "set_stealth_meta",
+      "sig": "3KGHjYMkkytgmMHNHvD3y5KbpABx48TBuCbqk62wxTPENBEf6Tu4TRwyoM1bCytvBQ6gyUTV5eSxYXF4HzSYNXpC"
+    },
+    {
+      "step": "pay_stealth",
+      "sig": "25uRYnma1tiTMJ81pLW9Wgv5wTDSVoreJRzwAFfQGhY43UT9dW7GePcoiBzdcC3kCX4RkWVTn9VbjRLSwjLZLi58",
+      "stealthAddress": "2Qgsac4QPLWBJQpk7GkeEvbfTu1CMdLS1tJhw5RPWyy3",
+      "lamports": 20000000,
+      "ephemR": "0a85ade10dd2c59c395b8a87dda2a3ad8ce6b4ed46268b693e894d9ec826dcd2"
+    },
+    {
+      "step": "sweep",
+      "sig": "31g9mZbgYW5mCosN8yCXqBNgGJan81HDaL7FLepJ4orpWh4Q1McQkYBmnRR8G9F2aEytwJDLENKDP5ToCPBTWUg6",
+      "from": "2Qgsac4QPLWBJQpk7GkeEvbfTu1CMdLS1tJhw5RPWyy3",
+      "to": "6o6Q4gv5z28kj1QPDirRpL46rhiA2nWN5NNBg5oCzgkJ",
+      "lamports": 19995000
+    }
+  ],
+  "asserts": {
+    "metaRoundtrip": "PASS",
+    "fundsLanded": "PASS",
+    "scanDetected": "PASS",
+    "scalarRecovered": "PASS",
+    "nativeSigVerifies": "PASS",
+    "sweepLanded": "PASS",
+    "recipientUnlinked": "PASS",
+    "paymentAccounts": [
+      "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      "2Qgsac4QPLWBJQpk7GkeEvbfTu1CMdLS1tJhw5RPWyy3",
+      "11111111111111111111111111111111",
+      "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+    ]
+  },
+  "honestCaveats": [
+    "Hides the RECIPIENT only. The SENDER (funded payer) is still on-chain-linkable as the sender — that is the job of a shielded pool / eNULL rail, not stealth addressing.",
+    "Native ed25519 signing, NO ZK, NO trusted setup. The one-time stealth address P is a real Solana pubkey; the recipient signs the sweep with the raw scalar p (p*B==P) and Solana verifies it with stock ed25519.",
+    "UNAUDITED devnet pilot. mainnet_ready=false throughout. The crate gates this explicitly.",
+    "The sweep destination here is a throwaway wallet; in practice the recipient would sweep into a wallet they never link to this meta-address."
+  ],
+  "overall": "PASS",
+  "recipient": {
+    "metaSpendPub": "75369a159f33dc6fcb7977de60534e9f77f3796c1ae2f8080983e383a7fcc3f0",
+    "metaViewPub": "15b910b7193a2d6467505d69c1c7f036f05b47872a12fcb6728b20e9801eb238",
+    "mainWallet": "6o6Q4gv5z28kj1QPDirRpL46rhiA2nWN5NNBg5oCzgkJ",
+    "note": "main wallet is the SWEEP DESTINATION; it never appears in the payment tx"
+  },
+  "stealth": {
+    "address": "2Qgsac4QPLWBJQpk7GkeEvbfTu1CMdLS1tJhw5RPWyy3",
+    "addressHex": "14ed2107248e7db48fc095e2e85502c75b3e54cb30f0bd50f6dd99e3e71a177a",
+    "ephemR": "0a85ade10dd2c59c395b8a87dda2a3ad8ce6b4ed46268b693e894d9ec826dcd2"
+  },
+  "explorer": {
+    "program": "https://explorer.solana.com/address/CpNbE8yec5UQJGTVsiTiQpKFhXfDKQZuGWMzMyFtKkME?cluster=devnet",
+    "stealthAddress": "https://explorer.solana.com/address/2Qgsac4QPLWBJQpk7GkeEvbfTu1CMdLS1tJhw5RPWyy3?cluster=devnet",
+    "payTx": "https://explorer.solana.com/tx/25uRYnma1tiTMJ81pLW9Wgv5wTDSVoreJRzwAFfQGhY43UT9dW7GePcoiBzdcC3kCX4RkWVTn9VbjRLSwjLZLi58?cluster=devnet",
+    "sweepTx": "https://explorer.solana.com/tx/31g9mZbgYW5mCosN8yCXqBNgGJan81HDaL7FLepJ4orpWh4Q1McQkYBmnRR8G9F2aEytwJDLENKDP5ToCPBTWUg6?cluster=devnet"
+  }
+}
