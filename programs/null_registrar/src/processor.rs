@@ -7,7 +7,7 @@ use solana_program::{
     rent::Rent,
     system_instruction,
     sysvar::Sysvar,
-    program::invoke_signed,
+    program::{invoke, invoke_signed},
     clock::Clock,
 };
 
@@ -15,7 +15,8 @@ use crate::{
     error::RegistrarError,
     instruction::{validate_name, RegistrarInstruction},
     state::{
-        NullDomain,    NULL_DOMAIN_SIZE,    NULL_DOMAIN_DISC,
+        NullDomain,    NULL_DOMAIN_SIZE,    NULL_DOMAIN_SIZE_V1, NULL_DOMAIN_DISC,
+        ND_OFF_STEALTH_META, STEALTH_META_LEN,
         RegistryConfig, REGISTRY_CONFIG_SIZE, REGISTRY_CONFIG_DISC,
     },
     IS_MAINNET_READY,
@@ -48,6 +49,9 @@ pub fn process(
         }
         RegistrarInstruction::Resolve { name } => {
             process_resolve(program_id, accounts, name)
+        }
+        RegistrarInstruction::SetStealthMeta { name, stealth_meta } => {
+            process_set_stealth_meta(program_id, accounts, name, stealth_meta)
         }
     }
 }
@@ -185,6 +189,7 @@ fn process_register(
         expires_at:    0, // founding domains never expire
         null_paid:     cfg.registration_fee,
         bump,
+        stealth_meta:  [0u8; STEALTH_META_LEN], // unset until owner calls SetStealthMeta
     };
     {
         let mut d = domain_acct.try_borrow_mut_data()?;
@@ -317,6 +322,79 @@ fn process_resolve(
         "null-registrar: resolve  pda={}  content_hash={:?}",
         domain_pda,
         &domain.content_hash,
+    );
+    Ok(())
+}
+
+// ─── 0x06 SetStealthMeta (owner-only; reallocs v1 154 -> v2 218 in place) ──────
+//
+// Publishes the NullPay ed25519 meta-address (spend_pub || view_pub) for a
+// domain so senders can derive recipient-unlinkable stealth addresses. Follows
+// the proven MigrateConfigV2 realloc pattern: top up rent for the +64 bytes,
+// grow the account in place, then write the meta-address. Idempotent on size
+// (a domain already at v2 just overwrites the meta-address).
+
+fn process_set_stealth_meta(
+    program_id:   &Pubkey,
+    accounts:     &[AccountInfo],
+    name:         [u8; 64],
+    stealth_meta: [u8; 64],
+) -> ProgramResult {
+    let printable_len = validate_name(&name)?;
+
+    let iter        = &mut accounts.iter();
+    let owner       = next_account_info(iter)?;   // [signer, writable] domain owner / rent payer
+    let domain_acct = next_account_info(iter)?;   // [writable] NullDomain PDA
+    let sys_prog    = next_account_info(iter)?;   // system program
+
+    let (domain_pda, _bump) =
+        Pubkey::find_program_address(&[DOMAIN_SEED, &name[..printable_len]], program_id);
+    if domain_acct.key != &domain_pda {
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // Owner check (read v1-or-v2; unpack tolerates both sizes).
+    {
+        let data   = domain_acct.try_borrow_data()?;
+        let domain = NullDomain::unpack_from(&data)
+            .ok_or(ProgramError::InvalidAccountData)?;
+        if domain.owner != owner.key.to_bytes() {
+            return Err(ProgramError::Custom(RegistrarError::NotOwner as u32));
+        }
+    }
+    if !owner.is_signer {
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+
+    // Grow the account to v2 (218) if it's still v1 (154). Top up rent first.
+    if domain_acct.data_len() < NULL_DOMAIN_SIZE {
+        if domain_acct.data_len() != NULL_DOMAIN_SIZE_V1 {
+            // Unexpected size — refuse rather than corrupt the layout.
+            return Err(ProgramError::InvalidAccountData);
+        }
+        let rent         = Rent::get()?;
+        let new_min      = rent.minimum_balance(NULL_DOMAIN_SIZE);
+        let cur_lamports = domain_acct.lamports();
+        if new_min > cur_lamports {
+            invoke(
+                &system_instruction::transfer(owner.key, domain_acct.key, new_min - cur_lamports),
+                &[owner.clone(), domain_acct.clone(), sys_prog.clone()],
+            )?;
+        }
+        domain_acct.realloc(NULL_DOMAIN_SIZE, false)?;
+    }
+
+    // Write the 64-byte meta-address into the v2 slot.
+    {
+        let mut data = domain_acct.try_borrow_mut_data()?;
+        data[ND_OFF_STEALTH_META..ND_OFF_STEALTH_META + STEALTH_META_LEN]
+            .copy_from_slice(&stealth_meta);
+    }
+
+    msg!(
+        "null-registrar: stealth meta set  pda={}  len={}",
+        domain_pda,
+        domain_acct.data_len(),
     );
     Ok(())
 }

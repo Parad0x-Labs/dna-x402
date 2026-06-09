@@ -53,7 +53,8 @@ mod tests {
             IX_INIT_REGISTRY, IX_REGISTER, IX_UPDATE_CONTENT, IX_TRANSFER, IX_RESOLVE,
         },
         state::{
-            NullDomain,    NULL_DOMAIN_SIZE,    NULL_DOMAIN_DISC,
+            NullDomain,    NULL_DOMAIN_SIZE,    NULL_DOMAIN_SIZE_V1, NULL_DOMAIN_DISC,
+            STEALTH_META_LEN,
             RegistryConfig, REGISTRY_CONFIG_SIZE, REGISTRY_CONFIG_DISC,
         },
     };
@@ -69,6 +70,9 @@ mod tests {
         let owner        = [0xAAu8; 32];
         let content_hash = [0xBBu8; 32];
 
+        let mut stealth_meta = [0u8; STEALTH_META_LEN];
+        for (i, b) in stealth_meta.iter_mut().enumerate() { *b = (i as u8).wrapping_add(1); }
+
         let domain = NullDomain {
             disc:          NULL_DOMAIN_DISC,
             name,
@@ -78,6 +82,7 @@ mod tests {
             expires_at:    0,
             null_paid:     500_000_000,
             bump:          254,
+            stealth_meta,
         };
 
         let mut buf = vec![0u8; NULL_DOMAIN_SIZE];
@@ -92,13 +97,45 @@ mod tests {
         assert_eq!(unpacked.expires_at,    0);
         assert_eq!(unpacked.null_paid,     500_000_000);
         assert_eq!(unpacked.bump,          254);
+        assert_eq!(unpacked.stealth_meta,  stealth_meta);
+        assert!(unpacked.has_stealth_meta());
     }
 
-    // ── 2. NullDomain size is exactly 154 bytes ───────────────────────────
+    // ── 2. NullDomain v2 size is 218 bytes; v1 is 154 ─────────────────────
 
     #[test]
-    fn test_null_domain_size_is_154() {
-        assert_eq!(NULL_DOMAIN_SIZE, 154, "NullDomain must be exactly 154 bytes");
+    fn test_null_domain_sizes() {
+        assert_eq!(NULL_DOMAIN_SIZE,    218, "NullDomain v2 (with stealth_meta) must be 218 bytes");
+        assert_eq!(NULL_DOMAIN_SIZE_V1, 154, "NullDomain v1 (legacy) must be 154 bytes");
+        assert_eq!(NULL_DOMAIN_SIZE - NULL_DOMAIN_SIZE_V1, STEALTH_META_LEN);
+    }
+
+    // ── 2b. A v1 (154-byte) account decodes with all-zero stealth_meta ─────
+
+    #[test]
+    fn test_null_domain_v1_backward_compat() {
+        let mut name = [0u8; 64];
+        b"legacy".iter().enumerate().for_each(|(i, &b)| name[i] = b);
+        let domain = NullDomain {
+            disc:          NULL_DOMAIN_DISC,
+            name,
+            owner:         [0x01u8; 32],
+            content_hash:  [0x02u8; 32],
+            registered_at: 1_700_000_000,
+            expires_at:    0,
+            null_paid:     0,
+            bump:          255,
+            stealth_meta:  [0u8; STEALTH_META_LEN],
+        };
+        // Pack into a v1-sized buffer (stealth_meta is skipped).
+        let mut v1buf = vec![0u8; NULL_DOMAIN_SIZE_V1];
+        domain.pack_into(&mut v1buf);
+        assert_eq!(v1buf.len(), 154);
+
+        let unpacked = NullDomain::unpack_from(&v1buf).expect("v1 unpack failed");
+        assert_eq!(unpacked.owner, [0x01u8; 32]);
+        assert_eq!(unpacked.stealth_meta, [0u8; STEALTH_META_LEN]);
+        assert!(!unpacked.has_stealth_meta(), "legacy domain has no stealth meta");
     }
 
     // ── 3. RegistryConfig pack / unpack round-trip ────────────────────────
@@ -243,6 +280,39 @@ mod tests {
             RegistrarInstruction::Resolve { name: n } => assert_eq!(n, name),
             _ => panic!("wrong variant"),
         }
+    }
+
+    // ── 9b. Instruction 0x06 SetStealthMeta unpack valid ──────────────────
+
+    #[test]
+    fn test_unpack_0x06_valid() {
+        use crate::instruction::IX_SET_STEALTH_META;
+        let mut name = [0u8; 64];
+        b"stealthtest1".iter().enumerate().for_each(|(i, &b)| name[i] = b);
+        let mut meta = [0u8; 64];
+        for (i, b) in meta.iter_mut().enumerate() { *b = (i as u8) ^ 0x5A; }
+
+        let mut data = vec![IX_SET_STEALTH_META];
+        data.extend_from_slice(&name);
+        data.extend_from_slice(&meta);
+
+        match RegistrarInstruction::unpack(&data).expect("unpack failed") {
+            RegistrarInstruction::SetStealthMeta { name: n, stealth_meta: m } => {
+                assert_eq!(n, name);
+                assert_eq!(m, meta);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // ── 9c. Instruction 0x06 too short rejected ───────────────────────────
+
+    #[test]
+    fn test_unpack_0x06_too_short() {
+        use crate::instruction::IX_SET_STEALTH_META;
+        let mut data = vec![IX_SET_STEALTH_META];
+        data.extend_from_slice(&[0u8; 100]); // < 128 payload
+        assert!(RegistrarInstruction::unpack(&data).is_err());
     }
 
     // ── 10. validate_name: valid names ───────────────────────────────────

@@ -2,11 +2,12 @@ use solana_program::program_error::ProgramError;
 use crate::error::RegistrarError;
 
 /// Instruction discriminants
-pub const IX_INIT_REGISTRY:   u8 = 0x01;
-pub const IX_REGISTER:        u8 = 0x02;
-pub const IX_UPDATE_CONTENT:  u8 = 0x03;
-pub const IX_TRANSFER:        u8 = 0x04;
-pub const IX_RESOLVE:         u8 = 0x05;
+pub const IX_INIT_REGISTRY:    u8 = 0x01;
+pub const IX_REGISTER:         u8 = 0x02;
+pub const IX_UPDATE_CONTENT:   u8 = 0x03;
+pub const IX_TRANSFER:         u8 = 0x04;
+pub const IX_RESOLVE:          u8 = 0x05;
+pub const IX_SET_STEALTH_META: u8 = 0x06;
 
 #[derive(Debug, PartialEq)]
 pub enum RegistrarInstruction {
@@ -43,6 +44,15 @@ pub enum RegistrarInstruction {
     /// data: [u8; 64] name
     Resolve {
         name: [u8; 64],
+    },
+
+    /// 0x06 — set/update the NullPay stealth meta-address (owner only).
+    /// Reallocs the domain PDA 154 -> 218 in place the first time, then writes
+    /// the 64-byte ed25519 meta-address (spend_pub || view_pub).
+    /// data: [u8; 64] name | [u8; 64] stealth_meta
+    SetStealthMeta {
+        name:         [u8; 64],
+        stealth_meta: [u8; 64],
     },
 }
 
@@ -114,6 +124,18 @@ impl RegistrarInstruction {
                 let mut name = [0u8; 64];
                 name.copy_from_slice(&rest[0..64]);
                 Ok(Self::Resolve { name })
+            }
+
+            IX_SET_STEALTH_META => {
+                // 64 (name) + 64 (stealth_meta) = 128 bytes
+                if rest.len() < 128 {
+                    return Err(ProgramError::InvalidInstructionData);
+                }
+                let mut name         = [0u8; 64];
+                let mut stealth_meta = [0u8; 64];
+                name.copy_from_slice(&rest[0..64]);
+                stealth_meta.copy_from_slice(&rest[64..128]);
+                Ok(Self::SetStealthMeta { name, stealth_meta })
             }
 
             _ => Err(ProgramError::InvalidInstructionData),
