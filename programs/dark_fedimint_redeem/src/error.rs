@@ -19,6 +19,10 @@ pub enum RedeemError {
     ArithmeticOverflow = 8,
     /// Stored group key on the config doesn't match the artifact's group key.
     WrongMintKey = 9,
+    /// `recipient == reserve_vault` — would burn a single-use token for a
+    /// net-zero payout (the vault would pay itself). Rejected before the
+    /// nullifier is created so the token is preserved.
+    RecipientIsReserveVault = 10,
 }
 
 impl From<RedeemError> for ProgramError {

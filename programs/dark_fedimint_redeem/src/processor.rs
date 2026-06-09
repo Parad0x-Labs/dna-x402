@@ -248,6 +248,29 @@ fn process_redeem(
         return Err(RedeemError::NullifierAlreadySpent.into());
     }
 
+    // 4. Bind the reserve vault to THIS config's PDA. Without this, an attacker
+    //    can present a valid token + config of their OWN cheap federation (so the
+    //    DLEQ passes and the nullifier PDA is namespaced to their config) while
+    //    pointing reserve_vault at a DIFFERENT federation's reserve — every
+    //    reserve vault is program-owned, so the unchecked lamport debit below
+    //    would drain the victim. Same guard `process_fund` already enforces.
+    let (reserve_vault_key, _vault_bump) = Pubkey::find_program_address(
+        &[RESERVE_VAULT_SEED, mint_config_info.key.as_ref()],
+        program_id,
+    );
+    if reserve_vault_key != *reserve_vault_info.key {
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // 4b. Refuse a self-pay: if recipient IS the reserve vault, the two lamport
+    //     mutations below cancel out (vault pays itself) yet the nullifier is
+    //     still created, BURNING a single-use token for zero net payout. Reject
+    //     BEFORE the nullifier is minted so a careless caller doesn't destroy a
+    //     valid token. (Low severity: no fund loss, but token-griefing.)
+    if recipient_info.key == reserve_vault_info.key {
+        return Err(RedeemError::RecipientIsReserveVault.into());
+    }
+
     // Reserve must hold at least one denomination.
     if reserve_vault_info.lamports() < config.denomination {
         return Err(RedeemError::InsufficientReserve.into());
