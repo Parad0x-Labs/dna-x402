@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-06-09T20:30:31.388Z",
+  "test": "private-rail-fusion-all-three-legs-in-one-payment",
+  "cluster": "devnet",
+  "poolProgram": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
+  "registrarProgram": "CpNbE8yec5UQJGTVsiTiQpKFhXfDKQZuGWMzMyFtKkME",
+  "denominationLamports": 100000000,
+  "relayerFeeLamports": 1000000,
+  "vkMode": "ceremony",
+  "steps": [
+    {
+      "step": "init_registry",
+      "skipped": "already initialised"
+    },
+    {
+      "step": "register",
+      "name": "fusepayee73goqe.null",
+      "sig": "tsozUUdB7VtPDGYQSpcvgmnKpRjA1msJCQ9CcPnEErQezLTLu2Qx6ZnzPopMYcCpEEcLrA3mCYsT3V8h4iVZWX2",
+      "domainPDA": "Fo7NEsjVW9P6xvvYyLzKbKjTP7fQaicNw8UdRhYfRtDK"
+    },
+    {
+      "step": "set_stealth_meta",
+      "sig": "3gzHhkPMsqMf3Kyavx18pUuTDQcUobr1WYLDp2gLriGmahLrmaaXwkWUgFCEDzTYSgjhMYSd1XEaNXcjoZ5dD8G8"
+    },
+    {
+      "step": "init_pool",
+      "sig": "3JLfUPNpc7vg2oMfhap7J8AGG5jdUREkTt1zju8K845ag6oCni9EMGY3VdNrepBxJfB8QnopxFzZ8XPvabRvH2vP",
+      "denom": 100000000
+    },
+    {
+      "step": "deposits",
+      "sigs": [
+        "33nbZnySJU3dNkKpiWbKwzqxMtvPk8Nvg9UUc8Rkx4GyjhasG8vEUs43sPA6VbrV67R8PGTbbkCPQuSWuZr6RvNa",
+        "2QfAaW41tNtd2LCrYRLQN6b7Cpwi9cD5n95Cudu7e9ruaLwJ1eJQi95JrUBzgFpa5Qnx6jhtvGMWz3tGM8TA9HqJ"
+      ]
+    },
+    {
+      "step": "fused_withdraw",
+      "sig": "N2ufaTcfBUu8kDSEfzd7wZkwuZiWQdgzfT6hpZjTQhaTdZ88xQJf7b91xfUFdALb9ah8corqFMYFrcMwPhULpnR",
+      "relayer": "EasHgkwP5VyokkeFGXtT2U6Jq2iH2LyHJVrdy5qCdPQq",
+      "recipientP": "6JCX13isDxnUZQvrfFYULWJFcxVEfVwRqX5n3EZkeyv8",
+      "announceR": "1676d656c60a7721996d642bde6c0de23eb7a467e98d65d86d45101cbba59d50"
+    },
+    {
+      "step": "sweep",
+      "sig": "bxJiypR7A7qmuYXQ9eZpgiKfnrVGadoUXPH3cKkGQkvaAyhkzndH6w3SK5kjKMx3xxY7gvwimziH5bYApG1k79E",
+      "from": "6JCX13isDxnUZQvrfFYULWJFcxVEfVwRqX5n3EZkeyv8",
+      "to": "3rpjLJ1nHd4V4tcBFcM2jgMdtFPdG6ULW5XkkRBoqwTf",
+      "lamports": 98995000
+    }
+  ],
+  "legs": {
+    "sender_unlinkable": {
+      "pass": true,
+      "why": "the withdraw tx contains no depositor signature/account; spend is authorized by the Groth16 membership proof. depositor(authority) and sender wallet absent from the withdraw tx accounts.",
+      "depositorAbsent": true,
+      "senderWalletAbsent": true,
+      "withdrawTxAccounts": [
+        "EasHgkwP5VyokkeFGXtT2U6Jq2iH2LyHJVrdy5qCdPQq",
+        "6JCX13isDxnUZQvrfFYULWJFcxVEfVwRqX5n3EZkeyv8",
+        "7RDgPvCAhj9HPWtrFKFvtGCJTqX8Um4RPgdUccGKUkct",
+        "A5mPHJqgZZZ8kKSvQF8ecxniB8Bw5MKNS9icVxCFD917",
+        "JCKjpbC4SxBwokPty98xiatjPyddEKzFvD3HNWEgSzXH",
+        "11111111111111111111111111111111",
+        "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
+        "ComputeBudget111111111111111111111111111111",
+        "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+      ]
+    },
+    "amount_hidden": {
+      "pass": true,
+      "why": "fixed denomination: every note is exactly DENOM lamports; payout = DENOM - FEE is constant across all withdrawals, so the amount is non-distinguishing.",
+      "denom": 100000000,
+      "fee": 1000000,
+      "payout": 99000000
+    },
+    "recipient_unlinkable": {
+      "pass": true,
+      "why": "P is a one-time stealth address derived per-payment; the payee's main wallet never appears in the withdraw tx, and P != meta spend_pub. Only the payee (with the view key) can link P back to payee.null.",
+      "payeeMainAbsentFromWithdraw": true,
+      "P_isOneTime_neq_spendPub": true,
+      "P_presentAsRecipient": true
+    }
+  },
+  "asserts": {
+    "metaRoundtrip": "PASS",
+    "scanDetected": "PASS",
+    "scalarRecovered": "PASS",
+    "nativeSigVerifies": "PASS",
+    "sweepLanded": "PASS",
+    "payeeMainOnlyInSweep": "PASS"
+  },
+  "scenarios": [
+    {
+      "name": "root_consistency",
+      "status": "PASS",
+      "root": "1dfaa03b5359fa5aaa75bd3c0c2b365d279d7e81545ec4e6097e8a201d281c58"
+    },
+    {
+      "name": "fused_relayer_withdraw",
+      "status": "PASS",
+      "sig": "N2ufaTcfBUu8kDSEfzd7wZkwuZiWQdgzfT6hpZjTQhaTdZ88xQJf7b91xfUFdALb9ah8corqFMYFrcMwPhULpnR",
+      "recipientP": "6JCX13isDxnUZQvrfFYULWJFcxVEfVwRqX5n3EZkeyv8",
+      "relayer": "EasHgkwP5VyokkeFGXtT2U6Jq2iH2LyHJVrdy5qCdPQq",
+      "recipientDelta": 99000000,
+      "relayerDelta": -181240,
+      "fee": 1000000,
+      "payout": 99000000,
+      "recipientSigned": false,
+      "nullifier": "1c876acf14483affea0e0dbdf8de68ed9bc5bc158e335a83fefefe733721a083"
+    },
+    {
+      "name": "leg_a_sender_unlinkable",
+      "status": "PASS",
+      "depositorAbsent": true,
+      "senderWalletAbsent": true
+    },
+    {
+      "name": "leg_b_amount_hidden",
+      "status": "PASS",
+      "denom": 100000000,
+      "fee": 1000000,
+      "payout": 99000000
+    },
+    {
+      "name": "leg_c_recipient_unlinkable",
+      "status": "PASS",
+      "payeeMainAbsentFromWithdraw": true,
+      "P_isOneTime": true
+    },
+    {
+      "name": "double_spend_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "39npLjXPscRnmZvQLEfmrQhkNRTud6ZnwZBCAqUp5o6n3J8JdmCiiRjJtgyTGWZhmTD4Sii4qvJDwTHx8QzKLwVa"
+    },
+    {
+      "name": "wrong_recipient_rejected",
+      "status": "PASS",
+      "reverted": true,
+      "sig": "4FkvH7qzSBqXqwMRT4qQQeguCHk9NNCqdrTHA1Ee5C9M9LdJMVNNUpMCBbhrjBSJHkYZYWcyuopnS4RkHXLR6QrH"
+    }
+  ],
+  "honestCaveats": [
+    "Ceremony VK is a BEACON-SEALED DRY RUN (simulated-independent contributions + fixed published drand beacon). NOT yet fully trustless; needs independent human contributors (ceremony/CONTRIBUTING_V3.md).",
+    "UNAUDITED devnet pilot. mainnet_ready=false throughout. Library / demo only.",
+    "SINGLE-PARTY demo: sender, payee, and relayer are all driven by this one script. The unlinkability is STRUCTURAL (what does / does not appear on-chain), not a claim of a large real anonymity set — this pool has only 2 notes.",
+    "The .null domain is registered by our wallet (the publisher of the name); that publisher key is distinct from the payee's unlinkable MAIN wallet, which never touches the withdraw tx.",
+    "NullPay recipient privacy is native ed25519 (no ZK / no setup); the sender/amount privacy is the shielded-pool Groth16 rail. The fusion is at the CLIENT level: the rail's recipient is wired to a NullPay one-time stealth address."
+  ],
+  "overall": "PASS",
+  "stealth": {
+    "address": "6JCX13isDxnUZQvrfFYULWJFcxVEfVwRqX5n3EZkeyv8",
+    "addressHex": "4eb254bba3c6214124d1182b049d4b68d80f52e32ee4184cce2ade01ebbf4ca1",
+    "ephemR": "1676d656c60a7721996d642bde6c0de23eb7a467e98d65d86d45101cbba59d50"
+  },
+  "payee": {
+    "nullName": "fusepayee73goqe.null",
+    "domainPDA": "Fo7NEsjVW9P6xvvYyLzKbKjTP7fQaicNw8UdRhYfRtDK",
+    "metaSpendPub": "d5504e82a54aabfb5405369d89bc1013d62681d67ededa4b6f0d59e99f430660",
+    "metaViewPub": "c46c187fd1a671f7308007078f7bc30939946ba5e9b763a56dc1ad19937a0007",
+    "mainWallet": "3rpjLJ1nHd4V4tcBFcM2jgMdtFPdG6ULW5XkkRBoqwTf",
+    "note": "main wallet is the SWEEP DESTINATION; it is ABSENT from the withdraw tx (recipient-unlinkable)."
+  },
+  "poolConfig": "A5mPHJqgZZZ8kKSvQF8ecxniB8Bw5MKNS9icVxCFD917",
+  "poolVault": "JCKjpbC4SxBwokPty98xiatjPyddEKzFvD3HNWEgSzXH",
+  "onChainRootAfterDeposits": "1dfaa03b5359fa5aaa75bd3c0c2b365d279d7e81545ec4e6097e8a201d281c58",
+  "circuit": "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
+  "vk": "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, DRY-RUN — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon; awaiting independent contributors, devnet pilot scope)",
+  "keystone": "ONE shielded-pool withdraw hides ALL THREE payment legs at once: (a) SENDER — a real Groth16 membership proof (alt_bn128 pairing syscall) authorizes the spend with NO depositor signature/link in the withdraw tx; (b) AMOUNT — fixed denomination, payout=denom-fee is constant; (c) RECIPIENT — the withdraw pays a NullPay ONE-TIME ed25519 stealth address P resolved from payee.null's on-chain meta. A permissionless RELAYER submits it (fee_payer != P); P never signs; the payee view-key-scans, recovers the one-time scalar p, and sweeps P natively. The payee's MAIN wallet never appears in the withdraw tx.",
+  "explorer": {
+    "poolProgram": "https://explorer.solana.com/address/2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY?cluster=devnet",
+    "registrar": "https://explorer.solana.com/address/CpNbE8yec5UQJGTVsiTiQpKFhXfDKQZuGWMzMyFtKkME?cluster=devnet",
+    "stealthAddress": "https://explorer.solana.com/address/6JCX13isDxnUZQvrfFYULWJFcxVEfVwRqX5n3EZkeyv8?cluster=devnet",
+    "withdrawTx": "https://explorer.solana.com/tx/N2ufaTcfBUu8kDSEfzd7wZkwuZiWQdgzfT6hpZjTQhaTdZ88xQJf7b91xfUFdALb9ah8corqFMYFrcMwPhULpnR?cluster=devnet",
+    "sweepTx": "https://explorer.solana.com/tx/bxJiypR7A7qmuYXQ9eZpgiKfnrVGadoUXPH3cKkGQkvaAyhkzndH6w3SK5kjKMx3xxY7gvwimziH5bYApG1k79E?cluster=devnet"
+  }
+}
