@@ -20,12 +20,12 @@ std = ["rand", "serde", "serde_json"]
 # Cargo.lock (3.2.1). NOT the SHA256 `dark-blind-signature` stub.
 curve25519-dalek = { version = "3.2.1", default-features = false, features = ["u64_backend", "serde"] }
 sha2 = "0.9"            # digest 0.9 — matches curve25519-dalek 3.2.1's digest dep
-rand = { version = "0.8", optional = true }
+rand = { version = "0.9", optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
-rand = "0.8"
+rand = "0.9"
 
 [[bin]]
 name = "enull_mint"

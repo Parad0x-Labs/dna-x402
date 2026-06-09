@@ -23,7 +23,7 @@ solana-program-test = { workspace = true }
 solana-sdk          = { workspace = true }
 tokio               = { workspace = true }
 dark-fedimint-ecash = { path = "../../crates/dark-fedimint-ecash" }
-rand                = "0.8"
+rand                = "0.9"
 
 [lib]
 crate-type = ["cdylib", "lib"]
