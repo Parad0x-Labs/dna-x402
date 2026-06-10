@@ -17,49 +17,54 @@ float noise(vec2 p){ vec2 i=floor(p), f=fract(p);
   float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
   vec2 u=f*f*(3.-2.*f); return mix(mix(a,b,u.x),mix(c,d,u.x),u.y); }
 float fbm(vec2 p){ float v=0., a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6);
-  for(int i=0;i<5;i++){ v+=a*noise(p); p=m*p; a*=.52; } return v; }
+  for(int i=0;i<6;i++){ v+=a*noise(p); p=m*p; a*=.5; } return v; }
 void main(){
   vec2 uv = gl_FragCoord.xy/uRes.xy;
   vec2 p  = (gl_FragCoord.xy - .5*uRes.xy)/uRes.y;
-  float t = uTime * (uReduce>.5 ? 0.5 : 1.0);
+  float t = uTime * (uReduce>.5 ? 0.45 : 1.0);
   vec2 m = (uMouse - .5); m.x *= uRes.x/uRes.y;   // slow-drifting field
   vec2 g = (uGlow  - .5); g.x *= uRes.x/uRes.y;   // responsive cursor light
-  vec2 q = p*1.3; q += 0.24*m;
-
-  // STORM — two-stage domain warp = turbulent, swirling filaments
-  float w1 = fbm(q*1.1 + vec2(0.0, t*0.085));
-  float w2 = fbm(q*1.1 + vec2(5.2,1.3) - t*0.07);
-  vec2 warped = q + 0.95*vec2(w1,w2);
-  float w3 = fbm(warped*1.7 + vec2(t*0.13,-t*0.10));
-  float w4 = fbm(warped*1.7 + vec2(-1.7,3.4) + t*0.11);
-  warped += 0.55*vec2(w3,w4);
-
-  float n  = fbm(warped*1.5 + t*0.10);
-  float n2 = fbm(warped*2.9 - t*0.13 + n*1.6);
-  float n3 = fbm(warped*5.6 + t*0.21 - n2*1.2);   // fine filament detail
+  // SOFT gaseous warp (the look you liked — gentle, not liquid swirls)
+  vec2 q = p*1.35; q += 0.30*m;
+  float warp1 = fbm(q*1.2 + vec2(0.0, t*0.06));
+  float warp2 = fbm(q*1.2 + vec2(5.2,1.3) - t*0.05);
+  vec2 warped = q + 0.65*vec2(warp1,warp2);
+  float n  = fbm(warped*1.6 + t*0.08);
+  float n2 = fbm(warped*3.1 - t*0.11 + n*1.4);
   float md = length(p - g);
-  float pool = exp(-md*md*2.0);
-
-  vec3 ink=vec3(0.018,0.016,0.032); vec3 violet=vec3(0.34,0.18,0.98);
-  vec3 magenta=vec3(1.00,0.16,0.48); vec3 cyan=vec3(0.08,0.92,1.00);
-  vec3 lime=vec3(0.80,1.00,0.16); vec3 mint=vec3(0.24,1.00,0.69);
+  float pool = exp(-md*md*2.2);
+  vec3 ink=vec3(0.024,0.022,0.037); vec3 violet=vec3(0.31,0.18,0.92);
+  vec3 magenta=vec3(1.00,0.18,0.49); vec3 cyan=vec3(0.10,0.89,1.00);
+  vec3 lime=vec3(0.78,1.00,0.18); vec3 mint=vec3(0.24,1.00,0.69);
+  vec3 deep=vec3(0.05,0.10,0.22);
   vec3 col = ink;
-  col = mix(col, violet,  smoothstep(0.24,0.80, n) * 0.95);
-  col = mix(col, magenta, smoothstep(0.40,0.92, n2) * 0.70);
-  float ribbon = smoothstep(0.70,0.97, fbm(warped*3.6 + vec2(t*0.26,-t*0.20)));
-  col = mix(col, cyan, ribbon*0.60);
-  float spark = smoothstep(0.82,1.0, n2) * smoothstep(0.0,0.7,uv.y);
-  col = mix(col, lime, spark*0.45);
-  // hot white-violet storm cores — bright filament crests
-  float core = smoothstep(0.86,1.0, n3) * smoothstep(0.45,0.95, n2);
-  col += vec3(0.95,0.92,1.0) * core * 0.55;
-  col += mint * pool * 0.45; col += cyan * pool * 0.16;
-  float lines = abs(fract(n2*10.0 - t*0.5) - 0.5);
-  col += vec3(0.9,1.0,0.95) * smoothstep(0.48,0.5,lines) * 0.06;
-  float vig = smoothstep(1.30,0.18, length(p*vec2(0.80,1.0)));
-  col *= mix(0.36, 1.08, vig);
+  // soft layered gas clouds (violet / magenta / a deep blue depth layer behind)
+  col = mix(col, deep,    smoothstep(0.20,0.95, fbm(warped*0.9 - t*0.03)) * 0.5);
+  col = mix(col, violet,  smoothstep(0.30,0.85, n)  * 0.85);
+  col = mix(col, magenta, smoothstep(0.45,0.95, n2) * 0.55);
+  float ribbon = smoothstep(0.78,0.99, fbm(warped*4.0 + vec2(t*0.2,-t*0.15)));
+  col = mix(col, cyan, ribbon*0.5);
+  float spark = smoothstep(0.86,1.0, n2) * smoothstep(0.0,0.7,uv.y);
+  col = mix(col, lime, spark*0.35);
+  col += mint * pool * 0.42; col += cyan * pool * 0.15;
+
+  // ── NEBULA MIST: fine dusty haze (gives the gaseous, misty grain, not liquid) ──
+  float dust = fbm(warped*6.5 + vec2(t*0.03,-t*0.02));
+  col += violet * smoothstep(0.58,0.92, dust) * 0.07;   // faint dust veils
+  col *= 0.93 + 0.12*dust;                               // mottled cloud density
+
+  // ── scattered STARS: sparse pinpricks that twinkle (sells "deep space") ──
+  vec2 sc = floor(gl_FragCoord.xy / 2.5);
+  float sh = hash(sc);
+  float star = step(0.9975, sh) * (0.45 + 0.55*sin(t*2.6 + sh*40.0));
+  col += vec3(0.85,0.9,1.0) * max(star, 0.0) * 0.8;
+
+  float lines = abs(fract(n2*9.0 - t*0.4) - 0.5);
+  col += vec3(0.9,1.0,0.95) * smoothstep(0.49,0.5,lines) * 0.05;
+  float vig = smoothstep(1.25,0.15, length(p*vec2(0.82,1.0)));
+  col *= mix(0.45, 1.12, vig);
   col += (hash(gl_FragCoord.xy + t)-0.5)/255.0;
-  col = col/(col+0.86); col = pow(col, vec3(0.83));   // filmic, a touch more contrast
+  col = col/(col+0.92); col = pow(col, vec3(0.86));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
