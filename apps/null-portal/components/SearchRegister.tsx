@@ -7,6 +7,9 @@ import {
   classifyName,
   ixRegisterNull,
   ixRegisterSol,
+  ixCreatePremiumAuctionSol,
+  premiumFloorLamports,
+  premiumFloorSol,
   lamportsToSol,
   normalizeName,
   nullAtomicToHuman,
@@ -51,6 +54,14 @@ export function SearchRegister() {
   const [txSig, setTxSig] = useState<string | null>(null);
   const [registeredName, setRegisteredName] = useState<string | null>(null);
   const [regError, setRegError] = useState<string | null>(null);
+
+  // premium (1–3 char) sealed-auction acquisition — lock an opening SOL bid at create
+  const [openingBid, setOpeningBid] = useState("");
+  const [premiumDur, setPremiumDur] = useState(86400); // commit = reveal phase length (sec)
+  const [openingPremium, setOpeningPremium] = useState(false);
+  const [premiumSig, setPremiumSig] = useState<string | null>(null);
+  const [premiumName, setPremiumName] = useState<string | null>(null);
+  const [premiumError, setPremiumError] = useState<string | null>(null);
 
   const reqId = useRef(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -98,13 +109,21 @@ export function SearchRegister() {
     setTxSig(null);
     setRegisteredName(null);
     setRegError(null);
+    setPremiumSig(null);
+    setPremiumName(null);
+    setPremiumError(null);
 
     const c = classifyName(name);
     setCheck(c);
     setAvail(null);
     setAvailError(null);
 
-    if (c.tier !== "registerable") {
+    // prefill the opening bid with the per-length floor for a premium name.
+    if (c.tier === "premium") setOpeningBid(String(premiumFloorSol(name.length, "mainnet")));
+
+    // both registerable AND premium names need an on-chain availability check (a premium
+    // name is "available" to auction only if its domain isn't already minted).
+    if (c.tier !== "registerable" && c.tier !== "premium") {
       setLoadingAvail(false);
       return;
     }
@@ -170,6 +189,37 @@ export function SearchRegister() {
 
   const isAvailable = check?.tier === "registerable" && avail?.status === "available";
   const isTaken = check?.tier === "registerable" && avail?.status === "taken";
+
+  // ── premium (1–3 char) sealed-auction acquisition ──
+  const premiumCharLen = check?.tier === "premium" ? name.length : 0;
+  const premiumFloor = premiumCharLen ? premiumFloorSol(premiumCharLen, "mainnet") : 0;
+  const isPremiumAvailable = check?.tier === "premium" && avail?.status === "available";
+  const isPremiumTaken = check?.tier === "premium" && avail?.status === "taken";
+  const openingBidNum = Number(openingBid);
+  const canOpenPremium =
+    isPremiumAvailable && Number.isFinite(openingBidNum) && openingBidNum >= premiumFloor && !!address;
+
+  const onOpenPremium = useCallback(async () => {
+    if (!address || !cfg || !isPremiumAvailable) return;
+    setPremiumError(null);
+    setOpeningPremium(true);
+    try {
+      const conn = getConnection();
+      const payer = new PublicKey(address);
+      const floorLamports = premiumFloorLamports(name.length, "mainnet");
+      const bidLamports = BigInt(Math.round(Number(openingBid) * 1e9));
+      if (bidLamports < floorLamports)
+        throw new Error(`opening bid must be ≥ ${premiumFloorSol(name.length, "mainnet")} SOL`);
+      const ix = await ixCreatePremiumAuctionSol("mainnet", payer, name, bidLamports, premiumDur, premiumDur, new PublicKey(cfg.treasury));
+      const sig = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 220_000 });
+      setPremiumSig(sig);
+      setPremiumName(name);
+    } catch (e) {
+      setPremiumError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setOpeningPremium(false);
+    }
+  }, [address, cfg, isPremiumAvailable, name, openingBid, premiumDur]);
 
   return (
     <>
@@ -302,8 +352,8 @@ export function SearchRegister() {
                 </div>
               )}
 
-              {/* primary CTA */}
-              {!txSig && (
+              {/* primary CTA (register) — hidden for premium names, which open an auction instead */}
+              {!txSig && check?.tier !== "premium" && (
                 <button
                   onClick={isAvailable ? (address ? onRegister : connect) : () => inputRef.current?.focus()}
                   disabled={registering || connecting}
@@ -322,6 +372,81 @@ export function SearchRegister() {
                 </button>
               )}
               {regError && <div className="mt-3 break-words font-mono text-xs text-danger">{regError}</div>}
+
+              {/* premium 1–3 char → open a sealed SOL auction (acquisition, not register) */}
+              {check?.tier === "premium" && isPremiumAvailable && !premiumSig && (
+                <div className="mt-3.5 rounded-xl border-[1.5px] border-magenta/40 bg-magenta/[0.05] p-4">
+                  <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-magenta">
+                    <span className="h-[7px] w-[7px] rounded-full bg-magenta" />
+                    premium · {premiumCharLen}-char · sealed SOL auction
+                  </div>
+                  <p className="mb-3 text-[12.5px] leading-relaxed text-dim">
+                    <b className="text-paper">{name}.null</b> is a premium name. claim it by opening a sealed-bid
+                    auction: you lock the opening bid (≥ {premiumFloor} SOL floor) and become the standing high bid.
+                    a strictly higher sealed bid wins; 100% of the clearing price goes to the treasury.
+                  </p>
+                  <div className="flex items-center gap-2 rounded-xl border-[1.5px] border-line bg-black/30 px-3 py-2">
+                    <span className="font-mono text-[12px] text-faint">opening bid</span>
+                    <input
+                      value={openingBid}
+                      onChange={(e) => setOpeningBid(e.target.value)}
+                      inputMode="decimal"
+                      placeholder={`≥ ${premiumFloor}`}
+                      className="w-full border-none bg-transparent text-right font-mono text-[14px] text-paper outline-none placeholder:text-faint"
+                    />
+                    <span className="font-mono text-[13px] font-bold text-magenta">SOL</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    {[{ k: 86400, l: "1 day" }, { k: 259200, l: "3 days" }, { k: 604800, l: "7 days" }].map((d) => (
+                      <button
+                        key={d.k}
+                        onClick={() => setPremiumDur(d.k)}
+                        className={`rounded-lg border-[1.5px] px-2.5 py-1.5 font-mono text-[11px] transition ${
+                          premiumDur === d.k ? "border-transparent bg-magenta font-bold text-paper" : "border-line text-dim hover:border-line2"
+                        }`}
+                      >
+                        {d.l}
+                      </button>
+                    ))}
+                    <span className="ml-auto font-mono text-[10.5px] text-faint">commit + reveal each</span>
+                  </div>
+                  <button
+                    onClick={address ? onOpenPremium : connect}
+                    disabled={openingPremium || connecting || (!!address && !canOpenPremium)}
+                    className="mt-3 flex w-full items-center justify-center gap-2.5 rounded-xl bg-magenta px-4 py-3 font-sans text-[15.5px] font-bold tracking-tight text-paper transition hover:-translate-y-px disabled:opacity-60"
+                  >
+                    {openingPremium ? "sign in phantom…" : !address ? "connect phantom to open" : `open auction · lock ${openingBid || premiumFloor} SOL`}
+                  </button>
+                  {premiumError && <div className="mt-2 break-words font-mono text-xs text-danger">{premiumError}</div>}
+                </div>
+              )}
+
+              {/* premium auction opened */}
+              {premiumSig && premiumName && (
+                <div className="mt-3.5 rounded-xl border-[1.5px] border-magenta/50 bg-magenta/[0.06] p-4">
+                  <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-magenta">
+                    <span className="h-[7px] w-[7px] rounded-full bg-magenta" />
+                    premium auction opened · solana mainnet
+                  </div>
+                  <div className="mb-2 font-display text-2xl font-black tracking-tight">
+                    {premiumName}
+                    <span className="text-magenta">.null</span>
+                  </div>
+                  <p className="text-[13px] text-dim">
+                    your sealed-bid auction is live. anyone can place a sealed bid; settle after the reveal window to
+                    mint the name to the winner.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    <a className="rounded-lg bg-magenta px-4 py-2.5 text-[13px] font-bold text-paper transition hover:opacity-90" href={solscanTx(premiumSig)} target="_blank" rel="noreferrer">
+                      view on solscan ↗
+                    </a>
+                    <a className="rounded-lg border-[1.5px] border-line px-4 py-2.5 text-[13px] font-semibold transition hover:border-magenta" href="/browse">
+                      see it in browse →
+                    </a>
+                  </div>
+                  <div className="mt-3 break-all font-mono text-[11px] text-faint">tx {premiumSig}</div>
+                </div>
+              )}
 
               {/* success */}
               {txSig && registeredName && (
@@ -382,7 +507,16 @@ function StatusLine({
 }) {
   if (name.length === 0) return <span className="text-faint">type a name to check availability on-chain</span>;
   if (check?.tier === "invalid") return <Badge tone="taken" label="invalid" text={check.reason} />;
-  if (check?.tier === "premium") return <Badge tone="taken" label="premium" text={`${check.reason}`} />;
+  if (check?.tier === "premium") {
+    if (loadingAvail || !avail)
+      return (
+        <span className="flex items-center gap-2.5 text-dim">
+          <span className="spinner" /> premium name — checking the registry…
+        </span>
+      );
+    if (avail.status === "taken") return <Badge tone="taken" label="taken" text={`${name}.null is already minted`} />;
+    return <Badge tone="ok" label="premium" text={`${check.reason} open a sealed auction below.`} />;
+  }
   if (loadingAvail || !avail)
     return (
       <span className="flex items-center gap-2.5 text-dim">

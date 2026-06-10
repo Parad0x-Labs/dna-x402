@@ -12,7 +12,7 @@ import {
 } from "@/lib/chain";
 import {
   lamportsToSol, shortAddr, ixBuyNowSol,
-  ixCommitBid, ixRevealBidSol, ixSettleSol, ixClaimRefundSol,
+  ixCommitBid, ixRevealBidSol, ixSettleSol, ixSettlePremiumSol, ixClaimRefundSol,
   poseidonCommit, freshBlinding,
 } from "@/lib/null-sdk";
 import { explorerAddr, explorerTx } from "@/lib/cluster";
@@ -181,7 +181,7 @@ export function Browse() {
             /* ── live listings (renders the moment a listing layout is wired) ── */
             <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((l, i) =>
-                l.kind === "auction" ? (
+                l.kind === "auction" || l.kind === "premium" ? (
                   <AuctionCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} onChanged={() => load(cluster)} />
                 ) : (
                   <LiveCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} onBought={() => load(cluster)} />
@@ -316,9 +316,9 @@ const EXAMPLES: Example[] = [
     name: "x",
     accent: "magenta",
     kind: "premium",
-    priceLabel: "premium · floor $10,000",
-    subLabel: "1-char · 100% to treasury",
-    cta: "lock bid ≥ floor",
+    priceLabel: "premium · floor 33 SOL",
+    subLabel: "1-char · sealed SOL auction · 100% to treasury",
+    cta: "open premium auction",
   },
 ];
 
@@ -533,6 +533,9 @@ function AuctionCard({
   const [sig, setSig] = useState<string | null>(null);
   const minBidSol = lamportsToSol(listing.minBid);
   const ownAuction = address != null && address === listing.seller;
+  // A premium (PRIMARY 'P') auction mints an UNOWNED 1–3 char name to the winner and pays
+  // 100% to the treasury — its settle takes the 10-account mint path, not the resale split.
+  const isPrimary = listing.kind === "premium";
 
   const run = async (build: () => Promise<import("@solana/web3.js").TransactionInstruction>, after?: () => void) => {
     if (!address) { connect(); return; }
@@ -562,7 +565,10 @@ function AuctionCard({
     );
   const onSettle = () =>
     run(
-      () => ixSettleSol(cluster, new PublicKey(address!), listing.name, new PublicKey(listing.seller), new PublicKey(listing.treasury)),
+      () =>
+        isPrimary
+          ? ixSettlePremiumSol(cluster, new PublicKey(address!), listing.name, new PublicKey(listing.treasury))
+          : ixSettleSol(cluster, new PublicKey(address!), listing.name, new PublicKey(listing.seller), new PublicKey(listing.treasury)),
       () => setTimeout(onChanged, 1800),
     );
   const onRefund = () =>
@@ -573,7 +579,7 @@ function AuctionCard({
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
           <i className={`h-[6px] w-[6px] rounded-full ${a.dot}`} />
-          auction · {phase === "commit" ? "sealed bidding" : phase === "reveal" ? "reveal phase" : "ended"}
+          {isPrimary ? "premium" : "auction"} · {phase === "commit" ? "sealed bidding" : phase === "reveal" ? "reveal phase" : "ended"}
         </span>
         <a href={explorerAddr(cluster, listing.pda)} target="_blank" rel="noreferrer" className="font-mono text-[10.5px] text-faint underline decoration-line hover:text-cyan">
           {shortAddr(listing.pda)} ↗

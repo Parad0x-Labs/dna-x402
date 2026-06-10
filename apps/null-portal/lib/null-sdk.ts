@@ -60,6 +60,7 @@ export const SOL_FEE_LAMPORTS = 7_000_000; // 0.007 SOL
 // ── Instruction discriminants ─────────────────────────────────────────────────
 export const IX_REGISTER = 0x02; // registrar Register
 export const IX_CREATE_LISTING = 0x08; // auction CreateListing (resale buy-now ± auction)
+export const IX_CREATE_PREMIUM_AUCTION = 0x07; // auction CreatePremiumAuction (SOL primary, 1–3 char)
 export const IX_BUY_NOW = 0x09; // auction BuyNow (SOL-native)
 export const CURRENCY_SOL = 1;
 export const CURRENCY_NULL = 3;
@@ -486,6 +487,92 @@ export async function ixClaimRefundSol(
   });
 }
 
+/**
+ * Per-length SOL floor (lamports) a premium primary auction's opening bid must meet.
+ * Mirrors programs/null-auction premium_floor_lamports: the default (mainnet) build
+ * enforces 33 / 10 / 3 SOL for 1 / 2 / 3-char; the devnet build uses 0.3 / 0.2 / 0.1
+ * so the lifecycle is cheap to exercise. The chain is the source of truth — a
+ * below-floor opening bid simply reverts (OpeningBidBelowFloor 0x801D).
+ */
+export function premiumFloorLamports(charLen: number, c: Cluster | ClusterConfig): bigint {
+  const cluster = typeof c === "string" ? c : c.cluster;
+  if (cluster === "devnet") return charLen === 1 ? 300_000_000n : charLen === 2 ? 200_000_000n : 100_000_000n;
+  return charLen === 1 ? 33_000_000_000n : charLen === 2 ? 10_000_000_000n : 3_000_000_000n;
+}
+export const premiumFloorSol = (charLen: number, c: Cluster | ClusterConfig): number =>
+  Number(premiumFloorLamports(charLen, c)) / 1e9;
+
+/**
+ * CreatePremiumAuction (0x07) SOL — open a PRIMARY auction on an UNOWNED 1–3 char name,
+ * locking the opening bid in SOL (the creator becomes the pre-revealed standing high bid).
+ * accounts: [creator(s,w), domain(ro), auction(w), commit(w), null_reg(ro), system(ro)]
+ * payload:  name[64] | opening_bid_lamports(u64) | commit_secs(u64) | reveal_secs(u64) | treasury[32]
+ */
+export async function ixCreatePremiumAuctionSol(
+  c: Cluster | ClusterConfig,
+  creator: PublicKey,
+  name: string,
+  openingBidLamports: bigint,
+  commitSecs: number,
+  revealSecs: number,
+  treasury: PublicKey,
+): Promise<TransactionInstruction> {
+  const data = concatBytes(
+    u8(IX_CREATE_PREMIUM_AUCTION),
+    padName64(name),
+    u64le(openingBidLamports),
+    u64le(commitSecs),
+    u64le(revealSecs),
+    treasury.toBytes(),
+  );
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: creator, isSigner: true, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: false },
+      { pubkey: await auctionPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await commitPda(c, name, creator), isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(data),
+  });
+}
+
+/**
+ * SettleAuction (0x04) PRIMARY/premium — mints the name to the winner (CPI MintPremium)
+ * and pays 100% of the winning bid → the treasury WALLET in SOL. Differs from the resale
+ * settle by appending the registrar config PDA + system program (mint CPI). The seller /
+ * vault / token-program slots are unused for a SOL primary (treasury wallet placeholders).
+ * accounts: [payer(s,w), auction(w), domain(w), seller(w·unused), treasury(w),
+ *   vault(w·unused), null_reg(ro), token_prog(ro·unused), registrar_config(w), system(ro)]
+ */
+export async function ixSettlePremiumSol(
+  c: Cluster | ClusterConfig,
+  payer: PublicKey,
+  name: string,
+  treasuryWallet: PublicKey,
+): Promise<TransactionInstruction> {
+  const reg = auctionRegistrarFor(c);
+  const registrarConfig = PublicKey.findProgramAddressSync([REGISTRY_SEED], reg)[0];
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: await auctionPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: treasuryWallet, isSigner: false, isWritable: true }, // seller slot (unused)
+      { pubkey: treasuryWallet, isSigner: false, isWritable: true }, // treasury wallet (100% SOL)
+      { pubkey: treasuryWallet, isSigner: false, isWritable: true }, // vault slot (unused for SOL)
+      { pubkey: reg, isSigner: false, isWritable: false },
+      { pubkey: reg, isSigner: false, isWritable: false }, // token_prog slot (unused)
+      { pubkey: registrarConfig, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_SETTLE_AUCTION), padName64(name))),
+  });
+}
+
 // ── NullPay stealth-meta layout (devnet registrar v2 NullDomain) ──────────────
 // The recipient's 64-byte ed25519 meta-address (spend_pub || view_pub) is stored
 // at offset 154; a v2 account is ≥ 218 bytes. (scripts/nullpay/devnet-e2e.mjs)
@@ -664,7 +751,7 @@ export function classifyName(name: string): NameCheck {
     return {
       name,
       tier: "premium",
-      reason: "1–3 character names are premium — auction-only. Auctions coming soon.",
+      reason: `${name.length}-character names are premium — claimed by opening a sealed-bid SOL auction.`,
     };
   }
   if (name.length > 32) {
