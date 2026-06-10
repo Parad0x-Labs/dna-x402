@@ -28,6 +28,6 @@ solana-program = { workspace = true }
 # opcodes 4 and 6 directly; ark is compiled out for the on-chain build via
 # #[cfg(not(target_os = "solana"))] guards in lib.rs.
 ark-bn254     = { version = "0.4", default-features = false }
-ark-ec        = { version = "0.4", default-features = false }
+ark-ec        = { version = "0.6", default-features = false }
 ark-ff        = { version = "0.4", default-features = false }
 ark-serialize = { version = "0.4", default-features = false }
