@@ -1,5 +1,10 @@
 # context-capsule — OpenClaw ContextEngine plugin
 
+> ⚠️ **MOVED — this copy is frozen.** The canonical home of this skill is now
+> [openclaw-skills/skills/context-capsule](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/context-capsule).
+> Install from, file issues against, and contribute to openclaw-skills; this
+> directory remains only as a historical pointer and will not receive updates.
+
 Compresses agent session history before it reaches the LLM. **Self-contained:**
 the compression core is vendored inline (`src/compression.ts`) — no external
 runtime dependency, and no network, file-system, or on-chain access. It uses

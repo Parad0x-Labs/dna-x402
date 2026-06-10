@@ -1,5 +1,9 @@
 # Context Capsule
 
+> ⚠️ **MOVED:** canonical home is
+> [openclaw-skills/skills/context-capsule](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/context-capsule).
+> This copy is frozen.
+
 Compress agent session history ~99% before it hits the LLM, so you stop paying
 to re-send the whole transcript on every call. Works with any model — Claude,
 GPT, Ollama, Mistral, LM Studio.

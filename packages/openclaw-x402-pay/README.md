@@ -1,6 +1,9 @@
 # openclaw-x402-pay — self-custody x402 payments for OpenClaw agents
 
-> 💜 [Star it on ClawHub](https://clawhub.ai/parad0x-labs/x402-pay) if it earns its keep.
+> ⚠️ **MOVED — this copy is frozen.** The canonical home of this skill is now
+> [openclaw-skills/skills/x402-pay](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/x402-pay).
+> Install from, file issues against, and contribute to openclaw-skills; this
+> directory remains only as a historical pointer and will not receive updates.
 
 Give your agent one tool — `pay_x402` — that fetches an x402-gated URL and, if it
 answers HTTP **402 Payment Required**, pays for it on Solana and returns the
@@ -20,8 +23,8 @@ resource. Pairs with [`openclaw-x402-gate`](https://github.com/Parad0x-Labs/dna-
 - **Minimal network surface.** Talks only to your configured Solana RPC and the
   target URL. No telemetry, no third-party calls.
 
-> **Status: Public Beta.** Non-custodial, capped, external audit scheduled Q3 2026.
-> **Not yet audited** — do not point it at large balances.
+> **Status: Public Beta.** Non-custodial, capped, **unaudited** — no external audit
+> has been completed or scheduled. Do not point it at large balances.
 
 ## Use it
 

@@ -1,6 +1,9 @@
 # openclaw-x402-gate — charge other agents with x402 on Solana
 
-> 💜 [Star it on ClawHub](https://clawhub.ai/parad0x-labs/x402-gate) if it earns its keep.
+> ⚠️ **MOVED — this copy is frozen.** The canonical home of this skill is now
+> [openclaw-skills/skills/x402-gate](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/x402-gate).
+> Install from, file issues against, and contribute to openclaw-skills; this
+> directory remains only as a historical pointer and will not receive updates.
 
 Turn any OpenClaw skill or API into a paid endpoint. Mint an HTTP **402 Payment
 Required** challenge, verify the payment, then serve. Funds settle **straight to
@@ -20,8 +23,8 @@ Solana mainnet**.
   well-formed header. The check binds to the unique receipt hash in the tx memo,
   so proofs can't be replayed against a different charge.
 
-> **Status: Public Beta.** Non-custodial, external audit scheduled Q3 2026.
-> Not yet audited.
+> **Status: Public Beta.** Non-custodial, **unaudited** — no external audit has
+> been completed or scheduled.
 
 ## The two tools
 

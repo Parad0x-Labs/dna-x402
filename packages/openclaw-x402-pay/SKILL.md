@@ -1,5 +1,9 @@
 # x402 Pay
 
+> ⚠️ **MOVED:** canonical home is
+> [openclaw-skills/skills/x402-pay](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/x402-pay).
+> This copy is frozen.
+
 Let your OpenClaw agent **pay for x402-gated APIs, data, and other agents** on
 Solana — without ever handing the skill a private key.
 
@@ -24,8 +28,8 @@ Solana — without ever handing the skill a private key.
 - **Hard `maxAmountUsdc` cap**, enforced before any transaction is built.
 - **Minimal network**: your Solana RPC + the target URL only. No telemetry.
 
-> **Public Beta** — non-custodial, capped, external audit scheduled Q3 2026.
-> Not yet audited; don't point it at large balances.
+> **Public Beta** — non-custodial, capped, **unaudited** (no external audit
+> completed or scheduled); don't point it at large balances.
 
 ## The tool
 
