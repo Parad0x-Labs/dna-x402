@@ -250,6 +250,12 @@ members = [
     "crates/dark-anon-signal",
     "crates/dark-anonymous-credential-v2",
     "crates/dark-anonymous-credentials",
+    # KVAC — REAL keyed-verification anonymous credential (MAC_GGM over Ristretto),
+    # the cryptographic article that supersedes the SHA256 anon-credential stubs above.
+    "crates/dark-kvac",
+    # KVAC × x402 — binds a KVAC presentation to an x402 resource scope; the
+    # per-context nullifier is the anonymous replay / rate-limit key.
+    "crates/dark-x402-kvac",
     "crates/dark-anonymous-payment",
     "crates/dark-anonymous-swap",
     "crates/dark-audit-log",

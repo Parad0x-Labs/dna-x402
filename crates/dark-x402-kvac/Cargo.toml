@@ -1,0 +1,24 @@
+[package]
+name = "dark-x402-kvac"
+version = "0.1.0"
+edition = "2021"
+description = "Wires the KVAC anonymous credential into the x402 paid-call flow: an agent presents a credential bound to the x402 resource scope instead of revealing payer_pubkey, and the per-context nullifier becomes the anonymous replay / rate-limit key (DEVNET, unaudited)."
+
+[features]
+default = ["std"]
+std = ["serde_json"]
+
+[dependencies]
+dark-kvac = { path = "../dark-kvac" }
+dark-x402-core = { path = "../dark-x402-core" }
+curve25519-dalek = { version = "3.2.1", default-features = false, features = ["u64_backend"] }
+sha2 = "0.9"   # matches dark-kvac's digest 0.9 (curve25519-dalek 3.2.1)
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", optional = true }
+
+[dev-dependencies]
+
+[[bin]]
+name = "x402_kvac_gateway_e2e"
+path = "src/bin/x402_kvac_gateway_e2e.rs"
+required-features = ["std"]

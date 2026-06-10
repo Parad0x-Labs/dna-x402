@@ -1,0 +1,71 @@
+{
+  "demo": "x402 × KVAC — anonymous tiered access + per-(resource,epoch) rate-limit",
+  "cluster": "devnet",
+  "program_id": "AFTuz5s58FEwQoQBxAdvWFrXAVnS9XzC43XQgL2Canpg",
+  "gateway_learns_agent_identity": false,
+  "properties": {
+    "forged_issuer_denied": true,
+    "malformed_denied": true,
+    "new_epoch_fresh_nullifier": true,
+    "new_resource_fresh_nullifier": true,
+    "two_shows_same_context_same_nullifier": true,
+    "two_shows_same_context_unlinkable_bytes": true
+  },
+  "x402_requirements": {
+    "resource_A": {
+      "resource": "https://gateway.dna/x402/infer",
+      "scope_hash": "f766664f2a5145cdcd793825a1004c9d3b141cdec9459c49070f406403aebb83"
+    },
+    "resource_B": {
+      "resource": "https://gateway.dna/x402/embed",
+      "scope_hash": "90dd49ceb489a7f9fa174cbd7fd26a56de0925df97318d3444fa621a931d4059"
+    }
+  },
+  "results": [
+    {
+      "epoch": 7,
+      "expect": "success",
+      "label": "A/epoch7 first call",
+      "nullifier": "4ea472eaf01eeaee8e83a6988fe3178d76760131453c028a2249187dfe6c624d",
+      "resource": "https://gateway.dna/x402/infer",
+      "sig": "zExZVwgDius7GoLQhaULfJkhQk8SZxFkafsmuB6C7D9DUMAU3otLh7urFCVYr4RXdwpoxd3nnz6bkpKPQwH6zD9",
+      "pda": "6rXggBFnkGzQ6taYRXLnG7BbnbPpLavfbxXoN6YkNY4Q",
+      "slot": 468409526,
+      "ok": true
+    },
+    {
+      "epoch": 7,
+      "expect": "rate-limited (AlreadyRecorded)",
+      "label": "A/epoch7 replay (same agent, same epoch)",
+      "nullifier": "4ea472eaf01eeaee8e83a6988fe3178d76760131453c028a2249187dfe6c624d",
+      "resource": "https://gateway.dna/x402/infer",
+      "reverted": true,
+      "error": "Custom(10) = AlreadyRecorded (0xa)",
+      "program_log": "Program AFTuz5s58FEwQoQBxAdvWFrXAVnS9XzC43XQgL2Canpg failed: custom program error: 0xa",
+      "ok": true
+    },
+    {
+      "epoch": 8,
+      "expect": "success",
+      "label": "A/epoch8 (new epoch)",
+      "nullifier": "2870198cd289b53371c7b504411c7919c76392086e389cc59c421c2f067ea97c",
+      "resource": "https://gateway.dna/x402/infer",
+      "sig": "5mHqnbLTVDb8LAKqFG5Y78S4HSQVjzHfJqQwtWY137nuy6cQe1AVTnDEiBGJqqEpn59JDdwGenfaTCzisCALiDBR",
+      "pda": "egs8YviWCJ5jSc1B2RCHqioMtvWSjMWfYizTQVuU2Vo",
+      "slot": 468409528,
+      "ok": true
+    },
+    {
+      "epoch": 7,
+      "expect": "success",
+      "label": "B/epoch7 (new resource)",
+      "nullifier": "6ea2cf52b9bb18ce2ffc2a89d09a55b31c0e27e53bd7d84d94599061757c2a0a",
+      "resource": "https://gateway.dna/x402/embed",
+      "sig": "5xQw17T3raL6qPefSXDMwCs57oMx4RiESUHcdDCVNAD436vkPdXddFTpizRdUbhC94MXfrQDtt1HGYuy36nW5ToW",
+      "pda": "Fij1peqafY8r5ZNY5HpxN2hPQW8Qb1NxjwZwgKw6Bx86",
+      "slot": 468409530,
+      "ok": true
+    }
+  ],
+  "all_ok": true
+}

@@ -1,0 +1,39 @@
+{
+  "adversarial_checks": {
+    "forged_nullifier_rejected": true,
+    "noncanonical_wire_rejected": true,
+    "nullifiers_differ_across_context": true,
+    "wrong_context_rejected": true
+  },
+  "all_ok": true,
+  "crate": "dark-kvac",
+  "credential": {
+    "attributes_hidden": true,
+    "spend_cap": 1000000,
+    "tier": 2
+  },
+  "iparams_CW_hex": "00384fcfe7af0468bec8bff8efb1bb53273fb6e1d2d5bc2a74fd0780216f587a",
+  "iparams_I_hex": "8c3c2b9dd07045aa51e003ebae1fa138ea4cd4e4a5431552fc23b3aad74b0438",
+  "is_stub": false,
+  "issuance_proof_verified": true,
+  "mainnet_ready": false,
+  "ms_pok_verified": true,
+  "scheme": "KVAC keyed-verification anonymous credential (MAC_GGM / ristretto255)",
+  "shows": [
+    {
+      "context_hex": "3890f08b1e9be84c35a95aa347018d9cdb4971ee6c42377b4667d55daf7aea16",
+      "context_label": "x402:gateway/quote:epoch-7",
+      "nullifier_hex": "fa5031decfefe85ddd8b03e18ea16a22887a6956ec7bf38f4ed345dd01a80359",
+      "presentation_wire_len": 448,
+      "verified": true
+    },
+    {
+      "context_hex": "6dc31063ba44154c194f6b73a09e2efc539d24fe2b52b32723deb38367dfe9f7",
+      "context_label": "x402:gateway/infer:epoch-7",
+      "nullifier_hex": "3439feb5a0e3881fe6e44b41a3bd908484f9882168ecd3076623c9510bba0a3f",
+      "presentation_wire_len": 448,
+      "verified": true
+    }
+  ],
+  "source": "CMZ 2013 (eprint 2013/516) + Signal 2019 (eprint 2019/1416)"
+}

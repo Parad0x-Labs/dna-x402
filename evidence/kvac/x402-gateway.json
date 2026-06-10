@@ -1,0 +1,53 @@
+{
+  "all_ok": true,
+  "demo": "x402 × KVAC — anonymous tiered access with per-(resource,epoch) rate-limit",
+  "gateway_learns_agent_identity": false,
+  "properties": {
+    "forged_issuer_denied": true,
+    "malformed_denied": true,
+    "new_epoch_fresh_nullifier": true,
+    "new_resource_fresh_nullifier": true,
+    "two_shows_same_context_same_nullifier": true,
+    "two_shows_same_context_unlinkable_bytes": true
+  },
+  "records": [
+    {
+      "epoch": 7,
+      "expect": "success",
+      "label": "A/epoch7 first call",
+      "nullifier": "4ea472eaf01eeaee8e83a6988fe3178d76760131453c028a2249187dfe6c624d",
+      "resource": "https://gateway.dna/x402/infer"
+    },
+    {
+      "epoch": 7,
+      "expect": "rate-limited (AlreadyRecorded)",
+      "label": "A/epoch7 replay (same agent, same epoch)",
+      "nullifier": "4ea472eaf01eeaee8e83a6988fe3178d76760131453c028a2249187dfe6c624d",
+      "resource": "https://gateway.dna/x402/infer"
+    },
+    {
+      "epoch": 8,
+      "expect": "success",
+      "label": "A/epoch8 (new epoch)",
+      "nullifier": "2870198cd289b53371c7b504411c7919c76392086e389cc59c421c2f067ea97c",
+      "resource": "https://gateway.dna/x402/infer"
+    },
+    {
+      "epoch": 7,
+      "expect": "success",
+      "label": "B/epoch7 (new resource)",
+      "nullifier": "6ea2cf52b9bb18ce2ffc2a89d09a55b31c0e27e53bd7d84d94599061757c2a0a",
+      "resource": "https://gateway.dna/x402/embed"
+    }
+  ],
+  "x402_requirements": {
+    "resource_A": {
+      "resource": "https://gateway.dna/x402/infer",
+      "scope_hash": "f766664f2a5145cdcd793825a1004c9d3b141cdec9459c49070f406403aebb83"
+    },
+    "resource_B": {
+      "resource": "https://gateway.dna/x402/embed",
+      "scope_hash": "90dd49ceb489a7f9fa174cbd7fd26a56de0925df97318d3444fa621a931d4059"
+    }
+  }
+}

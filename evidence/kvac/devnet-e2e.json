@@ -1,0 +1,47 @@
+{
+  "scheme": "KVAC keyed-verification anonymous credential (MAC_GGM / ristretto255)",
+  "cluster": "devnet",
+  "program_id": "AFTuz5s58FEwQoQBxAdvWFrXAVnS9XzC43XQgL2Canpg",
+  "deploy_sig": "5Abn8EdhUwfPJmbgkGKdkSD5XTNyoXUCvfa9G8v69ZoNKq3Jq7LZqdBmoe6ohVdfk8waKdxmv4cpxuVevRHyT4RT",
+  "payer": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "host_ceremony": {
+    "all_ok": true,
+    "issuance_proof_verified": true,
+    "ms_pok_verified": true
+  },
+  "scenarios": [
+    {
+      "scenario": "record_n_A",
+      "context": "x402:gateway/quote:epoch-7",
+      "nullifier": "fa5031decfefe85ddd8b03e18ea16a22887a6956ec7bf38f4ed345dd01a80359",
+      "expect": "success",
+      "sig": "3uH1H6WgTTxdneJSAv6B9t1PZfGR2z9saHGgVLgmTMyp7omWyBYBDZyuE3vVAjxsRSFwyaWgktUU7FbADtuLhDMY",
+      "pda": "EpPD5m1m5AQbHTWLHsmkNqWypM1vXym6eumKhXZS8NvR",
+      "slot": 468405616,
+      "ok": true
+    },
+    {
+      "scenario": "replay_n_A_double_spend",
+      "nullifier": "fa5031decfefe85ddd8b03e18ea16a22887a6956ec7bf38f4ed345dd01a80359",
+      "expect": "AlreadyRecorded",
+      "reverted": true,
+      "error": "InstructionError: Custom(10) = AlreadyRecorded (custom program error 0xa)",
+      "verified_via": "simulateTransaction — program log: \"failed: custom program error: 0xa\"",
+      "ok": true
+    },
+    {
+      "scenario": "record_n_B_diff_context",
+      "context": "x402:gateway/infer:epoch-7",
+      "nullifier": "3439feb5a0e3881fe6e44b41a3bd908484f9882168ecd3076623c9510bba0a3f",
+      "expect": "success",
+      "sig": "3ss7jKJWWduErxCoBjwwMu39oWun3rEtesrody1aXfabRwmTRG5a7uoD4n6ECZKnki4YqfD4h8R9ut8BBaJGX7p4",
+      "pda": "5tBZqzWpwmDteDVfTyop9XgMHJdLUs8Z3zE16cazNFE2",
+      "slot": 468405618,
+      "ok": true
+    }
+  ],
+  "pdas_recorded": true,
+  "pda_A_record_len": 41,
+  "pda_B_record_len": 41,
+  "all_ok": true
+}

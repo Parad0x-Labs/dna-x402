@@ -2207,6 +2207,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dark-kvac"
+version = "0.1.0"
+dependencies = [
+ "curve25519-dalek",
+ "hex",
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "sha2 0.9.9",
+]
+
+[[package]]
 name = "dark-kzg-verifier"
 version = "0.1.0"
 dependencies = [
@@ -2545,7 +2557,7 @@ name = "dark-poseidon-real"
 version = "0.1.0"
 dependencies = [
  "ark-bn254",
- "ark-ff",
+ "ark-ff 0.4.2",
  "hex",
  "light-poseidon",
  "sha2 0.10.9",
@@ -3632,6 +3644,18 @@ dependencies = [
  "hex",
  "sha2 0.11.0",
  "solana-program",
+]
+
+[[package]]
+name = "dark-x402-kvac"
+version = "0.1.0"
+dependencies = [
+ "curve25519-dalek",
+ "dark-kvac",
+ "dark-x402-core",
+ "serde",
+ "serde_json",
+ "sha2 0.9.9",
 ]
 
 [[package]]
