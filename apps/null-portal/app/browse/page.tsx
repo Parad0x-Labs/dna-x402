@@ -6,7 +6,13 @@
 export const dynamic = "force-dynamic";
 
 import { Browse } from "@/components/Browse";
+import { Offers } from "@/components/Offers";
 
 export default function BrowsePage() {
-  return <Browse />;
+  return (
+    <>
+      <Browse />
+      <Offers />
+    </>
+  );
 }

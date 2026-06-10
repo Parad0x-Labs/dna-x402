@@ -573,6 +573,71 @@ export async function ixSettlePremiumSol(
   });
 }
 
+// ── Make-offer (0x0A MakeOffer / 0x0B AcceptOffer / 0x0C CancelOffer) ──────────
+// A buyer escrows a standing SOL offer on any REGISTERED name; the owner accepts
+// (95% owner / 5% treasury, name → buyer) or the buyer cancels (full refund). No
+// timers, no reveal. OfferRecord (74B, disc 'O') PDA = [b"offer", name_hash, buyer].
+export const IX_MAKE_OFFER = 0x0a;
+export const IX_ACCEPT_OFFER = 0x0b;
+export const IX_CANCEL_OFFER = 0x0c;
+export const OFFER_SEED = new TextEncoder().encode("offer");
+export const OFFER_DISC = 0x4f; // 'O'
+export const OFFER_SIZE = 74;
+export const OF_OFF_BUYER = 1; // [32]
+export const OF_OFF_DOMAIN = 33; // [32]
+export const OF_OFF_AMOUNT = 65; // u64 lamports
+/** Hardcoded protocol treasury (the 5% cut). Must match PROTOCOL_TREASURY in the program. */
+export const PROTOCOL_TREASURY = new PublicKey("F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY");
+
+/** OfferRecord PDA for (name, buyer). */
+export async function offerPda(c: Cluster | ClusterConfig, name: string, buyer: PublicKey): Promise<PublicKey> {
+  const h = await nameHash(name);
+  return PublicKey.findProgramAddressSync([OFFER_SEED, h, buyer.toBuffer()], auctionProgramFor(c))[0];
+}
+
+/** MakeOffer (0x0A): [buyer(s,w), domain(ro), offer(w), null_reg(ro), system]. */
+export async function ixMakeOfferSol(c: Cluster | ClusterConfig, buyer: PublicKey, name: string, amountLamports: bigint): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: buyer, isSigner: true, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: false },
+      { pubkey: await offerPda(c, name, buyer), isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_MAKE_OFFER), padName64(name), u64le(amountLamports))),
+  });
+}
+
+/** AcceptOffer (0x0B): [owner(s,w), domain(w), offer(w), buyer(ro), treasury(w), null_reg(ro)]. */
+export async function ixAcceptOfferSol(c: Cluster | ClusterConfig, owner: PublicKey, name: string, buyer: PublicKey): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: owner, isSigner: true, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await offerPda(c, name, buyer), isSigner: false, isWritable: true },
+      { pubkey: buyer, isSigner: false, isWritable: false },
+      { pubkey: PROTOCOL_TREASURY, isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_ACCEPT_OFFER), padName64(name))),
+  });
+}
+
+/** CancelOffer (0x0C): [buyer(s,w), offer(w)]. */
+export async function ixCancelOfferSol(c: Cluster | ClusterConfig, buyer: PublicKey, name: string): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: buyer, isSigner: true, isWritable: true },
+      { pubkey: await offerPda(c, name, buyer), isSigner: false, isWritable: true },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_CANCEL_OFFER), padName64(name))),
+  });
+}
+
 // ── NullPay stealth-meta layout (devnet registrar v2 NullDomain) ──────────────
 // The recipient's 64-byte ed25519 meta-address (spend_pub || view_pub) is stored
 // at offset 154; a v2 account is ≥ 218 bytes. (scripts/nullpay/devnet-e2e.mjs)

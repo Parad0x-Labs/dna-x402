@@ -32,6 +32,11 @@ import {
   AS_STATUS_ACTIVE,
   AUCTION_SIZE,
   AUCTION_SIZE_V1,
+  OFFER_DISC,
+  OFFER_SIZE,
+  OF_OFF_BUYER,
+  OF_OFF_DOMAIN,
+  OF_OFF_AMOUNT,
 } from "./null-sdk";
 import { CLUSTERS, configFor, type Cluster } from "./cluster";
 
@@ -344,6 +349,55 @@ export async function readMarketplaceListings(
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return { wired: true, program: program.toBase58(), programAccounts, listings };
+}
+
+// ── Make-offer: read all OfferRecords + resolve their names ───────────────────
+export interface OfferView {
+  pda: string;       // the OfferRecord PDA
+  buyer: string;     // who made the offer
+  domainPda: string; // the NullDomain the offer targets
+  name: string;      // resolved plaintext name ("" if unresolved)
+  amount: bigint;    // lamports offered
+}
+export interface OffersSnapshot {
+  offers: OfferView[];
+  rpcError?: string;
+}
+/** Every standing offer on the cluster (OfferRecord accounts, disc 'O', dataSize 74),
+ *  with names resolved. The caller filters by buyer (my offers) or owner (incoming). */
+export async function readOffers(cluster: Cluster): Promise<OffersSnapshot> {
+  const cfg = configFor(cluster);
+  const program = new PublicKey(cfg.auction);
+  const conn = connFor(cfg.rpc);
+  let raw: { pubkey: PublicKey; account: { data: Uint8Array } }[];
+  try {
+    raw = (await gpaResilient(cluster, program, { filters: [{ dataSize: OFFER_SIZE }] })) as unknown as typeof raw;
+  } catch (e) {
+    return { offers: [], rpcError: e instanceof Error ? e.message : String(e) };
+  }
+  const recs = raw
+    .filter((a) => a.account.data.length >= OFFER_SIZE && a.account.data[0] === OFFER_DISC)
+    .map((a) => ({
+      pda: a.pubkey.toBase58(),
+      buyer: new PublicKey(a.account.data.subarray(OF_OFF_BUYER, OF_OFF_BUYER + 32)).toBase58(),
+      domain: new PublicKey(a.account.data.subarray(OF_OFF_DOMAIN, OF_OFF_DOMAIN + 32)),
+      amount: readU64LE(a.account.data, OF_OFF_AMOUNT),
+    }));
+  // Resolve domain PDAs → plaintext names (batch).
+  const names = new Map<string, string>();
+  for (let i = 0; i < recs.length; i += 100) {
+    const slice = recs.slice(i, i + 100);
+    const infos = await conn.getMultipleAccountsInfo(slice.map((r) => r.domain));
+    infos.forEach((info, j) => {
+      if (info && info.data.length > 0 && info.data[0] === NULL_DOMAIN_DISC) {
+        names.set(slice[j].domain.toBase58(), decodeName(info.data));
+      }
+    });
+  }
+  const offers: OfferView[] = recs
+    .map((r) => ({ pda: r.pda, buyer: r.buyer, domainPda: r.domain.toBase58(), name: names.get(r.domain.toBase58()) ?? "", amount: r.amount }))
+    .sort((a, b) => (b.amount > a.amount ? 1 : -1));
+  return { offers };
 }
 
 // ── NullPay: resolve a .null name's published stealth meta-address ─────────────
