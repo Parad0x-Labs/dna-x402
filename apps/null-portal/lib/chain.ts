@@ -12,22 +12,39 @@ import {
   TOKEN_2022_PROGRAM,
   NULL_DOMAIN_DISC,
   ND_OFF_OWNER,
+  ND_OFF_STEALTH_META,
+  ND_STEALTH_META_LEN,
   domainPda,
+  domainPdaFor,
   ataOf,
 } from "./null-sdk";
+import { CLUSTERS, configFor, type Cluster } from "./cluster";
 
 // Default to a fast KEYLESS public RPC — api.mainnet-beta.solana.com is slow +
 // heavily rate-limited (429s). publicnode needs no signup. For production, set
 // NEXT_PUBLIC_RPC_URL to a Helius/Triton/QuickNode endpoint for max speed.
-export const DEFAULT_RPC =
-  process.env.NEXT_PUBLIC_RPC_URL || "https://solana-rpc.publicnode.com";
+export const DEFAULT_RPC = CLUSTERS.mainnet.rpc;
 
-// Reuse one Connection (keeps its keep-alive fetch agent) instead of building a
-// fresh one on every keystroke.
-let _conn: Connection | null = null;
+// One Connection per cluster RPC (keeps its keep-alive fetch agent) instead of
+// building a fresh one on every keystroke.
+const _conns = new Map<string, Connection>();
+function connFor(rpc: string): Connection {
+  let c = _conns.get(rpc);
+  if (!c) {
+    c = new Connection(rpc, "confirmed");
+    _conns.set(rpc, c);
+  }
+  return c;
+}
+
+/** The mainnet connection — the register/search/my-names default. */
 export function getConnection(): Connection {
-  if (!_conn) _conn = new Connection(DEFAULT_RPC, "confirmed");
-  return _conn;
+  return connFor(DEFAULT_RPC);
+}
+
+/** Cluster-aware connection (mainnet | devnet). Used by /pay on devnet. */
+export function getConnectionForCluster(cluster: Cluster): Connection {
+  return connFor(CLUSTERS[cluster].rpc);
 }
 
 export type Availability =
@@ -119,4 +136,42 @@ export async function getNullBalanceAtomic(
   } catch {
     return 0n;
   }
+}
+
+// ── NullPay: resolve a .null name's published stealth meta-address ─────────────
+
+export type StealthMetaResult =
+  | { status: "found"; pda: string; meta: Uint8Array }
+  | { status: "no-meta"; pda: string } // domain exists but never published a meta
+  | { status: "not-found"; pda: string }; // name is unregistered on this cluster
+
+/**
+ * Resolve a `.null` name on the given cluster and read its 64-byte stealth
+ * meta-address (spend_pub || view_pub) from offset 154 of the NullDomain
+ * account. Returns "no-meta" if the domain exists but has not published one,
+ * and "not-found" if the name is unregistered.
+ */
+export async function resolveStealthMeta(
+  conn: Connection,
+  cluster: Cluster,
+  name: string,
+): Promise<StealthMetaResult> {
+  const cfg = configFor(cluster);
+  const pda = await domainPdaFor(cfg, name);
+  const pdaStr = pda.toBase58();
+  const info = await conn.getAccountInfo(pda);
+  if (!info || info.data.length === 0) {
+    return { status: "not-found", pda: pdaStr };
+  }
+  const data = info.data;
+  const end = ND_OFF_STEALTH_META + ND_STEALTH_META_LEN;
+  if (data.length < end) {
+    return { status: "no-meta", pda: pdaStr };
+  }
+  const meta = Uint8Array.from(data.subarray(ND_OFF_STEALTH_META, end));
+  // A never-set meta is all-zero (the account was reallocated but not written).
+  if (meta.every((b) => b === 0)) {
+    return { status: "no-meta", pda: pdaStr };
+  }
+  return { status: "found", pda: pdaStr, meta };
 }

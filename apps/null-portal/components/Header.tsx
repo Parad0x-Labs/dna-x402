@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWallet } from "./WalletProvider";
+import { useCluster } from "./ClusterProvider";
 import { shortAddr } from "@/lib/null-sdk";
+import type { Cluster } from "@/lib/cluster";
 
 function ConnectButton() {
   const { address, connecting, connect, disconnect, phantomAvailable } = useWallet();
@@ -46,6 +48,23 @@ function ConnectButton() {
   );
 }
 
+/** Small mono cluster pill — click cycles mainnet ⇄ devnet, persisted. */
+function ClusterPill() {
+  const { cluster, setCluster, ready } = useCluster();
+  const next: Cluster = cluster === "mainnet" ? "devnet" : "mainnet";
+  const dot = cluster === "mainnet" ? "bg-acc" : "bg-steel";
+  return (
+    <button
+      onClick={() => setCluster(next)}
+      title={`active cluster: ${cluster} — click to switch to ${next}`}
+      className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[11px] rounded-md border border-line bg-surf px-2.5 py-1.5 text-dim hover:border-line2 transition-colors"
+    >
+      <span className={`inline-block w-[6px] h-[6px] rounded-full ${dot}`} />
+      <span className="tracking-[1px] uppercase">{ready ? cluster : "…"}</span>
+    </button>
+  );
+}
+
 export function Header() {
   const pathname = usePathname();
   const link = (href: string, label: string) => (
@@ -66,15 +85,19 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
             <span className="inline-block w-[7px] h-[7px] rounded-full bg-acc shadow-[0_0_0_3px_rgba(45,212,160,0.15)]" />
             <span className="font-mono text-sm font-bold tracking-wider">
-              .null<span className="hidden sm:inline text-faint group-hover:text-dim transition-colors">/register</span>
+              web0<span className="text-acc">.null</span>
             </span>
           </Link>
           <nav className="flex items-center gap-3 sm:gap-4">
             {link("/", "search")}
+            {link("/pay", "pay")}
             {link("/my-names", "my names")}
           </nav>
         </div>
-        <ConnectButton />
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <ClusterPill />
+          <ConnectButton />
+        </div>
       </div>
     </header>
   );

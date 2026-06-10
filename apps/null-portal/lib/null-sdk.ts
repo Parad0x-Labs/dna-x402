@@ -18,8 +18,12 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { configFor, type Cluster, type ClusterConfig } from "./cluster";
 
 // ── Canonical mainnet ids (verified on-chain — DO NOT EDIT) ───────────────────
+// NOTE: REGISTRAR_PROGRAM is the mainnet default used by the register/search/
+// my-names flow. Cluster-aware callers (e.g. /pay on devnet) should derive the
+// program + PDA via registrarFor(cluster) / domainPdaFor(cluster, name) below.
 export const REGISTRAR_PROGRAM = new PublicKey(
   "H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm",
 );
@@ -43,6 +47,10 @@ export const TOKEN_2022_PROGRAM = new PublicKey(
 );
 export const ATA_PROGRAM = new PublicKey(
   "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+);
+/** Canonical SPL Memo program (same id on devnet + mainnet). */
+export const MEMO_PROGRAM = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
 );
 
 // ── Target fee (the on-chain target; read the LIVE value from config) ─────────
@@ -126,6 +134,37 @@ export async function domainPda(name: string): Promise<PublicKey> {
     REGISTRAR_PROGRAM,
   )[0];
 }
+
+/** The registrar program for a cluster. */
+export function registrarFor(c: Cluster | ClusterConfig): PublicKey {
+  const cfg = typeof c === "string" ? configFor(c) : c;
+  return new PublicKey(cfg.registrar);
+}
+
+/**
+ * Cluster-aware domain PDA. mainnet seeds with sha256(padName64(name)); devnet
+ * (the NullPay registrar) seeds with the RAW utf-8 name bytes. The kind comes
+ * from the cluster config so /pay resolves the right account on devnet.
+ */
+export async function domainPdaFor(
+  c: Cluster | ClusterConfig,
+  name: string,
+): Promise<PublicKey> {
+  const cfg = typeof c === "string" ? configFor(c) : c;
+  const program = new PublicKey(cfg.registrar);
+  const seed =
+    cfg.domainSeedKind === "raw"
+      ? new TextEncoder().encode(name)
+      : await nameHash(name);
+  return PublicKey.findProgramAddressSync([DOMAIN_SEED, seed], program)[0];
+}
+
+// ── NullPay stealth-meta layout (devnet registrar v2 NullDomain) ──────────────
+// The recipient's 64-byte ed25519 meta-address (spend_pub || view_pub) is stored
+// at offset 154; a v2 account is ≥ 218 bytes. (scripts/nullpay/devnet-e2e.mjs)
+export const ND_OFF_STEALTH_META = 154;
+export const ND_STEALTH_META_LEN = 64;
+export const ND_V2_MIN_LEN = 218;
 
 /** Canonical ATA of (owner, mint, tokenProgram). Mirrors ataOf in _lib.mjs:
  *  find_program_address([owner, token_program, mint], ATA_PROGRAM). */
