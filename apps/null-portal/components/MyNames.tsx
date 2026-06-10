@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "./WalletProvider";
-import { getConnection, getOwnedNames, type OwnedName } from "@/lib/chain";
+import { getOwnedNames, type OwnedName } from "@/lib/chain";
 import { shortAddr, solscanAddr } from "@/lib/null-sdk";
 
 export function MyNames() {
@@ -16,8 +16,7 @@ export function MyNames() {
     setLoading(true);
     setError(null);
     try {
-      const conn = getConnection();
-      const owned = await getOwnedNames(conn, new PublicKey(owner));
+      const owned = await getOwnedNames("mainnet", new PublicKey(owner));
       setNames(owned);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

@@ -177,6 +177,22 @@ export function Browse() {
                 retry
               </button>
             </div>
+          ) : state.kind === "ready" && state.snap.rpcError ? (
+            /* scan ran but the RPC refused getProgramAccounts (public nodes block it on
+               mainnet) — show the real reason, NOT a misleading "no listings". */
+            <div className="rounded-web0 border-[1.5px] border-magenta/50 bg-magenta/[0.06] p-6">
+              <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-magenta">
+                <span className="h-[7px] w-[7px] rounded-full bg-magenta" />
+                marketplace rpc unavailable
+              </div>
+              <div className="break-words text-sm text-paper">{state.snap.rpcError}</div>
+              <button
+                onClick={() => load(cluster)}
+                className="mt-4 rounded-lg border-[1.5px] border-line px-4 py-2 font-mono text-xs font-bold text-dim transition hover:-translate-y-0.5 hover:border-transparent hover:bg-mint hover:text-ink0"
+              >
+                retry
+              </button>
+            </div>
           ) : hasLive ? (
             /* ── live listings (renders the moment a listing layout is wired) ── */
             <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">

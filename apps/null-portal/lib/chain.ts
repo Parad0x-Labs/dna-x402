@@ -30,6 +30,7 @@ import {
   AS_OFF_BUY_NOW,
   AS_OFF_AUCTION_ENABLED,
   AS_STATUS_ACTIVE,
+  AUCTION_SIZE,
   AUCTION_SIZE_V1,
 } from "./null-sdk";
 import { CLUSTERS, configFor, type Cluster } from "./cluster";
@@ -65,6 +66,65 @@ function connFor(rpc: string): Connection {
 /** The mainnet connection — the register/search/my-names default. */
 export function getConnection(): Connection {
   return connFor(DEFAULT_RPC);
+}
+
+// ── Resilient getProgramAccounts ──────────────────────────────────────────────
+// gPA is a heavy, unindexed program scan. The keyless default (publicnode) is fast
+// for single-account reads but CANNOT serve gPA at all — it 504 Gateway-Times-out
+// after ~90s even WITH a dataSize filter (measured). So for program scans we:
+//   1. prefer a gPA-capable endpoint (a dedicated RPC if NEXT_PUBLIC_RPC_URL_* is set,
+//      else api.mainnet-beta), and keep publicnode only as a last resort;
+//   2. cap each attempt with a CLIENT timeout so a hung endpoint can't stall the UI;
+//   3. fall back across endpoints, surfacing an error only if every one fails.
+// Single-account reads (getAccountInfo / availability) keep using the fast default RPC.
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const GPA_TIMEOUT_MS = 11_000;
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("client timeout")), ms))]);
+}
+// "this endpoint can't serve the scan → try the next one". Covers transient failures
+// (429/5xx/timeout/network) AND hard refusals (403 Access-forbidden / CORS / "method not
+// available on free tier") — every keyless public mainnet RPC refuses browser gPA one way
+// or another, so we sweep the list and only surface an error once ALL endpoints fail.
+function isEndpointUnusable(e: unknown): boolean {
+  const m = String((e as { message?: string })?.message ?? e).toLowerCase();
+  return /failed to fetch|fetch failed|429|too many|timeout|time-?out|gateway|40[13]|50[234]|forbidden|not available|free ?tier|not enabled|disabled|network|socket|econn|aborted/.test(m);
+}
+const ENV_MAIN_RPC = process.env.NEXT_PUBLIC_RPC_URL_MAINNET || process.env.NEXT_PUBLIC_RPC_URL;
+const ENV_DEV_RPC = process.env.NEXT_PUBLIC_RPC_URL_DEVNET;
+// gPA-capable endpoints in preference order. publicnode is OMITTED on purpose — it 504s
+// on every gPA. On MAINNET no keyless RPC serves browser program-scans, so a dedicated
+// NEXT_PUBLIC_RPC_URL_MAINNET (Helius/Triton/QuickNode) is required for the marketplace +
+// My-Names; devnet's api.devnet.solana.com does allow browser gPA.
+const RPC_FALLBACKS: Record<Cluster, string[]> = {
+  mainnet: Array.from(new Set([ENV_MAIN_RPC, "https://api.mainnet-beta.solana.com"].filter(Boolean) as string[])),
+  devnet: Array.from(new Set([ENV_DEV_RPC, "https://api.devnet.solana.com"].filter(Boolean) as string[])),
+};
+type GpaConfig = Parameters<Connection["getProgramAccounts"]>[1];
+type GpaResult = Awaited<ReturnType<Connection["getProgramAccounts"]>>;
+export class RpcScanUnavailable extends Error {
+  constructor(public cluster: Cluster, public lastDetail: string) {
+    super(
+      cluster === "mainnet"
+        ? `Mainnet program reads need a dedicated RPC. Public nodes block getProgramAccounts from browsers (last: ${lastDetail}). Set NEXT_PUBLIC_RPC_URL_MAINNET to a Helius/Triton/QuickNode endpoint (free tier).`
+        : `Couldn't reach an RPC for this scan (last: ${lastDetail}). Retry, or set NEXT_PUBLIC_RPC_URL_DEVNET.`,
+    );
+    this.name = "RpcScanUnavailable";
+  }
+}
+async function gpaResilient(cluster: Cluster, programId: PublicKey, config: GpaConfig): Promise<GpaResult> {
+  const rpcs = RPC_FALLBACKS[cluster];
+  let lastErr: unknown;
+  for (const rpc of rpcs) {
+    try {
+      return await withTimeout(connFor(rpc).getProgramAccounts(programId, config), GPA_TIMEOUT_MS);
+    } catch (e) {
+      lastErr = e;
+      if (!isEndpointUnusable(e)) throw e; // a genuine programming error — don't sweep
+      await sleep(150);
+    }
+  }
+  throw new RpcScanUnavailable(cluster, ((lastErr as { message?: string })?.message ?? "unknown").slice(0, 80));
 }
 
 /** Cluster-aware connection (mainnet | devnet). Used by /pay on devnet. */
@@ -126,14 +186,15 @@ function decodeName(data: Uint8Array): string {
  * decode + return it — each owned domain shows as its real name, e.g. "chat".
  */
 export async function getOwnedNames(
-  conn: Connection,
+  cluster: Cluster,
   owner: PublicKey,
   registrar: PublicKey = REGISTRAR_PROGRAM,
 ): Promise<OwnedName[]> {
-  const accounts = await conn.getProgramAccounts(registrar, {
-    // memcmp on the owner field @ offset 65 == the connected wallet. The disc
-    // ('N' @ byte 0) is re-checked client-side below so we never surface a
-    // non-NullDomain account that happens to share these bytes.
+  const accounts = await gpaResilient(cluster, registrar, {
+    // memcmp on the owner field @ offset 65 == the connected wallet, applied SERVER-side
+    // so the RPC returns ONLY this wallet's domains (a few accounts, milliseconds). The
+    // disc ('N' @ byte 0) is re-checked client-side below. gpaResilient prefers a
+    // gPA-capable endpoint + caps the call, so a slow node can't hang or crash the page.
     filters: [{ memcmp: { offset: ND_OFF_OWNER, bytes: owner.toBase58() } }],
   });
 
@@ -201,6 +262,9 @@ export interface MarketSnapshot {
   programAccounts: number | null;
   /** decoded listings — empty until a listing layout is wired in */
   listings: MarketListing[];
+  /** set when the program scan couldn't run (RPC blocked gPA) — UI shows this, not
+   *  a misleading "no listings". null/undefined means the scan ran fine. */
+  rpcError?: string;
 }
 
 /**
@@ -212,14 +276,19 @@ export async function readMarketplaceListings(
 ): Promise<MarketSnapshot> {
   const cfg = configFor(cluster);
   const program = new PublicKey(cfg.auction);
-  const conn = connFor(cfg.rpc);
+  const conn = connFor(cfg.rpc); // for the (cheap, single-batch) domain-name lookups below
 
   let raw: { pubkey: PublicKey; account: { data: Uint8Array } }[];
   try {
-    raw = (await conn.getProgramAccounts(program)) as unknown as typeof raw;
-  } catch {
-    // RPC may reject an unindexed getProgramAccounts; treat as "unknown".
-    return { wired: true, program: program.toBase58(), programAccounts: null, listings: [] };
+    // Only AuctionState records (325B): a server-side dataSize filter skips the commit
+    // (116B) + vault (165B) accounts, so the response is just the live listings and
+    // comes back in milliseconds on a gPA-capable endpoint (publicnode can't do gPA).
+    raw = (await gpaResilient(cluster, program, { filters: [{ dataSize: AUCTION_SIZE }] })) as unknown as typeof raw;
+  } catch (e) {
+    // Every endpoint failed/rejected the scan — surface a clear rpcError so the UI shows
+    // "couldn't reach the marketplace RPC" instead of a misleading "no listings".
+    const rpcError = e instanceof Error ? e.message : String(e);
+    return { wired: true, program: program.toBase58(), programAccounts: null, listings: [], rpcError };
   }
   const programAccounts = raw.length;
 

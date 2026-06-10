@@ -76,8 +76,8 @@ export function Sell() {
     setError(null);
     try {
       // listable names live under the registrar the AUCTION pairs with (sha256-v2).
-      const conn = getConnectionForCluster(c);
-      const owned = await getOwnedNames(conn, new PublicKey(owner), auctionRegistrarFor(c));
+      // gpaResilient (inside getOwnedNames) picks a gPA-capable RPC + caps the call.
+      const owned = await getOwnedNames(c, new PublicKey(owner), auctionRegistrarFor(c));
       setNames(owned);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
