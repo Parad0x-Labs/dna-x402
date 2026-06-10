@@ -18,8 +18,9 @@ float noise(vec2 p){ vec2 i=floor(p), f=fract(p);
   vec2 u=f*f*(3.-2.*f); return mix(mix(a,b,u.x),mix(c,d,u.x),u.y); }
 float fbm(vec2 p){ float v=0., a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6);
   for(int i=0;i<6;i++){ v+=a*noise(p); p=m*p; a*=.5; } return v; }
-// real stars: a glowing point per cell — sharp core + soft 1/d^2 halo, magnitude
-// spread (most faint, a few bright), blue<->warm tint, gentle twinkle.
+// real stars (Hubble/Webb look): glowing point per cell — sharp core + soft 1/d^2
+// halo, wide magnitude spread, stellar-temperature colour (blue->white->gold->orange),
+// gentle twinkle, and 4-point DIFFRACTION SPIKES on the brightest stars only.
 vec3 stars(vec2 P, float t){
   vec3 c = vec3(0.0);
   vec2 g = floor(P), f = fract(P);
@@ -28,11 +29,20 @@ vec3 stars(vec2 P, float t){
       vec2 o = vec2(float(i), float(j));
       float h = hash(g + o);
       vec2 sp = o + vec2(hash(g + o + 1.7), hash(g + o + 4.3));
-      float d = length(f - sp);
+      vec2 dv = f - sp;
+      float d = length(dv);
       float mag = pow(fract(h * 73.1), 7.0);              // few bright, many faint
       float tw  = 0.55 + 0.45 * sin(t * 2.4 + h * 55.0);  // twinkle
       float glow = mag * tw * (0.0023 / (d*d + 0.0006));  // bright core + soft halo
-      vec3 tint = mix(vec3(0.72,0.82,1.0), vec3(1.0,0.93,0.82), hash(g + o + 9.1));
+      // diffraction spikes — the telescope-photo signature; ~mag^2 so the brighter stars show them
+      float sx = exp(-abs(dv.y)*150.0) * exp(-abs(dv.x)*3.2);
+      float sy = exp(-abs(dv.x)*150.0) * exp(-abs(dv.y)*3.2);
+      glow += mag*mag * tw * (sx + sy) * 0.55;
+      // colour by stellar temperature: mostly blue-white, some gold, rare orange-red
+      float temp = hash(g + o + 9.1);
+      vec3 tint = temp < 0.55
+        ? mix(vec3(0.70,0.82,1.0), vec3(1.0,1.0,0.98), temp/0.55)
+        : mix(vec3(1.0,0.95,0.82), vec3(1.0,0.72,0.55), (temp-0.55)/0.45);
       c += tint * glow;
     }
   }
@@ -78,6 +88,14 @@ void main(){
   col += mix(cyan, violet, n) * ridge * smoothstep(0.25,0.80, n) * 0.16;
   float stat = fbm(warped*8.5 + t*0.55);   // fast high-freq = static crackle, only in the lit gas
   col += mint * smoothstep(0.62,0.95, stat) * smoothstep(0.45,0.90, n2) * 0.055;
+
+  // ── DARK DUST LANES — cold dust silhouetted against the gas. This is the structure
+  //    that makes real nebula photos read as photos, not a uniform glow (Pillars/Carina) ──
+  float lane = smoothstep(0.42, 0.64, fbm(warped*1.7 + vec2(2.5, -t*0.02)));
+  col *= mix(1.0, 0.55, lane * 0.55);
+  // bright star-forming KNOTS — warm ionized cores in the densest gas
+  float knot = smoothstep(0.74, 0.96, n) * smoothstep(0.55, 0.90, n2);
+  col += mix(magenta, vec3(1.0,0.86,0.66), 0.35) * knot * 0.22;
 
   // ── NEBULA MIST: fine dusty haze (gives the gaseous, misty grain, not liquid) ──
   float dust = fbm(warped*6.5 + vec2(t*0.03,-t*0.02));
