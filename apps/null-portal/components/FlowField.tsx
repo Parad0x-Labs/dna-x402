@@ -18,6 +18,26 @@ float noise(vec2 p){ vec2 i=floor(p), f=fract(p);
   vec2 u=f*f*(3.-2.*f); return mix(mix(a,b,u.x),mix(c,d,u.x),u.y); }
 float fbm(vec2 p){ float v=0., a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6);
   for(int i=0;i<6;i++){ v+=a*noise(p); p=m*p; a*=.5; } return v; }
+// real stars: a glowing point per cell — sharp core + soft 1/d^2 halo, magnitude
+// spread (most faint, a few bright), blue<->warm tint, gentle twinkle.
+vec3 stars(vec2 P, float t){
+  vec3 c = vec3(0.0);
+  vec2 g = floor(P), f = fract(P);
+  for(int j=-1;j<=1;j++){
+    for(int i=-1;i<=1;i++){
+      vec2 o = vec2(float(i), float(j));
+      float h = hash(g + o);
+      vec2 sp = o + vec2(hash(g + o + 1.7), hash(g + o + 4.3));
+      float d = length(f - sp);
+      float mag = pow(fract(h * 73.1), 7.0);              // few bright, many faint
+      float tw  = 0.55 + 0.45 * sin(t * 2.4 + h * 55.0);  // twinkle
+      float glow = mag * tw * (0.0023 / (d*d + 0.0006));  // bright core + soft halo
+      vec3 tint = mix(vec3(0.72,0.82,1.0), vec3(1.0,0.93,0.82), hash(g + o + 9.1));
+      c += tint * glow;
+    }
+  }
+  return c;
+}
 void main(){
   vec2 uv = gl_FragCoord.xy/uRes.xy;
   vec2 p  = (gl_FragCoord.xy - .5*uRes.xy)/uRes.y;
@@ -53,11 +73,8 @@ void main(){
   col += violet * smoothstep(0.58,0.92, dust) * 0.07;   // faint dust veils
   col *= 0.93 + 0.12*dust;                               // mottled cloud density
 
-  // ── scattered STARS: sparse pinpricks that twinkle (sells "deep space") ──
-  vec2 sc = floor(gl_FragCoord.xy / 2.5);
-  float sh = hash(sc);
-  float star = step(0.9975, sh) * (0.45 + 0.55*sin(t*2.6 + sh*40.0));
-  col += vec3(0.85,0.9,1.0) * max(star, 0.0) * 0.8;
+  // ── STARS: real glowing points (screen-fixed so they twinkle like a sky) ──
+  col += stars(p * 18.0 + 23.0, t) * 0.75;
 
   float lines = abs(fract(n2*9.0 - t*0.4) - 0.5);
   col += vec3(0.9,1.0,0.95) * smoothstep(0.49,0.5,lines) * 0.05;
