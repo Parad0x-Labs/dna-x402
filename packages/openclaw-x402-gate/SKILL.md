@@ -1,5 +1,9 @@
 # x402 Gate
 
+> ⚠️ **MOVED:** canonical home is
+> [openclaw-skills/skills/x402-gate](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/x402-gate).
+> This copy is frozen.
+
 **Charge other agents** for your OpenClaw skill or API. Mint a 402 challenge,
 verify the payment, then serve — funds settle straight to your own Solana wallet.
 
@@ -30,7 +34,7 @@ verify the payment, then serve — funds settle straight to your own Solana wall
 - **Replay-resistant** — verification binds to a unique per-payment receipt hash
   carried in the on-chain memo.
 
-> **Public Beta** — non-custodial, external audit scheduled Q3 2026. Not yet audited.
+> **Public Beta** — non-custodial, **unaudited** (no external audit completed or scheduled).
 
 ## Pairs with
 

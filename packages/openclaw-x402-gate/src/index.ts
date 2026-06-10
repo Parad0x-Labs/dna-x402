@@ -13,7 +13,7 @@
  *   - Revenue-grade gating: set requireOnChain=true so a payment is accepted only
  *     after the transaction is confirmed on Solana (not just a well-formed header).
  *
- * Status: Public Beta. Non-custodial, external audit scheduled Q3 2026.
+ * Status: Public Beta. Non-custodial, unaudited (no external audit completed or scheduled).
  */
 
 // Type-only: resolved from the host OpenClaw runtime at load time.

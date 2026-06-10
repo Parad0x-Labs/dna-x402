@@ -15,8 +15,8 @@
  *   - NETWORK: talks only to the configured Solana RPC and the target URL.
  *     No telemetry, no third-party endpoints.
  *
- * Status: Public Beta. Non-custodial, capped, external audit scheduled Q3 2026.
- * Not yet audited — do not point it at large balances.
+ * Status: Public Beta. Non-custodial, capped, unaudited (no external audit
+ * completed or scheduled) — do not point it at large balances.
  */
 
 // Type-only import: resolved from the host OpenClaw runtime at load time, same
