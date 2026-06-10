@@ -18,6 +18,7 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { poseidon2 } from "poseidon-lite";
 import { configFor, type Cluster, type ClusterConfig } from "./cluster";
 
 // ── Canonical mainnet ids (verified on-chain — DO NOT EDIT) ───────────────────
@@ -79,10 +80,28 @@ export const AS_DISC_PRIMARY = 0x50; // 'P' — premium acquisition (100% treasu
 export const AS_OFF_SELLER = 1;
 export const AS_OFF_DOMAIN = 33;
 export const AS_OFF_TREASURY = 129;
+export const AS_OFF_MIN_BID = 161; // u64 — min bid (LAMPORTS for SOL auctions)
+export const AS_OFF_TOKEN_VAULT = 226; // [32] — all-zero ⇒ SOL auction (bids escrowed in the auction PDA)
+export const AS_OFF_COMMIT_END = 274; // i64 — commit phase ends
+export const AS_OFF_REVEAL_END = 282; // i64 — reveal phase ends (settle after)
+export const AS_OFF_NUM_REVEALS = 298; // u64
 export const AS_OFF_STATUS = 306; // 0=ACTIVE 1=SETTLED 2=CANCELLED
 export const AS_OFF_BUY_NOW = 308; // u64 LAMPORTS (0 = auction-only)
 export const AS_OFF_AUCTION_ENABLED = 316; // u8
+export const AS_OFF_RESERVE = 317; // u64 — reserve (LAMPORTS for SOL auctions; 0 = none)
 export const AS_STATUS_ACTIVE = 0;
+export const AS_STATUS_SETTLED = 1;
+export const AS_STATUS_CANCELLED = 2;
+
+// auction (sealed-bid) instruction discriminants + commit PDA seed
+export const IX_COMMIT_BID = 0x02;
+export const IX_REVEAL_BID = 0x03;
+export const IX_SETTLE_AUCTION = 0x04;
+export const IX_CLAIM_REFUND = 0x06;
+export const COMMIT_SEED = new TextEncoder().encode("commit");
+
+// BN254 scalar field — the Poseidon commitment must reduce mod P (matches on-chain sol_poseidon).
+export const BN254_P = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 // Upfront listing fee + settlement cut (mirror state.rs).
 export const LISTING_FEE_LAMPORTS = 10_000_000n; // 0.01 SOL, charged at CreateListing
@@ -300,6 +319,170 @@ export async function ixBuyNowSol(
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
     data: Buffer.from(concatBytes(u8(IX_BUY_NOW), padName64(name))),
+  });
+}
+
+// ── SOL SEALED-BID AUCTION (commit → reveal → settle) ─────────────────────────
+// Proven on devnet: a listing with auction_enabled=1 AND a zero usdc_mint is a SOL
+// auction — bids are plain SOL escrowed in the auction PDA (no token vault).
+
+/** BidCommitment PDA: seeds [b"commit", auctionPda, bidder]. */
+export async function commitPda(
+  c: Cluster | ClusterConfig,
+  name: string,
+  bidder: PublicKey,
+): Promise<PublicKey> {
+  const a = await auctionPda(c, name);
+  return PublicKey.findProgramAddressSync([COMMIT_SEED, a.toBuffer(), bidder.toBuffer()], auctionProgramFor(c))[0];
+}
+
+/** Poseidon2(bid_lamports, blinding) → 32-byte BE commitment (matches on-chain sol_poseidon). */
+export function poseidonCommit(bidLamports: bigint, blinding: Uint8Array): Uint8Array {
+  let b = 0n;
+  for (const byte of blinding) b = (b << 8n) | BigInt(byte);
+  const h = poseidon2([bidLamports, b % BN254_P]);
+  const out = new Uint8Array(32);
+  let v = h;
+  for (let i = 31; i >= 0; i--) { out[i] = Number(v & 0xffn); v >>= 8n; }
+  return out;
+}
+
+/** Fresh 31-byte blinding (< BN254 field). The bidder MUST keep this to reveal later. */
+export function freshBlinding(): Uint8Array {
+  const b = new Uint8Array(31);
+  crypto.getRandomValues(b);
+  return b;
+}
+
+/**
+ * CreateListing (0x08) as a SOL SEALED-BID AUCTION: auction_enabled=1, usdc_mint=ZERO.
+ * Escrows the name + charges the 0.01 SOL fee. min_bid / reserve are in LAMPORTS.
+ * accounts: [seller(s,w), domain(w), auction(w), treasury(w,sys), null_reg(ro), system(ro)]
+ */
+export async function ixCreateSolAuction(
+  c: Cluster | ClusterConfig,
+  seller: PublicKey,
+  name: string,
+  minBidLamports: bigint,
+  reserveLamports: bigint,
+  commitSecs: number,
+  revealSecs: number,
+  treasury: PublicKey,
+): Promise<TransactionInstruction> {
+  const data = concatBytes(
+    u8(IX_CREATE_LISTING),
+    padName64(name),
+    u64le(0), // buy_now = 0 (auction-only)
+    u64le(reserveLamports),
+    u64le(minBidLamports),
+    u64le(commitSecs),
+    u64le(revealSecs),
+    u64le(0), // bond
+    u64le(1), // sol_price (dummy nonzero; unused for SOL bids)
+    u64le(1), // null_price (dummy nonzero)
+    u8(1), // auction_enabled = 1
+    new Uint8Array(32), // null_mint
+    new Uint8Array(32), // usdc_mint = ZERO ⇒ SOL auction (no vault)
+    treasury.toBytes(),
+  );
+  const domain = await auctionDomainPda(c, name);
+  const auction = await auctionPda(c, name);
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: seller, isSigner: true, isWritable: true },
+      { pubkey: domain, isSigner: false, isWritable: true },
+      { pubkey: auction, isSigner: false, isWritable: true },
+      { pubkey: treasury, isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(data),
+  });
+}
+
+/** CommitBid (0x02): [bidder(s,w), auction(w), commit(w), system]. commitment = poseidonCommit(...). */
+export async function ixCommitBid(
+  c: Cluster | ClusterConfig,
+  bidder: PublicKey,
+  name: string,
+  commitment: Uint8Array,
+): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: bidder, isSigner: true, isWritable: true },
+      { pubkey: await auctionPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await commitPda(c, name, bidder), isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_COMMIT_BID), padName64(name), commitment)),
+  });
+}
+
+/** RevealBid (0x03) SOL: [bidder(s,w), auction(w), commit(w), system]. Escrows the SOL bid. */
+export async function ixRevealBidSol(
+  c: Cluster | ClusterConfig,
+  bidder: PublicKey,
+  name: string,
+  bidLamports: bigint,
+  blinding: Uint8Array, // 31 bytes
+): Promise<TransactionInstruction> {
+  const blind32 = new Uint8Array(32);
+  blind32.set(blinding, 1); // leading zero byte + 31-byte blinding
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: bidder, isSigner: true, isWritable: true },
+      { pubkey: await auctionPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await commitPda(c, name, bidder), isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_REVEAL_BID), padName64(name), u64le(bidLamports), u8(CURRENCY_SOL), blind32)),
+  });
+}
+
+/**
+ * SettleAuction (0x04) SOL resale: [payer(s,w), auction(w), domain(w), seller(w), treasury(w),
+ *   dummyVault(ro), null_reg(ro), dummyTokenProg(ro)]. Anyone may crank it after the reveal phase.
+ */
+export async function ixSettleSol(
+  c: Cluster | ClusterConfig,
+  payer: PublicKey,
+  name: string,
+  sellerWallet: PublicKey,
+  treasuryWallet: PublicKey,
+): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: await auctionPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: sellerWallet, isSigner: false, isWritable: true },
+      { pubkey: treasuryWallet, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }, // dummy token_vault
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }, // dummy token_prog
+    ],
+    data: Buffer.from(concatBytes(u8(IX_SETTLE_AUCTION), padName64(name))),
+  });
+}
+
+/** ClaimBondRefund (0x06) SOL: [bidder(s,w), auction(W), commit(w)]. A loser reclaims their bid. */
+export async function ixClaimRefundSol(
+  c: Cluster | ClusterConfig,
+  bidder: PublicKey,
+  name: string,
+): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: bidder, isSigner: true, isWritable: true },
+      { pubkey: await auctionPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await commitPda(c, name, bidder), isSigner: false, isWritable: true },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_CLAIM_REFUND), padName64(name))),
   });
 }
 

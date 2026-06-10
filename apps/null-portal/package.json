@@ -13,6 +13,7 @@
   "dependencies": {
     "@solana/web3.js": "^1.95.4",
     "next": "15.5.19",
+    "poseidon-lite": "^0.3.0",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },

@@ -5,7 +5,7 @@ import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useWallet } from "./WalletProvider";
 import { useCluster } from "./ClusterProvider";
 import { getConnectionForCluster, getOwnedNames, type OwnedName } from "@/lib/chain";
-import { shortAddr, solscanAddr, ixCreateListingSol, auctionRegistrarFor, TREASURY } from "@/lib/null-sdk";
+import { shortAddr, solscanAddr, ixCreateListingSol, ixCreateSolAuction, auctionRegistrarFor, TREASURY } from "@/lib/null-sdk";
 import { explorerTx } from "@/lib/cluster";
 import { signAndSendInstructions } from "@/lib/wallet";
 
@@ -19,6 +19,16 @@ const ESCROW_PCT = 1; // optional escrow-as-a-service
 const PREMIUM_FLOOR_USD: Record<number, number> = { 1: 10_000, 2: 3_000, 3: 500 };
 
 type ListingType = "buy-now" | "auction";
+
+// auction phase lengths (commit phase = reveal phase = the chosen value). A bid is
+// SEALED during commit, then opened during reveal; settle runs after reveal ends.
+const DURATIONS: { key: string; label: string; secs: number }[] = [
+  { key: "2m", label: "2 min · test", secs: 120 },
+  { key: "1h", label: "1 hour", secs: 3600 },
+  { key: "12h", label: "12 hours", secs: 43200 },
+  { key: "1d", label: "1 day", secs: 86400 },
+  { key: "3d", label: "3 days", secs: 259200 },
+];
 
 const accents = ["mint", "lime", "cyan", "magenta"] as const;
 type Accent = (typeof accents)[number];
@@ -53,6 +63,7 @@ export function Sell() {
   const [picked, setPicked] = useState<string | null>(null); // pda of chosen name
   const [listingType, setListingType] = useState<ListingType>("buy-now");
   const [price, setPrice] = useState("1.5");
+  const [durKey, setDurKey] = useState("1d"); // auction phase length
   const [escrowOptIn, setEscrowOptIn] = useState(false);
 
   // on-chain listing tx state
@@ -118,9 +129,10 @@ export function Sell() {
   );
   const netSellerSol = sellerSol - escrowSol;
 
-  // Phase 1 wires the SOL buy-now path only. Premium (1–3 char) and auction
-  // listings are designed but not yet wired (they keep the "soon" panel).
-  const canList = !!selected && !isPremium && listingType === "buy-now" && priceNum > 0;
+  // SOL buy-now AND SOL sealed-bid auction are both wired (devnet-proven). Premium
+  // (1–3 char) stays "soon". For an auction, `price` is the starting / minimum bid.
+  const canList = !!selected && !isPremium && priceNum > 0 && (listingType === "buy-now" || listingType === "auction");
+  const dur = DURATIONS.find((d) => d.key === durKey) ?? DURATIONS[3];
 
   const onList = useCallback(async () => {
     if (!address || !selected || !canList) return;
@@ -129,13 +141,11 @@ export function Sell() {
     try {
       const conn = getConnectionForCluster(cluster);
       const lamports = BigInt(Math.round(priceNum * LAMPORTS_PER_SOL));
-      const ix = await ixCreateListingSol(
-        cluster,
-        new PublicKey(address),
-        selected.name,
-        lamports,
-        TREASURY, // protocol treasury receives the 0.01 SOL fee + 5% on sale
-      );
+      const owner = new PublicKey(address);
+      const ix =
+        listingType === "auction"
+          ? await ixCreateSolAuction(cluster, owner, selected.name, lamports /* min bid */, 0n /* no reserve */, dur.secs, dur.secs, TREASURY)
+          : await ixCreateListingSol(cluster, owner, selected.name, lamports, TREASURY);
       // CreateListing inits the auction account, CPIs the registrar escrow transfer,
       // and pays the listing fee — give it headroom.
       const sig = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 250_000 });
@@ -146,7 +156,7 @@ export function Sell() {
     } finally {
       setListing(false);
     }
-  }, [address, selected, canList, cluster, priceNum, load]);
+  }, [address, selected, canList, cluster, priceNum, listingType, dur.secs, load]);
 
   return (
     <section className="pt-12 pb-10 sm:pt-16">
@@ -362,6 +372,34 @@ export function Sell() {
                       ))}
                     </div>
                   </div>
+
+                  {/* auction phase length — sealed commit window then a reveal window */}
+                  {listingType === "auction" && (
+                    <div className="mt-4 border-t-[1.5px] border-line pt-4">
+                      <div className="mb-2.5 font-mono text-[11px] uppercase tracking-[1.5px] text-faint">
+                        each phase lasts · sealed bids open after the commit window
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DURATIONS.map((d) => (
+                          <button
+                            key={d.key}
+                            onClick={() => setDurKey(d.key)}
+                            className={`rounded-full border-[1.5px] px-3 py-1.5 font-mono text-[12px] font-bold transition hover:-translate-y-0.5 ${
+                              durKey === d.key
+                                ? "border-transparent bg-cyan text-ink0"
+                                : "border-line bg-paper/[0.03] text-dim hover:border-cyan/60"
+                            }`}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-2 font-mono text-[11px] text-dim">
+                        commit {dur.label.replace(" · test", "")} → reveal {dur.label.replace(" · test", "")} → settle.
+                        bidders bid SOL, sealed; highest revealed wins.
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -508,12 +546,23 @@ export function Sell() {
                   <div className="rounded-web0 border-[1.5px] border-mint/45 bg-mint/[0.06] p-5">
                     <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-mint">
                       <span className="h-[7px] w-[7px] rounded-full bg-mint" />
-                      listed — your name is in escrow
+                      {listingType === "auction" ? "auction opened — name in escrow" : "listed — your name is in escrow"}
                     </div>
                     <p className="text-sm leading-relaxed text-paper">
-                      <b className="lowercase">{selected.name}.null</b> is now held by the
-                      listing contract at {fmtSol(priceNum)} SOL buy-now. it&apos;s off the
-                      market until it sells or you delist.
+                      {listingType === "auction" ? (
+                        <>
+                          <b className="lowercase">{selected.name}.null</b> is up for a sealed-bid
+                          auction (start ≥ {fmtSol(priceNum)} SOL, {dur.label.replace(" · test", "")} commit
+                          + reveal). bidders commit hidden SOL bids, reveal, and the highest wins — anyone
+                          settles after the reveal window.
+                        </>
+                      ) : (
+                        <>
+                          <b className="lowercase">{selected.name}.null</b> is now held by the
+                          listing contract at {fmtSol(priceNum)} SOL buy-now. it&apos;s off the
+                          market until it sells or you delist.
+                        </>
+                      )}
                     </p>
                     <a
                       href={explorerTx(cluster, listSig)}
@@ -525,49 +574,62 @@ export function Sell() {
                     </a>
                   </div>
                 ) : canList ? (
-                  /* ── wired SOL buy-now ── */
+                  /* ── wired SOL buy-now OR SOL sealed-bid auction ── */
                   <>
-                    <p className="max-w-[60ch] text-sm leading-relaxed text-dim">
-                      this signs one transaction that <b className="text-paper">moves{" "}
-                      {selected.name}.null into the listing contract</b> (escrow), charges the
-                      flat {LIST_FEE_SOL} SOL toll, and posts it for{" "}
-                      <b className="text-paper">{fmtSol(priceNum)} SOL</b> buy-now. on a sale
-                      you receive {SELLER_PCT}% ({fmtSol(sellerSol)} SOL); delist anytime to
-                      get the name straight back.
+                    <p className="max-w-[62ch] text-sm leading-relaxed text-dim">
+                      {listingType === "auction" ? (
+                        <>
+                          this opens a <b className="text-paper">sealed-bid auction</b> for{" "}
+                          {selected.name}.null: it escrows the name + charges the flat {LIST_FEE_SOL} SOL toll.
+                          bidders commit a <b className="text-paper">hidden SOL bid</b> (≥ {fmtSol(priceNum)} start)
+                          during the {dur.label.replace(" · test", "")} commit window, reveal it in the next
+                          window, and the highest revealed bid wins. you receive {SELLER_PCT}%.
+                        </>
+                      ) : (
+                        <>
+                          this signs one transaction that <b className="text-paper">moves{" "}
+                          {selected.name}.null into the listing contract</b> (escrow), charges the
+                          flat {LIST_FEE_SOL} SOL toll, and posts it for{" "}
+                          <b className="text-paper">{fmtSol(priceNum)} SOL</b> buy-now. on a sale
+                          you receive {SELLER_PCT}% ({fmtSol(sellerSol)} SOL); delist anytime to
+                          get the name straight back.
+                        </>
+                      )}
                     </p>
                     <button
                       onClick={address ? onList : connect}
                       disabled={listing || connecting}
-                      className="mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-mint px-4 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-ink0 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                      className={`mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-ink0 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${listingType === "auction" ? "bg-cyan" : "bg-mint"}`}
                     >
                       {!address
                         ? "connect phantom to list"
                         : listing
                           ? "confirming…"
-                          : `list ${selected.name}.null for ${fmtSol(priceNum)} SOL`}
+                          : listingType === "auction"
+                            ? `open auction · ${selected.name}.null ≥ ${fmtSol(priceNum)} SOL`
+                            : `list ${selected.name}.null for ${fmtSol(priceNum)} SOL`}
                     </button>
                     {listError && (
                       <div className="mt-3 break-words font-mono text-[11px] text-magenta">{listError}</div>
                     )}
                     <div className="mt-3 font-mono text-[11px] text-faint">
-                      one phantom signature · escrowed until it sells or you delist · {PROTOCOL_PCT}% protocol fee on sale only
+                      one phantom signature · escrowed by the contract · {PROTOCOL_PCT}% protocol fee on sale only
                     </div>
                   </>
                 ) : (
-                  /* ── premium / auction — designed, not yet wired ── */
+                  /* ── premium 1–3 char — auction-only, not yet wired in the portal ── */
                   <>
                     <p className="max-w-[60ch] text-sm leading-relaxed text-dim">
-                      {isPremium
-                        ? "1–3 character names are premium — they sell through a sealed-bid auction (100% to treasury). that path is built but not yet wired into this portal."
-                        : "the sealed-bid auction path is built but not yet wired into this portal — use buy-now to list today."}{" "}
-                      the SOL buy-now path above is{" "}
-                      <b className="text-paper">live and devnet-proven</b>.
+                      1–3 character names are premium — they sell through a sealed-bid auction
+                      (100% to treasury). that specific path isn&apos;t wired into the portal yet.
+                      Standard buy-now <b className="text-paper">and</b> SOL sealed-bid auctions
+                      for 4+ char names are live and devnet-proven.
                     </p>
                     <button
                       disabled
                       className="mt-5 inline-flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-line2 bg-paper/[0.02] px-4 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-faint opacity-70"
                     >
-                      {isPremium ? "premium auction — launching soon" : "auction listing — launching soon"}
+                      premium auction — launching soon
                     </button>
                   </>
                 )}

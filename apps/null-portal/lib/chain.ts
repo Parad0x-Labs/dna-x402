@@ -22,6 +22,10 @@ import {
   AS_OFF_SELLER,
   AS_OFF_DOMAIN,
   AS_OFF_TREASURY,
+  AS_OFF_MIN_BID,
+  AS_OFF_COMMIT_END,
+  AS_OFF_REVEAL_END,
+  AS_OFF_NUM_REVEALS,
   AS_OFF_STATUS,
   AS_OFF_BUY_NOW,
   AS_OFF_AUCTION_ENABLED,
@@ -35,6 +39,10 @@ function readU64LE(data: Uint8Array, off: number): bigint {
   let v = 0n;
   for (let i = 7; i >= 0; i--) v = (v << 8n) | BigInt(data[off + i]);
   return v;
+}
+/** little-endian i64 → number (unix-second timestamps fit a JS number). */
+function readI64LE(data: Uint8Array, off: number): number {
+  return Number(BigInt.asIntN(64, readU64LE(data, off)));
 }
 
 // Default to a fast KEYLESS public RPC — api.mainnet-beta.solana.com is slow +
@@ -177,6 +185,11 @@ export interface MarketListing {
   kind: "buy-now" | "auction" | "premium";
   /** buy-now price in LAMPORTS (0 = auction-only listing) */
   lamports: bigint;
+  /** auctions only: min bid (LAMPORTS), commit/reveal phase ends (unix secs), reveal count */
+  minBid: bigint;
+  commitEnd: number;
+  revealEnd: number;
+  numReveals: bigint;
 }
 
 export interface MarketSnapshot {
@@ -210,8 +223,13 @@ export async function readMarketplaceListings(
   }
   const programAccounts = raw.length;
 
-  // Decode each AuctionState; keep ACTIVE listings that carry a buy-now price.
-  type Partial = { pda: string; seller: string; treasury: string; domain: PublicKey; lamports: bigint; kind: MarketListing["kind"] };
+  // Decode each AuctionState; keep ACTIVE listings that are either buy-now (price > 0)
+  // or a sealed-bid auction (auction_enabled == 1).
+  type Partial = {
+    pda: string; seller: string; treasury: string; domain: PublicKey;
+    lamports: bigint; kind: MarketListing["kind"];
+    minBid: bigint; commitEnd: number; revealEnd: number; numReveals: bigint;
+  };
   const partials: Partial[] = [];
   for (const { pubkey, account } of raw) {
     const d = account.data;
@@ -220,8 +238,8 @@ export async function readMarketplaceListings(
     if (disc !== AS_DISC_RESALE && disc !== AS_DISC_PRIMARY) continue;
     if (d[AS_OFF_STATUS] !== AS_STATUS_ACTIVE) continue;
     const lamports = d.length > AS_OFF_BUY_NOW ? readU64LE(d, AS_OFF_BUY_NOW) : 0n;
-    if (lamports === 0n) continue; // auction-only listings have no buy-now leg
     const auctionEnabled = d.length > AS_OFF_AUCTION_ENABLED ? d[AS_OFF_AUCTION_ENABLED] : 1;
+    if (lamports === 0n && !auctionEnabled) continue; // nothing to sell
     partials.push({
       pda: pubkey.toBase58(),
       seller: new PublicKey(d.subarray(AS_OFF_SELLER, AS_OFF_SELLER + 32)).toBase58(),
@@ -229,6 +247,10 @@ export async function readMarketplaceListings(
       domain: new PublicKey(d.subarray(AS_OFF_DOMAIN, AS_OFF_DOMAIN + 32)),
       lamports,
       kind: disc === AS_DISC_PRIMARY ? "premium" : auctionEnabled ? "auction" : "buy-now",
+      minBid: readU64LE(d, AS_OFF_MIN_BID),
+      commitEnd: auctionEnabled ? readI64LE(d, AS_OFF_COMMIT_END) : 0,
+      revealEnd: auctionEnabled ? readI64LE(d, AS_OFF_REVEAL_END) : 0,
+      numReveals: readU64LE(d, AS_OFF_NUM_REVEALS),
     });
   }
 
@@ -245,7 +267,10 @@ export async function readMarketplaceListings(
   }
 
   const listings: MarketListing[] = partials
-    .map((p) => ({ name: names.get(p.domain.toBase58()) ?? "", pda: p.pda, seller: p.seller, treasury: p.treasury, kind: p.kind, lamports: p.lamports }))
+    .map((p) => ({
+      name: names.get(p.domain.toBase58()) ?? "", pda: p.pda, seller: p.seller, treasury: p.treasury,
+      kind: p.kind, lamports: p.lamports, minBid: p.minBid, commitEnd: p.commitEnd, revealEnd: p.revealEnd, numReveals: p.numReveals,
+    }))
     .filter((l) => l.name !== "")
     .sort((a, b) => a.name.localeCompare(b.name));
 
