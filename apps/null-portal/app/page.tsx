@@ -6,7 +6,15 @@
 export const dynamic = "force-dynamic";
 
 import { SearchRegister } from "@/components/SearchRegister";
+import { Pitch } from "@/components/Pitch";
+import { Proof } from "@/components/Proof";
 
 export default function HomePage() {
-  return <SearchRegister />;
+  return (
+    <>
+      <SearchRegister />
+      <Pitch />
+      <Proof />
+    </>
+  );
 }

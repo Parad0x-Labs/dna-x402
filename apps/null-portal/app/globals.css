@@ -69,3 +69,196 @@ body {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Showcase landing motion. Strictly leashed to the Web0 system: ONE mint
+   accent, the existing grid + glow vocabulary, no new hues, no glassmorphism.
+   Every effect respects prefers-reduced-motion (see the guard at the bottom).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* HERO backdrop: a single large mint radial glow that breathes, layered behind
+   a slowly drifting technical grid. Both fixed inside the hero, pointer-none.
+   This is an *intentional* extension of the two sanctioned backdrop layers. */
+.hero-stage {
+  position: relative;
+  isolation: isolate;
+}
+.hero-glow,
+.hero-grid,
+.hero-stars {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+/* the one permitted gradient — the mint radial — but here it pulses, slowly. */
+.hero-glow {
+  background: radial-gradient(
+    760px 520px at 50% 8%,
+    rgba(45, 212, 160, 0.16),
+    rgba(45, 212, 160, 0.04) 42%,
+    transparent 68%
+  );
+  animation: heroPulse 7.5s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+@keyframes heroPulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+/* same 54px technical grid as .web0-grid, but it drifts one cell, forever. */
+.hero-grid {
+  opacity: 0.6;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 32%, #000, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 32%, #000, transparent 78%);
+  animation: gridDrift 24s linear infinite;
+  will-change: background-position;
+}
+@keyframes gridDrift {
+  to {
+    background-position: 54px 54px;
+  }
+}
+/* faint mint starfield — tiny box-shadow dots that twinkle. No new color: the
+   dots ARE the accent, at low alpha. Three layers at different speeds = depth. */
+.hero-stars span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: transparent;
+}
+.hero-stars span.s1 {
+  box-shadow: 80px 60px rgba(45, 212, 160, 0.5), 340px 120px rgba(45, 212, 160, 0.32),
+    620px 80px rgba(45, 212, 160, 0.4), 880px 200px rgba(45, 212, 160, 0.28),
+    1120px 60px rgba(45, 212, 160, 0.45), 200px 280px rgba(45, 212, 160, 0.3),
+    760px 320px rgba(45, 212, 160, 0.36), 1020px 360px rgba(45, 212, 160, 0.26);
+  animation: twinkle 4s ease-in-out infinite;
+}
+.hero-stars span.s2 {
+  box-shadow: 150px 180px rgba(124, 147, 181, 0.32), 460px 40px rgba(124, 147, 181, 0.26),
+    700px 240px rgba(45, 212, 160, 0.28), 960px 120px rgba(124, 147, 181, 0.3),
+    260px 360px rgba(45, 212, 160, 0.24), 540px 300px rgba(124, 147, 181, 0.26);
+  animation: twinkle 6s ease-in-out infinite 1.2s;
+}
+.hero-stars span.s3 {
+  box-shadow: 60px 340px rgba(45, 212, 160, 0.22), 400px 220px rgba(124, 147, 181, 0.2),
+    840px 40px rgba(45, 212, 160, 0.2), 1080px 280px rgba(124, 147, 181, 0.22);
+  animation: twinkle 8s ease-in-out infinite 0.6s;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* one faint scanline sweeping the hero — slow, low alpha, never strobes. */
+.hero-scan {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(45, 212, 160, 0.05) 50%,
+    transparent 100%
+  );
+  height: 140px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 100% at 50% 50%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 100% at 50% 50%, #000, transparent 75%);
+  animation: scanSweep 9s linear infinite;
+  will-change: transform;
+}
+@keyframes scanSweep {
+  0% {
+    transform: translateY(-140px);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(620px);
+    opacity: 0;
+  }
+}
+
+/* Scroll-reveal — the brand ease, opacity + small lift. Toggled by an
+   IntersectionObserver adding .is-in. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* hover lift on the comparison panels — borders-over-shadows discipline kept:
+   the lift is translate only, depth still comes from the 1px line. */
+.lift {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+}
+
+/* the $0.00 ledger digit roll — used by the cost counter */
+.tabnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* a hairline that animates in from the left, used as a section underscore */
+.rule-grow {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-in .rule-grow,
+.rule-grow.is-in {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow,
+  .hero-grid,
+  .hero-stars span,
+  .hero-scan,
+  .caret {
+    animation: none !important;
+  }
+  .hero-scan {
+    display: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .rule-grow {
+    transform: none;
+  }
+  .lift:hover {
+    transform: none;
+  }
+}

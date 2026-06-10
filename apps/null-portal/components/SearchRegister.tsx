@@ -23,6 +23,7 @@ import {
   type Availability,
 } from "@/lib/chain";
 import { signAndSendInstructions } from "@/lib/wallet";
+import { TypedNames } from "./TypedNames";
 
 type Currency = "SOL" | "NULL";
 
@@ -175,29 +176,63 @@ export function SearchRegister() {
   const fmtNullFee = cfg ? nullAtomicToHuman(cfg.nullFee) : "~2,113";
 
   return (
-    <section className="pt-12 sm:pt-16 pb-8">
-      <div className="text-[12px] tracking-[3px] uppercase text-steel mb-5">
-        You are not on the internet you know
+    <section className="hero-stage pt-14 sm:pt-20 pb-8">
+      {/* animated, restrained hero backdrop — pulsing mint glow, drifting grid,
+          faint mint starfield + a slow scanline. all reduced-motion guarded. */}
+      <div className="hero-glow" aria-hidden />
+      <div className="hero-grid" aria-hidden />
+      <div className="hero-stars" aria-hidden>
+        <span className="s1" />
+        <span className="s2" />
+        <span className="s3" />
       </div>
-      <h1 className="text-[clamp(40px,8vw,76px)] font-extrabold tracking-[-3px] leading-none">
-        claim a<span className="text-acc"> .null</span> name
-        <span className="caret" />
+      <div className="hero-scan" aria-hidden />
+
+      {/* live status eyebrow */}
+      <div className="flex items-center gap-2 mb-6">
+        <span className="w-[7px] h-[7px] rounded-full bg-acc shadow-[0_0_0_3px_rgba(45,212,160,0.15)]" />
+        <span className="font-mono text-[11px] tracking-[2px] uppercase text-steel">
+          live on Solana mainnet
+        </span>
+        <span className="font-mono text-[11px] tracking-[2px] uppercase text-faint hidden sm:inline">
+          · this site runs on Web0
+        </span>
+      </div>
+
+      {/* the hook */}
+      <h1 className="text-[clamp(40px,8.4vw,84px)] font-extrabold tracking-[-3px] leading-[0.92] max-w-[900px]">
+        the web,
+        <br className="hidden sm:block" /> without the
+        <span className="text-acc"> rent.</span>
       </h1>
-      <p className="max-w-[600px] mt-5 text-dim text-[16px] leading-relaxed">
+
+      <div className="mt-5 font-mono text-[clamp(18px,3vw,30px)] font-bold tracking-[-0.4px] text-ink">
+        <span className="text-faint select-none">❯ </span>
+        <TypedNames />
+        <span className="text-faint">.null</span>
+      </div>
+
+      <p className="max-w-[600px] mt-6 text-dim text-[16.5px] leading-relaxed">
         A name that lives as a{" "}
         <strong className="text-ink font-semibold">Solana account</strong> — owned by{" "}
-        <strong className="text-ink font-semibold">your wallet</strong>, on mainnet. No
-        DNS, no host, no renewals, nobody can revoke it. Register it once, own it forever.
+        <strong className="text-ink font-semibold">your wallet</strong>, on mainnet.
+        Point it at a site on Arweave and it&apos;s online forever:{" "}
+        <strong className="text-ink font-semibold">$0/month</strong>, no host, no DNS, no
+        renewals, nobody can take it down. This very page is the proof.
       </p>
 
       {/* RESOLVER CONSOLE */}
-      <div className="mt-9 border border-line rounded-web0 bg-surf overflow-hidden">
+      <div className="mt-9 border border-line rounded-web0 bg-surf overflow-hidden shadow-[0_0_0_1px_rgba(45,212,160,0.04)]">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-line bg-bg2 font-mono text-xs text-dim">
           <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
           <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
           <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
           <span className="ml-2">
-            register <b className="text-steel">any</b> .null name — live, on Solana mainnet
+            check <b className="text-steel">any</b> .null name — live, on Solana mainnet
+          </span>
+          <span className="ml-auto hidden sm:flex items-center gap-1.5 text-faint">
+            <span className="w-[6px] h-[6px] rounded-full bg-acc" />
+            mainnet
           </span>
         </div>
         <div className="p-4">

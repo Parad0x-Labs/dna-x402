@@ -5,6 +5,7 @@
 export const dynamic = "force-dynamic";
 
 import { MyNames } from "@/components/MyNames";
+// (route is wallet/RPC-driven; rendered client-side)
 
 export default function MyNamesPage() {
   return <MyNames />;

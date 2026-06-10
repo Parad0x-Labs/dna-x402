@@ -33,38 +33,54 @@ export function MyNames() {
 
   return (
     <section className="pt-12 sm:pt-16 pb-8">
-      <div className="text-[12px] tracking-[3px] uppercase text-steel mb-5">
-        your .null names
+      <div className="flex items-center gap-2 mb-5">
+        <span className="w-[7px] h-[7px] rounded-full bg-acc shadow-[0_0_0_3px_rgba(45,212,160,0.15)]" />
+        <span className="text-[12px] tracking-[3px] uppercase text-steel">
+          your .null names
+        </span>
       </div>
       <h1 className="text-[clamp(32px,6vw,52px)] font-extrabold tracking-[-2px] leading-none">
         names you<span className="text-acc"> own</span>
       </h1>
       <p className="max-w-[560px] mt-4 text-dim text-[15px] leading-relaxed">
         Every <span className="font-mono">.null</span> domain account whose on-chain owner
-        is your connected wallet, read live from Solana mainnet.
+        is your connected wallet, read live from Solana mainnet. Yours forever — no
+        renewals, nothing to lose.
       </p>
 
       <div className="mt-8">
         {!address ? (
-          <div className="border border-line rounded-web0 bg-surf p-6">
-            {phantomAvailable ? (
-              <button
-                onClick={connect}
-                disabled={connecting}
-                className="rounded-xl bg-acc px-6 py-3 font-bold text-[#062018] hover:brightness-110 transition disabled:opacity-60"
-              >
-                {connecting ? "connecting…" : "Connect Phantom to see your names"}
-              </button>
-            ) : (
-              <a
-                href="https://phantom.app/"
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl bg-acc px-6 py-3 font-bold text-[#062018] hover:brightness-110 transition inline-block"
-              >
-                Get Phantom →
-              </a>
-            )}
+          <div className="border border-line rounded-web0 bg-surf overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-line bg-bg2 font-mono text-xs text-dim">
+              <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
+              <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
+              <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
+              <span className="ml-2">wallet not connected</span>
+            </div>
+            <div className="p-6">
+              <p className="text-dim text-[15px] leading-relaxed max-w-[460px] mb-5">
+                Connect your wallet to read the <span className="font-mono">.null</span>{" "}
+                names it owns, straight from mainnet. Read-only — nothing is signed.
+              </p>
+              {phantomAvailable ? (
+                <button
+                  onClick={connect}
+                  disabled={connecting}
+                  className="rounded-xl bg-acc px-6 py-3 font-bold text-[#062018] hover:brightness-110 transition disabled:opacity-60"
+                >
+                  {connecting ? "connecting…" : "Connect Phantom to see your names"}
+                </button>
+              ) : (
+                <a
+                  href="https://phantom.app/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl bg-acc px-6 py-3 font-bold text-[#062018] hover:brightness-110 transition inline-block"
+                >
+                  Get Phantom →
+                </a>
+              )}
+            </div>
           </div>
         ) : loading ? (
           <div className="flex items-center gap-3 border border-line rounded-web0 bg-surf p-6">
