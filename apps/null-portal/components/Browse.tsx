@@ -10,9 +10,25 @@ import {
   type MarketListing,
   type MarketSnapshot,
 } from "@/lib/chain";
-import { lamportsToSol, shortAddr, ixBuyNowSol } from "@/lib/null-sdk";
+import {
+  lamportsToSol, shortAddr, ixBuyNowSol,
+  ixCommitBid, ixRevealBidSol, ixSettleSol, ixClaimRefundSol,
+  poseidonCommit, freshBlinding,
+} from "@/lib/null-sdk";
 import { explorerAddr, explorerTx } from "@/lib/cluster";
 import { signAndSendInstructions } from "@/lib/wallet";
+
+const LAMPORTS = 1_000_000_000;
+const toHex = (b: Uint8Array) => Array.from(b).map((x) => x.toString(16).padStart(2, "0")).join("");
+const fromHex = (h: string) => Uint8Array.from(h.match(/.{2}/g)!.map((x) => parseInt(x, 16)));
+function fmtCountdown(secs: number): string {
+  if (secs <= 0) return "0s";
+  const d = Math.floor(secs / 86400), h = Math.floor((secs % 86400) / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
 
 type Filter = "all" | "buy-now" | "auctions" | "premium";
 
@@ -164,9 +180,13 @@ export function Browse() {
           ) : hasLive ? (
             /* ── live listings (renders the moment a listing layout is wired) ── */
             <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((l, i) => (
-                <LiveCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} onBought={() => load(cluster)} />
-              ))}
+              {filtered.map((l, i) =>
+                l.kind === "auction" ? (
+                  <AuctionCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} onChanged={() => load(cluster)} />
+                ) : (
+                  <LiveCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} onBought={() => load(cluster)} />
+                ),
+              )}
             </div>
           ) : (
             /* ── honest empty / launching state + illustrative cards ── */
@@ -469,6 +489,160 @@ function LiveCard({
       <div className="font-mono text-[10.5px] text-faint">
         atomic · pay + transfer or neither · 5% protocol fee
       </div>
+    </div>
+  );
+}
+
+/* ── auction card — sealed-bid lifecycle: commit → reveal → settle ─────────── */
+
+function AuctionCard({
+  listing,
+  cluster,
+  accentIndex,
+  onChanged,
+}: {
+  listing: MarketListing;
+  cluster: "mainnet" | "devnet";
+  accentIndex: number;
+  onChanged: () => void;
+}) {
+  const accent = (["cyan", "lime", "magenta", "mint"] as const)[accentIndex % 4];
+  const a = ACCENT[accent];
+  const { address, connect, connecting } = useWallet();
+
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const t = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const phase: "commit" | "reveal" | "ended" =
+    now < listing.commitEnd ? "commit" : now < listing.revealEnd ? "reveal" : "ended";
+  const remaining = phase === "commit" ? listing.commitEnd - now : phase === "reveal" ? listing.revealEnd - now : 0;
+
+  // the sealed bid (amount + blinding) is kept in this browser — the blinding is REQUIRED
+  // to reveal, so it is written BEFORE the commit tx is sent (losing it = unrevealable bid).
+  const storeKey = `web0.null:bid:${cluster}:${listing.pda}`;
+  const [myBid, setMyBid] = useState<{ bid: string; blinding: string; revealed?: boolean } | null>(null);
+  useEffect(() => {
+    try { const v = localStorage.getItem(storeKey); setMyBid(v ? JSON.parse(v) : null); } catch {}
+  }, [storeKey]);
+
+  const [bidStr, setBidStr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [sig, setSig] = useState<string | null>(null);
+  const minBidSol = lamportsToSol(listing.minBid);
+  const ownAuction = address != null && address === listing.seller;
+
+  const run = async (build: () => Promise<import("@solana/web3.js").TransactionInstruction>, after?: () => void) => {
+    if (!address) { connect(); return; }
+    setErr(null); setBusy(true);
+    try {
+      const ix = await build();
+      const conn = getConnectionForCluster(cluster);
+      const s = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 260_000 });
+      setSig(s); after?.();
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  };
+
+  const onCommit = async () => {
+    if (!address) { connect(); return; }
+    const bidLamports = BigInt(Math.round(Number(bidStr) * LAMPORTS));
+    if (!bidStr || bidLamports < listing.minBid) { setErr(`bid must be ≥ ${minBidSol} SOL`); return; }
+    const blinding = freshBlinding();
+    const entry = { bid: bidLamports.toString(), blinding: toHex(blinding) };
+    localStorage.setItem(storeKey, JSON.stringify(entry)); setMyBid(entry); // persist BEFORE sending
+    await run(() => ixCommitBid(cluster, new PublicKey(address!), listing.name, poseidonCommit(bidLamports, blinding)));
+  };
+  const onReveal = () =>
+    myBid &&
+    run(
+      () => ixRevealBidSol(cluster, new PublicKey(address!), listing.name, BigInt(myBid.bid), fromHex(myBid.blinding)),
+      () => { const e = { ...myBid, revealed: true }; localStorage.setItem(storeKey, JSON.stringify(e)); setMyBid(e); },
+    );
+  const onSettle = () =>
+    run(
+      () => ixSettleSol(cluster, new PublicKey(address!), listing.name, new PublicKey(listing.seller), new PublicKey(listing.treasury)),
+      () => setTimeout(onChanged, 1800),
+    );
+  const onRefund = () =>
+    run(() => ixClaimRefundSol(cluster, new PublicKey(address!), listing.name), () => { localStorage.removeItem(storeKey); setMyBid(null); });
+
+  return (
+    <div className={`group flex flex-col gap-3.5 rounded-web0 border-[1.5px] ${a.ring} bg-bg2/65 p-5 backdrop-blur-md`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+          <i className={`h-[6px] w-[6px] rounded-full ${a.dot}`} />
+          auction · {phase === "commit" ? "sealed bidding" : phase === "reveal" ? "reveal phase" : "ended"}
+        </span>
+        <a href={explorerAddr(cluster, listing.pda)} target="_blank" rel="noreferrer" className="font-mono text-[10.5px] text-faint underline decoration-line hover:text-cyan">
+          {shortAddr(listing.pda)} ↗
+        </a>
+      </div>
+
+      <div className="min-w-0 font-display text-[clamp(28px,4.4vw,44px)] font-black leading-[0.9] tracking-[-0.03em] lowercase">
+        <span className="block truncate">{listing.name}</span>
+        <span className={a.text}>.null</span>
+      </div>
+
+      <div className="flex items-center justify-between font-mono text-[12px]">
+        <span className="text-dim">min bid <b className="text-paper">{minBidSol} SOL</b></span>
+        <span className="text-dim">{Number(listing.numReveals)} revealed</span>
+      </div>
+      {phase !== "ended" && (
+        <div className={`font-mono text-[12px] ${a.text}`}>
+          {phase === "commit" ? "commit closes in " : "reveal closes in "}<b>{fmtCountdown(remaining)}</b>
+        </div>
+      )}
+
+      {sig && (
+        <a href={explorerTx(cluster, sig)} target="_blank" rel="noreferrer" className="rounded-xl border-[1.5px] border-mint/40 bg-mint/[0.06] px-4 py-2.5 font-mono text-[12px] text-mint">
+          submitted — {shortAddr(sig)} ↗
+        </a>
+      )}
+
+      {ownAuction ? (
+        <div className="mt-auto font-mono text-[11px] text-faint">your auction · you can&apos;t bid on it</div>
+      ) : phase === "commit" ? (
+        myBid ? (
+          <div className="mt-auto rounded-xl border-[1.5px] border-line bg-black/30 px-4 py-3 font-mono text-[12px] text-dim">
+            ✓ sealed bid placed — return in the reveal window to open it
+          </div>
+        ) : (
+          <div className="mt-auto flex flex-col gap-2">
+            <div className="flex items-center gap-2 rounded-xl border-[1.5px] border-line bg-black/30 px-3 py-2">
+              <input value={bidStr} onChange={(e) => setBidStr(e.target.value)} inputMode="decimal" placeholder={`≥ ${minBidSol}`} className="w-full border-none bg-transparent font-mono text-[14px] text-paper outline-none placeholder:text-faint" />
+              <span className={`font-mono text-[13px] font-bold ${a.text}`}>SOL</span>
+            </div>
+            <button onClick={onCommit} disabled={busy || connecting} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold text-ink0 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${a.btn}`}>
+              {!address ? "connect to bid" : busy ? "sealing…" : "commit sealed bid"}
+            </button>
+            <span className="font-mono text-[10.5px] text-faint">hidden until you reveal · the secret is saved in this browser</span>
+          </div>
+        )
+      ) : phase === "reveal" ? (
+        myBid && !myBid.revealed ? (
+          <button onClick={onReveal} disabled={busy} className={`mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold text-ink0 transition hover:-translate-y-px disabled:opacity-60 ${a.btn}`}>
+            {busy ? "revealing…" : `reveal your ${lamportsToSol(BigInt(myBid.bid))} SOL bid`}
+          </button>
+        ) : myBid?.revealed ? (
+          <div className="mt-auto font-mono text-[11px] text-mint">✓ revealed {lamportsToSol(BigInt(myBid.bid))} SOL — settle after the window closes</div>
+        ) : (
+          <div className="mt-auto font-mono text-[11px] text-faint">reveal phase — you have no bid here</div>
+        )
+      ) : (
+        <div className="mt-auto flex flex-col gap-2">
+          <button onClick={onSettle} disabled={busy} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold text-ink0 transition hover:-translate-y-px disabled:opacity-60 ${a.btn}`}>
+            {busy ? "settling…" : "settle auction"}
+          </button>
+          {myBid?.revealed && (
+            <button onClick={onRefund} disabled={busy} className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-line px-4 py-2.5 font-mono text-[12px] font-bold text-dim transition hover:border-cyan/60">
+              claim my bid back (if I didn&apos;t win)
+            </button>
+          )}
+        </div>
+      )}
+      {err && <div className="break-words font-mono text-[10.5px] text-magenta">{err}</div>}
     </div>
   );
 }
