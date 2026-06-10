@@ -13,6 +13,11 @@ no-entrypoint = []
 
 [dependencies]
 solana-program              = { workspace = true }
-spl-transfer-hook-interface = "=0.6.5"
+spl-transfer-hook-interface = "=0.4.1"
 spl-tlv-account-resolution  = "=0.5.1"
+# Pinned to the version whose deps (spl-transfer-hook-interface 0.4.1, spl-pod 0.1.0,
+# spl-type-length-value 0.3.0) exactly match the locked tree. no-entrypoint keeps the
+# token-2022 entrypoint out of our cdylib; we only read the TransferHookAccount extension.
+# Default features (token-group, zk-ops) are kept: 1.0.0 fails to compile without zk-ops.
+spl-token-2022              = { version = "=1.0.0", features = ["no-entrypoint"] }
 sha2                        = { workspace = true }
