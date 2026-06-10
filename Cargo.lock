@@ -2113,7 +2113,7 @@ name = "dark-macaroons"
 version = "0.1.0"
 dependencies = [
  "digest 0.11.3",
- "hmac 0.12.1",
+ "hmac 0.13.0",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4579,6 +4579,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
+]
+
+[[package]]
+name = "hmac"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6303bc9732ae41b04cb554b844a762b4115a61bfaa81e3e83050991eeb56863f"
+dependencies = [
+ "digest 0.11.3",
 ]
 
 [[package]]
