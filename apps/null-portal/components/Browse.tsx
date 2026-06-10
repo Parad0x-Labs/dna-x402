@@ -623,8 +623,26 @@ function AuctionCard({
         </a>
       )}
 
-      {ownAuction ? (
-        <div className="mt-auto font-mono text-[11px] text-faint">your auction · you can&apos;t bid on it</div>
+      {phase === "ended" ? (
+        /* Auction over → SETTLE (permissionless, anyone can crank). For the seller with 0
+           reveals this RETURNS the escrowed name to their wallet; with bids it finalizes the
+           sale + transfer. The seller MUST be able to crank this — it's how an unsold name
+           comes back. (Was previously hidden behind the ownAuction "can't bid" branch.) */
+        <div className="mt-auto flex flex-col gap-2">
+          <button onClick={onSettle} disabled={busy} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold text-ink0 transition hover:-translate-y-px disabled:opacity-60 ${a.btn}`}>
+            {busy ? "settling…" : ownAuction && Number(listing.numReveals) === 0 ? `settle & reclaim ${listing.name}.null` : "settle auction"}
+          </button>
+          {ownAuction && Number(listing.numReveals) === 0 && (
+            <span className="font-mono text-[10.5px] text-faint">no bids were placed — settling returns the name to your wallet (you pay only the network fee)</span>
+          )}
+          {myBid?.revealed && (
+            <button onClick={onRefund} disabled={busy} className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-line px-4 py-2.5 font-mono text-[12px] font-bold text-dim transition hover:border-cyan/60">
+              claim my bid back (if I didn&apos;t win)
+            </button>
+          )}
+        </div>
+      ) : ownAuction ? (
+        <div className="mt-auto font-mono text-[11px] text-faint">your auction · you can&apos;t bid on it (settle to reclaim once it ends)</div>
       ) : phase === "commit" ? (
         myBid ? (
           <div className="mt-auto rounded-xl border-[1.5px] border-line bg-black/30 px-4 py-3 font-mono text-[12px] text-dim">
@@ -642,7 +660,7 @@ function AuctionCard({
             <span className="font-mono text-[10.5px] text-faint">hidden until you reveal · the secret is saved in this browser</span>
           </div>
         )
-      ) : phase === "reveal" ? (
+      ) : (
         myBid && !myBid.revealed ? (
           <button onClick={onReveal} disabled={busy} className={`mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold text-ink0 transition hover:-translate-y-px disabled:opacity-60 ${a.btn}`}>
             {busy ? "revealing…" : `reveal your ${lamportsToSol(BigInt(myBid.bid))} SOL bid`}
@@ -652,17 +670,6 @@ function AuctionCard({
         ) : (
           <div className="mt-auto font-mono text-[11px] text-faint">reveal phase — you have no bid here</div>
         )
-      ) : (
-        <div className="mt-auto flex flex-col gap-2">
-          <button onClick={onSettle} disabled={busy} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold text-ink0 transition hover:-translate-y-px disabled:opacity-60 ${a.btn}`}>
-            {busy ? "settling…" : "settle auction"}
-          </button>
-          {myBid?.revealed && (
-            <button onClick={onRefund} disabled={busy} className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-line px-4 py-2.5 font-mono text-[12px] font-bold text-dim transition hover:border-cyan/60">
-              claim my bid back (if I didn&apos;t win)
-            </button>
-          )}
-        </div>
       )}
       {err && <div className="break-words font-mono text-[10.5px] text-magenta">{err}</div>}
     </div>
