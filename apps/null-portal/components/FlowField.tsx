@@ -66,15 +66,28 @@ void main(){
   col = mix(col, cyan, ribbon*0.5);
   float spark = smoothstep(0.86,1.0, n2) * smoothstep(0.0,0.7,uv.y);
   col = mix(col, lime, spark*0.35);
-  col += mint * pool * 0.42; col += cyan * pool * 0.15;
+  // cursor light — gaseous + electrical: a textured, flickering glow, not a smooth liquid blob
+  float poolTex = 0.55 + 0.45 * fbm(warped*5.0 + g*2.0 + t*0.5);
+  float flick   = 0.88 + 0.12 * sin(t*9.0 + n2*12.0);
+  float poolE   = pool * poolTex * flick;
+  col += mint * poolE * 0.48; col += cyan * poolE * 0.16;
+
+  // ── ELECTRICAL / GASEOUS energy (vs liquid): ridged noise = sharp crackling
+  //    filaments through the gas, plus a fast high-freq static shimmer ──
+  float ridge = pow(1.0 - abs(2.0*fbm(warped*3.3 + vec2(t*0.18,-t*0.13)) - 1.0), 3.5);
+  col += mix(cyan, violet, n) * ridge * smoothstep(0.25,0.80, n) * 0.16;
+  float stat = fbm(warped*8.5 + t*0.55);   // fast high-freq = static crackle, only in the lit gas
+  col += mint * smoothstep(0.62,0.95, stat) * smoothstep(0.45,0.90, n2) * 0.055;
 
   // ── NEBULA MIST: fine dusty haze (gives the gaseous, misty grain, not liquid) ──
   float dust = fbm(warped*6.5 + vec2(t*0.03,-t*0.02));
   col += violet * smoothstep(0.58,0.92, dust) * 0.07;   // faint dust veils
   col *= 0.93 + 0.12*dust;                               // mottled cloud density
 
-  // ── STARS: real glowing points (screen-fixed so they twinkle like a sky) ──
-  col += stars(p * 18.0 + 23.0, t) * 0.75;
+  // ── STARS: two depths = a galaxy field. sparse bright foreground + dense, MUCH
+  //          fainter "star dust" behind it (recreates the deep galaxy sprinkle) ──
+  col += stars(p * 16.0 + 23.0, t) * 0.80;   // the bright ones (sparse)
+  col += stars(p * 33.0 + 61.0, t) * 0.24;   // far galaxy dust — denser + much dimmer
 
   float lines = abs(fract(n2*9.0 - t*0.4) - 0.5);
   col += vec3(0.9,1.0,0.95) * smoothstep(0.49,0.5,lines) * 0.05;
