@@ -328,7 +328,8 @@ export function Sell() {
               </div>
             ) : (
               <>
-                {/* buy-now / auction toggle */}
+                {/* listing type — sealed auctions retired (confusing reveal/settle flow);
+                    being replaced by make-offer. Buy-now is the live path. */}
                 <div className="flex flex-wrap gap-2.5">
                   <TypeChip
                     active={listingType === "buy-now"}
@@ -337,10 +338,11 @@ export function Sell() {
                     onClick={() => setListingType("buy-now")}
                   />
                   <TypeChip
-                    active={listingType === "auction"}
-                    label="auction"
-                    sub="open with a starting bid"
-                    onClick={() => setListingType("auction")}
+                    active={false}
+                    disabled
+                    label="make-offer · soon"
+                    sub="buyers offer, you accept the best — no timers"
+                    onClick={() => {}}
                   />
                 </div>
 
@@ -751,17 +753,22 @@ function TypeChip({
   label,
   sub,
   onClick,
+  disabled = false,
 }: {
   active: boolean;
   label: string;
   sub: string;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`flex min-w-[160px] flex-1 flex-col items-start gap-1 rounded-web0 border-[1.5px] px-4 py-3.5 text-left transition ${
-        active
+        disabled
+          ? "cursor-not-allowed border-dashed border-line bg-paper/[0.02] text-faint opacity-60"
+          : active
           ? "border-transparent bg-mint text-ink0"
           : "border-line bg-paper/[0.03] text-dim hover:border-line2"
       }`}
