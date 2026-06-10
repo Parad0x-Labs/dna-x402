@@ -537,7 +537,11 @@ function AuctionCard({
 
   // the sealed bid (amount + blinding) is kept in this browser — the blinding is REQUIRED
   // to reveal, so it is written BEFORE the commit tx is sent (losing it = unrevealable bid).
-  const storeKey = `web0.null:bid:${cluster}:${listing.pda}`;
+  // PER-WALLET key: the bid belongs to the BIDDER, not just the auction. Keyed only by
+  // (cluster, auction) every wallet in this browser shared ONE slot, so a 2nd wallet's bid
+  // made the 1st + 3rd see "you already bid". The on-chain commit PDA is per-bidder too, so
+  // the local record must be as well. (Disconnected → "anon" bucket; reconnect loads yours.)
+  const storeKey = `web0.null:bid:${cluster}:${listing.pda}:${address ?? "anon"}`;
   const [myBid, setMyBid] = useState<{ bid: string; blinding: string; revealed?: boolean } | null>(null);
   useEffect(() => {
     try { const v = localStorage.getItem(storeKey); setMyBid(v ? JSON.parse(v) : null); } catch {}
