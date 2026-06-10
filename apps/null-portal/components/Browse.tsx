@@ -557,15 +557,15 @@ function AuctionCard({
   // 100% to the treasury — its settle takes the 10-account mint path, not the resale split.
   const isPrimary = listing.kind === "premium";
 
-  const run = async (build: () => Promise<import("@solana/web3.js").TransactionInstruction>, after?: () => void) => {
-    if (!address) { connect(); return; }
+  const run = async (build: () => Promise<import("@solana/web3.js").TransactionInstruction>, after?: () => void): Promise<boolean> => {
+    if (!address) { connect(); return false; }
     setErr(null); setBusy(true);
     try {
       const ix = await build();
       const conn = getConnectionForCluster(cluster);
       const s = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 260_000 });
-      setSig(s); after?.();
-    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+      setSig(s); after?.(); return true;
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); return false; } finally { setBusy(false); }
   };
 
   const onCommit = async () => {
@@ -574,8 +574,12 @@ function AuctionCard({
     if (!bidStr || bidLamports < listing.minBid) { setErr(`bid must be ≥ ${minBidSol} SOL`); return; }
     const blinding = freshBlinding();
     const entry = { bid: bidLamports.toString(), blinding: toHex(blinding) };
-    localStorage.setItem(storeKey, JSON.stringify(entry)); setMyBid(entry); // persist BEFORE sending
-    await run(() => ixCommitBid(cluster, new PublicKey(address!), listing.name, poseidonCommit(bidLamports, blinding)));
+    // Persist the secret BEFORE sending — a CONFIRMED commit whose blinding we lost is
+    // unrevealable. But if the tx is rejected/fails it never went on-chain, so roll the
+    // optimistic record back, or the card would falsely claim a sealed bid was placed.
+    localStorage.setItem(storeKey, JSON.stringify(entry)); setMyBid(entry);
+    const ok = await run(() => ixCommitBid(cluster, new PublicKey(address!), listing.name, poseidonCommit(bidLamports, blinding)));
+    if (!ok) { localStorage.removeItem(storeKey); setMyBid(null); }
   };
   const onReveal = () =>
     myBid &&
