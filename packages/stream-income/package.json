@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@solana/web3.js": "^1.91.0",
-    "@types/node": "^20.0.0",
+    "@types/node": "^25.9.2",
     "typescript": "^5.4.0"
   },
   "keywords": [
