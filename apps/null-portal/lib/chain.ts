@@ -17,8 +17,25 @@ import {
   domainPda,
   domainPdaFor,
   ataOf,
+  AS_DISC_RESALE,
+  AS_DISC_PRIMARY,
+  AS_OFF_SELLER,
+  AS_OFF_DOMAIN,
+  AS_OFF_TREASURY,
+  AS_OFF_STATUS,
+  AS_OFF_BUY_NOW,
+  AS_OFF_AUCTION_ENABLED,
+  AS_STATUS_ACTIVE,
+  AUCTION_SIZE_V1,
 } from "./null-sdk";
 import { CLUSTERS, configFor, type Cluster } from "./cluster";
+
+/** little-endian u64 → bigint (Buffer-free). */
+function readU64LE(data: Uint8Array, off: number): bigint {
+  let v = 0n;
+  for (let i = 7; i >= 0; i--) v = (v << 8n) | BigInt(data[off + i]);
+  return v;
+}
 
 // Default to a fast KEYLESS public RPC — api.mainnet-beta.solana.com is slow +
 // heavily rate-limited (429s). publicnode needs no signup. For production, set
@@ -103,8 +120,9 @@ function decodeName(data: Uint8Array): string {
 export async function getOwnedNames(
   conn: Connection,
   owner: PublicKey,
+  registrar: PublicKey = REGISTRAR_PROGRAM,
 ): Promise<OwnedName[]> {
-  const accounts = await conn.getProgramAccounts(REGISTRAR_PROGRAM, {
+  const accounts = await conn.getProgramAccounts(registrar, {
     // memcmp on the owner field @ offset 65 == the connected wallet. The disc
     // ('N' @ byte 0) is re-checked client-side below so we never surface a
     // non-NullDomain account that happens to share these bytes.
@@ -138,30 +156,26 @@ export async function getNullBalanceAtomic(
   }
 }
 
-// ── Marketplace listings (cluster-aware, honest) ──────────────────────────────
+// ── Marketplace listings (cluster-aware, real decoder) ────────────────────────
 //
-// HONESTY NOTE: there is NO deployed *marketplace/listing* program wired into
-// the portal yet. The auction program id (config.auction) exists per-cluster,
-// but its on-chain Listing account layout is not part of this portal's verified
-// SDK, so we deliberately do NOT invent a decoder / fake listings.
-//
-// readMarketplaceListings does a REAL, read-only RPC probe of the auction
-// program so the UI can show a truthful live program-account count, then returns
-// an empty `listings` array with `wired: false`. The Browse screen renders a
-// confident "marketplace launching" empty state from this — never fabricated
-// prices/owners. When the listing program + layout are wired, decode here and
-// flip `wired` to true; the UI already renders real cards from `listings`.
+// readMarketplaceListings does a REAL, read-only getProgramAccounts over the
+// auction program, decodes each live AuctionState (state.rs layout), keeps the
+// ACTIVE ones that carry a buy-now price, then batch-reads the escrowed domain
+// accounts to recover each plaintext .null name. No fabrication: a name/price/
+// seller only appears if it is on-chain right now. `wired: true` once decoded.
 
 export interface MarketListing {
   /** the .null name being sold, e.g. "vault" */
   name: string;
-  /** listing account pubkey (base58) */
+  /** AuctionState account pubkey (base58) */
   pda: string;
-  /** seller wallet (base58) */
+  /** seller wallet (base58) — receives 95% on sale */
   seller: string;
+  /** treasury wallet (base58) recorded in the listing — needed to build BuyNow */
+  treasury: string;
   /** "buy-now" fixed price or "auction" */
   kind: "buy-now" | "auction" | "premium";
-  /** price (buy-now) or current bid (auction) in lamports */
+  /** buy-now price in LAMPORTS (0 = auction-only listing) */
   lamports: bigint;
 }
 
@@ -177,36 +191,65 @@ export interface MarketSnapshot {
 }
 
 /**
- * Read the live marketplace state for a cluster. Real RPC probe, no fabrication.
- *
- * Until a Listing account layout is part of the verified SDK, this returns
- * `wired: false` with an empty `listings` array. `programAccounts` is the real,
- * live count of accounts owned by the auction program (so the empty state can
- * honestly say "0 live listings" vs "program not deployed").
+ * Read the live marketplace state for a cluster. Real RPC, no fabrication: decodes
+ * every ACTIVE AuctionState that carries a buy-now price and resolves its name.
  */
 export async function readMarketplaceListings(
   cluster: Cluster,
 ): Promise<MarketSnapshot> {
   const cfg = configFor(cluster);
   const program = new PublicKey(cfg.auction);
-  let programAccounts: number | null = null;
+  const conn = connFor(cfg.rpc);
+
+  let raw: { pubkey: PublicKey; account: { data: Uint8Array } }[];
   try {
-    // dataSlice: 0 → we only want the COUNT, not the (potentially large) data.
-    const accounts = await connFor(cfg.rpc).getProgramAccounts(program, {
-      dataSlice: { offset: 0, length: 0 },
-    });
-    programAccounts = accounts.length;
+    raw = (await conn.getProgramAccounts(program)) as unknown as typeof raw;
   } catch {
     // RPC may reject an unindexed getProgramAccounts; treat as "unknown".
-    programAccounts = null;
+    return { wired: true, program: program.toBase58(), programAccounts: null, listings: [] };
   }
-  // No verified Listing layout yet → no decoded listings (honest empty state).
-  return {
-    wired: false,
-    program: program.toBase58(),
-    programAccounts,
-    listings: [],
-  };
+  const programAccounts = raw.length;
+
+  // Decode each AuctionState; keep ACTIVE listings that carry a buy-now price.
+  type Partial = { pda: string; seller: string; treasury: string; domain: PublicKey; lamports: bigint; kind: MarketListing["kind"] };
+  const partials: Partial[] = [];
+  for (const { pubkey, account } of raw) {
+    const d = account.data;
+    if (d.length < AUCTION_SIZE_V1) continue;
+    const disc = d[0];
+    if (disc !== AS_DISC_RESALE && disc !== AS_DISC_PRIMARY) continue;
+    if (d[AS_OFF_STATUS] !== AS_STATUS_ACTIVE) continue;
+    const lamports = d.length > AS_OFF_BUY_NOW ? readU64LE(d, AS_OFF_BUY_NOW) : 0n;
+    if (lamports === 0n) continue; // auction-only listings have no buy-now leg
+    const auctionEnabled = d.length > AS_OFF_AUCTION_ENABLED ? d[AS_OFF_AUCTION_ENABLED] : 1;
+    partials.push({
+      pda: pubkey.toBase58(),
+      seller: new PublicKey(d.subarray(AS_OFF_SELLER, AS_OFF_SELLER + 32)).toBase58(),
+      treasury: new PublicKey(d.subarray(AS_OFF_TREASURY, AS_OFF_TREASURY + 32)).toBase58(),
+      domain: new PublicKey(d.subarray(AS_OFF_DOMAIN, AS_OFF_DOMAIN + 32)),
+      lamports,
+      kind: disc === AS_DISC_PRIMARY ? "premium" : auctionEnabled ? "auction" : "buy-now",
+    });
+  }
+
+  // Batch-read the escrowed domain accounts to recover plaintext names.
+  const names = new Map<string, string>();
+  for (let i = 0; i < partials.length; i += 100) {
+    const slice = partials.slice(i, i + 100);
+    const infos = await conn.getMultipleAccountsInfo(slice.map((p) => p.domain));
+    infos.forEach((info, j) => {
+      if (info && info.data.length > 0 && info.data[0] === NULL_DOMAIN_DISC) {
+        names.set(slice[j].domain.toBase58(), decodeName(info.data));
+      }
+    });
+  }
+
+  const listings: MarketListing[] = partials
+    .map((p) => ({ name: names.get(p.domain.toBase58()) ?? "", pda: p.pda, seller: p.seller, treasury: p.treasury, kind: p.kind, lamports: p.lamports }))
+    .filter((l) => l.name !== "")
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return { wired: true, program: program.toBase58(), programAccounts, listings };
 }
 
 // ── NullPay: resolve a .null name's published stealth meta-address ─────────────

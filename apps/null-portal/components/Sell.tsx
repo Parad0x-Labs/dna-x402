@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useWallet } from "./WalletProvider";
-import { getConnection, getOwnedNames, type OwnedName } from "@/lib/chain";
-import { shortAddr, solscanAddr } from "@/lib/null-sdk";
+import { useCluster } from "./ClusterProvider";
+import { getConnectionForCluster, getOwnedNames, type OwnedName } from "@/lib/chain";
+import { shortAddr, solscanAddr, ixCreateListingSol, auctionRegistrarFor, TREASURY } from "@/lib/null-sdk";
+import { explorerTx } from "@/lib/cluster";
+import { signAndSendInstructions } from "@/lib/wallet";
 
 /* ── marketplace economics (fixed, presented to the seller verbatim) ─────────── */
 const LIST_FEE_SOL = 0.01; // flat, NON-REFUNDABLE anti-spam toll
@@ -41,6 +44,7 @@ const RING: Record<Accent, string> = {
 
 export function Sell() {
   const { address, connect, connecting, phantomAvailable } = useWallet();
+  const { cluster } = useCluster();
 
   const [names, setNames] = useState<OwnedName[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,12 +55,18 @@ export function Sell() {
   const [price, setPrice] = useState("1.5");
   const [escrowOptIn, setEscrowOptIn] = useState(false);
 
-  const load = useCallback(async (owner: string) => {
+  // on-chain listing tx state
+  const [listing, setListing] = useState(false);
+  const [listSig, setListSig] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
+
+  const load = useCallback(async (owner: string, c: typeof cluster) => {
     setLoading(true);
     setError(null);
     try {
-      const conn = getConnection();
-      const owned = await getOwnedNames(conn, new PublicKey(owner));
+      // listable names live under the registrar the AUCTION pairs with (sha256-v2).
+      const conn = getConnectionForCluster(c);
+      const owned = await getOwnedNames(conn, new PublicKey(owner), auctionRegistrarFor(c));
       setNames(owned);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -66,12 +76,14 @@ export function Sell() {
   }, []);
 
   useEffect(() => {
-    if (address) load(address);
+    if (address) load(address, cluster);
     else {
       setNames(null);
       setPicked(null);
     }
-  }, [address, load]);
+    setListSig(null);
+    setListError(null);
+  }, [address, cluster, load]);
 
   const selected = useMemo(
     () => names?.find((n) => n.pda === picked) ?? null,
@@ -106,13 +118,43 @@ export function Sell() {
   );
   const netSellerSol = sellerSol - escrowSol;
 
+  // Phase 1 wires the SOL buy-now path only. Premium (1–3 char) and auction
+  // listings are designed but not yet wired (they keep the "soon" panel).
+  const canList = !!selected && !isPremium && listingType === "buy-now" && priceNum > 0;
+
+  const onList = useCallback(async () => {
+    if (!address || !selected || !canList) return;
+    setListError(null);
+    setListing(true);
+    try {
+      const conn = getConnectionForCluster(cluster);
+      const lamports = BigInt(Math.round(priceNum * LAMPORTS_PER_SOL));
+      const ix = await ixCreateListingSol(
+        cluster,
+        new PublicKey(address),
+        selected.name,
+        lamports,
+        TREASURY, // protocol treasury receives the 0.01 SOL fee + 5% on sale
+      );
+      // CreateListing inits the auction account, CPIs the registrar escrow transfer,
+      // and pays the listing fee — give it headroom.
+      const sig = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 250_000 });
+      setListSig(sig);
+      setTimeout(() => load(address, cluster), 1500);
+    } catch (e) {
+      setListError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setListing(false);
+    }
+  }, [address, selected, canList, cluster, priceNum, load]);
+
   return (
     <section className="pt-12 pb-10 sm:pt-16">
       {/* eyebrow — exact v4 pattern */}
       <span className="flex w-max items-center gap-2.5 font-mono text-[12px] lowercase tracking-wide text-dim">
         <span className="h-[9px] w-[9px] animate-pulsering rounded-full bg-lime" />
         the .null marketplace ·{" "}
-        <span className="text-cyan">your name, your wallet, your toll</span>
+        <span className="text-cyan">list it, the contract holds it, you keep {SELLER_PCT}%</span>
       </span>
 
       {/* hook */}
@@ -122,12 +164,13 @@ export function Sell() {
 
       <p className="mt-6 max-w-[62ch] text-[clamp(14px,1.15vw,17px)] leading-relaxed text-dim">
         list a name you own for a flat{" "}
-        <b className="font-semibold text-paper">{LIST_FEE_SOL} SOL</b> toll. it{" "}
-        <b className="font-semibold text-paper">stays in your wallet</b> the whole
-        time — the market is only authorised to hand it over{" "}
-        <b className="font-semibold text-paper">if it sells</b>.{" "}
+        <b className="font-semibold text-paper">{LIST_FEE_SOL} SOL</b> toll. while it&apos;s
+        listed the name is{" "}
+        <b className="font-semibold text-paper">held by the listing contract</b> — off the
+        market until it <b className="font-semibold text-paper">sells</b> or you{" "}
+        <b className="font-semibold text-paper">delist</b>.{" "}
         <span className="font-semibold text-lime">
-          no escrow, no custody, you keep {SELLER_PCT}%.
+          a sale pays you {SELLER_PCT}%, atomically.
         </span>
       </p>
 
@@ -155,7 +198,7 @@ export function Sell() {
               </div>
               <div className="break-words text-sm text-paper">{error}</div>
               <button
-                onClick={() => load(address)}
+                onClick={() => load(address, cluster)}
                 className="mt-4 rounded-lg border-[1.5px] border-line px-4 py-2 font-mono text-xs font-bold text-dim transition hover:-translate-y-0.5 hover:border-transparent hover:bg-mint hover:text-ink0"
               >
                 retry
@@ -325,7 +368,7 @@ export function Sell() {
           </StepShell>
         )}
 
-        {/* ── STEP 3 — fee breakdown + delegation explainer ────────────────── */}
+        {/* ── STEP 3 — fee breakdown + escrow explainer ─────────────────────── */}
         {selected && (
           <StepShell n={3} title="what you pay, what you keep" sub="no hidden cuts">
             {/* LIME solid panel — the headline economics, v4 shadow-slab */}
@@ -388,7 +431,7 @@ export function Sell() {
                         : `${ESCROW_PCT}%`
                       : "off"
                   }
-                  note="optional opt-in for OTC deals — off by default; delegation covers normal sales"
+                  note="optional opt-in for OTC deals — off by default; the listing contract covers normal sales"
                   tone="violet"
                   action={
                     !isPremium ? (
@@ -419,70 +462,118 @@ export function Sell() {
               </div>
             </div>
 
-            {/* DELEGATION explainer — the trust story */}
+            {/* ESCROW explainer — the honest trust story */}
             <div className="mt-4 rounded-web0 border-[1.5px] border-mint/50 bg-mint/[0.05] p-5">
               <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-mint">
                 <span className="h-[7px] w-[7px] animate-pulsering rounded-full bg-mint" />
-                custody = delegation, not escrow
+                custody = the listing contract holds it
               </div>
               <div className="space-y-2.5">
                 <Bullet good>
-                  your name <b className="text-paper">stays in your wallet</b> the
-                  whole time it&apos;s listed — we never take custody
+                  when you list, the name is <b className="text-paper">moved into the
+                  listing contract</b> (a program PDA) — it&apos;s in escrow, not your
+                  wallet, until the listing resolves
                 </Bullet>
                 <Bullet good>
-                  the market is only <b className="text-paper">authorised to transfer it
-                  if it sells</b>; a buy is atomic — pay + transfer, or neither
+                  no person can touch it: only <b className="text-paper">a buy or your
+                  delist</b> can move it, and a buy is atomic — pay + transfer, or neither
                 </Bullet>
                 <Bullet good>
-                  <b className="text-paper">delist anytime</b> and the authorisation is
-                  revoked — your name was always yours
+                  <b className="text-paper">delist anytime</b> and the contract hands the
+                  name straight back to your wallet
                 </Bullet>
               </div>
             </div>
           </StepShell>
         )}
 
-        {/* ── STEP 4 — list it (honest "launching soon", no fake success) ──── */}
+        {/* ── STEP 4 — list it on-chain ────────────────────────────────────── */}
         {selected && (
           <StepShell n={4} title="list it" sub="the on-chain step">
             <div className="overflow-hidden rounded-web0 border-[1.5px] border-line bg-bg2/65 backdrop-blur-md">
               <div className="flex items-center justify-between border-b-[1.5px] border-line px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <span className="h-[7px] w-[7px] rounded-full bg-steel" />
-                  <span className="font-display text-lg font-black tracking-tight lowercase text-dim">
+                  <span className={`h-[7px] w-[7px] rounded-full ${canList ? "animate-pulsering bg-mint" : "bg-steel"}`} />
+                  <span className={`font-display text-lg font-black tracking-tight lowercase ${canList ? "text-paper" : "text-dim"}`}>
                     on-chain listing
                   </span>
                 </div>
-                <span className="rounded-full border-[1.5px] border-line2 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[1px] text-steel">
-                  SOON
+                <span className={`rounded-full border-[1.5px] px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[1px] ${canList ? "border-mint/40 text-mint" : "border-line2 text-steel"}`}>
+                  {canList ? "live" : "soon"}
                 </span>
               </div>
               <div className="px-5 py-5">
-                <p className="max-w-[60ch] text-sm leading-relaxed text-dim">
-                  the delegation + atomic-buy program isn&apos;t wired into this
-                  portal yet, so we won&apos;t pretend to sign a listing that
-                  can&apos;t settle. when the marketplace program goes live, this
-                  button lists{" "}
-                  <b className="text-paper lowercase">
-                    {selected.name}.null
-                  </b>{" "}
-                  {isPremium
-                    ? "to a sealed premium auction"
-                    : listingType === "buy-now"
-                      ? `for ${priceNum > 0 ? fmtSol(priceNum) : "—"} SOL buy-now`
-                      : `to auction, opening at ${priceNum > 0 ? fmtSol(priceNum) : "—"} SOL`}{" "}
-                  in one phantom signature.
-                </p>
-                <button
-                  disabled
-                  className="mt-5 inline-flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-line2 bg-paper/[0.02] px-4 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-faint opacity-70"
-                >
-                  listing — launching soon
-                </button>
+                {listSig ? (
+                  /* ── success ── */
+                  <div className="rounded-web0 border-[1.5px] border-mint/45 bg-mint/[0.06] p-5">
+                    <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-mint">
+                      <span className="h-[7px] w-[7px] rounded-full bg-mint" />
+                      listed — your name is in escrow
+                    </div>
+                    <p className="text-sm leading-relaxed text-paper">
+                      <b className="lowercase">{selected.name}.null</b> is now held by the
+                      listing contract at {fmtSol(priceNum)} SOL buy-now. it&apos;s off the
+                      market until it sells or you delist.
+                    </p>
+                    <a
+                      href={explorerTx(cluster, listSig)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block font-mono text-[11px] text-cyan underline decoration-line hover:text-mint"
+                    >
+                      {shortAddr(listSig)} ↗
+                    </a>
+                  </div>
+                ) : canList ? (
+                  /* ── wired SOL buy-now ── */
+                  <>
+                    <p className="max-w-[60ch] text-sm leading-relaxed text-dim">
+                      this signs one transaction that <b className="text-paper">moves{" "}
+                      {selected.name}.null into the listing contract</b> (escrow), charges the
+                      flat {LIST_FEE_SOL} SOL toll, and posts it for{" "}
+                      <b className="text-paper">{fmtSol(priceNum)} SOL</b> buy-now. on a sale
+                      you receive {SELLER_PCT}% ({fmtSol(sellerSol)} SOL); delist anytime to
+                      get the name straight back.
+                    </p>
+                    <button
+                      onClick={address ? onList : connect}
+                      disabled={listing || connecting}
+                      className="mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded-xl bg-mint px-4 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-ink0 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {!address
+                        ? "connect phantom to list"
+                        : listing
+                          ? "confirming…"
+                          : `list ${selected.name}.null for ${fmtSol(priceNum)} SOL`}
+                    </button>
+                    {listError && (
+                      <div className="mt-3 break-words font-mono text-[11px] text-magenta">{listError}</div>
+                    )}
+                    <div className="mt-3 font-mono text-[11px] text-faint">
+                      one phantom signature · escrowed until it sells or you delist · {PROTOCOL_PCT}% protocol fee on sale only
+                    </div>
+                  </>
+                ) : (
+                  /* ── premium / auction — designed, not yet wired ── */
+                  <>
+                    <p className="max-w-[60ch] text-sm leading-relaxed text-dim">
+                      {isPremium
+                        ? "1–3 character names are premium — they sell through a sealed-bid auction (100% to treasury). that path is built but not yet wired into this portal."
+                        : "the sealed-bid auction path is built but not yet wired into this portal — use buy-now to list today."}{" "}
+                      the SOL buy-now path above is{" "}
+                      <b className="text-paper">live and devnet-proven</b>.
+                    </p>
+                    <button
+                      disabled
+                      className="mt-5 inline-flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-line2 bg-paper/[0.02] px-4 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-faint opacity-70"
+                    >
+                      {isPremium ? "premium auction — launching soon" : "auction listing — launching soon"}
+                    </button>
+                  </>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[11px] text-faint">
                   <span>
-                    will list as{" "}
+                    name account{" "}
                     <a
                       className="text-cyan underline decoration-line hover:text-mint"
                       href={solscanAddr(selected.pda)}
@@ -492,7 +583,6 @@ export function Sell() {
                       {shortAddr(selected.pda)} ↗
                     </a>
                   </span>
-                  <span>· you&apos;ll sign once · the name stays in your wallet</span>
                 </div>
               </div>
             </div>
@@ -500,10 +590,11 @@ export function Sell() {
         )}
       </div>
 
-      {/* honesty footer — identical posture to MyNames */}
+      {/* honesty footer */}
       <p className="mt-8 font-mono text-[11px] lowercase tracking-wide text-faint">
-        public beta · capped · unaudited · non-custodial — listed names stay in your
-        wallet; the market can only transfer one if it sells
+        public beta · capped · unaudited — a listed name is held by the listing contract
+        (escrow) until it sells or you delist; sales are atomic, the protocol takes no
+        discretionary custody
       </p>
     </section>
   );

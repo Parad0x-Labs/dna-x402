@@ -1,14 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PublicKey } from "@solana/web3.js";
 import { useCluster } from "./ClusterProvider";
+import { useWallet } from "./WalletProvider";
 import {
   readMarketplaceListings,
+  getConnectionForCluster,
   type MarketListing,
   type MarketSnapshot,
 } from "@/lib/chain";
-import { lamportsToSol, shortAddr } from "@/lib/null-sdk";
-import { explorerAddr } from "@/lib/cluster";
+import { lamportsToSol, shortAddr, ixBuyNowSol } from "@/lib/null-sdk";
+import { explorerAddr, explorerTx } from "@/lib/cluster";
+import { signAndSendInstructions } from "@/lib/wallet";
 
 type Filter = "all" | "buy-now" | "auctions" | "premium";
 
@@ -71,10 +75,11 @@ export function Browse() {
 
       {/* economics intro — bold, terse */}
       <p className="mt-6 max-w-[64ch] text-[clamp(14px,1.15vw,17px)] leading-relaxed text-dim">
-        a name you list <b className="font-semibold text-paper">stays in your wallet</b> —
-        this is <span className="font-semibold text-mint">delegation, not escrow</span>. the
-        market can only move it <b className="font-semibold text-paper">if it sells</b>, and a
-        buy is atomic: pay + transfer, or neither.{" "}
+        a listed name is <b className="font-semibold text-paper">held by the listing
+        contract</b> — escrowed by a program, not a person. the only ways out are a{" "}
+        <b className="font-semibold text-paper">sale</b> or the seller&apos;s{" "}
+        <b className="font-semibold text-paper">delist</b>, and a buy is atomic: pay +
+        transfer, or neither.{" "}
         <span className="font-semibold text-lime">0.01 SOL to list</span>,{" "}
         <span className="font-semibold text-paper">5% on sale</span>, delist anytime.
       </p>
@@ -83,8 +88,8 @@ export function Browse() {
       <div className="mt-7 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="list fee" value="0.01 SOL" note="flat · non-refundable toll" dot="cyan" />
         <Stat label="on sale" value="5% / 95%" note="protocol / seller" dot="mint" />
-        <Stat label="custody" value="delegation" note="name stays in your wallet" dot="lime" />
-        <Stat label="escrow svc" value="1% · opt-in" note="separate, for OTC deals" dot="magenta" />
+        <Stat label="custody" value="escrowed" note="held by the listing contract" dot="lime" />
+        <Stat label="settlement" value="atomic" note="pay + transfer, or neither" dot="magenta" />
       </div>
 
       {/* CONSOLE — v4 glass */}
@@ -160,7 +165,7 @@ export function Browse() {
             /* ── live listings (renders the moment a listing layout is wired) ── */
             <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((l, i) => (
-                <LiveCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} />
+                <LiveCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} onBought={() => load(cluster)} />
               ))}
             </div>
           ) : (
@@ -172,8 +177,8 @@ export function Browse() {
 
       {/* honesty footer */}
       <p className="mt-6 font-mono text-[11px] lowercase tracking-wide text-faint">
-        public beta · capped · unaudited · non-custodial — listed names stay in your wallet,
-        sales are atomic, the protocol never takes custody
+        public beta · capped · unaudited — a listed name is escrowed by the listing contract
+        until it sells or the seller delists; sales are atomic, no person holds custody
       </p>
     </section>
   );
@@ -223,8 +228,8 @@ function EmptyMarket({ cluster }: { cluster: string }) {
         </div>
         <p className="mt-3 max-w-[52ch] text-[14.5px] font-medium leading-relaxed opacity-80">
           no .null name is listed on {cluster} right now. the marketplace settles atomically —
-          when it goes live, a listed name <b>stays in the seller&apos;s wallet</b> until it
-          sells. be the first to list and set the floor.
+          a listed name is <b>held by the listing contract</b> until it sells or the seller
+          delists. be the first to list and set the floor.
         </p>
         <div className="mt-5 flex flex-wrap gap-2.5">
           <a
@@ -360,15 +365,52 @@ function LiveCard({
   listing,
   cluster,
   accentIndex,
+  onBought,
 }: {
   listing: MarketListing;
   cluster: "mainnet" | "devnet";
   accentIndex: number;
+  onBought: () => void;
 }) {
   const accent = (["mint", "cyan", "lime", "magenta"] as const)[accentIndex % 4];
   const a = ACCENT[accent];
   const price = lamportsToSol(listing.lamports);
   const isAuction = listing.kind === "auction";
+  const { address, connect, connecting } = useWallet();
+
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [sig, setSig] = useState<string | null>(null);
+  const ownListing = address != null && address === listing.seller;
+
+  const onBuy = useCallback(async () => {
+    if (!address) {
+      connect();
+      return;
+    }
+    setErr(null);
+    setBusy(true);
+    try {
+      const conn = getConnectionForCluster(cluster);
+      const ix = await ixBuyNowSol(
+        cluster,
+        new PublicKey(address),
+        new PublicKey(listing.seller),
+        listing.name,
+        new PublicKey(listing.treasury),
+      );
+      // BuyNow does a registrar CPI + two system transfers — give it headroom.
+      const s = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 200_000 });
+      setSig(s);
+      // let the chain settle, then refresh the board so the sold name drops off.
+      setTimeout(onBought, 1500);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }, [address, connect, cluster, listing.seller, listing.name, listing.treasury, onBought]);
+
   return (
     <div
       className={`group flex flex-col gap-4 rounded-web0 border-[1.5px] ${a.ring} bg-bg2/65 p-5 backdrop-blur-md transition hover:-translate-y-0.5`}
@@ -376,7 +418,7 @@ function LiveCard({
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
           <i className={`h-[6px] w-[6px] rounded-full ${a.dot}`} />
-          {listing.kind === "buy-now" ? "buy now" : isAuction ? "auction" : "premium"}
+          {listing.kind === "buy-now" ? "buy now" : isAuction ? "auction · buy now" : "premium"}
         </span>
         <a
           href={explorerAddr(cluster, listing.pda)}
@@ -394,20 +436,36 @@ function LiveCard({
       </div>
 
       <div>
-        <div className="font-mono text-[13px] font-bold text-paper">
-          {isAuction ? `auction · current bid ${price} SOL` : `buy now · ${price} SOL`}
-        </div>
+        <div className="font-mono text-[13px] font-bold text-paper">buy now · {price} SOL</div>
         <div className="mt-1 font-mono text-[11px] text-dim">
-          seller {shortAddr(listing.seller)} · keeps 95%
+          seller {shortAddr(listing.seller)} · keeps 95% ({lamportsToSol((listing.lamports * 95n) / 100n)} SOL)
         </div>
       </div>
 
-      <button
-        className={`mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold tracking-tight transition hover:-translate-y-px ${a.btn}`}
-      >
-        {isAuction ? "place bid" : `buy ${listing.name}.null`}
-        <Arrow />
-      </button>
+      {sig ? (
+        <div className="mt-auto rounded-xl border-[1.5px] border-mint/40 bg-mint/[0.06] px-4 py-3">
+          <div className="font-mono text-[12px] font-bold text-mint">bought — name transferring to you</div>
+          <a href={explorerTx(cluster, sig)} target="_blank" rel="noreferrer" className="font-mono text-[10.5px] text-dim underline hover:text-cyan">
+            {shortAddr(sig)} ↗
+          </a>
+        </div>
+      ) : (
+        <button
+          onClick={onBuy}
+          disabled={busy || connecting || ownListing}
+          className={`mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold tracking-tight transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${a.btn}`}
+        >
+          {ownListing
+            ? "your listing"
+            : busy
+              ? "confirming…"
+              : !address
+                ? `connect to buy`
+                : `buy ${listing.name}.null`}
+          {!busy && !ownListing && <Arrow />}
+        </button>
+      )}
+      {err && <div className="break-words font-mono text-[10.5px] text-magenta">{err}</div>}
       <div className="font-mono text-[10.5px] text-faint">
         atomic · pay + transfer or neither · 5% protocol fee
       </div>

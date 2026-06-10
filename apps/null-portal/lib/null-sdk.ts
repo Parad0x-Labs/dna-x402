@@ -58,12 +58,35 @@ export const SOL_FEE_LAMPORTS = 7_000_000; // 0.007 SOL
 
 // ── Instruction discriminants ─────────────────────────────────────────────────
 export const IX_REGISTER = 0x02; // registrar Register
+export const IX_CREATE_LISTING = 0x08; // auction CreateListing (resale buy-now ± auction)
+export const IX_BUY_NOW = 0x09; // auction BuyNow (SOL-native)
 export const CURRENCY_SOL = 1;
 export const CURRENCY_NULL = 3;
 
 // ── PDA seeds ─────────────────────────────────────────────────────────────────
 export const REGISTRY_SEED = new TextEncoder().encode("null-registry");
 export const DOMAIN_SEED = new TextEncoder().encode("null-domain");
+export const AUCTION_SEED = new TextEncoder().encode("null-auction");
+
+// ── AuctionState layout (mirrors programs/null-auction/src/state.rs EXACTLY) ───
+// 325-byte v2 record; the first 308 bytes are identical to legacy v1.
+// NOTE: buy_now_price @ 308 holds LAMPORTS since the SOL-native conversion
+// (2026-06-10) — the field is reused; state.rs's "USD micro" doc predates it.
+export const AUCTION_SIZE = 325;
+export const AUCTION_SIZE_V1 = 308;
+export const AS_DISC_RESALE = 0x41; // 'A' — 95/5 resale
+export const AS_DISC_PRIMARY = 0x50; // 'P' — premium acquisition (100% treasury)
+export const AS_OFF_SELLER = 1;
+export const AS_OFF_DOMAIN = 33;
+export const AS_OFF_TREASURY = 129;
+export const AS_OFF_STATUS = 306; // 0=ACTIVE 1=SETTLED 2=CANCELLED
+export const AS_OFF_BUY_NOW = 308; // u64 LAMPORTS (0 = auction-only)
+export const AS_OFF_AUCTION_ENABLED = 316; // u8
+export const AS_STATUS_ACTIVE = 0;
+
+// Upfront listing fee + settlement cut (mirror state.rs).
+export const LISTING_FEE_LAMPORTS = 10_000_000n; // 0.01 SOL, charged at CreateListing
+export const TREASURY_FEE_BPS = 500n; // 5% of the sale to treasury, 95% to seller
 
 // ── RegistryConfig (v2 — 122 bytes) field offsets (mirror state.rs EXACTLY) ───
 export const REGISTRY_CONFIG_SIZE = 122;
@@ -89,6 +112,17 @@ export const NULL_DECIMALS = 6;
 // ── small byte helpers (Buffer-free so they work in the browser too) ──────────
 function u8(n: number): Uint8Array {
   return Uint8Array.from([n & 0xff]);
+}
+
+/** little-endian u64 (8 bytes) from a bigint|number — Buffer-free for the browser. */
+function u64le(n: bigint | number): Uint8Array {
+  let v = BigInt(n);
+  const b = new Uint8Array(8);
+  for (let i = 0; i < 8; i++) {
+    b[i] = Number(v & 0xffn);
+    v >>= 8n;
+  }
+  return b;
 }
 
 function concatBytes(...parts: Uint8Array[]): Uint8Array {
@@ -157,6 +191,116 @@ export async function domainPdaFor(
       ? new TextEncoder().encode(name)
       : await nameHash(name);
   return PublicKey.findProgramAddressSync([DOMAIN_SEED, seed], program)[0];
+}
+
+// ── Marketplace (auction) PDAs + builders — SOL-native resale buy-now ──────────
+//
+// The auction program derives the domain PDA with sha256(padName64(name)) under
+// its PAIRED registrar (cfg.auctionRegistrar), so these always use sha256 — never
+// the cluster's raw-seed NullPay registrar. On mainnet auctionRegistrar===registrar.
+
+export function auctionProgramFor(c: Cluster | ClusterConfig): PublicKey {
+  const cfg = typeof c === "string" ? configFor(c) : c;
+  return new PublicKey(cfg.auction);
+}
+
+export function auctionRegistrarFor(c: Cluster | ClusterConfig): PublicKey {
+  const cfg = typeof c === "string" ? configFor(c) : c;
+  return new PublicKey(cfg.auctionRegistrar);
+}
+
+/** Domain PDA AS THE AUCTION DERIVES IT: sha256 seed under the paired registrar. */
+export async function auctionDomainPda(
+  c: Cluster | ClusterConfig,
+  name: string,
+): Promise<PublicKey> {
+  const h = await nameHash(name);
+  return PublicKey.findProgramAddressSync([DOMAIN_SEED, h], auctionRegistrarFor(c))[0];
+}
+
+/** AuctionState PDA: seeds [b"null-auction", sha256(padName64(name))] under the auction. */
+export async function auctionPda(
+  c: Cluster | ClusterConfig,
+  name: string,
+): Promise<PublicKey> {
+  const h = await nameHash(name);
+  return PublicKey.findProgramAddressSync([AUCTION_SEED, h], auctionProgramFor(c))[0];
+}
+
+/**
+ * CreateListing (0x08) — SOL-native fixed-price listing (auction_enabled=0, no vault).
+ * Escrows the name to the auction PDA and charges the 0.01 SOL listing fee → treasury.
+ *
+ * payload: [0x08] name[64] buy_now(u64 LAMPORTS) reserve(u64) min_bid(u64) commit(u64)
+ *          reveal(u64) bond(u64) sol_price(u64) null_price(u64) auction_enabled(u8)
+ *          null_mint[32] usdc_mint[32] treasury[32]
+ * accounts: [seller(s,w), domain(w), auction(w,init), treasury(w,sys), null_reg(ro), system(ro)]
+ */
+export async function ixCreateListingSol(
+  c: Cluster | ClusterConfig,
+  seller: PublicKey,
+  name: string,
+  buyNowLamports: bigint,
+  treasury: PublicKey,
+): Promise<TransactionInstruction> {
+  const data = concatBytes(
+    u8(IX_CREATE_LISTING),
+    padName64(name),
+    u64le(buyNowLamports), // buy_now (lamports)
+    u64le(0), // reserve
+    u64le(0), // min_bid
+    u64le(0), // commit_secs
+    u64le(0), // reveal_secs
+    u64le(0), // bond_lamports
+    u64le(0), // sol_price_usd_micro
+    u64le(0), // null_price_usd_micro
+    u8(0), // auction_enabled = 0 → pure buy-now, no token vault
+    new Uint8Array(32), // null_mint (unused for SOL buy-now)
+    new Uint8Array(32), // usdc_mint (unused for SOL buy-now)
+    treasury.toBytes(),
+  );
+  const domain = await auctionDomainPda(c, name);
+  const auction = await auctionPda(c, name);
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: seller, isSigner: true, isWritable: true },
+      { pubkey: domain, isSigner: false, isWritable: true },
+      { pubkey: auction, isSigner: false, isWritable: true },
+      { pubkey: treasury, isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(data),
+  });
+}
+
+/**
+ * BuyNow (0x09) — SOL. Pays state.buy_now_price: 95% seller / 5% treasury; name → buyer.
+ * accounts: [buyer(s,w), auction(w), domain(w), seller(w,sys), treasury(w,sys), null_reg(ro), system(ro)]
+ */
+export async function ixBuyNowSol(
+  c: Cluster | ClusterConfig,
+  buyer: PublicKey,
+  seller: PublicKey,
+  name: string,
+  treasury: PublicKey,
+): Promise<TransactionInstruction> {
+  const domain = await auctionDomainPda(c, name);
+  const auction = await auctionPda(c, name);
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: buyer, isSigner: true, isWritable: true },
+      { pubkey: auction, isSigner: false, isWritable: true },
+      { pubkey: domain, isSigner: false, isWritable: true },
+      { pubkey: seller, isSigner: false, isWritable: true },
+      { pubkey: treasury, isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_BUY_NOW), padName64(name))),
+  });
 }
 
 // ── NullPay stealth-meta layout (devnet registrar v2 NullDomain) ──────────────
