@@ -103,9 +103,13 @@ void main(){
   col *= 0.93 + 0.12*dust;                               // mottled cloud density
 
   // ── STARS: two depths = a galaxy field. sparse bright foreground + dense, MUCH
-  //          fainter "star dust" behind it (recreates the deep galaxy sprinkle) ──
-  col += stars(p * 16.0 + 23.0, t) * 0.80;   // the bright ones (sparse)
-  col += stars(p * 33.0 + 61.0, t) * 0.24;   // far galaxy dust — denser + much dimmer
+  //          fainter "star dust" behind it (recreates the deep galaxy sprinkle).
+  //          PARALLAX: both layers drift with the SAME slow cursor vector m that
+  //          moves the gas, so the stars and the nebula travel TOGETHER (no layer
+  //          sliding independently) -- foreground parallaxes a touch more than the far
+  //          dust for depth, but everything stays locked to the one slow-mo drift. --
+  col += stars(p * 16.0 + 23.0 + m * 1.6, t) * 0.80;   // bright foreground (parallaxes more)
+  col += stars(p * 33.0 + 61.0 + m * 0.9, t) * 0.24;   // far galaxy dust (parallaxes less)
 
   float lines = abs(fract(n2*9.0 - t*0.4) - 0.5);
   col += vec3(0.9,1.0,0.95) * smoothstep(0.49,0.5,lines) * 0.05;
