@@ -113,6 +113,8 @@ void main(){
   col *= mix(0.45, 1.12, vig);
   col += (hash(gl_FragCoord.xy + t)-0.5)/255.0;
   col = col/(col+0.92); col = pow(col, vec3(0.86));
+  col = (col - 0.5) * 1.10 + 0.5;   // +10% contrast (pivot mid-gray)
+  col = max(col * 0.90, 0.0);        // +10% darkness
   gl_FragColor = vec4(col, 1.0);
 }`;
 
