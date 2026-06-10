@@ -89,8 +89,11 @@ Anyone contributes via `ceremony/CONTRIBUTING_V3.md` — that is the decentraliz
 
 **Honest scope:** the dry run's contributions are simulated-independent (one operator),
 so it is **not yet trustless** — it becomes trustless when those steps are run by
-independent humans. The **drand beacon is real**. Swapping the ceremony VK into the
-verifier and re-running the e2e under it is supported via `--vk-mode ceremony`.
+independent humans. The **drand beacon is real**. The deployed devnet program embeds
+this ceremony VK, so `--vk-mode ceremony` is the **default** the e2e/fusion scripts run
+under (and `prove-v3.mjs` defaults to it). The single-party pilot VK verifies locally but
+is rejected on-chain (`Custom(4)=ProofInvalid`), so `--vk-mode pilot` is refused by the
+e2e scripts; a pilot proof only applies to a pool you deployed yourself with the pilot VK.
 
 ## 4. Devnet e2e (full unlinkability)
 

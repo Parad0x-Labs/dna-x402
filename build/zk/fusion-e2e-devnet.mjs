@@ -29,14 +29,16 @@
  *
  * Honest scope (see also evidence honestCaveats):
  *   - UNAUDITED devnet pilot. mainnet_ready=false.
- *   - Trusted setup: pilot VK is SINGLE-PARTY (default); --vk-mode ceremony uses the
- *     beacon-sealed multi-contribution DRY-RUN VK (still awaiting independent humans).
+ *   - Trusted setup: this runs under the beacon-sealed multi-contribution DRY-RUN
+ *     ceremony VK (the one the deployed program embeds; still awaiting independent
+ *     humans). vk-mode=ceremony is the default and only supported mode here — the
+ *     single-party pilot VK is rejected on-chain (Custom(4)=ProofInvalid).
  *   - Single-party demo: sender, payee, relayer are all driven by this one script;
  *     the unlinkability is structural (what does / does not appear on-chain), not a
  *     claim that a real anonymity set exists in this 2-note pool.
  *
  * Usage:
- *   node build/zk/fusion-e2e-devnet.mjs <POOL_PROGRAM_ID> --registrar <REGISTRAR_ID> [--vk-mode pilot|ceremony]
+ *   node build/zk/fusion-e2e-devnet.mjs <POOL_PROGRAM_ID> --registrar <REGISTRAR_ID> [--vk-mode ceremony]
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
@@ -58,7 +60,18 @@ const RPC = process.env.RPC ?? "https://api.devnet.solana.com";
 const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 const POOL_PROGRAM = new PublicKey(process.argv[2]);
 const REGISTRAR = new PublicKey(arg("registrar"));
-const VK_MODE = arg("vk-mode", "pilot");
+const VK_MODE = arg("vk-mode", "ceremony").toLowerCase();
+if (VK_MODE === "pilot") {
+  console.error(
+    "fusion-e2e-devnet.mjs: --vk-mode pilot is not supported against the deployed pool.\n" +
+    "  The on-chain program embeds the CEREMONY verifying key; pilot (single-party) proofs\n" +
+    "  are rejected with Custom(4)=ProofInvalid. Re-run with --vk-mode ceremony (the default).");
+  process.exit(2);
+}
+if (VK_MODE !== "ceremony") {
+  console.error(`fusion-e2e-devnet.mjs: unknown --vk-mode '${VK_MODE}' (only 'ceremony' is supported)`);
+  process.exit(2);
+}
 const DENOM = 100_000_000; // 0.1 SOL fixed denomination
 const FEE = 1_000_000;     // 0.001 SOL relayer reimbursement (<= MAX_FEE = 0.05 SOL)
 
@@ -192,7 +205,9 @@ function prove(spec, { fee = FEE, denom = DENOM } = {}) {
   const tmp = mkdtempSync(join(tmpdir(), "fuse-proof-"));
   const sIn = join(tmp, "spec.json"), sOut = join(tmp, "out.json");
   writeFileSync(sIn, JSON.stringify({ ...spec, fee: String(fee), denomination: String(denom) }));
-  execFileSync(process.execPath, [join(HERE, "prove-v3.mjs"), sIn, sOut], { stdio: "pipe" });
+  // Forward vk-mode so the prover uses the CEREMONY zkey/vk the deployed program embeds.
+  execFileSync(process.execPath, [join(HERE, "prove-v3.mjs"), sIn, sOut],
+    { stdio: "pipe", env: { ...process.env, SWV3_VK_MODE: VK_MODE } });
   const out = JSON.parse(readFileSync(sOut, "utf8"));
   rmSync(tmp, { recursive: true, force: true });
   return out;
@@ -526,9 +541,7 @@ async function main() {
   ev.poolVault = poolVault.toBase58();
   ev.onChainRootAfterDeposits = rootAfter;
   ev.circuit = "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)";
-  ev.vk = VK_MODE === "ceremony"
-    ? "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, DRY-RUN — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon; awaiting independent contributors, devnet pilot scope)"
-    : "shielded_withdraw_v3_vk (SINGLE-PARTY / DEVNET PILOT / NOT TRUSTLESS)";
+  ev.vk = "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, DRY-RUN — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon; awaiting independent contributors, devnet pilot scope). This is the VK the deployed program embeds.";
   ev.keystone =
     "ONE shielded-pool withdraw hides ALL THREE payment legs at once: (a) SENDER — a real Groth16 " +
     "membership proof (alt_bn128 pairing syscall) authorizes the spend with NO depositor signature/link " +
@@ -537,9 +550,7 @@ async function main() {
     "meta. A permissionless RELAYER submits it (fee_payer != P); P never signs; the payee view-key-scans, " +
     "recovers the one-time scalar p, and sweeps P natively. The payee's MAIN wallet never appears in the withdraw tx.";
   ev.honestCaveats = [
-    VK_MODE === "ceremony"
-      ? "Ceremony VK is a BEACON-SEALED DRY RUN (simulated-independent contributions + fixed published drand beacon). NOT yet fully trustless; needs independent human contributors (ceremony/CONTRIBUTING_V3.md)."
-      : "SINGLE-PARTY trusted setup — NOT trustless. Use --vk-mode ceremony for the beacon-sealed multi-contribution (dry-run) VK.",
+    "Ceremony VK is a BEACON-SEALED DRY RUN (simulated-independent contributions + fixed published drand beacon). NOT yet fully trustless; needs independent human contributors (ceremony/CONTRIBUTING_V3.md).",
     "UNAUDITED devnet pilot. mainnet_ready=false throughout. Library / demo only.",
     "SINGLE-PARTY demo: sender, payee, and relayer are all driven by this one script. The unlinkability is STRUCTURAL (what does / does not appear on-chain), not a claim of a large real anonymity set — this pool has only 2 notes.",
     "The .null domain is registered by our wallet (the publisher of the name); that publisher key is distinct from the payee's unlinkable MAIN wallet, which never touches the withdraw tx.",
