@@ -445,7 +445,7 @@ spl-tlv-account-resolution  = "0.6"
 spl-memo            = "4"
 # ── Testing / verification ──────────────────────────────────────────────────
 proptest            = "1.5"
-proptest-derive     = "0.5"
+proptest-derive     = "0.8"
 rayon               = "1.10"
 statrs              = "0.17"
 kolmogorov_smirnov  = "1.1"
