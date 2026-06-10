@@ -138,6 +138,77 @@ export async function getNullBalanceAtomic(
   }
 }
 
+// ── Marketplace listings (cluster-aware, honest) ──────────────────────────────
+//
+// HONESTY NOTE: there is NO deployed *marketplace/listing* program wired into
+// the portal yet. The auction program id (config.auction) exists per-cluster,
+// but its on-chain Listing account layout is not part of this portal's verified
+// SDK, so we deliberately do NOT invent a decoder / fake listings.
+//
+// readMarketplaceListings does a REAL, read-only RPC probe of the auction
+// program so the UI can show a truthful live program-account count, then returns
+// an empty `listings` array with `wired: false`. The Browse screen renders a
+// confident "marketplace launching" empty state from this — never fabricated
+// prices/owners. When the listing program + layout are wired, decode here and
+// flip `wired` to true; the UI already renders real cards from `listings`.
+
+export interface MarketListing {
+  /** the .null name being sold, e.g. "vault" */
+  name: string;
+  /** listing account pubkey (base58) */
+  pda: string;
+  /** seller wallet (base58) */
+  seller: string;
+  /** "buy-now" fixed price or "auction" */
+  kind: "buy-now" | "auction" | "premium";
+  /** price (buy-now) or current bid (auction) in lamports */
+  lamports: bigint;
+}
+
+export interface MarketSnapshot {
+  /** whether a real listing decoder is wired for this cluster */
+  wired: boolean;
+  /** the auction/marketplace program probed (base58) */
+  program: string;
+  /** count of accounts owned by that program right now (truthful, live) */
+  programAccounts: number | null;
+  /** decoded listings — empty until a listing layout is wired in */
+  listings: MarketListing[];
+}
+
+/**
+ * Read the live marketplace state for a cluster. Real RPC probe, no fabrication.
+ *
+ * Until a Listing account layout is part of the verified SDK, this returns
+ * `wired: false` with an empty `listings` array. `programAccounts` is the real,
+ * live count of accounts owned by the auction program (so the empty state can
+ * honestly say "0 live listings" vs "program not deployed").
+ */
+export async function readMarketplaceListings(
+  cluster: Cluster,
+): Promise<MarketSnapshot> {
+  const cfg = configFor(cluster);
+  const program = new PublicKey(cfg.auction);
+  let programAccounts: number | null = null;
+  try {
+    // dataSlice: 0 → we only want the COUNT, not the (potentially large) data.
+    const accounts = await connFor(cfg.rpc).getProgramAccounts(program, {
+      dataSlice: { offset: 0, length: 0 },
+    });
+    programAccounts = accounts.length;
+  } catch {
+    // RPC may reject an unindexed getProgramAccounts; treat as "unknown".
+    programAccounts = null;
+  }
+  // No verified Listing layout yet → no decoded listings (honest empty state).
+  return {
+    wired: false,
+    program: program.toBase58(),
+    programAccounts,
+    listings: [],
+  };
+}
+
 // ── NullPay: resolve a .null name's published stealth meta-address ─────────────
 
 export type StealthMetaResult =

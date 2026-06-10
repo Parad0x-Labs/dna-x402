@@ -15,52 +15,43 @@ function ConnectButton() {
       <button
         onClick={disconnect}
         title={address}
-        className="shrink-0 whitespace-nowrap font-mono text-xs sm:text-sm rounded-lg border border-line2 bg-surf px-3 py-2 text-ink hover:border-acc-d transition-colors"
+        className="shrink-0 whitespace-nowrap rounded-full border-[1.5px] border-line bg-bg2/60 px-3.5 py-2 font-mono text-xs text-ink transition hover:border-mint sm:text-sm"
       >
-        <span className="inline-block w-[7px] h-[7px] rounded-full bg-acc mr-2 align-middle" />
+        <span className="mr-2 inline-block h-[7px] w-[7px] align-middle rounded-full bg-mint" />
         {shortAddr(address)}
-        <span className="text-faint ml-2">disconnect</span>
+        <span className="ml-2 text-faint">disconnect</span>
       </button>
     );
   }
 
+  const base =
+    "shrink-0 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-paper px-4 py-2.5 font-sans text-sm font-bold tracking-tight text-ink0 transition hover:-translate-y-px hover:bg-violet hover:text-paper";
+
   if (!phantomAvailable) {
     return (
-      <a
-        href="https://phantom.app/"
-        target="_blank"
-        rel="noreferrer"
-        className="shrink-0 whitespace-nowrap font-mono text-xs sm:text-sm rounded-lg bg-acc px-3 sm:px-4 py-2 font-bold text-[#062018] hover:brightness-110 transition"
-      >
-        Get Phantom →
+      <a href="https://phantom.app/" target="_blank" rel="noreferrer" className={base}>
+        get phantom →
       </a>
     );
   }
-
   return (
-    <button
-      onClick={connect}
-      disabled={connecting}
-      className="shrink-0 whitespace-nowrap font-mono text-xs sm:text-sm rounded-lg bg-acc px-3 sm:px-4 py-2 font-bold text-[#062018] hover:brightness-110 transition disabled:opacity-60"
-    >
-      {connecting ? "connecting…" : <><span className="sm:hidden">Connect</span><span className="hidden sm:inline">Connect Phantom</span></>}
+    <button onClick={connect} disabled={connecting} className={`${base} disabled:opacity-60`}>
+      {connecting ? "connecting…" : "connect phantom"}
     </button>
   );
 }
 
-/** Small mono cluster pill — click cycles mainnet ⇄ devnet, persisted. */
 function ClusterPill() {
   const { cluster, setCluster, ready } = useCluster();
   const next: Cluster = cluster === "mainnet" ? "devnet" : "mainnet";
-  const dot = cluster === "mainnet" ? "bg-acc" : "bg-steel";
   return (
     <button
       onClick={() => setCluster(next)}
       title={`active cluster: ${cluster} — click to switch to ${next}`}
-      className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[11px] rounded-md border border-line bg-surf px-2.5 py-1.5 text-dim hover:border-line2 transition-colors"
+      className="shrink-0 inline-flex items-center gap-2 rounded-full border-[1.5px] border-mint/40 bg-mint/[0.06] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.06em] text-mint transition hover:border-mint/70"
     >
-      <span className={`inline-block w-[6px] h-[6px] rounded-full ${dot}`} />
-      <span className="tracking-[1px] uppercase">{ready ? cluster : "…"}</span>
+      <span className={`inline-block h-[7px] w-[7px] rounded-full ${cluster === "mainnet" ? "bg-mint animate-pulsering" : "bg-steel"}`} />
+      {ready ? cluster : "…"}
     </button>
   );
 }
@@ -70,8 +61,8 @@ export function Header() {
   const link = (href: string, label: string) => (
     <Link
       href={href}
-      className={`font-mono text-xs sm:text-sm transition-colors ${
-        pathname === href ? "text-acc" : "text-dim hover:text-ink"
+      className={`rounded-full px-3 py-1.5 font-mono text-[13px] transition ${
+        pathname === href ? "bg-lime text-ink0" : "text-dim hover:bg-lime hover:text-ink0"
       }`}
     >
       {label}
@@ -79,26 +70,26 @@ export function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-bg">
-      <div className="mx-auto max-w-[1060px] px-5 sm:px-7 py-4 flex items-center justify-between gap-2 sm:gap-3">
-        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
-          <Link href="/" className="flex items-center gap-2 shrink-0 group">
-            <span className="inline-block w-[7px] h-[7px] rounded-full bg-acc shadow-[0_0_0_3px_rgba(45,212,160,0.15)]" />
-            <span className="font-mono text-sm font-bold tracking-wider">
-              web0<span className="text-acc">.null</span>
-            </span>
-          </Link>
-          <nav className="flex items-center gap-3 sm:gap-4">
-            {link("/", "search")}
-            {link("/pay", "pay")}
-            {link("/my-names", "my names")}
-          </nav>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+    <header className="sticky top-3 z-30 mt-3">
+      <nav className="flex items-center justify-between gap-3 rounded-full border-[1.5px] border-line bg-bg2/50 px-3 py-2.5 pl-5 backdrop-blur-md">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span className="inline-block h-[13px] w-[13px] animate-pulsering rounded-full bg-mint" />
+          <span className="font-sans text-[19px] font-bold tracking-tight">
+            web0<span className="text-mint">.null</span>
+          </span>
+        </Link>
+        <nav className="hidden items-center gap-1 md:flex">
+          {link("/", "search")}
+          {link("/browse", "browse")}
+          {link("/sell", "sell")}
+          {link("/pay", "pay")}
+          {link("/my-names", "my names")}
+        </nav>
+        <div className="flex items-center gap-2.5">
           <ClusterPill />
           <ConnectButton />
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

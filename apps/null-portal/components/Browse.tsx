@@ -1,0 +1,432 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCluster } from "./ClusterProvider";
+import {
+  readMarketplaceListings,
+  type MarketListing,
+  type MarketSnapshot,
+} from "@/lib/chain";
+import { lamportsToSol, shortAddr } from "@/lib/null-sdk";
+import { explorerAddr } from "@/lib/cluster";
+
+type Filter = "all" | "buy-now" | "auctions" | "premium";
+
+type LoadState =
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "ready"; snap: MarketSnapshot };
+
+const FILTERS: { id: Filter; label: string; accent: string }[] = [
+  { id: "all", label: "all", accent: "hover:bg-mint hover:text-ink0" },
+  { id: "buy-now", label: "buy now", accent: "hover:bg-cyan hover:text-ink0" },
+  { id: "auctions", label: "auctions", accent: "hover:bg-lime hover:text-ink0" },
+  { id: "premium", label: "premium", accent: "hover:bg-magenta hover:text-paper" },
+];
+
+export function Browse() {
+  const { cluster, config } = useCluster();
+  const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const load = useCallback(async (c: typeof cluster) => {
+    setState({ kind: "loading" });
+    try {
+      const snap = await readMarketplaceListings(c);
+      setState({ kind: "ready", snap });
+    } catch (e) {
+      setState({ kind: "error", message: e instanceof Error ? e.message : String(e) });
+    }
+  }, []);
+
+  useEffect(() => {
+    load(cluster);
+  }, [cluster, load]);
+
+  const listings: MarketListing[] =
+    state.kind === "ready" ? state.snap.listings : [];
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return listings;
+    if (filter === "buy-now") return listings.filter((l) => l.kind === "buy-now");
+    if (filter === "auctions") return listings.filter((l) => l.kind === "auction");
+    return listings.filter((l) => l.kind === "premium");
+  }, [listings, filter]);
+
+  const hasLive = filtered.length > 0;
+
+  return (
+    <section className="pt-12 pb-12 sm:pt-16">
+      {/* eyebrow */}
+      <span className="flex w-max items-center gap-2.5 font-mono text-[12px] lowercase tracking-wide text-dim">
+        <span className="h-[9px] w-[9px] animate-pulsering rounded-full bg-magenta" />
+        the .null marketplace ·{" "}
+        <span className="text-cyan">read live from solana {config.label}</span>
+      </span>
+
+      {/* hook */}
+      <h1 className="mt-5 font-display text-[clamp(46px,9vw,128px)] font-black leading-[0.84] tracking-[-0.035em] lowercase">
+        browse <span className="text-magenta">.null</span> names.
+      </h1>
+
+      {/* economics intro — bold, terse */}
+      <p className="mt-6 max-w-[64ch] text-[clamp(14px,1.15vw,17px)] leading-relaxed text-dim">
+        a name you list <b className="font-semibold text-paper">stays in your wallet</b> —
+        this is <span className="font-semibold text-mint">delegation, not escrow</span>. the
+        market can only move it <b className="font-semibold text-paper">if it sells</b>, and a
+        buy is atomic: pay + transfer, or neither.{" "}
+        <span className="font-semibold text-lime">0.01 SOL to list</span>,{" "}
+        <span className="font-semibold text-paper">5% on sale</span>, delist anytime.
+      </p>
+
+      {/* economics strip — the exact numbers, laid out clearly */}
+      <div className="mt-7 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="list fee" value="0.01 SOL" note="flat · non-refundable toll" dot="cyan" />
+        <Stat label="on sale" value="5% / 95%" note="protocol / seller" dot="mint" />
+        <Stat label="custody" value="delegation" note="name stays in your wallet" dot="lime" />
+        <Stat label="escrow svc" value="1% · opt-in" note="separate, for OTC deals" dot="magenta" />
+      </div>
+
+      {/* CONSOLE — v4 glass */}
+      <div className="mt-9 overflow-hidden rounded-web0 border-[1.5px] border-line bg-bg2/65 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)] backdrop-blur-md">
+        <div className="flex items-center gap-2 border-b-[1.5px] border-line px-3.5 py-3">
+          <span className="flex gap-1.5">
+            <b className="h-[11px] w-[11px] rounded-full bg-magenta" />
+            <b className="h-[11px] w-[11px] rounded-full bg-lime" />
+            <b className="h-[11px] w-[11px] rounded-full bg-cyan" />
+          </span>
+          <span className="ml-1.5 font-mono text-[11.5px] tracking-wide text-faint">
+            web0://marketplace · {config.label}
+          </span>
+          <span className="ml-auto hidden items-center gap-1.5 font-mono text-[11.5px] text-faint sm:flex">
+            <span
+              className={`h-[6px] w-[6px] rounded-full ${
+                state.kind === "loading" ? "bg-steel" : "animate-pulsering bg-mint"
+              }`}
+            />
+            {state.kind === "loading" ? "reading…" : "live"}
+          </span>
+        </div>
+
+        <div className="p-3.5 sm:p-5">
+          {/* filter pills — v4 chips */}
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            {FILTERS.map((f) => {
+              const active = filter === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setFilter(f.id)}
+                  className={`rounded-full border-[1.5px] px-3.5 py-1.5 font-mono text-[12.5px] font-bold transition hover:-translate-y-0.5 ${
+                    active
+                      ? "border-transparent bg-paper text-ink0"
+                      : `border-line bg-paper/[0.03] text-dim hover:border-transparent ${f.accent}`
+                  }`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+            <span className="ml-auto hidden font-mono text-[11px] text-faint sm:inline">
+              {state.kind === "ready"
+                ? `${state.snap.programAccounts ?? "—"} program accounts on ${config.label}`
+                : ""}
+            </span>
+          </div>
+
+          {/* body */}
+          {state.kind === "loading" ? (
+            <div className="flex items-center gap-3 rounded-web0 border-[1.5px] border-line bg-black/30 px-5 py-5">
+              <span className="spinner" />
+              <span className="font-mono text-sm text-dim">
+                probing the marketplace program on {config.label}…
+              </span>
+            </div>
+          ) : state.kind === "error" ? (
+            <div className="rounded-web0 border-[1.5px] border-magenta/50 bg-magenta/[0.06] p-6">
+              <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-magenta">
+                <span className="h-[7px] w-[7px] rounded-full bg-magenta" />
+                couldn&apos;t reach solana
+              </div>
+              <div className="break-words text-sm text-paper">{state.message}</div>
+              <button
+                onClick={() => load(cluster)}
+                className="mt-4 rounded-lg border-[1.5px] border-line px-4 py-2 font-mono text-xs font-bold text-dim transition hover:-translate-y-0.5 hover:border-transparent hover:bg-mint hover:text-ink0"
+              >
+                retry
+              </button>
+            </div>
+          ) : hasLive ? (
+            /* ── live listings (renders the moment a listing layout is wired) ── */
+            <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((l, i) => (
+                <LiveCard key={l.pda} listing={l} cluster={cluster} accentIndex={i} />
+              ))}
+            </div>
+          ) : (
+            /* ── honest empty / launching state + illustrative cards ── */
+            <EmptyMarket cluster={config.label} />
+          )}
+        </div>
+      </div>
+
+      {/* honesty footer */}
+      <p className="mt-6 font-mono text-[11px] lowercase tracking-wide text-faint">
+        public beta · capped · unaudited · non-custodial — listed names stay in your wallet,
+        sales are atomic, the protocol never takes custody
+      </p>
+    </section>
+  );
+}
+
+/* ── economics stat tile ─────────────────────────────────────────────────────── */
+
+function Stat({
+  label,
+  value,
+  note,
+  dot,
+}: {
+  label: string;
+  value: string;
+  note: string;
+  dot: "mint" | "lime" | "cyan" | "magenta";
+}) {
+  const dotc = { mint: "bg-mint", lime: "bg-lime", cyan: "bg-cyan", magenta: "bg-magenta" }[dot];
+  return (
+    <div className="rounded-web0 border-[1.5px] border-line bg-bg2/65 px-4 py-3.5 backdrop-blur-md">
+      <div className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.12em] text-faint">
+        <i className={`h-[6px] w-[6px] rounded-full ${dotc}`} />
+        {label}
+      </div>
+      <div className="mt-1.5 font-display text-[clamp(22px,2.4vw,30px)] font-black leading-none tracking-[-0.02em] text-paper">
+        {value}
+      </div>
+      <div className="mt-1 font-mono text-[11px] text-dim">{note}</div>
+    </div>
+  );
+}
+
+/* ── EMPTY / LAUNCHING state ──────────────────────────────────────────────────── */
+
+function EmptyMarket({ cluster }: { cluster: string }) {
+  return (
+    <div className="flex flex-col gap-6">
+      {/* the loud "be the first" panel — solid lime + shadow-slab signature */}
+      <div className="relative overflow-hidden rounded-web0 border-[1.5px] border-ink0/20 bg-lime p-7 text-ink0 shadow-slab sm:p-9">
+        <div className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[0.12em] opacity-80">
+          <i className="h-[7px] w-[7px] animate-pulsering rounded-full bg-magenta" />
+          marketplace launching
+        </div>
+        <div className="mt-2 font-display text-[clamp(30px,5.4vw,60px)] font-black leading-[0.86] tracking-[-0.035em] lowercase">
+          no live listings yet.
+        </div>
+        <p className="mt-3 max-w-[52ch] text-[14.5px] font-medium leading-relaxed opacity-80">
+          no .null name is listed on {cluster} right now. the marketplace settles atomically —
+          when it goes live, a listed name <b>stays in the seller&apos;s wallet</b> until it
+          sells. be the first to list and set the floor.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-2.5">
+          <a
+            href="/sell"
+            className="group inline-flex items-center gap-2.5 rounded-xl bg-ink0 px-5 py-3 font-sans text-[15px] font-bold tracking-tight text-paper transition hover:-translate-y-px"
+          >
+            list a name — be the first
+            <Arrow />
+          </a>
+          <a
+            href="/my-names"
+            className="inline-flex items-center rounded-xl border-[1.5px] border-ink0/30 px-5 py-3 font-sans text-[15px] font-bold tracking-tight text-ink0 transition hover:border-ink0"
+          >
+            see names you own →
+          </a>
+        </div>
+      </div>
+
+      {/* what a card looks like — clearly watermarked EXAMPLES, never real prices */}
+      <div>
+        <div className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
+          <span className="h-[6px] w-[6px] rounded-full bg-steel" />
+          example cards · illustrative only — not real listings
+        </div>
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+          {EXAMPLES.map((ex) => (
+            <ExampleCard key={ex.name} ex={ex} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── illustrative example cards (NON-INTERACTIVE, watermarked) ───────────────── */
+
+type Example = {
+  name: string;
+  accent: "mint" | "lime" | "cyan" | "magenta";
+  kind: "buy-now" | "auction" | "premium";
+  priceLabel: string;
+  subLabel: string;
+  cta: string;
+};
+
+const EXAMPLES: Example[] = [
+  {
+    name: "vault",
+    accent: "mint",
+    kind: "buy-now",
+    priceLabel: "buy now · 4.20 SOL",
+    subLabel: "seller keeps 95% · 3.99 SOL",
+    cta: "buy now",
+  },
+  {
+    name: "agent",
+    accent: "cyan",
+    kind: "auction",
+    priceLabel: "auction · current bid 1.10 SOL",
+    subLabel: "ends in 11h · 7 bids",
+    cta: "place bid",
+  },
+  {
+    name: "x",
+    accent: "magenta",
+    kind: "premium",
+    priceLabel: "premium · floor $10,000",
+    subLabel: "1-char · 100% to treasury",
+    cta: "lock bid ≥ floor",
+  },
+];
+
+const ACCENT = {
+  mint: { dot: "bg-mint", text: "text-mint", btn: "bg-mint text-ink0", ring: "border-mint/40" },
+  lime: { dot: "bg-lime", text: "text-lime", btn: "bg-lime text-ink0", ring: "border-lime/40" },
+  cyan: { dot: "bg-cyan", text: "text-cyan", btn: "bg-cyan text-ink0", ring: "border-cyan/40" },
+  magenta: {
+    dot: "bg-magenta",
+    text: "text-magenta",
+    btn: "bg-magenta text-paper",
+    ring: "border-magenta/40",
+  },
+} as const;
+
+function ExampleCard({ ex }: { ex: Example }) {
+  const a = ACCENT[ex.accent];
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-web0 border-[1.5px] ${a.ring} bg-bg2/65 p-5 backdrop-blur-md`}
+      aria-hidden
+    >
+      {/* corner watermark — unmistakably an example */}
+      <span className="absolute right-3 top-3 select-none rounded-full border-[1.5px] border-line2 bg-black/40 px-2.5 py-0.5 font-mono text-[9.5px] font-bold uppercase tracking-[0.16em] text-faint">
+        example
+      </span>
+      {/* diagonal "EXAMPLE" ghost wash */}
+      <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span className="rotate-[-18deg] font-display text-[clamp(30px,6vw,56px)] font-black uppercase tracking-[0.2em] text-paper/[0.04]">
+          example
+        </span>
+      </span>
+
+      <div className="relative">
+        <div className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+          <i className={`h-[6px] w-[6px] rounded-full ${a.dot}`} />
+          {ex.kind === "buy-now" ? "buy now" : ex.kind === "auction" ? "auction" : "premium"}
+        </div>
+
+        <div className="mt-3 min-w-0 font-display text-[clamp(30px,4.6vw,48px)] font-black leading-[0.9] tracking-[-0.03em] lowercase">
+          <span className="block truncate">{ex.name}</span>
+          <span className={a.text}>.null</span>
+        </div>
+
+        <div className="mt-4 font-mono text-[13px] font-bold text-paper">{ex.priceLabel}</div>
+        <div className="mt-1 font-mono text-[11px] text-dim">{ex.subLabel}</div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <span
+            className={`inline-flex cursor-not-allowed items-center gap-2 rounded-xl px-4 py-2.5 font-sans text-[14px] font-bold tracking-tight opacity-90 ${a.btn}`}
+          >
+            {ex.cta}
+          </span>
+          <span className="font-mono text-[10.5px] text-faint">5% fee on sale</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── live listing card (used the instant a real listing layout is wired) ─────── */
+
+function LiveCard({
+  listing,
+  cluster,
+  accentIndex,
+}: {
+  listing: MarketListing;
+  cluster: "mainnet" | "devnet";
+  accentIndex: number;
+}) {
+  const accent = (["mint", "cyan", "lime", "magenta"] as const)[accentIndex % 4];
+  const a = ACCENT[accent];
+  const price = lamportsToSol(listing.lamports);
+  const isAuction = listing.kind === "auction";
+  return (
+    <div
+      className={`group flex flex-col gap-4 rounded-web0 border-[1.5px] ${a.ring} bg-bg2/65 p-5 backdrop-blur-md transition hover:-translate-y-0.5`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+          <i className={`h-[6px] w-[6px] rounded-full ${a.dot}`} />
+          {listing.kind === "buy-now" ? "buy now" : isAuction ? "auction" : "premium"}
+        </span>
+        <a
+          href={explorerAddr(cluster, listing.pda)}
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono text-[10.5px] text-faint underline decoration-line hover:text-cyan"
+        >
+          {shortAddr(listing.pda)} ↗
+        </a>
+      </div>
+
+      <div className="min-w-0 font-display text-[clamp(30px,4.6vw,48px)] font-black leading-[0.9] tracking-[-0.03em] lowercase">
+        <span className="block truncate">{listing.name}</span>
+        <span className={a.text}>.null</span>
+      </div>
+
+      <div>
+        <div className="font-mono text-[13px] font-bold text-paper">
+          {isAuction ? `auction · current bid ${price} SOL` : `buy now · ${price} SOL`}
+        </div>
+        <div className="mt-1 font-mono text-[11px] text-dim">
+          seller {shortAddr(listing.seller)} · keeps 95%
+        </div>
+      </div>
+
+      <button
+        className={`mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-sans text-[15px] font-bold tracking-tight transition hover:-translate-y-px ${a.btn}`}
+      >
+        {isAuction ? "place bid" : `buy ${listing.name}.null`}
+        <Arrow />
+      </button>
+      <div className="font-mono text-[10.5px] text-faint">
+        atomic · pay + transfer or neither · 5% protocol fee
+      </div>
+    </div>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[17px] w-[17px] transition group-hover:translate-x-1"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}

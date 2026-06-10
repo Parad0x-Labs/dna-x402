@@ -147,65 +147,65 @@ export function Pay() {
   }, [address, derived, lamports, name, resolve]);
 
   return (
-    <section className="pt-14 sm:pt-20 pb-8">
+    <section className="pt-12 sm:pt-16 pb-8">
       {/* eyebrow */}
-      <div className="flex items-center gap-2 mb-6">
-        <span className="w-[7px] h-[7px] rounded-full bg-acc shadow-[0_0_0_3px_rgba(45,212,160,0.15)]" />
-        <span className="font-mono text-[11px] tracking-[2px] uppercase text-steel">
-          private send · NullPay
+      <span className="flex w-max items-center gap-2.5 font-mono text-[12px] lowercase tracking-wide text-dim">
+        <span className="h-[9px] w-[9px] animate-pulsering rounded-full bg-mint" />
+        private send · nullpay
+        <span className="hidden text-cyan sm:inline">
+          · live on solana {config.label}
         </span>
-        <span className="font-mono text-[11px] tracking-[2px] uppercase text-faint hidden sm:inline">
-          · live on Solana {config.label}
-        </span>
-      </div>
+      </span>
 
       {/* hook */}
-      <h1 className="text-[clamp(40px,8vw,76px)] font-extrabold tracking-[-3px] leading-[0.92] max-w-[860px]">
-        send to a name.
-        <br className="hidden sm:block" /> hide the
-        <span className="text-acc"> receiver.</span>
+      <h1 className="mt-5 max-w-[14ch] font-display text-[clamp(46px,9vw,116px)] font-black leading-[0.84] tracking-[-0.035em] lowercase">
+        pay anyone
+        <br className="hidden sm:block" /> by name.{" "}
+        <span className="text-mint">privately.</span>
       </h1>
 
-      <p className="max-w-[600px] mt-6 text-dim text-[16.5px] leading-relaxed">
-        Pay any <strong className="text-ink font-semibold">.null</strong> name. Your wallet
+      <p className="mt-6 max-w-[62ch] text-[clamp(14px,1.15vw,17px)] leading-relaxed text-dim">
+        send to any <b className="font-semibold text-paper">.null</b> name. your wallet
         derives a fresh{" "}
-        <strong className="text-ink font-semibold">one-time address</strong> in your browser —
-        the money lands somewhere only the recipient can find and spend. No exchange, no
-        intermediary, no link back to their main wallet.
+        <b className="font-semibold text-paper">one-time address</b> right here in your
+        browser — the money lands somewhere only the recipient can find and spend.{" "}
+        <span className="font-semibold text-lime">no exchange, no middleman, no link back to their main wallet.</span>
       </p>
 
-      {/* PAY CONSOLE */}
-      <div className="mt-9 border border-line rounded-web0 bg-surf overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-line bg-bg2 font-mono text-xs text-dim">
-          <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
-          <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
-          <span className="w-[10px] h-[10px] rounded-full bg-[#2a3340]" />
-          <span className="ml-2">
-            send privately to a <b className="text-steel">.null</b> name
+      {/* PAY CONSOLE — v4 glass */}
+      <div className="mt-9 overflow-hidden rounded-web0 border-[1.5px] border-line bg-bg2/65 backdrop-blur-md shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+        <div className="flex items-center gap-2 border-b-[1.5px] border-line px-3.5 py-3">
+          <span className="flex gap-1.5">
+            <b className="h-[11px] w-[11px] rounded-full bg-magenta" />
+            <b className="h-[11px] w-[11px] rounded-full bg-lime" />
+            <b className="h-[11px] w-[11px] rounded-full bg-cyan" />
           </span>
-          <span className="ml-auto hidden sm:flex items-center gap-1.5 text-faint">
-            <span className="w-[6px] h-[6px] rounded-full bg-steel" />
-            {config.label}
+          <span className="ml-1.5 font-mono text-[11.5px] tracking-wide text-faint">
+            web0://nullpay · {config.label}
+          </span>
+          <span className="ml-auto hidden items-center gap-1.5 font-mono text-[11.5px] text-faint sm:flex">
+            <span className="h-[6px] w-[6px] animate-pulsering rounded-full bg-mint" />
+            live
           </span>
         </div>
 
-        <div className="p-4">
+        <div className="p-3.5 sm:p-4">
           {/* recipient name */}
-          <div className="flex items-center gap-3">
-            <span className="text-acc font-mono text-lg select-none">❯</span>
+          <div className="flex items-center gap-2.5 rounded-xl border-[1.5px] border-line bg-black/30 px-3.5 py-3 transition focus-within:border-mint focus-within:shadow-[0_0_0_4px_rgba(61,255,176,0.12)]">
+            <span className="select-none font-mono text-lg font-bold text-cyan">&gt;</span>
             <input
               value={raw}
               onChange={(e) => setRaw(e.target.value)}
               placeholder="recipient name"
               autoComplete="off"
               spellCheck={false}
-              className="flex-1 bg-transparent border-none outline-none text-ink text-lg font-mono tracking-[0.3px] placeholder:text-faint"
+              className="flex-1 border-none bg-transparent font-mono text-[15px] tracking-tight text-paper outline-none placeholder:text-faint"
             />
-            <span className="font-mono text-faint text-lg hidden sm:inline">.null</span>
+            <span className="font-mono text-[15px] font-bold text-mint">.null</span>
           </div>
 
           {/* resolve result */}
-          <div className="mt-4">
+          <div className="mt-3.5">
             <ResolvePanel
               name={name}
               resolve={resolve}
@@ -219,25 +219,25 @@ export function Pay() {
             resolve.result.status === "found" &&
             derived &&
             !txSig && (
-              <div className="mt-4 border border-acc-d rounded-web0 bg-bg2 p-6">
-                <div className="font-mono text-[11px] tracking-[1.5px] uppercase text-acc mb-4">
+              <div className="mt-3.5 rounded-web0 border-[1.5px] border-mint/50 bg-mint/[0.06] p-5 sm:p-6">
+                <div className="mb-4 font-mono text-[11px] uppercase tracking-[1.5px] text-mint">
                   send to {name}.null
                 </div>
 
-                <div className="flex items-center gap-3 mb-4">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
                   <input
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     inputMode="decimal"
-                    className="w-28 bg-surf border border-line rounded-lg px-3 py-2 font-mono text-ink outline-none focus:border-acc-d transition-colors"
+                    className="w-28 rounded-xl border-[1.5px] border-line bg-black/30 px-3.5 py-2.5 font-mono text-paper outline-none transition focus:border-mint focus:shadow-[0_0_0_4px_rgba(61,255,176,0.12)]"
                   />
-                  <span className="font-mono text-sm text-dim">SOL</span>
+                  <span className="font-mono text-sm font-bold text-paper">SOL</span>
                   <div className="flex gap-1.5">
                     {["0.01", "0.05", "0.1"].map((a) => (
                       <button
                         key={a}
                         onClick={() => setAmount(a)}
-                        className="font-mono text-xs rounded-md border border-line bg-surf px-2.5 py-1.5 text-dim hover:text-acc hover:border-line2 transition-colors"
+                        className="rounded-full border-[1.5px] border-line bg-paper/[0.03] px-3 py-1.5 font-mono text-[12.5px] font-bold text-dim transition hover:-translate-y-0.5 hover:border-transparent hover:bg-mint hover:text-ink0"
                       >
                         {a}
                       </button>
@@ -249,29 +249,29 @@ export function Pay() {
                   <button
                     onClick={connect}
                     disabled={connecting}
-                    className="rounded-xl bg-acc px-6 py-3 font-bold text-[#062018] hover:brightness-110 transition disabled:opacity-60"
+                    className="rounded-xl bg-mint px-6 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-ink0 transition hover:-translate-y-px hover:bg-lime disabled:opacity-60"
                   >
-                    {connecting ? "connecting…" : "Connect Phantom to send"}
+                    {connecting ? "connecting…" : "connect phantom to send"}
                   </button>
                 ) : (
                   <button
                     onClick={onSend}
                     disabled={!canSend}
-                    className="rounded-xl bg-acc px-6 py-3 font-bold text-[#062018] hover:brightness-110 transition disabled:opacity-60"
+                    className="rounded-xl bg-mint px-6 py-3.5 font-sans text-[16.5px] font-bold tracking-tight text-ink0 transition hover:-translate-y-px hover:bg-lime disabled:opacity-60"
                   >
                     {sending
-                      ? "sign in Phantom…"
-                      : `Send ${amount} SOL to ${name}.null`}
+                      ? "sign in phantom…"
+                      : `send ${amount} SOL to ${name}.null`}
                   </button>
                 )}
 
-                <div className="font-mono text-[11px] text-faint mt-3">
+                <div className="mt-3 font-mono text-[11px] text-faint">
                   {address ? <>from {shortAddr(address)} · </> : null}
-                  you sign once in Phantom · funds go to the one-time address, not the name
+                  you sign once in phantom · funds go to the one-time address, not the name
                 </div>
                 {payError && (
-                  <div className="font-mono text-xs text-danger mt-3 break-words">
-                    That didn&apos;t go through — your balance is unchanged. {payError}
+                  <div className="mt-3 break-words font-mono text-xs text-danger">
+                    that didn&apos;t go through — your balance is unchanged. {payError}
                   </div>
                 )}
               </div>
@@ -279,18 +279,18 @@ export function Pay() {
 
           {/* SUCCESS */}
           {txSig && paidTo && (
-            <div className="mt-4 border border-acc-d rounded-web0 bg-bg2 p-6">
-              <div className="font-mono text-[11px] tracking-[1.5px] uppercase text-acc mb-3 flex items-center gap-2">
-                <span className="w-[7px] h-[7px] rounded-full bg-acc" />
-                sent · {config.label}
+            <div className="mt-3.5 rounded-web0 border-[1.5px] border-mint/50 bg-mint/[0.06] p-5 sm:p-6">
+              <div className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-mint">
+                <span className="h-[7px] w-[7px] animate-pulsering rounded-full bg-mint" />
+                sent · solana {config.label}
               </div>
-              <div className="text-2xl font-extrabold tracking-[-1px] mb-3">
+              <div className="mb-3 font-display text-[clamp(28px,4vw,40px)] font-black leading-[0.92] tracking-[-0.02em] lowercase">
                 paid {paidTo.name}
-                <span className="text-acc">.null</span>
+                <span className="text-mint">.null</span>
               </div>
-              <p className="text-ink/90 max-w-[520px] text-[15px] leading-relaxed">
-                The funds landed at a fresh one-time address. Only the recipient&apos;s view
-                key can find it, and only their spend key can move it. Their main wallet never
+              <p className="max-w-[58ch] text-[15px] leading-relaxed text-dim">
+                the funds landed at a fresh one-time address. only the recipient&apos;s view
+                key can find it, and only their spend key can move it. their main wallet never
                 appears in this transaction.
               </p>
               <div className="mt-4 space-y-2">
@@ -299,18 +299,18 @@ export function Pay() {
                   value={paidTo.p}
                   href={explorerAddr("devnet", paidTo.p)}
                 />
-                <div className="font-mono text-[11px] text-faint break-all">
+                <div className="break-all font-mono text-[11px] text-faint">
                   ephemeral R · {paidTo.r}
                 </div>
               </div>
-              <div className="flex gap-3 flex-wrap mt-5">
+              <div className="mt-5 flex flex-wrap gap-2.5">
                 <a
-                  className="rounded-xl bg-acc px-5 py-3 font-bold text-[#062018] text-sm hover:brightness-110 transition"
+                  className="rounded-lg bg-mint px-5 py-2.5 text-[13px] font-bold text-ink0 transition hover:bg-lime"
                   href={explorerTx("devnet", txSig)}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  View transaction ↗
+                  view transaction ↗
                 </a>
                 <button
                   onClick={() => {
@@ -318,12 +318,12 @@ export function Pay() {
                     setTxSig(null);
                     setPaidTo(null);
                   }}
-                  className="rounded-xl border border-line2 px-5 py-3 font-semibold text-sm hover:border-acc-d transition"
+                  className="rounded-lg border-[1.5px] border-line px-5 py-2.5 text-[13px] font-semibold transition hover:border-mint"
                 >
-                  Send another →
+                  send another →
                 </button>
               </div>
-              <div className="font-mono text-[11px] text-faint mt-4 break-all">
+              <div className="mt-4 break-all font-mono text-[11px] text-faint">
                 tx {txSig}
               </div>
             </div>
@@ -350,14 +350,14 @@ function ResolvePanel({
 }) {
   if (name.length === 0 || resolve.kind === "idle") {
     return (
-      <div className="font-mono text-xs text-faint">
+      <div className="font-mono text-[12.5px] text-faint">
         type a recipient&apos;s .null name to resolve their stealth address…
       </div>
     );
   }
   if (resolve.kind === "loading") {
     return (
-      <div className="border border-line2 rounded-web0 bg-bg2 px-5 py-4 flex items-center gap-3">
+      <div className="flex items-center gap-3 rounded-web0 border-[1.5px] border-line bg-black/30 px-5 py-4">
         <span className="spinner" />
         <span className="font-mono text-sm text-dim">
           resolving {name}.null &amp; reading its stealth meta-address…
@@ -367,11 +367,12 @@ function ResolvePanel({
   }
   if (resolve.kind === "error") {
     return (
-      <div className="border border-line2 rounded-web0 bg-bg2 px-5 py-4">
-        <div className="font-mono text-[11px] tracking-[1.5px] uppercase text-steel mb-2">
-          couldn&apos;t reach Solana
+      <div className="rounded-web0 border-[1.5px] border-magenta/50 bg-magenta/[0.06] px-5 py-4">
+        <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-magenta">
+          <span className="h-[7px] w-[7px] rounded-full bg-magenta" />
+          couldn&apos;t reach solana
         </div>
-        <div className="text-sm text-ink break-words">{resolve.message} — try again.</div>
+        <div className="break-words text-sm text-paper">{resolve.message} — try again.</div>
       </div>
     );
   }
@@ -380,17 +381,17 @@ function ResolvePanel({
 
   if (r.status === "not-found") {
     return (
-      <div className="border border-line2 rounded-web0 bg-bg2 px-5 py-4">
-        <div className="font-mono text-[11px] tracking-[1.5px] uppercase text-steel mb-2 flex items-center gap-2">
-          <span className="w-[7px] h-[7px] rounded-full bg-steel" />
+      <div className="rounded-web0 border-[1.5px] border-magenta/50 bg-magenta/[0.06] px-5 py-4">
+        <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-magenta">
+          <span className="h-[7px] w-[7px] rounded-full bg-magenta" />
           not registered
         </div>
-        <div className="text-2xl font-extrabold tracking-[-1px] mb-2">
+        <div className="mb-2 font-display text-2xl font-black tracking-tight lowercase">
           {name}
-          <span className="text-acc">.null</span>
+          <span className="text-magenta">.null</span>
         </div>
         <div className="text-sm text-dim">
-          No such name on {cluster}. Ask the recipient to register it first.
+          no such name on {cluster}. ask the recipient to register it first.
         </div>
       </div>
     );
@@ -398,18 +399,18 @@ function ResolvePanel({
 
   if (r.status === "no-meta") {
     return (
-      <div className="border border-line2 rounded-web0 bg-bg2 px-5 py-4">
-        <div className="font-mono text-[11px] tracking-[1.5px] uppercase text-steel mb-2 flex items-center gap-2">
-          <span className="w-[7px] h-[7px] rounded-full bg-steel" />
+      <div className="rounded-web0 border-[1.5px] border-line2 bg-black/30 px-5 py-4">
+        <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-steel">
+          <span className="h-[7px] w-[7px] rounded-full bg-steel" />
           no stealth address
         </div>
-        <div className="text-2xl font-extrabold tracking-[-1px] mb-2">
+        <div className="mb-2 font-display text-2xl font-black tracking-tight lowercase">
           {name}
-          <span className="text-acc">.null</span>
+          <span className="text-steel">.null</span>
         </div>
         <div className="text-sm text-dim">
-          This name exists but hasn&apos;t published a stealth meta-address yet, so it
-          can&apos;t receive a private payment. The owner sets one once from their wallet.
+          this name exists but hasn&apos;t published a stealth meta-address yet, so it
+          can&apos;t receive a private payment. the owner sets one once from their wallet.
         </div>
       </div>
     );
@@ -418,17 +419,17 @@ function ResolvePanel({
   // found + derived
   const pBase58 = derived ? new PublicKey(derived.stealthPub).toBase58() : "";
   return (
-    <div className="border border-acc-d rounded-web0 bg-bg2 px-5 py-4">
-      <div className="font-mono text-[11px] tracking-[1.5px] uppercase text-acc mb-2 flex items-center gap-2">
-        <span className="w-[7px] h-[7px] rounded-full bg-acc" />
+    <div className="rounded-web0 border-[1.5px] border-mint/50 bg-mint/[0.06] px-5 py-4">
+      <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[1.5px] text-mint">
+        <span className="h-[7px] w-[7px] animate-pulsering rounded-full bg-mint" />
         stealth address ready
       </div>
-      <div className="text-2xl font-extrabold tracking-[-1px] mb-2">
+      <div className="mb-2 font-display text-2xl font-black tracking-tight lowercase">
         {name}
-        <span className="text-acc">.null</span>
+        <span className="text-mint">.null</span>
       </div>
-      <p className="text-sm text-ink/90 max-w-[520px]">
-        Derived a fresh one-time address for this payment. It changes every time — two
+      <p className="max-w-[58ch] text-sm text-dim">
+        derived a fresh one-time address for this payment. it changes every time — two
         payments to the same name never share an address on-chain.
       </p>
       {derived && (
@@ -458,20 +459,20 @@ function ProofLine({
 }) {
   return (
     <div>
-      <div className="font-mono text-[10px] tracking-[1px] uppercase text-steel mb-1">
+      <div className="mb-1 font-mono text-[10px] uppercase tracking-[1px] text-faint">
         {label}
       </div>
-      <div className="font-mono text-[11px] break-all text-steel bg-bg border border-line rounded-lg p-[9px]">
+      <div className="break-all rounded-lg border-[1.5px] border-line bg-black/30 p-[9px] font-mono text-[11px] text-cyan">
         {value}
       </div>
-      <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+      <div className="mt-1.5 flex flex-wrap items-center gap-2">
         <a
-          className="font-mono text-[11px] text-acc hover:brightness-110"
+          className="font-mono text-[11px] text-cyan underline decoration-line hover:text-mint"
           href={href}
           target="_blank"
           rel="noreferrer"
         >
-          View on Solana Explorer →
+          view on solana explorer →
         </a>
         {note && <span className="font-mono text-[10px] text-faint">· {note}</span>}
       </div>
@@ -485,46 +486,46 @@ function PrivacyTiers() {
   return (
     <div className="mt-10 grid gap-4 md:grid-cols-2">
       {/* basic tier — what you get today */}
-      <div className="border border-acc-d rounded-web0 bg-bg2 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-acc-d/40">
+      <div className="overflow-hidden rounded-web0 border-[1.5px] border-mint/50 bg-mint/[0.04]">
+        <div className="flex items-center justify-between border-b-[1.5px] border-mint/30 px-5 py-4">
           <div className="flex items-center gap-2">
-            <span className="w-[7px] h-[7px] rounded-full bg-acc" />
-            <span className="font-extrabold tracking-[-0.5px] text-lg">basic · live</span>
+            <span className="h-[7px] w-[7px] animate-pulsering rounded-full bg-mint" />
+            <span className="font-display text-lg font-black tracking-tight lowercase">basic · live</span>
           </div>
-          <span className="font-mono text-[10px] tracking-[1px] text-acc border border-acc-d rounded-md px-[9px] py-[4px]">
+          <span className="rounded-full bg-mint px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[1px] text-ink0">
             LIVE
           </span>
         </div>
-        <div className="px-5 py-4 space-y-3">
+        <div className="space-y-3 px-5 py-4">
           <Row good>
-            recipient is <b className="text-ink">hidden</b> — funds go to a fresh one-time
+            recipient is <b className="text-paper">hidden</b> — funds go to a fresh one-time
             address, never their main wallet
           </Row>
           <Row good>two payments to the same name share no on-chain address</Row>
           <Row good>no exchange, no mixer, no custodian — pure wallet-to-key math</Row>
           <Row>
             <span className="text-steel">sender is still visible</span> — your wallet is the
-            on-chain payer. That&apos;s normal for a basic send.
+            on-chain payer. that&apos;s normal for a basic send.
           </Row>
         </div>
       </div>
 
       {/* max private — the shielded-pool route (stub) */}
-      <div className="border border-line rounded-web0 bg-surf overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
+      <div className="overflow-hidden rounded-web0 border-[1.5px] border-line bg-bg2/65 backdrop-blur-md">
+        <div className="flex items-center justify-between border-b-[1.5px] border-line px-5 py-4">
           <div className="flex items-center gap-2">
-            <span className="w-[7px] h-[7px] rounded-full bg-steel" />
-            <span className="font-extrabold tracking-[-0.5px] text-lg text-dim">
+            <span className="h-[7px] w-[7px] rounded-full bg-steel" />
+            <span className="font-display text-lg font-black tracking-tight lowercase text-dim">
               max private
             </span>
           </div>
-          <span className="font-mono text-[10px] tracking-[1px] text-steel border border-line2 rounded-md px-[9px] py-[4px]">
+          <span className="rounded-full border-[1.5px] border-line2 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[1px] text-steel">
             SOON
           </span>
         </div>
-        <div className="px-5 py-4 space-y-3">
+        <div className="space-y-3 px-5 py-4">
           <Row>
-            route through the <b className="text-ink">shielded pool</b> so the{" "}
+            route through the <b className="text-paper">shielded pool</b> so the{" "}
             <span className="text-steel">sender</span> is hidden too
           </Row>
           <Row>break the link between your wallet and the payment entirely</Row>
@@ -535,7 +536,7 @@ function PrivacyTiers() {
           <div className="pt-1">
             <button
               disabled
-              className="font-mono text-xs rounded-md border border-line2 bg-surf px-3 py-1.5 text-faint cursor-not-allowed opacity-60"
+              className="cursor-not-allowed rounded-full border-[1.5px] border-line2 bg-paper/[0.02] px-3.5 py-1.5 font-mono text-xs text-faint opacity-60"
             >
               route through shielded pool — coming
             </button>
@@ -550,11 +551,11 @@ function Row({ children, good }: { children: React.ReactNode; good?: boolean }) 
   return (
     <div className="flex items-start gap-2.5">
       <span
-        className={`mt-[6px] w-[6px] h-[6px] rounded-full shrink-0 ${
-          good ? "bg-acc" : "bg-steel"
+        className={`mt-[6px] h-[6px] w-[6px] shrink-0 rounded-full ${
+          good ? "bg-mint" : "bg-steel"
         }`}
       />
-      <span className="text-[14px] text-dim leading-relaxed">{children}</span>
+      <span className="text-[14px] leading-relaxed text-dim">{children}</span>
     </div>
   );
 }
