@@ -40,7 +40,7 @@
   "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/session-channels",
   "license": "MIT",
   "peerDependencies": {
-    "@parad0x_labs/liquefy-receipts": "^0.1.0"
+    "@parad0x_labs/liquefy-receipts": "^0.2.0"
   },
   "peerDependenciesMeta": {
     "@parad0x_labs/liquefy-receipts": {
