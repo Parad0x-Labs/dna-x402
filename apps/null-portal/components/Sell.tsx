@@ -8,6 +8,7 @@ import { getConnectionForCluster, getOwnedNames, type OwnedName } from "@/lib/ch
 import { shortAddr, solscanAddr, ixCreateListingSol, ixCreateSolAuction, auctionRegistrarFor, TREASURY } from "@/lib/null-sdk";
 import { explorerTx } from "@/lib/cluster";
 import { signAndSendInstructions } from "@/lib/wallet";
+import Link from "next/link";
 
 /* ── marketplace economics (fixed, presented to the seller verbatim) ─────────── */
 const LIST_FEE_SOL = 0.01; // flat, NON-REFUNDABLE anti-spam toll
@@ -285,13 +286,13 @@ export function Sell() {
                 wallet doesn&apos;t own any <span className="font-mono font-bold">.null</span>{" "}
                 accounts yet. register one first, then come back to list it.
               </p>
-              <a
+              <Link
                 className="group mt-5 inline-flex items-center gap-2.5 rounded-xl bg-ink0 px-5 py-3 font-sans text-[15px] font-bold tracking-tight text-paper transition hover:-translate-y-px"
                 href="/"
               >
                 register your first name
                 <Arrow />
-              </a>
+              </Link>
             </div>
           )}
         </StepShell>

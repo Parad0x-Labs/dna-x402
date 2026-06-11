@@ -5,6 +5,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "./WalletProvider";
 import { getOwnedNames, type OwnedName } from "@/lib/chain";
 import { shortAddr, solscanAddr } from "@/lib/null-sdk";
+import Link from "next/link";
 
 export function MyNames() {
   const { address, connect, connecting, phantomAvailable } = useWallet();
@@ -199,7 +200,7 @@ export function MyNames() {
               this wallet doesn&apos;t own any <span className="font-mono font-bold">.null</span> accounts
               on mainnet yet. claim one and it&apos;s yours, on-chain, forever.
             </p>
-            <a
+            <Link
               className="group mt-5 inline-flex items-center gap-2.5 rounded-xl bg-ink0 px-5 py-3 font-sans text-[15px] font-bold tracking-tight text-paper transition hover:-translate-y-px"
               href="/"
             >
@@ -207,7 +208,7 @@ export function MyNames() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] transition group-hover:translate-x-1">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-            </a>
+            </Link>
           </div>
         )}
       </div>
