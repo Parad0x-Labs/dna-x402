@@ -717,10 +717,23 @@ export async function readConfig(conn: Connection): Promise<RegistryConfig> {
 // ── Register instruction builders (PORTED verbatim from 06_verify.mjs) ─────────
 // SOL Register data: [0x02][padName64(64)][zero(32)][CURRENCY_SOL(1)]
 // Accounts: [payer(s,w), domain(w), config(w), system, treasury(w)]
+// ── 3/wallet anti-squat cap (Register only — premium-auction winners are exempt) ──
+// The registrar's OwnerCapacity PDA [b"owner-cap", owner] counts a wallet's PROTOCOL
+// (free Register) acquisitions; the cap (3) is enforced on Register, NOT on premium mints.
+export const OWNER_CAP_SEED = new TextEncoder().encode("owner-cap");
+export function ownerCapPda(owner: PublicKey, program: PublicKey = REGISTRAR_PROGRAM): PublicKey {
+  return PublicKey.findProgramAddressSync([OWNER_CAP_SEED, owner.toBuffer()], program)[0];
+}
+
+// SOL Register. The registrar reads the treasury fee account ONLY when sol_fee > 0, then
+// owner_cap as the LAST account. So in the FREE pilot (fee==0) owner_cap sits at index 4
+// (no treasury); with a fee it sits at index 5 (after treasury). The pre-cap registrar
+// ignores the trailing owner_cap, so this is safe to ship before the cap registrar lands.
 export async function ixRegisterSol(
   payer: PublicKey,
   name: string,
   treasury: PublicKey,
+  feeLamports: bigint = 0n,
 ): Promise<TransactionInstruction> {
   const data = concatBytes(
     u8(IX_REGISTER),
@@ -729,25 +742,23 @@ export async function ixRegisterSol(
     u8(CURRENCY_SOL),
   );
   const domain = await domainPda(name);
-  return new TransactionInstruction({
-    programId: REGISTRAR_PROGRAM,
-    keys: [
-      { pubkey: payer, isSigner: true, isWritable: true },
-      { pubkey: domain, isSigner: false, isWritable: true },
-      { pubkey: configPda(), isSigner: false, isWritable: true },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: treasury, isSigner: false, isWritable: true },
-    ],
-    data: Buffer.from(data),
-  });
+  const keys = [
+    { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: domain, isSigner: false, isWritable: true },
+    { pubkey: configPda(), isSigner: false, isWritable: true },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+  ];
+  if (feeLamports > 0n) keys.push({ pubkey: treasury, isSigner: false, isWritable: true });
+  keys.push({ pubkey: ownerCapPda(payer), isSigner: false, isWritable: true }); // cap account — ALWAYS last
+  return new TransactionInstruction({ programId: REGISTRAR_PROGRAM, keys, data: Buffer.from(data) });
 }
 
-// NULL Register data: [0x02][padName64(64)][zero(32)][CURRENCY_NULL(1)]
-// Accounts: [payer(s,w), domain(w), config(w), system,
-//            payer_null_ata(w), treasury_null_ata(w), token2022]
+// NULL Register. Fee accounts (payer_ata, treasury_ata, token2022) only when null_fee > 0,
+// then owner_cap LAST. Free pilot → owner_cap at index 4.
 export async function ixRegisterNull(
   payer: PublicKey,
   name: string,
+  feeAmount: bigint = 0n,
 ): Promise<TransactionInstruction> {
   const data = concatBytes(
     u8(IX_REGISTER),
@@ -756,19 +767,19 @@ export async function ixRegisterNull(
     u8(CURRENCY_NULL),
   );
   const domain = await domainPda(name);
-  return new TransactionInstruction({
-    programId: REGISTRAR_PROGRAM,
-    keys: [
-      { pubkey: payer, isSigner: true, isWritable: true },
-      { pubkey: domain, isSigner: false, isWritable: true },
-      { pubkey: configPda(), isSigner: false, isWritable: true },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: ataOf(payer, NULL_MINT, TOKEN_2022_PROGRAM), isSigner: false, isWritable: true },
-      { pubkey: ataOf(TREASURY, NULL_MINT, TOKEN_2022_PROGRAM), isSigner: false, isWritable: true },
-      { pubkey: TOKEN_2022_PROGRAM, isSigner: false, isWritable: false },
-    ],
-    data: Buffer.from(data),
-  });
+  const keys = [
+    { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: domain, isSigner: false, isWritable: true },
+    { pubkey: configPda(), isSigner: false, isWritable: true },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+  ];
+  if (feeAmount > 0n) {
+    keys.push({ pubkey: ataOf(payer, NULL_MINT, TOKEN_2022_PROGRAM), isSigner: false, isWritable: true });
+    keys.push({ pubkey: ataOf(TREASURY, NULL_MINT, TOKEN_2022_PROGRAM), isSigner: false, isWritable: true });
+    keys.push({ pubkey: TOKEN_2022_PROGRAM, isSigner: false, isWritable: false });
+  }
+  keys.push({ pubkey: ownerCapPda(payer), isSigner: false, isWritable: true }); // cap account — ALWAYS last
+  return new TransactionInstruction({ programId: REGISTRAR_PROGRAM, keys, data: Buffer.from(data) });
 }
 
 // ── Name validation + tiers ───────────────────────────────────────────────────

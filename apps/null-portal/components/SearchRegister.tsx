@@ -163,11 +163,14 @@ export function SearchRegister() {
     try {
       const conn = getConnection();
       const payer = new PublicKey(address);
+      // Pass the live fee so the SDK lays out fee accounts only when fee>0, with the
+      // owner_cap (3/wallet anti-squat) PDA always LAST — matching the registrar's reader.
       const ix =
         currency === "NULL"
-          ? await ixRegisterNull(payer, name)
-          : await ixRegisterSol(payer, name, new PublicKey(cfg.treasury));
-      const sig = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 120_000 });
+          ? await ixRegisterNull(payer, name, cfg.nullFee)
+          : await ixRegisterSol(payer, name, new PublicKey(cfg.treasury), cfg.solFee);
+      // 200k CU: covers the one-time OwnerCapacity PDA create on a wallet's first acquisition.
+      const sig = await signAndSendInstructions({ connection: conn, owner: address, instructions: [ix], computeUnits: 200_000 });
       setTxSig(sig);
       setRegisteredName(name);
       const a = await checkAvailability(conn, name);
