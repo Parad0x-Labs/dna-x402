@@ -39,15 +39,15 @@ GPT, Ollama, Mistral, LM Studio.
 
 Keeps the last 10 messages verbatim. Compresses everything older into a ~60-token
 capsule (zlib deflate + a topic/Merkle summary). In benchmarks the agent still
-answers 30/30 memory-recall questions correctly.
+answers 36 of 40 memory-recall questions correctly (90% recovery).
 
 ## Savings
 
 |                       | Without | With     |
 | --------------------- | ------- | -------- |
-| Tokens per call       | 7,583   | 53       |
-| Cost (Claude Sonnet)  | $0.023  | $0.00016 |
-| Monthly (50 calls/day)| ~$34    | ~$0.24   |
+| Tokens per call       | 7,919   | 53       |
+| Cost (Claude Sonnet)  | $0.024  | $0.00016 |
+| Monthly (50 calls/day)| ~$36    | ~$0.24   |
 
 ## Install
 
@@ -81,3 +81,9 @@ github.com/Parad0x-Labs/dna-x402/tree/main/packages/openclaw-context-capsule
 The standalone library (`@parad0x_labs/context-capsule`) is published separately
 on npm for non-OpenClaw use; this skill vendors only the two pure functions it
 needs and does not depend on it at runtime.
+
+---
+
+💜 If Context Capsule is quietly shrinking your token bill, a ⭐ on ClawHub helps
+other agent builders find it.
+

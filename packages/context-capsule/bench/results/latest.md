@@ -1,19 +1,19 @@
 # Context Capsule Public Benchmark Report
 
 **Fixture:** `agent-session-100`  
-**Timestamp:** 2026-06-01T21:07:32.346Z
+**Timestamp:** 2026-06-05T03:58:44.369Z
 
 ## Metrics
 
 | Metric | Value | Gate | Status |
 |--------|-------|------|--------|
 | Token savings | 99.3% | >= 95% | **PASS** |
-| Recovery score | 100.0% | >= 90% | **PASS** |
-| Runtime | 29ms | < 1000ms | **PASS** |
-| Original tokens | 7583 | — | — |
+| Recovery score | 90.0% | >= 90% | **PASS** |
+| Runtime | 86ms | < 1000ms | **PASS** |
+| Original tokens | 7919 | — | — |
 | Capsule tokens | 53 | — | — |
-| Saved tokens | 7530 | — | — |
-| Questions passed | 30/30 | — | — |
+| Saved tokens | 7866 | — | — |
+| Questions passed | 36/40 | — | — |
 
 **Overall: ALL GATES PASSED**
 
@@ -51,6 +51,16 @@
 | 28 | What security gap exists in anchorReceipts that must be resolved before production? | **PASS** | darkSecp256r1, authentication, keypair | — |
 | 29 | What cargo command was used to build the Solana on-chain program? | **PASS** | cargo build-sbf, receipt_anchor.so | — |
 | 30 | What was the solana CLI command used to deploy the compiled program to devnet? | **PASS** | solana program deploy, --url devnet | — |
+| 31 | What was the FINAL decision on the storage system? | **PASS** | postgres | — |
+| 32 | Was the storage decision corrected at any point? | **FAIL** | correct, postgres, redis | changed, revised |
+| 33 | What was the original storage choice before the correction? | **PASS** | redis | — |
+| 34 | What security constraint was explicitly stated as a rule not to violate? | **PASS** | keypair, private, commit, git | — |
+| 35 | If earlier messages said to use one approach and later messages said use a different approach, which approach should be used? | **FAIL** | later | final, recent, correction, updated |
+| 36 | When instructions conflict across different points in the conversation, which instruction takes precedence? | **FAIL** | later, last | override, supersede |
+| 37 | What reason was given for abandoning the original storage approach in favour of the corrected one? | **PASS** | complexity, infrastructure, postgres | — |
+| 38 | Which storage technology was explicitly rejected and what was the stated reason for rejecting it? | **FAIL** | redis, abandoned | complexity |
+| 39 | What is the final, settled decision on session storage — not an intermediate proposal, but the concluded choice? | **PASS** | postgres, final, session | — |
+| 40 | Was the phrase 'scratch that' or an equivalent retraction used at any point, and what did it retract? | **PASS** | scratch, redis, retract | — |
 
 ## Reproduce
 

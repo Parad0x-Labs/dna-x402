@@ -6,10 +6,10 @@
   "tests": {
     "recordPositive": {
       "result": "CONFIRMED",
-      "tx": "263dWdnBNJM4Bydz2ASvZdFRqRsTMKmyop4SiKjbQ8SdUXwYjNtNqHvQhWM6Uop6AfVJyRGsTaCis4KDSD953Qjw"
+      "tx": "5dShF12yirDQomyLE2o2R47qQprQRcxKohj7SLFXzvonpScJhmgCfygh82XYZ9B5rfeaX5aGJU93CsrSywCRDDxh"
     },
     "doubleSpendSame": "REJECTED Custom(10)",
     "zeroNullifier": "REJECTED Custom(11)"
   },
-  "explorer": "https://explorer.solana.com/tx/263dWdnBNJM4Bydz2ASvZdFRqRsTMKmyop4SiKjbQ8SdUXwYjNtNqHvQhWM6Uop6AfVJyRGsTaCis4KDSD953Qjw?cluster=devnet"
+  "explorer": "https://explorer.solana.com/tx/5dShF12yirDQomyLE2o2R47qQprQRcxKohj7SLFXzvonpScJhmgCfygh82XYZ9B5rfeaX5aGJU93CsrSywCRDDxh?cluster=devnet"
 }

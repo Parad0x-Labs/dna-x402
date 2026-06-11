@@ -1,13 +1,13 @@
 {
   "fixture": "agent-session-100",
-  "original_tokens": 7583,
+  "original_tokens": 7919,
   "capsule_tokens": 53,
-  "saved_tokens": 7530,
+  "saved_tokens": 7866,
   "savings_percent": 99.3,
-  "recovery_score_percent": 100,
-  "runtime_ms": 29,
-  "questions_total": 30,
-  "questions_passed": 30,
+  "recovery_score_percent": 90,
+  "runtime_ms": 86,
+  "questions_total": 40,
+  "questions_passed": 36,
   "passed_gates": true,
   "gate_savings_ok": true,
   "gate_recovery_ok": true,
@@ -298,7 +298,113 @@
         "--url devnet"
       ],
       "missing_keywords": []
+    },
+    {
+      "question": "What was the FINAL decision on the storage system?",
+      "passed": true,
+      "matched_keywords": [
+        "postgres"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Was the storage decision corrected at any point?",
+      "passed": false,
+      "matched_keywords": [
+        "correct",
+        "postgres",
+        "redis"
+      ],
+      "missing_keywords": [
+        "changed",
+        "revised"
+      ]
+    },
+    {
+      "question": "What was the original storage choice before the correction?",
+      "passed": true,
+      "matched_keywords": [
+        "redis"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "What security constraint was explicitly stated as a rule not to violate?",
+      "passed": true,
+      "matched_keywords": [
+        "keypair",
+        "private",
+        "commit",
+        "git"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "If earlier messages said to use one approach and later messages said use a different approach, which approach should be used?",
+      "passed": false,
+      "matched_keywords": [
+        "later"
+      ],
+      "missing_keywords": [
+        "final",
+        "recent",
+        "correction",
+        "updated"
+      ]
+    },
+    {
+      "question": "When instructions conflict across different points in the conversation, which instruction takes precedence?",
+      "passed": false,
+      "matched_keywords": [
+        "later",
+        "last"
+      ],
+      "missing_keywords": [
+        "override",
+        "supersede"
+      ]
+    },
+    {
+      "question": "What reason was given for abandoning the original storage approach in favour of the corrected one?",
+      "passed": true,
+      "matched_keywords": [
+        "complexity",
+        "infrastructure",
+        "postgres"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Which storage technology was explicitly rejected and what was the stated reason for rejecting it?",
+      "passed": false,
+      "matched_keywords": [
+        "redis",
+        "abandoned"
+      ],
+      "missing_keywords": [
+        "complexity"
+      ]
+    },
+    {
+      "question": "What is the final, settled decision on session storage — not an intermediate proposal, but the concluded choice?",
+      "passed": true,
+      "matched_keywords": [
+        "postgres",
+        "final",
+        "session"
+      ],
+      "missing_keywords": []
+    },
+    {
+      "question": "Was the phrase 'scratch that' or an equivalent retraction used at any point, and what did it retract?",
+      "passed": true,
+      "matched_keywords": [
+        "scratch",
+        "redis",
+        "retract"
+      ],
+      "missing_keywords": []
     }
   ],
-  "timestamp": "2026-06-01T21:07:32.346Z"
+  "timestamp": "2026-06-05T03:58:44.369Z"
 }

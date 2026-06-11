@@ -26,17 +26,17 @@ npm run bench:public
 
 | Metric | Result | Gate |
 |---|---|---|
-| Original tokens | ~725 | — |
-| Capsule tokens | ~49 | — |
+| Original tokens | ~7,919 | — |
+| Capsule tokens | ~53 | — |
 | Token savings | **>= 95%** | >= 95% |
-| Recovery score | **>= 90%** | >= 90% (30 questions, keyword match) |
+| Recovery score | **>= 90%** | >= 90% (40 questions, keyword match) |
 | Runtime | **< 1000ms** | < 1000ms |
 
 Token savings measured as: `(original_tokens - capsule_inject_tokens) / original_tokens`.
 Original tokens: `chars / 4` estimate on the raw JSONL session.
 Capsule tokens: `chars / 4` on the `injectCapsule()` output string.
 
-Recovery score: 30 golden questions answered from the capsule via `searchCapsule()`.
+Recovery score: 40 golden questions answered from the capsule via `searchCapsule()`.
 Each question passes if all required keywords appear in the result (case-insensitive).
 No LLM is involved.
 

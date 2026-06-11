@@ -1,9 +1,6 @@
 # context-capsule — OpenClaw ContextEngine plugin
 
-> ⚠️ **MOVED — this copy is frozen.** The canonical home of this skill is now
-> [openclaw-skills/skills/context-capsule](https://github.com/Parad0x-Labs/openclaw-skills/tree/main/skills/context-capsule).
-> Install from, file issues against, and contribute to openclaw-skills; this
-> directory remains only as a historical pointer and will not receive updates.
+> 💜 **Saving you tokens?** [Star it on ClawHub](https://clawhub.ai/parad0x-labs/context-capsule) — it's a context engine, so it works silently in the background. A star is the only way other agent builders find it.
 
 Compresses agent session history before it reaches the LLM. **Self-contained:**
 the compression core is vendored inline (`src/compression.ts`) — no external
@@ -46,8 +43,8 @@ enabled may not need this.
 | Metric | Result | CI gate |
 |---|---|---|
 | Token savings | 99.3% | >= 95% |
-| Recovery score | 100% | >= 90% |
-| Runtime | 29ms | < 1000ms |
+| Recovery score | 90% | >= 90% |
+| Runtime | 86ms | < 1000ms |
 
 Reproduce locally:
 
