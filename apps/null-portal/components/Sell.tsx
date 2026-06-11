@@ -9,6 +9,7 @@ import { shortAddr, solscanAddr, ixCreateListingSol, ixCreateSolAuction, auction
 import { explorerTx } from "@/lib/cluster";
 import { signAndSendInstructions } from "@/lib/wallet";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 /* ── marketplace economics (fixed, presented to the seller verbatim) ─────────── */
 const LIST_FEE_SOL = 0.01; // flat, NON-REFUNDABLE anti-spam toll
@@ -63,6 +64,7 @@ export function Sell() {
 
   const [picked, setPicked] = useState<string | null>(null); // pda of chosen name
   const [listingType, setListingType] = useState<ListingType>("buy-now");
+  const router = useRouter();
   const [price, setPrice] = useState("1.5");
   const [durKey, setDurKey] = useState("1d"); // auction phase length
   const [escrowOptIn, setEscrowOptIn] = useState(false);
@@ -340,10 +342,15 @@ export function Sell() {
                   />
                   <TypeChip
                     active={false}
-                    disabled
-                    label="make-offer · soon"
-                    sub="buyers offer, you accept the best — no timers"
-                    onClick={() => {}}
+                    label="make-offer"
+                    sub="live · buyers offer anytime, you accept in browse →"
+                    onClick={() => router.push("/browse")}
+                  />
+                  <TypeChip
+                    active={false}
+                    label="english auction"
+                    sub="live · open ascending, highest bid wins · in browse →"
+                    onClick={() => router.push("/browse")}
                   />
                 </div>
 

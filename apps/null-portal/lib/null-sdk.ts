@@ -580,7 +580,15 @@ export async function ixSettlePremiumSol(
 export const IX_MAKE_OFFER = 0x0a;
 export const IX_ACCEPT_OFFER = 0x0b;
 export const IX_CANCEL_OFFER = 0x0c;
+export const IX_INIT_CONFIG = 0x0d; // auction InitConfig (fee-governance singleton)
+export const IX_SET_FEE = 0x0e; // auction SetFee (capped 5%, decrease instant / increase +48h)
+export const IX_CREATE_ENGLISH = 0x0f; // open ascending ("English") SOL auction
+export const IX_PLACE_BID = 0x10; // English open ascending bid
+export const IX_SETTLE_ENGLISH = 0x11; // English settle (winner / no-bids return)
+export const IX_CANCEL_ENGLISH = 0x12; // English cancel (no-bid only)
 export const OFFER_SEED = new TextEncoder().encode("offer");
+export const ENGLISH_SEED = new TextEncoder().encode("eng-auction");
+export const CONFIG_SEED = new TextEncoder().encode("auction-config");
 export const OFFER_DISC = 0x4f; // 'O'
 export const OFFER_SIZE = 74;
 export const OF_OFF_BUYER = 1; // [32]
@@ -635,6 +643,94 @@ export async function ixCancelOfferSol(c: Cluster | ClusterConfig, buyer: Public
       { pubkey: await offerPda(c, name, buyer), isSigner: false, isWritable: true },
     ],
     data: Buffer.from(concatBytes(u8(IX_CANCEL_OFFER), padName64(name))),
+  });
+}
+
+// ── English (open ascending) auction ──────────────────────────────────────────
+// EnglishAuction account (171B): disc 'E'(0x45)@0 | seller[32]@1 | domain[32]@33 |
+// treasury[32]@65 | start_price(u64)@97 | end_ts(i64)@105 | highest_bid(u64)@113 |
+// highest_bidder[32]@121 | num_bids(u64)@153 | status@161 | bump@162.
+export const ENGLISH_DISC = 0x45; // 'E'
+export const ENGLISH_SIZE = 171;
+export const EN_OFF_SELLER = 1, EN_OFF_DOMAIN = 33, EN_OFF_TREASURY = 65, EN_OFF_START = 97,
+  EN_OFF_END = 105, EN_OFF_HIGH = 113, EN_OFF_HIGHBIDDER = 121, EN_OFF_NUM = 153, EN_OFF_STATUS = 161;
+/** +5% min step over the high, floor 0.05 SOL — mirrors ENGLISH_MIN_STEP_* in the program. */
+export const ENGLISH_MIN_STEP_BPS = 500n, ENGLISH_MIN_STEP_FLOOR = 50_000_000n;
+/** Minimum acceptable next bid (lamports) given the current high (0 = first bid → start). */
+export function englishMinNextBid(highLamports: bigint, startLamports: bigint): bigint {
+  if (highLamports === 0n) return startLamports;
+  const step = (highLamports * ENGLISH_MIN_STEP_BPS) / 10_000n;
+  return highLamports + (step > ENGLISH_MIN_STEP_FLOOR ? step : ENGLISH_MIN_STEP_FLOOR);
+}
+
+/** EnglishAuction PDA: seeds [b"eng-auction", nameHash]. */
+export async function englishPda(c: Cluster | ClusterConfig, name: string): Promise<PublicKey> {
+  const h = await nameHash(name);
+  return PublicKey.findProgramAddressSync([ENGLISH_SEED, h], auctionProgramFor(c))[0];
+}
+/** AuctionConfig PDA (fee-governance singleton): seeds [b"auction-config"]. */
+export function auctionConfigPda(c: Cluster | ClusterConfig): PublicKey {
+  return PublicKey.findProgramAddressSync([CONFIG_SEED], auctionProgramFor(c))[0];
+}
+
+/** CreateEnglishAuction (0x0F): [seller(s,w), english(w), domain(w), null_reg(ro), system]. */
+export async function ixCreateEnglishAuction(c: Cluster | ClusterConfig, seller: PublicKey, name: string, startPriceLamports: bigint, durationSecs: bigint): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: seller, isSigner: true, isWritable: true },
+      { pubkey: await englishPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_CREATE_ENGLISH), padName64(name), u64le(startPriceLamports), u64le(durationSecs), PROTOCOL_TREASURY.toBuffer())),
+  });
+}
+
+/** PlaceBid (0x10): [bidder(s,w), english(w), prev_leader(w), system]. prevLeader = the current
+ *  highest_bidder (refunded here); on the FIRST bid pass any placeholder (e.g. the bidder). */
+export async function ixPlaceBidEnglish(c: Cluster | ClusterConfig, bidder: PublicKey, name: string, amountLamports: bigint, prevLeader: PublicKey): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: bidder, isSigner: true, isWritable: true },
+      { pubkey: await englishPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: prevLeader, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_PLACE_BID), padName64(name), u64le(amountLamports))),
+  });
+}
+
+/** SettleEnglish (0x11): [cranker(s,w), english(w), domain(w), null_reg(ro), seller(w), treasury(w), config(ro)]. */
+export async function ixSettleEnglish(c: Cluster | ClusterConfig, cranker: PublicKey, name: string, seller: PublicKey): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: cranker, isSigner: true, isWritable: true },
+      { pubkey: await englishPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+      { pubkey: seller, isSigner: false, isWritable: true },
+      { pubkey: PROTOCOL_TREASURY, isSigner: false, isWritable: true },
+      { pubkey: auctionConfigPda(c), isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_SETTLE_ENGLISH), padName64(name))),
+  });
+}
+
+/** CancelEnglish (0x12) — seller cancels a NO-BID auction: [seller(s,w), english(w), domain(w), null_reg(ro)]. */
+export async function ixCancelEnglish(c: Cluster | ClusterConfig, seller: PublicKey, name: string): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionProgramFor(c),
+    keys: [
+      { pubkey: seller, isSigner: true, isWritable: true },
+      { pubkey: await englishPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: auctionRegistrarFor(c), isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_CANCEL_ENGLISH), padName64(name))),
   });
 }
 

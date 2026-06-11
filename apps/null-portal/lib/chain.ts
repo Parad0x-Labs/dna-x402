@@ -37,6 +37,16 @@ import {
   OF_OFF_BUYER,
   OF_OFF_DOMAIN,
   OF_OFF_AMOUNT,
+  ENGLISH_SIZE,
+  ENGLISH_DISC,
+  EN_OFF_SELLER,
+  EN_OFF_DOMAIN,
+  EN_OFF_START,
+  EN_OFF_END,
+  EN_OFF_HIGH,
+  EN_OFF_HIGHBIDDER,
+  EN_OFF_NUM,
+  EN_OFF_STATUS,
 } from "./null-sdk";
 import { CLUSTERS, configFor, type Cluster } from "./cluster";
 
@@ -398,6 +408,62 @@ export async function readOffers(cluster: Cluster): Promise<OffersSnapshot> {
     .map((r) => ({ pda: r.pda, buyer: r.buyer, domainPda: r.domain.toBase58(), name: names.get(r.domain.toBase58()) ?? "", amount: r.amount }))
     .sort((a, b) => (b.amount > a.amount ? 1 : -1));
   return { offers };
+}
+
+// ── English (open ascending) auctions ─────────────────────────────────────────
+export interface EnglishView {
+  pda: string;
+  name: string;        // resolved plaintext name ("" if unresolved)
+  domainPda: string;
+  seller: string;
+  startPrice: bigint;  // lamports
+  highBid: bigint;     // lamports (0 = no bids)
+  highBidder: string;  // "" if none
+  endTs: number;       // unix seconds
+  numBids: number;
+  status: number;      // 0 = ACTIVE
+}
+export interface EnglishSnapshot { auctions: EnglishView[]; rpcError?: string; }
+/** Every ACTIVE English auction on the cluster (EnglishAuction accounts, disc 'E', 171B), names resolved. */
+export async function readEnglishAuctions(cluster: Cluster): Promise<EnglishSnapshot> {
+  const cfg = configFor(cluster);
+  const program = new PublicKey(cfg.auction);
+  const conn = connFor(cfg.rpc);
+  let raw: { pubkey: PublicKey; account: { data: Uint8Array } }[];
+  try {
+    raw = (await gpaResilient(cluster, program, { filters: [{ dataSize: ENGLISH_SIZE }] })) as unknown as typeof raw;
+  } catch (e) {
+    return { auctions: [], rpcError: e instanceof Error ? e.message : String(e) };
+  }
+  const recs = raw
+    .filter((a) => a.account.data.length >= ENGLISH_SIZE && a.account.data[0] === ENGLISH_DISC && a.account.data[EN_OFF_STATUS] === 0)
+    .map((a) => {
+      const d = a.account.data;
+      const high = readU64LE(d, EN_OFF_HIGH);
+      return {
+        pda: a.pubkey.toBase58(),
+        domain: new PublicKey(d.subarray(EN_OFF_DOMAIN, EN_OFF_DOMAIN + 32)),
+        seller: new PublicKey(d.subarray(EN_OFF_SELLER, EN_OFF_SELLER + 32)).toBase58(),
+        startPrice: readU64LE(d, EN_OFF_START),
+        highBid: high,
+        highBidder: high > 0n ? new PublicKey(d.subarray(EN_OFF_HIGHBIDDER, EN_OFF_HIGHBIDDER + 32)).toBase58() : "",
+        endTs: Number(readU64LE(d, EN_OFF_END)),
+        numBids: Number(readU64LE(d, EN_OFF_NUM)),
+        status: d[EN_OFF_STATUS],
+      };
+    });
+  const names = new Map<string, string>();
+  for (let i = 0; i < recs.length; i += 100) {
+    const slice = recs.slice(i, i + 100);
+    const infos = await conn.getMultipleAccountsInfo(slice.map((r) => r.domain));
+    infos.forEach((info, j) => {
+      if (info && info.data.length > 0 && info.data[0] === NULL_DOMAIN_DISC) names.set(slice[j].domain.toBase58(), decodeName(info.data));
+    });
+  }
+  const auctions: EnglishView[] = recs
+    .map((r) => ({ pda: r.pda, name: names.get(r.domain.toBase58()) ?? "", domainPda: r.domain.toBase58(), seller: r.seller, startPrice: r.startPrice, highBid: r.highBid, highBidder: r.highBidder, endTs: r.endTs, numBids: r.numBids, status: r.status }))
+    .sort((a, b) => a.endTs - b.endTs);
+  return { auctions };
 }
 
 // ── NullPay: resolve a .null name's published stealth meta-address ─────────────

@@ -29,7 +29,7 @@ export function Pitch() {
           the part nobody tells you
         </div>
         <h2 className="max-w-[16ch] font-display text-[clamp(34px,6.4vw,82px)] font-black lowercase leading-[0.84] tracking-[-0.035em]">
-          a real website costs money{" "}
+          a web2 site costs money{" "}
           <span className="text-magenta">every month</span>. this one costs{" "}
           <span className="text-mint">nothing</span>.
         </h2>
