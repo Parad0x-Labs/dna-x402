@@ -12,6 +12,7 @@ pub enum RitualHookError {
     InvalidInstructionData = 6,
     InvalidAccountData = 7,
     MissingRequiredAccount = 8,
+    NotTransferring = 9, // Execute invoked outside a genuine Token-2022 transfer
 }
 
 impl From<RitualHookError> for ProgramError {
