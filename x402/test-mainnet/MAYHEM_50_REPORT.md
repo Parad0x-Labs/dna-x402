@@ -7,6 +7,19 @@
 
 ---
 
+## ⚠️ Correction (2026-06-05): on-chain anchoring claim
+
+An earlier version of this report listed **"Receipts Anchored On-Chain | 80/80"**. That figure is **not supported by on-chain evidence** and contradicts this report's own Audit Summary (`"receiptsAnchored": 0`). It has been corrected below.
+
+Re-verified against Solana mainnet on 2026-06-05:
+
+- The **20 real USDC transfer TXs, SOL funding, and USDC drains** below are **genuine and finalized** on mainnet (spot-checked via `getSignatureStatuses`: transfers #1/#20, a funding tx, and a drain tx all `finalized`, slots ~402.64M ≈ 2026-02-25).
+- **No batch-anchor transaction exists for this run.** Every row in the receipts table below is the literal placeholder `batched`, not a signature — there is no anchor TX to verify. The `receipt_anchor` program (`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`) shows **no on-chain activity until 2026-05-29** (its first txs post-date this run by ~3 months), consistent with `receiptsAnchored: 0`.
+
+**Truthful figure:** the 80 receipts were **built, chained (anti-equivocation DAG), and batched off-chain**, but the batch Merkle root was **never anchored on-chain** in this run. **On-chain anchors = 0/80.** "80/80" refers to off-chain batching, not on-chain anchoring. Do not cite this run as proof of on-chain receipt anchoring until a real anchor TX is produced and listed here.
+
+---
+
 ## Summary
 
 | Metric | Value |
@@ -18,7 +31,8 @@
 | Tests Passed | 84 |
 | Tests Failed | 0 |
 | Pass Rate | 100.0% |
-| Receipts Anchored On-Chain | 80/80 |
+| Receipts Built + Chained + Batched (off-chain) | 80/80 |
+| Receipts Anchored On-Chain | 0/80 — no anchor TX this run (audit: `receiptsAnchored=0`); see Correction above |
 | Netting Batches Settled | 60 |
 | On-Chain USDC Transfer TXs | 20 |
 
@@ -68,9 +82,11 @@
 
 ---
 
-## On-Chain Anchored Receipts
+## Batched Receipts (off-chain — NOT anchored on-chain this run)
 
-| Receipt ID | TX Signature |
+> These 80 receipts were built and chained (anti-equivocation DAG) and assembled into batches **off-chain**. The batch Merkle root was **not** submitted to the `receipt_anchor` program in this run — every value below is the literal placeholder `batched`, not a transaction signature, and the Audit Summary reports `receiptsAnchored: 0`. See the Correction at the top of this report.
+
+| Receipt ID | Batch Status |
 |-----------|-------------|
 | `8348ea5d-ce2...` | batched |
 | `1c5731be-775...` | batched |
@@ -269,7 +285,7 @@
 | 80 | agent-19/default//resource/transfer | ✅ | receiptId=352209d1-deeb-4e20-ab1a-6fa3ed27c0d5 txSig=L7hjJ6kkfXQ71xb8 amount=1003 |
 | 81 | agent-20/default//inference/transfer | ✅ | receiptId=2f0126ad-5a0a-43db-a902-b3ab51967720 txSig=5h537QnLEEWSje2X amount=5015 |
 | 82 | FLUSH | ✅ | batches=60 |
-| 83 | ANCHORING | ✅ | anchored=80 total=80 |
+| 83 | ANCHORING | ✅ | anchored=80 total=80 — NOTE: "anchored" here = batched off-chain; on-chain anchor TXs = 0 (see Audit Summary row #84 / Correction) |
 | 84 | AUDIT | ✅ | summary={"totalEvents":754,"paymentsVerified":374,"paymentsRejected":0,"receiptsIssued":374,"receiptsAnchored":0,"webhoo |
 
 ---
@@ -284,5 +300,5 @@ Settlement modes verified:
 
 Amount range: $0.00001 to $2.00 per transaction ✅
 Resources: /resource, /inference, /stream-access ✅
-Receipt anchoring on-chain ✅
+Receipt chaining + off-chain batching ✅ (on-chain anchor: 0/80 this run — batch root not submitted; see Correction)
 All funds recovered to deployer ✅

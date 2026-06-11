@@ -50,7 +50,7 @@ calls; it does not go to the LLM unless explicitly retrieved.
 
 ## How recovery was scored
 
-30 golden questions are defined in:
+40 golden questions are defined in:
 
 ```
 packages/context-capsule/bench/fixtures/recovery-questions.json
@@ -75,7 +75,7 @@ No LLM is involved. This tests whether the compressed capsule preserves
 enough of the original text that keyword-level retrieval still works. It
 does not test semantic understanding.
 
-**Recovery score** = questions passed / 30 * 100.
+**Recovery score** = questions passed / 40 * 100.
 
 The gate is 90%. Failing a gate exits the benchmark with code 1.
 
@@ -117,7 +117,7 @@ automatically on every push to `packages/context-capsule/**`.
 | Gate | Threshold | Exit code on failure |
 |---|---|---|
 | Token savings | >= 95% | 1 |
-| Recovery score | >= 90% (27/30 questions) | 1 |
+| Recovery score | >= 90% (36/40 questions) | 1 |
 | Runtime | < 1000ms | 1 |
 
 ---

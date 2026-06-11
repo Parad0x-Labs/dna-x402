@@ -16,11 +16,11 @@
     "offChainVerify": "PASS",
     "onChainRealProof": {
       "result": "CONFIRMED",
-      "tx": "3j3Gx7dEvLys4J4wG4MNbokyKnhE7MAYj3MNjUgZWwsiwxbHeihnNxUt8D4zrSpdJGXsrUM8ahCtM5NbqoZ7CSNc"
+      "tx": "32BDyVQXh8VHmitusWcQNNeuWN8Kai1Y7Bh6kDJJ5R28TqsM5rJRvEFCxZmhCD3ixwbJ2SLqH1nY4znefsWu2iKj"
     },
     "onChainForgedProof": "REJECTED",
     "onChainTamperedThreshold": "REJECTED",
     "onChainZeroProof": "REJECTED"
   },
-  "explorer": "https://explorer.solana.com/tx/3j3Gx7dEvLys4J4wG4MNbokyKnhE7MAYj3MNjUgZWwsiwxbHeihnNxUt8D4zrSpdJGXsrUM8ahCtM5NbqoZ7CSNc?cluster=devnet"
+  "explorer": "https://explorer.solana.com/tx/32BDyVQXh8VHmitusWcQNNeuWN8Kai1Y7Bh6kDJJ5R28TqsM5rJRvEFCxZmhCD3ixwbJ2SLqH1nY4znefsWu2iKj?cluster=devnet"
 }

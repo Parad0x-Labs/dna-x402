@@ -1,19 +1,40 @@
 # Parad0x Labs Product Map
 
-## Stack Overview
+## The Parad0x stack
 
-| Product | Role | Use it for | Do not confuse it with |
-|---|---|---|---|
-| [`dna-x402`](https://github.com/Parad0x-Labs/dna-x402) | fast payment rail | x402 payment flows, paid APIs, signed receipts, anchoring | privacy settlement protocol |
-| [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) | privacy settlement protocol | optimistic-ZK settlement, challengeable privacy flows | machine-speed x402 hot path |
-| [`liquefy-openclaw-integration`](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) | compression + audit layer | trace vaults, verified restore, audit trails, agent data protection | payment rail or settlement protocol |
-| **Dark Null Solana Frontier Research** (this repo) | SVM-native privacy primitives | sharded nullifier banks, ALT fog, compressed receipts, receipt-spend notes, Jito bundle cloak, leader-aware routing, ephemeral PDA chaff | full ZK settlement (Dark Null Protocol) |
+Parad0x Labs builds Web0 on Solana — money and agents that settle themselves. This
+canonical map is mirrored in every repo's "How this fits the Parad0x stack" box.
+
+| Layer | Repo | Does |
+|---|---|---|
+| 💸 Payments | [dna-x402](https://github.com/Parad0x-Labs/dna-x402) | x402 rail: quote → pay → verify → receipt → anchor |
+| 🛠️ Build | [dna-x402-builders](https://github.com/Parad0x-Labs/dna-x402-builders) | Hosted kit: turn any API/bot into a paid agent |
+| 🕶️ Privacy | [Dark-Null-Protocol](https://github.com/Parad0x-Labs/Dark-Null-Protocol) | Groth16 privacy settlement, published proofs |
+| 🗜️ Data | [liquefy](https://github.com/Parad0x-Labs/liquefy) | Columnar compression that beats Zstd |
+| 🛡️ Audit | [liquefy-openclaw-integration](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) | Flight recorder: 24 engines + Solana-anchored audit trails |
+| 🎬 Media | [nebula-media](https://github.com/Parad0x-Labs/nebula-media) | Proof-carrying media compression — scene-aware + on-chain receipts |
+| 🧠 Local AI | [nulla-local](https://github.com/Parad0x-Labs/nulla-local) | Local-first agent runtime — your machine, your memory |
+
+Token: **$NULL** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` · usage fills a community rewards war chest · **see it live:** [parad0xlabs.com](https://parad0xlabs.com)
+
+## Do not confuse these
+
+| Product | Is | Is NOT |
+|---|---|---|
+| `dna-x402` | fast payment rail (402 → pay → retry → receipt) | a privacy settlement protocol |
+| `Dark-Null-Protocol` | optimistic-ZK privacy settlement | the machine-speed x402 hot path |
+| `liquefy-openclaw-integration` | compression + audit/forensics layer | a payment rail or settlement protocol |
+| Dark Null frontier research (lives in `dna-x402/docs`) | SVM-native privacy primitive research | shipped ZK settlement (that is Dark-Null-Protocol) |
 
 ## Fast Routing Guide
 
 - Choose **dna-x402** for `402 -> pay -> retry -> receipt` commerce flows.
-- Choose **Dark Null Protocol** for privacy-sensitive settlement with a different latency profile.
-- Choose **Liquefy** for compression, auditability, and verified recovery of AI/agent artifacts.
+- Choose **dna-x402-builders** to wrap an existing API or bot into a paid agent without protocol work.
+- Choose **Dark-Null-Protocol** for privacy-sensitive settlement with a different latency profile.
+- Choose **liquefy** for compression, auditability, and verified recovery of AI/agent artifacts.
+- Choose **liquefy-openclaw-integration** for hash-chained, Solana-anchored agent audit trails.
+- Choose **nebula-media** for proof-carrying media (video/audio) compression with quality proofs.
+- Choose **nulla-local** for a local-first agent runtime that keeps memory on your own machine.
 
 ## Frontier Research
 
@@ -54,12 +75,24 @@ parad0x_stack:
   dna-x402:
     category: payment rail
     best_for: paid API and agent commerce
+  dna-x402-builders:
+    category: hosted builder kit
+    best_for: turning any API or bot into a paid agent
   Dark-Null-Protocol:
     category: privacy settlement
     best_for: optimistic-ZK settlement flows
+  liquefy:
+    category: columnar compression
+    best_for: small searchable receipt batches
   liquefy-openclaw-integration:
     category: compression and audit layer
     best_for: traces, vaults, logs, restore
+  nebula-media:
+    category: proof-carrying media compression
+    best_for: video/audio re-encode with quality proofs
+  nulla-local:
+    category: local-first agent runtime
+    best_for: on-device agents and persistent memory
   frontier:
     category: research directions
     best_for: understanding where the stack is going
