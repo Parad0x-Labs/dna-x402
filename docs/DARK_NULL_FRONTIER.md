@@ -20,14 +20,14 @@
 | MPC Sealed Pricing / Private Auctions | Research | Arcium production dependency |
 | MEV-Aware Private Settlement | Research | no Jito BAM integration |
 | Alpenglow-Ready UX | Research | no Alpenglow-specific runtime path |
-| Silent Payment Rails | Research | no ephemeral key derivation, no stealth-address scanner |
+| Silent Payment Rails | **Prototype** | `swarm/silent-pay.mjs`, 13 tests passing, ECDH stealth-address derivation + scanning |
 | ZK Fiat Settlement Proof | Research | no TLS notary, no zkTLS integration |
-| Threshold Blind Mint Federation | Research | no FROST k-of-n key split, no partial blind sig aggregation |
+| Threshold Blind Mint Federation | **Prototype** | `swarm/threshold-mint.mjs`, 14 tests passing, k-of-n BDHKE via Shamir + Lagrange |
 | Nova / Folding Scheme Accumulation | Research | no folding circuit, no Nova prover integration |
 | ZKML Verifiable Inference Receipts | Research | no EZKL/SP1 integration, no model execution circuit |
-| Private Streaming Micropayments | Research | no streaming payment protocol, no hidden-rate contract |
+| Private Streaming Micropayments | **Prototype** | `swarm/payment-stream.mjs`, 15 tests passing, payment channel + off-chain ticks + countersigned settlement |
 
-*All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo. None are mainnet-deployed. None are audited.*
+*All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo (113/113). None are mainnet-deployed. None are audited.*
 
 ---
 
@@ -369,7 +369,7 @@ Each time an agent pays, the sender derives a fresh one-time address from the re
 
 **What it means for agents:** an AI agent making a thousand API calls appears to be a thousand different payers. Competitors cannot map your vendor relationships or measure your call volume by watching the chain.
 
-**What this needs:** a BIP352-style scan key registration, an ephemeral key derivation step per payment, and a background scanner for recipients. All cryptography is Ristretto/secp256k1 + ECDH — no new circuits. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** `swarm/silent-pay.mjs` in the Dark Null Protocol repo — ECDH stealth-address derivation + recipient scanner, 13 tests passing. No on-chain component yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -393,7 +393,7 @@ FROST (Flexible Round-Optimized Schnorr Threshold, Komlo/Goldberg 2020) splits t
 
 **What this means for agents:** NULL access tokens and x402 receipts issued by a federation cannot be forged even if k-1 servers are fully compromised. The protocol survives adversarial infrastructure.
 
-**What this needs:** FROST protocol integration (reference implementations exist: zcash/frost, serai-dex/schnorr-signatures), a partial-signature aggregation step, and modified BDHKE issuance flow. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** `swarm/threshold-mint.mjs` in the Dark Null Protocol repo — k-of-n BDHKE via Shamir's Secret Sharing + Lagrange interpolation, 14 tests passing. No DKG or per-signer DLEQ proof yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -429,7 +429,7 @@ An x402 agent calls a language model API that charges per output token. 10,000 t
 
 **What this means for agents:** an AI agent pays for exactly what it consumed — per token, per second, per API call — without broadcasting 10,000 transactions. One open, one close. The stream ticks are cryptographically committed off-chain and settled in bulk. Observers see one channel, not the usage pattern.
 
-**What this needs:** a hidden-rate payment channel protocol (similar to Lightning but with Dark Null privacy), a commitment scheme for off-chain ticks, and a closing verifier. Bolt (Lightning Labs) and the Solana payment channel work are the closest references. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** `swarm/payment-stream.mjs` in the Dark Null Protocol repo — payment channel with off-chain tick commitments + countersigned settlement, 15 tests passing. No Solana program yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -450,12 +450,12 @@ An x402 agent calls a language model API that charges per output token. 10,000 t
 | Confidential T22 bridge | Blocked | T22 audit + circuit extension | High — audit-gated |
 | MPC sealed pricing | Research | Arcium production on Solana | High — external dependency |
 | Full private agent commerce | Research | All prototype items at maturity | Long |
-| Silent Payment Rails | Research | BIP352 scan key derivation, on-chain address scheme | Medium — secp256k1 ECDH, no new circuits |
+| Silent Payment Rails | **Prototype** | On-chain scan key registration, receiver scanner | Low — JS prototype shipped (13 tests) |
 | ZK Fiat Settlement Proof | Research | TLS notary deployment (DECO / Reclaim) | High — external zkTLS infra |
-| Threshold Blind Mint Federation | Research | FROST k-of-n, modified BDHKE issuance | Medium — reference FROST libs exist |
+| Threshold Blind Mint Federation | **Prototype** | Per-signer DLEQ proof, DKG ceremony | Medium — JS prototype shipped (14 tests) |
 | Nova / Folding Scheme Accumulation | Research | Nova prover, folding-compatible circuit | High — new prover backend |
 | ZKML Verifiable Inference Receipts | Research | EZKL / SP1 model circuit, compute fit | High — circuit size vs Solana CU budget |
-| Private Streaming Micropayments | Research | Off-chain commitment scheme, channel verifier | Medium — payment channel + Dark Null closing proof |
+| Private Streaming Micropayments | **Prototype** | Solana program, on-chain dispute resolution | Medium — JS prototype shipped (15 tests) |
 
 ---
 
