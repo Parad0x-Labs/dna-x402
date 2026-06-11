@@ -193,7 +193,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
 > Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.
 
-**1551 tests green. 9 programs live on Solana mainnet-beta. 20+ packages shipped.**
+**1551 tests green. 8 programs live on Solana mainnet-beta. 20+ packages shipped.**
 
 ### Current public status
 

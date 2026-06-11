@@ -55,6 +55,14 @@ wallet/*.json
 *.secrets.zip
 *.secrets.zip.enc
 
+# Key inventories + key-handling scripts (local only — never publish)
+KEY_LEDGER*.md
+scripts/backup-keys-to-usb.ps1
+scripts/convert-keypairs-to-phantom.py
+
+# Local clones of sibling / private repos — NEVER publish (holds the private web0-internal website)
+.clone/
+
 # Test/audit artifacts (large, ephemeral)
 x402/audit_out*/
 x402/test-mainnet/keys/
