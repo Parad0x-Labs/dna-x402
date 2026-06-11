@@ -20,6 +20,12 @@
 | MPC Sealed Pricing / Private Auctions | Research | Arcium production dependency |
 | MEV-Aware Private Settlement | Research | no Jito BAM integration |
 | Alpenglow-Ready UX | Research | no Alpenglow-specific runtime path |
+| Silent Payment Rails | Research | no ephemeral key derivation, no stealth-address scanner |
+| ZK Fiat Settlement Proof | Research | no TLS notary, no zkTLS integration |
+| Threshold Blind Mint Federation | Research | no FROST k-of-n key split, no partial blind sig aggregation |
+| Nova / Folding Scheme Accumulation | Research | no folding circuit, no Nova prover integration |
+| ZKML Verifiable Inference Receipts | Research | no EZKL/SP1 integration, no model execution circuit |
+| Private Streaming Micropayments | Research | no streaming payment protocol, no hidden-rate contract |
 
 *All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo. None are mainnet-deployed. None are audited.*
 
@@ -355,6 +361,78 @@ Each piece is either live or has a clear path. The convergence is what makes Dar
 
 ---
 
+## 11. Silent Payment Rails — Permanently Unlinkable Addresses
+
+Each time an agent pays, the sender derives a fresh one-time address from the recipient's public scan key. The recipient scans the chain to discover funds. The sender never reveals which address belongs to whom — no reused addresses across time or counterparties.
+
+**What breaks today:** every x402 payment settles to the same seller wallet address. Any observer can build a full payment graph. Silent payments give each settlement transaction a unique, unlinkable on-chain destination.
+
+**What it means for agents:** an AI agent making a thousand API calls appears to be a thousand different payers. Competitors cannot map your vendor relationships or measure your call volume by watching the chain.
+
+**What this needs:** a BIP352-style scan key registration, an ephemeral key derivation step per payment, and a background scanner for recipients. All cryptography is Ristretto/secp256k1 + ECDH — no new circuits. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+
+---
+
+## 12. ZK Fiat Settlement Proof — Stripe/Visa/Mastercard as On-Chain Settlement Evidence
+
+An x402-style payment completes a Stripe charge. The Stripe webhook fires with a settlement event. A zkTLS notary (DECO, Reclaim Protocol) attests the TLS session data. A ZK proof is generated that says "this charge settled" — without revealing the card number, the merchant, or the customer.
+
+**What breaks today:** to bridge fiat payments to on-chain x402 flows, either the payer posts a credit card number somewhere (catastrophic), or they use a manual proof (not machine-speed). Neither is agent-compatible.
+
+**What this means for agents:** an agent can pay for a real-world service with any payment method its operator funds (Stripe, card, bank wire) and deliver a cryptographic settlement receipt on-chain. The API on the other side sees proof, not card data.
+
+**What this needs:** a TLS notary deployment, a zkTLS circuit for the Stripe/Visa webhook format, and an on-chain verifier for the notary's signature. Research stage — no deployed notary yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+
+---
+
+## 13. Threshold Blind Mint Federation — No Single Server Can Mint NULL
+
+FROST (Flexible Round-Optimized Schnorr Threshold, Komlo/Goldberg 2020) splits the NULL token mint key across k-of-n independent signers. No single server can issue a token alone. Each signer holds one key share; k must cooperate for any issuance. The tokens themselves are blind — the signers see a blinded request and cannot link issuance to redemption.
+
+**What breaks today:** the BDHKE blind token prototype (already shipped, 19 tests passing) uses a single mint key held by one server. That server is a single point of compromise — take the key, forge unlimited tokens.
+
+**What this means for agents:** NULL access tokens and x402 receipts issued by a federation cannot be forged even if k-1 servers are fully compromised. The protocol survives adversarial infrastructure.
+
+**What this needs:** FROST protocol integration (reference implementations exist: zcash/frost, serai-dex/schnorr-signatures), a partial-signature aggregation step, and modified BDHKE issuance flow. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+
+---
+
+## 14. Nova / Folding Scheme Accumulation — O(1) Proof Accumulation
+
+Nova (Kothapalli/Setty/Tzialla 2021) and HyperNova (2023) use folding to accumulate N proofs into one constant-size proof, amortized. Ten thousand agent micropayments accumulate into a proof the same size as a proof for one. The cost curve collapses from O(N) toward O(1).
+
+**What breaks today:** SnarkPack batching (the current research target for recursive settlement) gives O(log N) aggregation — better than O(N) sequential, but each epoch proof still grows as log(calls). At 100K agent calls per day, that growth matters.
+
+**What this means for agents:** epoch settlement becomes flat-cost. An agent network processing 1M micropayments per hour pays the same on-chain cost as one processing 1K. The rail scales linearly in throughput, not in cost.
+
+**What this needs:** Nova/HyperNova prover integration (microsoft/Nova reference implementation), a folding-compatible circuit for the Dark Null nullifier step, and benchmark evidence of proof size at scale. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+
+---
+
+## 15. ZKML Verifiable Inference Receipts — The AI Agent Proves It Used the Right Model
+
+An AI agent charges per inference. The client wants to know: was that really GPT-4 running on my query, or some cheaper model? ZKML (EZKL, SP1) generates a ZK proof that model M ran on input I and produced output O — without revealing I or the model weights.
+
+**What breaks today:** AI agent billing is entirely trust-based. The agent says "I called the model." The receipt says "inference happened." There is no proof.
+
+**What this means for agents:** a paid inference API delivers a 256-byte proof with every response. The client verifies: correct model, correct output, no substitution. The x402 receipt carries the proof hash. The Dark Null nullifier prevents replay.
+
+**What this needs:** EZKL or SP1 integration for a standard model size, a proof-of-inference circuit that fits within Solana's compute limits, and a receipt schema extension for `proofOfModelExecution`. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+
+---
+
+## 16. Private Streaming Micropayments — Pay-Per-Token Without a Chain Transaction Per Token
+
+An x402 agent calls a language model API that charges per output token. 10,000 tokens at 0.000001 SOL each = 10,000 transactions at current architecture. Private streaming micropayments open one on-chain channel, commit to off-chain payment ticks privately, and close with a single settlement.
+
+**What breaks today:** per-token billing collapses to "pay in advance" (caps capability) or "pay per session" (coarse-grained). Neither is true pay-as-you-go at machine speed.
+
+**What this means for agents:** an AI agent pays for exactly what it consumed — per token, per second, per API call — without broadcasting 10,000 transactions. One open, one close. The stream ticks are cryptographically committed off-chain and settled in bulk. Observers see one channel, not the usage pattern.
+
+**What this needs:** a hidden-rate payment channel protocol (similar to Lightning but with Dark Null privacy), a commitment scheme for off-chain ticks, and a closing verifier. Bolt (Lightning Labs) and the Solana payment channel work are the closest references. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+
+---
+
 ## Precedence Order
 
 | Primitive | Status | Core Dependency | Risk |
@@ -372,6 +450,12 @@ Each piece is either live or has a clear path. The convergence is what makes Dar
 | Confidential T22 bridge | Blocked | T22 audit + circuit extension | High — audit-gated |
 | MPC sealed pricing | Research | Arcium production on Solana | High — external dependency |
 | Full private agent commerce | Research | All prototype items at maturity | Long |
+| Silent Payment Rails | Research | BIP352 scan key derivation, on-chain address scheme | Medium — secp256k1 ECDH, no new circuits |
+| ZK Fiat Settlement Proof | Research | TLS notary deployment (DECO / Reclaim) | High — external zkTLS infra |
+| Threshold Blind Mint Federation | Research | FROST k-of-n, modified BDHKE issuance | Medium — reference FROST libs exist |
+| Nova / Folding Scheme Accumulation | Research | Nova prover, folding-compatible circuit | High — new prover backend |
+| ZKML Verifiable Inference Receipts | Research | EZKL / SP1 model circuit, compute fit | High — circuit size vs Solana CU budget |
+| Private Streaming Micropayments | Research | Off-chain commitment scheme, channel verifier | Medium — payment channel + Dark Null closing proof |
 
 ---
 
