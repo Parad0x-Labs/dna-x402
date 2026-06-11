@@ -17,9 +17,10 @@
  * syscall against state the program built with the sol_poseidon syscall. The proof
  * binds relayer + fee, so the 2-way payout split is fixed by the proof.
  *
- * Usage: node build/zk/e2e-v3-devnet.mjs <PROGRAM_ID> [--vk-mode pilot|ceremony]
- *   --vk-mode ceremony : the program on-chain must already carry the ceremony VK; the
- *                        prover then uses SWV3_ZKEY/SWV3_VK env (ceremony zkey/vk).
+ * Usage: node build/zk/e2e-v3-devnet.mjs <PROGRAM_ID> [--vk-mode ceremony]
+ *   vk-mode=ceremony (default) : the prover uses the CEREMONY zkey/vk the deployed
+ *     program embeds (forwarded to prove-v3.mjs as SWV3_VK_MODE). The single-party
+ *     pilot VK is rejected on-chain (Custom(4)=ProofInvalid), so it is not supported.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync } from "node:fs";
@@ -36,7 +37,18 @@ const REPO = join(HERE, "..", "..");
 const RPC = process.env.RPC ?? "https://api.devnet.solana.com";
 const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 const PROGRAM_ID = new PublicKey(process.argv[2]);
-const VK_MODE = (() => { const i = process.argv.indexOf("--vk-mode"); return i !== -1 ? process.argv[i + 1] : "pilot"; })();
+const VK_MODE = (() => { const i = process.argv.indexOf("--vk-mode"); return (i !== -1 ? process.argv[i + 1] : "ceremony").toLowerCase(); })();
+if (VK_MODE === "pilot") {
+  console.error(
+    "e2e-v3-devnet.mjs: --vk-mode pilot is not supported against the deployed pool.\n" +
+    "  The on-chain program embeds the CEREMONY verifying key; pilot (single-party) proofs\n" +
+    "  are rejected with Custom(4)=ProofInvalid. Re-run with --vk-mode ceremony (the default).");
+  process.exit(2);
+}
+if (VK_MODE !== "ceremony") {
+  console.error(`e2e-v3-devnet.mjs: unknown --vk-mode '${VK_MODE}' (only 'ceremony' is supported)`);
+  process.exit(2);
+}
 const DENOM = 100_000_000; // 0.1 SOL per note
 const FEE = 1_000_000;     // 0.001 SOL relayer reimbursement (<= MAX_FEE = 0.05 SOL)
 
@@ -187,7 +199,9 @@ function prove(spec, { fee = FEE, denom = DENOM, expectFail = false } = {}) {
   const sIn = join(tmp, "spec.json"), sOut = join(tmp, "out.json");
   writeFileSync(sIn, JSON.stringify({ ...spec, fee: String(fee), denomination: String(denom) }));
   try {
-    execFileSync(process.execPath, [join(HERE, "prove-v3.mjs"), sIn, sOut], { stdio: "pipe" });
+    // Forward vk-mode so the prover uses the CEREMONY zkey/vk the deployed program embeds.
+    execFileSync(process.execPath, [join(HERE, "prove-v3.mjs"), sIn, sOut],
+      { stdio: "pipe", env: { ...process.env, SWV3_VK_MODE: VK_MODE } });
   } catch (e) {
     rmSync(tmp, { recursive: true, force: true });
     if (expectFail) return { proofFailed: true, stderr: (e.stderr ?? Buffer.from("")).toString().slice(0, 200) };
@@ -363,9 +377,7 @@ async function main() {
     relayerFeeLamports: FEE,
     vkMode: VK_MODE,
     circuit: "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
-    vk: VK_MODE === "ceremony"
-      ? "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope)"
-      : "shielded_withdraw_v3_vk (SINGLE-PARTY / DEVNET PILOT / NOT TRUSTLESS)",
+    vk: "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope). This is the VK the deployed program embeds.",
     initSig,
     onChainRootAfterDeposits: rootAfter,
     coreCircuitRoot: rustRoot,
@@ -379,9 +391,7 @@ async function main() {
       "the withdraw and was reimbursed the proof-bound fee; the recipient received denom-fee " +
       "and never signed. Double-spend / wrong-root / wrong-recipient / over-fee / relayer-mismatch all reverted.",
     honestCaveats: [
-      VK_MODE === "ceremony"
-        ? "Ceremony VK is a BEACON-SEALED DRY RUN: multiple SIMULATED-independent phase-2 contributions (one machine, varied entropy) finalized with a FIXED, already-published drand beacon (round 6000000). The public beacon adds unpredictability nobody controls, but this is NOT yet fully trustless — real trustlessness needs the simulated contributors replaced by independent humans (see ceremony/CONTRIBUTING_V3.md). Claim: 'beacon-sealed multi-contribution ceremony (dry-run); awaiting independent contributors.'"
-        : "SINGLE-PARTY trusted setup — NOT trustless. Use --vk-mode ceremony for the beacon-sealed multi-contribution (dry-run) VK.",
+      "Ceremony VK is a BEACON-SEALED DRY RUN: multiple SIMULATED-independent phase-2 contributions (one machine, varied entropy) finalized with a FIXED, already-published drand beacon (round 6000000). The public beacon adds unpredictability nobody controls, but this is NOT yet fully trustless — real trustlessness needs the simulated contributors replaced by independent humans (see ceremony/CONTRIBUTING_V3.md). Claim: 'beacon-sealed multi-contribution ceremony (dry-run); awaiting independent contributors.'",
       "UNAUDITED devnet pilot. mainnet_ready=false throughout.",
       "Stealth recipient (NullPay) NOT integrated — recipient is a plain wallet here. Documented as a follow-up stub.",
       "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count==0) for deterministic Merkle-path rebuild.",
