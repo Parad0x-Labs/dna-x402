@@ -13,6 +13,7 @@ import {
   disconnectPhantom,
   getPhantom,
   normalizeWalletAddress,
+  signMessageWithPhantom,
 } from "@/lib/wallet";
 
 interface WalletState {
@@ -22,6 +23,8 @@ interface WalletState {
   phantomAvailable: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  /** Sign a UTF-8 message; returns the raw 64-byte ed25519 signature. */
+  signMessage: (message: string) => Promise<Uint8Array>;
 }
 
 const WalletContext = createContext<WalletState | null>(null);
@@ -78,9 +81,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
+  const signMessage = useCallback(
+    (message: string) => signMessageWithPhantom(message),
+    [],
+  );
+
   const value = useMemo<WalletState>(
-    () => ({ address, connecting, error, phantomAvailable, connect, disconnect }),
-    [address, connecting, error, phantomAvailable, connect, disconnect],
+    () => ({ address, connecting, error, phantomAvailable, connect, disconnect, signMessage }),
+    [address, connecting, error, phantomAvailable, connect, disconnect, signMessage],
   );
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;

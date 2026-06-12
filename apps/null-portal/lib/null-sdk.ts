@@ -734,12 +734,43 @@ export async function ixCancelEnglish(c: Cluster | ClusterConfig, seller: Public
   });
 }
 
-// ── NullPay stealth-meta layout (devnet registrar v2 NullDomain) ──────────────
-// The recipient's 64-byte ed25519 meta-address (spend_pub || view_pub) is stored
-// at offset 154; a v2 account is ≥ 218 bytes. (scripts/nullpay/devnet-e2e.mjs)
-export const ND_OFF_STEALTH_META = 154;
+// ── NullPay stealth-meta layout (sha256-seed registrar v2 NullDomain) ─────────
+// The recipient's 64-byte ed25519 meta-address (spend_pub || view_pub) lives at
+// offset 314 — immediately ABOVE the 314-byte base — and a stealth-enabled account
+// is 378 bytes. Written by SetStealthMeta (0x0c), which reallocs 314 -> 378.
+// This is the SAME layout on mainnet (H4wbFJ) and the devnet v2 registrar; it is
+// NOT the old raw-seed NullPay build (which used offset 154).
+export const ND_OFF_STEALTH_META = 314;
 export const ND_STEALTH_META_LEN = 64;
-export const ND_V2_MIN_LEN = 218;
+export const ND_V2_MIN_LEN = 378;
+
+// Registrar opcode (distinct program from the auction's 0x0c CancelOffer).
+export const IX_SET_STEALTH_META = 0x0c;
+
+/**
+ * SetStealthMeta (0x0c) — publish the recipient's 64-byte ed25519 stealth meta on
+ * the cluster's sha256-seed registrar (mainnet H4wbFJ; devnet the v2 registrar —
+ * i.e. cfg.auctionRegistrar, which is sha256 on both clusters). Owner-only; the
+ * first call reallocs the domain 314 -> 378 with an owner-paid rent top-up.
+ * accounts: [owner (signer, writable / rent payer), domain (writable), system].
+ */
+export async function ixSetStealthMeta(
+  c: Cluster | ClusterConfig,
+  owner: PublicKey,
+  name: string,
+  meta64: Uint8Array,
+): Promise<TransactionInstruction> {
+  if (meta64.length !== ND_STEALTH_META_LEN) throw new Error("stealth meta must be 64 bytes");
+  return new TransactionInstruction({
+    programId: auctionRegistrarFor(c),
+    keys: [
+      { pubkey: owner, isSigner: true, isWritable: true },
+      { pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(IX_SET_STEALTH_META), padName64(name), meta64)),
+  });
+}
 
 /** Canonical ATA of (owner, mint, tokenProgram). Mirrors ataOf in _lib.mjs:
  *  find_program_address([owner, token_program, mint], ATA_PROGRAM). */

@@ -15,7 +15,7 @@ import {
   ND_OFF_STEALTH_META,
   ND_STEALTH_META_LEN,
   domainPda,
-  domainPdaFor,
+  auctionDomainPda,
   ataOf,
   AS_DISC_RESALE,
   AS_DISC_PRIMARY,
@@ -475,9 +475,13 @@ export type StealthMetaResult =
 
 /**
  * Resolve a `.null` name on the given cluster and read its 64-byte stealth
- * meta-address (spend_pub || view_pub) from offset 154 of the NullDomain
+ * meta-address (spend_pub || view_pub) from offset 314 of the NullDomain
  * account. Returns "no-meta" if the domain exists but has not published one,
  * and "not-found" if the name is unregistered.
+ *
+ * The stealth meta lives on the cluster's sha256-seed registrar (mainnet H4wbFJ;
+ * devnet the v2 registrar = cfg.auctionRegistrar), so we derive the PDA exactly as
+ * SetStealthMeta does — NOT via the old raw-seed NullPay registrar.
  */
 export async function resolveStealthMeta(
   conn: Connection,
@@ -485,7 +489,7 @@ export async function resolveStealthMeta(
   name: string,
 ): Promise<StealthMetaResult> {
   const cfg = configFor(cluster);
-  const pda = await domainPdaFor(cfg, name);
+  const pda = await auctionDomainPda(cfg, name);
   const pdaStr = pda.toBase58();
   const info = await conn.getAccountInfo(pda);
   if (!info || info.data.length === 0) {

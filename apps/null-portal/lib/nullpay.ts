@@ -94,6 +94,34 @@ export interface StealthPayment {
   ephemPub: Uint8Array; // 32B — the ephemeral R published in the announce
 }
 
+// ── deterministic key model — derive keys from the wallet itself ──────────────
+//
+// The recipient's stealth keys are derived from a signature their wallet makes
+// over a FIXED message. ed25519 signatures are deterministic (RFC 8032 — the
+// nonce comes from the key + message, no randomness), so the SAME wallet always
+// reproduces the SAME signature, and therefore the SAME keys, on any device.
+//
+// This is the safety property: there is NO separate secret to back up or lose.
+// Control of the wallet IS control of the funds — re-deriving from the wallet
+// recovers every private payment ever sent to the name. Sweep destinations are
+// always a wallet the user already controls, never a throwaway keypair.
+export const NULLPAY_KEY_MESSAGE =
+  "web0 · NullPay private inbox\n\n" +
+  "Sign to derive your private-pay keys. This signature never leaves your device " +
+  "and moves no funds. Anyone able to produce this signature with your wallet can " +
+  "read and spend your private payments, so only sign on a wallet you control.\n\nv1";
+
+const TAG_KEYSEED = new TextEncoder().encode("web0-nullpay-spend-seed-v1");
+
+/** Derive deterministic stealth keys from a wallet's signature over
+ *  NULLPAY_KEY_MESSAGE. Same wallet -> same signature -> same keys, every time,
+ *  on every device. The signature is the only secret; it is the user's wallet. */
+export function keysFromWalletSignature(signature: Uint8Array): StealthKeys {
+  if (signature.length < 32) throw new Error("wallet signature too short to derive keys");
+  const seed = sha512(cat(TAG_KEYSEED, signature)).slice(0, 32);
+  return keygen(seed);
+}
+
 // ── keygen ────────────────────────────────────────────────────────────────────
 // spendSeed: 32-byte Uint8Array. Returns { spend, view, spendPub, viewPub, meta(64B) }.
 export function keygen(spendSeed: Uint8Array): StealthKeys {

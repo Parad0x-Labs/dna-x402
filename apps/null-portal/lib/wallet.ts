@@ -37,6 +37,10 @@ export type PhantomProvider = {
   removeListener?(event: string, handler: (args: unknown) => void): void;
   signAndSendTransaction?(tx: Transaction): Promise<PhantomSignResult>;
   signTransaction?(tx: Transaction): Promise<Transaction>;
+  signMessage?(
+    message: Uint8Array,
+    encoding?: string,
+  ): Promise<{ signature: Uint8Array } | Uint8Array>;
 };
 
 /**
@@ -106,6 +110,24 @@ export async function connectPhantom(
     throw new Error("Connected wallet address unavailable. Reconnect Phantom and retry.");
   }
   return addr;
+}
+
+/**
+ * Sign a UTF-8 message with Phantom and return the raw 64-byte ed25519 signature.
+ * Deterministic per (wallet, message) — used to derive NullPay stealth keys with
+ * no separate secret to store. Connects first so the prompt shows the right wallet.
+ */
+export async function signMessageWithPhantom(message: string): Promise<Uint8Array> {
+  const phantom = getPhantom();
+  if (!phantom?.connect) throw new PhantomNotFoundError();
+  await connectPhantom();
+  if (!phantom.signMessage) {
+    throw new Error("This wallet cannot sign messages — use Phantom to unlock your private inbox.");
+  }
+  const encoded = new TextEncoder().encode(message);
+  const res = await phantom.signMessage(encoded, "utf8");
+  const sig = (res as { signature?: Uint8Array }).signature ?? (res as Uint8Array);
+  return sig instanceof Uint8Array ? sig : Uint8Array.from(sig as ArrayLike<number>);
 }
 
 export async function disconnectPhantom(): Promise<void> {
