@@ -1,12 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-  LAMPORTS_PER_SOL,
-} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "./WalletProvider";
 import { useCluster } from "./ClusterProvider";
 import {
@@ -17,12 +12,12 @@ import {
 import {
   derive,
   randomSeed32,
-  toHex,
   type StealthPayment,
 } from "@/lib/nullpay";
-import { MEMO_PROGRAM, normalizeName, shortAddr } from "@/lib/null-sdk";
+import { normalizeName, shortAddr } from "@/lib/null-sdk";
 import { signAndSendInstructions } from "@/lib/wallet";
-import { explorerAddr, explorerTx } from "@/lib/cluster";
+import { explorerAddr, explorerTx, type Cluster } from "@/lib/cluster";
+import { buildPrivatePayment, resolveIxFor, toAtomic, type Asset } from "@/lib/stealth";
 
 const DEBOUNCE_MS = 400;
 
@@ -33,15 +28,16 @@ type ResolveState =
   | { kind: "result"; result: StealthMetaResult };
 
 export function Pay() {
-  // NullPay is LIVE on devnet — force the page onto it regardless of the global
-  // toggle, but reflect that to the user so the pill + page agree.
-  const { cluster, setCluster, config } = useCluster();
+  // Private pay runs on the ACTIVE cluster (mainnet by default) — the stealth meta
+  // lives on the cluster's sha256 registrar, same code path mainnet↔devnet.
+  const { cluster, config } = useCluster();
   const { address, connect, connecting } = useWallet();
 
   const [raw, setRaw] = useState("");
   const [resolve, setResolve] = useState<ResolveState>({ kind: "idle" });
   const [derived, setDerived] = useState<StealthPayment | null>(null);
-  const [amount, setAmount] = useState("0.02");
+  const [asset, setAsset] = useState<Asset>("USDC");
+  const [amount, setAmount] = useState("1.00");
 
   const [sending, setSending] = useState(false);
   const [txSig, setTxSig] = useState<string | null>(null);
@@ -50,12 +46,6 @@ export function Pay() {
 
   const reqId = useRef(0);
   const name = useMemo(() => normalizeName(raw), [raw]);
-
-  // Pin /pay to devnet (where NullPay is live) on mount if we're elsewhere.
-  useEffect(() => {
-    if (cluster !== "devnet") setCluster("devnet");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Debounced resolve of the recipient name -> stealth meta.
   useEffect(() => {
@@ -72,8 +62,8 @@ export function Pay() {
     setResolve({ kind: "loading" });
     const t = setTimeout(async () => {
       try {
-        const conn = getConnectionForCluster("devnet");
-        const r = await resolveStealthMeta(conn, "devnet", name);
+        const conn = getConnectionForCluster(cluster);
+        const r = await resolveStealthMeta(conn, cluster, name);
         if (reqId.current !== myReq) return;
         setResolve({ kind: "result", result: r });
         // If a meta exists, derive a fresh one-time address right away (browser-only).
@@ -91,60 +81,56 @@ export function Pay() {
       }
     }, DEBOUNCE_MS);
     return () => clearTimeout(t);
-  }, [name]);
+  }, [name, cluster]);
 
-  const lamports = useMemo(() => {
+  const amountAtomic = useMemo(() => {
     const n = Number(amount);
-    if (!Number.isFinite(n) || n <= 0) return 0;
-    return Math.floor(n * LAMPORTS_PER_SOL);
-  }, [amount]);
+    if (!Number.isFinite(n) || n <= 0) return 0n;
+    return toAtomic(n, asset);
+  }, [amount, asset]);
 
   const canSend =
     !!address &&
     !!derived &&
     resolve.kind === "result" &&
     resolve.result.status === "found" &&
-    lamports > 0 &&
+    amountAtomic > 0n &&
     !sending;
 
   const onSend = useCallback(async () => {
-    if (!address || !derived || lamports <= 0) return;
+    if (!address || amountAtomic <= 0n) return;
     if (resolve.kind !== "result" || resolve.result.status !== "found") return;
     setPayError(null);
     setSending(true);
     try {
-      const conn = getConnectionForCluster("devnet");
-      const stealthPub = new PublicKey(derived.stealthPub);
-      const ephemHex = toHex(derived.ephemPub);
-
-      // 1) pay the one-time stealth address P
-      const transferIx = SystemProgram.transfer({
-        fromPubkey: new PublicKey(address),
-        toPubkey: stealthPub,
-        lamports,
+      const conn = getConnectionForCluster(cluster);
+      // Build the private payment: derive a fresh one-time address P, pay SOL or
+      // USDC to it, announce R, and reference the domain PDA (Resolve) so the
+      // recipient can find it. A fresh P every send — never reused.
+      const resolveIx = await resolveIxFor(cluster, name);
+      const built = buildPrivatePayment({
+        cluster,
+        sender: new PublicKey(address),
+        name,
+        meta64: resolve.result.meta,
+        asset,
+        amountAtomic,
+        resolveIx,
       });
-      // 2) publish the ephemeral R in a memo (the StealthAnnounce the recipient scans)
-      const announce = `nullpay:v1:${name}.null:R=${ephemHex}`;
-      const memoIx = new TransactionInstruction({
-        programId: MEMO_PROGRAM,
-        keys: [],
-        data: Buffer.from(announce, "utf8"),
-      });
-
       const sig = await signAndSendInstructions({
         connection: conn,
         owner: address,
-        instructions: [transferIx, memoIx],
-        computeUnits: 80_000,
+        instructions: built.instructions,
+        computeUnits: built.computeUnits,
       });
       setTxSig(sig);
-      setPaidTo({ name, p: stealthPub.toBase58(), r: ephemHex });
+      setPaidTo({ name, p: built.stealthPub, r: built.ephemHex });
     } catch (e) {
       setPayError(e instanceof Error ? e.message : String(e));
     } finally {
       setSending(false);
     }
-  }, [address, derived, lamports, name, resolve]);
+  }, [address, amountAtomic, asset, cluster, name, resolve]);
 
   return (
     <section className="pt-12 sm:pt-16 pb-8">
@@ -210,7 +196,7 @@ export function Pay() {
               name={name}
               resolve={resolve}
               derived={derived}
-              cluster="devnet"
+              cluster={cluster}
             />
           </div>
 
@@ -224,6 +210,24 @@ export function Pay() {
                   send to {name}.null
                 </div>
 
+                {/* asset selector */}
+                <div className="mb-3 flex gap-1.5">
+                  {(["USDC", "SOL"] as Asset[]).map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => {
+                        setAsset(a);
+                        setAmount(a === "USDC" ? "1.00" : "0.05");
+                      }}
+                      className={`rounded-lg border-[1.5px] px-3.5 py-1.5 font-mono text-[12.5px] font-bold transition ${
+                        asset === a ? "border-mint bg-mint text-ink0" : "border-line text-dim hover:border-mint"
+                      }`}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                   <input
                     value={amount}
@@ -231,9 +235,9 @@ export function Pay() {
                     inputMode="decimal"
                     className="w-28 rounded-xl border-[1.5px] border-line bg-black/30 px-3.5 py-2.5 font-mono text-paper outline-none transition focus:border-mint focus:shadow-[0_0_0_4px_rgba(61,255,176,0.12)]"
                   />
-                  <span className="font-mono text-sm font-bold text-paper">SOL</span>
+                  <span className="font-mono text-sm font-bold text-paper">{asset}</span>
                   <div className="flex gap-1.5">
-                    {["0.01", "0.05", "0.1"].map((a) => (
+                    {(asset === "USDC" ? ["1", "5", "25"] : ["0.01", "0.05", "0.1"]).map((a) => (
                       <button
                         key={a}
                         onClick={() => setAmount(a)}
@@ -261,7 +265,7 @@ export function Pay() {
                   >
                     {sending
                       ? "sign in phantom…"
-                      : `send ${amount} SOL to ${name}.null`}
+                      : `send ${amount} ${asset} to ${name}.null`}
                   </button>
                 )}
 
@@ -297,7 +301,7 @@ export function Pay() {
                 <ProofLine
                   label="one-time address"
                   value={paidTo.p}
-                  href={explorerAddr("devnet", paidTo.p)}
+                  href={explorerAddr(cluster, paidTo.p)}
                 />
                 <div className="break-all font-mono text-[11px] text-faint">
                   ephemeral R · {paidTo.r}
@@ -306,7 +310,7 @@ export function Pay() {
               <div className="mt-5 flex flex-wrap gap-2.5">
                 <a
                   className="rounded-lg bg-mint px-5 py-2.5 text-[13px] font-bold text-ink0 transition hover:bg-lime"
-                  href={explorerTx("devnet", txSig)}
+                  href={explorerTx(cluster, txSig)}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -346,7 +350,7 @@ function ResolvePanel({
   name: string;
   resolve: ResolveState;
   derived: StealthPayment | null;
-  cluster: "devnet";
+  cluster: Cluster;
 }) {
   if (name.length === 0 || resolve.kind === "idle") {
     return (
@@ -437,7 +441,7 @@ function ResolvePanel({
           <ProofLine
             label="pays to"
             value={pBase58}
-            href={explorerAddr("devnet", pBase58)}
+            href={explorerAddr(cluster, pBase58)}
             note="computed in your browser, just now"
           />
         </div>

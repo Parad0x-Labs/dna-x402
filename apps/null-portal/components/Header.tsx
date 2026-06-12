@@ -83,6 +83,7 @@ export function Header() {
           {link("/browse", "browse")}
           {link("/sell", "sell")}
           {link("/pay", "pay")}
+          {link("/receive", "receive")}
           {link("/my-names", "my names")}
         </nav>
         <div className="flex items-center gap-2.5">

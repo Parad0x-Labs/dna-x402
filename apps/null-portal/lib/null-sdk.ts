@@ -772,6 +772,112 @@ export async function ixSetStealthMeta(
   });
 }
 
+// ── classic SPL Token (USDC) + stealth pay-tx helpers ─────────────────────────
+
+/** Classic SPL Token program (USDC etc.) — NOT Token-2022. */
+export const TOKEN_PROGRAM = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+export const USDC_DECIMALS = 6;
+
+/** Circle USDC mint per cluster (mainnet vs devnet test USDC). */
+export function usdcMintFor(c: Cluster | ClusterConfig): PublicKey {
+  const cl = typeof c === "string" ? c : c.cluster;
+  return cl === "mainnet"
+    ? new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+    : new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"); // devnet USDC
+}
+
+/** Resolve (0x05) — read-only registrar call that touches the domain PDA. Bundled
+ *  into a private payment so the recipient can FIND it via getSignaturesForAddress
+ *  on their domain PDA (a bare memo isn't address-queryable). */
+export async function ixResolve(
+  c: Cluster | ClusterConfig,
+  name: string,
+): Promise<TransactionInstruction> {
+  return new TransactionInstruction({
+    programId: auctionRegistrarFor(c),
+    keys: [{ pubkey: await auctionDomainPda(c, name), isSigner: false, isWritable: false }],
+    data: Buffer.from(concatBytes(u8(0x05), padName64(name))),
+  });
+}
+
+/** ATA-program CreateIdempotent (data=[1]) — make owner's ATA for mint if absent. */
+export function ixCreateAtaIdempotent(
+  payer: PublicKey,
+  owner: PublicKey,
+  mint: PublicKey,
+  tokenProgram: PublicKey = TOKEN_PROGRAM,
+): { ata: PublicKey; ix: TransactionInstruction } {
+  const ata = ataOf(owner, mint, tokenProgram);
+  const ix = new TransactionInstruction({
+    programId: ATA_PROGRAM,
+    keys: [
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: ata, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: false, isWritable: false },
+      { pubkey: mint, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: tokenProgram, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from([1]),
+  });
+  return { ata, ix };
+}
+
+/** SPL Token Transfer (opcode 3): source -> dest, signed by authority, amount atomic. */
+export function ixSplTransfer(
+  source: PublicKey,
+  dest: PublicKey,
+  authority: PublicKey,
+  amount: bigint,
+  tokenProgram: PublicKey = TOKEN_PROGRAM,
+): TransactionInstruction {
+  return new TransactionInstruction({
+    programId: tokenProgram,
+    keys: [
+      { pubkey: source, isSigner: false, isWritable: true },
+      { pubkey: dest, isSigner: false, isWritable: true },
+      { pubkey: authority, isSigner: true, isWritable: false },
+    ],
+    data: Buffer.from(concatBytes(u8(3), u64le(amount))),
+  });
+}
+
+/** SPL Token CloseAccount (opcode 9): close `account`, rent -> dest, signed by authority. */
+export function ixCloseAccount(
+  account: PublicKey,
+  dest: PublicKey,
+  authority: PublicKey,
+  tokenProgram: PublicKey = TOKEN_PROGRAM,
+): TransactionInstruction {
+  return new TransactionInstruction({
+    programId: tokenProgram,
+    keys: [
+      { pubkey: account, isSigner: false, isWritable: true },
+      { pubkey: dest, isSigner: false, isWritable: true },
+      { pubkey: authority, isSigner: true, isWritable: false },
+    ],
+    data: Buffer.from([9]),
+  });
+}
+
+/** A bare SPL-Memo instruction carrying `text`. */
+export function ixMemo(text: string): TransactionInstruction {
+  return new TransactionInstruction({ programId: MEMO_PROGRAM, keys: [], data: Buffer.from(text, "utf8") });
+}
+
+// ── NullPay announce string (sender publishes; recipient scans) ───────────────
+export const STEALTH_ANNOUNCE_PREFIX = "nullpay:v1:";
+/** `nullpay:v1:<name>.null:R=<ephemHex>` */
+export function buildAnnounce(name: string, ephemHex: string): string {
+  return `${STEALTH_ANNOUNCE_PREFIX}${name}.null:R=${ephemHex}`;
+}
+/** Parse a memo -> { name, ephemHex } or null. */
+export function parseAnnounce(memo: string): { name: string; ephemHex: string } | null {
+  if (!memo.startsWith(STEALTH_ANNOUNCE_PREFIX)) return null;
+  const m = memo.match(/^nullpay:v1:(.+)\.null:R=([0-9a-fA-F]{64})$/);
+  return m ? { name: m[1], ephemHex: m[2] } : null;
+}
+
 /** Canonical ATA of (owner, mint, tokenProgram). Mirrors ataOf in _lib.mjs:
  *  find_program_address([owner, token_program, mint], ATA_PROGRAM). */
 export function ataOf(

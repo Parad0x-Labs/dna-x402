@@ -176,6 +176,22 @@ export function recover(
   return { p, stealthPub: payment.stealthPub };
 }
 
+// ── recipient: from an announced R, derive the one-time address + its scalar ──
+// Unlike scan(), this needs no prior knowledge of P — it COMPUTES the one-time
+// address P = p·B for a given ephemeral R, so the inbox can then check P (and its
+// token account) on-chain for funds and, if any, sweep them with the scalar p.
+export function recipientOneTime(
+  keys: StealthKeys,
+  ephemPub: Uint8Array,
+): { p: bigint; stealthPub: Uint8Array } {
+  const R = Point.fromBytes(ephemPub);
+  const sharedPoint = R.multiply(keys.view); // v·R = r·V
+  const shared = hashToScalarWide(TAG_SHARED, sharedPoint.toBytes());
+  const p = (((keys.spend + shared) % L) + L) % L;
+  if (p === 0n) throw new Error("zero stealth scalar");
+  return { p, stealthPub: B.multiply(p).toBytes() };
+}
+
 // ── raw-scalar EdDSA sign (RFC 8032 §5.1.6) with the one-time scalar p ─────────
 // Produces a 64-byte R||S signature verifiable under P by stock ed25519 / Solana.
 export function signWithStealthScalar(
