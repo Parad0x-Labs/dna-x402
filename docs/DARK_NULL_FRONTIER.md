@@ -20,14 +20,14 @@
 | MPC Sealed Pricing / Private Auctions | Research | Arcium production dependency |
 | MEV-Aware Private Settlement | Research | no Jito BAM integration |
 | Alpenglow-Ready UX | Research | no Alpenglow-specific runtime path |
-| Silent Payment Rails | **Prototype** | `swarm/silent-pay.mjs`, 13 tests passing, ECDH stealth-address derivation + scanning |
-| ZK Fiat Settlement Proof | Research | no TLS notary, no zkTLS integration |
-| Threshold Blind Mint Federation | **Prototype** | `swarm/threshold-mint.mjs`, 14 tests passing, k-of-n BDHKE via Shamir + Lagrange |
-| Nova / Folding Scheme Accumulation | Research | no folding circuit, no Nova prover integration |
-| ZKML Verifiable Inference Receipts | Research | no EZKL/SP1 integration, no model execution circuit |
-| Private Streaming Micropayments | **Prototype** | `swarm/payment-stream.mjs`, 15 tests passing, payment channel + off-chain ticks + countersigned settlement |
+| Silent Payment Rails | **Devnet program** | `swarm/silent-pay.mjs` + Solana program [`9C9F9Y8…`](https://explorer.solana.com/address/9C9F9Y8icd7tsnet4HtQU4LTkQMuAWWXAT97rR2eG6wV?cluster=devnet) devnet, e2e passes; BIP352-style ECDH stealth-address — no on-chain scanner |
+| Fiat Settlement Oracle | **Devnet program** | Solana program [`DjHQxF5…`](https://explorer.solana.com/address/DjHQxF5pcZBqZtXX9niFpJsGuAUBs77v4dssuAdyFR4b?cluster=devnet) devnet, e2e passes; `secp256k1_recover` verifies oracle sig over settlement receipt — oracle-attested, not zkTLS |
+| Threshold Blind Mint Federation | **Devnet program** | `swarm/threshold-mint.mjs` + Solana program [`C6M8Nux…`](https://explorer.solana.com/address/C6M8Nuxo1hj9QjPGAfYSXNwkDQEeRVuGZS4FqtjAQuVJ?cluster=devnet) devnet, e2e passes; k-of-n BDHKE via Shamir + Lagrange — no DKG |
+| Receipt Commitment Accumulator | **Devnet program** | Solana program [`7VWjpxe…`](https://explorer.solana.com/address/7VWjpxe2bBHChzMsqvPS8ZFJBRLaGkWTzM3Wrm36tnBd?cluster=devnet) devnet, e2e passes; rolling SHA256 commitment — SHA256 accumulator, not Nova folding |
+| Oracle-Attested Inference Receipt | **Devnet program** | Solana program [`23yVqL6…`](https://explorer.solana.com/address/23yVqL6UopoXLv3UihSKQ6EEpuxztWSKcHyKwdC9gM3v?cluster=devnet) devnet, e2e passes; `secp256k1_recover` verifies oracle sig over model+I/O hashes — oracle attestation, not EZKL |
+| Private Streaming Micropayments | **Devnet program** | `swarm/payment-stream.mjs` + Solana program [`C5uhvm1…`](https://explorer.solana.com/address/C5uhvm1SUxrZdzKAc3ZDHkVJbmrt7ntjhai6F7QHK6uP?cluster=devnet) devnet, e2e passes; payment channel open/tick/close — no hidden-rate encryption |
 
-*All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo (113/113). None are mainnet-deployed. None are audited.*
+*All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo (113/113). Devnet programs verified by `scripts/demo-x402-dark-null.mjs` — all 6 in one agent session. None are audited.*
 
 ---
 
@@ -369,7 +369,7 @@ Each time an agent pays, the sender derives a fresh one-time address from the re
 
 **What it means for agents:** an AI agent making a thousand API calls appears to be a thousand different payers. Competitors cannot map your vendor relationships or measure your call volume by watching the chain.
 
-**What is already evidenced:** `swarm/silent-pay.mjs` in the Dark Null Protocol repo — ECDH stealth-address derivation + recipient scanner, 13 tests passing. No on-chain component yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** `swarm/silent-pay.mjs` (13 tests) + Solana program `9C9F9Y8icd7tsnet4HtQU4LTkQMuAWWXAT97rR2eG6wV` on devnet, e2e passes. BIP352-style ECDH stealth-address derive + on-chain scan-key registry + payment record PDA. No on-chain scanner loop; scanner runs off-chain. Wired into x402 `integration/x402-hooks.mjs` — each payment goes to a fresh one-time address. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -381,7 +381,7 @@ An x402-style payment completes a Stripe charge. The Stripe webhook fires with a
 
 **What this means for agents:** an agent can pay for a real-world service with any payment method its operator funds (Stripe, card, bank wire) and deliver a cryptographic settlement receipt on-chain. The API on the other side sees proof, not card data.
 
-**What this needs:** a TLS notary deployment, a zkTLS circuit for the Stripe/Visa webhook format, and an on-chain verifier for the notary's signature. Research stage — no deployed notary yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** Solana program `DjHQxF5pcZBqZtXX9niFpJsGuAUBs77v4dssuAdyFR4b` on devnet, e2e passes. `secp256k1_recover` verifies an oracle signature over `SHA256(payment_id ‖ amount_cents ‖ recipient)`; replay-protected receipt PDA created on settlement. This is an oracle-attested model — the oracle is a trusted off-chain signer, not a zkTLS notary. The full zkTLS path (TLS notary + circuit + on-chain verifier) is still research. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -393,7 +393,7 @@ FROST (Flexible Round-Optimized Schnorr Threshold, Komlo/Goldberg 2020) splits t
 
 **What this means for agents:** NULL access tokens and x402 receipts issued by a federation cannot be forged even if k-1 servers are fully compromised. The protocol survives adversarial infrastructure.
 
-**What is already evidenced:** `swarm/threshold-mint.mjs` in the Dark Null Protocol repo — k-of-n BDHKE via Shamir's Secret Sharing + Lagrange interpolation, 14 tests passing. No DKG or per-signer DLEQ proof yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** `swarm/threshold-mint.mjs` (14 tests) + Solana program `C6M8Nuxo1hj9QjPGAfYSXNwkDQEeRVuGZS4FqtjAQuVJ` on devnet, e2e passes. On-chain `FederationConfig` records threshold + aggregate pubkey; `IssuanceRecord` PDA provides replay protection. k-of-n BDHKE via Shamir + Lagrange in the off-chain layer. No DKG or per-signer DLEQ proof yet — full FROST threshold protocol is research. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -405,7 +405,7 @@ Nova (Kothapalli/Setty/Tzialla 2021) and HyperNova (2023) use folding to accumul
 
 **What this means for agents:** epoch settlement becomes flat-cost. An agent network processing 1M micropayments per hour pays the same on-chain cost as one processing 1K. The rail scales linearly in throughput, not in cost.
 
-**What this needs:** Nova/HyperNova prover integration (microsoft/Nova reference implementation), a folding-compatible circuit for the Dark Null nullifier step, and benchmark evidence of proof size at scale. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** Solana program `7VWjpxe2bBHChzMsqvPS8ZFJBRLaGkWTzM3Wrm36tnBd` on devnet, e2e passes. Rolling `SHA256(prev_commitment ‖ receipt_hash)` accumulator with finalization gate — one on-chain root proves all receipts in a session. Off-chain root re-derivation verified to match on-chain state. This is a hash-based commitment accumulator, not Nova folding. The full Nova/HyperNova O(1) folding path still requires: Nova prover integration, folding-compatible circuit for the Dark Null nullifier step, and benchmark evidence at scale. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -417,7 +417,7 @@ An AI agent charges per inference. The client wants to know: was that really GPT
 
 **What this means for agents:** a paid inference API delivers a 256-byte proof with every response. The client verifies: correct model, correct output, no substitution. The x402 receipt carries the proof hash. The Dark Null nullifier prevents replay.
 
-**What this needs:** EZKL or SP1 integration for a standard model size, a proof-of-inference circuit that fits within Solana's compute limits, and a receipt schema extension for `proofOfModelExecution`. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** Solana program `23yVqL6UopoXLv3UihSKQ6EEpuxztWSKcHyKwdC9gM3v` on devnet, e2e passes. `secp256k1_recover` verifies an oracle signature over `SHA256(model_hash ‖ input_hash ‖ output_hash)`; replay-protected inference receipt PDA. Wired into x402 `integration/x402-hooks.mjs` via `makeInferenceHook` — AI API calls record on-chain attestation per receipt. This is oracle-attested compute, not a ZK circuit. The full ZKML path still requires: EZKL or SP1 integration, a proof-of-inference circuit within Solana's compute limits, and a receipt schema extension for `proofOfModelExecution`. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
@@ -429,7 +429,7 @@ An x402 agent calls a language model API that charges per output token. 10,000 t
 
 **What this means for agents:** an AI agent pays for exactly what it consumed — per token, per second, per API call — without broadcasting 10,000 transactions. One open, one close. The stream ticks are cryptographically committed off-chain and settled in bulk. Observers see one channel, not the usage pattern.
 
-**What is already evidenced:** `swarm/payment-stream.mjs` in the Dark Null Protocol repo — payment channel with off-chain tick commitments + countersigned settlement, 15 tests passing. No Solana program yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
+**What is already evidenced:** `swarm/payment-stream.mjs` (15 tests) + Solana program `C5uhvm1SUxrZdzKAc3ZDHkVJbmrt7ntjhai6F7QHK6uP` on devnet, e2e passes. `OpenChannel` funds a PDA with session capacity; off-chain ticks track per-call accumulation; `CloseChannel` settles the exact consumed amount. Wired into x402 via `StreamingSession` in `integration/x402-hooks.mjs` — agent sessions bill per API call with one open and one on-chain close. No hidden-rate encryption yet. Full spec: `docs/2030_PRIMITIVES.md` in the Dark Null Protocol repo.
 
 ---
 
