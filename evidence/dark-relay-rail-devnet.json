@@ -1,48 +1,48 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-06-09T19:57:28.344Z",
+  "generatedAt": "2026-06-13T10:18:15.947Z",
   "test": "dark_relay_rail-v3-relayer-fee-zk-withdraw",
   "cluster": "devnet",
-  "program": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
-  "poolConfig": "7wZk3PiUEWVsWtStC32r4SmbV7EMhUWiFUX5Vpik4ryR",
-  "poolVault": "Du2xPoD3R65TNso9F5SUdbapTrSnU5EUzXVj6J9TK2xJ",
+  "program": "BcTdifKCSqWawmwpmRJx1RtmgK9diM59UMemxju8DU77",
+  "poolConfig": "7oPr23t9VnBBJze73QqF9SCrcVPFPZHpUERoG1e5Sdsi",
+  "poolVault": "24muG6X9tE78jBkWap7qW11AuFyhWpVSmtA5ce2JfA4B",
   "denominationLamports": 100000000,
   "relayerFeeLamports": 1000000,
   "vkMode": "ceremony",
   "circuit": "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
-  "vk": "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope)",
-  "initSig": "4DxeB3S5TKc7ZTowd79XLgH4FzS6cXViDvr3rZQzSMqDqSp4oth9hV2v6QnsQy3eA6Fvfv4BcXMxdAmG9wfYwuYS",
-  "onChainRootAfterDeposits": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
-  "coreCircuitRoot": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
+  "vk": "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope). This is the VK the deployed program embeds.",
+  "initSig": "4VjZU4YoUQAYndzePV6wCgW9f8GoQkMZQ5v9Dzi7oCwJp6igHcxgo3efvRZ6RPVeRCGRH62nZvwVUEVS3qqAmP39",
+  "onChainRootAfterDeposits": "2c459f6acfee5a5074b3abc0d5ad63cce4cd779d101d8b881cf8251f9e2390fb",
+  "coreCircuitRoot": "2c459f6acfee5a5074b3abc0d5ad63cce4cd779d101d8b881cf8251f9e2390fb",
   "rootsMatch": true,
   "scenarios": [
     {
       "name": "root_consistency",
       "status": "PASS",
-      "root": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
+      "root": "2c459f6acfee5a5074b3abc0d5ad63cce4cd779d101d8b881cf8251f9e2390fb",
       "deposits": [
-        "42mtRTFvyD87cpNVkEBXLhzn7Aap9yX7RYq2J9TDXCx23UgkHYNneoCWUoVAHwJsworhjfNsbqHi7qXT66xh1cxB",
-        "3yREcgnh9Z5YfQZqFiqWd6sH5xv9TSoKGPbyJHz4w9qxFaguC4KjWyEM3Bze8P9wa1wQ1rBs6L25Xn7eDfwYf7vD"
+        "3JcjgpnpRCm4wkZ9kimJy6iASCjVc243tXiJ8WQ69saxer5XZZNkxX7BwaPzuuc3oEkehBETRa9pxFKFHLnbct7C",
+        "3yMrPLabJZHDW3C8Ty931YgumgteUjfipwhoA3ECsBPxydWn1rAT7wv5E88hijenXbH8gUaYHGAfVgGXdTcag4AA"
       ]
     },
     {
       "name": "valid_relayer_withdraw",
       "status": "PASS",
-      "sig": "64Zpd39vpSEEYovMDRjaYUQ6Y4xptUJQBn2Jw4UuvaJpjjQRBjFTbRzUjssG9fD8LBU2sf5suWfob9ynaWvw1eA",
-      "recipient": "CENhSBCeZCDCKrGQTMVyjZCd8M7MqEaqi2y6DgRnkYtW",
-      "relayer": "AeC9SmCssHzp8mQYieVvXTn4wnBF8tkmCaw7FRPJo7FZ",
+      "sig": "5UKv2cLHV2LaXinmZhndVxD5W8Qk8HkXTMdSsqrRzLyDdfbDG9pQ7k9tBYEfe3R3JWkdcv6UGcFLmn5hnSwzm9uu",
+      "recipient": "9MMNerWxVHUVziba9PJEnyo5EyMVbah9sjFaXvAFzaqL",
+      "relayer": "BqmtE2MRLKuoSEmbQXahQytzdC1GYnbPZpNa2JJt1eNS",
       "recipientDelta": 99000000,
       "relayerDelta": -181240,
       "fee": 1000000,
       "payout": 99000000,
       "recipientSigned": false,
-      "nullifier": "122d3cf33101706d39f2981ac25ddc2f9fab1ebf64c0945758d2d56c3180fdf4"
+      "nullifier": "11f3c1b68b0ab745281f6b842a9d2e0bbf1d553f31bff88f0fb7d3e032e70b6e"
     },
     {
       "name": "double_spend_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "5kyUxhzXSgUTW6J2iebSFPC3A15gVMJWG3VabUASgBC5FhbDb7iFx58XHP56JwruxmxZStMYsE8SsLp2Zv2BvZpa",
+      "sig": "2rLRj5BWBxwBuEz1HMSiPNM3P9C33c526NTtpmWoCVLrV3i1GD49zf5Ju4JeQJk3AKNJGf5JkwQ33kiMbQhTh7jB",
       "err": {
         "InstructionError": [
           1,
@@ -56,7 +56,7 @@
       "name": "wrong_root_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "4Vxj4b4MvxxXNjfSZdrDYruCqhXVJ4q1ufMdhXGkbYhHrCi95kvxEGoex6p3Fn9NiLbnfZq5Y9Wf7pdeySkDboBY",
+      "sig": "3ecRgz9XRwHGUodQGdSFHhrPMArqThsMWrcgEUmfXQSSMT9X2WW6c2xThxawTEqPnQHruudm8269oPj5NKwPQznK",
       "err": {
         "InstructionError": [
           1,
@@ -70,7 +70,7 @@
       "name": "wrong_recipient_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "5LDZfL91WEssZKaru3tiLUCRhAzBEQVPCn2Vpx5hrSkVYrpY9VrMh9B9wvfBKbqiTKFanhhZJa39ff6VeHZirGUL",
+      "sig": "52mKuCCWcEi7Fw4F2UHBSENkbgPdKqaeYyrk2i2QbKv4A4JReXjaHzf81LTLFatEJ1azVRLkKGHk9XudB2N2eN9B",
       "err": {
         "InstructionError": [
           1,
@@ -90,7 +90,7 @@
       "name": "relayer_mismatch_rejected",
       "status": "PASS",
       "reverted": true,
-      "sig": "3oWbwSY7Hr4JcfEJPt2TfWb37YJWhMJdnqRq5WXG6q8fSap4s5VTMnxxnrgTxCnH7zCE5R6eSAuM4kscM8Dejttm",
+      "sig": "3rY8Uo4Te7RnMoS6BQn4HKHrHDAMJyrzt1RL4Ljpzs66BBK8mY6UTRfUXuj5qrR6Uxiq1BiCwcppq22g2Uj9CZye",
       "err": {
         "InstructionError": [
           1,
@@ -103,7 +103,7 @@
     {
       "name": "second_valid_withdraw",
       "status": "PASS",
-      "sig": "3ypTqGiddQyyWR9AmwqUZN38x5bAjekU8JJBTkMRAW3MH9LaHqRPK7Fk1HT1JFR83C7m1kQ2QkysixKVtDSkYVsa",
+      "sig": "5J1yC5crz4o7TRUShXSFgSHCuZCHeLU7QH2c1DPKjgnU14BjjserqKWnwQxMKFADq23UwSUL31xV7jWk3ksqWaSt",
       "recipientDelta": 99000000
     }
   ],
@@ -116,7 +116,7 @@
     "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count==0) for deterministic Merkle-path rebuild."
   ],
   "explorer": {
-    "program": "https://explorer.solana.com/address/2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY?cluster=devnet"
+    "program": "https://explorer.solana.com/address/BcTdifKCSqWawmwpmRJx1RtmgK9diM59UMemxju8DU77?cluster=devnet"
   },
   "runs": {
     "pilot": {
@@ -208,30 +208,30 @@
         {
           "name": "root_consistency",
           "status": "PASS",
-          "root": "2af78fa34c1f786168e86ad3e6cfeec0ee43b644d8050da7461f98a153b5d5bc",
+          "root": "2c459f6acfee5a5074b3abc0d5ad63cce4cd779d101d8b881cf8251f9e2390fb",
           "deposits": [
-            "42mtRTFvyD87cpNVkEBXLhzn7Aap9yX7RYq2J9TDXCx23UgkHYNneoCWUoVAHwJsworhjfNsbqHi7qXT66xh1cxB",
-            "3yREcgnh9Z5YfQZqFiqWd6sH5xv9TSoKGPbyJHz4w9qxFaguC4KjWyEM3Bze8P9wa1wQ1rBs6L25Xn7eDfwYf7vD"
+            "3JcjgpnpRCm4wkZ9kimJy6iASCjVc243tXiJ8WQ69saxer5XZZNkxX7BwaPzuuc3oEkehBETRa9pxFKFHLnbct7C",
+            "3yMrPLabJZHDW3C8Ty931YgumgteUjfipwhoA3ECsBPxydWn1rAT7wv5E88hijenXbH8gUaYHGAfVgGXdTcag4AA"
           ]
         },
         {
           "name": "valid_relayer_withdraw",
           "status": "PASS",
-          "sig": "64Zpd39vpSEEYovMDRjaYUQ6Y4xptUJQBn2Jw4UuvaJpjjQRBjFTbRzUjssG9fD8LBU2sf5suWfob9ynaWvw1eA",
-          "recipient": "CENhSBCeZCDCKrGQTMVyjZCd8M7MqEaqi2y6DgRnkYtW",
-          "relayer": "AeC9SmCssHzp8mQYieVvXTn4wnBF8tkmCaw7FRPJo7FZ",
+          "sig": "5UKv2cLHV2LaXinmZhndVxD5W8Qk8HkXTMdSsqrRzLyDdfbDG9pQ7k9tBYEfe3R3JWkdcv6UGcFLmn5hnSwzm9uu",
+          "recipient": "9MMNerWxVHUVziba9PJEnyo5EyMVbah9sjFaXvAFzaqL",
+          "relayer": "BqmtE2MRLKuoSEmbQXahQytzdC1GYnbPZpNa2JJt1eNS",
           "recipientDelta": 99000000,
           "relayerDelta": -181240,
           "fee": 1000000,
           "payout": 99000000,
           "recipientSigned": false,
-          "nullifier": "122d3cf33101706d39f2981ac25ddc2f9fab1ebf64c0945758d2d56c3180fdf4"
+          "nullifier": "11f3c1b68b0ab745281f6b842a9d2e0bbf1d553f31bff88f0fb7d3e032e70b6e"
         },
         {
           "name": "double_spend_rejected",
           "status": "PASS",
           "reverted": true,
-          "sig": "5kyUxhzXSgUTW6J2iebSFPC3A15gVMJWG3VabUASgBC5FhbDb7iFx58XHP56JwruxmxZStMYsE8SsLp2Zv2BvZpa",
+          "sig": "2rLRj5BWBxwBuEz1HMSiPNM3P9C33c526NTtpmWoCVLrV3i1GD49zf5Ju4JeQJk3AKNJGf5JkwQ33kiMbQhTh7jB",
           "err": {
             "InstructionError": [
               1,
@@ -245,7 +245,7 @@
           "name": "wrong_root_rejected",
           "status": "PASS",
           "reverted": true,
-          "sig": "4Vxj4b4MvxxXNjfSZdrDYruCqhXVJ4q1ufMdhXGkbYhHrCi95kvxEGoex6p3Fn9NiLbnfZq5Y9Wf7pdeySkDboBY",
+          "sig": "3ecRgz9XRwHGUodQGdSFHhrPMArqThsMWrcgEUmfXQSSMT9X2WW6c2xThxawTEqPnQHruudm8269oPj5NKwPQznK",
           "err": {
             "InstructionError": [
               1,
@@ -259,7 +259,7 @@
           "name": "wrong_recipient_rejected",
           "status": "PASS",
           "reverted": true,
-          "sig": "5LDZfL91WEssZKaru3tiLUCRhAzBEQVPCn2Vpx5hrSkVYrpY9VrMh9B9wvfBKbqiTKFanhhZJa39ff6VeHZirGUL",
+          "sig": "52mKuCCWcEi7Fw4F2UHBSENkbgPdKqaeYyrk2i2QbKv4A4JReXjaHzf81LTLFatEJ1azVRLkKGHk9XudB2N2eN9B",
           "err": {
             "InstructionError": [
               1,
@@ -279,7 +279,7 @@
           "name": "relayer_mismatch_rejected",
           "status": "PASS",
           "reverted": true,
-          "sig": "3oWbwSY7Hr4JcfEJPt2TfWb37YJWhMJdnqRq5WXG6q8fSap4s5VTMnxxnrgTxCnH7zCE5R6eSAuM4kscM8Dejttm",
+          "sig": "3rY8Uo4Te7RnMoS6BQn4HKHrHDAMJyrzt1RL4Ljpzs66BBK8mY6UTRfUXuj5qrR6Uxiq1BiCwcppq22g2Uj9CZye",
           "err": {
             "InstructionError": [
               1,
@@ -292,12 +292,12 @@
         {
           "name": "second_valid_withdraw",
           "status": "PASS",
-          "sig": "3ypTqGiddQyyWR9AmwqUZN38x5bAjekU8JJBTkMRAW3MH9LaHqRPK7Fk1HT1JFR83C7m1kQ2QkysixKVtDSkYVsa",
+          "sig": "5J1yC5crz4o7TRUShXSFgSHCuZCHeLU7QH2c1DPKjgnU14BjjserqKWnwQxMKFADq23UwSUL31xV7jWk3ksqWaSt",
           "recipientDelta": 99000000
         }
       ],
-      "program": "2L7phWpE8Mkrij6oURj1mQcSPGs3oPL5ytAAQoN65nYY",
-      "generatedAt": "2026-06-09T19:57:28.344Z"
+      "program": "BcTdifKCSqWawmwpmRJx1RtmgK9diM59UMemxju8DU77",
+      "generatedAt": "2026-06-13T10:18:15.947Z"
     }
   }
 }
