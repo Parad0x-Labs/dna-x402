@@ -18,11 +18,13 @@
 //!   3. 7 public inputs (nullifier, merkle_root, recipient, pool_id, relayer, fee,
 //!      denomination). VK from `dark_groth16_core::shielded_withdraw_v3_vk`.
 //!
-//! CEREMONY — TRUSTLESS (Hermez ptau + drand-only beacon):
-//!   Phase 1: Hermez Perpetual Powers of Tau (power 14, sha256 489be9e5…).
-//!   Phase 2: ONLY the drand League of Entropy beacon (round 6000000) — zero
-//!   human contributors, zero toxic waste, 100% trustless. Verified in
-//!   ceremony/shielded_withdraw_v3/transcript_v3.json.
+//! CEREMONY — no Phase-2 human contributor (Hermez PPOT + drand beacon):
+//!   Phase 1: Hermez Perpetual Powers of Tau (power 14, sha256 489be9e5…,
+//!            publicly verifiable, multiple independent contributors).
+//!   Phase 2: ONLY the drand League of Entropy beacon (round 6000000) —
+//!            no human held or generated Phase-2 entropy; drand is collectively
+//!            operated by League of Entropy nodes and publicly verifiable.
+//!            Transcript: ceremony/shielded_withdraw_v3/transcript_v3.json.
 //!
 //! `IS_STUB = false` — hashing, tree, binding, and verifier are all real.
 //! `MAINNET_READY = true` — trustless ceremony complete, open beta.

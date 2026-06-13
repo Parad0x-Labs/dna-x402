@@ -1,6 +1,6 @@
 {
   "circuit": "shielded_withdraw_v3",
-  "mode": "HERMEZ-PTAU + DRAND-ONLY BEACON — 100% trustless. Phase 1: Hermez Perpetual Powers of Tau (thousands of real contributors). Phase 2: ONLY the drand beacon (League of Entropy, round 6000000). Zero human toxic waste. Zero single party that can forge proofs.",
+  "mode": "HERMEZ-PTAU + DRAND-ONLY BEACON. Phase 1: Hermez Perpetual Powers of Tau (publicly verifiable, multiple independent contributors). Phase 2: ONLY the drand League of Entropy beacon (round 6000000) — no human Phase-2 contributor, no human held or generated Phase-2 entropy. Publicly reproducible: anyone can re-derive this VK from 0000.zkey + the beacon value.",
   "phase1": {
     "source": "Hermez Perpetual Powers of Tau",
     "power": 14,
@@ -26,7 +26,7 @@
   "final_zkey_sha256": "e31006e7c059b4566a9be75aaba4d89d7b5524d86d2da6c42d519a8f1fde716b",
   "vk_sha256": "d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c",
   "n_public": 7,
-  "trustless": true,
-  "trustless_proof": "Phase 1 (Hermez ptau, thousands of contributors) + Phase 2 (drand beacon only, League of Entropy). No human toxic waste exists in Phase 2. Forging a proof requires breaking BN254 discrete log AND controlling the drand beacon — computationally infeasible.",
+  "no_phase2_human_contributor": true,
+  "security_model": "Phase 1 (Hermez PPOT): sound if any one PPOT contributor deleted their entropy. Phase 2: no human contributor at all — entropy is the drand beacon output, collectively produced by League of Entropy nodes (Cloudflare, EPFL, Protocol Labs, and others) and publicly verifiable on-chain. Forging a proof requires breaking BN254 discrete log. Unaudited open beta.",
   "generatedAt": "2026-06-13T10:45:00.000Z"
 }

@@ -7,7 +7,13 @@
 //! Curve:          BN254 (bn128)        Protocol: groth16
 //! Public inputs:  7 (nullifier, merkle_root, recipient, pool_id, relayer, fee,
 //!                    denomination)  [circuit order]
-//! Ceremony:       HERMEZ-PTAU + DRAND-ONLY BEACON (round 6000000, League of Entropy). Phase 1: Hermez\n//!                 Perpetual Powers of Tau (power 14, sha256 489be9e5). Phase 2: ONLY the\n//!                 drand beacon — zero human contributors, zero toxic waste, 100% trustless.\n//!                 Beacon randomness: 642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114
+//! Ceremony:       HERMEZ-PPOT + DRAND-ONLY BEACON (round 6000000, League of Entropy).
+//!                 Phase 1: Hermez Perpetual Powers of Tau (power 14, sha256 489be9e5,
+//!                 publicly verifiable, multiple independent contributors).
+//!                 Phase 2: ONLY the drand beacon — no human Phase-2 contributor,
+//!                 no human held or generated Phase-2 entropy; drand is collectively
+//!                 operated by League of Entropy nodes (Cloudflare, EPFL, Protocol Labs)
+//!                 and publicly verifiable. Unaudited open beta.
 //! VK SHA-256:     d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c
 //!
 //! Do not edit manually — regenerate with: node build/zk/vk-to-rust-v3.mjs
