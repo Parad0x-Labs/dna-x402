@@ -363,6 +363,24 @@ async function main() {
   record("second_valid_withdraw", w2.executed && (recA2 - recB2) === DENOM - FEE ? "PASS" : "FAIL",
     { sig: w2.sig, recipientDelta: recA2 - recB2 });
 
+  // ── sweep ephemeral SOL back to wallet (max-recoverable-funds rule) ─────────
+  console.log(`\n[sweep] returning leftover SOL from ephemeral keypairs to wallet`);
+  for (const [label, kp] of [["authority", authority], ["relayer", relayer], ["recipient", recipient]]) {
+    const bal = await conn.getBalance(kp.publicKey, "confirmed");
+    const FEE_RESERVE = 5_000;
+    if (bal > FEE_RESERVE) {
+      try {
+        const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
+        const sweepTx = new Transaction({ blockhash, lastValidBlockHeight, feePayer: kp.publicKey })
+          .add(SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: wallet.publicKey, lamports: bal - FEE_RESERVE }));
+        sweepTx.sign(kp);
+        const s = await conn.sendRawTransaction(sweepTx.serialize(), { skipPreflight: true });
+        await conn.confirmTransaction({ signature: s, blockhash, lastValidBlockHeight }, "confirmed");
+        console.log(`  swept ${label} (${bal - FEE_RESERVE} lam) → wallet ${s}`);
+      } catch (e) { console.warn(`  sweep ${label} failed: ${e.message?.slice(0, 80)}`); }
+    }
+  }
+
   // ── evidence ────────────────────────────────────────────────────────────────
   const allPass = results.scenarios.every((s) => s.status === "PASS");
   const evidence = {
@@ -377,7 +395,7 @@ async function main() {
     relayerFeeLamports: FEE,
     vkMode: VK_MODE,
     circuit: "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
-    vk: "shielded_withdraw_v3_vk (BEACON-SEALED MULTI-CONTRIBUTION CEREMONY, dry-run — public ptau + simulated-independent contributions + FIXED pre-committed drand beacon round 6000000; awaiting independent contributors, devnet pilot scope). This is the VK the deployed program embeds.",
+    vk: "shielded_withdraw_v3_vk (Hermez PPOT Phase 1 + drand-only beacon Phase 2, round 6000000 — no human Phase-2 contributor, no human held Phase-2 entropy). This is the VK the deployed program embeds.",
     initSig,
     onChainRootAfterDeposits: rootAfter,
     coreCircuitRoot: rustRoot,
