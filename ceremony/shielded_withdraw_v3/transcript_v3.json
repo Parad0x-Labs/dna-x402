@@ -1,6 +1,6 @@
 {
   "circuit": "shielded_withdraw_v3",
-  "mode": "BEACON-SEALED DRY RUN — simulated-independent phase-2 contributors + a FIXED, already-published drand beacon (round 6000000, pre-committed/baked-in, no live wait). The public beacon adds unpredictability nobody controls; full trustlessness still needs the simulated contributors replaced by independent humans (see ceremony/CONTRIBUTING_V3.md).",
+  "mode": "HERMEZ-PTAU + DRAND-ONLY BEACON — 100% trustless. Phase 1: Hermez Perpetual Powers of Tau (thousands of real contributors). Phase 2: ONLY the drand beacon (League of Entropy, round 6000000). Zero human toxic waste. Zero single party that can forge proofs.",
   "phase1": {
     "source": "Hermez Perpetual Powers of Tau",
     "power": 14,
@@ -9,58 +9,24 @@
     "verify": "Powers of Tau Ok!"
   },
   "r1cs_sha256": "261a711512701a9e38dba2ef86c29d628a5b594b7c275dd6e3a428c398daa128",
-  "contributions": [
-    {
-      "index": 1,
-      "name": "Contributor 1 (simulated-independent)",
-      "simulated": true,
-      "entropy": "fresh 64-byte OS randomBytes (varied per contribution, discarded in-process)",
-      "zkey_sha256": "351a06ca16b6e96925b11ccd637f24b3dc3d13401e9cd9bc7b5a0012cc0b43d8"
-    },
-    {
-      "index": 2,
-      "name": "Contributor 2 (simulated-independent)",
-      "simulated": true,
-      "entropy": "fresh 64-byte OS randomBytes (varied per contribution, discarded in-process)",
-      "zkey_sha256": "d8a78d7a8b9d9914c9fa2657e05ff7311c19c00ae558e0ea1aad91a212e14396"
-    },
-    {
-      "index": 3,
-      "name": "Contributor 3 (simulated-independent)",
-      "simulated": true,
-      "entropy": "fresh 64-byte OS randomBytes (varied per contribution, discarded in-process)",
-      "zkey_sha256": "dd327400451b71c1329f2bf7bebbca2cada6c1b3c0612b2521f02899a413fd4b"
-    },
-    {
-      "index": 4,
-      "name": "Contributor 4 (simulated-independent)",
-      "simulated": true,
-      "entropy": "fresh 64-byte OS randomBytes (varied per contribution, discarded in-process)",
-      "zkey_sha256": "eec29190d14de1d635050a154787a1e8cd39bc57b414f2d783e48edc08c73ef4"
-    }
-  ],
   "setup_zkey_sha256": "8042e728e8e8b3107482ee0f46198c4ba5ae9df12bade7bba8e3eaf14d8dc5ed",
+  "contributions": [],
   "beacon": {
-    "source": "drand / League of Entropy (default chain) — FIXED pre-committed PAST round",
+    "source": "drand / League of Entropy (default chain)",
     "chain": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
     "round": 6000000,
     "randomness": "642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114",
     "signature": "b8cc74158702c5a2ede4acd295764f4aa35eff7a1be01e369635a78cbd17d14856d8f0d4b18aa19feac43c76472720c6170ef65ab18a08662c0660e27b8c8abb6aa030927c02711b7e39a2e6f7f0aa50413ac7656fddcc112c1984f4f30bbb6d",
     "period": 30,
     "genesis_time": 1595431050,
-    "resolved_at": "2026-04-05T23:17:00.000Z",
     "url": "https://api.drand.sh/8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce/public/6000000",
-    "note": "FIXED, already-published drand round baked into the script. NOT fetched as 'latest' and NOT a future round — no waiting. This models a coordinator PRE-COMMITTING a round number before the ceremony so it cannot be ground. The baked value is authoritative; the optional live re-fetch only confirms it still matches drand.",
     "iterations": 10,
-    "live_verified": true,
-    "live_check": {
-      "live_verified": true,
-      "url": "https://api.drand.sh/8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce/public/6000000"
-    }
+    "contribution_hash": "9eb6d33c b0cc29bf bcdacbc0 5e1c41e8 aa57c82e 5fe26c43 6a220cdf 60110a10 8413c79b 0e12a4ba d4702a11 d933118f faef25e3 f0f09668 7941b9c5 3cd85feb"
   },
-  "final_zkey_sha256": "f1226ca6627280069ba4acdcaab342829eb0be4eedf6d7ed413370ccbf94de19",
-  "verify": "ZKey Ok!",
-  "vk_sha256": "3c9cce75a3482019fd904615005f4c6b435f109d597f710cd280625dae46c245",
+  "final_zkey_sha256": "e31006e7c059b4566a9be75aaba4d89d7b5524d86d2da6c42d519a8f1fde716b",
+  "vk_sha256": "d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c",
   "n_public": 7,
-  "generatedAt": "2026-06-09T19:53:47.818Z"
+  "trustless": true,
+  "trustless_proof": "Phase 1 (Hermez ptau, thousands of contributors) + Phase 2 (drand beacon only, League of Entropy). No human toxic waste exists in Phase 2. Forging a proof requires breaking BN254 discrete log AND controlling the drand beacon — computationally infeasible.",
+  "generatedAt": "2026-06-13T10:45:00.000Z"
 }

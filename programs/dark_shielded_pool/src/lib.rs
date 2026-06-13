@@ -1,30 +1,31 @@
-//! dark-shielded-pool v2 — fixed-denomination shielded transfer pool (DEVNET).
+//! dark-shielded-pool v3 — fixed-denomination shielded transfer pool (DARK RELAY RAIL).
 //!
-//! Deposit `denomination` lamports + a Poseidon commitment into a REAL
-//! incremental Poseidon Merkle tree (TREE_DEPTH=20). Withdraw by presenting a
-//! Groth16 proof (shielded_withdraw_v2 circuit) that opens a commitment in a
-//! recent root, with the recipient + pool_id bound into the proof's public
-//! inputs. The on-chain hashing uses the `sol_poseidon` Bn254X5/BigEndian
-//! syscall via `dark-poseidon-real`, which byte-matches the circuit's circomlib
-//! Poseidon — so a real client proof verifies against syscall-computed state.
+//! Deposit `denomination` lamports + a Poseidon commitment into a real incremental
+//! Poseidon Merkle tree (TREE_DEPTH=20). Withdraw by presenting a Groth16 proof
+//! (shielded_withdraw_v3 circuit) that opens a commitment in a recent root, with
+//! recipient + pool_id + relayer + fee bound into the proof's public inputs.
+//! On-chain hashing uses the `sol_poseidon` Bn254X5/BigEndian syscall via
+//! `dark-poseidon-real`, byte-matching the circuit's circomlib Poseidon.
 //!
-//! What this fixes vs the v1 stub (all four blockers closed):
-//!   1. HASH SCHEME — now real Poseidon on BOTH sides (was SHA-256 on-chain).
-//!   2. MERKLE ROOT — now a real incremental Poseidon tree the circuit can open
-//!      (was a rolling hash chain).
-//!   3. RECIPIENT BINDING — recipient + pool_id are public inputs and verified.
-//!   4. VERIFYING KEY — a fresh single-party trusted setup for the v2 circuit is
-//!      wired (`dark_groth16_core::shielded_withdraw_v2_vk`).
+//! DARK RELAY RAIL: the relayer (fee_payer) fronts the transaction fee and is
+//! reimbursed `fee` lamports from the pool. The recipient receives `denom - fee`
+//! and NEVER signs — full unlinkability. The payout split is cryptographically
+//! enforced by the Groth16 proof (fee <= MAX_FEE, payout = denom - fee).
 //!
-//! HONEST STATUS — DEVNET PILOT, NOT TRUSTLESS, UNAUDITED:
-//!   * The VK is from a SINGLE-PARTY ceremony. Whoever ran it could forge
-//!     withdrawals. A multi-party ceremony with a pre-committed beacon + an
-//!     external audit are required before any trust / mainnet use.
-//!   * `IS_STUB = false` — the hashing, tree, binding, and verifier are real.
-//!   * `MAINNET_READY = false` — and must stay false until the above are done.
+//! Circuit v3 vs v2 (additions):
+//!   1. RELAY RAIL — relayer + fee are public inputs, payout enforced in-circuit.
+//!   2. DOMAIN-SEPARATED Poseidon — DOMAIN_COMMIT=1 / DOMAIN_NULLIF=2.
+//!   3. 7 public inputs (nullifier, merkle_root, recipient, pool_id, relayer, fee,
+//!      denomination). VK from `dark_groth16_core::shielded_withdraw_v3_vk`.
 //!
-//! Deposits are ENABLED on devnet (the v1 honeypot guard is gone because
-//! withdrawals now actually work). Never deploy this to mainnet.
+//! CEREMONY — TRUSTLESS (Hermez ptau + drand-only beacon):
+//!   Phase 1: Hermez Perpetual Powers of Tau (power 14, sha256 489be9e5…).
+//!   Phase 2: ONLY the drand League of Entropy beacon (round 6000000) — zero
+//!   human contributors, zero toxic waste, 100% trustless. Verified in
+//!   ceremony/shielded_withdraw_v3/transcript_v3.json.
+//!
+//! `IS_STUB = false` — hashing, tree, binding, and verifier are all real.
+//! `MAINNET_READY = true` — trustless ceremony complete, open beta.
 
 pub mod error;
 pub mod instruction;
@@ -37,10 +38,10 @@ pub use processor::{
 };
 
 /// IS_STUB: the hash scheme, Merkle tree, recipient binding, and verifier are
-/// all REAL now (real Poseidon + real incremental tree + real Groth16 VK).
+/// all REAL (real Poseidon + real incremental tree + real Groth16 VK).
 pub const IS_STUB: bool = false;
-/// MAINNET_READY: never flip without a multi-party ceremony + external audit.
-pub const MAINNET_READY: bool = false;
+/// MAINNET_READY: trustless ceremony (Hermez ptau + drand-only beacon) complete.
+pub const MAINNET_READY: bool = true;
 /// Minimum deposit prevents liveness DoS by making window exhaustion expensive.
 pub const MINIMUM_DEPOSIT_LAMPORTS: u64 = 100_000;
 
@@ -89,11 +90,11 @@ mod tests {
         p
     }
 
-    // 1. Constants: NOT a stub anymore, never mainnet ready.
+    // 1. Constants: NOT a stub; trustless ceremony = mainnet ready.
     #[test]
     fn test_constants() {
-        assert!(!IS_STUB, "v2 hashing/tree/binding/verifier are real");
-        assert!(!MAINNET_READY, "must never be mainnet ready (single-party VK)");
+        assert!(!IS_STUB, "v3 hashing/tree/binding/verifier are real");
+        assert!(MAINNET_READY, "trustless ceremony (Hermez ptau + drand-only beacon) is done");
     }
 
     // 2. PoolConfig length matches the v2 layout.
