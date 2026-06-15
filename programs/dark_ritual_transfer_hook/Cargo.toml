@@ -13,7 +13,7 @@ no-entrypoint = []
 
 [dependencies]
 solana-program              = { workspace = true }
-spl-transfer-hook-interface = "=0.4.1"
+spl-transfer-hook-interface = "=0.6.5"
 spl-tlv-account-resolution  = "=0.5.1"
 # Pinned to the version whose deps (spl-transfer-hook-interface 0.4.1, spl-pod 0.1.0,
 # spl-type-length-value 0.3.0) exactly match the locked tree. no-entrypoint keeps the
