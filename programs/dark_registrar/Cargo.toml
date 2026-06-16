@@ -1,0 +1,17 @@
+[package]
+name = "dark-registrar"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+# `devnet` disables the mainnet_ready VK fail-closed guard (devnet uses a single-party,
+# non-trustless VK on purpose). Omit it for mainnet builds → guard active (fail-closed).
+devnet = []
+
+[dependencies]
+solana-program    = { workspace = true }
+dark-groth16-core = { path = "../../crates/dark-groth16-core" }

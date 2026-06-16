@@ -2,11 +2,13 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint,
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     msg,
-    program::invoke,
+    program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
+    rent::Rent,
+    system_instruction,
+    sysvar::Sysvar,
 };
 
 use dark_groth16_core::{
@@ -17,17 +19,33 @@ use dark_groth16_core::{
 
 entrypoint!(process_instruction);
 
-/// dark_nullifier_record (same id on devnet + mainnet) — single-use enforcement.
-const NULLIFIER_RECORD_PROGRAM: Pubkey =
-    solana_program::pubkey!("24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65");
-/// PDA seed prefix used by dark_nullifier_record.
-const NULL_RECORD_SEED: &[u8] = b"null_record";
-/// RecordNullifier discriminator in dark_nullifier_record.
-const IX_RECORD_NULLIFIER: u8 = 0x00;
+// ─── canonical receipt tree binding (audit HIGH fix) ────────────────────────────
+// The track-record proof opens against a Merkle `root`. That root MUST be the root of
+// the AUTHORITATIVE on-chain receipt tree — otherwise an attacker builds their own tree
+// off-chain with fabricated receipt leaves, proves against it, and forges reputation
+// (Sybil). We therefore require the caller to pass the canonical receipt_commitment_tree
+// PDA and we accept `root` only if it matches one of that tree's recent roots.
+//
+// DEVNET program id of dark_receipt_commitment_tree. Mainnet redeploy MUST update this
+// (matches the existing convention of hardcoding sibling program ids).
+const RECEIPT_TREE_PROGRAM: Pubkey =
+    solana_program::pubkey!("H9nL9tErFXFmr2ZGkgFVz2NpjAsAeDBXDgS85qBWFGAe");
+const RECEIPT_TREE_SEED: &[u8] = b"receipt_tree";
+/// Canonical reputation tree id (the one settlement writes receipts into). Devnet POC = 0.
+const CANONICAL_TREE_ID: [u8; 8] = [0u8; 8];
+// receipt_commitment_tree account layout (see that program): DEPTH=10, ROOT_HISTORY=8.
+const RT_ROOT_HISTORY: usize = 8;
+const RT_O_ROOTS: usize = 682; // O_ZEROS(42+10*32) + DEPTH*32 = 682
+const RT_TREE_LEN: usize = RT_O_ROOTS + RT_ROOT_HISTORY * 32; // 938
+
+/// Self-owned single-use nullifier PDA seed (no external program dependency — the prior
+/// external-CPI design used a wrong/foreign program id and let anyone front-run the
+/// nullifier via the permissionless record program; we now own it here, like x402_access).
+const REP_NULLIFIER_SEED: &[u8] = b"rep_nullifier";
 
 /// Instruction data layout — track_record circuit, 6 public inputs (448 bytes):
 ///   proof[256]                — BN254 Groth16 proof (A:64 B:128 C:64)
-///   root[32]                  — anchored receipt Merkle root
+///   root[32]                  — anchored receipt Merkle root (MUST match the canonical tree)
 ///   min_count[32]             — required receipt count (tier bar)
 ///   min_volume[32]            — required total settled volume
 ///   window_start[32]          — earliest acceptable receipt timestamp
@@ -35,14 +53,10 @@ const IX_RECORD_NULLIFIER: u8 = 0x00;
 ///   agent_commitment[32]      — Poseidon(secret, agent_id); same identity as dark_x402_access_gate
 ///
 /// Accounts:
-///   0. payer                     [signer, writable] — funds the nullifier PDA rent
-///   1. dark_nullifier_record     []                 — must equal NULLIFIER_RECORD_PROGRAM
-///   2. nullifier_record_pda      [writable]         — PDA(["null_record", reputation_nullifier])
-///   3. system_program            []
-///
-/// Verifies the track-record proof, then records `reputation_nullifier` in
-/// dark_nullifier_record (CPI). A replayed proof fails because the nullifier PDA already
-/// exists (Custom(10) AlreadyRecorded) — so each proof is single-use.
+///   0. payer                 [signer, writable] — funds the nullifier PDA rent
+///   1. receipt_tree          []                 — canonical PDA(["receipt_tree", 0]) @ RECEIPT_TREE_PROGRAM
+///   2. nullifier_record_pda  [writable]         — PDA(["rep_nullifier", reputation_nullifier]) @ this program
+///   3. system_program        []
 pub const INSTRUCTION_DATA_LEN: usize = 448;
 
 const OFF_PROOF: usize = 0;
@@ -57,7 +71,7 @@ fn parse32(data: &[u8], off: usize) -> [u8; 32] {
     data[off..off + 32].try_into().unwrap_or([0u8; 32])
 }
 
-fn process_instruction(_program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     if data.len() != INSTRUCTION_DATA_LEN {
         msg!("dark_reputation_gate: expected {} bytes, got {}", INSTRUCTION_DATA_LEN, data.len());
         return Err(ProgramError::InvalidInstructionData);
@@ -74,12 +88,63 @@ fn process_instruction(_program_id: &Pubkey, accounts: &[AccountInfo], data: &[u
     let rep_null     = parse32(data, OFF_REP_NULL);
     let agent_commit = parse32(data, OFF_AGENT_COMMIT);
 
+    let iter = &mut accounts.iter();
+    let payer           = next_account_info(iter)?;
+    let receipt_tree    = next_account_info(iter)?;
+    let nullifier_record = next_account_info(iter)?;
+    let system_program  = next_account_info(iter)?;
+
+    // ── HIGH fix: bind `root` to the canonical on-chain receipt tree ────────────
+    // Reject unless `receipt_tree` is the canonical PDA owned by the receipt tree program,
+    // and `root` equals one of its recent (ROOT_HISTORY) roots. This stops an attacker from
+    // initialising their own tree (also owned by that program) with fabricated leaves.
+    let (tree_pda, _tb) =
+        Pubkey::find_program_address(&[RECEIPT_TREE_SEED, &CANONICAL_TREE_ID], &RECEIPT_TREE_PROGRAM);
+    if receipt_tree.key != &tree_pda {
+        return Err(ProgramError::InvalidArgument);
+    }
+    if receipt_tree.owner != &RECEIPT_TREE_PROGRAM {
+        return Err(ProgramError::IllegalOwner);
+    }
+    {
+        let td = receipt_tree.try_borrow_data()?;
+        if td.len() < RT_TREE_LEN {
+            return Err(ProgramError::InvalidAccountData);
+        }
+        // Reject the zero root explicitly: a freshly-initialised tree leaves history slots
+        // 1..8 all-zero (only slot 0 holds the non-zero empty-tree root), so without this an
+        // attacker could pass root=0 and match an unwritten slot. The circuit already makes
+        // this unprovable (no Poseidon path hashes to 0), but don't rely on it on-chain.
+        // Mirrors dark-shielded-pool-core::merkle (root==[0;32] => reject).
+        if root == [0u8; 32] {
+            return Err(ProgramError::Custom(11));
+        }
+        let mut known = false;
+        for i in 0..RT_ROOT_HISTORY {
+            let off = RT_O_ROOTS + i * 32;
+            if td[off..off + 32] == root[..] {
+                known = true;
+                break;
+            }
+        }
+        if !known {
+            return Err(ProgramError::Custom(11)); // UnknownRoot — not the canonical tree's root
+        }
+    }
+
     // circuit public-input order
     let public_inputs: [[u8; 32]; NR_PUBLIC_INPUTS] =
         [root, min_count, min_volume, window_start, rep_null, agent_commit];
 
     // ── verify the Groth16 track-record proof ──────────────────────────────────
     let vk = track_record_vk();
+    // Fail closed on a non-trustless VK (audit MEDIUM: this guard was missing here).
+    // Devnet ships a single-party VK; `--features devnet` skips this. Mainnet omits the
+    // feature → guard active (fail-closed). Mirrors dark_shielded_pool / dark_x402_access_gate.
+    #[cfg(not(feature = "devnet"))]
+    if !vk.mainnet_ready {
+        return Err(ProgramError::Custom(2));
+    }
     let a_bytes: [u8; 64]  = proof_bytes[0..64].try_into().unwrap_or([0u8; 64]);
     let b_bytes: [u8; 128] = proof_bytes[64..192].try_into().unwrap_or([0u8; 128]);
     let c_bytes: [u8; 64]  = proof_bytes[192..256].try_into().unwrap_or([0u8; 64]);
@@ -94,38 +159,47 @@ fn process_instruction(_program_id: &Pubkey, accounts: &[AccountInfo], data: &[u
         return Err(ProgramError::Custom(1));
     }
 
-    // ── record reputation_nullifier (single-use) via dark_nullifier_record CPI ──
-    let iter = &mut accounts.iter();
-    let payer          = next_account_info(iter)?;
-    let null_program   = next_account_info(iter)?;
-    let record_pda     = next_account_info(iter)?;
-    let system_program = next_account_info(iter)?;
-
-    if null_program.key != &NULLIFIER_RECORD_PROGRAM {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-    // PDA must be the genuine record account for THIS nullifier — no spoofing.
-    let (expected_pda, _bump) =
-        Pubkey::find_program_address(&[NULL_RECORD_SEED, &rep_null], null_program.key);
-    if record_pda.key != &expected_pda {
+    // ── single-use nullifier: SELF-OWNED PDA (no external program) ──────────────
+    // [b"rep_nullifier", reputation_nullifier] under THIS program id. Present => replay.
+    let (np, nbump) = Pubkey::find_program_address(&[REP_NULLIFIER_SEED, &rep_null], program_id);
+    if nullifier_record.key != &np {
         return Err(ProgramError::InvalidArgument);
     }
+    // Spent iff we created+initialized it (owned here, non-empty). NOT lamports (front-run safe).
+    if nullifier_record.owner == program_id && !nullifier_record.data_is_empty() {
+        return Err(ProgramError::Custom(10)); // AlreadyRecorded
+    }
+    if !payer.is_signer {
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+    if *system_program.key != solana_program::system_program::id() {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+    let rent = Rent::get()?;
+    let space: usize = 1; // 1-byte marker (stores the bump)
+    let needed = rent.minimum_balance(space);
+    let seeds: &[&[u8]] = &[REP_NULLIFIER_SEED, &rep_null, &[nbump]];
+    if nullifier_record.lamports() == 0 {
+        invoke_signed(
+            &system_instruction::create_account(payer.key, nullifier_record.key, needed, space as u64, program_id),
+            &[payer.clone(), nullifier_record.clone(), system_program.clone()],
+            &[seeds],
+        )?;
+    } else {
+        let have = nullifier_record.lamports();
+        if have < needed {
+            invoke(
+                &system_instruction::transfer(payer.key, nullifier_record.key, needed - have),
+                &[payer.clone(), nullifier_record.clone(), system_program.clone()],
+            )?;
+        }
+        invoke_signed(&system_instruction::allocate(nullifier_record.key, space as u64),
+            &[nullifier_record.clone(), system_program.clone()], &[seeds])?;
+        invoke_signed(&system_instruction::assign(nullifier_record.key, program_id),
+            &[nullifier_record.clone(), system_program.clone()], &[seeds])?;
+    }
+    nullifier_record.try_borrow_mut_data()?[0] = nbump;
 
-    let mut ix_data = [0u8; 33];
-    ix_data[0] = IX_RECORD_NULLIFIER;
-    ix_data[1..33].copy_from_slice(&rep_null);
-    let ix = Instruction {
-        program_id: NULLIFIER_RECORD_PROGRAM,
-        accounts: vec![
-            AccountMeta::new(*payer.key, true),
-            AccountMeta::new(*record_pda.key, false),
-            AccountMeta::new_readonly(*system_program.key, false),
-        ],
-        data: ix_data.to_vec(),
-    };
-    // Fails with Custom(10) AlreadyRecorded if this proof was already used → single-use.
-    invoke(&ix, &[payer.clone(), record_pda.clone(), system_program.clone()])?;
-
-    msg!("dark_reputation_gate: track-record proof verified + nullifier recorded (single-use)");
+    msg!("dark_reputation_gate: track-record proof verified (root bound to canonical tree) + nullifier recorded");
     Ok(())
 }

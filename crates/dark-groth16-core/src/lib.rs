@@ -38,7 +38,8 @@ use solana_program::alt_bn128::prelude::{
 
 // ── BN254 constants ───────────────────────────────────────────────────────────
 
-/// Null-proof verifying key (real, from null_proof_final.zkey — single-party ceremony).
+/// Null-proof verifying key (from null_proof_final.zkey). Single-party (disclosed
+/// pilot) ceremony — `mainnet_ready = false` until a trustless multi-party ceremony.
 pub mod null_proof_vk;
 
 /// x402 access circuit verifying key (Poseidon commitment + threshold + nullifier).
@@ -58,6 +59,10 @@ pub mod shielded_withdraw_v2_vk;
 /// `mainnet_ready = false`.
 pub mod shielded_withdraw_v3_vk;
 
+/// Dark Registrar ownership verifying key — anonymous .null name ownership.
+/// Public inputs: name, commitment, action_hash. Devnet only — `mainnet_ready = false`.
+pub mod registrar_vk;
+
 /// BN254 base field prime Fp (big-endian, 32 bytes).
 ///
 /// Source: `ark-bn254` Fp modulus limbs (little-endian u64):
@@ -67,6 +72,33 @@ pub const BN254_FP: [u8; 32] = [
     0x30, 0x64, 0x4e, 0x72, 0xe1, 0x31, 0xa0, 0x29, 0xb8, 0x50, 0x45, 0xb6, 0x81, 0x81, 0x58, 0x5d,
     0x97, 0x81, 0x6a, 0x91, 0x68, 0x71, 0xca, 0x8d, 0x3c, 0x20, 0x8c, 0x16, 0xd8, 0x7c, 0xfd, 0x47,
 ];
+
+/// BN254 SCALAR field order Fr (big-endian, 32 bytes) — the order public inputs
+/// live in. `r = 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001`.
+/// DISTINCT from `BN254_FP` (the base field). `alt_bn128_multiplication` reduces its
+/// scalar mod r, so without an explicit `< r` guard a public input N and N+r are the
+/// SAME field element to the verifier — which lets a single proof verify for many
+/// distinct 32-byte encodings of the same input. Where that raw encoding is also used
+/// as a uniqueness key (e.g. the nullifier-spent PDA seed), that asymmetry is a
+/// double-spend. Reject non-canonical inputs up front.
+pub const BN254_FR: [u8; 32] = [
+    0x30, 0x64, 0x4e, 0x72, 0xe1, 0x31, 0xa0, 0x29, 0xb8, 0x50, 0x45, 0xb6, 0x81, 0x81, 0x58, 0x5d,
+    0x28, 0x33, 0xe8, 0x48, 0x79, 0xb9, 0x70, 0x91, 0x43, 0xe1, 0xf5, 0x93, 0xf0, 0x00, 0x00, 0x01,
+];
+
+/// True iff `x` (big-endian 32 bytes) is a canonical Fr element, i.e. `x < r`.
+pub fn fr_is_canonical(x: &[u8; 32]) -> bool {
+    // big-endian lexicographic compare: x < BN254_FR
+    for i in 0..32 {
+        if x[i] < BN254_FR[i] {
+            return true;
+        }
+        if x[i] > BN254_FR[i] {
+            return false;
+        }
+    }
+    false // x == r is NOT canonical (r ≡ 0)
+}
 
 // ── BN254 G1 generator ────────────────────────────────────────────────────────
 
@@ -194,6 +226,10 @@ pub enum Groth16Error {
     Bn254Error(AltBn128Error),
     /// Pairing check returned false — proof is invalid.
     ProofInvalid,
+    /// A public input is >= r (the scalar field order) — non-canonical. Rejected
+    /// because the syscall would silently reduce it mod r, aliasing distinct 32-byte
+    /// encodings onto the same field element (nullifier double-spend vector).
+    NonCanonicalPublicInput,
 }
 
 impl std::fmt::Display for Groth16Error {
@@ -202,6 +238,7 @@ impl std::fmt::Display for Groth16Error {
             Self::PublicInputCountMismatch => write!(f, "public input count mismatch"),
             Self::Bn254Error(e) => write!(f, "BN254 syscall error: {}", e),
             Self::ProofInvalid => write!(f, "Groth16 proof invalid"),
+            Self::NonCanonicalPublicInput => write!(f, "non-canonical public input (>= r)"),
         }
     }
 }
@@ -365,6 +402,12 @@ pub fn compute_vk_x(
     }
     let mut acc = vk.gamma_abc[0];
     for (i, pi) in public_inputs.iter().enumerate() {
+        // Reject non-canonical (>= r) public inputs BEFORE the syscall reduces them
+        // mod r. Otherwise N and N+r verify identically while keying distinct PDAs
+        // downstream — a double-spend on the nullifier set.
+        if !fr_is_canonical(pi) {
+            return Err(Groth16Error::NonCanonicalPublicInput);
+        }
         let term = g1_mul_scalar(&vk.gamma_abc[i + 1], pi)?;
         acc = g1_add(&acc, &term)?;
     }
@@ -438,6 +481,35 @@ pub fn g2_generator_neg() -> G2Affine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ── Fr canonicalization (nullifier double-spend guard) ───────────────────
+
+    /// big-endian 32-byte add of a small u8 (no overflow past 32 bytes in tests).
+    fn be_add_one(x: &[u8; 32]) -> [u8; 32] {
+        let mut r = *x;
+        for i in (0..32).rev() {
+            let (v, c) = r[i].overflowing_add(1);
+            r[i] = v;
+            if !c { break; }
+        }
+        r
+    }
+
+    #[test]
+    fn test_fr_canonical() {
+        let zero = [0u8; 32];
+        assert!(fr_is_canonical(&zero), "0 < r");
+        assert!(!fr_is_canonical(&BN254_FR), "r is NOT canonical (≡ 0)");
+        // r-1 is canonical, r+1 is not
+        let mut r_minus_1 = BN254_FR;
+        // subtract 1 (last limb of r is ...0x01, so r-1 ends ...0x00)
+        r_minus_1[31] -= 1;
+        assert!(fr_is_canonical(&r_minus_1), "r-1 < r");
+        let r_plus_1 = be_add_one(&BN254_FR);
+        assert!(!fr_is_canonical(&r_plus_1), "r+1 >= r");
+        // all-0xFF (≈2^256-1) is far above r → non-canonical (the N+r double-spend value)
+        assert!(!fr_is_canonical(&[0xFF; 32]), "max u256 >= r");
+    }
 
     // ── Serialization / roundtrips ────────────────────────────────────────────
 

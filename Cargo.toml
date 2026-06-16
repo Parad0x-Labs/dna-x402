@@ -208,6 +208,8 @@ members = [
     "programs/receipt_commitment_tree",
     # DARK_ZK_PRIMITIVES_V1 - Phase 3 (on-chain nullifier recorder)
     "programs/dark_nullifier_record",
+    # Anonymous .null name ownership (commitment + ZK ownership proof + relayer fee-payer)
+    "programs/dark_registrar",
     # DARK_ZK_PRIMITIVES_V1 - Phase 4 (Semaphore group registry + nullifier store)
     "programs/dark_semaphore",
     # NULL_MINER_V1 - Token-2022 transfer hook, secp256r1 passkey vault, secp256k1 ETH auth

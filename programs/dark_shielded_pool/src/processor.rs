@@ -128,6 +128,15 @@ pub fn verify_proof_groth16(
     denomination: u64,
 ) -> bool {
     let vk = shielded_withdraw_v3_vk();
+    // Fail closed on a non-trustless VK (audit HIGH: mainnet_ready was comment-only).
+    // Devnet intentionally ships a single-party (mainnet_ready=false) VK, so the `devnet`
+    // feature (build with `--features devnet`) skips this guard. A MAINNET build omits the
+    // feature, so a non-ceremony VK is rejected. Safe default: forget the flag → guard is
+    // ACTIVE (fail-closed). Mirrors dark_bn254_gate::processor (which uses a ready VK).
+    #[cfg(not(feature = "devnet"))]
+    if !vk.mainnet_ready {
+        return false;
+    }
     // gamma_abc.len() must be 8 (7 public inputs + constant term).
     if vk.gamma_abc.len() != 8 {
         return false;
@@ -291,6 +300,13 @@ fn process_deposit(
     let depositor_info = next_account_info(iter)?;
     let system_program = next_account_info(iter)?;
 
+    // The config account MUST be owned by this program — otherwise an attacker can
+    // pass a System-owned account they pre-filled with arbitrary fields (denomination,
+    // root, is_initialized) and have every "trusted config" read below honour it.
+    if pool_config_info.owner != program_id {
+        return Err(ProgramError::IllegalOwner);
+    }
+
     let mut config = PoolConfig::unpack_boxed(&pool_config_info.data.borrow())?;
     if !config.is_initialized() {
         return Err(ShieldedPoolError::NotInitialized.into());
@@ -303,6 +319,26 @@ fn process_deposit(
     }
     if config.denomination < crate::MINIMUM_DEPOSIT_LAMPORTS {
         return Err(ShieldedPoolError::BelowMinimumDeposit.into());
+    }
+
+    // Bind the vault to THIS config's PDA BEFORE the deposit transfer. Without this,
+    // a deposit could insert a fully-provable commitment into the real Merkle tree
+    // while routing the denomination to an attacker-controlled vault — minting a note
+    // that is later withdrawable from the legitimately-funded vault. Mirrors InitPool.
+    let (pool_vault_key, _vault_bump) = Pubkey::find_program_address(
+        &[POOL_VAULT_SEED, pool_config_info.key.as_ref()],
+        program_id,
+    );
+    if pool_vault_key != *pool_vault_info.key {
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // Fail closed at the capacity boundary: once `note_count` reaches
+    // 2^TREE_DEPTH the incremental tree is full, and reusing `note_count` as the
+    // next leaf index would alias onto an already-filled position, corrupting
+    // `filled_subtrees`/`merkle_root` and rendering later deposits unprovable.
+    if config.note_count >= (1u64 << TREE_DEPTH) {
+        return Err(ShieldedPoolError::TreeFull.into());
     }
 
     let leaf_index = config.note_count;
@@ -409,6 +445,13 @@ fn process_withdraw(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
+    // Config account must be program-owned — a forged System-owned config (chosen
+    // denomination + a root whose leaf secret the attacker knows) would otherwise let
+    // a self-made proof verify and drain the real vault with no InitPool at all.
+    if pool_config_info.owner != program_id {
+        return Err(ProgramError::IllegalOwner);
+    }
+
     let config = PoolConfig::unpack_boxed(&pool_config_info.data.borrow())?;
     if !config.is_initialized() {
         return Err(ShieldedPoolError::NotInitialized.into());
@@ -416,6 +459,20 @@ fn process_withdraw(
     if config.is_paused {
         return Err(ShieldedPoolError::PoolPaused.into());
     }
+
+    // Bind the vault to THIS config's PDA BEFORE any lamport debit. Without this an
+    // attacker proves a note against their OWN (cheap, self-funded) config but points
+    // pool_vault at a DIFFERENT, legitimately-funded vault — all checks pass and the debit
+    // below drains the victim. With this bind, an attacker config resolves only to its
+    // own (empty) vault. Mirrors InitPool's binding.
+    let (pool_vault_key, _vault_bump) = Pubkey::find_program_address(
+        &[POOL_VAULT_SEED, pool_config_info.key.as_ref()],
+        program_id,
+    );
+    if pool_vault_key != *pool_vault_info.key {
+        return Err(ProgramError::InvalidArgument);
+    }
+
     if recipient != *recipient_info.key {
         return Err(ProgramError::InvalidArgument);
     }
@@ -478,26 +535,56 @@ fn process_withdraw(
     }
 
     // Fee-payer funds the nullifier-record PDA (recipient need not sign/pre-fund).
-    invoke_signed(
-        &system_instruction::create_account(
-            fee_payer_info.key,
-            nullifier_rec_info.key,
-            rent.minimum_balance(NULLIFIER_RECORD_LEN),
-            NULLIFIER_RECORD_LEN as u64,
-            program_id,
-        ),
-        &[
-            fee_payer_info.clone(),
-            nullifier_rec_info.clone(),
-            system_program.clone(),
-        ],
-        &[&[
-            NULLIFIER_SEED,
-            pool_config_info.key.as_ref(),
-            &nullifier,
-            &[null_bump],
-        ]],
-    )?;
+    // Prefund-tolerant: a griefer can front-run a 1-lamport System transfer to this PDA so a
+    // plain create_account would fail ("account already in use") and brick the withdrawal.
+    // Tolerate that by top-up + allocate + assign under the PDA seeds (same pattern as
+    // dark_x402_access_gate). The spent-check above (data_len()>0) stays sound because only
+    // this program can allocate the PDA's data — a griefer can add lamports, not data.
+    let null_seeds: &[&[u8]] = &[
+        NULLIFIER_SEED,
+        pool_config_info.key.as_ref(),
+        &nullifier,
+        &[null_bump],
+    ];
+    let null_needed = rent.minimum_balance(NULLIFIER_RECORD_LEN);
+    let null_accts = [
+        fee_payer_info.clone(),
+        nullifier_rec_info.clone(),
+        system_program.clone(),
+    ];
+    if nullifier_rec_info.lamports() == 0 {
+        invoke_signed(
+            &system_instruction::create_account(
+                fee_payer_info.key,
+                nullifier_rec_info.key,
+                null_needed,
+                NULLIFIER_RECORD_LEN as u64,
+                program_id,
+            ),
+            &null_accts,
+            &[null_seeds],
+        )?;
+    } else {
+        let have = nullifier_rec_info.lamports();
+        if have < null_needed {
+            // fee_payer is a tx signer → empty seeds (invoke) suffices for the source.
+            invoke_signed(
+                &system_instruction::transfer(fee_payer_info.key, nullifier_rec_info.key, null_needed - have),
+                &null_accts,
+                &[],
+            )?;
+        }
+        invoke_signed(
+            &system_instruction::allocate(nullifier_rec_info.key, NULLIFIER_RECORD_LEN as u64),
+            &null_accts,
+            &[null_seeds],
+        )?;
+        invoke_signed(
+            &system_instruction::assign(nullifier_rec_info.key, program_id),
+            &null_accts,
+            &[null_seeds],
+        )?;
+    }
 
     let record = NullifierRecord {
         bump: null_bump,
@@ -532,10 +619,18 @@ fn process_withdraw(
 
 // ─── PausePool / ResumePool ──────────────────────────────────────────────────
 
-fn process_pause(_program_id: &Pubkey, accounts: &[AccountInfo], pause: bool) -> ProgramResult {
+fn process_pause(program_id: &Pubkey, accounts: &[AccountInfo], pause: bool) -> ProgramResult {
     let iter = &mut accounts.iter();
     let pool_config_info = next_account_info(iter)?;
     let authority_info = next_account_info(iter)?;
+
+    // The config account MUST be owned by this program (audit MEDIUM: consistency with
+    // deposit/withdraw). Otherwise a caller could present a look-alike account carrying an
+    // authority field they control. The runtime would reject the write to a non-owned
+    // account, but checking here fails fast and keeps the access-control model uniform.
+    if pool_config_info.owner != program_id {
+        return Err(ProgramError::IllegalOwner);
+    }
 
     // Direct byte access (offset 4..36 = authority, offset 3 = is_paused). The
     // full PoolConfig is ~1 KB; unpacking it onto the SBF stack here would blow

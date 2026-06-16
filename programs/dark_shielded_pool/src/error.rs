@@ -37,6 +37,9 @@ pub enum ShieldedPoolError {
     /// recipient payout). The v3 circuit also rejects this, but we fail closed
     /// before the subtraction.
     FeeExceedsDenomination = 13,
+    /// The Merkle commitment tree is full — no more leaves can be inserted.
+    /// Referenced by the deposit path (processor.rs) and asserted == 14 (lib.rs).
+    TreeFull = 14,
 }
 
 impl From<ShieldedPoolError> for ProgramError {

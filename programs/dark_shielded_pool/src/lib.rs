@@ -27,7 +27,8 @@
 //!            Transcript: ceremony/shielded_withdraw_v3/transcript_v3.json.
 //!
 //! `IS_STUB = false` — hashing, tree, binding, and verifier are all real.
-//! `MAINNET_READY = true` — trustless ceremony complete, open beta.
+//! `MAINNET_READY = false` — ceremony had ZERO independent human contributors;
+//! not trustless until re-run + fixed-binary redeploy + authority timelock/burn.
 
 pub mod error;
 pub mod instruction;
@@ -42,8 +43,15 @@ pub use processor::{
 /// IS_STUB: the hash scheme, Merkle tree, recipient binding, and verifier are
 /// all REAL (real Poseidon + real incremental tree + real Groth16 VK).
 pub const IS_STUB: bool = false;
-/// MAINNET_READY: trustless ceremony (Hermez ptau + drand-only beacon) complete.
-pub const MAINNET_READY: bool = true;
+/// MAINNET_READY = false. The deployed VK came from a setup→beacon trusted setup
+/// with ZERO independent human Phase-2 contributors (transcript_v3.json
+/// `contributions: []`), so soundness rests on one unverifiable single-party delta
+/// — NOT a trustless ceremony. A 2026-06-14 red/blue audit also found unbound-vault
+/// drains (now fixed) and a nullifier non-canonicalization double-spend (now fixed
+/// in dark-groth16-core). Do NOT flip true until: independent contributors re-run
+/// the ceremony, the fixed binary is redeployed, and the upgrade authority is
+/// timelocked/burned.
+pub const MAINNET_READY: bool = false;
 /// Minimum deposit prevents liveness DoS by making window exhaustion expensive.
 pub const MINIMUM_DEPOSIT_LAMPORTS: u64 = 100_000;
 
@@ -92,11 +100,12 @@ mod tests {
         p
     }
 
-    // 1. Constants: NOT a stub; trustless ceremony = mainnet ready.
+    // 1. Constants: NOT a stub; but NOT mainnet-ready until an independent-contributor
+    //    ceremony re-run + fixed-binary redeploy + upgrade-authority timelock/burn.
     #[test]
     fn test_constants() {
         assert!(!IS_STUB, "v3 hashing/tree/binding/verifier are real");
-        assert!(MAINNET_READY, "trustless ceremony (Hermez ptau + drand-only beacon) is done");
+        assert!(!MAINNET_READY, "ceremony had zero independent contributors — not trustless yet");
     }
 
     // 2. PoolConfig length matches the v2 layout.
@@ -257,6 +266,8 @@ mod tests {
         assert_eq!(ShieldedPoolError::StubNotReady as u32, 10);
         assert_eq!(ShieldedPoolError::BelowMinimumDeposit as u32, 11);
         assert_eq!(ShieldedPoolError::UnknownRoot as u32, 12);
+        assert_eq!(ShieldedPoolError::FeeExceedsDenomination as u32, 13);
+        assert_eq!(ShieldedPoolError::TreeFull as u32, 14);
     }
 
     // ── instruction round-trips ──────────────────────────────────────────────
