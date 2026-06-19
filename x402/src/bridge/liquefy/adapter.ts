@@ -122,6 +122,7 @@ const SEVERITY_MAP: Record<AuditEventKind, "info" | "warn" | "error"> = {
   GUARD_RECEIPT_INVALID: "error",
   GUARD_FAIL_OPEN: "warn",
   GUARD_RUNTIME_ERROR: "error",
+  GUARD_UNVERIFIED_IDENTITY: "warn",
 };
 
 const DOMAIN_MAP: Record<AuditEventKind, LiquefyTelemetryRecord["domain"]> = {
@@ -171,6 +172,7 @@ const DOMAIN_MAP: Record<AuditEventKind, LiquefyTelemetryRecord["domain"]> = {
   GUARD_RECEIPT_INVALID: "receipt",
   GUARD_FAIL_OPEN: "system",
   GUARD_RUNTIME_ERROR: "system",
+  GUARD_UNVERIFIED_IDENTITY: "system",
 };
 
 export function auditEntryToTelemetry(entry: AuditEntry): LiquefyTelemetryRecord {

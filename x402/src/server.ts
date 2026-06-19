@@ -1298,7 +1298,8 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     | "GUARD_RECEIPT_VERIFIED"
     | "GUARD_RECEIPT_INVALID"
     | "GUARD_FAIL_OPEN"
-    | "GUARD_RUNTIME_ERROR",
+    | "GUARD_RUNTIME_ERROR"
+    | "GUARD_UNVERIFIED_IDENTITY",
     input: {
       req?: express.Request;
       endpointId?: string;
@@ -1344,13 +1345,20 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
 
     const actor = observeGuardActor(req);
-    // SECURITY: warn when spend ceilings are enforced against an unverified header-sourced identity.
-    // Header values (x-dna-buyer-id, x-dna-wallet, x-dna-agent-id) are client-supplied and can be
-    // forged. Spend ceilings gated on them are not tamper-proof until replaced by verified identities.
+    // SECURITY: spend ceilings require a verified identity. Header values (x-dna-buyer-id,
+    // x-dna-wallet, x-dna-agent-id) are client-supplied and forgeable. Enforcing spend ceilings
+    // against them is worse than not enforcing — a forged buyerId can be used to exhaust another
+    // buyer's quota. Skip ceiling checks entirely for header-sourced identity; ceilings only apply
+    // when the payer wallet is verified from an on-chain payment proof.
     if (actor.identitySource === "header") {
-      console.warn(
-        `[guard] identitySource=header for spend ceiling check at stage=${input.stage} resource=${input.resource} — identity is unverified and may be forged`,
-      );
+      recordGuardAudit("GUARD_UNVERIFIED_IDENTITY", {
+        req,
+        endpointId: endpointIdForResource(input.resource),
+        amountAtomic: input.amountAtomic,
+        reason: "spend_ceiling_skipped_unverified_identity",
+        meta: { stage: input.stage, identitySource: "header" },
+      });
+      return true;
     }
 
     const endpointId = endpointIdForResource(input.resource);

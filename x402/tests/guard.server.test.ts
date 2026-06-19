@@ -155,7 +155,10 @@ function baseConfig(snapshotPath?: string): X402Config {
 }
 
 describe("DNA Guard x402 server integration", () => {
-  it("blocks quote issuance when guard ceilings are exceeded and exposes guard status", async () => {
+  it("skips spend ceiling check for header-sourced identity and exposes guard status", async () => {
+    // Spend ceilings are NOT enforced against header-sourced identities (forgeable).
+    // A forged x-dna-buyer-id can exhaust another buyer's quota — skipping is safer than enforcing.
+    // Ceiling enforcement only applies when identitySource === "payment_proof".
     const config = baseConfig();
     const { app, context } = createX402App(config, {
       paymentVerifier: new FakeVerifier(),
@@ -173,8 +176,8 @@ describe("DNA Guard x402 server integration", () => {
     const quoteRes = makeResponse() as Response & MockResponse;
     await invoke(routeHandler(app, "get", "/quote"), quoteReq, quoteRes);
 
-    expect(quoteRes.statusCode).toBe(429);
-    expect(quoteRes.body).toMatchObject({ error: "dna_guard_spend_blocked" });
+    // Header identity → ceiling skipped → quote succeeds (200)
+    expect(quoteRes.statusCode).toBe(200);
 
     const healthRes = makeResponse() as Response & MockResponse;
     await invoke(routeHandler(app, "get", "/health"), makeRequest({ method: "GET", path: "/health" }), healthRes);
@@ -182,7 +185,6 @@ describe("DNA Guard x402 server integration", () => {
       guard: {
         enabled: true,
         failMode: "fail-closed",
-        summary: { spendBlocked: 1 },
       },
     });
 
@@ -196,7 +198,6 @@ describe("DNA Guard x402 server integration", () => {
     await invoke(routeHandler(adminRouter, "get", "/guard"), makeRequest({ method: "GET", path: "/guard" }), adminRes);
     expect(adminRes.body).toMatchObject({
       enabled: true,
-      summary: { spendBlocked: 1 },
     });
   });
 

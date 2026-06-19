@@ -48,7 +48,8 @@ export type AuditEventKind =
   | "GUARD_RECEIPT_VERIFIED"
   | "GUARD_RECEIPT_INVALID"
   | "GUARD_FAIL_OPEN"
-  | "GUARD_RUNTIME_ERROR";
+  | "GUARD_RUNTIME_ERROR"
+  | "GUARD_UNVERIFIED_IDENTITY";
 
 export interface AuditEntry {
   id: string;
