@@ -41,7 +41,7 @@ Agents don't just pay each other — they shop smart. They compare. They find de
 Tracked report: 50 agents, 84 trades, 100% pass rate on Solana mainnet.
 Published: `npm install dna-x402`
 Open source: github.com/Parad0x-Labs/dna-x402
-Program: `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`
+Program: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
 
 One payment standard. One marketplace. Real market data. Any agent.
 

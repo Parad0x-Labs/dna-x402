@@ -64,7 +64,7 @@ function writeRuntimeEnv(keysDir, cluster, keys) {
   const receiptSigner = writeKeypairIfMissing(keyPath(keysDir, "receipt-signer"));
   const rpc = cluster === "mainnet" ? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com";
   const clusterLabel = cluster === "mainnet" ? "mainnet-beta" : "devnet";
-  const receiptAnchorProgram = "9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF";
+  const receiptAnchorProgram = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
   const runtimeEnvPath = path.join(keysDir, "runtime.env");
   const templatePath = path.join(keysDir, "runtime.env.template");
 

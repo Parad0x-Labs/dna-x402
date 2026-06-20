@@ -417,7 +417,7 @@ async function main(): Promise<void> {
       PAYMENT_RECIPIENT: recipientOwner.toBase58(),
       SOLANA_RPC_URL: args.rpcUrl,
       ANCHORING_ENABLED: process.env.ANCHORING_ENABLED ?? "1",
-      RECEIPT_ANCHOR_PROGRAM_ID: process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF",
+      RECEIPT_ANCHOR_PROGRAM_ID: process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
       ANCHORING_KEYPAIR_PATH: process.env.ANCHORING_KEYPAIR_PATH ?? funderKeyPath,
       ANCHORING_BATCH_SIZE: process.env.ANCHORING_BATCH_SIZE ?? "16",
       ANCHORING_SIGNATURE_LOG_PATH: process.env.ANCHORING_SIGNATURE_LOG_PATH ?? anchorSignatureLogPath,

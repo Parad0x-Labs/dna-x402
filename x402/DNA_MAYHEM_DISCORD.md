@@ -64,8 +64,8 @@ Duration:         165 seconds
 → https://solscan.io/tx/3SqBvmJN6v54yP6rpADGJZHrjqJNdEyvbVur6Ut122m6jpneK4igMfx7QvkVxMEJSZtokE6DcV4DRnXz5CVmkkUb
 
 ### Program
-`9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`
-→ https://solscan.io/account/9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF
+`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
+→ https://solscan.io/account/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
 
 ### What This Proves
 - AI agents can pay from **$0.00001 to $2.00+** in a single protocol
@@ -97,7 +97,7 @@ DNA x402 stress test complete.
 
 50 AI agents. 80 trades. $0.00001 to $2.00. Netting + real on-chain USDC transfers. 84/84 tests passed. 80/80 receipts anchored on Solana mainnet. Zero failures.
 
-Program: 9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF
+Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
 
 Sample TXs:
 solscan.io/tx/5YkC97LzZx3eCFFoGSh4jGE62SeccqG3UK5aAnt86sLDfeu9T3pG5wFH1CnKvhY2xnRYumiWS5KmAh4EZPzdum2e

@@ -96,7 +96,7 @@ Two lines. Your API now earns money.
 | Admin/audit events logged | 56 |
 | Total test cost | 0.000040 SOL |
 | Cluster | Solana mainnet-beta |
-| Program | `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` |
+| Program | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` |
 
 ---
 

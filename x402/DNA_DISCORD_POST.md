@@ -62,7 +62,7 @@ app.use("/api/inference", dnaPaywall({
 DNA x402 (standalone): https://github.com/Parad0x-Labs/dna-x402
 Liquefy + DNA bridge:  https://github.com/Parad0x-Labs/liquefy-openclaw-integration
 
-**Program:** `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`
+**Program:** `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
 
 If you're building agents — plug in, test it, break it. Open source. MIT license.
 We want every AI agent speaking the same payment language.
@@ -92,7 +92,7 @@ Standalone or integrated with Liquefy OpenClaw for payment-gated vaults + audit 
 github.com/Parad0x-Labs/dna-x402
 github.com/Parad0x-Labs/liquefy-openclaw-integration
 
-Program: 9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF
+Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
 
 Building agents? Plug in, test it, break it. One language for agent payments.
 

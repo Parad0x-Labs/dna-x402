@@ -37,7 +37,7 @@ describe("anchoring program guard", () => {
     const safeConfig: X402Config = {
       ...baseConfig,
       pdxDarkProtocolProgramId: "3hYWUSYmNCzrHNgsE6xo3jKT9GjCFxCpPWXj4Q4imToz",
-      receiptAnchorProgramId: "9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF",
+      receiptAnchorProgramId: "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
     };
     const unsafeConfig: X402Config = {
       ...baseConfig,
