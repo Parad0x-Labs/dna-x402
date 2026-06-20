@@ -123,9 +123,11 @@ These are additive layers. Drop them in alongside what you already ship.
 
 | Package | What it does |
 |---|---|
+| [`openclaw-x402-gate`](./packages/openclaw-x402-gate) | Server-side 402 challenge + structural verify + on-chain USDC settle confirmation. **Public beta**, non-custodial (`recipientAddress` is your own wallet — the gate holds no keys), unaudited. |
+| [`openclaw-x402-pay`](./packages/openclaw-x402-pay) | Self-custody client payer with a **hard spend cap enforced before any transaction is signed** (`maxAmountUsdc`), BYO-signer, no key custody. **Public beta**, unaudited. |
 | [`@parad0x_labs/outcome-receipts`](./packages/outcome-receipts) | Creator-signed outcome attached to delivery receipt. Success fee fires only if outcome is positive. No-fake-PnL enforced on-chain, not by marketing. |
 | [`@parad0x_labs/agent-reputation`](./packages/agent-reputation) | Agent proves delivery rate, accuracy, and latency without revealing any buyer. ZK-ready over receipt history. |
-| [`@parad0x_labs/receipt-dag`](./packages/receipt-dag) | Append-only proof chain — every action links to the previous one. Anti-equivocation: same sequence nonce from same agent = on-chain proof of cheating. |
+| [`@parad0x_labs/receipt-dag`](./packages/receipt-dag) | Append-only proof chain — every action links to the previous one. Anti-equivocation: same sequence nonce from same agent = on-chain proof of cheating. **Built + tested** (v0.2.0); batch Merkle root (RFC-6962) anchored on mainnet via `receipt_anchor` `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`. Unified cross-layer graph is the next build. |
 | [`@parad0x_labs/zk-access`](./packages/zk-access) | Agents prove "I have tier X with Y calls left" without revealing wallet. Phase 2: Groth16 circuit. |
 | [`@parad0x_labs/blind-access`](./packages/blind-access) | Buyer pays once, receives N access tokens. Server cannot link which buyer spent which token. Phase 2: RSA blind signatures. |
 | [`@parad0x_labs/session-channels`](./packages/session-channels) | 200 micro-actions in a session → one compressed receipt batch → one Solana anchor. For bots, devices, and agents with high action frequency. |
@@ -397,7 +399,7 @@ For local seller flows and buyer testing, open [`x402/README.md`](./x402/README.
 | Path | Purpose |
 |---|---|
 | [`x402/`](./x402) | Canonical package, server, SDKs, verifier, diagnostics |
-| [`crates/`](./crates) | Rust primitive workspace for agent commerce, route privacy, receipts, fee logic, and Dark Null bridges |
+| [`crates/`](./crates) | Rust primitive workspace for agent commerce, route privacy, receipts, fee logic, and Dark Null bridges. The load-bearing core is a **tested primitives library** — built crates with inline `#[test]` coverage spanning x402 receipts/privacy (`dark-x402-core`), receipt and capsule chains (`dark-receipt-chain`, `dark-alpha-receipts`), nullifier sharding (`dark-nullifier-epoch-manager`), stealth addresses (`dark-stealth-ed25519`, `dark-stealth-address`), the Poseidon-BN254 shielded pool tree (`dark-shielded-pool-core`), end-to-end private pay (`dark-private-x402`), and demo-grade HTLC/mixer scaffolds. These are libraries, not deployed programs. |
 | [`programs/receipt_anchor/`](./programs/receipt_anchor) | Solana program for receipt anchoring |
 | [`programs/live_attestation/`](./programs/live_attestation) | **NullLive** — continuous hardware attestation for live streams. Signed frame batches anchored on Solana every 1–5 min. Badge goes dark when heartbeat stops. See [`docs/NULLLIVE_README.md`](./docs/NULLLIVE_README.md) |
 | [`packages/nulllive-sdk/`](./packages/nulllive-sdk) | TypeScript SDK for NullLive attestation packets, Merkle batch roots, and Solana instruction builders (`@parad0x_labs/nulllive-sdk`) |
