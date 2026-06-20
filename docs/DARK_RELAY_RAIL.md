@@ -97,7 +97,7 @@ e2e scripts; a pilot proof only applies to a pool you deployed yourself with the
 
 ## 4. Devnet e2e (full unlinkability)
 
-`build/zk/e2e-v3-devnet.mjs` (evidence → `evidence/dark-relay-rail-devnet.json`):
+`build/zk/e2e-v3-devnet.mjs` (evidence → `evidence/dark-relay-rail-mainnet-beta.json`):
 deposit into a bucket → real V3 proof for a withdraw to a **fresh** recipient with a
 relayer fee → submitted by a **relayer** (`fee_payer != recipient`, recipient never
 signs) → asserts recipient gets `denom - fee`, relayer is reimbursed `fee`, and:
@@ -124,4 +124,4 @@ To make the recipient unlinkable, integrate stealth addresses (NullPay):
 - Setup (pilot): `build/zk/run-setup-v3.mjs`. Prover: `build/zk/prove-v3.mjs`.
 - Ceremony (trustless): `ceremony/run-ceremony-v3.mjs` + `ceremony/CONTRIBUTING_V3.md`.
 - Buckets: `build/zk/init-buckets-devnet.mjs`. E2E: `build/zk/e2e-v3-devnet.mjs`.
-- Evidence: `evidence/dark-relay-rail-devnet.json`, `evidence/dark-relay-rail-buckets-devnet.json`.
+- Evidence: `evidence/dark-relay-rail-mainnet-beta.json`, `evidence/dark-relay-rail-buckets-devnet.json`.

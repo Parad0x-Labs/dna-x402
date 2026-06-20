@@ -24,7 +24,7 @@ solana program deploy ../../target/deploy/dark_shielded_pool_program.so \
   --program-id ../../target/deploy/dark_shielded_pool_program-keypair.json --url devnet
 
 node init-buckets-devnet.mjs <PROGRAM_ID>     # 0.1 / 1 / 10 SOL denomination buckets
-node e2e-v3-devnet.mjs <PROGRAM_ID>           # full relayer-fee e2e -> evidence/dark-relay-rail-devnet.json
+node e2e-v3-devnet.mjs <PROGRAM_ID>           # full relayer-fee e2e -> evidence/dark-relay-rail-mainnet-beta.json
 ```
 
 **VK mode.** `prove-v3.mjs` and the e2e/fusion scripts default to `--vk-mode ceremony`,

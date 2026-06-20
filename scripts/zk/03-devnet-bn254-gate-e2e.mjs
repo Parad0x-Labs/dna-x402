@@ -174,9 +174,9 @@ async function main() {
       "Proof generated client-side with snarkjs. On-chain verifier uses alt_bn128_pairing syscall.",
     ],
   };
-  writeFileSync(join(REPO, "evidence", "zk", "dark-bn254-gate-devnet.json"),
+  writeFileSync(join(REPO, "evidence", "zk", "dark-bn254-gate-mainnet-beta.json"),
     JSON.stringify(evidence, null, 2) + "\n");
-  console.log("  Evidence: evidence/zk/dark-bn254-gate-devnet.json");
+  console.log("  Evidence: evidence/zk/dark-bn254-gate-mainnet-beta.json");
 
   await rm(tmp, { recursive: true, force: true });
   console.log("\nPASS: real Groth16 proof verified on-chain via dark_bn254_gate.");

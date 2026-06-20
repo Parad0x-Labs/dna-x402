@@ -417,7 +417,7 @@ async function main() {
     explorer: { program: `https://explorer.solana.com/address/${PROGRAM_ID.toBase58()}?cluster=${CLUSTER}` },
   };
   mkdirSync(join(REPO, "evidence"), { recursive: true });
-  const outPath = join(REPO, "evidence", "dark-relay-rail-devnet.json");
+  const outPath = join(REPO, "evidence", "dark-relay-rail-mainnet-beta.json");
   // Merge: keep both pilot and ceremony runs if the file already exists.
   let merged = evidence;
   if (existsSync(outPath)) {
@@ -429,7 +429,7 @@ async function main() {
     merged = { ...evidence, runs: { [VK_MODE]: { overall: evidence.overall, scenarios: evidence.scenarios, program: evidence.program, generatedAt: evidence.generatedAt } } };
   }
   writeFileSync(outPath, JSON.stringify(merged, null, 2) + "\n");
-  console.log(`\nEvidence: evidence/dark-relay-rail-devnet.json`);
+  console.log(`\nEvidence: evidence/dark-relay-rail-mainnet-beta.json`);
   console.log(`OVERALL (${VK_MODE}): ${evidence.overall}`);
   for (const s of results.scenarios) console.log(`  ${s.status.padEnd(4)} ${s.name}`);
   process.exit(allPass ? 0 : 1);
