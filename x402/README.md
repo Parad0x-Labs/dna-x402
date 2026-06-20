@@ -2,7 +2,7 @@
 
 `DNA x402` is Parad0x Labs' x402 payment protocol for Solana. Any API can require payment, and any agent can pay programmatically with quote, proof, receipt, and optional on-chain anchoring.
 
-**Program**: [`9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF`](https://solscan.io/account/9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF)
+**Program**: [`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`](https://solscan.io/account/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN)
 
 ## Why DNA
 

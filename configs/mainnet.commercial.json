@@ -9,7 +9,7 @@
   "platformFeePct": 0,
   "operatorFeeBps": 50,
   "protocolFeeBps": 5,
-  "protocolFeeRecipient": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  "protocolFeeRecipient": "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5",
   "maxNullPerEpochAtomic": 1000000000000,
   "epochDurationSlots": 432000,
   "programs": {
@@ -21,7 +21,7 @@
     "mintGate": "5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1",
     "receiptAnchor": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
     "proofGate": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
-    "nullRegistrar": "H4wbFJucY9shJt95N8Bra532Z4nnkKhGEfqWvLcYfuDm"
+    "nullRegistrar": "NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np"
   },
   "nullMint": "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
   "rpcUrl": "https://api.mainnet-beta.solana.com"

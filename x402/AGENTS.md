@@ -10,7 +10,7 @@ Three settlement modes: **transfer** (real on-chain USDC, safest default), **str
 It is not a privacy-pool or zk-SNARK hot-path product.
 Normal DNA x402 remains the default path. Use the optional Dark Null path only after a normal signed DNA receipt exists and the receipt needs a private receipt summary.
 
-**Program**: `9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF` (Solana mainnet)
+**Program**: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` (Solana mainnet)
 
 ## Install
 
@@ -465,7 +465,7 @@ USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
 PAYMENT_RECIPIENT=YOUR_WALLET_ADDRESS
 RECEIPT_SIGNING_SECRET=YOUR_ED25519_SECRET_BASE58
 ANCHORING_ENABLED=1
-RECEIPT_ANCHOR_PROGRAM_ID=9bPBmDNnKGxF8GTt4SqodNJZ1b9nSjoKia2ML4V5gGCF
+RECEIPT_ANCHOR_PROGRAM_ID=6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
 FEE_BPS=30
 PORT=8080
 ```

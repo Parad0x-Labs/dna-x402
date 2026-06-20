@@ -695,7 +695,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
  *   3. GET /api/inference with x-dnp-commit-id header -> 200
  */
 // Default Parad0x protocol treasury — receives protocolFee when protocolFeeBps > 0.
-const PARAD0X_TREASURY = "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY";
+const PARAD0X_TREASURY = "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5";
 
 export function dnaPaywall(options: PaywallOptions) {
   const network = inferPaymentNetwork(options.network, options.solanaRpcUrl);
