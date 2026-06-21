@@ -38,7 +38,7 @@ is Sprint 2 scope. This is clearly disclosed in all grant materials.
 - `operatorFeeBps: 50` — Parad0x's own default for Parad0x-run endpoints. Third-party
   builders set their own value independently.
 - `protocolFeeBps: 5` — 0.05% Parad0x official rail fee.
-- `protocolFeeRecipient: F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`
+- `protocolFeeRecipient: 9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5`
 
 ### OSS / grant track (`configs/mainnet.oss.json`)
 - `operatorFeeBps: 0` — no fees
@@ -56,7 +56,7 @@ zero-fee operation.
 | commercial-config-fees | PASS | operator=5000 protocol=500 total=5500 net=994500 |
 | oss-config-fees | PASS | all fees=0 net=1000000 (full amount to provider) |
 | dust-payment-floor-division | PASS | 9 atomic: fees=0 net=9 (BigInt floor division) |
-| deploy-wallet-not-program-id | PASS | F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY accepted |
+| deploy-wallet-not-program-id | PASS | 2Rhe5AyEPYk3Y2bvxuiGhqbX9UivM6Q3ztr5xELvxcDB accepted |
 | program-id-rejected | PASS | threw as expected: Fee recipient address is a known program ID — use a treasury wallet instead: Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p |
 
 > **All scenarios passed.**

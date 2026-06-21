@@ -10,7 +10,6 @@ const SQUADS = {
   "SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu": "v3",
 };
 const KNOWN = {
-  F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY: "deployer (id.json)",
   "2Rhe5AyEPYk3Y2bvxuiGhqbX9UivM6Q3ztr5xELvxcDB": "mainnet-deployer",
   "8fWzmPQhRMnkZo6k26XaywAFgbhHF6FRyTnBwZ6P3N9u": "fee-treasury",
   "7wWKi3S3HVxPqNRfhP1DhicCfiK55oPwEv7b6S1FyKkZ": "receipt-anchor",
@@ -20,7 +19,6 @@ const VAULT = process.argv[2] || "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5";
 // wallets that likely CREATED the multisig (vault has no tx history of its own)
 const CREATORS = [
   "2Rhe5AyEPYk3Y2bvxuiGhqbX9UivM6Q3ztr5xELvxcDB",
-  "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
   VAULT,
 ];
 

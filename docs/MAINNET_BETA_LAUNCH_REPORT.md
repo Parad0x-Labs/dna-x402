@@ -30,9 +30,9 @@
 | Parameter | Value |
 |-----------|-------|
 | Cluster | mainnet-beta |
-| Deploy wallet | `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY` |
-| Upgrade authority | `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY` (single wallet, pre-audit) |
-| Planned multisig | Squads — post-audit |
+| Deploy / authority wallet | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` (Squads multisig) |
+| Upgrade authority | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` (Squads multisig) |
+| Authority custody | Squads multisig (migrated) |
 | IS_MAINNET_READY | false (pre-audit pilot) |
 | Audit status | External audit pending |
 

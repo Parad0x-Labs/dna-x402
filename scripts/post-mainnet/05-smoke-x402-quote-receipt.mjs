@@ -163,7 +163,7 @@ try {
 // Scenario 4: assertFeeRecipientNotProgramId — deploy wallet (valid)
 try {
   console.log("4. assertFeeRecipientNotProgramId(deploy_wallet) — should NOT throw:");
-  const deployWallet = "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY";
+  const deployWallet = "2Rhe5AyEPYk3Y2bvxuiGhqbX9UivM6Q3ztr5xELvxcDB";
   assertFeeRecipientNotProgramId(deployWallet);
   pass("deploy-wallet-not-program-id", `${deployWallet} accepted`);
 } catch (err) {
@@ -248,7 +248,7 @@ is Sprint 2 scope. This is clearly disclosed in all grant materials.
 - \`operatorFeeBps: 50\` — Parad0x's own default for Parad0x-run endpoints. Third-party
   builders set their own value independently.
 - \`protocolFeeBps: 5\` — 0.05% Parad0x official rail fee.
-- \`protocolFeeRecipient: F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY\`
+- \`protocolFeeRecipient: 9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5\`
 
 ### OSS / grant track (\`configs/mainnet.oss.json\`)
 - \`operatorFeeBps: 0\` — no fees

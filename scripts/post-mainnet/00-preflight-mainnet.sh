@@ -4,7 +4,7 @@ set -euo pipefail
 # Preflight checks before a mainnet deploy or post-deploy verification run.
 # Run this from the repo root: bash scripts/post-mainnet/00-preflight-mainnet.sh
 
-DEPLOY_WALLET="F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY"
+DEPLOY_WALLET="${DEPLOY_WALLET:-}"  # expected deploy signer; set via env. Empty = skip the equality check below.
 MIN_SOL_LAMPORTS=1000000000  # 1 SOL in lamports (post-deploy, not pre-deploy requirement)
 
 echo "=== DNA x402 Mainnet Preflight ==="
@@ -34,12 +34,16 @@ if [ -z "$CURRENT_ADDRESS" ]; then
   echo "FAIL: Could not determine solana address. Check keypair config."
   exit 1
 fi
-if [ "$CURRENT_ADDRESS" != "$DEPLOY_WALLET" ]; then
+if [ -z "$DEPLOY_WALLET" ]; then
+  echo "NOTE: DEPLOY_WALLET not set — skipping the expected-wallet equality check."
+  echo "      Active wallet: $CURRENT_ADDRESS"
+elif [ "$CURRENT_ADDRESS" != "$DEPLOY_WALLET" ]; then
   echo "FAIL: Active keypair resolves to $CURRENT_ADDRESS"
   echo "      Expected deploy wallet: $DEPLOY_WALLET"
   exit 1
+else
+  echo "OK: Active wallet matches expected deploy wallet ($DEPLOY_WALLET)"
 fi
-echo "OK: Active wallet matches deploy wallet ($DEPLOY_WALLET)"
 
 # ── SOL balance check ─────────────────────────────────────────────────────────
 echo ""

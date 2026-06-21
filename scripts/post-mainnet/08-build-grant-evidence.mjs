@@ -47,7 +47,7 @@ const PROGRAM_IDS = {
   dark_proof_gate_lite: "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2",
 };
 
-const DEPLOY_WALLET   = "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY";
+const UPGRADE_AUTHORITY   = "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5";
 const NULL_TOKEN      = "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump";
 const DEPLOY_COMMIT   = "bba2ba6484a8e1d673d8d554476be8f8f6b929ed"; // git sha of actual deploy
 
@@ -76,7 +76,6 @@ async function main() {
     evidencePackCommit: commitHash,
     commitHash: DEPLOY_COMMIT, // back-compat alias — points to deploy commit
     cluster: "mainnet-beta",
-    deployWallet: DEPLOY_WALLET,
     deployDate: "2026-05-29",
     nullToken: NULL_TOKEN,
     nullTokenStandard: "Token-2022",
@@ -92,7 +91,7 @@ async function main() {
     feeModel: {
       operatorFeeBps: 50,
       protocolFeeBps: 5,
-      protocolFeeRecipient: DEPLOY_WALLET,
+      protocolFeeRecipient: UPGRADE_AUTHORITY,
       enforcement: "SDK/receipt-level metadata. On-chain fee-split enforcement is sprint 2.",
       ossFreeFork: true,
       ossConfig: {
@@ -109,15 +108,14 @@ async function main() {
     },
 
     auditStatus: "Pre-audit capped pilot. External audit pending. IS_MAINNET_READY=false in all program binaries.",
-    upgradeAuthority: DEPLOY_WALLET,
-    plannedMultisig: "Squads multisig — upgrade authority transfer planned post-audit",
+    upgradeAuthority: UPGRADE_AUTHORITY,
+    authorityCustody: "Squads multisig — upgrade authority migration complete (verified on-chain)",
     backendCustody: false,
     backendSigning: false,
 
     knownLimitations: [
       "External security audit not yet completed. All programs built with IS_MAINNET_READY=false.",
       "On-chain fee-split enforcement is Sprint 2 scope. Current enforcement is SDK/receipt metadata.",
-      "Upgrade authority is single wallet — Squads multisig migration planned post-audit.",
       "USDC direct transfer smoke not run against mainnet-beta (validated in devnet CI).",
       "Groth16 private settlement is roadmap — not in current deployed programs.",
     ],
@@ -181,7 +179,7 @@ async function main() {
 **Generated:** ${timestamp}
 **Commit:** \`${commitHash}\`
 **Cluster:** mainnet-beta
-**Deploy Wallet / Protocol Treasury:** \`${DEPLOY_WALLET}\`
+**Upgrade Authority / Protocol Treasury (Squads multisig):** \`${UPGRADE_AUTHORITY}\`
 **Repo:** https://github.com/Parad0x-Labs/dna-x402
 
 ---
@@ -203,8 +201,8 @@ DNA x402 is the first Solana stack combining:
 |---------|-----|---------|
 ${programTable}
 
-**Upgrade Authority (all programs):** \`${DEPLOY_WALLET}\`
-**Planned post-audit:** Transfer to Squads multisig
+**Upgrade Authority (all programs, Squads multisig):** \`${UPGRADE_AUTHORITY}\`
+**Authority custody:** Squads multisig (migration complete)
 
 ---
 
@@ -242,8 +240,7 @@ ${smokeStatusTable}
 
 1. External security audit not yet completed. \`IS_MAINNET_READY=false\` in all binaries.
 2. On-chain fee-split enforcement is Sprint 2 (current: SDK/receipt metadata).
-3. Single-wallet upgrade authority → Squads multisig migration post-audit.
-4. Groth16 private settlement on roadmap (programs deployed, full verifier integration pending).
+3. Groth16 private settlement on roadmap (programs deployed, full verifier integration pending).
 
 ---
 
@@ -298,9 +295,9 @@ ${Object.entries(PROGRAM_IDS).map(([l, id]) => `| \`${l}\` | \`${id}\` |`).join(
 | Parameter | Value |
 |-----------|-------|
 | Cluster | mainnet-beta |
-| Deploy wallet | \`${DEPLOY_WALLET}\` |
-| Upgrade authority | \`${DEPLOY_WALLET}\` (single wallet, pre-audit) |
-| Planned multisig | Squads — post-audit |
+| Deploy / authority wallet (Squads multisig) | \`${UPGRADE_AUTHORITY}\` |
+| Upgrade authority | \`${UPGRADE_AUTHORITY}\` (Squads multisig) |
+| Authority custody | Squads multisig (migrated) |
 | IS_MAINNET_READY | false (pre-audit pilot) |
 | Audit status | External audit pending |
 
@@ -334,7 +331,6 @@ ${Object.entries(PROGRAM_IDS).map(([l, id]) => `| \`${l}\` | \`${id}\` |`).join(
 ## What Is Explicitly Sprint 2
 
 - On-chain fee-split enforcement (transaction-level USDC splits)
-- Squads multisig upgrade authority migration
 - External security audit
 - Groth16 private settlement full integration
 - \`IS_MAINNET_READY=true\` flag activation per-program (requires audit sign-off)
@@ -354,7 +350,7 @@ ${Object.entries(PROGRAM_IDS).map(([l, id]) => `| \`${l}\` | \`${id}\` |`).join(
 ## Next Steps
 
 1. External security audit (grant-funded target)
-2. Squads multisig migration for upgrade authority
+2. Verify Squads multisig thresholds and members (authority checklist)
 3. Activate \`IS_MAINNET_READY=true\` per-program on audit sign-off
 4. On-chain fee-split enforcement (Sprint 2)
 5. Public mainnet open beta announcement

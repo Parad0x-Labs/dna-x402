@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-05-29  
 **Cluster:** mainnet-beta  
-**Deploy wallet:** `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`  
+**Upgrade authority:** `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` (Squads multisig)  
 **Repo:** https://github.com/Parad0x-Labs/dna-x402
 
 ---
@@ -35,7 +35,7 @@ npm run mainnet:preflight
 
 This checks:
 - Git HEAD == origin/main (no stale local commits)
-- Active Solana keypair == deploy wallet (`F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`)
+- Active Solana keypair == expected deploy wallet (set via `DEPLOY_WALLET` env var)
 - SOL balance >= 1 SOL
 - No keypair JSON files tracked in git
 - Both config files exist with correct fee values
@@ -251,9 +251,9 @@ Reads all evidence files in `evidence/mainnet/` and produces:
 
 ## Upgrade Authority
 
-Current authority: `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY` (single wallet, pre-audit)
+Current authority: `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` (Squads multisig)
 
-Planned migration to Squads multisig post-audit:
+Authority is held by the Squads multisig. Manage / verify with:
 
 ```bash
 # Dry run — shows commands without executing

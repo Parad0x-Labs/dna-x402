@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-26  
 **Network:** Solana Devnet  
-**Payer:** `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`  
+**Payer:** project devnet deploy keypair  
 **Toolchain:** `cargo-build-sbf 4.0.0` / Solana platform-tools v1.53 / Solana CLI 1.18.26
 
 ---

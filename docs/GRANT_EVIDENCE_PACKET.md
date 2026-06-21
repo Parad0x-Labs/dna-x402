@@ -3,7 +3,7 @@
 **Generated:** 2026-05-31T09:53:16.968Z
 **Commit:** `2151b2a6fea861a50056f443fbf49f95cbbe6bf3`
 **Cluster:** mainnet-beta
-**Deploy Wallet / Protocol Treasury:** `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`
+**Upgrade Authority / Protocol Treasury:** `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` (Squads multisig)
 **Repo:** https://github.com/Parad0x-Labs/dna-x402
 
 ---
@@ -32,8 +32,8 @@ DNA x402 is the first Solana stack combining:
 | `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | [Explorer](https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN?cluster=mainnet-beta) |
 | `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | [Explorer](https://explorer.solana.com/address/PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2?cluster=mainnet-beta) |
 
-**Upgrade Authority (all programs):** `F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY`
-**Planned post-audit:** Transfer to Squads multisig
+**Upgrade Authority (all programs):** `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` (Squads multisig)
+**Authority custody:** Squads multisig (migration complete)
 
 ---
 
