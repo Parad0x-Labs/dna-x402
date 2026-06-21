@@ -13,6 +13,19 @@ import { deriveBucketIdFromUnixMs, packAnchorBatchV1, packAnchorV1 } from "../pa
 
 export const DEFAULT_ANCHOR_PROGRAM_ID = new PublicKey("3hYWUSYmNCzrHNgsE6xo3jKT9GjCFxCpPWXj4Q4imToz");
 export const DEFAULT_SHOP_ID = "dnp-core";
+export const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+// Build an SPL Memo instruction carrying the per-quote memoHash nonce. Include this in
+// the payment transaction so the facilitator can bind the transfer to exactly one quote
+// (prevents the same tx from satisfying a different quote). Optionally pass the payer as
+// a signer so the memo is attributable on-chain.
+export function buildMemoInstruction(memo: string, signer?: PublicKey): TransactionInstruction {
+  return new TransactionInstruction({
+    programId: MEMO_PROGRAM_ID,
+    keys: signer ? [{ pubkey: signer, isSigner: true, isWritable: false }] : [],
+    data: Buffer.from(memo, "utf8"),
+  });
+}
 
 const U64_MAX = (1n << 64n) - 1n;
 

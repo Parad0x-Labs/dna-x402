@@ -21,6 +21,9 @@ const schema = z.object({
   APP_VERSION: z.string().default("dev"),
   BUILD_COMMIT: z.string().optional(),
   SOLANA_RPC_URL: z.string().url().default("https://api.devnet.solana.com"),
+  SETTLEMENT_COMMITMENT: z.enum(["confirmed", "finalized"]).default("confirmed"),
+  SETTLEMENT_REQUIRE_FINALIZED_ATOMIC: z.string().regex(/^\d+$/).optional(),
+  REQUIRE_PAYMENT_MEMO: z.string().optional(),
   PDX_DARK_PROTOCOL_PROGRAM_ID: z.string().min(32).optional(),
   PAYMENT_PROGRAM_ID: z.string().min(32).optional(),
   USDC_MINT: z.string().min(32).default(DEFAULT_USDC_DEVNET),
@@ -139,7 +142,7 @@ const schema = z.object({
   PUBLIC_PHYSICAL_GOODS_ENABLED: z.string().optional(),
   PUBLIC_HIGH_RISK_CATEGORIES_ENABLED: z.string().optional(),
   DNA_GUARD_ENABLED: z.string().optional(),
-  DNA_GUARD_FAIL_MODE: z.enum(["fail-open", "fail-closed"]).default("fail-open"),
+  DNA_GUARD_FAIL_MODE: z.enum(["fail-open", "fail-closed"]).default("fail-closed"),
   DNA_GUARD_WINDOW_MS: z.coerce.number().int().positive().default(86_400_000),
   DNA_GUARD_SNAPSHOT_PATH: z.string().optional(),
   DNA_GUARD_BUYER_CEILING_ATOMIC: z.string().regex(/^\d+$/).optional(),
@@ -284,6 +287,9 @@ export interface X402Config {
   appVersion: string;
   buildCommit?: string;
   solanaRpcUrl: string;
+  settlementCommitment?: "confirmed" | "finalized";
+  settlementRequireFinalizedAtomic?: string;
+  requirePaymentMemo?: boolean;
   pdxDarkProtocolProgramId?: string;
   paymentProgramId?: string;
   usdcMint: string;
@@ -542,6 +548,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
     appVersion: parsed.APP_VERSION,
     buildCommit: parsed.BUILD_COMMIT,
     solanaRpcUrl: parsed.SOLANA_RPC_URL,
+    settlementCommitment: parsed.SETTLEMENT_COMMITMENT,
+    settlementRequireFinalizedAtomic: parsed.SETTLEMENT_REQUIRE_FINALIZED_ATOMIC,
+    requirePaymentMemo: parseBooleanEnv(parsed.REQUIRE_PAYMENT_MEMO, false),
     pdxDarkProtocolProgramId: parsed.PDX_DARK_PROTOCOL_PROGRAM_ID ?? parsed.PAYMENT_PROGRAM_ID,
     paymentProgramId: parsed.PAYMENT_PROGRAM_ID,
     usdcMint: effectiveMint,
@@ -949,6 +958,9 @@ export function validateMainnetReadiness(config: X402Config): string[] {
   }
   if (config.dnaGuard?.enabled && config.dnaGuard.failMode !== "fail-closed") {
     issues.push("DNA_GUARD_FAIL_MODE must be fail-closed when DNA Guard is enabled on mainnet.");
+  }
+  if (config.settlementCommitment !== "finalized" && !config.settlementRequireFinalizedAtomic) {
+    issues.push("SETTLEMENT_COMMITMENT must be 'finalized', or SETTLEMENT_REQUIRE_FINALIZED_ATOMIC must set a finalized-required threshold, on mainnet to prevent reorg double-spend.");
   }
   if (!config.anchoringEnabled) {
     issues.push("ANCHORING_ENABLED must be enabled on mainnet.");

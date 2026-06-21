@@ -956,7 +956,7 @@ function createGlobalProofReplayKey(input: { shopId: string; proofId: string; se
 function resolveGuardConfig(config: X402Config): X402GuardConfig {
   return config.dnaGuard ?? {
     enabled: false,
-    failMode: "fail-open",
+    failMode: "fail-closed",
     windowMs: 86_400_000,
     spendCeilings: {},
   };
@@ -1172,6 +1172,16 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const app = express();
   const now = deps.now ?? (() => new Date());
   const guardConfig = resolveGuardConfig(config);
+  // Fail-open means a guard runtime error or spend-ceiling check failure lets the
+  // request through. Mirror ReplayStore: forbid it in production, warn otherwise.
+  if (guardConfig.enabled && guardConfig.failMode === "fail-open") {
+    const guardFailOpenMsg =
+      "DNA Guard is enabled with failMode=fail-open: a guard runtime error or spend-ceiling check failure will ALLOW the request through. Set DNA_GUARD_FAIL_MODE=fail-closed to deny on guard failure.";
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(`DNA_GUARD_FAIL_OPEN_FORBIDDEN_IN_PRODUCTION: ${guardFailOpenMsg}`);
+    }
+    console.warn(`WARNING: ${guardFailOpenMsg}`);
+  }
   const feeLedgerStore = deps.feeLedgerStore ?? createFeeLedgerStore(config);
 
   if (config.unsafeUnverifiedNettingEnabled && process.env.NODE_ENV === "production") {
@@ -1183,6 +1193,9 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   const paymentVerifier = deps.paymentVerifier ?? new SolanaPaymentVerifier(connection, {
     allowUnverifiedNetting: config.unsafeUnverifiedNettingEnabled,
     allowedSignerWallets: config.realChainDrill?.enabled ? config.realChainDrill.allowedSigners : undefined,
+    settlementCommitment: config.settlementCommitment,
+    requireFinalizedAtomic: config.settlementRequireFinalizedAtomic,
+    requirePaymentMemo: config.requirePaymentMemo,
   });
   const receiptSigner = deps.receiptSigner ?? (config.receiptSigningSecret
     ? ReceiptSigner.fromBase58Secret(config.receiptSigningSecret)
@@ -1420,6 +1433,25 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     });
   }
 
+  // Defense-in-depth (tamper-evident): when anchoring is enabled, publish each consumed
+  // replay-nullifier key to the live receipt_anchor program via the existing queue, so
+  // the consumed-replay set is externally auditable rather than server-DB-only. The key
+  // is already a 32-byte SHA-256, so it is a valid anchor32. No-op when anchoring is off.
+  // NOTE: this WITNESSES replays on-chain; it does not ENFORCE them. The enforcing
+  // single-use nullifier PDA is the redeploy-gated follow-up (out of scope here).
+  function anchorConsumedReplayKey(replayKey: string, quote: Quote, settlementMode: "transfer" | "stream"): void {
+    context.anchoringQueue?.enqueue({
+      receiptId: `replay:${replayKey}`,
+      anchor32: replayKey,
+      shopId: CORE_SHOP_ID,
+      endpointId: endpointIdForResource(quote.resource),
+      capabilityTags: capabilityTagsForResource(quote.resource),
+      priceAmount: quote.totalAtomic,
+      mint: quote.mint,
+      settlementMode,
+    });
+  }
+
   function recordGuardReceiptVerification(
     _req: express.Request | undefined,
     resource: string,
@@ -1498,7 +1530,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         programId: config.receiptAnchorProgramId as string,
         protocolProgramId: protocolProgramId ?? undefined,
         altAddress: config.anchoringAltAddress,
-        commitment: "confirmed",
+        commitment: "finalized",
       });
       anchorClient.assertProgramConfiguration();
 
@@ -1707,7 +1739,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     txSignature?: string;
     streamId?: string;
     error?: string;
-    errorCode?: "INVALID_PROOF" | "NOT_CONFIRMED_YET" | "RPC_UNAVAILABLE" | "PAYMENT_INVALID" | "UNDERPAY" | "WRONG_MINT" | "WRONG_RECIPIENT" | "TOO_OLD";
+    errorCode?: "INVALID_PROOF" | "NOT_CONFIRMED_YET" | "RPC_UNAVAILABLE" | "PAYMENT_INVALID" | "UNDERPAY" | "WRONG_MINT" | "WRONG_RECIPIENT" | "TOO_OLD" | "MEMO_MISMATCH";
     retryable?: boolean;
   }> {
     if (auditFixturesEnabled && quote.resource.startsWith(AUDIT_FIXTURE_BASE_PATH)) {
@@ -4121,6 +4153,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         });
         return;
       }
+      anchorConsumedReplayKey(replayKey, quote, "transfer");
     }
     if (!directSplitRequired && paymentProof.settlement === "stream" && verification.streamId) {
       const globalReplayKey = createGlobalProofReplayKey({
@@ -4156,6 +4189,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         });
         return;
       }
+      anchorConsumedReplayKey(replayKey, quote, "stream");
     }
 
     if (!directSplitRequired && paymentProof.settlement === "netting") {

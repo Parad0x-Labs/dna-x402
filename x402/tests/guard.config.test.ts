@@ -54,6 +54,7 @@ describe("DNA Guard config", () => {
       ALLOW_INSECURE: "1",
       UNSAFE_UNVERIFIED_NETTING_ENABLED: "1",
       DNA_GUARD_ENABLED: "1",
+      DNA_GUARD_FAIL_MODE: "fail-open",
     });
 
     expect(validateMainnetReadiness(config)).toEqual(expect.arrayContaining([
@@ -82,6 +83,7 @@ describe("DNA Guard config", () => {
       ANCHORING_KEYPAIR_PATH: "./test-mainnet/keys/mainnet/anchoring.json",
       DNA_GUARD_ENABLED: "1",
       DNA_GUARD_FAIL_MODE: "fail-closed",
+      SETTLEMENT_COMMITMENT: "finalized",
     });
 
     expect(validateMainnetReadiness(config)).toEqual([]);

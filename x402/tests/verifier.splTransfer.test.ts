@@ -323,4 +323,166 @@ describe("strict SPL transfer verifier", () => {
     expect(verified.errorCode).toBe("RPC_UNAVAILABLE");
     expect(verified.retryable).toBe(true);
   });
+
+  it("rejects a not-yet-finalized transfer when finalized settlement is required", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        return { value: { err: null, confirmationStatus: "confirmed" } };
+      },
+      async getParsedTransaction() {
+        throw new Error("should not fetch parsed tx before the finality gate");
+      },
+      async getBlockTime() {
+        return Math.floor(Date.now() / 1000);
+      },
+    };
+
+    const verified = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1500",
+      maxAgeSeconds: 900,
+      requiredCommitment: "finalized",
+    });
+
+    expect(verified.ok).toBe(false);
+    expect(verified.errorCode).toBe("NOT_CONFIRMED_YET");
+    expect(verified.retryable).toBe(true);
+  });
+
+  it("accepts a finalized transfer when finalized settlement is required", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        return { value: { err: null, confirmationStatus: "finalized" } };
+      },
+      async getParsedTransaction() {
+        return {
+          slot: 128,
+          blockTime: Math.floor(Date.now() / 1000),
+          meta: {
+            err: null,
+            preTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "1000" } },
+            ],
+            postTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "3000" } },
+            ],
+          },
+          transaction: {
+            message: {
+              instructions: [],
+            },
+          },
+        };
+      },
+      async getBlockTime() {
+        return Math.floor(Date.now() / 1000);
+      },
+    };
+
+    const verified = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1500",
+      maxAgeSeconds: 900,
+      requiredCommitment: "finalized",
+    });
+
+    expect(verified.ok).toBe(true);
+    expect(verified.settledOnchain).toBe(true);
+  });
+
+  it("accepts a transfer whose memo matches the expected quote nonce", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        return { value: { err: null } };
+      },
+      async getParsedTransaction() {
+        return {
+          slot: 129,
+          blockTime: Math.floor(Date.now() / 1000),
+          meta: {
+            err: null,
+            preTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "1000" } },
+            ],
+            postTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "3000" } },
+            ],
+          },
+          transaction: {
+            message: {
+              instructions: [
+                {
+                  program: "spl-memo",
+                  programId: "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+                  parsed: "quote-nonce-abc123",
+                },
+              ],
+            },
+          },
+        };
+      },
+      async getBlockTime() {
+        return Math.floor(Date.now() / 1000);
+      },
+    };
+
+    const verified = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1500",
+      maxAgeSeconds: 900,
+      expectedMemo: "quote-nonce-abc123",
+    });
+
+    expect(verified.ok).toBe(true);
+    expect(verified.settledOnchain).toBe(true);
+  });
+
+  it("rejects a transfer missing the expected quote-nonce memo (cross-quote replay binding)", async () => {
+    const connection: any = {
+      async getSignatureStatus() {
+        return { value: { err: null } };
+      },
+      async getParsedTransaction() {
+        return {
+          slot: 130,
+          blockTime: Math.floor(Date.now() / 1000),
+          meta: {
+            err: null,
+            preTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "1000" } },
+            ],
+            postTokenBalances: [
+              { owner: "recipient-wallet", mint: "usdc-mint", uiTokenAmount: { amount: "3000" } },
+            ],
+          },
+          transaction: {
+            message: {
+              instructions: [],
+            },
+          },
+        };
+      },
+      async getBlockTime() {
+        return Math.floor(Date.now() / 1000);
+      },
+    };
+
+    const verified = await verifySplTransferProof(connection, {
+      txSignature: "5PjDJaPFDdw8RjTwd1PAZnFUSJj6Qfg4D5UrrM4utgYwDykcKhj7x8YxYwDmg9iP4W8VdM4pcftrfP5UiQ8H8xg7",
+      expectedMint: "usdc-mint",
+      expectedRecipient: "recipient-wallet",
+      minAmountAtomic: "1500",
+      maxAgeSeconds: 900,
+      expectedMemo: "quote-nonce-abc123",
+    });
+
+    expect(verified.ok).toBe(false);
+    expect(verified.errorCode).toBe("MEMO_MISMATCH");
+  });
 });

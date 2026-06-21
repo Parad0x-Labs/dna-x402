@@ -134,7 +134,7 @@ describe("computePaywallFees — range validation", () => {
 describe("assertFeeRecipientNotProgramId", () => {
   it("accepts a valid Solana wallet address (44 chars)", () => {
     expect(() =>
-      assertFeeRecipientNotProgramId("F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY"),
+      assertFeeRecipientNotProgramId("CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2"),
     ).not.toThrow();
   });
 
@@ -154,13 +154,13 @@ describe("assertFeeRecipientNotProgramId", () => {
 
   it("throws on address too long (> 44 chars)", () => {
     expect(() =>
-      assertFeeRecipientNotProgramId("F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY_extra"),
+      assertFeeRecipientNotProgramId("CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2_extra"),
     ).toThrow(/invalid length/i);
   });
 
   it("throws on invalid base58 characters", () => {
     expect(() =>
-      assertFeeRecipientNotProgramId("F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP0O0"),
+      assertFeeRecipientNotProgramId("CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExd0O0"),
     ).toThrow(/invalid base58/i);
   });
 
@@ -209,7 +209,7 @@ class MockResponse extends EventEmitter {
 
 const BASE = {
   priceAtomic: "10000",
-  recipient: "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+  recipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
   paymentVerifier: new FakeVerifier(),
   settlement: ["transfer" as const],
 };
@@ -270,7 +270,7 @@ describe("dnaPaywall 402 fee breakdown", () => {
     const fb = quote.feeBreakdown as Record<string, unknown>;
     expect(fb.protocolFeeAtomic).toBe("5");
     expect(fb.protocolFeeBps).toBe(5);
-    expect(fb.protocolFeeRecipient).toBe("F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY");
+    expect(fb.protocolFeeRecipient).toBe("9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5");
   });
 
   it("combined 50+5 bps: both fees in feeBreakdown", () => {
@@ -280,7 +280,7 @@ describe("dnaPaywall 402 fee breakdown", () => {
       ...BASE,
       operatorFeeBps: 50,
       protocolFeeBps: 5,
-      operatorFeeRecipient: "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY",
+      operatorFeeRecipient: "CsfAbvMGrYK4Ex9rKA5vFEbRR2hMBdbzjVyjjExds2d2",
     });
     const body = invoke402(mw, app);
     const quote = (body.paymentRequirements as Record<string, unknown>).quote as Record<string, unknown>;

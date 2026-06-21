@@ -240,7 +240,8 @@ export interface VerificationResult {
     | "UNDERPAY"
     | "WRONG_MINT"
     | "WRONG_RECIPIENT"
-    | "TOO_OLD";
+    | "TOO_OLD"
+    | "MEMO_MISMATCH";
   retryable?: boolean;
   details?: Record<string, unknown>;
 }

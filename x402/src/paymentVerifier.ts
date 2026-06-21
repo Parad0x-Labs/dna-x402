@@ -13,6 +13,9 @@ export interface SolanaPaymentVerifierOptions {
   maxTransferProofAgeSeconds?: number;
   allowUnverifiedNetting?: boolean;
   allowedSignerWallets?: string[];
+  settlementCommitment?: "confirmed" | "finalized";
+  requireFinalizedAtomic?: string;
+  requirePaymentMemo?: boolean;
   rpcCache?: {
     statusTtlMs?: number;
     parsedTxTtlMs?: number;
@@ -75,6 +78,26 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
     }
   }
 
+  // Resolve the settlement commitment for this payment: finalized when configured
+  // globally, or when the quote total meets the finalized-required threshold
+  // (tiered: small payments may settle at confirmed, large ones require finality).
+  private resolveSettlementCommitment(totalAtomic: string): "confirmed" | "finalized" {
+    if (this.options.settlementCommitment === "finalized") {
+      return "finalized";
+    }
+    const threshold = this.options.requireFinalizedAtomic;
+    if (threshold) {
+      try {
+        if (BigInt(totalAtomic) >= BigInt(threshold)) {
+          return "finalized";
+        }
+      } catch {
+        // Unparseable amount: fall through to the safe default below.
+      }
+    }
+    return "confirmed";
+  }
+
   private async verifyTransfer(quote: Quote, txSignature: string, amountAtomicHint?: string): Promise<VerificationResult> {
     const requiredMinAmount = quote.totalAtomic;
     const hintedAmount = this.parseAtomicHint(amountAtomicHint);
@@ -89,6 +112,8 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
         minAmountAtomic: effectiveMinAmount,
         maxAgeSeconds: this.options.maxTransferProofAgeSeconds ?? 900,
         allowedSignerWallets: this.options.allowedSignerWallets,
+        requiredCommitment: this.resolveSettlementCommitment(quote.totalAtomic),
+        expectedMemo: this.options.requirePaymentMemo ? quote.memoHash : undefined,
       });
     } catch (error) {
       const cause = extractRpcErrorMessage(error);

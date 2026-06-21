@@ -14,6 +14,8 @@ export interface SplTransferVerificationInput {
   maxAgeSeconds?: number;
   nowMs?: number;
   allowedSignerWallets?: string[];
+  requiredCommitment?: "confirmed" | "finalized";
+  expectedMemo?: string;
 }
 
 export interface SplTransferVerificationResult {
@@ -32,7 +34,8 @@ export interface SplTransferVerificationResult {
     | "UNDERPAY"
     | "WRONG_MINT"
     | "WRONG_RECIPIENT"
-    | "TOO_OLD";
+    | "TOO_OLD"
+    | "MEMO_MISMATCH";
   retryable?: boolean;
   details?: Record<string, unknown>;
 }
@@ -135,6 +138,32 @@ function rpcUnavailable(error: unknown): SplTransferVerificationResult {
   };
 }
 
+const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+
+// Collect UTF-8 memo strings from any SPL Memo instructions in the parsed tx, so the
+// caller can bind a payment to exactly one quote via the per-quote memoHash nonce.
+function memoStringsFromParsedTx(
+  tx: NonNullable<Awaited<ReturnType<Connection["getParsedTransaction"]>>>,
+): string[] {
+  const out: string[] = [];
+  const instructions = tx.transaction?.message?.instructions ?? [];
+  for (const ix of instructions) {
+    const programId = (ix as { programId?: { toString(): string } }).programId;
+    const programIdStr = typeof programId?.toString === "function" ? programId.toString() : undefined;
+    const program = (ix as { program?: string }).program;
+    if (program !== "spl-memo" && programIdStr !== MEMO_PROGRAM_ID) {
+      continue;
+    }
+    const parsed = (ix as { parsed?: unknown }).parsed;
+    if (typeof parsed === "string") {
+      out.push(parsed);
+    } else if (parsed && typeof parsed === "object" && typeof (parsed as { memo?: unknown }).memo === "string") {
+      out.push((parsed as { memo: string }).memo);
+    }
+  }
+  return out;
+}
+
 export async function verifySplTransferProof(
   connection: Pick<Connection, "getSignatureStatus" | "getParsedTransaction" | "getBlockTime">,
   input: SplTransferVerificationInput,
@@ -175,10 +204,27 @@ export async function verifySplTransferProof(
     };
   }
 
+  // Reorg safety: when finalized settlement is required, reject a tx that is only
+  // confirmed/processed. Guarded on confirmationStatus presence so callers/mocks
+  // that omit it keep the prior (confirmed-level) behavior.
+  if (
+    input.requiredCommitment === "finalized" &&
+    status.value.confirmationStatus != null &&
+    status.value.confirmationStatus !== "finalized"
+  ) {
+    return {
+      ok: false,
+      settledOnchain: false,
+      error: "transaction not finalized yet",
+      errorCode: "NOT_CONFIRMED_YET",
+      retryable: true,
+    };
+  }
+
   let tx: Awaited<ReturnType<typeof connection.getParsedTransaction>>;
   try {
     tx = await connection.getParsedTransaction(input.txSignature, {
-      commitment: "confirmed",
+      commitment: input.requiredCommitment ?? "confirmed",
       maxSupportedTransactionVersion: 0,
     });
   } catch (error) {
@@ -326,6 +372,26 @@ export async function verifySplTransferProof(
         amountObservedAtomic: observed.toString(10),
         error: "payment proof too old",
         errorCode: "TOO_OLD",
+        retryable: false,
+      };
+    }
+  }
+
+  // Per-quote nonce binding: when an expected memo is supplied, the tx must carry an
+  // SPL Memo instruction equal to the quote's memoHash. Gated on expectedMemo presence
+  // so callers that don't require memo binding keep the prior behavior.
+  if (input.expectedMemo != null) {
+    const memos = memoStringsFromParsedTx(tx);
+    if (!memos.includes(input.expectedMemo)) {
+      return {
+        ok: false,
+        settledOnchain: false,
+        txSignature: input.txSignature,
+        slot: tx.slot,
+        blockTime,
+        amountObservedAtomic: observed.toString(10),
+        error: "payment memo does not match the quote nonce (cross-quote replay binding failed)",
+        errorCode: "MEMO_MISMATCH",
         retryable: false,
       };
     }
