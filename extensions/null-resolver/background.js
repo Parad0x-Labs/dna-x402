@@ -9,12 +9,13 @@ importScripts("codec.js"); // provides base58Encode, buildDomainFilters, decodeC
 // Config (overridable via chrome.storage.sync)
 // ---------------------------------------------------------------------------
 
-// Set this to the deployed null_registrar program ID. Until the program is
-// deployed (devnet/mainnet) and this is set, resolution returns null — the
-// resolver is wired but has nothing to resolve against yet.
-// Deployed on Solana mainnet 2026-06-04.
-const DEFAULT_PROGRAM_ID = "GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8"; // mainnet
-const DEFAULT_RPC = "https://api.mainnet-beta.solana.com";
+// Live null_registrar program ID on Solana mainnet-beta. Canonical source is
+// configs/mainnet.commercial.json (programs.nullRegistrar) — keep this in sync.
+// Overridable at runtime via chrome.storage.sync.
+const DEFAULT_PROGRAM_ID = "NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np"; // mainnet null_registrar
+// Public RPC that accepts a browser-extension Origin. api.mainnet-beta.solana.com
+// answers extension requests with HTTP 403 (Origin header), so it can't be used here.
+const DEFAULT_RPC = "https://solana-rpc.publicnode.com";
 const ARWEAVE_GATEWAY = "https://arweave.net";
 
 async function getConfig() {
@@ -64,11 +65,8 @@ async function fetchDomainAccount(name, rpcUrl, programId) {
 async function resolveNullDomain(name) {
   const { rpcUrl, programId, arweaveGateway } = await getConfig();
 
-  // Program not configured/deployed yet — nothing to resolve against.
-  if (!programId || programId === DEFAULT_PROGRAM_ID) {
-    console.warn("[Null Resolver] programId not set — deploy null_registrar and set it in options.");
-    return null;
-  }
+  // No registrar configured — nothing to resolve against.
+  if (!programId) return null;
 
   const base64Data = await fetchDomainAccount(name, rpcUrl, programId);
   if (!base64Data) return null; // not registered

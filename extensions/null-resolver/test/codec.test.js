@@ -70,14 +70,16 @@ check("padName64 pads to 64", padName64("parad0x").length === 64);
 check("padName64 null-pads the tail", padName64("ab")[2] === 0 && padName64("ab")[63] === 0);
 check("padName64 rejects names > 64 bytes", padName64("x".repeat(65)) === null);
 
-// 6. getProgramAccounts filters select disc + name at the right offsets
+// 6. getProgramAccounts filters select disc + name at the right offsets.
+//    No dataSize filter: the NullDomain struct grows across program versions
+//    (v1 154 bytes, live mainnet 314), so account size is left unconstrained.
 const filters = buildDomainFilters("parad0x");
-check("filters: dataSize is 154", filters[0].dataSize === NULL_DOMAIN_SIZE);
-check("filters: discriminator memcmp at offset 0", filters[1].memcmp.offset === 0);
-check("filters: name memcmp at offset 1", filters[2].memcmp.offset === ND_OFF_NAME);
+check("filters: no dataSize constraint (size-agnostic match)", !filters.some((f) => "dataSize" in f));
+check("filters: discriminator memcmp at offset 0", filters[0].memcmp.offset === 0);
+check("filters: name memcmp at offset 1", filters[1].memcmp.offset === ND_OFF_NAME);
 check(
   "filters: name bytes are base58(padded 64-byte name)",
-  filters[2].memcmp.bytes === base58Encode(padName64("parad0x"))
+  filters[1].memcmp.bytes === base58Encode(padName64("parad0x"))
 );
 check("buildDomainFilters rejects oversize names", buildDomainFilters("x".repeat(65)) === null);
 

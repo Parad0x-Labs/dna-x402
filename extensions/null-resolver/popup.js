@@ -1,6 +1,7 @@
 // Null Resolver — popup script
 
-const DEFAULT_RPC = "https://api.mainnet-beta.solana.com";
+// Must accept a browser-extension Origin (api.mainnet-beta.solana.com returns 403).
+const DEFAULT_RPC = "https://solana-rpc.publicnode.com";
 
 // ---------------------------------------------------------------------------
 // Current tab domain detection

@@ -15,7 +15,11 @@ import { homedir } from "node:os";
 
 const CLUSTER      = "https://api.mainnet-beta.solana.com";
 const CONFIG_PATH  = "configs/mainnet.commercial.json";
-const PROGRAM_ID   = new PublicKey(process.argv[2] ?? "GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8");
+// Default to the live registrar from config (no hardcoded program IDs); an
+// explicit CLI arg still overrides.
+const PROGRAM_ID   = new PublicKey(
+  process.argv[2] ?? JSON.parse(readFileSync(CONFIG_PATH, "utf8")).programs.nullRegistrar
+);
 const NULL_MINT    = new PublicKey("8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump");
 
 const REGISTRY_SEED = Buffer.from("null-registry");

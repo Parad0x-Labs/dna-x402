@@ -6,17 +6,17 @@
 //   • In the Node test suite via require("../codec.js") — exported through the
 //     module.exports guard at the bottom.
 //
-// Byte layout below is the AUTHORITATIVE on-chain NullDomain struct from
-// programs/null_registrar/src/state.rs — keep these offsets in lockstep with it:
+// On-chain NullDomain byte layout (programs/null_registrar/src/state.rs). The
+// struct grows append-only across program versions — live mainnet accounts are
+// 314 bytes — but the leading fields below are stable, so the resolver relies
+// only on this prefix and never on the total account size:
 //   disc[1]            @ 0    = 0x4E ('N')
 //   name[64]           @ 1    — UTF-8 domain name, null-padded
 //   owner[32]          @ 65
 //   content_hash[32]   @ 97   — Arweave tx id hash (what .null resolves to)
-//   registered_at(i64) @ 129
-//   expires_at(i64)    @ 137
-//   null_paid(u64)     @ 145
-//   bump[1]            @ 153
-//   total              = 154 bytes
+//   ... additional fields appended after byte 154 in later program versions
+// NULL_DOMAIN_SIZE is the v1 baseline / minimum decodable length, NOT the exact
+// account size — newer (larger) accounts decode from the same prefix.
 
 const NULL_DOMAIN_SIZE = 154;
 const NULL_DOMAIN_DISC = 0x4e; // 'N'
@@ -62,11 +62,15 @@ function padName64(name) {
 // name. Matching the stored bytes directly is exact regardless of how the
 // program derives its PDA seed — and avoids client-side Ed25519 PDA derivation,
 // which cannot be done correctly in pure JS without a curve library.
+//
+// No dataSize filter on purpose: the NullDomain struct grows as the program
+// appends fields (v1 was 154 bytes, live mainnet accounts are 314), while the
+// disc + 64-byte name already match exactly one account. Pinning the size would
+// silently match zero accounts after any struct growth.
 function buildDomainFilters(name) {
   const padded = padName64(name);
   if (!padded) return null;
   return [
-    { dataSize: NULL_DOMAIN_SIZE },
     { memcmp: { offset: 0, bytes: base58Encode(Uint8Array.from([NULL_DOMAIN_DISC])) } },
     { memcmp: { offset: ND_OFF_NAME, bytes: base58Encode(padded) } },
   ];

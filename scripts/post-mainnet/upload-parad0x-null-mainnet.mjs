@@ -11,7 +11,10 @@ import {
 } from "@solana/web3.js";
 
 const CLUSTER    = "https://api.mainnet-beta.solana.com";
-const PROGRAM_ID = new PublicKey("GRasGMtZsvvymw5BqY1ZpG1Hy15XEK7nz4Z6fTA6cMP8");
+// Live registrar from config — no hardcoded program IDs.
+const PROGRAM_ID = new PublicKey(
+  JSON.parse(readFileSync("configs/mainnet.commercial.json", "utf8")).programs.nullRegistrar
+);
 const HTML_PATH  = "site/null/parad0x.html";
 const DOMAIN_SEED = Buffer.from("null-domain");
 
