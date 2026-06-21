@@ -1,7 +1,7 @@
 {
   "name": "@parad0x_labs/receipt-dag",
-  "version": "0.2.0",
-  "description": "Anti-equivocation DAG for x402 agent receipts. Append-only, tamper-evident history; two receipts from the same agent with the same sequenceNonce is cryptographic proof of cheating.",
+  "version": "0.3.0",
+  "description": "Cross-layer anti-equivocation DAG for x402 agent receipts. Append-only, tamper-evident history across stack layers (payment, x402-access, shielded, reputation, job); two receipts from the same agent with the same sequenceNonce is cryptographic proof of cheating.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "type": "module",
@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
-    "test": "node --test tests/merkle.test.mjs"
+    "test": "node --test tests/merkle.test.mjs tests/cross-layer.test.mjs"
   },
   "keywords": [
     "solana",

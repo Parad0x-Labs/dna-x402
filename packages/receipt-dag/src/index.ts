@@ -17,6 +17,19 @@ import type { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+/**
+ * The stack layer a receipt was produced by. The DAG spans layers: an agent's actions
+ * chain by sequenceNonce (parentReceiptId), and a receipt may ADDITIONALLY depend on
+ * receipts in OTHER layers via `crossRefs` (e.g. an x402 access grant depends on the
+ * payment that funded it). Chain edges + cross-layer edges together form the graph.
+ */
+export type ReceiptLayer =
+  | "payment"
+  | "x402-access"
+  | "shielded"
+  | "reputation"
+  | "job";
+
 /** A single node in the receipt DAG. */
 export interface DagReceipt {
   /** Unique identifier for this receipt: SHA-256(agentPubkey + sequenceNonce + actionHash). */
@@ -36,6 +49,15 @@ export interface DagReceipt {
   timestamp: number;
   /** Solana transaction signature if this receipt (or its batch) was anchored. */
   solanaTx?: string;
+  /** Which stack layer produced this receipt (the layer builders fold it into actionHash). */
+  layer?: ReceiptLayer;
+  /**
+   * receiptIds in OTHER layers/agents this receipt depends on — the cross-layer graph
+   * edges (e.g. an x402-access receipt cross-refs the payment receipt that funded it).
+   * Distinct from `parentReceiptId` (the same-agent monotonic chain). Bound into the
+   * anchored Merkle root (which hashes the whole receipt), so they are tamper-evident.
+   */
+  crossRefs?: string[];
 }
 
 /** Returned by verifyDagChain — pass=true means chain is valid. */
@@ -54,6 +76,10 @@ export interface BuildDagReceiptParams {
   sequenceNonce: number;
   parentReceiptId?: string;
   timestamp?: number;
+  /** Which stack layer produced this receipt. */
+  layer?: ReceiptLayer;
+  /** receiptIds in other layers/agents this receipt depends on (cross-layer graph edges). */
+  crossRefs?: string[];
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -113,6 +139,8 @@ export function buildDagReceipt(params: BuildDagReceiptParams): DagReceipt {
     sequenceNonce,
     parentReceiptId,
     timestamp = Date.now(),
+    layer,
+    crossRefs,
   } = params;
 
   if (sequenceNonce < 0 || !Number.isInteger(sequenceNonce)) {
@@ -127,6 +155,10 @@ export function buildDagReceipt(params: BuildDagReceiptParams): DagReceipt {
 
   const receiptId = deriveReceiptId(agentPubkey, sequenceNonce, actionHash);
 
+  if (crossRefs?.some((ref) => ref === receiptId)) {
+    throw new Error("A receipt cannot cross-reference itself");
+  }
+
   const receipt: DagReceipt = {
     receiptId,
     sequenceNonce,
@@ -136,6 +168,12 @@ export function buildDagReceipt(params: BuildDagReceiptParams): DagReceipt {
   };
   if (parentReceiptId !== undefined) {
     receipt.parentReceiptId = parentReceiptId;
+  }
+  if (layer !== undefined) {
+    receipt.layer = layer;
+  }
+  if (crossRefs !== undefined && crossRefs.length > 0) {
+    receipt.crossRefs = [...crossRefs];
   }
   return receipt;
 }
@@ -226,6 +264,53 @@ export function verifyDagChain(receipts: DagReceipt[]): DagVerifyResult {
     // If the parent is NOT in this batch (cross-batch reference), we accept the
     // declared parentReceiptId at face value; full chain verification would require
     // fetching the prior batch from the archive.
+  }
+
+  // ── Rule 5: cross-layer edges resolve + the parent+crossRef graph is acyclic ──
+  // crossRefs are the inter-layer dependency edges (e.g. x402-access → payment). A
+  // self-reference, or a cycle in the combined parent+crossRef graph, would let a
+  // receipt claim to depend on its own descendant — reject both.
+  for (const r of receipts) {
+    for (const ref of r.crossRefs ?? []) {
+      if (ref === r.receiptId) {
+        return { valid: false, violation: `Receipt ${r.receiptId} cross-references itself` };
+      }
+      // Cross-batch refs (not present in this batch) are accepted at face value, like parents.
+    }
+  }
+  // Iterative DFS cycle detection over within-batch parent + crossRef edges.
+  const WHITE = 0, GREY = 1, BLACK = 2;
+  const color = new Map<string, number>();
+  for (const r of receipts) color.set(r.receiptId, WHITE);
+  const edgesOf = (r: DagReceipt): string[] => {
+    const out: string[] = [];
+    if (r.parentReceiptId !== undefined && byId.has(r.parentReceiptId)) out.push(r.parentReceiptId);
+    for (const ref of r.crossRefs ?? []) if (byId.has(ref)) out.push(ref);
+    return out;
+  };
+  for (const root of receipts) {
+    if (color.get(root.receiptId) !== WHITE) continue;
+    const stack: Array<{ id: string; it: number }> = [{ id: root.receiptId, it: 0 }];
+    color.set(root.receiptId, GREY);
+    while (stack.length > 0) {
+      const top = stack[stack.length - 1];
+      const node = byId.get(top.id);
+      const out = node ? edgesOf(node) : [];
+      if (top.it < out.length) {
+        const next = out[top.it++];
+        const c = color.get(next);
+        if (c === GREY) {
+          return { valid: false, violation: `Cycle in the cross-layer graph at ${next}` };
+        }
+        if (c === WHITE) {
+          color.set(next, GREY);
+          stack.push({ id: next, it: 0 });
+        }
+      } else {
+        color.set(top.id, BLACK);
+        stack.pop();
+      }
+    }
   }
 
   return { valid: true };
@@ -343,4 +428,86 @@ export async function anchorDagRoot(
 export function hashAction(action: unknown): string {
   const data = typeof action === "string" ? action : JSON.stringify(action);
   return sha256hex(data);
+}
+
+// ── Cross-layer integration ──────────────────────────────────────────────────────
+
+/** Parameters for buildX402AccessReceipt. */
+export interface BuildX402AccessReceiptParams {
+  /** The agent identity (e.g. the on-chain agent_commitment as a hex/decimal string). */
+  agentPubkey: string;
+  /** BN254-Fr scope hash the x402 access proof was bound to. */
+  scopeHash: string;
+  /** Rate-limit epoch the proof was bound to. */
+  epoch: number | string;
+  /** The single-use access nullifier recorded on-chain by the gate. */
+  nullifier: string;
+  /** receiptId of the settlement/payment that funded this access (the cross-layer edge). */
+  fundingReceiptId: string;
+  /** The agent's global monotonic sequence number across all layers. */
+  sequenceNonce: number;
+  /** receiptId of this agent's previous action (any layer); omit only for genesis. */
+  parentReceiptId?: string;
+  timestamp?: number;
+}
+
+/**
+ * Build a DagReceipt for an x402 access grant produced by the Merkle-bound access gate
+ * (`dark_x402_access_gate` v2). The `actionHash` binds the access semantics (scope,
+ * epoch, nullifier); `parentReceiptId` continues this agent's chain; and `crossRefs`
+ * records the funding payment — so the graph can prove "this access was backed by a
+ * settled payment" without revealing amounts or counterparties.
+ *
+ * The two anti-abuse mechanisms compose: the on-chain nullifier stops *replay* of one
+ * access, and the DAG's anti-equivocation stops the agent claiming two *histories*.
+ */
+export function buildX402AccessReceipt(params: BuildX402AccessReceiptParams): DagReceipt {
+  const {
+    agentPubkey, scopeHash, epoch, nullifier,
+    fundingReceiptId, sequenceNonce, parentReceiptId, timestamp,
+  } = params;
+  const actionHash = hashAction({ layer: "x402-access", scopeHash, epoch: String(epoch), nullifier });
+  return buildDagReceipt({
+    agentPubkey,
+    actionHash,
+    sequenceNonce,
+    parentReceiptId,
+    timestamp,
+    layer: "x402-access",
+    crossRefs: [fundingReceiptId],
+  });
+}
+
+/**
+ * Walk a receipt's full provenance — every ancestor reachable via parent + crossRef
+ * edges within the batch — so a cross-layer claim can be proven, e.g. that an
+ * x402-access receipt traces back to a `payment` (or `shielded`) receipt.
+ *
+ * @returns the ancestor receipts (excluding the start) and the set of layers reached.
+ */
+export function traceProvenance(
+  startReceiptId: string,
+  receipts: DagReceipt[]
+): { ancestors: DagReceipt[]; reachedLayers: Set<ReceiptLayer> } {
+  const byId = new Map(receipts.map((r) => [r.receiptId, r] as const));
+  const ancestors = new Map<string, DagReceipt>();
+  const reachedLayers = new Set<ReceiptLayer>();
+  const stack: string[] = [startReceiptId];
+  while (stack.length > 0) {
+    const id = stack.pop() as string;
+    const r = byId.get(id);
+    if (r === undefined) continue;
+    const next: string[] = [];
+    if (r.parentReceiptId !== undefined) next.push(r.parentReceiptId);
+    for (const ref of r.crossRefs ?? []) next.push(ref);
+    for (const n of next) {
+      const nr = byId.get(n);
+      if (nr !== undefined && n !== startReceiptId && !ancestors.has(n)) {
+        ancestors.set(n, nr);
+        if (nr.layer !== undefined) reachedLayers.add(nr.layer);
+        stack.push(n);
+      }
+    }
+  }
+  return { ancestors: [...ancestors.values()], reachedLayers };
 }
