@@ -1,0 +1,47 @@
+{
+  "title": "x402 access gate hardening — Merkle-bound credit (v2)",
+  "summary": "Closes the v1 free-witness tautology: the access-threshold check is now bound to a real settlement-written receipt in the canonical receipt tree, not an invented balance. Verified on both layers.",
+  "cluster": "devnet",
+  "mainnet_ready": false,
+  "circuit": {
+    "file": "circuits/x402_access_v2.circom",
+    "constraints_nonlinear": 3477,
+    "depth": 10,
+    "public_inputs": ["root", "threshold", "scope_hash", "epoch", "nullifier", "agent_commitment"],
+    "relation": "agent_commitment=Poseidon(secret,agent_id); leaf=Poseidon5(agent_commitment,amount,ts,counterparty,nonce); MerkleProof(leaf,root); amount>=threshold; nullifier=Poseidon(DOMAIN_ACCESS=11,secret,scope_hash,epoch)",
+    "vk_module": "crates/dark-groth16-core/src/x402_access_v2_vk.rs",
+    "vk_sha256": "1486012d6b5679662ea2b18cd7e872d196363cb306188cb75a74bb0587e023e1",
+    "ceremony": "single-party devnet (locally-generated pot14) — re-ceremony required before mainnet"
+  },
+  "program": {
+    "name": "dark_x402_access_gate",
+    "devnet_program_id": "Ew4kwn4BCKGb3v5uN1zD8EQzLSzALA5LetpK5qVSBoEs",
+    "data_len_bytes": 96704,
+    "canonical_receipt_tree_program": "H9nL9tErFXFmr2ZGkgFVz2NpjAsAeDBXDgS85qBWFGAe",
+    "canonical_tree_pda": "ALajW7imiYLX9pmzkZwrDngtRc3znSDvuVZdjZTAjWHR",
+    "root_binding": "root must equal one of the canonical receipt tree's recent roots (rejects a self-made tree with Custom(11))"
+  },
+  "grade_circuit_layer": {
+    "harness": "build/zk/x402-access-harden-bench.mjs (egress-blocked sandbox sandbox/x402v2/)",
+    "V1_old_tautology_reproduced": "PASS — a v1 proof with an invented balance verifies",
+    "A1_forge_amount": "PASS — witness generation fails (Merkle unsatisfiable), no proof can exist",
+    "A2_below_threshold": "PASS — witness generation fails",
+    "A5_proof_lending": "PASS — verify false with a swapped agent_commitment",
+    "L1_legit": "PASS — real receipt >= threshold verifies"
+  },
+  "grade_chain_layer": {
+    "harness": "build/zk/x402-access-v2-e2e.mjs",
+    "L1_legit_access": "PASS — Merkle-bound proof accepted on-chain, single-use x402_nullifier PDA created",
+    "A4_replay": "PASS — Custom(3) (nullifier already recorded)",
+    "A3_self_made_root": "PASS — Custom(11) (root not in canonical receipt tree)",
+    "A6_cross_scope": "PASS — Custom(1) (scope_hash public-input mismatch fails verification)"
+  },
+  "transactions_devnet": {
+    "deploy": "46DwQ9c1XqNzjQJzeNv3TBCoCDi7EqVLRzxFJtEpU6stLEmc85cm1yTC58aRRP1ho3ERQkvgaUE5AwwHsUMkJKz3",
+    "upgrade_devnet_feature": "4TY7tiqtvbhm6tMZTcAzr2iS46GSLYy6zX7R5qeby9QAezEfCQpa7JxyLwW5nGUHud9DbHewV57QfhWHkqL5EpMu"
+  },
+  "reproduce": {
+    "build_and_circuit_grade": "docker build -t x402v2-bench sandbox/x402v2 && docker run --rm --network none -v $PWD/circuits:/mnt/circuits:ro -v $PWD/build:/mnt/build:ro x402v2-bench",
+    "onchain_e2e": "docker run --rm -v <devnet-keypair>:/key.json:ro -v $PWD/sandbox/x402v2/out/art/v2:/art:ro -v $PWD/build:/mnt/build:ro -e GATE=Ew4kwn4B... -e RECEIPT_TREE=H9nL9tErF... --entrypoint bash x402v2-bench -c 'cp /mnt/build/zk/x402-access-v2-e2e.mjs /work/ && cd /work && node x402-access-v2-e2e.mjs'"
+  }
+}

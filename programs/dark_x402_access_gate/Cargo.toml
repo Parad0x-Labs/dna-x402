@@ -8,6 +8,9 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = []
+# Devnet builds compile out the mainnet_ready fail-closed VK guard (single-party devnet
+# ceremony). Mainnet omits this feature → guard active → rejects a non-trustless VK.
+devnet = []
 
 [dependencies]
 solana-program    = { workspace = true }

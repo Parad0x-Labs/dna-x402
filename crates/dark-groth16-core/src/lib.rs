@@ -42,8 +42,13 @@ use solana_program::alt_bn128::prelude::{
 /// pilot) ceremony — `mainnet_ready = false` until a trustless multi-party ceremony.
 pub mod null_proof_vk;
 
-/// x402 access circuit verifying key (Poseidon commitment + threshold + nullifier).
+/// x402 access circuit verifying key (Poseidon commitment + threshold + nullifier). v1 (DEFECT:
+/// free-witness `balance` — tautology). Kept for reference; dark_x402_access_gate uses v2.
 pub mod x402_access_vk;
+
+/// x402 access v2 verifying key — Merkle-bound credit (amount>=threshold against the canonical
+/// receipt root) + scope/epoch nullifier. Closes the v1 free-witness tautology.
+pub mod x402_access_v2_vk;
 
 /// Track-record circuit verifying key (Poseidon receipt-Merkle membership + count/volume/window).
 pub mod track_record_vk;
