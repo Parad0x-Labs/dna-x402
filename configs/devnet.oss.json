@@ -21,6 +21,5 @@
     "nullRegistrar": "3mqpDJ6c84nVDwGPHEbtH5vbaDqRtPidAK5JX5KRzBB4"
   },
   "rpcUrl": "https://api.devnet.solana.com",
-  "deployedAt": "2026-05-29T00:00:00Z",
-  "deployerWallet": "F6Fr2Sn6jLMbpLMcg7ezrwNLZxs9MM8RYyifUAvP72BY"
+  "deployedAt": "2026-05-29T00:00:00Z"
 }
