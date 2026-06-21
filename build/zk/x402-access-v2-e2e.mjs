@@ -61,6 +61,15 @@ async function send(ixs, label, { expectErr = null } = {}) {
   try {
     sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true });
     err = (await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed")).value.err;
+    // confirmTransaction can race and report null on a tx that actually reverted on-chain;
+    // re-read the authoritative status from the ledger so forge cases aren't flaky-passed.
+    if (err == null && sig) {
+      for (let i = 0; i < 6; i++) {
+        const t = await conn.getTransaction(sig, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+        if (t?.meta) { err = t.meta.err; break; }
+        await new Promise((r) => setTimeout(r, 700));
+      }
+    }
   } catch (e) { err = e.message; }
   return { sig, err, errStr: err == null ? "" : JSON.stringify(err) };
 }
@@ -196,12 +205,34 @@ async function main() {
   const r4 = await send([ComputeBudgetProgram.setComputeUnitLimit({ units: 400000 }), gateIx(proofBytes, pubSwap)], "A6");
   grade("A6", /Custom":1|custom program error: 0x1\b/.test(r4.errStr), r4.err ? `cross-scope rejected ${r4.errStr}` : "cross-scope WRONGLY accepted");
 
-  console.log("\n=== ON-CHAIN GRADE ===");
-  console.log(grades.map((g) => `${g.id}:${g.ok ? "PASS" : "FAIL"}`).join("  "));
-  const allPass = grades.every((g) => g.ok) && grades.length === 4;
+  // (8) LIVE-MESH — flow the REAL on-chain x402 access into the cross-layer receipt-DAG.
+  const DAG = process.env.DAG ?? "/dag/src/index.ts";
+  const { buildDagReceipt, buildX402AccessReceipt, verifyDagChain, buildDagMerkleRoot, traceProvenance, hashAction } = await import(DAG);
+  const agentId = agent_commitment.toString();
+  const payment = buildDagReceipt({
+    agentPubkey: agentId, layer: "payment", sequenceNonce: 0,
+    actionHash: hashAction({ layer: "payment", amount: amount.toString(), leafIndex: myIdx, ts: ts.toString() }),
+  });
+  const accessR = buildX402AccessReceipt({
+    agentPubkey: agentId, scopeHash: scope_hash.toString(), epoch: epoch.toString(), nullifier: nullifier.toString(),
+    fundingReceiptId: payment.receiptId, sequenceNonce: 1, parentReceiptId: payment.receiptId,
+  });
+  const batch = [payment, accessR];
+  const vr = verifyDagChain(batch);
+  const prov = traceProvenance(accessR.receiptId, batch);
+  const anchorRoot = buildDagMerkleRoot(batch).toString("hex");
+  // The access receipt is itself the x402-access node; its provenance must trace back to a payment.
+  const dagOk = vr.valid && accessR.layer === "x402-access" && prov.reachedLayers.has("payment");
+  console.log(`\n[live-mesh] payment(${payment.layer}) → access(${accessR.layer})  ids ${payment.receiptId.slice(0, 10)}…/${accessR.receiptId.slice(0, 10)}…`);
+  console.log(`[live-mesh] access traces layers: ${[...prov.reachedLayers].join(" + ")}   DAG valid: ${vr.valid}`);
+  console.log(`[live-mesh] cross-layer anchor root (commit via receipt_anchor 6HSRGivd…): ${anchorRoot}`);
+
+  console.log("\n=== ON-CHAIN + LIVE-MESH GRADE ===");
+  console.log(grades.map((g) => `${g.id}:${g.ok ? "PASS" : "FAIL"}`).join("  ") + `  DAG:${dagOk ? "PASS" : "FAIL"}`);
+  const allPass = grades.every((g) => g.ok) && grades.length === 4 && dagOk;
   console.log(allPass
-    ? "\n✅ ON-CHAIN VERIFIED: legit access accepted; replay, self-made-root, and cross-scope all rejected on the deployed gate."
-    : "\n❌ ON-CHAIN GRADE FAILED — see FAIL rows.");
+    ? "\n✅ LIVE-MESH VERIFIED: on-chain x402 access (legit accepted; replay/self-made-root/cross-scope rejected) → flowed into the cross-layer DAG → access traces to its funding payment → anchor root computed."
+    : "\n❌ GRADE FAILED — see FAIL rows.");
   process.exit(allPass ? 0 : 1);
 }
 main().catch((e) => { console.error("Fatal:", e.message); process.exit(1); });
