@@ -366,57 +366,89 @@ export function buildDagMerkleRoot(receipts: DagReceipt[]): Buffer {
   return carry ?? Buffer.alloc(32, 0);
 }
 
+/** PDA seed prefix for a receipt_anchor bucket account. */
+export const RECEIPT_ANCHOR_BUCKET_SEED = "bucket";
+/** The program's bucket window (seconds); its default bucket_id is floor(unix/3600). */
+export const RECEIPT_ANCHOR_BUCKET_WINDOW_SECONDS = 3600;
+
+export interface AnchorDagRootOptions {
+  /** Anchor program id. Defaults to the mainnet program; pass a devnet id to anchor on devnet. */
+  programId?: string;
+  /**
+   * Explicit bucket id (the program accumulates each anchor into a per-bucket running root).
+   * Defaults to floor(Date.now()/1000/3600), matching the program's own default bucket.
+   */
+  bucketId?: bigint;
+}
+
+export interface AnchorDagRootResult {
+  signature: string;
+  /** The cross-layer Merkle root that was anchored (hex). */
+  anchor: string;
+  /** The bucket id the anchor was folded into. */
+  bucketId: bigint;
+  /** The bucket PDA whose running root + count were updated. */
+  bucketPda: string;
+}
+
 /**
- * Anchor a DAG receipt batch on Solana.
+ * Anchor a DAG receipt batch on Solana via the `receipt_anchor` program.
  *
- * Builds the Merkle root of the batch, then submits a transaction to the
- * receipt_anchor program (same program used by liquefy-receipts) so the root
- * is immutably recorded on-chain. Returns the transaction signature.
+ * Builds the batch Merkle root and folds it into a bucket's running root on-chain:
+ * `bucket.root = SHA-256(bucket.root || anchor)`, `bucket.count += 1`. The bucket is a
+ * PDA `["bucket", bucket_id_le]` created on first use. Uses the AnchorSingle wire form
+ * with an explicit bucket id: `[version=1][flags=0x01][root32][bucket_id_le8]` (42 bytes),
+ * accounts `[payer(signer,writable), bucket(writable), system_program]`.
  *
- * Instruction data layout: [0x01][0x00][32 bytes root]  (34 bytes total)
- *
- * @param receipts   - The batch of DagReceipts to anchor.
- * @param connection - A @solana/web3.js Connection to an RPC endpoint.
- * @param payer      - The fee-payer Keypair that signs the transaction.
- * @returns Solana transaction signature (base-58 string).
+ * @returns the tx signature plus the anchored root, bucket id, and bucket PDA (so callers
+ *          can read the bucket account back and verify the accumulation).
  */
 export async function anchorDagRoot(
   receipts: DagReceipt[],
   connection: Connection,
-  payer: Keypair
-): Promise<string> {
-  // Dynamic import so the package stays importable in environments that do not
-  // have @solana/web3.js installed (e.g. pure-Node unit tests).
-  const { Transaction, TransactionInstruction, PublicKey, sendAndConfirmTransaction } =
+  payer: Keypair,
+  options: AnchorDagRootOptions = {}
+): Promise<AnchorDagRootResult> {
+  // Dynamic import so the package stays importable in environments without @solana/web3.js.
+  const { Transaction, TransactionInstruction, PublicKey, SystemProgram, sendAndConfirmTransaction } =
     await import("@solana/web3.js");
 
   if (receipts.length === 0) {
     throw new Error("Cannot anchor an empty receipt batch");
   }
 
+  const programId = new PublicKey(options.programId ?? RECEIPT_ANCHOR_PROGRAM_ID);
+  const bucketId =
+    options.bucketId ??
+    BigInt(Math.floor(Date.now() / 1000 / RECEIPT_ANCHOR_BUCKET_WINDOW_SECONDS));
+
   const root = buildDagMerkleRoot(receipts);
 
-  // Build anchor instruction data: [0x01][0x00][32-byte root]
-  const ixData = new Uint8Array(34);
-  ixData[0] = 0x01;
-  ixData[1] = 0x00;
-  ixData.set(root, 2);
+  const bucketIdLe = Buffer.alloc(8);
+  bucketIdLe.writeBigUInt64LE(bucketId);
+  const [bucketPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from(RECEIPT_ANCHOR_BUCKET_SEED), bucketIdLe],
+    programId
+  );
 
-  const programId = new PublicKey(RECEIPT_ANCHOR_PROGRAM_ID);
+  // AnchorSingle with explicit bucket: [version=1][flags=FLAG_HAS_BUCKET_ID=0x01][root32][bucket_id_le8].
+  const data = Buffer.concat([Buffer.from([0x01, 0x01]), root, bucketIdLe]);
 
   const ix = new TransactionInstruction({
     programId,
     keys: [
       { pubkey: payer.publicKey, isSigner: true, isWritable: true },
+      { pubkey: bucketPda, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
-    data: Buffer.from(ixData),
+    data,
   });
 
   const tx = new Transaction().add(ix);
   tx.feePayer = payer.publicKey;
 
-  const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
-  return sig;
+  const signature = await sendAndConfirmTransaction(connection, tx, [payer]);
+  return { signature, anchor: root.toString("hex"), bucketId, bucketPda: bucketPda.toBase58() };
 }
 
 // ── Convenience re-exports ────────────────────────────────────────────────────

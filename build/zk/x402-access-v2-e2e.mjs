@@ -207,7 +207,7 @@ async function main() {
 
   // (8) LIVE-MESH — flow the REAL on-chain x402 access into the cross-layer receipt-DAG.
   const DAG = process.env.DAG ?? "/dag/src/index.ts";
-  const { buildDagReceipt, buildX402AccessReceipt, verifyDagChain, buildDagMerkleRoot, traceProvenance, hashAction } = await import(DAG);
+  const { buildDagReceipt, buildX402AccessReceipt, verifyDagChain, buildDagMerkleRoot, traceProvenance, hashAction, anchorDagRoot } = await import(DAG);
   const agentId = agent_commitment.toString();
   const payment = buildDagReceipt({
     agentPubkey: agentId, layer: "payment", sequenceNonce: 0,
@@ -221,11 +221,26 @@ async function main() {
   const vr = verifyDagChain(batch);
   const prov = traceProvenance(accessR.receiptId, batch);
   const anchorRoot = buildDagMerkleRoot(batch).toString("hex");
-  // The access receipt is itself the x402-access node; its provenance must trace back to a payment.
-  const dagOk = vr.valid && accessR.layer === "x402-access" && prov.reachedLayers.has("payment");
   console.log(`\n[live-mesh] payment(${payment.layer}) → access(${accessR.layer})  ids ${payment.receiptId.slice(0, 10)}…/${accessR.receiptId.slice(0, 10)}…`);
   console.log(`[live-mesh] access traces layers: ${[...prov.reachedLayers].join(" + ")}   DAG valid: ${vr.valid}`);
-  console.log(`[live-mesh] cross-layer anchor root (commit via receipt_anchor 6HSRGivd…): ${anchorRoot}`);
+  console.log(`[live-mesh] cross-layer anchor root: ${anchorRoot}`);
+
+  // Anchor the cross-layer root ON-CHAIN via receipt_anchor, then verify the bucket accumulated it.
+  // The access receipt is itself the x402-access node; its provenance must trace back to a payment.
+  let anchoredOk = true, anchorLine = "(skipped — set ANCHOR_PROGRAM to anchor on-chain)";
+  if (process.env.ANCHOR_PROGRAM) {
+    const bucketId = BigInt(Date.now()); // fresh per-run bucket → starts empty, count goes 0→1
+    const ar = await anchorDagRoot(batch, conn, payer, { programId: process.env.ANCHOR_PROGRAM, bucketId });
+    const acc = await conn.getAccountInfo(new PublicKey(ar.bucketPda), "confirmed");
+    const onRoot = acc ? Buffer.from(acc.data.slice(14, 46)).toString("hex") : "";
+    const onCount = acc ? acc.data.readUInt32LE(10) : 0;
+    const { createHash } = await import("node:crypto");
+    const expect = createHash("sha256").update(Buffer.concat([Buffer.alloc(32), Buffer.from(ar.anchor, "hex")])).digest("hex");
+    anchoredOk = onRoot === expect && onCount === 1;
+    anchorLine = `tx ${ar.signature.slice(0, 12)}… bucket ${ar.bucketPda.slice(0, 8)}… count=${onCount} accumulated-root✓=${onRoot === expect}`;
+  }
+  console.log(`[live-mesh] on-chain anchor: ${anchorLine}`);
+  const dagOk = vr.valid && accessR.layer === "x402-access" && prov.reachedLayers.has("payment") && anchoredOk;
 
   console.log("\n=== ON-CHAIN + LIVE-MESH GRADE ===");
   console.log(grades.map((g) => `${g.id}:${g.ok ? "PASS" : "FAIL"}`).join("  ") + `  DAG:${dagOk ? "PASS" : "FAIL"}`);
