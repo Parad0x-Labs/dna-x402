@@ -1,0 +1,22 @@
+{
+  "name": "ECASH-NULL — Chaumian blind-BLS bearer cash on BN254",
+  "date": "2026-06-22",
+  "layer": "crypto kill-test (offline, no chain)",
+  "claim": "Unlinkable Chaumian bearer cash whose redemption is a 2-pairing BLS check e(sigma,G2)==e(M,K) on BN254 — the curve sol_alt_bn128_group_op exposes on Solana mainnet TODAY. Routes around the Ristretto / sol_curve_* syscall (and SIMD-0388 BLS12-381 pairing) that gates dark_fedimint_redeem on mainnet, with no trusted setup.",
+  "scheme": "Mint sk k, pk K=k*G2. User: serial m -> M in G1, blind r, hands Mb=r*M to the mint (mint never sees the token). Mint blind-signs Sb=k*Mb. User unblinds S=r^-1*Sb=k*M. Redeem: verify e(S,G2)==e(M,K) and consume a single-use nullifier=H(serial).",
+  "tooling": "@noble/curves/bn254 (pairing + G1/G2 + Fp12.eql), node, sandboxed docker --network none",
+  "script": "build/zk/ecash-null-killtest.mjs",
+  "result": "PASS (7/7)",
+  "checks": {
+    "legit token verifies (2-pairing check)": true,
+    "blind-sign is unlinkable + still valid": true,
+    "first redeem accepted": true,
+    "double-spend rejected (nullifier)": true,
+    "forged signature rejected": true,
+    "signature bound to its message": true,
+    "wrong mint key rejected": true
+  },
+  "reuses": "Keeps ~80% of programs/dark_fedimint_redeem (nullifier, double-spend PDA, payout); swaps the DLEQ verify for the alt_bn128 2-pairing check.",
+  "production_notes": "M must be hash-to-curve to the G1 subgroup (here M=h(serial)*G1 exercises the pairing/blinding algebra). On-chain verify = one alt_bn128_pairing call e(S,G2)*e(M,-K)==1. Next step: a ~1-day litesvm Rust kill-test of the same equation against the real alt_bn128 software backend, then wire into a dark_fedimint_redeem variant.",
+  "status": "Proven at the math layer. Not yet an on-chain program. Publish as a proven primitive + design, not a shipped product."
+}
