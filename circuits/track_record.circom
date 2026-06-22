@@ -16,9 +16,12 @@ pragma circom 2.1.6;
 //   window_start          earliest acceptable timestamp (e.g. now - 90d)
 //   reputation_nullifier  Poseidon(DOMAIN_REP, secret, epoch) — single-use per epoch
 //   agent_commitment      Poseidon(secret, agent_id) — same identity as the access gate
+//   epoch                 the time bucket the nullifier is bound to; PUBLIC so the gate can
+//                         require epoch == floor(Clock.unix_timestamp / EPOCH_LEN) and thereby
+//                         cap each identity to one reputation spend per window (anti-Sybil)
 //
 // Private inputs (per receipt i in [0,K)):
-//   secret, agent_id, epoch,
+//   secret, agent_id,
 //   amount[i], timestamp[i], counterparty[i], receipt_nonce[i],
 //   leaf_index[i], path_elements[i][depth], path_index[i][depth]
 //
@@ -159,5 +162,5 @@ template TrackRecord(K, depth) {
 // v1 (devnet POC) sized to the available pot14 ptau: K=4 receipts, depth-10 tree.
 // Production scales to K=16 / depth-20 with a larger ptau (pot20).
 component main {
-    public [root, min_count, min_volume, window_start, reputation_nullifier, agent_commitment]
+    public [root, min_count, min_volume, window_start, reputation_nullifier, agent_commitment, epoch]
 } = TrackRecord(4, 10);

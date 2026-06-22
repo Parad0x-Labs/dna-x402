@@ -1,5 +1,6 @@
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
+    clock::Clock,
     entrypoint,
     entrypoint::ProgramResult,
     msg,
@@ -57,7 +58,7 @@ const REP_NULLIFIER_SEED: &[u8] = b"rep_nullifier";
 ///   1. receipt_tree          []                 — canonical PDA(["receipt_tree", 0]) @ RECEIPT_TREE_PROGRAM
 ///   2. nullifier_record_pda  [writable]         — PDA(["rep_nullifier", reputation_nullifier]) @ this program
 ///   3. system_program        []
-pub const INSTRUCTION_DATA_LEN: usize = 448;
+pub const INSTRUCTION_DATA_LEN: usize = 480; // 256 proof + 7 public inputs * 32
 
 const OFF_PROOF: usize = 0;
 const OFF_ROOT: usize = 256;
@@ -66,9 +67,28 @@ const OFF_MIN_VOLUME: usize = 320;
 const OFF_WINDOW_START: usize = 352;
 const OFF_REP_NULL: usize = 384;
 const OFF_AGENT_COMMIT: usize = 416;
+const OFF_EPOCH: usize = 448;
+
+/// Epoch window length in seconds. The reputation_nullifier is Poseidon(DOMAIN_REP, secret,
+/// epoch), and the gate requires epoch == floor(Clock.unix_timestamp / EPOCH_LEN), so one
+/// identity can mint at most one reputation_nullifier per window. 86_400 = 1 day (GhostScore
+/// daily rate-limit). Cheap to retune — it lives only here and in the prover, not the circuit.
+const EPOCH_LEN: i64 = 86_400;
 
 fn parse32(data: &[u8], off: usize) -> [u8; 32] {
     data[off..off + 32].try_into().unwrap_or([0u8; 32])
+}
+
+/// True iff `epoch` (a BN254-Fr big-endian 32-byte field element) equals the CURRENT clock
+/// window `floor(now / EPOCH_LEN)`. The window fits in u64, so the high 24 bytes must be zero;
+/// `now` must be non-negative. Current bucket only — no carry — so an identity can present at
+/// most one reputation_nullifier per EPOCH_LEN (anti-Sybil rate-limit).
+fn epoch_in_window(epoch: &[u8; 32], now: i64) -> bool {
+    if epoch[..24] != [0u8; 24] || now < 0 {
+        return false;
+    }
+    let epoch_val = u64::from_be_bytes(epoch[24..32].try_into().unwrap());
+    epoch_val == (now / EPOCH_LEN) as u64
 }
 
 fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
@@ -87,6 +107,18 @@ fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8
     let window_start = parse32(data, OFF_WINDOW_START);
     let rep_null     = parse32(data, OFF_REP_NULL);
     let agent_commit = parse32(data, OFF_AGENT_COMMIT);
+    let epoch        = parse32(data, OFF_EPOCH);
+
+    // ── HIGH fix (anti-Sybil): bind the public `epoch` to the on-chain clock window ─────
+    // epoch is folded into reputation_nullifier = Poseidon(DOMAIN_REP, secret, epoch) and is
+    // now a PUBLIC circuit input. Previously it was a prover-chosen free witness, so one
+    // identity minted unlimited nullifiers across self-picked epochs (zero rate-limit). We
+    // require epoch == floor(now / EPOCH_LEN) — the CURRENT bucket only — capping each
+    // identity to one reputation spend per EPOCH_LEN. Checked before the expensive pairing so a
+    // stale/forged epoch is rejected cheaply.
+    if !epoch_in_window(&epoch, Clock::get()?.unix_timestamp) {
+        return Err(ProgramError::Custom(12)); // StaleOrForgedEpoch / out-of-range
+    }
 
     let iter = &mut accounts.iter();
     let payer           = next_account_info(iter)?;
@@ -132,9 +164,9 @@ fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8
         }
     }
 
-    // circuit public-input order
+    // circuit public-input order (epoch appended last — must match track_record.circom)
     let public_inputs: [[u8; 32]; NR_PUBLIC_INPUTS] =
-        [root, min_count, min_volume, window_start, rep_null, agent_commit];
+        [root, min_count, min_volume, window_start, rep_null, agent_commit, epoch];
 
     // ── verify the Groth16 track-record proof ──────────────────────────────────
     let vk = track_record_vk();
@@ -202,4 +234,62 @@ fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8
 
     msg!("dark_reputation_gate: track-record proof verified (root bound to canonical tree) + nullifier recorded");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{epoch_in_window, EPOCH_LEN};
+
+    // big-endian 32-byte field element from a u64 (matches the circuit/gate epoch encoding)
+    fn be32(v: u64) -> [u8; 32] {
+        let mut b = [0u8; 32];
+        b[24..32].copy_from_slice(&v.to_be_bytes());
+        b
+    }
+
+    #[test]
+    fn current_window_is_accepted() {
+        let now = 5 * EPOCH_LEN + 123; // somewhere inside bucket 5
+        assert!(epoch_in_window(&be32(5), now));
+    }
+
+    #[test]
+    fn future_epoch_is_rejected() {
+        let now = 5 * EPOCH_LEN + 123;
+        assert!(!epoch_in_window(&be32(6), now)); // pre-minting a future window must fail
+    }
+
+    #[test]
+    fn stale_epoch_is_rejected() {
+        let now = 5 * EPOCH_LEN + 123;
+        assert!(!epoch_in_window(&be32(4), now)); // no carry — previous window is rejected
+    }
+
+    #[test]
+    fn the_sybil_attack_is_closed() {
+        // The vuln: same identity mints nullifiers under self-chosen epochs. Now only the one
+        // bucket matching the clock is accepted, so every other self-chosen epoch is rejected.
+        let now = 100 * EPOCH_LEN;
+        let cur = 100u64;
+        let mut accepted = 0;
+        for e in (cur - 3)..=(cur + 3) {
+            if epoch_in_window(&be32(e), now) {
+                accepted += 1;
+            }
+        }
+        assert_eq!(accepted, 1, "exactly one epoch (the current bucket) may be accepted");
+    }
+
+    #[test]
+    fn out_of_u64_range_epoch_is_rejected() {
+        let now = 5 * EPOCH_LEN;
+        let mut e = be32(5);
+        e[0] = 1; // set a high byte -> field element exceeds u64 window
+        assert!(!epoch_in_window(&e, now));
+    }
+
+    #[test]
+    fn negative_clock_is_rejected() {
+        assert!(!epoch_in_window(&be32(0), -1));
+    }
 }
