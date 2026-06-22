@@ -25,7 +25,10 @@ const PROGRAMS = {
   dark_secp256k1_auth: "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
   dark_semaphore: "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
   null_token: "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
-  // demo/stub — NOT a real verifier (hardcoded proof bypass); see get_stack_status.
+  // EXCLUDED STUB — NOT a live/usable program. Contains a literal 0xDE 0xAD
+  // unconditional bypass (any proof passes), a documented P0; excluded from the
+  // pilot and fail-closed pending bypass removal + a trustless ceremony / real VK.
+  // Kept here only so get_stack_status can surface it as "stub — do not use".
   dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
 } as const;
 
@@ -603,9 +606,9 @@ function getStackStatus(): object {
       {
         name: "dark_bn254_gate",
         address: PROGRAMS.dark_bn254_gate,
-        status: "stub — do not use",
+        status: "excluded stub — do not use",
         explorer_url: explorerAccount(PROGRAMS.dark_bn254_gate),
-        description: "DEPRECATED demo gate with a hardcoded proof bypass — NOT a real verifier. Superseded by dark_x402_access_gate (real Groth16 BN254). Listed for transparency only.",
+        description: "EXCLUDED from the pilot — contains a literal 0xDE 0xAD unconditional bypass (any proof passes), a documented P0. NOT a real verifier; fail-closed pending bypass removal + a trustless ceremony / real VK. A trustless on-chain verifier is pending a clean redeploy + a trustless ceremony. Listed for transparency only.",
       },
       {
         name: "dark_semaphore",

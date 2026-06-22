@@ -30,9 +30,12 @@ It accumulates 32-byte anchors (SHA-256 of payment receipts) into hourly-windowe
 AnchorBucket PDAs. Each bucket holds a running Merkle root and count. This is the 
 application layer that needs SIMD-0064's inclusion proof underneath it.
 
-We also have `dark_bn254_gate` live on mainnet (`GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd`) 
-— a Groth16 verifier using Solana's native BN254 syscalls — which is the cryptographic 
-primitive for the extension proposed below.
+The cryptographic primitive for the extension proposed below is Groth16 verification over
+Solana's native BN254 (`alt_bn128`) syscalls — a protocol-level precompile. Off-chain Groth16
+verification (snarkjs) works today; a trustless on-chain verifier is pending a clean redeploy
+plus a trustless ceremony. (Our `dark_bn254_gate` demo is excluded from the pilot and
+fail-closed: it carries a `0xDE 0xAD` unconditional bypass — any proof passes — a documented
+P0, so it is not a trusted verifier and we do not advertise it as one.)
 
 ## Proposed extension to SIMD-0064
 
@@ -42,7 +45,7 @@ inclusion proof variant:
 - **Circuit:** proves `leaf ∈ Merkle-tree(block_entries)` without revealing the path
 - **Public inputs:** block header hash, leaf hash, tree root
 - **Proof system:** Groth16 over BN254 (matches Solana's existing `alt_bn128` syscalls)
-- **On-chain verification:** ~200k CU using the native precompile, already demonstrated
+- **On-chain verification:** ~200k CU using the native `alt_bn128` precompile
 - **Use case:** privacy-preserving payment channels and agent-to-agent settlements where 
   position metadata must not leak
 
@@ -64,7 +67,6 @@ would need to produce, not change Agave/Firedancer internals.
 - Original SIMD-0064: https://github.com/solana-foundation/solana-improvement-documents/pull/64
 - DNA x402 repo: https://github.com/Parad0x-Labs/dna-x402
 - receipt_anchor on mainnet: https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
-- Groth16 gate on mainnet: https://explorer.solana.com/address/GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd
 ```
 
 ---
@@ -85,8 +87,8 @@ Solana mainnet (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN) aggregating AI age
 payment receipts for our x402 payment rail. The missing piece is the block-level 
 inclusion proof SIMD-0064 would standardize.
 
-We're also proposing a Groth16 inclusion proof extension using Solana's existing BN254 
-syscalls — already exercised in our dark_bn254_gate program.
+We're also proposing a Groth16 inclusion proof extension using Solana's existing BN254
+(`alt_bn128`) syscalls.
 
 We have an open grant application ($65k — audit + ZK sprint) and would like to connect 
 this SIMD work to that conversation. Happy to set up a call.

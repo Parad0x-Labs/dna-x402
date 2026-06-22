@@ -68,15 +68,15 @@ Such that:
 
 ## DNA x402 implementation
 
-### Programs (live on Solana mainnet-beta)
+### Programs (Solana mainnet-beta)
 
-| Program | Role in POR |
-|---|---|
-| `dark_bn254_gate` (`GCptvBYF...`) | On-chain Groth16 verifier — the core POR primitive |
-| `dark_semaphore` (`Ev7HEFhh...`) | Nullifier registry — prevents double-exercise of rights |
-| `dark_proof_gate_lite` (`PmSCTueh...`) | Lightweight proof-of-claim anchor |
-| `receipt_anchor` (`6HSRGivd...`) | Permanent on-chain proof of receipts |
-| `dark_secp256r1_vault` (`3hbbtje...`) | Biometric identity — proves operator identity |
+| Program | Role in POR | Status |
+|---|---|---|
+| `dark_bn254_gate` (`GCptvBYF...`) | Intended on-chain Groth16 verifier for the POR primitive | ⛔ Excluded from pilot — `0xDE 0xAD` unconditional bypass (any proof passes), documented P0, fail-closed pending bypass removal + a trustless ceremony / real VK. Off-chain Groth16 verification via `snarkjs` works today. |
+| `dark_semaphore` (`Ev7HEFhh...`) | Nullifier registry — prevents double-exercise of rights | Pilot |
+| `dark_proof_gate_lite` (`PmSCTueh...`) | Lightweight proof-of-claim anchor | Pilot |
+| `receipt_anchor` (`6HSRGivd...`) | Permanent on-chain proof of receipts | Pilot |
+| `dark_secp256r1_vault` (`3hbbtje...`) | Biometric identity — proves operator identity | Pilot |
 
 ### Circuit
 
@@ -96,10 +96,18 @@ Proves: "I know a secret that opens a commitment in the tree, and the nullifier 
 
 ### Proof verification
 
+Off-chain Groth16 verification (the binding soundness check for POR) runs today via
+`snarkjs groth16 verify`.
+
+The transaction below landed against `dark_bn254_gate`, but that gate is excluded from the
+pilot: it carries a `0xDE 0xAD` unconditional bypass (any proof passes), a documented P0, so
+this is NOT a trusted on-chain proof check. It is fail-closed pending bypass removal + a
+trustless ceremony / real VK.
+
 ```
 TX: 3zpKr4pccPC7334L1Uw9ejbyr2e5P3Zr45Yqitetvg8Wr61bTtqNKTFyB6Kpj2rGwfQKNdTCocrZeCHR3uAma6yR
 Cluster: Solana mainnet-beta
-Program: GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd
+Program: GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd  (excluded stub — 0xDE 0xAD bypass)
 CU used: ~114,000 (well within 400k limit)
 ```
 
@@ -133,7 +141,7 @@ Prove you are in a group (Semaphore nullifier tree) without revealing which memb
 
 | Milestone | Status |
 |---|---|
-| Groth16 verifier on Solana mainnet | ✅ Live (`GCptvBYF...`) |
+| Groth16 verifier on Solana mainnet | ⛔ Excluded from pilot (`GCptvBYF...` — `0xDE 0xAD` bypass; fail-closed pending real VK + trustless ceremony). Off-chain verification works today. |
 | Biometric identity binding (Loop) | ✅ Live (`3hbbtje...`) |
 | Nullifier registry | ✅ Live (`Ev7HEFhh...`) |
 | Compressed private receipt batches | ✅ Live (`6HSRGivd...`) |

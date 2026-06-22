@@ -17,7 +17,7 @@ The x402 access circuit gates tiered API access with zero-knowledge. A client (a
 | I am paying for this request only (no replay) | `nullifier` (on-chain) | `nonce` |
 | My balance meets the minimum tier | `threshold` (on-chain) | actual `balance` |
 
-**Circuit relation** (verified by Groth16 BN254, checkable by `dark_bn254_gate` on mainnet):
+**Circuit relation** (Groth16 BN254; off-chain verification works today via `snarkjs`. The on-chain `dark_bn254_gate` is excluded from the pilot — it contains a literal `0xDE 0xAD` unconditional bypass, any proof passes, a documented P0 — so it is not yet a trusted on-chain checker. Fail-closed pending bypass removal + a trustless ceremony / real VK):
 
 ```
 C1: Poseidon(secret, agent_id) == commitment     // binding: proves agent identity
@@ -141,14 +141,14 @@ Compile: `nargo compile` then run Sunspot to generate the Solana verifier progra
 
 ## 4. The Circom Fallback — Working Today
 
-The Circom path (`circuits/x402_access.circom`) uses the same cryptographic primitives as the existing `shielded_withdraw.circom` and `null_proof` circuits that are already proven to work on Solana devnet/mainnet via `dark_bn254_gate`.
+The Circom path (`circuits/x402_access.circom`) uses the same cryptographic primitives as the existing `shielded_withdraw.circom` and `null_proof` circuits. Proof generation and off-chain verification work today via `snarkjs`. The on-chain `dark_bn254_gate` is the intended verifier but is excluded from the pilot — it carries a literal `0xDE 0xAD` unconditional bypass (any proof passes), a documented P0 — so it does not yet provide trusted on-chain verification.
 
 ### Shared infrastructure
 
 - **Poseidon hash**: `circomlib/circuits/poseidon.circom` — native BN254-field hash, same as shielded pool
 - **snarkjs**: Already in the repo via the dark-null-protocol toolchain
 - **Powers of Tau**: `pot16_final.ptau` — existing ceremony artifact covers 2^16 constraints. x402_access uses ~3,500 constraints, fits comfortably
-- **On-chain verifier**: `dark_bn254_gate` — live on Solana mainnet, verified real Groth16 proofs via `alt_bn128_pairing` syscall
+- **On-chain verifier**: `dark_bn254_gate` — deployed but excluded from the pilot and fail-closed. It contains a literal `0xDE 0xAD` unconditional bypass (any proof passes), a documented P0, so it is not a trusted verifier today. The pairing path via the `alt_bn128_pairing` syscall is the intended mechanism, pending bypass removal + a trustless ceremony / real VK. Verify off-chain with `snarkjs` in the meantime
 
 ### Compile and setup commands
 
@@ -226,14 +226,14 @@ The `verifyAccessProof()` function in `packages/x402-circuit/src/index.ts` const
 | Zero-knowledge | Server learns nothing about `secret`, `balance`, or `agent_id` | Groth16 zk-SNARK; holds assuming soundness of setup |
 | Binding | `commitment` uniquely binds to one `(secret, agent_id)` pair | Poseidon collision resistance under BN254 field |
 | Anti-replay | Each request consumes the nullifier; reuse is rejected on-chain | Nullifier registry in `dark-shielded-pool-core` |
-| Soundness | Fake proofs rejected by `dark_bn254_gate` pairing check | Holds assuming correct vk, correct proving key, and honest setup |
+| Soundness | Fake proofs rejected by the Groth16 pairing check (off-chain via `snarkjs`) | Holds assuming correct vk, correct proving key, and honest setup. On-chain soundness via `dark_bn254_gate` does NOT hold yet — that gate is excluded from the pilot and carries a `0xDE 0xAD` unconditional bypass (any proof passes) |
 | Tier gate | `balance >= threshold` is enforced in-circuit | GreaterEqThan(64) from circomlib |
 | Overflow safety | `balance` and `threshold` are constrained to < 2^64 | RangeCheck64 prevents field wrap attacks |
 
 **Caveats** (same as rest of DARK_ZK_PRIMITIVES):
 - Proving key is a local development setup, not a public MPC ceremony. Run a ceremony before mainnet use.
 - No security audit on this circuit. Do not use in production without an audit.
-- The `dark_bn254_gate` verifier is live on mainnet but is fail-closed pending audit of the verifying key material.
+- The `dark_bn254_gate` verifier is excluded from the pilot and fail-closed: it contains a literal `0xDE 0xAD` unconditional bypass (any proof passes), a documented P0. It is not a trusted on-chain verifier pending bypass removal + a trustless ceremony / real VK.
 
 ---
 

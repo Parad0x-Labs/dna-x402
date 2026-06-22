@@ -78,11 +78,11 @@ npm start
 
 ## Programs (mainnet)
 
-| Program | Address |
-|---|---|
-| receipt_anchor | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` |
-| dark_secp256r1_vault | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` |
-| dark_secp256k1_auth | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` |
-| dark_bn254_gate | `GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd` |
-| dark_semaphore | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` |
-| null_token | `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
+| Program | Address | Status |
+|---|---|---|
+| receipt_anchor | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | Live |
+| dark_secp256r1_vault | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | Live |
+| dark_secp256k1_auth | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Live |
+| dark_semaphore | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Live |
+| null_token | `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` | Live |
+| dark_bn254_gate | `GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd` | ⛔ Excluded stub — `0xDE 0xAD` unconditional bypass (any proof passes), documented P0. NOT a real verifier, do not use. A trustless on-chain verifier is pending (clean redeploy + ceremony). |
