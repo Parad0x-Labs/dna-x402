@@ -133,11 +133,13 @@ fn test_gate_error_display_names_pairing_failure() {
 }
 
 #[test]
-fn test_vk_is_mainnet_ready() {
-    // The real VK from null_proof_final.zkey must have mainnet_ready = true
+fn test_vk_fail_closed_until_trustless_ceremony() {
+    // The null_proof VK comes from a single-party (1-of-1) pilot ceremony, so it must
+    // stay mainnet_ready = false — the gate guard then rejects it (fail-closed), closing
+    // the toxic-waste forgery path until a trustless multi-party ceremony regenerates it.
     use dark_groth16_core::null_proof_vk::null_proof_vk;
     let vk = null_proof_vk();
-    assert!(vk.mainnet_ready, "real VK must have mainnet_ready = true");
+    assert!(!vk.mainnet_ready, "single-party pilot VK must stay fail-closed");
 }
 
 #[test]
@@ -200,7 +202,7 @@ fn test_real_proof_verifies_with_null_proof_vk() {
     // Full on-chain BPF pairing is tested in program_tests (Linux/macOS).
 
     let vk = null_proof_vk();
-    assert!(vk.mainnet_ready);
+    assert!(!vk.mainnet_ready, "single-party pilot VK stays fail-closed until a trustless ceremony");
 
     // Parse public signals (simple: split by [ " , ] whitespace)
     let signals: Vec<&str> = public_json
