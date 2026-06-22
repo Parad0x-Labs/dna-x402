@@ -1,0 +1,62 @@
+{
+  "circuit": "shielded_withdraw_v3",
+  "layer": "circuit (math) — held-out differential benchmark, no chain",
+  "date": "2026-06-22",
+  "source": "P1 adversarial ZK audit swarm (wqknkjp8x), CRITICAL + medium findings on shielded_withdraw_v3",
+  "findings_closed": [
+    {
+      "id": "A1",
+      "severity": "critical",
+      "class": "replay/double-spend (circuit soundness)",
+      "title": "Nullifier malleability — pool_key_field was a free private witness, never bound to the public pool_id",
+      "before": "nullifier = Poseidon(DOMAIN_NULLIF, secret, pool_key_field); pool_key_field is an unconstrained private input, so one note yields unlimited distinct valid nullifiers -> unlimited double-spend in one pool. pool_id was only a dead `_ <==` sink.",
+      "after": "nullifier = Poseidon(DOMAIN_NULLIF, secret, pool_id); pool_id is the PUBLIC pool PDA (reduced mod r), so the nullifier is a deterministic function of (secret, pool_id) — exactly ONE valid nullifier per note per pool. The on-chain nullifier-uniqueness check then blocks every double-spend.",
+      "enforcing_constraint": "nullifier === computed_nullifier (circuit line 162)"
+    },
+    {
+      "id": "A2",
+      "severity": "medium",
+      "class": "soundness/free-witness",
+      "title": "Merkle path_index selector bits never boolean-constrained (MultiMux1 blends, does not select)",
+      "before": "MultiMux1.s <== path_index[i] with no s*(s-1)===0; a non-boolean selector (e.g. 2) produces a linear blend of the two siblings instead of a left/right choice, letting a prover bend the Merkle path.",
+      "after": "path_index[i] * (path_index[i] - 1) === 0 for every level; each selector is forced into {0,1}, so every level is a real left/right choice.",
+      "enforcing_constraint": "path_index[i] * (path_index[i] - 1) === 0 (MerkleProof line 93)"
+    }
+  ],
+  "benchmark": {
+    "type": "held-out differential (VULN = HEAD circuit minus the fix; FIXED = hardened circuit; they differ by exactly the two security changes)",
+    "tooling": "circom 2.1.9 + snarkjs 0.7.5 + circomlib 2.0.5 + poseidon-lite 0.3.0, sandboxed (docker --network none, build-host != key-host)",
+    "result": "PASS",
+    "checks": {
+      "L  legit verifies (FIXED)": true,
+      "L  legit verifies (VULN, baseline)": true,
+      "A1 VULN double-spend PRESENT": true,
+      "A1 FIXED rejects non-canonical nullifier": true,
+      "A1 FIXED nullifier deterministic": true,
+      "A2 VULN non-boolean selector PRESENT": true,
+      "A2 FIXED rejects non-boolean selector": true
+    },
+    "unsat_evidence": {
+      "A1_fixed": "ERROR 4 in template ShieldedWithdraw line 162 (nullifier === computed_nullifier)",
+      "A2_fixed": "ERROR 4 in template MerkleProof line 93 (path_index[i] * (path_index[i] - 1) === 0)"
+    }
+  },
+  "constraints": {
+    "fixed_non_linear": 5696,
+    "vuln_non_linear": 5676,
+    "delta": 20,
+    "delta_explanation": "exactly the depth-20 per-level boolean selector constraints; the nullifier binding changes which signal feeds the hash and adds no constraints",
+    "public_inputs": 7,
+    "public_input_order": "nullifier, merkle_root, recipient, pool_id, relayer, fee, denomination"
+  },
+  "artifacts": {
+    "fixed_vk_sha256_single_party_pilot": "b8c65823916f206a7de71db023f02e7b57585ebd7df0e91ed91462b288339367",
+    "note": "This VK is a single-party DEVNET PILOT setup used only to grade the fix. It is NOT the deployed VK."
+  },
+  "status": "Circuit fix PROVEN at the math layer. Next (pending): regenerate the deployed verifying key from this fixed circuit via the trustless multi-party ceremony (ceremony/run-ceremony-v3.mjs), then redeploy dark_shielded_pool with the new VK + a devnet feature so withdraw is no longer fail-closed. The pool stays fail-closed (mainnet_ready=false) until that lands — no live withdraw path is affected by this change.",
+  "scripts": [
+    "circuits/shielded_withdraw_v3.circom (fixed)",
+    "build/zk/shielded-withdraw-harden-bench.mjs (held-out differential benchmark)",
+    "sandbox/x402v2/run-swv3.sh (sandboxed compile + single-party setup + grade)"
+  ]
+}
