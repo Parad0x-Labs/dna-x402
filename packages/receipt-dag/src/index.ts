@@ -543,3 +543,121 @@ export function traceProvenance(
   }
   return { ancestors: [...ancestors.values()], reachedLayers };
 }
+
+// ── Proof-of-accountability verifier ──────────────────────────────────────────────
+// Anyone holding the receipts can verify the chain AND that its root is the one anchored
+// on-chain — WITHOUT trusting the issuer. Reads the receipt_anchor bucket and checks the
+// accumulated root. (For a fresh single-anchor bucket, count==1 and
+// bucket.root == SHA-256([0;32] || anchoredRoot); a multi-anchor bucket needs the full
+// anchor sequence to verify a lone root, which we surface rather than fake.)
+
+export interface VerifyAnchoredRootResult {
+  anchored: boolean;
+  bucketPda: string;
+  onChainRoot: string | null; // hex
+  count: number | null;
+  bucketId: bigint | null;
+  matchesFreshAccumulator: boolean | null;
+  note?: string;
+}
+
+export interface AccountabilityVerdict {
+  accountable: boolean;
+  chainValid: boolean;
+  chainViolation?: string;
+  merkleRoot: string; // hex
+  rootAnchored: boolean;
+  layersCovered: ReceiptLayer[];
+  anchor: VerifyAnchoredRootResult;
+}
+
+/** AnchorBucket layout: [ver1][bump1][bucket_id8 LE][count4 LE][root32][updated_at8 LE]. */
+function parseAnchorBucket(data: Uint8Array): { bucketId: bigint; count: number; root: string } {
+  const b = Buffer.from(data);
+  return {
+    bucketId: b.readBigUInt64LE(2),
+    count: b.readUInt32LE(10),
+    root: Buffer.from(b.subarray(14, 46)).toString("hex"),
+  };
+}
+
+/**
+ * Verify that `rootHex` was anchored into a receipt_anchor bucket. Pass either the
+ * `bucketPda` (read it directly) or the `bucketId` (derive the PDA). Read-only.
+ */
+/**
+ * PURE accumulator check (no chain, no web3.js) — does `rootHex` match what a fresh
+ * (count==1) receipt_anchor bucket accumulated? bucket.root == SHA-256([0;32] || root).
+ * Exported so the verification logic is testable offline against raw bucket bytes.
+ */
+export function checkAccumulatedRoot(
+  rootHex: string,
+  bucketData: Uint8Array
+): Omit<VerifyAnchoredRootResult, "bucketPda"> {
+  const { bucketId, count, root: onChainRoot } = parseAnchorBucket(bucketData);
+  const expectFresh = sha256buf(Buffer.concat([Buffer.alloc(32), Buffer.from(rootHex, "hex")])).toString("hex");
+  let matchesFreshAccumulator: boolean | null = null;
+  let note: string | undefined;
+  if (count === 1) {
+    matchesFreshAccumulator = onChainRoot === expectFresh;
+  } else {
+    note = `bucket count=${count}; a lone root only verifies directly against a fresh (count==1) bucket — multi-anchor buckets need the full anchor sequence`;
+  }
+  const r: Omit<VerifyAnchoredRootResult, "bucketPda"> = {
+    anchored: matchesFreshAccumulator === true, onChainRoot, count, bucketId, matchesFreshAccumulator,
+  };
+  if (note !== undefined) r.note = note;
+  return r;
+}
+
+export async function verifyAnchoredRoot(
+  rootHex: string,
+  connection: Connection,
+  options: { programId?: string; bucketId?: bigint; bucketPda?: string }
+): Promise<VerifyAnchoredRootResult> {
+  const { PublicKey } = await import("@solana/web3.js");
+  const programId = new PublicKey(options.programId ?? RECEIPT_ANCHOR_PROGRAM_ID);
+
+  let bucketPda: InstanceType<typeof PublicKey>;
+  if (options.bucketPda !== undefined) {
+    bucketPda = new PublicKey(options.bucketPda);
+  } else if (options.bucketId !== undefined) {
+    const le = Buffer.alloc(8); le.writeBigUInt64LE(options.bucketId);
+    bucketPda = PublicKey.findProgramAddressSync([Buffer.from(RECEIPT_ANCHOR_BUCKET_SEED), le], programId)[0];
+  } else {
+    throw new Error("verifyAnchoredRoot: pass bucketPda or bucketId");
+  }
+
+  const acc = await connection.getAccountInfo(bucketPda, "confirmed");
+  if (acc === null) {
+    return { anchored: false, bucketPda: bucketPda.toBase58(), onChainRoot: null, count: null, bucketId: null, matchesFreshAccumulator: null, note: "bucket account not found" };
+  }
+  return { ...checkAccumulatedRoot(rootHex, acc.data), bucketPda: bucketPda.toBase58() };
+}
+
+/**
+ * One-call proof of accountability: given the receipt batch (payment -> access -> job),
+ * verify the DAG chain (anti-equivocation + parent linkage), recompute its Merkle root,
+ * and confirm that root is anchored on-chain. Returns a structured verdict.
+ */
+export async function verifyAccountability(
+  batch: DagReceipt[],
+  connection: Connection,
+  options: { programId?: string; bucketId?: bigint; bucketPda?: string }
+): Promise<AccountabilityVerdict> {
+  const chain = verifyDagChain(batch);
+  const merkleRoot = buildDagMerkleRoot(batch).toString("hex");
+  const anchor = await verifyAnchoredRoot(merkleRoot, connection, options);
+  const layers = new Set<ReceiptLayer>();
+  for (const r of batch) if (r.layer !== undefined) layers.add(r.layer);
+  const out: AccountabilityVerdict = {
+    accountable: chain.valid && anchor.anchored,
+    chainValid: chain.valid,
+    merkleRoot,
+    rootAnchored: anchor.anchored,
+    layersCovered: [...layers],
+    anchor,
+  };
+  if (chain.violation !== undefined) out.chainViolation = chain.violation;
+  return out;
+}
