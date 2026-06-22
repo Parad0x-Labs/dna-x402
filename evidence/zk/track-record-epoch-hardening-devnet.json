@@ -1,0 +1,24 @@
+{
+  "fix": "track_record / dark_reputation_gate — epoch free-witness (anti-Sybil)",
+  "severity": "high",
+  "class": "replay/double-spend (rate-limit bypass)",
+  "date": "2026-06-22",
+  "source": "P1 adversarial ZK audit (wqknkjp8x) + design/red-team pass (wywqxirv7)",
+  "before": "epoch was an UNBOUND PRIVATE free witness in track_record.circom, used only in reputation_nullifier = Poseidon(DOMAIN_REP, secret, epoch). A single identity (fixed secret) could pick arbitrarily many epoch values -> unbounded distinct nullifiers, each passing the [b'rep_nullifier'] single-use PDA check -> zero rate-limit / anti-Sybil.",
+  "after": "epoch is now a PUBLIC circuit input (appended last: nPublic 6->7). The gate requires epoch == floor(Clock.unix_timestamp / EPOCH_LEN) (current bucket only, no carry), capping each identity to one reputation_nullifier per EPOCH_LEN window. EPOCH_LEN = 86_400s (1 day) for GhostScore; it lives only in the gate + prover (not the circuit), so it is cheap to retune without a re-ceremony.",
+  "changes": [
+    "circuits/track_record.circom: epoch promoted to public[] (last); recompiled -> public inputs 7, IC 8.",
+    "crates/dark-groth16-core/src/track_record_vk.rs: regenerated (NR_PUBLIC_INPUTS=7, IC[7]=epoch).",
+    "scripts/zk/track-record-vk-to-rust.mjs: LABELS += epoch, NR_PUBLIC_INPUTS derived from LABELS.length.",
+    "programs/dark_reputation_gate/src/lib.rs: OFF_EPOCH=448, INSTRUCTION_DATA_LEN 448->480, EPOCH_LEN const, epoch_in_window() check before the pairing (Custom(12) on mismatch), epoch added to public_inputs[]."
+  ],
+  "validation": {
+    "circuit_recompile": "sandboxed (docker --network none, sandbox/x402v2/run-trackrecord.sh): non-linear constraints 11950, public inputs 7, VK nPublic=7 / IC=8.",
+    "gate_unit_tests": "cargo test -p dark-reputation-gate --lib: 6/6 — current_window_is_accepted, future_epoch_is_rejected, stale_epoch_is_rejected, the_sybil_attack_is_closed (exactly one epoch accepted of 7 self-chosen), out_of_u64_range_epoch_is_rejected, negative_clock_is_rejected.",
+    "gate_compile": "cargo build -p dark-reputation-gate: clean with the regenerated 7-input VK + 7-element public_inputs."
+  },
+  "vk_sha256_single_party_pilot": "28f6dad4dd4e1fa0",
+  "deploy_notes": "DEVNET only. The mainnet dark_reputation_gate (9nN7UTTT…) is the HOSTILE/stolen program from the 2026-06-14 incident (upgrade authority = attacker F6Fr…) and must NOT be reused. The devnet rail (gate CVhsfWR1…, tree H9nL…) is the target. Adding a public input changes the zkey, so a phase-2 re-ceremony is required before redeploy: recompile + ceremony/run-ceremony.mjs --circuit track_record -> new VK -> rebuild + redeploy gate to devnet. mainnet_ready stays false.",
+  "pending_deploy_step": "The 3 devnet e2e/prover wire-builders (scripts/zk/track-record-e2e.mjs, scripts/zk/full-stack-e2e.mjs, build/zk/reputation-serverless-e2e.mjs) must be updated for the new wire before the devnet run: epoch = floor(now/EPOCH_LEN) (not a hardcoded constant), 448->480-byte payload with epoch as public input [6], and (for the self-payment fix) counterparty := recipient.key. They are devnet-run-only and were not edited blind — update them as part of the re-ceremony + redeploy.",
+  "founder_decision": "EPOCH_LEN = 86_400 (1 day) is the proposed GhostScore cadence (one reputation present per identity per day). Cheap to change (gate const + prover; no re-ceremony). Confirm or retune."
+}

@@ -37,7 +37,9 @@ pragma circom 2.1.6;
 //   fee against a denomination the pool does not have.
 //
 // Public inputs (visible on-chain — must match instruction accounts/state exactly):
-//   - nullifier     BN254 Fr = Poseidon(3, DOMAIN_NULLIF=2, secret, pool_key_field)
+//   - nullifier     BN254 Fr = Poseidon(3, DOMAIN_NULLIF=2, secret, pool_id)
+//                   pool_id is PUBLIC, so the nullifier is one-per-note-per-pool —
+//                   no free witness, no malleability, no double-spend.
 //   - merkle_root   BN254 Fr = root of the on-chain Poseidon commitment tree
 //   - recipient     BN254 Fr = withdrawal destination wallet (reduced mod r)
 //   - pool_id       BN254 Fr = pool program PDA (reduced mod r)
@@ -48,9 +50,8 @@ pragma circom 2.1.6;
 // Private inputs (stay client-side, never on-chain):
 //   - secret           32-byte random note secret
 //   - leaf_index       u64 leaf position in the commitment tree
-//   - pool_key_field   pool program PDA as Fr field element
 //   - path_elements    TREE_DEPTH sibling hashes
-//   - path_index       TREE_DEPTH left/right indicators (0=left, 1=right)
+//   - path_index       TREE_DEPTH left/right indicators (boolean-constrained, 0=left, 1=right)
 //   - payout_recipient witness = denomination - fee (constrained, not free)
 //
 // Compile:
@@ -66,19 +67,10 @@ include "node_modules/circomlib/circuits/mux1.circom";
 include "node_modules/circomlib/circuits/comparators.circom";
 
 // ── parameters ─────────────────────────────────────────────────────────────────
-// Merkle tree depth — 20 levels = up to 2^20 ≈ 1M notes per pool.
-var TREE_DEPTH = 20;
-
-// Domain tags — prevent cross-function Poseidon collisions.
-var DOMAIN_COMMIT = 1;
-var DOMAIN_NULLIF = 2;
-
-// Fee accounting bit-width. Lamports fit in u64, so 64 bits bounds fee, denomination
-// and payout to the non-negative u64 range. MAX_FEE caps the relayer reimbursement.
-// 50_000_000 lamports = 0.05 SOL — generous headroom over real devnet tx+rent cost
-// (~0.0001 SOL) while staying well below the 0.1 SOL smallest denomination bucket.
-var FEE_BITS = 64;
-var MAX_FEE  = 50000000;
+// Merkle tree depth — 20 levels = up to 2^20 ≈ 1M notes per pool (the literal passed to
+// the main component below). The numeric constants live inside ShieldedWithdraw as local
+// `var`s (circom does not allow top-level `var` declarations); they inline to the same
+// R1CS regardless of where they are declared.
 
 // ── Merkle tree verifier ──────────────────────────────────────────────────────
 template MerkleProof(depth) {
@@ -94,6 +86,12 @@ template MerkleProof(depth) {
     hashes[0] <== leaf;
 
     for (var i = 0; i < depth; i++) {
+        // Boolean-constrain the selector bit. MultiMux1 only computes a LINEAR blend
+        // out = (c1 - c0)*s + c0, so a non-boolean s (e.g. 2) does NOT select a sibling
+        // — it produces an arbitrary combination, letting a prover bend the Merkle path.
+        // Force s in {0,1} so each level is a real left/right choice.
+        path_index[i] * (path_index[i] - 1) === 0;
+
         poseidons[i] = Poseidon(2);
         muxes[i]     = MultiMux1(2);
 
@@ -126,10 +124,15 @@ template ShieldedWithdraw(depth) {
     // ── Private inputs (never leave the client) ────────────────────────────────
     signal input secret;
     signal input leaf_index;
-    signal input pool_key_field;
     signal input path_elements[depth];
     signal input path_index[depth];
     signal input payout_recipient; // witness: must equal denomination - fee
+
+    // ── constants (local — circom forbids top-level `var`; these inline regardless) ─
+    var DOMAIN_COMMIT = 1;   // Poseidon domain tag for the commitment
+    var DOMAIN_NULLIF = 2;   // Poseidon domain tag for the nullifier
+    var FEE_BITS = 64;       // lamports fit in u64; bounds fee/denomination/payout >= 0
+    var MAX_FEE  = 50000000; // 0.05 SOL fee cap — headroom over devnet cost, < 0.1 SOL denom
 
     // ── 1. Commit = Poseidon(DOMAIN_COMMIT, secret, leaf_index) ───────────────
     component commitment_hasher = Poseidon(3);
@@ -145,22 +148,26 @@ template ShieldedWithdraw(depth) {
     merkle_proof.path_elements <== path_elements;
     merkle_proof.path_index    <== path_index;
 
-    // ── 3. Nullifier = Poseidon(DOMAIN_NULLIF, secret, pool_key_field) ─────────
+    // ── 3. Nullifier = Poseidon(DOMAIN_NULLIF, secret, pool_id) ────────────────
+    // pool_id is the PUBLIC pool PDA (reduced mod r). Binding the nullifier to it
+    // — instead of the old free private `pool_key_field` witness — makes the nullifier
+    // a deterministic function of (secret, pool_id): exactly ONE valid nullifier per
+    // note per pool. A prover can no longer mint a fresh nullifier for the same note,
+    // so the on-chain nullifier-uniqueness check blocks every double-spend.
     component nullifier_hasher = Poseidon(3);
     nullifier_hasher.inputs[0] <== DOMAIN_NULLIF;
     nullifier_hasher.inputs[1] <== secret;
-    nullifier_hasher.inputs[2] <== pool_key_field;
+    nullifier_hasher.inputs[2] <== pool_id;
     signal computed_nullifier  <== nullifier_hasher.out;
     nullifier === computed_nullifier;
 
-    // ── 4. Bind recipient, pool_id, relayer (front-run / redirect protection) ──
-    // These are public, so a substituted value invalidates the proof. The explicit
-    // assignments keep the optimiser from dropping the wires.
+    // ── 4. Bind recipient, relayer (front-run / redirect protection) ───────────
+    // These are public, so a substituted value changes the public-input vector and
+    // invalidates the proof. pool_id is now bound via the nullifier above. The explicit
+    // sinks keep the optimiser from dropping the wires.
     signal recipient_check <== recipient;
-    signal pool_id_check   <== pool_id;
     signal relayer_check   <== relayer;
     _ <== recipient_check;
-    _ <== pool_id_check;
     _ <== relayer_check;
 
     // ── 5. Fee accounting — the relayer-incentive binding ──────────────────────

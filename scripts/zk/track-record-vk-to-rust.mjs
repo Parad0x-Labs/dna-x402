@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * circuits/out/track_record_vk.json -> crates/dark-groth16-core/src/track_record_vk.rs
- * Same EIP-197 (imaginary-first) G2 encoding as 02-vk-json-to-rust.mjs. 6 public inputs.
+ * Same EIP-197 (imaginary-first) G2 encoding as 02-vk-json-to-rust.mjs. 7 public inputs
+ * (epoch is now public — bound on-chain to the clock window for anti-Sybil rate-limiting).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -11,7 +12,7 @@ import { fileURLToPath } from "node:url";
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const VK_PATH = join(REPO, "circuits", "out", "track_record_vk.json");
 const OUT = join(REPO, "crates", "dark-groth16-core", "src", "track_record_vk.rs");
-const LABELS = ["root", "min_count", "min_volume", "window_start", "reputation_nullifier", "agent_commitment"];
+const LABELS = ["root", "min_count", "min_volume", "window_start", "reputation_nullifier", "agent_commitment", "epoch"];
 
 const raw = readFileSync(VK_PATH);
 const vk = JSON.parse(raw);
@@ -40,8 +41,8 @@ const rust = `//! Track-Record Circuit Groth16 verifying key for dark_reputation
 //! Generated from: circuits/out/track_record_vk.json
 //! Circuit:        track_record — Poseidon receipt-Merkle membership x K + count/volume/window + nullifier
 //! Curve:          BN254 (bn128)   Protocol: groth16
-//! Public inputs:  6 (root, min_count, min_volume, window_start, reputation_nullifier, agent_commitment)
-//! Ceremony:       Single-party (devnet POC, locally-generated pot16). Devnet only.
+//! Public inputs:  7 (root, min_count, min_volume, window_start, reputation_nullifier, agent_commitment, epoch)
+//! Ceremony:       Single-party (devnet POC, locally-generated pot15). Devnet only.
 //!                 Reuse a public Hermez/PSE ptau + multi-party phase-2 before mainnet trust.
 //! VK SHA-256:     ${vkSha}
 //!
@@ -50,7 +51,7 @@ const rust = `//! Track-Record Circuit Groth16 verifying key for dark_reputation
 
 use crate::{G1Affine, G2Affine, VerificationKey};
 
-pub const NR_PUBLIC_INPUTS: usize = 6;
+pub const NR_PUBLIC_INPUTS: usize = ${LABELS.length};
 
 pub fn track_record_vk() -> VerificationKey {
     VerificationKey {

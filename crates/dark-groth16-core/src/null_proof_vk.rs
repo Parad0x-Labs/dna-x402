@@ -184,6 +184,11 @@ pub fn null_proof_vk() -> VerificationKey {
         ],
     }
         ],
-        mainnet_ready: true,
+        // Single-party (1-of-1) disclosed-pilot ceremony: the setup runner could hold
+        // toxic waste and forge a proof for arbitrary public inputs. The gate guard
+        // rejects unless mainnet_ready, so this stays false (fail-closed) until a
+        // trustless multi-party Phase-2 ceremony regenerates this VK. Matches the
+        // module doc and the 5 sibling VKs. Do not flip without the ceremony.
+        mainnet_ready: false,
     }
 }

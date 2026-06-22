@@ -7,9 +7,12 @@
 //! signer: anyone can record a receipt, but only by actually paying `amount` to the recipient.
 //! This removes the off-chain trust + liveness dependency (the old pinned `O_AUTH`/
 //! `CANONICAL_AUTHORITY`) while keeping receipts unforgeable — a leaf can only enter the tree
-//! as a side-effect of a settled payment, not by fiat. (Residual: self-payment can farm
-//! reputation at the cost of fees/capital — harden later with distinct-counterparty / burn /
-//! stake; that is a threat-model knob, not a server dependency.)
+//! as a side-effect of a settled payment, not by fiat. Self-payment is REJECTED
+//! (`recipient.key != payer.key`) and the leaf's `counterparty` is bound on-chain to the real
+//! `recipient.key` (not a caller-chosen field), so an agent cannot farm reputation by paying
+//! itself or forging the counterparty. (Residual: an agent controlling two funded wallets can
+//! still book real distinct-recipient receipts at real capital cost — full Sybil resistance
+//! needs distinct-counterparty/min-amount/burn economics, a threat-model knob, not a server dep.)
 //!
 //! The tree keeps only the frontier + a rolling root history on-chain (NOT the leaves), so
 //! cost is constant. The root equals the one dark_reputation_gate verifies track-record proofs
@@ -20,7 +23,8 @@
 //! Instructions:
 //!   0x00 Initialize         accounts: [payer(s,w), tree_pda(w), system]      data: tree_id[8]
 //!   0x02 SettleAndRecord    accounts: [payer(s,w), recipient(w), tree_pda(w), system]
-//!                           data: tree_id[8] agent_commitment[32] amount_le[8] counterparty[32] nonce[32]
+//!                           data: tree_id[8] agent_commitment[32] amount_le[8] counterparty[32](IGNORED) nonce[32]
+//!                           (counterparty bytes are ignored; the leaf binds counterparty := recipient.key)
 
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -79,7 +83,7 @@ fn u64_to_be32(x: u64) -> [u8; 32] {
     o
 }
 
-fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
+pub fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let (tag, rest) = data.split_first().ok_or(ProgramError::InvalidInstructionData)?;
     match tag {
         0x00 => initialize(program_id, accounts, rest),
@@ -144,7 +148,9 @@ fn settle_and_record(program_id: &Pubkey, accounts: &[AccountInfo], rest: &[u8])
     let tree_id: [u8; 8] = rest[0..8].try_into().unwrap();
     let agent_commitment: [u8; 32] = rest[8..40].try_into().unwrap();
     let amount = u64::from_le_bytes(rest[40..48].try_into().unwrap());
-    let counterparty: [u8; 32] = rest[48..80].try_into().unwrap();
+    // rest[48..80] (a caller-supplied counterparty) is intentionally IGNORED — the recorded
+    // counterparty is bound to the real recipient.key below (self-payment-Sybil fix). The 112-byte
+    // layout is preserved so existing callers don't trip the length check.
     let nonce: [u8; 32] = rest[80..112].try_into().unwrap();
 
     let iter = &mut accounts.iter();
@@ -159,6 +165,15 @@ fn settle_and_record(program_id: &Pubkey, accounts: &[AccountInfo], rest: &[u8])
     if amount == 0 {
         return Err(ProgramError::InvalidInstructionData); // a receipt must reflect a real payment
     }
+    // ── self-payment-Sybil fix ─────────────────────────────────────────────────
+    // A receipt is only meaningful if value moved to a DIFFERENT party. Reject paying
+    // yourself (free reputation farming at fee cost), and bind the leaf's counterparty to the
+    // wallet that actually received the funds — not a caller-chosen field — so the recorded
+    // counterparty can never be decoupled from where the money went.
+    if recipient.key == payer.key {
+        return Err(ProgramError::Custom(24)); // SelfPayment — not a real counterparty
+    }
+    let counterparty: [u8; 32] = recipient.key.to_bytes();
     let (pda, _bump) = Pubkey::find_program_address(&[TREE_SEED, &tree_id], program_id);
     if tree.key != &pda {
         return Err(ProgramError::InvalidArgument);
