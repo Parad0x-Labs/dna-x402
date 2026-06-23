@@ -1,0 +1,22 @@
+{
+  "name": "NullPay Stealth Inbox — ed25519 explicit-scalar one-time address",
+  "date": "2026-06-22",
+  "layer": "crypto kill-test (offline, no chain, no mainnet write)",
+  "claim": "Pay a .null name; funds land on a fresh one-time ed25519 address only the recipient can sweep. The make-or-break: a stealth-derived scalar (NOT bit-clamped like a normal ed25519 seed) still produces a signature that STOCK RFC-8032 ed25519 verify accepts, so Solana accepts the sweep.",
+  "scheme": "Recipient publishes meta = (Scan=scan_sk*G, Spend=spend_sk*G). Sender: ephemeral Eph=eph_sk*G, ECDH shared=H(eph_sk*Scan), t=H(shared), one-time P=Spend+t*G. Recipient: shared=H(scan_sk*Eph) (DH symmetry), one-time secret p=(spend_sk+t) mod L, p*G==P. Sweep signed with the explicit unclamped p.",
+  "tooling": "@noble/curves/ed25519 (Point ops + stock ed25519.verify), manual RFC-8032 explicit-scalar sign, sandboxed docker --network none",
+  "script": "build/zk/nullpay-stealth-killtest.mjs",
+  "result": "PASS (7/7)",
+  "checks": {
+    "ECDH shared secret matches (sender == recipient)": true,
+    "recovered one-time secret controls the address": true,
+    "one-time scalar is UNCLAMPED (not a normal seed)": true,
+    "explicit-scalar sig verifies under STOCK ed25519": true,
+    "wrong key cannot sign for the address": true,
+    "tampered sweep message rejected": true,
+    "distinct payments unlinkable (no scan key)": true
+  },
+  "corroborates": "evidence/nullpay-stealth-devnet.json — the SAME claim already landed on devnet (real pay_stealth + sweep tx 31g9mZbg…, stealth address 2Qgsac4Q…, metaRoundtrip/fundsLanded/scanDetected PASS).",
+  "reuses": "crates/dark-stealth-ed25519, dark-stealth-address, dark-batch-stealth-scan (view-tag O(1) scan); live R1 registrar SetStealthMeta (IX 0x06); NullDomain.x402_endpoint to publish the ephemeral.",
+  "status": "Crypto core PROVEN offline + devnet-proven on-chain. The remaining work is off-chain TS glue (sender derive / recipient scan+sweep) against the LIVE registrar — that leg involves a real on-chain write and waits for the founder. Publish the proof + the design; do not write mainnet unattended."
+}
