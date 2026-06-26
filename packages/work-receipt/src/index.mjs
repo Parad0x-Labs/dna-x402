@@ -19,7 +19,7 @@
 //                 commits its taskSpecHash, so the evidence is there, but it is not a single
 //                 verifyDagChain call (deriving sequenceNonce from taskSpecHash is a follow-up).
 //
-// HONEST BOUNDARIES (do NOT overclaim): NO fair exchange (a requester can see-then-withhold the
+// LIMITS (do NOT overclaim): NO fair exchange (a requester can see-then-withhold the
 // accept, a worker can withhold bytes — the absence of an accept is a dispute SIGNAL, not a clawback;
 // fair exchange is impossible non-custodial with signatures alone — Pagnia–Gärtner). NO subjective
 // correctness (agent-as-judge is out). NO dispute RESOLVER — v0 RECORDS conflicting attestations, it
