@@ -1,0 +1,16 @@
+{
+  "name": "@parad0x_labs/work-receipt",
+  "version": "0.1.0",
+  "description": "Verify agent WORK, not just payment: trustless, serverless, non-custodial task<->deliverable binding + a deterministic check gate, anchored on Solana. Composes with receipt-dag.",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "files": ["src/", "README.md", "LICENSE"],
+  "keywords": ["work-verification", "task-binding", "agent", "solana", "ed25519", "receipt", "non-custodial", "parad0x-labs"],
+  "dependencies": { "@noble/curves": "^2.2.0", "@noble/hashes": "^2.2.0" },
+  "peerDependencies": { "@parad0x_labs/receipt-dag": "^0.2.0" },
+  "scripts": { "test": "node test/work-receipt.test.mjs" },
+  "engines": { "node": ">=22" },
+  "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "https://github.com/Parad0x-Labs/dna-x402", "directory": "packages/work-receipt" }
+}
