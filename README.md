@@ -380,6 +380,7 @@ Run the Rust regression suite with: `cargo test --workspace`
 - Proof and rollout docs: [`docs/`](./docs)
 - Public site: [`site/`](./site)
 - `/agent` UI: [`site-agent/`](./site-agent)
+- Want native `.null` identity + pay-by-name in your agent? Add the companion MCP in one line: `claude mcp add null -- npx -y @parad0x_labs/null-mcp` (resolve, register, private pay, verifiable receipts — keyless, BYO signer). Tool list: [npmjs.com/package/@parad0x_labs/null-mcp](https://www.npmjs.com/package/@parad0x_labs/null-mcp)
 
 ## Quick Start
 
