@@ -54,4 +54,6 @@ jobs:
 
       - name: Summary
         run: |
-          echo "## Security Audit — $(date -u +
+          echo "## Security Audit — $(date -u +'%Y-%m-%d %H:%M UTC')" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Ran npm audit, pip-audit, and cargo audit. Per-ecosystem results are in the step logs above." >> "$GITHUB_STEP_SUMMARY"
