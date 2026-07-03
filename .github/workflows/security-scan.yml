@@ -120,3 +120,15 @@ jobs:
 
       - name: Test receipt anchor program
         run: cargo test --manifest-path programs/receipt_anchor/Cargo.toml
+
+  x402-refund-escrow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Test x402 refund escrow program
+        run: cargo test --manifest-path programs/x402_refund_escrow/Cargo.toml

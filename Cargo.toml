@@ -223,6 +223,8 @@ members = [
     "programs/agent_credential_mint",
     # NULL_REGISTRAR — .null domain name system on Solana
     "programs/null_registrar",
+    # X402_REFUND_ESCROW — refund-on-failure conditional settlement for x402
+    "programs/x402_refund_escrow",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

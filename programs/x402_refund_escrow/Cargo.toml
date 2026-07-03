@@ -1,0 +1,27 @@
+[package]
+name = "x402-refund-escrow"
+version = "0.1.0"
+edition = "2021"
+description = "Refund-on-failure conditional-settlement escrow for x402: settlement-carries-receipt (ed25519 verified via the instructions sysvar), equivocation-as-fraud-proof, timeout auto-refund."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+no-entrypoint = []
+
+[dependencies]
+solana-program = "=1.18.26"
+thiserror = "1.0"
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk = { workspace = true }
+tokio = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("custom-heap", "custom-panic"))',
+    'cfg(target_os, values("solana"))',
+] }
