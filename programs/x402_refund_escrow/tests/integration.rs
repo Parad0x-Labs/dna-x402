@@ -10,6 +10,7 @@ use solana_sdk::{
     account::Account,
     ed25519_program,
     instruction::{AccountMeta, Instruction},
+    program_pack::Pack,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_instruction, system_program, sysvar,
