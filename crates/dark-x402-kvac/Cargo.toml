@@ -12,7 +12,7 @@ std = ["serde_json"]
 dark-kvac = { path = "../dark-kvac" }
 dark-x402-core = { path = "../dark-x402-core" }
 curve25519-dalek = { version = "3.2.1", default-features = false, features = ["u64_backend"] }
-sha2 = "0.9"   # matches dark-kvac's digest 0.9 (curve25519-dalek 3.2.1)
+sha2 = "0.9"   # matches dark-kvac's digest 0.11 (curve25519-dalek 3.2.1)
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
 

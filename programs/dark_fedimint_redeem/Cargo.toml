@@ -16,7 +16,7 @@ dark-fedimint-ecash = { path = "../../crates/dark-fedimint-ecash", default-featu
 # Point arithmetic on-chain is via syscalls, so the stack-heavy basepoint tables
 # are never reached.
 curve25519-dalek = { version = "3.2.1", default-features = false, features = ["u64_backend"] }
-sha2 = "0.9"
+sha2 = "0.11"
 
 [dev-dependencies]
 solana-program-test = { workspace = true }

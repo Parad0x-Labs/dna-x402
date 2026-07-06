@@ -16,7 +16,7 @@ stub = ["dep:sha2"]
 
 [dependencies]
 # Legacy SHA-256 stub backend (feature `stub` only).
-sha2 = { version = "0.10", optional = true }
+sha2 = { version = "0.11", optional = true }
 
 # HOST backend (cargo test, off-chain prover/indexer): Light Protocol's
 # circomlib-compatible BN254 Poseidon. Matches

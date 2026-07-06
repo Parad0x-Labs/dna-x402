@@ -2017,7 +2017,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.9.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2027,7 +2027,7 @@ dependencies = [
  "curve25519-dalek",
  "dark-fedimint-ecash",
  "rand 0.8.6",
- "sha2 0.9.9",
+ "sha2 0.11.0",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -2212,7 +2212,7 @@ dependencies = [
  "rand 0.8.6",
  "serde",
  "serde_json",
- "sha2 0.9.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2557,7 +2557,7 @@ dependencies = [
  "ark-ff 0.4.2",
  "hex",
  "light-poseidon",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-program",
 ]
 
@@ -3384,7 +3384,7 @@ dependencies = [
  "hex",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -3661,7 +3661,7 @@ dependencies = [
  "dark-x402-core",
  "serde",
  "serde_json",
- "sha2 0.9.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -10642,6 +10642,17 @@ name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
+
+[[package]]
+name = "x402-refund-escrow"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "thiserror",
+ "tokio",
+]
 
 [[package]]
 name = "x509-parser"
