@@ -1672,7 +1672,7 @@ dependencies = [
  "ark-bn254",
  "ark-ec 0.6.0",
  "ark-ff 0.4.2",
- "ark-serialize 0.4.2",
+ "ark-serialize 0.6.0",
  "solana-program",
 ]
 
@@ -10642,6 +10642,17 @@ name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
+
+[[package]]
+name = "x402-refund-escrow"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "thiserror",
+ "tokio",
+]
 
 [[package]]
 name = "x509-parser"
