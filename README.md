@@ -4,6 +4,7 @@
 ![Chain: Solana](https://img.shields.io/badge/Chain-Solana-14F195?style=flat-square)
 ![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
 ![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
+![Attack replays rejected live: 10/10](https://img.shields.io/badge/Attack_Replays_Rejected-10%2F10_live-00C2A8?style=flat-square)
 
 <p align="center">
   <img src="./docs/assets/github-header-dna-x402.png" alt="Parad0x Labs" width="100%" />
@@ -26,6 +27,17 @@ https://github.com/Parad0x-Labs/dna-x402
 ```
 
 `Parad0x-Labs/x402-dna` is a legacy mirror. Public links, install instructions, and builder docs should point to `dna-x402`.
+
+## 🔥 The numbers
+
+| | |
+|---|---|
+| **Real Groth16 verification on Solana** | BN254 proofs verified on-chain via the `alt_bn128_pairing` syscall against Poseidon commitment state — shielded deposits and withdrawals, not client-trusted claims |
+| **1,000,000 receipts → 32 bytes** | ZK-compressed receipt anchoring: a million payment proofs cost ~$0.001/day to keep verifiable on-chain forever |
+| **Trusted setup without toxic waste** | Hermez Perpetual Powers of Tau + drand League-of-Entropy beacon, SHA-256-pinned transcript in [`ceremony/`](./ceremony/shielded_withdraw_v3/transcript_v3.json) — no single party holds ceremony material |
+| **10/10 attack replays rejected, live** | A public suite fires revocation-forgery, nullifier-bank reset, forged admin, replayed payment and PDA-squatting attacks at the *deployed* devnet programs — every one dies with the expected on-chain error. Signatures: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) |
+| **1551 tests green · 8 programs live on mainnet-beta** | Continuous `mainnet-readiness` CI: build, test suite, dependency audits, secret scan, and a devnet smoke run on every push |
+| **Payments that verify themselves** | x402 402-flow gates check ed25519 payer signatures, enforce single-use proofs, confirm USDC settlement on-chain before unlocking, and anchor a compressed receipt after |
 
 ## 💸 What you could build with it
 
