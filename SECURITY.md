@@ -34,6 +34,18 @@ Main controls:
 - rate limiting on market write surfaces
 - verified tier requires on-chain anchor confirmation
 
+## Hardening Record (August 2026)
+
+Verified live on Agave 4.2.1 devnet; hostile instructions rejected with expected program errors. Evidence: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md).
+
+- `openclaw-x402-gate`: ed25519 payment signature verification, single-use replay store, on-chain settlement confirmed by default, payee validated in the confirmed transaction.
+- `agent_credential_mint`: revocation and device-key rotation require program signatures from the protocol authority / agent wallet.
+- `null_token_hook`: canonical `[b"hook-config"]` PDA binds allowlist administration to one config; execution is fail-closed under the `mainnet` feature.
+- `dark_nullifier_banks`: initialization of live bank state is rejected (`BankAlreadyInitialized`).
+- `null_mint_gate`: emission claims are co-signed by the stored config authority.
+- `dark_shielded_pool`, `receipt_commitment_tree`: PDA creation tolerates lamport front-running via top-up/allocate/assign.
+- x402 server layer: callback URL validation (loopback/link-local/private-range), synchronous proof reservation in seller/paywall finalize paths, constant-time API key comparison.
+
 ## Security Checks
 
 Run before sharing/deploying:
