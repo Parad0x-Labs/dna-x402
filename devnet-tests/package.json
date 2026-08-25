@@ -1,0 +1,10 @@
+{
+  "name": "dna-x402-devnet-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node suite.ts" },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4"
+  }
+}

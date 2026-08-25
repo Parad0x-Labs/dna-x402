@@ -190,3 +190,4 @@ build/zk/e2e/
 # vk.json + transcript_v3.json + intermediate contribution zkeys), but NEVER commit
 # the large public ptau (290 MB, freely re-downloadable from Hermez) or any entropy.
 ceremony/shielded_withdraw_v3/*.ptau
+devnet-keys/
