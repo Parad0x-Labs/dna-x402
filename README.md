@@ -117,13 +117,30 @@ These are additive layers. Drop them in alongside what you already ship.
 
 ---
 
-## What just shipped (June 2026)
+## What just shipped (August 2026)
+
+**Security hardening release — verified live on Agave 4.2.1 devnet.**
+
+Every settlement-critical path now enforces cryptographic authority end to end, and the enforcement is proven by a public attack-replay suite: 10 hostile scenarios fired against the deployed programs on devnet, every one rejected with the expected on-chain program error.
+
+- **Payment gates verify signatures, not JSON shape.** `openclaw-x402-gate` validates ed25519 payment signatures against the payer key and confirms settlement on-chain before unlocking a resource — on-chain confirmation is the default.
+- **Replay-proof by construction.** Payment proofs are single-use with a pluggable replay store; double-finalize races in the seller/paywall SDKs are closed by synchronous proof reservation.
+- **Signer authority across the program suite.** Credential revocation, device-key rotation, allowlist administration, nullifier-bank initialization, and emission claims all require verified program signatures — no unsigned authority paths remain.
+- **Prefund-tolerant PDA creation** in the shielded pool and receipt tree: account initialization survives lamport-front-running, using the same top-up/allocate/assign pattern proven in the access gate.
+- **SSRF-hardened callbacks**: server-side fetches reject loopback, link-local, and private-range targets.
+- **Constant-time secret comparison** across paywall API-key checks.
+
+Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) · rerun anytime with `node devnet-tests/suite.ts`.
+
+---
+
+## What shipped in June 2026
 
 20+ packages shipped across payments, privacy, compression, identity, and Web0:
 
 | Package | What it does |
 |---|---|
-| [`openclaw-x402-gate`](./packages/openclaw-x402-gate) | Server-side 402 challenge + structural verify + on-chain USDC settle confirmation. **Public beta**, non-custodial (`recipientAddress` is your own wallet — the gate holds no keys), unaudited. |
+| [`openclaw-x402-gate`](./packages/openclaw-x402-gate) | Server-side 402 challenge with ed25519 signature verification, single-use replay protection, and on-chain USDC settle confirmation (default). **Public beta**, non-custodial (`recipientAddress` is your own wallet — the gate holds no keys), unaudited. |
 | [`openclaw-x402-pay`](./packages/openclaw-x402-pay) | Self-custody client payer with a **hard spend cap enforced before any transaction is signed** (`maxAmountUsdc`), BYO-signer, no key custody. **Public beta**, unaudited. |
 | [`@parad0x_labs/outcome-receipts`](./packages/outcome-receipts) | Creator-signed outcome attached to delivery receipt. Success fee fires only if outcome is positive. No-fake-PnL enforced on-chain, not by marketing. |
 | [`@parad0x_labs/agent-reputation`](./packages/agent-reputation) | Agent proves delivery rate, accuracy, and latency without revealing any buyer. ZK-ready over receipt history. |
@@ -195,7 +212,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
 > Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.
 
-**1551 tests green. 8 programs live on Solana mainnet-beta. 20+ packages shipped.**
+**1551 tests green. 8 programs live on Solana mainnet-beta. 20+ packages shipped. 10/10 live attack replays rejected on Agave 4.2.1 devnet.**
 
 ### Current public status
 

@@ -34,9 +34,9 @@
 | `dark_semaphore` | Signature verification skipped; nullifier PDA still written | Low — nullifier registry only, no token movement |
 | `dark_secp256r1_vault` | P-256 assertion not verified on-chain; PDA still written | Low — devnet trust model, no funds at risk |
 | `dark_secp256k1_auth` | ETH sig not verified on-chain; binding PDA still written | Low — devnet trust model, no funds at risk |
-| `null_token_hook` | Permissive pass-through up to `dark_pool_limit_atomic` | Low — existing NULL token is standard SPL; Token-2022 hooks cannot be registered on it |
+| `null_token_hook` | Permissive pass-through up to `dark_pool_limit_atomic`; allowlist admin bound to the canonical `[b"hook-config"]` PDA (re-run `InitConfig` after deploying builds from this revision) | Low — existing NULL token is standard SPL; Token-2022 hooks cannot be registered on it |
 | `null_lottery` | Commit-reveal draw recorded; SPL token settlement skipped | Low — no real currency moves in this mode |
-| `null_mint_gate` | Emission claim PDA written; SPL mint CPI skipped | Low — accounting only, no NULL actually minted |
+| `null_mint_gate` | Emission claim PDA written; SPL mint CPI skipped; claims co-signed by config authority | Low — accounting only, no NULL actually minted |
 
 All enforcement activates only when programs are rebuilt with `--features mainnet` **after external audit sign-off**.
 
