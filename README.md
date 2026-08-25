@@ -36,7 +36,7 @@ https://github.com/Parad0x-Labs/dna-x402
 | **1,000,000 receipts → 32 bytes** | ZK-compressed receipt anchoring: a million payment proofs cost ~$0.001/day to keep verifiable on-chain forever |
 | **Trusted setup without toxic waste** | Hermez Perpetual Powers of Tau + drand League-of-Entropy beacon, SHA-256-pinned transcript in [`ceremony/`](./ceremony/shielded_withdraw_v3/transcript_v3.json) — no single party holds ceremony material |
 | **10/10 attack replays rejected, live** | A public suite fires revocation-forgery, nullifier-bank reset, forged admin, replayed payment and PDA-squatting attacks at the *deployed* devnet programs — every one dies with the expected on-chain error. Signatures: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) |
-| **1551 tests green · 8 programs live on mainnet-beta** | Continuous `mainnet-readiness` CI: build, test suite, dependency audits, secret scan, and a devnet smoke run on every push |
+| **1551 tests green · 6 hardened programs live on devnet** | Continuous `mainnet-readiness` CI: build, test suite, dependency audits, secret scan, and a devnet smoke run on every push |
 | **Payments that verify themselves** | x402 402-flow gates check ed25519 payer signatures, enforce single-use proofs, confirm USDC settlement on-chain before unlocking, and anchor a compressed receipt after |
 
 ## 💸 What you could build with it
@@ -224,16 +224,17 @@ paths, NULL emission accounting, and lottery/root primitives.
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
 > Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.
 
-**1551 tests green. 8 programs live on Solana mainnet-beta. 20+ packages shipped. 10/10 live attack replays rejected on Agave 4.2.1 devnet.**
+**1551 tests green. 6 hardened programs live on Solana devnet (Agave 4.2.1). 20+ packages shipped. 10/10 live attack replays rejected.**
 
 ### Current public status
 
 | Surface | Status |
 |---|---|
-| OSS devnet profile | Ready to deploy with zero fees and zero NULL emission |
-| Commercial mainnet profile | Ready for mainnet pilot deploy after wallet/RPC/program-id checks; external audit pending |
+| Devnet deployment | 6 hardened programs live on Agave 4.2.1 devnet with a public attack-replay suite ([`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md)) |
+| Mainnet | No active mainnet deployments; earlier mainnet program IDs have been retired |
+| Commercial profile | Ready for pilot deploy after wallet/RPC/program-id provisioning; external audit pending |
 | Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
-| NULL token | Mainnet mint exists: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` |
+| NULL token | No active token mint; token launch follows the audit gate |
 
 ### Deploy profile programs
 

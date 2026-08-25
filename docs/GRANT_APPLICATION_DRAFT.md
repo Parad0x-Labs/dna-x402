@@ -1,3 +1,5 @@
+> **Status update (2026-08-25):** The mainnet program deployments described in this document have been retired and are no longer active. Current live deployments are on Solana devnet (Agave 4.2.1) from the hardened `main` branch — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) for verified evidence. The content below is preserved as a historical record of its original date.
+
 # DNA x402 — Solana Foundation Grant Application
 
 **Applicant:** Parad0x Labs  

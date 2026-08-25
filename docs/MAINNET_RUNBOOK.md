@@ -1,3 +1,5 @@
+> **Status update (2026-08-25):** The mainnet program deployments referenced here have been retired and are no longer active. Current live deployments are devnet-only — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
+
 # DNA x402 — Mainnet Runbook
 
 **Last updated:** 2026-05-29  

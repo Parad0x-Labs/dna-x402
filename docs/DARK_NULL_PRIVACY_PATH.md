@@ -54,7 +54,7 @@ It does not store:
 
 DNA x402 normal path:
 
-- mainnet-beta receipt-anchor program is active for DNA receipt anchoring
+- DNA receipt anchoring runs on the devnet `receipt_commitment_tree` deployment; mainnet anchoring is not active
 - Public Beta live payment flows are capped and direct-split gated
 
 Dark Null path:
