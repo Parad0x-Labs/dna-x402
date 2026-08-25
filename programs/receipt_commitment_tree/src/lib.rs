@@ -116,11 +116,29 @@ fn initialize(program_id: &Pubkey, accounts: &[AccountInfo], rest: &[u8]) -> Pro
         return Err(ProgramError::Custom(21)); // already initialized
     }
     let rent = Rent::get()?.minimum_balance(TREE_LEN);
-    invoke_signed(
-        &system_instruction::create_account(payer.key, &pda, rent, TREE_LEN as u64, program_id),
-        &[payer.clone(), tree.clone(), system_program.clone()],
-        &[&[TREE_SEED, &tree_id, &[bump]]],
-    )?;
+    // Prefund-hardened creation (mirrors dark_x402_access_gate): a 1-lamport
+    // pre-fund of the PDA would make the bare create_account CPI fail forever.
+    // Top-up/allocate/assign under the PDA seeds instead.
+    let tree_seeds: &[&[u8]] = &[TREE_SEED, &tree_id, &[bump]];
+    if tree.lamports() == 0 {
+        invoke_signed(
+            &system_instruction::create_account(payer.key, &pda, rent, TREE_LEN as u64, program_id),
+            &[payer.clone(), tree.clone(), system_program.clone()],
+            &[tree_seeds],
+        )?;
+    } else {
+        let have = tree.lamports();
+        if have < rent {
+            invoke(
+                &system_instruction::transfer(payer.key, &pda, rent - have),
+                &[payer.clone(), tree.clone(), system_program.clone()],
+            )?;
+        }
+        invoke_signed(&system_instruction::allocate(&pda, TREE_LEN as u64),
+            &[tree.clone(), system_program.clone()], &[tree_seeds])?;
+        invoke_signed(&system_instruction::assign(&pda, program_id),
+            &[tree.clone(), system_program.clone()], &[tree_seeds])?;
+    }
 
     let mut d = tree.try_borrow_mut_data()?;
     // O_AUTH vestigial → zeros.

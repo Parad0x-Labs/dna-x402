@@ -36,7 +36,7 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Pr
         HookInstruction::AddToAllowlist { flags } =>
             process_add_to_allowlist(program_id, accounts, flags),
         HookInstruction::RemoveFromAllowlist =>
-            process_remove_from_allowlist(accounts),
+            process_remove_from_allowlist(program_id, accounts),
     }
 }
 
@@ -62,10 +62,15 @@ fn process_execute(
     let _validation_pda  = next_account_info(iter)?;
 
     // Optional: config PDA may be passed as account[5].
-    // If absent, we skip the hook entirely (permissive default).
+    // Fail-closed on mainnet: without the canonical config there is no way to
+    // authorise the transfer. Devnet stays permissive for testing.
     let config_info = iter.next();
     if config_info.is_none() {
-        msg!("null-token-hook: No config account — pass-through");
+        if IS_MAINNET_READY {
+            msg!("null-token-hook: No config account — rejected");
+            return Err(HookError::NotAuthorized.into());
+        }
+        msg!("null-token-hook: No config account — pass-through (devnet)");
         return Ok(());
     }
     let config_info = config_info.unwrap();
@@ -76,7 +81,11 @@ fn process_execute(
         match HookConfig::unpack_from(&data) {
             Some(c) => c,
             None => {
-                msg!("null-token-hook: Config not initialised — pass-through");
+                if IS_MAINNET_READY {
+                    msg!("null-token-hook: Config not initialised — rejected");
+                    return Err(HookError::NotAuthorized.into());
+                }
+                msg!("null-token-hook: Config not initialised — pass-through (devnet)");
                 return Ok(());
             }
         }
@@ -88,9 +97,11 @@ fn process_execute(
         return Ok(());
     }
 
-    // Derive the expected config PDA and verify the account passed is correct.
+    // Derive the CANONICAL config PDA (seeded only by b"hook-config", NOT by
+    // the admin key — a caller-keyed derivation let anyone become their own
+    // admin) and verify the account passed is that one true config.
     let (expected_config_pda, _) = Pubkey::find_program_address(
-        &[b"hook-config", &config.admin],
+        &[b"hook-config"],
         program_id,
     );
     if expected_config_pda != *config_info.key {
@@ -156,8 +167,11 @@ fn process_init_config(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
+    // The config PDA is CANONICAL — seeded only by b"hook-config", not by the
+    // admin key. A caller-keyed derivation let anyone initialise their own
+    // config and self-certify as admin.
     let (expected_pda, bump) = Pubkey::find_program_address(
-        &[b"hook-config", admin_info.key.as_ref()],
+        &[b"hook-config"],
         program_id,
     );
     if expected_pda != *config_pda.key {
@@ -180,7 +194,7 @@ fn process_init_config(
             program_id,
         ),
         &[admin_info.clone(), config_pda.clone(), system_prog.clone()],
-        &[&[b"hook-config", admin_info.key.as_ref(), &[bump]]],
+        &[&[b"hook-config", &[bump]]],
     )?;
 
     let record = HookConfig {
@@ -213,10 +227,10 @@ fn process_add_to_allowlist(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    // Require the hook config PDA as account[4] and verify admin is authorised.
+    // Require the canonical hook config PDA as account[4] and verify admin is authorised.
     let config_pda = next_account_info(iter)?;
     let (expected_config_pda, _) = Pubkey::find_program_address(
-        &[b"hook-config", admin_info.key.as_ref()],
+        &[b"hook-config"],
         program_id,
     );
     if expected_config_pda != *config_pda.key {
@@ -268,13 +282,31 @@ fn process_add_to_allowlist(
 
 // ── RemoveFromAllowlist ───────────────────────────────────────────────────────
 
-fn process_remove_from_allowlist(accounts: &[AccountInfo]) -> ProgramResult {
+fn process_remove_from_allowlist(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let iter          = &mut accounts.iter();
     let allowlist_pda = next_account_info(iter)?;
     let admin_info    = next_account_info(iter)?;
 
     if !admin_info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
+    }
+
+    // Same admin check as AddToAllowlist: require the canonical hook config
+    // PDA and verify the signer is the stored admin.
+    let config_pda = next_account_info(iter)?;
+    let (expected_config_pda, _) = Pubkey::find_program_address(
+        &[b"hook-config"],
+        program_id,
+    );
+    if expected_config_pda != *config_pda.key {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    {
+        let data = config_pda.try_borrow_data()?;
+        let config = HookConfig::unpack_from(&data).ok_or(HookError::NotAdmin)?;
+        if config.admin != admin_info.key.to_bytes() {
+            return Err(HookError::NotAdmin.into());
+        }
     }
 
     if allowlist_pda.data_is_empty() {

@@ -21,6 +21,8 @@ pub enum DarkNullError {
     ArithmeticOverflow,
     #[error("invalid instruction data")]
     InvalidInstructionData,
+    #[error("bank PDA has already been initialized")]
+    BankAlreadyInitialized,
 }
 
 impl From<DarkNullError> for ProgramError {

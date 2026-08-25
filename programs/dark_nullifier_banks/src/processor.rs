@@ -72,6 +72,16 @@ fn process_init_bank(
         return Err(DarkNullError::InvalidBankPda.into());
     }
 
+    // Guard against re-initialization: an account with sufficient length and a
+    // nonzero version byte is live bank state. Overwriting it would reset
+    // `count`/`root` and invalidate nullifier replay protection.
+    if bank.data_len() >= NULLIFIER_BANK_LEN {
+        let existing = bank.try_borrow_data()?;
+        if existing[0] != 0 {
+            return Err(DarkNullError::BankAlreadyInitialized.into());
+        }
+    }
+
     if bank.data_len() < NULLIFIER_BANK_LEN {
         let rent = Rent::get()?;
         let lamports = rent.minimum_balance(NULLIFIER_BANK_LEN);

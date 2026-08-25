@@ -145,6 +145,9 @@ fn process_claim(
     let emission_record  = next_account_info(iter)?;
     let agent            = next_account_info(iter)?;
     let system_prog      = next_account_info(iter)?;
+    // Config authority — appended account; required until on-chain proof
+    // verification links nullifier/receipt/amount (see below).
+    let authority        = next_account_info(iter)?;
 
     if !agent.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
@@ -156,6 +159,12 @@ fn process_claim(
         EmissionConfig::unpack_from(&data)
             .ok_or(ProgramError::InvalidAccountData)?
     };
+
+    // Claims are operator-gated: the stored config authority co-signs every
+    // emission until on-chain receipt verification is integrated.
+    if !authority.is_signer || authority.key.to_bytes() != cfg.admin {
+        return Err(MintGateError::NotAdmin.into());
+    }
 
     if !cfg.is_active {
         return Err(MintGateError::MintGateNotActive.into());
