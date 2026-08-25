@@ -70,8 +70,17 @@ fn process_issue(
     agent_pubkey:      [u8; 32],
     device_pubkey:     [u8; 33],
     binding_type:      BindingType,
-    _x402_receipt_hash: [u8; 32],
+    x402_receipt_hash: [u8; 32],
 ) -> ProgramResult {
+    // Minimal receipt sanity check: reject the default hash. Full on-chain
+    // verification against the x402 payment record is post-audit work (see the
+    // IS_MAINNET_READY block below) — until then the hash is recorded as
+    // unverified, which is why it must at least be non-default.
+    if x402_receipt_hash == [0u8; 32] {
+        msg!("unverified receipt");
+        return Err(CredentialError::InvalidX402Receipt.into());
+    }
+
     let account_info_iter = &mut accounts.iter();
 
     let agent_wallet_info       = next_account_info(account_info_iter)?;
@@ -178,8 +187,9 @@ fn process_revoke(
         program_id,
     );
 
-    // In devnet mode allow admin keypair; in mainnet only protocol_authority PDA
-    if IS_MAINNET_READY && *authority_info.key != authority_pda {
+    // Revocation requires a program signature from the protocol_authority PDA
+    // (CPI invoke_signed). Key equality alone is not sufficient authorization.
+    if !authority_info.is_signer || *authority_info.key != authority_pda {
         return Err(CredentialError::Unauthorized.into());
     }
 
@@ -245,6 +255,12 @@ fn process_upgrade(
 
     let mut pda_data = credential_record_info.try_borrow_mut_data()?;
     let mut record   = CredentialRecord::unpack_from(&pda_data)?;
+
+    // Caller must actually sign — key equality without a signature lets anyone
+    // who knows the agent's pubkey rotate its device binding.
+    if !agent_wallet_info.is_signer {
+        return Err(CredentialError::Unauthorized.into());
+    }
 
     // Verify caller is the registered agent
     let agent_pubkey_bytes: [u8; 32] = agent_wallet_info.key.to_bytes();

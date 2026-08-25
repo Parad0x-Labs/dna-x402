@@ -128,11 +128,37 @@ function redactForLlm(value: unknown): unknown {
 // Tool implementations
 // ---------------------------------------------------------------------------
 
+/** SSRF guard for tool-supplied endpoint URLs (lexical checks only — no DNS). */
+function isSafeHttpUrl(rawUrl: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  const host = url.hostname.toLowerCase().replace(/\.$/, "");
+  if (!host || host === "localhost" || host.endsWith(".localhost") ||
+      host.endsWith(".internal") || host.endsWith(".local")) return false;
+  if (/^127\.|^10\.|^192\.168\.|^169\.254\.|^0\./.test(host)) return false;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
+  if (host.includes(":")) {
+    const h = host.replace(/^\[|\]$/g, "");
+    if (h === "::" || h === "::1" || /^(fe8|fe9|fea|feb)/.test(h) || h.startsWith("fc") || h.startsWith("fd")) return false;
+    const mapped = h.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (mapped && /^127\.|^10\.|^192\.168\.|^169\.254\.|^0\.|^172\.(1[6-9]|2\d|3[01])\./.test(mapped[1])) return false;
+  }
+  return true;
+}
+
 async function x402GetQuote(
   endpointUrl: string,
   method = "GET"
 ): Promise<object> {
   try {
+    if (!isSafeHttpUrl(endpointUrl)) {
+      return { error: "endpoint_url blocked by SSRF guard (must be a public http(s) host)" };
+    }
     const res = await fetch(endpointUrl, {
       method,
       headers: { Accept: "application/json" },
@@ -505,6 +531,9 @@ async function privateCompute(params: {
   // Step 4: POST to executor_endpoint
   let executorResponse: object = { status: "unreachable", note: "Executor endpoint could not be reached; local hashes recorded." };
   try {
+    if (!isSafeHttpUrl(executor_endpoint)) {
+      throw new Error("executor_endpoint blocked by SSRF guard (must be a public http(s) host)");
+    }
     const res = await fetch(executor_endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

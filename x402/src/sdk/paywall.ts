@@ -434,20 +434,45 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         }
       }
 
-      const verification = await quote.paymentVerifier.verify({
-        quoteId: quote.quoteId,
-        resource: quote.resource,
-        amountAtomic: quote.fees.providerNetAtomic,
-        feeAtomic: quote.fees.totalFeeAtomic,
-        totalAtomic: quote.priceAtomic,
-        mint: quote.mint,
-        recipient: quote.recipient,
-        expiresAt: quote.expiresAt,
-        settlement: quote.settlement as Array<"transfer" | "stream" | "netting">,
-        memoHash: quote.memoHash,
-      }, proof);
+      // Reserve the proof key SYNCHRONOUSLY, before any await, so two
+      // concurrent /finalize requests with the same proof cannot both pass the
+      // used-proof checks above. Rolled back on every failure path below.
+      if (proof.settlement === "transfer") {
+        runtime?.usedTransferProofs.set(proof.txSignature, commitId);
+      }
+      if (proof.settlement === "stream") {
+        runtime?.usedStreamProofs.set(proof.streamId, commitId);
+      }
+      const releaseProofReservation = (): void => {
+        if (proof.settlement === "transfer" && runtime?.usedTransferProofs.get(proof.txSignature) === commitId) {
+          runtime?.usedTransferProofs.delete(proof.txSignature);
+        }
+        if (proof.settlement === "stream" && runtime?.usedStreamProofs.get(proof.streamId) === commitId) {
+          runtime?.usedStreamProofs.delete(proof.streamId);
+        }
+      };
+
+      let verification;
+      try {
+        verification = await quote.paymentVerifier.verify({
+          quoteId: quote.quoteId,
+          resource: quote.resource,
+          amountAtomic: quote.fees.providerNetAtomic,
+          feeAtomic: quote.fees.totalFeeAtomic,
+          totalAtomic: quote.priceAtomic,
+          mint: quote.mint,
+          recipient: quote.recipient,
+          expiresAt: quote.expiresAt,
+          settlement: quote.settlement as Array<"transfer" | "stream" | "netting">,
+          memoHash: quote.memoHash,
+        }, proof);
+      } catch (e) {
+        releaseProofReservation();
+        throw e;
+      }
 
       if (!verification?.ok) {
+        releaseProofReservation();
         routeRes.status(verificationFailureStatus(verification ?? { ok: false, settledOnchain: false })).json({
           ok: false,
           error: {
@@ -459,6 +484,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         return;
       }
       if (proof.settlement === "transfer" && !verification?.txSignature) {
+        releaseProofReservation();
         routeRes.status(422).json({
           ok: false,
           error: {
@@ -470,6 +496,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
         return;
       }
       if (proof.settlement === "stream" && !verification?.streamId) {
+        releaseProofReservation();
         routeRes.status(422).json({
           ok: false,
           error: {
@@ -482,8 +509,13 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       }
       if (proof.settlement === "transfer") {
         const canonicalTxSignature = verification.txSignature!;
+        // Drop the provisional reservation once the canonical key is known.
+        if (proof.txSignature !== canonicalTxSignature && runtime?.usedTransferProofs.get(proof.txSignature) === commitId) {
+          runtime?.usedTransferProofs.delete(proof.txSignature);
+        }
         const canonicalCommitId = runtime?.usedTransferProofs.get(canonicalTxSignature);
         if (canonicalCommitId && canonicalCommitId !== commitId) {
+          releaseProofReservation();
           routeRes.status(409).json({
             error: "Transfer proof already used",
             commitId: canonicalCommitId,
@@ -493,8 +525,12 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
       }
       if (proof.settlement === "stream") {
         const canonicalStreamId = verification.streamId!;
+        if (proof.streamId !== canonicalStreamId && runtime?.usedStreamProofs.get(proof.streamId) === commitId) {
+          runtime?.usedStreamProofs.delete(proof.streamId);
+        }
         const canonicalCommitId = runtime?.usedStreamProofs.get(canonicalStreamId);
         if (canonicalCommitId && canonicalCommitId !== commitId) {
+          releaseProofReservation();
           routeRes.status(409).json({
             error: "Stream proof already used",
             commitId: canonicalCommitId,
@@ -735,7 +771,7 @@ export function dnaPaywall(options: PaywallOptions) {
     if (options.requireApiKey) {
       const headerName = options.apiKeyHeader ?? "x-api-key";
       const key = req.header(headerName);
-      if (!key || !options.apiKeys?.has(key)) {
+      if (!key || !options.apiKeys || !apiKeyMatches(options.apiKeys, key)) {
         res.status(401).json({
           error: "unauthorized",
           message: "Valid API key required",
@@ -1095,10 +1131,28 @@ export function dnaPaywall(options: PaywallOptions) {
   };
 }
 
+/** Constant-time string compare (same idiom as admin/auth.ts). Length is
+ *  checked first — that leaks only the expected length, which is public. */
+function constantTimeEquals(actual: string, expected: string): boolean {
+  const actualBytes = Buffer.from(actual);
+  const expectedBytes = Buffer.from(expected);
+  return actualBytes.length === expectedBytes.length && crypto.timingSafeEqual(actualBytes, expectedBytes);
+}
+
+/** Timing-safe membership check over the API-key set: every entry is compared,
+ *  so response timing does not reveal how far into the set the match was. */
+function apiKeyMatches(validKeys: Set<string>, presented: string): boolean {
+  let matched = false;
+  for (const candidate of validKeys) {
+    matched = constantTimeEquals(presented, candidate) || matched;
+  }
+  return matched;
+}
+
 export function apiKeyGuard(validKeys: Set<string>, headerName = "x-api-key") {
   return function guard(req: Request, res: Response, next: NextFunction): void {
     const key = req.header(headerName);
-    if (!key || !validKeys.has(key)) {
+    if (!key || !apiKeyMatches(validKeys, key)) {
       res.status(401).json({ error: "unauthorized", header: headerName });
       return;
     }

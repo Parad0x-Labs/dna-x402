@@ -16,7 +16,7 @@ use solana_program::{
     clock::Clock,
     entrypoint::ProgramResult,
     msg,
-    program::invoke_signed,
+    program::{invoke, invoke_signed},
     program_error::ProgramError,
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
@@ -357,26 +357,46 @@ fn process_deposit(
         return Err(ProgramError::InvalidArgument);
     }
 
-    invoke_signed(
-        &system_instruction::create_account(
-            depositor_info.key,
-            note_leaf_info.key,
-            rent.minimum_balance(NOTE_LEAF_LEN),
-            NOTE_LEAF_LEN as u64,
-            program_id,
-        ),
-        &[
-            depositor_info.clone(),
-            note_leaf_info.clone(),
-            system_program.clone(),
-        ],
-        &[&[
-            NOTE_LEAF_SEED,
-            pool_config_info.key.as_ref(),
-            &leaf_index.to_le_bytes(),
-            &[leaf_bump],
-        ]],
-    )?;
+    // Prefund-hardened creation (mirrors dark_x402_access_gate): a griefer can
+    // pre-fund the PDA with 1 lamport, which makes a bare create_account CPI
+    // fail forever and bricks deposits at this leaf index. Top-up/allocate/
+    // assign under the PDA seeds instead.
+    let needed = rent.minimum_balance(NOTE_LEAF_LEN);
+    let leaf_seeds: &[&[u8]] = &[
+        NOTE_LEAF_SEED,
+        pool_config_info.key.as_ref(),
+        &leaf_index.to_le_bytes(),
+        &[leaf_bump],
+    ];
+    if note_leaf_info.lamports() == 0 {
+        invoke_signed(
+            &system_instruction::create_account(
+                depositor_info.key,
+                note_leaf_info.key,
+                needed,
+                NOTE_LEAF_LEN as u64,
+                program_id,
+            ),
+            &[
+                depositor_info.clone(),
+                note_leaf_info.clone(),
+                system_program.clone(),
+            ],
+            &[leaf_seeds],
+        )?;
+    } else {
+        let have = note_leaf_info.lamports();
+        if have < needed {
+            invoke(
+                &system_instruction::transfer(depositor_info.key, note_leaf_info.key, needed - have),
+                &[depositor_info.clone(), note_leaf_info.clone(), system_program.clone()],
+            )?;
+        }
+        invoke_signed(&system_instruction::allocate(note_leaf_info.key, NOTE_LEAF_LEN as u64),
+            &[note_leaf_info.clone(), system_program.clone()], &[leaf_seeds])?;
+        invoke_signed(&system_instruction::assign(note_leaf_info.key, program_id),
+            &[note_leaf_info.clone(), system_program.clone()], &[leaf_seeds])?;
+    }
 
     invoke_signed(
         &system_instruction::transfer(

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { z } from "zod";
 import { ReceiptSigner } from "../receipts.js";
+import { checkSafeFetchUrl } from "../common/safeFetchUrl.js";
 import { validateShopManifest } from "../manifest/validate.js";
 import { MarketplaceHeartbeatService } from "./heartbeat.js";
 import { MarketplaceStore } from "./store.js";
@@ -136,6 +137,12 @@ export function createMarketplaceApp(deps: CreateMarketplaceDeps = {}): { app: e
     const parsed = orderBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+    // SSRF guard: reject callback URLs pointing at loopback/private/internal
+    // hosts before the order is stored.
+    if (parsed.data.callbackUrl && !checkSafeFetchUrl(parsed.data.callbackUrl).ok) {
+      res.status(400).json({ ok: false, error: "unsafe_callback_url" });
       return;
     }
     const order = orders.placeOrder({

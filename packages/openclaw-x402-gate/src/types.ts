@@ -65,6 +65,12 @@ export type VerifyResult =
       resource: string;
       /** True only if the on-chain tx was confirmed; false = header-only check */
       onChainVerified: boolean;
+      /**
+       * True if the ed25519 `signature` verified offline against
+       * `payerAddress`. False means the signature is (at best) a Solana tx
+       * signature that MUST be confirmed on-chain before serving anything.
+       */
+      signatureVerified: boolean;
       signature: string;
     }
   | { valid: false; error: string };
