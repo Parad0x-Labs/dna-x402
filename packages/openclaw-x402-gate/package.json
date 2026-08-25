@@ -33,6 +33,7 @@
     }
   },
   "dependencies": {
+    "@noble/curves": "^2.2.0",
     "@solana/web3.js": "^1.95.0"
   },
   "engines": {

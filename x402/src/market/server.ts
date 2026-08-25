@@ -21,6 +21,7 @@ import { ReputationEngine } from "./reputation.js";
 import { MarketRegistry } from "./registry.js";
 import { createAbuseReport, reportBodySchema } from "./report.js";
 import { MarketStorage } from "./storage.js";
+import { checkSafeFetchUrl } from "../common/safeFetchUrl.js";
 import { MarketEvent, MarketOrder, MarketOrderInput, SignedShopManifest } from "./types.js";
 
 interface CreateMarketDeps {
@@ -268,6 +269,11 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
 
   async function notifyOrderCallback(order: MarketOrder): Promise<void> {
     if (!order.callbackUrl || !order.chosenQuote) {
+      return;
+    }
+    // Re-validate right before fetch (SSRF guard; URL was checked at creation
+    // too, but stored state may be stale or injected by another path).
+    if (!checkSafeFetchUrl(order.callbackUrl).ok) {
       return;
     }
     try {
@@ -712,6 +718,12 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
     const parsed = orderBodySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+    // SSRF guard: reject callback URLs pointing at loopback/private/internal
+    // hosts before the order is stored.
+    if (parsed.data.callbackUrl && !checkSafeFetchUrl(parsed.data.callbackUrl).ok) {
+      res.status(400).json({ ok: false, error: "unsafe_callback_url" });
       return;
     }
 

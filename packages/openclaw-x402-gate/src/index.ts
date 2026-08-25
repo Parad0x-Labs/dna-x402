@@ -23,11 +23,13 @@ import { Connection } from "@solana/web3.js";
 import { DEFAULT_RPC, type SolanaNetwork } from "./constants";
 import { makeChallenge, verifyPaymentStructure } from "./gate";
 import { confirmOnChain } from "./onchain";
+import { InMemoryReplayStore, type ReplayStore } from "./replay";
 
 export * from "./constants";
 export * from "./types";
 export * from "./gate";
 export * from "./onchain";
+export * from "./replay";
 
 interface GateConfig {
   recipientAddress: string;
@@ -35,6 +37,10 @@ interface GateConfig {
   network: SolanaNetwork;
   requireOnChain: boolean;
   rpcUrl?: string;
+  /** Durable replay store. The in-memory default is lost on restart, which
+   *  allows replay of captured X-Payment headers — inject a durable store in
+   *  production (Redis, database, ...). */
+  replayStore?: ReplayStore;
 }
 
 function readConfig(raw: Record<string, unknown> | undefined): GateConfig {
@@ -43,8 +49,12 @@ function readConfig(raw: Record<string, unknown> | undefined): GateConfig {
     recipientAddress: typeof c.recipientAddress === "string" ? c.recipientAddress : "",
     priceUsdc: typeof c.priceUsdc === "number" ? c.priceUsdc : 0.01,
     network: c.network === "solana-mainnet" ? "solana-mainnet" : "solana-devnet",
-    requireOnChain: c.requireOnChain === true,
+    // Secure default: require on-chain confirmation unless explicitly disabled.
+    requireOnChain: c.requireOnChain !== false,
     rpcUrl: typeof c.rpcUrl === "string" ? c.rpcUrl : undefined,
+    replayStore: c.replayStore instanceof Object && typeof (c.replayStore as ReplayStore).has === "function"
+      ? (c.replayStore as ReplayStore)
+      : undefined,
   };
 }
 
@@ -65,6 +75,9 @@ export default definePluginEntry({
     config?: Record<string, unknown>;
   }) {
     const config = readConfig(api.config);
+    // In-memory default: lost on restart. Production must inject a durable
+    // ReplayStore via plugin config (`replayStore`).
+    const replayStore = config.replayStore ?? new InMemoryReplayStore();
 
     api.registerTool({
       name: "x402_challenge",
@@ -122,20 +135,37 @@ export default definePluginEntry({
           network: config.network,
         });
 
-        const structural = verifyPaymentStructure(header, requirement);
+        const structural = verifyPaymentStructure(header, requirement, { replayStore });
         if (!structural.valid) return structural;
 
-        if (!config.requireOnChain) return structural;
+        if (!config.requireOnChain) {
+          if (!structural.signatureVerified) {
+            // The signature could not be verified offline (e.g. it is a raw
+            // Solana tx signature). Accepting it without on-chain confirmation
+            // would let any well-formed header through.
+            console.warn(
+              "[x402-gate] SECURITY: requireOnChain=false with a non-verifiable " +
+                "payment signature — rejecting. Set requireOnChain=true or have the " +
+                "payer submit an ed25519-signed proof.",
+            );
+            return { valid: false, error: "proof signature is not offline-verifiable; on-chain confirmation is required" };
+          }
+          return structural;
+        }
 
         // Revenue-grade: confirm the payment actually settled.
         const rpcUrl = config.rpcUrl ?? DEFAULT_RPC[config.network];
         const connection = new Connection(rpcUrl, "confirmed");
         const chain = await confirmOnChain(connection, structural.signature, {
           receiptHash: structural.receiptHash,
+          recipient: requirement.payTo,
         });
         if (!chain.confirmed) {
           return { valid: false, error: `on-chain confirmation failed: ${chain.reason}` };
         }
+        // Consume the replay key only after full confirmation for
+        // chain-verified proofs (offline-verified ones were marked earlier).
+        replayStore.markUsed(`${structural.receiptHash}:${structural.signature}`);
         return { ...structural, onChainVerified: true };
       },
     });

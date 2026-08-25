@@ -273,20 +273,45 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       return;
     }
 
-    const verification = await paymentVerifier.verify({
-      quoteId: quote.quoteId,
-      resource: quote.resource,
-      amountAtomic: quote.amount,
-      feeAtomic: quote.feeAtomic,
-      totalAtomic: quote.totalAtomic,
-      mint: quote.mint,
-      recipient: quote.recipient,
-      expiresAt: quote.expiresAt,
-      settlement: quote.settlement as Array<"transfer" | "stream" | "netting">,
-      memoHash: quote.memoHash,
-    }, proof);
+    // Reserve the proof key SYNCHRONOUSLY, before any await, so two concurrent
+    // /finalize requests with the same proof cannot both pass the used-proof
+    // checks above. The reservation is rolled back on every failure path below.
+    if (proof.settlement === "transfer") {
+      usedTransferProofs.set(proof.txSignature, commitId);
+    }
+    if (proof.settlement === "stream") {
+      usedStreamProofs.set(proof.streamId, commitId);
+    }
+    const releaseProofReservation = (): void => {
+      if (proof.settlement === "transfer" && usedTransferProofs.get(proof.txSignature) === commitId) {
+        usedTransferProofs.delete(proof.txSignature);
+      }
+      if (proof.settlement === "stream" && usedStreamProofs.get(proof.streamId) === commitId) {
+        usedStreamProofs.delete(proof.streamId);
+      }
+    };
+
+    let verification;
+    try {
+      verification = await paymentVerifier.verify({
+        quoteId: quote.quoteId,
+        resource: quote.resource,
+        amountAtomic: quote.amount,
+        feeAtomic: quote.feeAtomic,
+        totalAtomic: quote.totalAtomic,
+        mint: quote.mint,
+        recipient: quote.recipient,
+        expiresAt: quote.expiresAt,
+        settlement: quote.settlement as Array<"transfer" | "stream" | "netting">,
+        memoHash: quote.memoHash,
+      }, proof);
+    } catch (e) {
+      releaseProofReservation();
+      throw e;
+    }
 
     if (!verification.ok) {
+      releaseProofReservation();
       res.status(verificationFailureStatus(verification)).json({
         ok: false,
         error: {
@@ -298,6 +323,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       return;
     }
     if (proof.settlement === "transfer" && !verification.txSignature) {
+      releaseProofReservation();
       res.status(422).json({
         ok: false,
         error: {
@@ -309,6 +335,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
       return;
     }
     if (proof.settlement === "stream" && !verification.streamId) {
+      releaseProofReservation();
       res.status(422).json({
         ok: false,
         error: {
@@ -321,8 +348,13 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     }
     if (proof.settlement === "transfer") {
       const canonicalTxSignature = verification.txSignature!;
+      // Drop the provisional reservation once the canonical key is known.
+      if (proof.txSignature !== canonicalTxSignature && usedTransferProofs.get(proof.txSignature) === commitId) {
+        usedTransferProofs.delete(proof.txSignature);
+      }
       const canonicalCommitId = usedTransferProofs.get(canonicalTxSignature);
       if (canonicalCommitId && canonicalCommitId !== commitId) {
+        releaseProofReservation();
         res.status(409).json({
           error: "Transfer proof already used",
           commitId: canonicalCommitId,
@@ -332,8 +364,12 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     }
     if (proof.settlement === "stream") {
       const canonicalStreamId = verification.streamId!;
+      if (proof.streamId !== canonicalStreamId && usedStreamProofs.get(proof.streamId) === commitId) {
+        usedStreamProofs.delete(proof.streamId);
+      }
       const canonicalCommitId = usedStreamProofs.get(canonicalStreamId);
       if (canonicalCommitId && canonicalCommitId !== commitId) {
+        releaseProofReservation();
         res.status(409).json({
           error: "Stream proof already used",
           commitId: canonicalCommitId,
