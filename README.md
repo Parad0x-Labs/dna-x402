@@ -156,7 +156,7 @@ Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](./devnet-
 | [`openclaw-x402-pay`](./packages/openclaw-x402-pay) | Self-custody client payer with a **hard spend cap enforced before any transaction is signed** (`maxAmountUsdc`), BYO-signer, no key custody. **Public beta**, unaudited. |
 | [`@parad0x_labs/outcome-receipts`](./packages/outcome-receipts) | Creator-signed outcome attached to delivery receipt. Success fee fires only if outcome is positive. No-fake-PnL enforced on-chain, not by marketing. |
 | [`@parad0x_labs/agent-reputation`](./packages/agent-reputation) | Agent proves delivery rate, accuracy, and latency without revealing any buyer. ZK-ready over receipt history. |
-| [`@parad0x_labs/receipt-dag`](./packages/receipt-dag) | Append-only proof chain — every action links to the previous one. Anti-equivocation: same sequence nonce from same agent = on-chain proof of cheating. **Built + tested** (v0.2.0); batch Merkle root (RFC-6962) anchored on mainnet via `receipt_anchor` `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`. Unified cross-layer graph is the next build. |
+| [`@parad0x_labs/receipt-dag`](./packages/receipt-dag) | Append-only proof chain — every action links to the previous one. Anti-equivocation: same sequence nonce from same agent = on-chain proof of cheating. **Built + tested** (v0.2.0); batch Merkle roots (RFC-6962) were anchored on mainnet via `receipt_anchor` `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` in June–July 2026; that program is now retired. Unified cross-layer graph is the next build. |
 | [`@parad0x_labs/zk-access`](./packages/zk-access) | Agents prove "I have tier X with Y calls left" without revealing wallet. Phase 2: Groth16 circuit. |
 | [`@parad0x_labs/blind-access`](./packages/blind-access) | Buyer pays once, receives N access tokens. Server cannot link which buyer spent which token. Phase 2: RSA blind signatures. |
 | [`@parad0x_labs/session-channels`](./packages/session-channels) | 200 micro-actions in a session → one compressed receipt batch → one Solana anchor. For bots, devices, and agents with high action frequency. |
@@ -231,7 +231,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 | Surface | Status |
 |---|---|
 | Devnet deployment | 6 hardened programs live on Agave 4.2.1 devnet with a public attack-replay suite ([`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md)) |
-| Mainnet | No active mainnet deployments; earlier mainnet program IDs have been retired |
+| Mainnet | No active mainnet deployments; earlier mainnet program IDs have been retired — per-program status in the canonical inventory, [web0 PROGRAMS.md](https://github.com/Parad0x-Labs/web0/blob/main/docs/PROGRAMS.md) |
 | Commercial profile | Ready for pilot deploy after wallet/RPC/program-id provisioning; external audit pending |
 | Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
 | NULL token | No active token mint; token launch follows the audit gate |
