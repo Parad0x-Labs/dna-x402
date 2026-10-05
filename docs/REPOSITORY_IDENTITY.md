@@ -30,4 +30,4 @@ npx --no-install dna-x402
 ## Related Public Repos
 
 - Dark Null Protocol: `https://github.com/Parad0x-Labs/Dark-Null-Protocol`
-- DNA x402 Builders: `https://github.com/Parad0x-Labs/dna-x402-builders`
+- DNA x402 Builders: private repository (available to reviewers on request)

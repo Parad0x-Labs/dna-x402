@@ -26,7 +26,7 @@ Current decision: DNA x402 is not approved for public production launch until th
 | Helius RPC configured | configured from server secret environment, redacted | `PASSED_PUBLIC_BETA` |
 | Emergency pause route | x402 service reachable at `https://parad0xlabs.com/x402/`; admin route still restricted by app config | `PARTIAL_ROUTE_LIVE_OPERATOR_DRILL_REQUIRED` |
 | Rollback plan | restore previous systemd unit and archived `/opt/dna-x402` deployment from `/root/dna-x402-backups`; revert Nginx `/x402/` block from timestamped backup | `DOCUMENTED_BASIC_ROLLBACK` |
-| Release commit | `contabo-preflight` deployment bundle, not a tagged release commit | `BLOCKED_RELEASE_TAG_REQUIRED` |
+| Release commit | server preflight deployment bundle, not a tagged release commit | `BLOCKED_RELEASE_TAG_REQUIRED` |
 | Release version | `dna-x402@1.1.0` | `PASSED_PUBLIC_BETA` |
 | Release approver | `sls_0x` | `PUBLIC_BETA_ASSIGNED_PUBLIC_BACKUP_REQUIRED` |
 | Launch date | `PENDING_PUBLIC_APPROVAL` | `BLOCKED` |

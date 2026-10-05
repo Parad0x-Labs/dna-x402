@@ -8,7 +8,7 @@ canonical map is mirrored in every repo's "How this fits the Parad0x stack" box.
 | Layer | Repo | Does |
 |---|---|---|
 | 💸 Payments | [dna-x402](https://github.com/Parad0x-Labs/dna-x402) | x402 rail: quote → pay → verify → receipt → anchor |
-| 🛠️ Build | [dna-x402-builders](https://github.com/Parad0x-Labs/dna-x402-builders) | Hosted kit: turn any API/bot into a paid agent |
+| 🛠️ Build | dna-x402-builders (private repository) | Hosted kit: turn any API/bot into a paid agent |
 | 🕶️ Privacy | [Dark-Null-Protocol](https://github.com/Parad0x-Labs/Dark-Null-Protocol) | Groth16 privacy settlement, published proofs |
 | 🗜️ Data | [liquefy](https://github.com/Parad0x-Labs/liquefy) | Columnar compression that beats Zstd |
 | 🛡️ Audit | [liquefy-openclaw-integration](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) | Flight recorder: 24 engines + Solana-anchored audit trails |
@@ -29,7 +29,7 @@ Token: **$NULL** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` · usage fills a
 ## Fast Routing Guide
 
 - Choose **dna-x402** for `402 -> pay -> retry -> receipt` commerce flows.
-- Choose **dna-x402-builders** to wrap an existing API or bot into a paid agent without protocol work.
+- Choose **dna-x402-builders** (private; available on request) to wrap an existing API or bot into a paid agent without protocol work.
 - Choose **Dark-Null-Protocol** for privacy-sensitive settlement with a different latency profile.
 - Choose **liquefy** for compression, auditability, and verified recovery of AI/agent artifacts.
 - Choose **liquefy-openclaw-integration** for hash-chained, Solana-anchored agent audit trails.

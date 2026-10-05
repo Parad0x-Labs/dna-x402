@@ -3,7 +3,7 @@
 > ⚠️ **Legacy/illustrative.** This documents the v1 (NULL-priced, `IS_MAINNET_READY`) design.
 > The **live mainnet** registrar is **v2** — **SOL-priced (~0.01 SOL all-in), config-driven via
 > `SetConfig`, free during the pilot** — at `NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np`.
-> See the canonical v2 source/spec in the web0-internal repo.
+> The canonical v2 registrar source/spec is maintained privately and is available to reviewers on request.
 
 **Program**: `programs/null_registrar`
 **Status**: Pre-audit pilot — `IS_MAINNET_READY = false`

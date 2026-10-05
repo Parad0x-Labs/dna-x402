@@ -4,7 +4,7 @@
 ![Chain: Solana](https://img.shields.io/badge/Chain-Solana-14F195?style=flat-square)
 ![Protocol: x402](https://img.shields.io/badge/Protocol-x402-black?style=flat-square)
 ![Receipts: Anchored](https://img.shields.io/badge/Receipts-Anchored-00C2A8?style=flat-square)
-![Attack replays rejected live: 10/10](https://img.shields.io/badge/Attack_Replays_Rejected-10%2F10_live-00C2A8?style=flat-square)
+![Devnet attack-replay suite: T1-T10 pass](https://img.shields.io/badge/Devnet_Attack--Replay_Suite-T1--T10_pass-00C2A8?style=flat-square)
 
 <p align="center">
   <img src="./docs/assets/github-header-dna-x402.png" alt="Parad0x Labs" width="100%" />
@@ -26,7 +26,7 @@ Canonical public repository:
 https://github.com/Parad0x-Labs/dna-x402
 ```
 
-`Parad0x-Labs/x402-dna` is a legacy mirror. Public links, install instructions, and builder docs should point to `dna-x402`.
+`Parad0x-Labs/x402-dna` was an earlier repository name and is not publicly available. Public links, install instructions, and builder docs point to `dna-x402`.
 
 ## 🔥 The numbers
 
@@ -35,8 +35,8 @@ https://github.com/Parad0x-Labs/dna-x402
 | **Real Groth16 verification on Solana** | BN254 proofs verified on-chain via the `alt_bn128_pairing` syscall against Poseidon commitment state — shielded deposits and withdrawals, not client-trusted claims |
 | **1,000,000 receipts → 32 bytes** | ZK-compressed receipt anchoring: a million payment proofs cost ~$0.001/day to keep verifiable on-chain forever |
 | **Trusted setup without toxic waste** | Hermez Perpetual Powers of Tau + drand League-of-Entropy beacon, SHA-256-pinned transcript in [`ceremony/`](./ceremony/shielded_withdraw_v3/transcript_v3.json) — no single party holds ceremony material |
-| **10/10 attack replays rejected, live** | A public suite fires revocation-forgery, nullifier-bank reset, forged admin, replayed payment and PDA-squatting attacks at the *deployed* devnet programs — every one dies with the expected on-chain error. Signatures: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) |
-| **1551 tests green · 6 hardened programs live on devnet** | Continuous `mainnet-readiness` CI: build, test suite, dependency audits, secret scan, and a devnet smoke run on every push |
+| **Devnet attack-replay suite: T1–T10 pass** | A public suite fires credential-revocation forgery, unsigned credential upgrade, nullifier-bank re-init, forged hook admin, PDA prefund grief and unauthorized emission claims at security-fix builds deployed on devnet. Each attack is rejected with the expected program error (or, for prefund grief, absorbed); one informational finding (F1) is recorded with the results. Signatures: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) |
+| **1,568 x402 tests passing in CI · 8 programs deployed on devnet** | Continuous `mainnet-readiness` CI on every push: x402 build and test suite (1,568 passed as of 2026-10-05), site-agent tests, dependency audits, secret scan, Rust tests for `receipt_anchor` and `x402_refund_escrow`, and a smoke job |
 | **Payments that verify themselves** | x402 402-flow gates check ed25519 payer signatures, enforce single-use proofs, confirm USDC settlement on-chain before unlocking, and anchor a compressed receipt after |
 
 ## 💸 What you could build with it
@@ -56,14 +56,14 @@ Parad0x Labs builds Web0 on Solana — money and agents that settle themselves. 
 | Layer | Repo | Does |
 |---|---|---|
 | 💸 Payments | **dna-x402** (this repo) | x402 rail: quote → pay → verify → receipt → anchor |
-| 🛠️ Build | [dna-x402-builders](https://github.com/Parad0x-Labs/dna-x402-builders) | Hosted kit: turn any API/bot into a paid agent |
+| 🛠️ Build | dna-x402-builders (private repository, available to reviewers on request) | Hosted kit: turn any API/bot into a paid agent |
 | 🕶️ Privacy | [Dark-Null-Protocol](https://github.com/Parad0x-Labs/Dark-Null-Protocol) | Groth16 privacy settlement, published proofs |
-| 🗜️ Data | [liquefy](https://github.com/Parad0x-Labs/liquefy) | Columnar compression that beats Zstd |
+| 🗜️ Data | liquefy (private repository) | Columnar compression |
 | 🛡️ Audit | [liquefy-openclaw-integration](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) | Flight recorder: 24 engines + Solana-anchored audit trails |
-| 🎬 Media | [nebula-media](https://github.com/Parad0x-Labs/nebula-media) | Proof-carrying media compression — scene-aware + on-chain receipts |
-| 🧠 Local AI | [nulla-local](https://github.com/Parad0x-Labs/nulla-local) | Local-first agent runtime — your machine, your memory |
+| 🎬 Media | nebula-media (private repository) | Proof-carrying media compression — scene-aware + on-chain receipts |
+| 🧠 Runtime | [VOOL](https://github.com/Parad0x-Labs/vool) | Daily-user AI runtime — local-first, cloud when you choose |
 
-**See it live** (a consumer app running on these rails): **[parad0xlabs.com](https://parad0xlabs.com)**
+Project site: **[parad0xlabs.com](https://parad0xlabs.com)** (VOOL, Web0, and lab projects including DNA x402)
 
 ## LLM / Agent Quick Parse
 
@@ -93,7 +93,7 @@ related_repo:
   fee_saving_primitives: docs/FEE_SAVING_SOLANA_PRIMITIVES.md
   edge_capstone_flow: docs/EDGE_CAPSTONE_FLOW.md
 canonical_repo: https://github.com/Parad0x-Labs/dna-x402
-legacy_mirror: https://github.com/Parad0x-Labs/x402-dna
+legacy_repo_name: Parad0x-Labs/x402-dna  # earlier name, not publicly available
 ```
 
 ![DNA x402 Proof Snapshot](./docs/assets/dna-proof-card.svg)
@@ -131,9 +131,9 @@ These are additive layers. Drop them in alongside what you already ship.
 
 ## What just shipped (August 2026)
 
-**Security hardening release — verified live on Agave 4.2.1 devnet.**
+**Security hardening release — verified on devnet (2026-08-25).**
 
-Every settlement-critical path now enforces cryptographic authority end to end, and the enforcement is proven by a public attack-replay suite: 10 hostile scenarios fired against the deployed programs on devnet, every one rejected with the expected on-chain program error.
+Every settlement-critical path now enforces cryptographic authority end to end, and the enforcement is exercised by a public attack-replay suite: tests T1–T10 run against security-fix builds of five programs deployed on devnet (`agent_credential_mint`, `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree`, `dark_null_mint_gate`). Attack attempts are rejected with the expected on-chain program error; one informational finding (F1, initialization of an unclaimed hook config) is recorded alongside the signatures.
 
 - **Payment gates verify signatures, not JSON shape.** `openclaw-x402-gate` validates ed25519 payment signatures against the payer key and confirms settlement on-chain before unlocking a resource — on-chain confirmation is the default.
 - **Replay-proof by construction.** Payment proofs are single-use with a pluggable replay store; double-finalize races in the seller/paywall SDKs are closed by synchronous proof reservation.
@@ -148,7 +148,7 @@ Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](./devnet-
 
 ## What shipped in June 2026
 
-20+ packages shipped across payments, privacy, compression, identity, and Web0:
+20+ packages in this repo across payments, privacy, compression, identity, and Web0. Source lives under [`packages/`](./packages); `@parad0x_labs/openclaw-x402-gate`, `@parad0x_labs/openclaw-x402-pay`, `@parad0x_labs/context-capsule`, and `@parad0x_labs/mcp-server` are also published on npm, and the rest install from source:
 
 | Package | What it does |
 |---|---|
@@ -206,7 +206,7 @@ Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](./devnet-
 | Area | Status | Notes |
 |---|---|---|
 | `x402/` package | Active | Canonical product surface |
-| `receipt_anchor` program | Active | Receipt anchoring for VERIFIED semantics |
+| `receipt_anchor` program | Devnet | Deployed on devnet (`CPQ8Y1bd…`); the mainnet deployment (`6HSRGivd…`) ran June–July 2026 and was retired 2026-07-14 |
 | Seller / buyer SDKs | Active | Live in `x402/src/` |
 | Dark Null privacy path | Active SDK surface | Optional hash-only private receipt request path |
 | Proof / audit docs | Active | See [`docs/`](./docs) |
@@ -219,20 +219,20 @@ Built on top of DNA x402, NULL Miner is a Solana agent-work rail for phones,
 browsers, and servers: task receipts, passkey-sealed agent keys, x402 payout
 paths, NULL emission accounting, and lottery/root primitives.
 
-**First known open-source Solana stack combining x402-style HTTP payments, signed/anchored receipts, optional Dark Null private receipt settlement, and agent identity/work rails in one public developer workspace.**
+**An open-source Solana stack combining x402-style HTTP payments, signed/anchored receipts, optional Dark Null private receipt settlement, and agent identity/work rails in one public developer workspace.**
 
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
-> Our specific contribution is the integrated four-layer stack — no competing open-source project ships all layers together.
+> Our specific contribution is integrating these four layers in one workspace.
 
-**1551 tests green. 6 hardened programs live on Solana devnet (Agave 4.2.1). 20+ packages shipped. 10/10 live attack replays rejected.**
+**1,568 x402 tests passing in CI. 8 programs deployed on Solana devnet. 20+ packages in this repo. Devnet attack-replay suite T1–T10 passing.**
 
 ### Current public status
 
 | Surface | Status |
 |---|---|
-| Devnet deployment | 6 hardened programs live on Agave 4.2.1 devnet with a public attack-replay suite ([`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md)) |
-| Mainnet | No active mainnet deployments; earlier mainnet program IDs have been retired — per-program status in the canonical inventory, [web0 PROGRAMS.md](https://github.com/Parad0x-Labs/web0/blob/main/docs/PROGRAMS.md) |
-| Commercial profile | Ready for pilot deploy after wallet/RPC/program-id provisioning; external audit pending |
+| Devnet deployment | 8 programs deployed on devnet per [`configs/devnet.oss.json`](./configs/devnet.oss.json): semaphore (`ADwL3Sdo…`), secp256r1 vault (`2TwExMAZ…`), secp256k1 auth (`2xH4kMwe…`), token hook (`3tmvVJxh…`), lottery (`FbsPcWiE…`), mint gate (`2M9DwyFg…`), receipt_anchor (`CPQ8Y1bd…`), proof gate (`nYyXgf9w…`); the `nullRegistrar` entry in that file is retired. The attack-replay suite ([`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md)) targets separately deployed security-fix builds of `agent_credential_mint`, `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree`, and `dark_null_mint_gate` |
+| Mainnet | No active DNA x402 production deployment. Eight mainnet programs (semaphore, secp256r1 vault, secp256k1 auth, token hook, lottery, mint gate, receipt_anchor `6HSRGivd…`, proof gate `PmSCTue…`) ran June–July 2026 and were retired on 2026-07-14 (ProgramData closed): their transaction history stays readable on explorers, but they cannot be invoked. Canonical deployment inventory available to reviewers on request |
+| Commercial profile | Deploy profile kept in this repo; no commercial deployment is currently active. A new deploy needs wallet/RPC/program-id provisioning; external audit pending |
 | Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
 | NULL token | No active token mint; token launch follows the audit gate |
 
@@ -248,6 +248,8 @@ paths, NULL emission accounting, and lottery/root primitives.
 | `null_mint_gate` | NULL emission claim ledger with nullifier replay protection |
 
 ### Mainnet pilot path
+
+The June–July 2026 mainnet pilot ran under this profile and was retired on 2026-07-14; nothing from it is currently deployed. This section documents the profile for any future deployment.
 
 The commercial profile can be deployed to mainnet as a pilot while external
 audit is pending. It creates public transaction evidence and supports
@@ -318,7 +320,7 @@ This repo is **not** a mixer repo, privacy-pool product page, or zk hot-path pay
 
 ### Public Frontier Workspace
 
-The full agent-commerce workspace is public in this repository, not hidden in a local-only tree. Current `main` carries a 343-member Cargo workspace: 311 crate entries, 10 Solana program entries, the TypeScript x402 package, the public builder site, and the local agent/admin UI.
+The full agent-commerce workspace is public in this repository, not hidden in a local-only tree. Current `main` carries a 362-member Cargo workspace: 334 crate entries, 28 Solana program entries, the TypeScript x402 package, the public builder site, and the local agent/admin UI.
 
 Start with [`docs/PUBLIC_FRONTIER_WORKSPACE.md`](./docs/PUBLIC_FRONTIER_WORKSPACE.md) for the public inventory, promoted module map, Dark Null integration points, and regression commands.
 
@@ -410,7 +412,7 @@ Run the Rust regression suite with: `cargo test --workspace`
 - Proof and rollout docs: [`docs/`](./docs)
 - Public site: [`site/`](./site)
 - `/agent` UI: [`site-agent/`](./site-agent)
-- Want native `.null` identity + pay-by-name in your agent? Add the companion MCP in one line: `claude mcp add null -- npx -y @parad0x_labs/null-mcp` (resolve, register, private pay, verifiable receipts — keyless, BYO signer). Tool list: [npmjs.com/package/@parad0x_labs/null-mcp](https://www.npmjs.com/package/@parad0x_labs/null-mcp)
+- Legacy `.null` names: the `.null` registrar and auctions ran on mainnet June–August 2026 and are retired, so no `.null` name can currently be registered, updated, or transferred on mainnet. The companion MCP [`@parad0x_labs/null-mcp`](https://www.npmjs.com/package/@parad0x_labs/null-mcp) can still resolve legacy name records (read-only); its write tools target the retired mainnet programs. Pay-by-name to a stealth meta-address (private pay) was exercised end-to-end on devnet only (NullPay registrar `CpNbE8…`); no mainnet name published a stealth meta-address.
 
 ## Quick Start
 

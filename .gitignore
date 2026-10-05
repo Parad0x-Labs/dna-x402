@@ -60,7 +60,7 @@ KEY_LEDGER*.md
 scripts/backup-keys-to-usb.ps1
 scripts/convert-keypairs-to-phantom.py
 
-# Local clones of sibling / private repos — NEVER publish (holds the private web0-internal website)
+# Local clones of sibling / private repos — NEVER publish (private sibling material)
 .clone/
 
 # Test/audit artifacts (large, ephemeral)
