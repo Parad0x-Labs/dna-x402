@@ -9,8 +9,14 @@
 //!   2. The precompile verifies the ETH signature over its message and the
 //!      ETH address it carries before this program runs.
 //!   3. RegisterEthAgent reads that instruction through the instructions sysvar
-//!      and requires: verified ETH address == pda_seed[12..32], verified message
-//!      == msg_hash, verified signature == r || s || recovery_id.
+//!      and requires: verified ETH address == pda_seed[12..32], verified
+//!      signature == r || s || recovery_id, msg_hash == keccak256(verified
+//!      message), and verified message == the canonical EIP-191 binding message
+//!      (`binding::binding_message`) for this program id, the agent signer, the
+//!      ETH address, domain_hash and auth_hash.
+//!
+//! The binding message commits to the Solana agent key, so a public ETH
+//! signature cannot be replayed to bind that ETH address to a different agent.
 //!
 //! Accounts: RegisterEthAgent [record_pda, agent_signer, system_program,
 //! instructions_sysvar]; RevokeEthAgent [record_pda, agent_signer].
@@ -27,6 +33,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+pub mod binding;
 pub mod error;
 pub mod instruction;
 pub mod processor;

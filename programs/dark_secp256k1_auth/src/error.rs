@@ -18,8 +18,12 @@ pub enum AuthError {
     MalformedPrecompile,
     /// The precompile-verified ETH address doesn't match the supplied pda_seed.
     EthAddressMismatch,
-    /// The precompile-verified message differs from msg_hash in the instruction.
+    /// msg_hash in the instruction is not keccak256 of the precompile-verified message.
     MessageMismatch,
+    /// The precompile-verified message is not the canonical binding message for
+    /// this program, the agent signer, the ETH address, domain_hash and auth_hash
+    /// (e.g. a signature made for another agent replayed to squat the address).
+    BindingMessageMismatch,
 }
 
 impl From<AuthError> for ProgramError {
@@ -34,6 +38,7 @@ impl From<AuthError> for ProgramError {
             AuthError::MalformedPrecompile    => 0x5007,
             AuthError::EthAddressMismatch     => 0x5008,
             AuthError::MessageMismatch        => 0x5009,
+            AuthError::BindingMessageMismatch => 0x500A,
         })
     }
 }

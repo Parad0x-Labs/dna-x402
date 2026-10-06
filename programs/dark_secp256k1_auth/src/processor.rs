@@ -7,6 +7,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     clock::Clock,
     entrypoint::ProgramResult,
+    keccak,
     msg,
     program::invoke_signed,
     program_error::ProgramError,
@@ -19,7 +20,8 @@ use solana_program::{
 // The secp256k1 precompile binding below is enforced in every build. It used to
 // be compiled only with the `mainnet` cargo feature, so default (devnet) builds
 // bound any ETH address to any caller; that feature is kept as a no-op so existing
-// build commands keep working.
+// build commands keep working. The signed message is the canonical binding message
+// (see `binding.rs`), which names the program id and the agent signer.
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     match AuthInstruction::unpack(data)? {
@@ -61,21 +63,31 @@ fn process_register(
 
     // Parse the secp256k1 precompile at index 0 and bind what it verified:
     //   - the recovered ETH address must equal the eth_address in pda_seed
-    //   - the signed message must be exactly msg_hash (32 bytes)
     //   - the signature must be the r || s || recovery_id in this instruction
+    //   - msg_hash must be keccak256 of the signed message (the EIP-191 digest)
+    //   - the signed message must be the canonical binding message for this
+    //     program id, this agent signer, the ETH address, domain_hash and
+    //     auth_hash, so a signature made for one agent cannot bind the ETH
+    //     address to another one
     let ix_sysvar = next_account_info(iter)?;
     let verified_ix = load_precompile_ix(ix_sysvar)?;
     let verified = crate::secp256k1::parse_single_verified(&verified_ix.data, 0)?;
     if verified.eth_address != eth_address {
         return Err(AuthError::EthAddressMismatch.into());
     }
-    if verified.message != msg_hash {
-        return Err(AuthError::MessageMismatch.into());
-    }
     if verified.signature[..32] != r || verified.signature[32..64] != s
         || verified.signature[64] != recovery_id
     {
         return Err(AuthError::InvalidSignature.into());
+    }
+    if keccak::hash(verified.message).to_bytes() != msg_hash {
+        return Err(AuthError::MessageMismatch.into());
+    }
+    let expected = crate::binding::binding_message(
+        program_id, agent_signer.key, &eth_address, &domain_hash, &auth_hash,
+    );
+    if verified.message != expected.as_slice() {
+        return Err(AuthError::BindingMessageMismatch.into());
     }
 
     let rent     = Rent::get()?;

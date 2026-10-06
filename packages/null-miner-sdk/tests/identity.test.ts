@@ -15,13 +15,14 @@ import { keccak_256 } from "@noble/hashes/sha3";
 import {
   createEthAgentAuthMessage,
   formatEthPersonalSignMessage,
+  ethPersonalSignMessageBytes,
   ethPersonalSignHash,
   parseEthSignature,
   recoverEthAddress,
   deriveAgentAuthPda,
   buildSecp256k1AuthInstruction,
+  buildSecp256k1PrecompileData,
 } from "../src/identity/metamask.js";
-import type { EthAgentAuthMessage } from "../src/identity/metamask.js";
 
 // PassportV2 module
 import {
@@ -45,80 +46,57 @@ import type { CoalitionMember } from "../src/coalitions/index.js";
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("MetaMask auth message", () => {
-  const baseOpts = {
-    domain: "null-miner.xyz",
-    agentPubkey: "AeioU1234567890abcdef1234567890abcdef1234567890ab",
-    vaultId: "vault-test-001",
-  };
+  const PROGRAM = "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu";
+  const AGENT   = "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3";
+  const ETH     = "0xABcdef1234567890abcdef1234567890ABCDEF12";
+  const baseOpts = { programId: PROGRAM, agentPubkey: AGENT, ethAddress: ETH, domain: "null-miner.xyz" };
 
-  test("createEthAgentAuthMessage returns all required fields", () => {
+  test("createEthAgentAuthMessage derives domain and auth hashes", () => {
     const msg = createEthAgentAuthMessage(baseOpts);
-    expect(msg.domain).toBe(baseOpts.domain);
-    expect(msg.agentPubkey).toBe(baseOpts.agentPubkey);
-    expect(msg.vaultId).toBe(baseOpts.vaultId);
-    expect(msg.version).toBe("eth-agent-auth-v1");
-    expect(msg.nonce).toBeDefined();
-    expect(msg.nonce.length).toBe(32); // 16 bytes hex
-    expect(msg.ethAddress).toBeDefined();
+    expect(msg.programId).toBe(PROGRAM);
+    expect(msg.agentPubkey).toBe(AGENT);
+    expect(msg.ethAddress).toBe(ETH.toLowerCase());
+    expect(msg.version).toBe("dark-secp256k1-auth v1");
+    const pda = deriveAgentAuthPda(ETH, AGENT, "null-miner.xyz");
+    expect(msg.domainHash).toBe(pda.domainHash);
+    expect(msg.authHash).toBe(pda.authHash);
   });
 
-  test("createEthAgentAuthMessage uses provided nonce", () => {
-    const nonce = "deadbeefdeadbeef";
-    const msg = createEthAgentAuthMessage({ ...baseOpts, nonce });
-    expect(msg.nonce).toBe(nonce);
-  });
-
-  test("createEthAgentAuthMessage generates different nonces each time", () => {
-    const m1 = createEthAgentAuthMessage(baseOpts);
-    const m2 = createEthAgentAuthMessage(baseOpts);
-    expect(m1.nonce).not.toBe(m2.nonce);
-  });
-
-  test("formatEthPersonalSignMessage contains all key fields", () => {
-    const nonce = "aabbccdd11223344";
-    const msg = createEthAgentAuthMessage({ ...baseOpts, nonce });
-    const formatted = formatEthPersonalSignMessage(msg);
-    expect(formatted).toContain(baseOpts.domain);
-    expect(formatted).toContain(baseOpts.agentPubkey);
-    expect(formatted).toContain(baseOpts.vaultId);
-    expect(formatted).toContain(nonce);
-    expect(formatted).toContain("Solana Agent Authorization v1");
-    expect(formatted).toContain("Warning: This authorizes a Solana agent key");
-  });
-
-  test("ethPersonalSignHash returns a 32-byte Uint8Array", () => {
+  test("formatEthPersonalSignMessage is the exact on-chain binding text", () => {
     const msg = createEthAgentAuthMessage(baseOpts);
-    const formatted = formatEthPersonalSignMessage(msg);
-    const hash = ethPersonalSignHash(formatted);
+    expect(formatEthPersonalSignMessage(msg)).toBe([
+      "dark-secp256k1-auth v1: bind ETH address to Solana agent",
+      `program: ${PROGRAM}`,
+      `agent: ${AGENT}`,
+      `eth: ${ETH.toLowerCase()}`,
+      `domain: ${msg.domainHash}`,
+      `auth: ${msg.authHash}`,
+    ].join("\n"));
+  });
+
+  test("the message changes with the agent and the program", () => {
+    const m0 = formatEthPersonalSignMessage(createEthAgentAuthMessage(baseOpts));
+    const m1 = formatEthPersonalSignMessage(createEthAgentAuthMessage({ ...baseOpts, agentPubkey: PROGRAM }));
+    const m2 = formatEthPersonalSignMessage(createEthAgentAuthMessage({ ...baseOpts, programId: AGENT }));
+    expect(m1).not.toBe(m0);
+    expect(m2).not.toBe(m0);
+    expect(Buffer.from(ethPersonalSignHash(m0)).toString("hex"))
+      .not.toBe(Buffer.from(ethPersonalSignHash(m1)).toString("hex"));
+  });
+
+  test("ethPersonalSignMessageBytes uses the EIP-191 prefix and byte length", () => {
+    const bytes = Buffer.from(ethPersonalSignMessageBytes("abc"));
+    expect(bytes.toString("utf8")).toBe("\x19Ethereum Signed Message:\n3abc");
+    const hash = ethPersonalSignHash("abc");
     expect(hash).toBeInstanceOf(Uint8Array);
     expect(hash.length).toBe(32);
-  });
-
-  test("ethPersonalSignHash is deterministic for same message", () => {
-    const nonce = "1122334455667788";
-    const msg = createEthAgentAuthMessage({ ...baseOpts, nonce });
-    const formatted = formatEthPersonalSignMessage(msg);
-    const h1 = ethPersonalSignHash(formatted);
-    const h2 = ethPersonalSignHash(formatted);
-    expect(Buffer.from(h1).toString("hex")).toBe(Buffer.from(h2).toString("hex"));
-  });
-
-  test("ethPersonalSignHash differs for different messages", () => {
-    const m1 = createEthAgentAuthMessage({ ...baseOpts, nonce: "aaaa000000000000" });
-    const m2 = createEthAgentAuthMessage({ ...baseOpts, nonce: "bbbb111111111111" });
-    const h1 = ethPersonalSignHash(formatEthPersonalSignMessage(m1));
-    const h2 = ethPersonalSignHash(formatEthPersonalSignMessage(m2));
-    expect(Buffer.from(h1).toString("hex")).not.toBe(Buffer.from(h2).toString("hex"));
+    expect(Buffer.from(hash).toString("hex")).toBe(Buffer.from(keccak_256(bytes)).toString("hex"));
   });
 
   test("parseEthSignature splits a 65-byte hex into r, s, v, recoveryId", () => {
-    // 64 bytes of r+s = 'aa' * 32 + 'bb' * 32, v = 0x1b (27)
     const rHex = "aa".repeat(32);
     const sHex = "bb".repeat(32);
-    const vHex = "1b"; // 27
-    const sigHex = rHex + sHex + vHex;
-
-    const components = parseEthSignature(sigHex);
+    const components = parseEthSignature(rHex + sHex + "1b");
     expect(components.r).toHaveLength(32);
     expect(components.s).toHaveLength(32);
     expect(components.v).toBe(27);
@@ -128,12 +106,7 @@ describe("MetaMask auth message", () => {
   });
 
   test("parseEthSignature handles 0x prefix and v=28", () => {
-    const rHex = "cc".repeat(32);
-    const sHex = "dd".repeat(32);
-    const vHex = "1c"; // 28
-    const sigHex = "0x" + rHex + sHex + vHex;
-
-    const components = parseEthSignature(sigHex);
+    const components = parseEthSignature("0x" + "cc".repeat(32) + "dd".repeat(32) + "1c");
     expect(components.v).toBe(28);
     expect(components.recoveryId).toBe(1);
   });
@@ -142,60 +115,50 @@ describe("MetaMask auth message", () => {
     expect(() => parseEthSignature("aabb")).toThrow();
   });
 
-  test("deriveAgentAuthPda returns 64-char hex pdaSeed", () => {
-    const pda = deriveAgentAuthPda(
-      "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "AgentPubkey123",
-      "null-miner.xyz"
-    );
-    expect(pda.pdaSeed).toHaveLength(64);
+  test("deriveAgentAuthPda: pdaSeed = 12 zero bytes || ETH address", () => {
+    const pda = deriveAgentAuthPda("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef", AGENT, "null-miner.xyz");
+    expect(pda.pdaSeed).toBe("00".repeat(12) + "deadbeef".repeat(5));
     expect(pda.authHash).toHaveLength(64);
+    expect(pda.domainHash).toHaveLength(64);
   });
 
-  test("deriveAgentAuthPda is deterministic", () => {
-    const addr  = "0x1234567890abcdef1234567890abcdef12345678";
-    const agent = "SomeAgentPubkey";
-    const domain = "test.domain";
-    const p1 = deriveAgentAuthPda(addr, agent, domain);
-    const p2 = deriveAgentAuthPda(addr, agent, domain);
-    expect(p1.pdaSeed).toBe(p2.pdaSeed);
-    expect(p1.authHash).toBe(p2.authHash);
+  test("deriveAgentAuthPda is deterministic and address-specific", () => {
+    const p1 = deriveAgentAuthPda("0xaaaa000000000000000000000000000000000001", AGENT, "d");
+    const p2 = deriveAgentAuthPda("0xaaaa000000000000000000000000000000000001", AGENT, "d");
+    const p3 = deriveAgentAuthPda("0xbbbb000000000000000000000000000000000002", AGENT, "d");
+    expect(p1).toEqual(p2);
+    expect(p3.pdaSeed).not.toBe(p1.pdaSeed);
   });
 
-  test("pdaSeed differs for different ethAddress", () => {
-    const agent  = "SomeAgentPubkey";
-    const domain = "test.domain";
-    const p1 = deriveAgentAuthPda("0xaaaa000000000000000000000000000000000001", agent, domain);
-    const p2 = deriveAgentAuthPda("0xbbbb000000000000000000000000000000000002", agent, domain);
-    expect(p1.pdaSeed).not.toBe(p2.pdaSeed);
+  test("createEthAgentAuthMessage rejects a malformed ETH address", () => {
+    expect(() => createEthAgentAuthMessage({ ...baseOpts, ethAddress: "0x1234" })).toThrow();
   });
 
-  test("buildSecp256k1AuthInstruction returns exactly 200 bytes", () => {
-    const pda = deriveAgentAuthPda(
-      "0xabcdef1234567890abcdef1234567890abcdef12",
-      "AgentPubkeyXYZ",
-      "null-miner.xyz"
-    );
-    const sigComponents = {
-      r: new Uint8Array(32).fill(0x11),
-      s: new Uint8Array(32).fill(0x22),
-      v: 27,
-      recoveryId: 0,
-    };
+  test("buildSecp256k1AuthInstruction: 194 bytes in the program layout", () => {
+    const pda = deriveAgentAuthPda(ETH, AGENT, "null-miner.xyz");
+    const sig = { r: new Uint8Array(32).fill(0x11), s: new Uint8Array(32).fill(0x22), v: 28, recoveryId: 1 };
     const msgHash = new Uint8Array(32).fill(0x33);
-    const ix = buildSecp256k1AuthInstruction(pda, sigComponents, msgHash);
-    expect(ix).toBeInstanceOf(Uint8Array);
-    expect(ix.length).toBe(200);
+    const ix = buildSecp256k1AuthInstruction(pda, sig, msgHash);
+    expect(ix.length).toBe(194);
+    expect(ix[0]).toBe(0x01);
+    expect(ix[65]).toBe(1);
+    expect(Buffer.from(ix.subarray(66, 98)).toString("hex")).toBe("33".repeat(32));
+    expect(Buffer.from(ix.subarray(98, 130)).toString("hex")).toBe(pda.pdaSeed);
+    expect(Buffer.from(ix.subarray(130, 162)).toString("hex")).toBe(pda.authHash);
+    expect(Buffer.from(ix.subarray(162, 194)).toString("hex")).toBe(pda.domainHash);
   });
 
-  test("buildSecp256k1AuthInstruction first byte is discriminant 0x01", () => {
-    const pda = deriveAgentAuthPda("0x0000000000000000000000000000000000000001", "K", "d");
-    const ix = buildSecp256k1AuthInstruction(
-      pda,
-      { r: new Uint8Array(32), s: new Uint8Array(32), v: 27, recoveryId: 0 },
-      new Uint8Array(32)
-    );
-    expect(ix[0]).toBe(0x01);
+  test("buildSecp256k1PrecompileData carries address, signature and EIP-191 message", () => {
+    const sig = { r: new Uint8Array(32).fill(0x11), s: new Uint8Array(32).fill(0x22), v: 27, recoveryId: 0 };
+    const data = Buffer.from(buildSecp256k1PrecompileData(ETH, sig, "abc"));
+    const msg = Buffer.from(ethPersonalSignMessageBytes("abc"));
+    expect(data[0]).toBe(1);
+    expect(data.readUInt16LE(1)).toBe(12);
+    expect(data.readUInt16LE(4)).toBe(77);
+    expect(data.readUInt16LE(7)).toBe(97);
+    expect(data.readUInt16LE(9)).toBe(msg.length);
+    expect(data.subarray(77, 97).toString("hex")).toBe(ETH.slice(2).toLowerCase());
+    expect(data.subarray(97).equals(msg)).toBe(true);
   });
 });
 
@@ -207,62 +170,42 @@ describe("ETH signature recovery", () => {
   // Deterministic test private key: [1, 2, 3, ..., 32]
   const ETH_PRIV = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
   const ETH_PUB  = secp256k1.getPublicKey(ETH_PRIV, false); // 65 bytes, uncompressed
+  const EXPECTED_ADDR = "0x" + Buffer.from(keccak_256(ETH_PUB.subarray(1)).subarray(12)).toString("hex");
 
-  // Expected ETH address from the known private key
-  const pubNoPrefix = ETH_PUB.subarray(1); // 64 bytes
-  const addrHash    = keccak_256(pubNoPrefix);
-  const EXPECTED_ADDR = "0x" + Buffer.from(addrHash.subarray(12)).toString("hex");
+  const signHex = (formatted: string): string => {
+    const sig = secp256k1.sign(ethPersonalSignHash(formatted), ETH_PRIV);
+    const r = Buffer.from(sig.r.toString(16).padStart(64, "0"), "hex");
+    const s = Buffer.from(sig.s.toString(16).padStart(64, "0"), "hex");
+    return Buffer.concat([r, s, Buffer.from([27 + sig.recovery])]).toString("hex");
+  };
 
   test("expected ETH address is 42 chars (0x + 40 hex)", () => {
     expect(EXPECTED_ADDR).toHaveLength(42);
     expect(EXPECTED_ADDR.startsWith("0x")).toBe(true);
   });
 
-  test("recoverEthAddress returns the correct address for a known key", () => {
+  test("recoverEthAddress returns the signing address", () => {
     const msg = createEthAgentAuthMessage({
+      programId: "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      agentPubkey: "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+      ethAddress: EXPECTED_ADDR,
       domain: "recovery-test.xyz",
-      agentPubkey: "TestAgentPubkey123",
-      vaultId: "vault-recovery-001",
-      nonce: "aabbccddeeff0011",
     });
-
-    const formatted = formatEthPersonalSignMessage(msg);
-    const msgHash   = ethPersonalSignHash(formatted);
-
-    // Sign with noble secp256k1
-    const sig = secp256k1.sign(msgHash, ETH_PRIV);
-
-    // Build 65-byte hex: r(32) + s(32) + v(1)
-    const rHex = Buffer.from(sig.r.toString(16).padStart(64, "0"), "hex");
-    const sHex = Buffer.from(sig.s.toString(16).padStart(64, "0"), "hex");
-    const vByte = Buffer.from([27 + sig.recovery]);
-    const sigHex = Buffer.concat([rHex, sHex, vByte]).toString("hex");
-
-    const recovered = recoverEthAddress(msg, sigHex);
-    expect(recovered).toBe(EXPECTED_ADDR);
+    const sigHex = signHex(formatEthPersonalSignMessage(msg));
+    expect(recoverEthAddress(msg, sigHex)).toBe(EXPECTED_ADDR);
+    expect(recoverEthAddress(msg, sigHex)).toBe(EXPECTED_ADDR);
   });
 
-  test("recoverEthAddress is consistent across calls", () => {
-    const msg = createEthAgentAuthMessage({
-      domain: "consistency-test.xyz",
-      agentPubkey: "AgentConsistency99",
-      vaultId: "vault-c-001",
-      nonce: "1122334455667788",
-    });
-
-    const formatted = formatEthPersonalSignMessage(msg);
-    const msgHash   = ethPersonalSignHash(formatted);
-    const sig       = secp256k1.sign(msgHash, ETH_PRIV);
-
-    const rHex = Buffer.from(sig.r.toString(16).padStart(64, "0"), "hex");
-    const sHex = Buffer.from(sig.s.toString(16).padStart(64, "0"), "hex");
-    const vByte = Buffer.from([27 + sig.recovery]);
-    const sigHex = Buffer.concat([rHex, sHex, vByte]).toString("hex");
-
-    const r1 = recoverEthAddress(msg, sigHex);
-    const r2 = recoverEthAddress(msg, sigHex);
-    expect(r1).toBe(r2);
-    expect(r1).toBe(EXPECTED_ADDR);
+  test("a signature for one agent does not recover the signer for another agent", () => {
+    const opts = {
+      programId: "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      agentPubkey: "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+      ethAddress: EXPECTED_ADDR,
+      domain: "squat-test.xyz",
+    };
+    const sigHex = signHex(formatEthPersonalSignMessage(createEthAgentAuthMessage(opts)));
+    const other = createEthAgentAuthMessage({ ...opts, agentPubkey: "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd" });
+    expect(recoverEthAddress(other, sigHex)).not.toBe(EXPECTED_ADDR);
   });
 });
 

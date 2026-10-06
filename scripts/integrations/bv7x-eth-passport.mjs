@@ -10,6 +10,8 @@
  *
  * What it does:
  *   ETH address (Base wallet) → secp256k1 precompile → EthAgentRecord PDA
+ *   The ETH wallet personal_signs a message naming the program id and the
+ *   Solana key, so the signature cannot bind the address to another key.
  *
  * Use cases for BV-7X:
  *   - Arena agent credentials tied to ETH wallet
@@ -20,16 +22,15 @@
  * Run: node scripts/integrations/bv7x-eth-passport.mjs --test
  */
 
-import { secp256k1 } from "@noble/curves/secp256k1.js";
-import { keccak_256 } from "@noble/hashes/sha3.js";
 import {
   Connection, Keypair, PublicKey, Transaction,
-  TransactionInstruction, SystemProgram,
-  SYSVAR_INSTRUCTIONS_PUBKEY,
 } from "@solana/web3.js";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { ethAddress, ethAgentPda, registerIx, signBinding } from "../passport/lib/eth-agent.mjs";
+
+export { ethAddress };
 
 if (!process.env.SECP256K1_AUTH_PROGRAM_ID) {
   console.error("ERROR: set SECP256K1_AUTH_PROGRAM_ID: the mainnet dark_secp256k1_auth pilot program was retired on 2026-07-14.");
@@ -37,119 +38,49 @@ if (!process.env.SECP256K1_AUTH_PROGRAM_ID) {
 }
 const SECP256K1_AUTH = new PublicKey(process.env.SECP256K1_AUTH_PROGRAM_ID);
 const SOLANA_RPC     = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
-
-// ── ETH address ───────────────────────────────────────────────────────────────
-
-export function ethAddress(privKey) {
-  const pub = secp256k1.getPublicKey(privKey, false).slice(1);
-  return Buffer.from(keccak_256(pub).slice(12));
-}
-
-// ── secp256k1 precompile instruction ─────────────────────────────────────────
-
-function secp256k1Ix({ ethAddr, sig64, recovId, msgHash, ixIndex }) {
-  const sigOff = 12, addrOff = sigOff + 65, msgOff = addrOff + 20;
-  const data = Buffer.alloc(msgOff + 32);
-  data[0] = 1;
-  let o = 1;
-  data.writeUInt16LE(sigOff, o);  o += 2;
-  data[o++] = ixIndex & 0xff;
-  data.writeUInt16LE(addrOff, o); o += 2;
-  data[o++] = ixIndex & 0xff;
-  data.writeUInt16LE(msgOff, o);  o += 2;
-  data.writeUInt16LE(32, o);      o += 2;
-  data[o++] = ixIndex & 0xff;
-  Buffer.from(sig64).copy(data, sigOff);
-  data[sigOff + 64] = recovId & 0xff;
-  Buffer.from(ethAddr).copy(data, addrOff);
-  Buffer.from(msgHash).copy(data, msgOff);
-  return new TransactionInstruction({
-    programId: new PublicKey("KeccakSecp256k11111111111111111111111111111"),
-    keys: [], data,
-  });
-}
+const clusterOf      = (rpc) => (rpc.includes("devnet") ? "devnet" : rpc.includes("testnet") ? "testnet" : "mainnet-beta");
 
 // ── Register ──────────────────────────────────────────────────────────────────
 
 export async function registerBV7XPassport(ethPriv, solanaPayer, rpcUrl = SOLANA_RPC) {
-  const conn    = new Connection(rpcUrl, "confirmed");
-  const addr    = ethAddress(ethPriv);
+  const conn = new Connection(rpcUrl, "confirmed");
 
-  // Solana secp256k1 precompile hashes the message internally with keccak256.
-  // Sign keccak256(rawMessage) but pass rawMessage to the precompile.
-  const rawMsg    = Buffer.alloc(32, 0x42);
-  const msgDigest = Buffer.from(keccak_256(rawMsg));
-
-  // noble/curves v2: sign() returns raw 64-byte Uint8Array (r||s)
-  // Use Signature.fromCompact + addRecoveryBit to find recovery id
-  const sig64raw = secp256k1.sign(msgDigest, ethPriv, { prehash: false });
-  const r        = Buffer.from(sig64raw.slice(0, 32));
-  const s        = Buffer.from(sig64raw.slice(32, 64));
-  const sig64    = Buffer.concat([r, s]);
-  // Find recovery bit by trying 0 and 1
-  const pubKeyFull = secp256k1.getPublicKey(ethPriv, false);
-  let recovId = 0;
-  for (let bit = 0; bit < 2; bit++) {
-    try {
-      const rec = secp256k1.Signature.fromBytes(sig64raw, "compact")
-        .addRecoveryBit(bit)
-        .recoverPublicKey(msgDigest);
-      if (Buffer.from(rec.toBytes(false)).equals(Buffer.from(pubKeyFull))) {
-        recovId = bit; break;
-      }
-    } catch { /* try next */ }
-  }
-
-  const pdaSeed    = Buffer.concat([Buffer.alloc(12), addr]);
+  // The ETH key personal_signs the canonical binding message, which names this
+  // program id and the Solana key being bound (scripts/passport/lib/eth-agent.mjs).
   const authHash   = Buffer.alloc(32, 0x01);
   const domainHash = Buffer.alloc(32, 0x02);
-
-  const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("eth-agent"), addr], SECP256K1_AUTH
-  );
-
-  const preIx = secp256k1Ix({ ethAddr: addr, sig64, recovId, msgHash: rawMsg, ixIndex: 0 });
-  const regIx = new TransactionInstruction({
-    programId: SECP256K1_AUTH,
-    keys: [
-      { pubkey: pda,                          isSigner: false, isWritable: true },
-      { pubkey: solanaPayer.publicKey,        isSigner: true,  isWritable: true },
-      { pubkey: SystemProgram.programId,      isSigner: false, isWritable: false },
-      { pubkey: SYSVAR_INSTRUCTIONS_PUBKEY,   isSigner: false, isWritable: false },
-    ],
-    data: Buffer.concat([
-      Buffer.from([0x01]), r, s, Buffer.from([recovId]),
-      rawMsg, pdaSeed, authHash, domainHash,
-    ]),
+  const signed = signBinding({
+    programId: SECP256K1_AUTH, agent: solanaPayer.publicKey, ethPriv, domainHash, authHash,
   });
+  const pda = ethAgentPda(SECP256K1_AUTH, signed.ethAddr);
+  const regIx = registerIx({ ...signed, agent: solanaPayer.publicKey });
 
   const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
   const tx = new Transaction({ blockhash, lastValidBlockHeight, feePayer: solanaPayer.publicKey })
-    .add(preIx, regIx);
+    .add(signed.preIx, regIx);
   tx.sign(solanaPayer);
 
   const txSig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true });
-  await conn.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, "confirmed");
+  const conf = await conn.confirmTransaction({ signature: txSig, blockhash, lastValidBlockHeight }, "confirmed");
+  if (conf.value.err) throw new Error(`RegisterEthAgent ${txSig} failed: ${JSON.stringify(conf.value.err)}`);
 
   return {
     tx:          txSig,
     pda:         pda.toBase58(),
-    ethAddress:  `0x${addr.toString("hex")}`,
-    explorerUrl: `https://explorer.solana.com/tx/${txSig}?cluster=mainnet-beta`,
+    ethAddress:  `0x${signed.ethAddr.toString("hex")}`,
+    explorerUrl: `https://explorer.solana.com/tx/${txSig}?cluster=${clusterOf(rpcUrl)}`,
   };
 }
 
 export async function lookupBV7XPassport(ethAddressHex, rpcUrl = SOLANA_RPC) {
   const conn    = new Connection(rpcUrl, "confirmed");
   const ethAddr = Buffer.from(ethAddressHex.replace("0x", ""), "hex");
-  const [pda]   = PublicKey.findProgramAddressSync(
-    [Buffer.from("eth-agent"), ethAddr], SECP256K1_AUTH
-  );
+  const pda     = ethAgentPda(SECP256K1_AUTH, ethAddr);
   const info = await conn.getAccountInfo(pda);
   return {
     registered:  info !== null,
     pda:         pda.toBase58(),
-    explorerUrl: `https://explorer.solana.com/address/${pda.toBase58()}?cluster=mainnet-beta`,
+    explorerUrl: `https://explorer.solana.com/address/${pda.toBase58()}?cluster=${clusterOf(rpcUrl)}`,
   };
 }
 
@@ -172,7 +103,7 @@ if (process.argv.includes("--test")) {
 
   try {
     const result = await registerBV7XPassport(ethPriv, payer, SOLANA_RPC);
-    console.log("✅ Registered!");
+    console.log("Registered.");
     console.log(`PDA:         ${result.pda}`);
     console.log(`Solana tx:   ${result.tx}`);
     console.log(`Explorer:    ${result.explorerUrl}`);

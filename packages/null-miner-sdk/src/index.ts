@@ -188,11 +188,15 @@ export type { FlywheelConfig, FlywheelYield, EpochStats } from "./flywheel/index
 export {
   createEthAgentAuthMessage,
   formatEthPersonalSignMessage,
+  ethPersonalSignMessageBytes,
   ethPersonalSignHash,
   parseEthSignature,
   recoverEthAddress,
   deriveAgentAuthPda,
   buildSecp256k1AuthInstruction,
+  buildSecp256k1PrecompileData,
+  ETH_AGENT_BINDING_TAG,
+  ETH_AGENT_BINDING_VERSION,
 } from "./identity/metamask.js";
 export type { EthAgentAuthMessage, EthSignatureComponents, AgentAuthPda } from "./identity/metamask.js";
 

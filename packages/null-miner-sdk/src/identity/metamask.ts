@@ -1,29 +1,49 @@
 /**
  * null-miner-sdk — MetaMask / secp256k1 Agent Authorization
  *
- * Ethereum users can authorize Solana agents without Phantom.
- * An ETH wallet signs a canonical message → we recover the ETH address →
- * derive a deterministic Solana agent PDA from that address.
+ * Ethereum users can authorize Solana agents without Phantom. The ETH wallet
+ * `personal_sign`s a canonical binding message that names the
+ * `dark_secp256k1_auth` program id, the Solana agent key, the ETH address,
+ * domain_hash and auth_hash. The program rebuilds that message on-chain from the
+ * transaction (program id, agent signer, pda_seed, domain_hash, auth_hash) and
+ * requires the secp256k1 precompile to have verified exactly it, so a signature
+ * made for one agent cannot bind the ETH address to another agent.
  *
- * On-chain verification uses the secp256k1 precompile (genesis, always live).
- * The Rust program `dark_secp256k1_auth` stores the ETH→Agent binding.
+ * Message body (lines joined by "\n", no trailing newline):
+ *   dark-secp256k1-auth v1: bind ETH address to Solana agent
+ *   program: <base58 program id>
+ *   agent: <base58 agent pubkey>
+ *   eth: 0x<40 lowercase hex>
+ *   domain: <domain_hash hex>
+ *   auth: <auth_hash hex>
  *
+ * Mirrors programs/dark_secp256k1_auth/src/binding.rs.
  * No ETH RPC needed. All offline — sign in MetaMask, submit to Solana.
  */
 
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
-import { createHash, randomBytes } from "crypto";
+import { createHash } from "crypto";
+
+export const ETH_AGENT_BINDING_VERSION = "dark-secp256k1-auth v1";
+export const ETH_AGENT_BINDING_TAG = `${ETH_AGENT_BINDING_VERSION}: bind ETH address to Solana agent`;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface EthAgentAuthMessage {
-  domain: string;
+  /** dark_secp256k1_auth program id (base58). */
+  programId: string;
+  /** Solana agent key being bound (base58, as printed by web3.js). */
   agentPubkey: string;
+  /** ETH address that signs (0x-prefixed, lowercase). */
   ethAddress: string;
-  vaultId: string;
+  /** Domain string; domainHash = SHA-256(domain). */
+  domain: string;
+  /** hex SHA-256(domain). */
+  domainHash: string;
+  /** hex SHA-256(pdaSeed || "commitment"). */
+  authHash: string;
   version: string;
-  nonce: string;
 }
 
 export interface EthSignatureComponents {
@@ -37,60 +57,78 @@ export interface AgentAuthPda {
   ethAddress: string;
   agentPubkey: string;
   domain: string;
+  /** hex: 12 zero bytes || 20-byte ETH address (the program reads pda_seed[12..32]). */
   pdaSeed: string;
+  /** hex SHA-256(pdaSeed || "commitment"). */
   authHash: string;
+  /** hex SHA-256(domain). */
+  domainHash: string;
 }
 
 // ── Message construction ──────────────────────────────────────────────────────
 
+function normalizeEthAddress(addr: string): string {
+  const hex = addr.toLowerCase().replace(/^0x/, "");
+  if (!/^[0-9a-f]{40}$/.test(hex)) {
+    throw new Error(`Expected a 20-byte ETH address, got ${addr}`);
+  }
+  return `0x${hex}`;
+}
+
 /**
- * Create an EthAgentAuthMessage struct. Generates a random nonce if not provided.
+ * Build the binding message for `ethAddress` -> `agentPubkey` under `programId`.
  */
 export function createEthAgentAuthMessage(opts: {
-  domain: string;
+  programId: string;
   agentPubkey: string;
-  vaultId: string;
-  nonce?: string;
+  ethAddress: string;
+  domain: string;
 }): EthAgentAuthMessage {
-  const nonce = opts.nonce ?? randomBytes(16).toString("hex");
-  // Derive a placeholder ethAddress; the real address comes from the signature recovery.
-  // For the struct we use a zero address — actual binding happens in recoverEthAddress.
+  const ethAddress = normalizeEthAddress(opts.ethAddress);
+  const pda = deriveAgentAuthPda(ethAddress, opts.agentPubkey, opts.domain);
   return {
-    domain: opts.domain,
+    programId: opts.programId,
     agentPubkey: opts.agentPubkey,
-    ethAddress: "0x0000000000000000000000000000000000000000",
-    vaultId: opts.vaultId,
-    version: "eth-agent-auth-v1",
-    nonce,
+    ethAddress,
+    domain: opts.domain,
+    domainHash: pda.domainHash,
+    authHash: pda.authHash,
+    version: ETH_AGENT_BINDING_VERSION,
   };
 }
 
 /**
- * Format the human-readable message body for MetaMask `personal_sign`.
- * MetaMask prepends the Ethereum personal sign prefix automatically.
+ * The text to pass to MetaMask `personal_sign` (MetaMask adds the EIP-191 prefix).
  */
 export function formatEthPersonalSignMessage(msg: EthAgentAuthMessage): string {
   return [
-    "Solana Agent Authorization v1",
-    `Domain: ${msg.domain}`,
-    `Agent: ${msg.agentPubkey}`,
-    `Vault: ${msg.vaultId}`,
-    `Nonce: ${msg.nonce}`,
-    "Warning: This authorizes a Solana agent key",
+    ETH_AGENT_BINDING_TAG,
+    `program: ${msg.programId}`,
+    `agent: ${msg.agentPubkey}`,
+    `eth: ${normalizeEthAddress(msg.ethAddress)}`,
+    `domain: ${msg.domainHash.toLowerCase()}`,
+    `auth: ${msg.authHash.toLowerCase()}`,
   ].join("\n");
 }
 
 /**
- * Hash the message with the Ethereum personal sign prefix.
- * keccak256("\x19Ethereum Signed Message:\n" + length + message)
+ * EIP-191 message bytes: "\x19Ethereum Signed Message:\n" + byteLength + message.
+ * These are the bytes the secp256k1 precompile instruction must carry.
+ */
+export function ethPersonalSignMessageBytes(message: string): Uint8Array {
+  const body = Buffer.from(message, "utf8");
+  return Uint8Array.from(Buffer.concat([
+    Buffer.from(`\x19Ethereum Signed Message:\n${body.length}`, "utf8"),
+    body,
+  ]));
+}
+
+/**
+ * keccak256 of the EIP-191 message bytes (the digest MetaMask signs, and
+ * RegisterEthAgent's msg_hash).
  */
 export function ethPersonalSignHash(message: string): Uint8Array {
-  const prefix = `\x19Ethereum Signed Message:\n${message.length}`;
-  const data = Buffer.concat([
-    Buffer.from(prefix, "utf8"),
-    Buffer.from(message, "utf8"),
-  ]);
-  return keccak_256(data);
+  return keccak_256(ethPersonalSignMessageBytes(message));
 }
 
 // ── Signature parsing ─────────────────────────────────────────────────────────
@@ -148,86 +186,95 @@ export function recoverEthAddress(message: EthAgentAuthMessage, sigHex: string):
 // ── PDA derivation ────────────────────────────────────────────────────────────
 
 /**
- * Derive the on-chain PDA seed and auth commitment for an ETH→Agent binding.
- * pdaSeed  = SHA-256("eth-agent-auth-v1" || ethAddress || agentPubkey || domain)
- * authHash = SHA-256(pdaSeed || "commitment")
+ * Derive the on-chain fields for an ETH -> Agent binding.
+ *   pdaSeed    = 12 zero bytes || ethAddress (record PDA seeds: ["eth-agent", ethAddress])
+ *   authHash   = SHA-256(pdaSeed || "commitment")
+ *   domainHash = SHA-256(domain)
  */
 export function deriveAgentAuthPda(
   ethAddress: string,
   agentPubkey: string,
   domain: string
 ): AgentAuthPda {
-  const pdaSeed = sha256Buf(
-    Buffer.from("eth-agent-auth-v1"),
-    Buffer.from(ethAddress),
-    Buffer.from(agentPubkey),
-    Buffer.from(domain)
-  );
-  const authHash = sha256Buf(
-    pdaSeed,
-    Buffer.from("commitment")
-  );
+  const eth = normalizeEthAddress(ethAddress);
+  const pdaSeed = Buffer.concat([Buffer.alloc(12), Buffer.from(eth.slice(2), "hex")]);
+  const authHash = sha256Buf(pdaSeed, Buffer.from("commitment"));
+  const domainHash = sha256Buf(Buffer.from(domain, "utf8"));
   return {
-    ethAddress,
+    ethAddress: eth,
     agentPubkey,
     domain,
     pdaSeed: pdaSeed.toString("hex"),
     authHash: authHash.toString("hex"),
+    domainHash: domainHash.toString("hex"),
   };
 }
 
-// ── Instruction builder ───────────────────────────────────────────────────────
+// ── Instruction builders ──────────────────────────────────────────────────────
 
 /**
- * Build the 200-byte instruction data for the `dark_secp256k1_auth` program.
+ * RegisterEthAgent instruction data (194 bytes) for `dark_secp256k1_auth`.
  *
  * Layout:
- *   [0x01]         discriminant: RegisterEthAgent
- *   r[32]          signature r
- *   s[32]          signature s
- *   [recoveryId:1] v bit
- *   msgHash[32]    message hash
- *   pdaSeed[32]    PDA seed
- *   authHash[32]   auth commitment
- *   [0..0][37]     zero padding (future use)
+ *   [0x01]          discriminant: RegisterEthAgent
+ *   r[32]           signature r
+ *   s[32]           signature s
+ *   [recoveryId:1]  0 or 1
+ *   msgHash[32]     ethPersonalSignHash(formatEthPersonalSignMessage(msg))
+ *   pdaSeed[32]     12 zero bytes || ETH address
+ *   authHash[32]    auth commitment
+ *   domainHash[32]  SHA-256(domain)
+ *
+ * Accounts: [record PDA (w), agent (signer, w), system program, instructions sysvar];
+ * the secp256k1 precompile instruction (buildSecp256k1PrecompileData) must be at
+ * transaction index 0.
  */
 export function buildSecp256k1AuthInstruction(
   auth: AgentAuthPda,
   sigComponents: EthSignatureComponents,
   msgHash: Uint8Array
 ): Uint8Array {
-  const buf = new Uint8Array(200);
+  const buf = new Uint8Array(194);
   let offset = 0;
-
-  // discriminant
   buf[offset++] = 0x01;
-
-  // r (32 bytes)
-  buf.set(sigComponents.r, offset);
-  offset += 32;
-
-  // s (32 bytes)
-  buf.set(sigComponents.s, offset);
-  offset += 32;
-
-  // recoveryId (1 byte)
+  buf.set(sigComponents.r, offset); offset += 32;
+  buf.set(sigComponents.s, offset); offset += 32;
   buf[offset++] = sigComponents.recoveryId;
-
-  // msgHash (32 bytes)
-  buf.set(msgHash.subarray(0, 32), offset);
-  offset += 32;
-
-  // pdaSeed (32 bytes)
-  const pdaSeedBytes = Buffer.from(auth.pdaSeed, "hex");
-  buf.set(pdaSeedBytes, offset);
-  offset += 32;
-
-  // authHash (32 bytes)
-  const authHashBytes = Buffer.from(auth.authHash, "hex");
-  buf.set(authHashBytes, offset);
-  // offset += 32; // offset = 162, remaining 38 bytes stay zero-padded → total 200
-
+  buf.set(msgHash.subarray(0, 32), offset); offset += 32;
+  buf.set(Buffer.from(auth.pdaSeed, "hex"), offset); offset += 32;
+  buf.set(Buffer.from(auth.authHash, "hex"), offset); offset += 32;
+  buf.set(Buffer.from(auth.domainHash, "hex"), offset);
   return buf;
+}
+
+/**
+ * Data of the secp256k1 precompile instruction (program
+ * KeccakSecp256k11111111111111111111111111111) carrying one signature over the
+ * EIP-191 bytes of `message` (the personal_sign text).
+ */
+export function buildSecp256k1PrecompileData(
+  ethAddress: string,
+  sigComponents: EthSignatureComponents,
+  message: string,
+  instructionIndex = 0
+): Uint8Array {
+  const msg = ethPersonalSignMessageBytes(message);
+  const sigOff = 12, addrOff = sigOff + 65, msgOff = addrOff + 20;
+  const data = Buffer.alloc(msgOff + msg.length);
+  data[0] = 1;
+  data.writeUInt16LE(sigOff, 1);
+  data[3] = instructionIndex;
+  data.writeUInt16LE(addrOff, 4);
+  data[6] = instructionIndex;
+  data.writeUInt16LE(msgOff, 7);
+  data.writeUInt16LE(msg.length, 9);
+  data[11] = instructionIndex;
+  data.set(sigComponents.r, sigOff);
+  data.set(sigComponents.s, sigOff + 32);
+  data[sigOff + 64] = sigComponents.recoveryId;
+  data.set(Buffer.from(normalizeEthAddress(ethAddress).slice(2), "hex"), addrOff);
+  data.set(msg, msgOff);
+  return Uint8Array.from(data);
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────

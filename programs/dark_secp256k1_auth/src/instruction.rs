@@ -10,10 +10,15 @@ pub enum AuthInstruction {
     ///   [1..33]   r[32]          — ECDSA signature r component
     ///   [33..65]  s[32]          — ECDSA signature s component
     ///   [65]      recovery_id    — 0 or 1
-    ///   [66..98]  msg_hash[32]   — keccak256 of the signed message
+    ///   [66..98]  msg_hash[32]   — keccak256 of the signed message, i.e. the
+    ///                              EIP-191 personal_sign digest of the canonical
+    ///                              binding message (see `binding.rs`)
     ///   [98..130] pda_seed[32]   — last 20 bytes = eth_address
     ///   [130..162] auth_hash[32] — commitment = SHA-256(pda_seed || "commitment")
     ///   [162..194] domain_hash[32] — SHA-256(domain_utf8)
+    ///
+    /// The precompile message must be the canonical binding message over
+    /// (program id, agent_signer, eth_address, domain_hash, auth_hash).
     ///
     /// Total data: 194 bytes  (discriminant + 6 fields)
     ///
