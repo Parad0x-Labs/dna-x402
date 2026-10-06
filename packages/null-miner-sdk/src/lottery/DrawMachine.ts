@@ -2,12 +2,15 @@
  * null-miner-sdk — Provably-fair draw machine for NULL lottery
  *
  * Commit-reveal: house commits SHA-256(seed) at round open, reveals seed at
- * draw time. Draw is deterministic Fisher-Yates using Poseidon mixing so it is
- * fully reproducible from public inputs (seed + roundId).
+ * draw time. The draw is the dark_null_lottery program's `draw_numbers`:
+ * Fisher-Yates over 1..=30 with keccak256(seed || round_id_le || i), so it is
+ * reproducible from public inputs (seed + roundId) and equals the on-chain draw.
  */
 
 import { createHash, randomBytes } from "crypto";
+import { keccak_256 } from "@noble/hashes/sha3";
 import { poseidonHash2, hexToField, fieldToHex } from "../zk/poseidon.js";
+import { bytes32, u64le, fallbackWinnerIndex } from "./ticketTree.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,15 +42,31 @@ export function buildCommitment(seed: string): string {
 // ── Draw ──────────────────────────────────────────────────────────────────────
 
 /**
- * Reveal a seed and draw 5 numbers from 1..=30.
- * Verifies SHA-256(seed) === commitment before drawing.
- *
- * Fisher-Yates with Poseidon mixing:
+ * The program's draw (processor::draw_numbers), in draw order:
  *   pool = [1..30]
  *   for i = 0..5:
- *     hashVal = poseidonHash2(hexToField(seed), BigInt(roundId * 100 + i))
- *     idx     = Number(hashVal % BigInt(30 - i))
- *     drawnNumbers[i] = pool[idx]; pool.splice(idx, 1)
+ *     idx = u64_le(keccak256(seed || round_id_le || [i])[0..8]) % (30 - i)
+ *     drawn[i] = pool[idx]; pool[idx] = pool[29 - i]
+ */
+export function drawNumbers(seed: string | Uint8Array, roundId: number | bigint): number[] {
+  const s = bytes32(seed, "seed");
+  const rid = u64le(roundId);
+  const pool: number[] = [];
+  for (let n = 1; n <= 30; n++) pool.push(n);
+  const drawn: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    const remaining = 30 - i;
+    const h = keccak_256(Uint8Array.from([...s, ...rid, i]));
+    const idx = Number(Buffer.from(h).readBigUInt64LE(0) % BigInt(remaining));
+    drawn.push(pool[idx]);
+    pool[idx] = pool[remaining - 1];
+  }
+  return drawn;
+}
+
+/**
+ * Reveal a seed and draw 5 numbers from 1..=30 (see drawNumbers).
+ * Verifies SHA-256(seed) === commitment before drawing.
  */
 export function revealDraw(
   seed:       string,
@@ -63,16 +82,7 @@ export function revealDraw(
   }
 
   const seedField = hexToField(seed);
-  const pool: number[] = [];
-  for (let n = 1; n <= 30; n++) pool.push(n);
-
-  const drawnNumbers: number[] = [];
-  for (let i = 0; i < 5; i++) {
-    const hashVal = poseidonHash2(seedField, BigInt(roundId * 100 + i));
-    const idx     = Number(hashVal % BigInt(30 - i));
-    drawnNumbers.push(pool[idx]);
-    pool.splice(idx, 1);
-  }
+  const drawnNumbers = drawNumbers(seed, roundId);
 
   // drawHash uniquely identifies this draw (public fingerprint)
   const drawHash = fieldToHex(
@@ -157,11 +167,12 @@ export function generateSeed(): string {
 }
 
 /**
- * Build fallback winner index from seed + pool size.
- * winner_index = Number(poseidonHash2(hexToField(seed), BigInt(poolSize)) % BigInt(poolSize))
+ * Fallback winner index, as the program's FallbackDraw selects it:
+ *   u64_le(SHA-256("dark-null-lottery:fallback:v1" || seed || round_id_le)[0..8]) % poolSize
+ * `seed` is the third round's committed draw seed, `roundId` that round's id and
+ * `poolSize` its anchored ticket count.
  */
-export function buildFallbackWinnerIndex(seed: string, poolSize: number): number {
+export function buildFallbackWinnerIndex(seed: string, roundId: number, poolSize: number): number {
   if (poolSize <= 0) throw new Error("DrawMachine: poolSize must be > 0");
-  const h = poseidonHash2(hexToField(seed), BigInt(poolSize));
-  return Number(h % BigInt(poolSize));
+  return fallbackWinnerIndex(seed, roundId, poolSize);
 }

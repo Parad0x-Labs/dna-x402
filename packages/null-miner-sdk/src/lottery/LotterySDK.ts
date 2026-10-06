@@ -20,10 +20,10 @@ import {
   batchTicketsToArchive,
   buildFallbackPool,
   findFallbackWinner,
-  checkBatchForWin,
-  buildBatchRoot,
+  buildTicketProof,
 } from "./TicketStore.js";
 import type { LotteryTicket, TicketBatch } from "./TicketStore.js";
+import { claimJackpotData } from "./ticketTree.js";
 
 import { bridgeArchiveToAnchor } from "../liquefy/bridge.js";
 import type { ArchiveBridgeResult } from "../liquefy/bridge.js";
@@ -44,7 +44,7 @@ export interface LotteryConfig {
 
 export interface RoundInfo {
   roundId:            number;
-  status:             "open" | "committed" | "anchored" | "drawn" | "won" | "no_winner";
+  status:             "open" | "committed" | "anchored" | "drawn" | "won" | "no_winner" | "fallback_drawn";
   seedCommitment?:    string;
   drawnNumbers?:      number[];
   ticketCount:        number;
@@ -71,9 +71,11 @@ export interface RoundDrawResult {
 export interface FallbackDrawResult {
   rounds:       number[];
   winnerTicket: LotteryTicket;
-  winnerIndex:  number;
-  poolSize:     number;
-  seed:         string;
+  winnerIndex:  number;       // leaf index in the third round's tickets tree
+  poolSize:     number;       // FallbackDraw fallback_pool_size
+  poolRoot:     string;       // FallbackDraw fallback_tickets_root (hex)
+  seed:         string;       // the third round's committed draw seed
+  proof:        string[];     // winner's Merkle proof (hex) for ClaimJackpot
 }
 
 // ── Default Config ────────────────────────────────────────────────────────────
@@ -90,8 +92,9 @@ export function buyTicket(
   roundId:  number,
   numbers:  number[],
   config:   LotteryConfig = DEFAULT_LOTTERY_CONFIG,
+  owner?:   string,
 ): BuyTicketResult {
-  const ticket = createTicket(agentId, roundId, numbers, config.ticketPriceNull);
+  const ticket = createTicket(agentId, roundId, numbers, config.ticketPriceNull, owner);
 
   const receipt = createHash("sha256")
     .update(`lottery-receipt-v1:${ticket.ticketId}:${roundId}`)
@@ -153,13 +156,8 @@ export function revealAndDraw(
   const drawResult = revealDraw(seed, commitment, round.roundId);
 
   // Find winning ticket
-  const batch: TicketBatch = {
-    roundId:    round.roundId,
-    tickets,
-    batchRoot:  buildBatchRoot(tickets),
-    entryCount: tickets.length,
-  };
-  const winningTicket = checkBatchForWin(batch, drawResult.drawnNumbers);
+  const winningTicket =
+    tickets.find((t) => dmCheckWin(t.numbers, drawResult.drawnNumbers)) ?? null;
 
   const { jackpot, houseCut } = computeJackpot(
     round.totalNullDeposited,
@@ -187,18 +185,27 @@ export function revealAndDraw(
 }
 
 /**
- * Operator: execute fallback draw after 3 no-winner rounds.
+ * Operator: the FallbackDraw the program will run after 3 no-winner rounds.
+ *
+ * `rounds` are the three consecutive rounds' anchored batches; the pool is the
+ * third one. `fallbackSeed` is the third round's committed draw seed; pass its
+ * commitment to check it here (the program checks SHA-256(seed) against it).
  */
 export function executeFallbackDraw(
-  rounds:       TicketBatch[],
-  fallbackSeed: string,
+  rounds:               TicketBatch[],
+  fallbackSeed:         string,
+  thirdRoundCommitment?: string,
 ): FallbackDrawResult {
   const pool        = buildFallbackPool(rounds);
   if (pool.poolSize === 0) {
-    throw new Error("LotterySDK: fallback pool is empty — no tickets across provided rounds");
+    throw new Error("LotterySDK: fallback pool is empty — the third round anchored no tickets");
+  }
+  if (thirdRoundCommitment !== undefined && buildCommitment(fallbackSeed) !== thirdRoundCommitment) {
+    throw new Error("LotterySDK: fallback seed does not match the third round's commitment");
   }
 
-  const winnerIndex = buildFallbackWinnerIndex(fallbackSeed, pool.poolSize);
+  const thirdRound  = pool.rounds[2];
+  const winnerIndex = buildFallbackWinnerIndex(fallbackSeed, thirdRound, pool.poolSize);
   const winnerTicket = findFallbackWinner(pool, winnerIndex);
 
   if (!winnerTicket) {
@@ -210,8 +217,25 @@ export function executeFallbackDraw(
     winnerTicket,
     winnerIndex,
     poolSize:     pool.poolSize,
+    poolRoot:     pool.poolRoot,
     seed:         fallbackSeed,
+    proof:        buildTicketProof(pool.allTickets, winnerIndex),
   };
+}
+
+/**
+ * Player: ClaimJackpot instruction data for an anchored ticket at `leafIndex`
+ * of its round's tickets tree (`tickets` = that round's anchored batch, in
+ * order). The transaction must be signed by `ticket.owner`.
+ */
+export function buildClaimJackpotData(
+  tickets:   LotteryTicket[],
+  leafIndex: number,
+): Uint8Array {
+  const ticket = tickets[leafIndex];
+  if (!ticket) throw new Error("LotterySDK: leaf index out of range");
+  const proof = buildTicketProof(tickets, leafIndex).map((h) => Uint8Array.from(Buffer.from(h, "hex")));
+  return claimJackpotData(ticket.nullifier, ticket.numbers, leafIndex, proof);
 }
 
 // ── Finance ───────────────────────────────────────────────────────────────────

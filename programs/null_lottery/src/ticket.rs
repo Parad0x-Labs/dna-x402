@@ -21,6 +21,17 @@
 //! claimed numbers and nullifier, and requires (a) the numbers to equal the drawn
 //! numbers and (b) the leaf to be at `leaf_index < ticket_count` under
 //! `tickets_root`.
+//!
+//! FallbackDraw selects one ticket of the third round's anchored tree:
+//!
+//! ```text
+//! index = u64_le(SHA-256("dark-null-lottery:fallback:v1" || seed[32]
+//!                        || round_id_le[8])[0..8]) mod ticket_count
+//! ```
+//!
+//! where `seed` is that round's committed draw seed. ClaimJackpot on the
+//! FallbackDrawn round requires (b) with `leaf_index == index`; the numbers
+//! can be any.
 
 use solana_program::hash::hashv;
 
@@ -30,6 +41,8 @@ pub const TICKET_LEAF_TAG: &[u8] = b"dark-null-lottery:ticket:v1";
 pub const NODE_PREFIX: &[u8] = &[0x01];
 /// Upper bound on the proof length accepted by ClaimJackpot.
 pub const MAX_PROOF_DEPTH: usize = 32;
+/// Domain separation tag of the fallback selection.
+pub const FALLBACK_TAG: &[u8] = b"dark-null-lottery:fallback:v1";
 
 /// Leaf commitment of one ticket.
 pub fn ticket_leaf(round_id: u64, owner: &[u8; 32], numbers: &[u8; 5], nullifier: &[u8; 32]) -> [u8; 32] {
@@ -57,6 +70,18 @@ pub fn root_from_proof(leaf: [u8; 32], index: u64, proof: &[[u8; 32]]) -> [u8; 3
         acc = if (index >> level) & 1 == 1 { node(sibling, &acc) } else { node(&acc, sibling) };
     }
     acc
+}
+
+/// Leaf index of the fallback winner among `ticket_count` anchored tickets
+/// (0 when the set is empty; FallbackDraw refuses an empty set).
+pub fn fallback_winner_index(seed: &[u8; 32], round_id: u64, ticket_count: u64) -> u64 {
+    if ticket_count == 0 {
+        return 0;
+    }
+    let h = hashv(&[FALLBACK_TAG, seed, &round_id.to_le_bytes()]).to_bytes();
+    let mut x = [0u8; 8];
+    x.copy_from_slice(&h[..8]);
+    u64::from_le_bytes(x) % ticket_count
 }
 
 /// The 5 drawn numbers in ascending order (the form a ticket commits to).

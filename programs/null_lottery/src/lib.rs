@@ -15,7 +15,12 @@
 //!     ticket leaf, which commits to the claimant key, must be under the anchored
 //!     tickets_root (see `ticket.rs`). The first valid winning ticket claims and
 //!     the round becomes Won with that ticket's nullifier.
-//!   - Won round: the nullifier must equal the stored winner nullifier.
+//!   - FallbackDrawn round: FallbackDraw took three consecutive Drawn rounds and
+//!     selected one ticket of the third round's anchored tree with that round's
+//!     committed seed (`ticket::fallback_winner_index`). Only that ticket's
+//!     owner claims, with the same leaf and proof format; the numbers can be any.
+//!   - Won round: closed (AlreadyClaimed for the stored nullifier, InvalidWinner
+//!     otherwise). There is no nullifier-only claim.
 //!   - No SPL token transfer is made; the claim is recorded on-chain.
 
 use solana_program::{
@@ -50,7 +55,7 @@ mod tests {
     use crate::{
         error::LotteryError,
         instruction::LotteryInstruction,
-        processor::{draw_numbers, fallback_winner_nullifier},
+        processor::draw_numbers,
         state::{
             CLAIM_NULLIFIER_DISC, CLAIM_NULLIFIER_SIZE,
             LOTTERY_CONFIG_DISC, LOTTERY_CONFIG_SIZE,
@@ -350,23 +355,27 @@ mod tests {
         assert_ne!(commitment_bytes, bad_commitment.to_bytes());
     }
 
-    // ── 13. fallback_winner_index: deterministic given seed + pool_size ───
+    // ── 13. fallback_winner_index: deterministic, in range, seed/round bound ─
 
     #[test]
-    fn test_fallback_winner_deterministic() {
-        let seed      = [0x77u8; 32];
-        let pool_size = 500u64;
-
-        let n1 = fallback_winner_nullifier(&seed, pool_size);
-        let n2 = fallback_winner_nullifier(&seed, pool_size);
-        assert_eq!(n1, n2, "must be deterministic");
-
-        // Different pool_size → different result
-        let n3 = fallback_winner_nullifier(&seed, pool_size + 1);
-        assert_ne!(n1, n3);
-
-        // Non-zero result
-        assert_ne!(n1, [0u8; 32]);
+    fn test_fallback_winner_index() {
+        use crate::ticket::fallback_winner_index;
+        let seed = [0x77u8; 32];
+        assert_eq!(fallback_winner_index(&seed, 9, 500), fallback_winner_index(&seed, 9, 500));
+        for count in 1u64..=64 {
+            assert!(fallback_winner_index(&seed, 9, count) < count);
+        }
+        assert_eq!(fallback_winner_index(&seed, 9, 1), 0);
+        assert_eq!(fallback_winner_index(&seed, 9, 0), 0);
+        // The index depends on the seed and the round id.
+        let hits = (0u8..32)
+            .filter(|b| fallback_winner_index(&[*b; 32], 9, 1 << 20) != fallback_winner_index(&seed, 9, 1 << 20))
+            .count();
+        assert!(hits >= 31);
+        assert_ne!(fallback_winner_index(&seed, 9, 1 << 40), fallback_winner_index(&seed, 10, 1 << 40));
+        // Status byte 6 is FallbackDrawn.
+        assert_eq!(RoundStatus::from_byte(6), Some(RoundStatus::FallbackDrawn));
+        assert_eq!(RoundStatus::from_byte(7), None);
     }
 
     // ── 14. Double-commitment protection: WrongStatus on re-commit ────────

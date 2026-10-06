@@ -18,7 +18,8 @@ pub enum LotteryError {
     WrongStatus,
     /// The caller is not the stored admin.
     NotAdmin,
-    /// no_winner_count < fallback_after; fallback not yet available.
+    /// FallbackDraw: the config asks for a no-winner streak longer than the
+    /// three consecutive rounds FallbackDraw takes (fallback_after > 3).
     FallbackNotReady,
     /// The claimed ticket's numbers are not the round's drawn numbers.
     TicketNotWinning,
@@ -26,6 +27,14 @@ pub enum LotteryError {
     /// leaf_index < ticket_count under the anchored tickets_root, or no ticket
     /// proof was supplied for a Drawn round.
     InvalidTicketProof,
+    /// FallbackDraw: fallback_tickets_root / fallback_pool_size are not the
+    /// third round's anchored tickets_root / ticket_count, or that set is empty.
+    FallbackPoolMismatch,
+    /// ClaimJackpot on a FallbackDrawn round: leaf_index is not the ticket the
+    /// fallback selected.
+    NotFallbackWinner,
+    /// FallbackDraw: the three rounds are not consecutive round ids.
+    FallbackRoundsNotConsecutive,
 }
 
 impl From<LotteryError> for ProgramError {
@@ -42,6 +51,9 @@ impl From<LotteryError> for ProgramError {
             LotteryError::FallbackNotReady    => 0x6009,
             LotteryError::TicketNotWinning    => 0x600A,
             LotteryError::InvalidTicketProof  => 0x600B,
+            LotteryError::FallbackPoolMismatch => 0x600C,
+            LotteryError::NotFallbackWinner   => 0x600D,
+            LotteryError::FallbackRoundsNotConsecutive => 0x600E,
         })
     }
 }

@@ -41,6 +41,11 @@ pub enum LotteryInstruction {
     /// 0x05 FallbackDraw
     /// Data: [0x05, seed[32], fallback_tickets_root[32], fallback_pool_size[8]]
     ///       = 73 bytes total
+    /// Accounts: [lottery_config PDA, round_1 (w), round_2 (w), round_3 (w),
+    ///            admin (signer)]
+    /// Three consecutive Drawn rounds. `seed` must be round_3's committed draw
+    /// seed; `fallback_tickets_root` / `fallback_pool_size` must equal round_3's
+    /// anchored tickets_root / ticket_count (the fallback pool).
     FallbackDraw {
         seed:                  [u8; 32],
         fallback_tickets_root: [u8; 32],
@@ -48,11 +53,10 @@ pub enum LotteryInstruction {
     },
 
     /// 0x06 ClaimJackpot
-    /// Data, Drawn round (ticket proof required):
-    ///   [0x06, nullifier[32], numbers[5], leaf_index[8] (u64 LE), proof_len[1],
-    ///    proof[32 * proof_len]]
-    /// Data, Won round (FallbackDraw winner): [0x06, nullifier[32]] = 33 bytes;
-    ///   a ticket section, if present, is ignored.
+    /// Data: [0x06, nullifier[32], numbers[5], leaf_index[8] (u64 LE), proof_len[1],
+    ///        proof[32 * proof_len]]
+    /// The ticket section is required on a Drawn or FallbackDrawn round; the
+    /// 33-byte nullifier-only form parses but never claims. A Won round is closed.
     /// `numbers` ascending; `proof` = sibling hashes from the leaf up (see ticket.rs).
     ClaimJackpot {
         winner_nullifier: [u8; 32],
@@ -60,7 +64,7 @@ pub enum LotteryInstruction {
     },
 }
 
-/// The ticket a ClaimJackpot presents on a Drawn round.
+/// The ticket a ClaimJackpot presents (Drawn or FallbackDrawn round).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TicketClaim {
     pub numbers:    [u8; 5],

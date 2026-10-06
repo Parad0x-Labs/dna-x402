@@ -1,10 +1,14 @@
 /**
  * NULL Lottery — comprehensive test suite (60+ tests)
  *
- * Covers DrawMachine, TicketStore, and LotterySDK.
+ * Covers DrawMachine, TicketStore, LotterySDK and the ticket.rs mirror
+ * (ticketTree), cross-checked against vectors written by the program's
+ * tests/ticket_vectors.rs (override the file with TICKET_VECTORS=<path>).
  */
 
-import { createHash } from "crypto";
+import { createHash, randomBytes } from "crypto";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 import {
   buildCommitment,
@@ -13,6 +17,7 @@ import {
   checkWin,
   generateSeed,
   buildFallbackWinnerIndex,
+  drawNumbers,
 } from "../src/lottery/DrawMachine.js";
 
 import {
@@ -22,6 +27,8 @@ import {
   findFallbackWinner,
   checkBatchForWin,
   buildBatchRoot,
+  buildTicketProof,
+  ticketLeafOf,
 } from "../src/lottery/TicketStore.js";
 import type { LotteryTicket, TicketBatch } from "../src/lottery/TicketStore.js";
 
@@ -31,6 +38,7 @@ import {
   submitRoundTickets,
   revealAndDraw,
   executeFallbackDraw,
+  buildClaimJackpotData,
   computeJackpot,
   buildClaimReceipt,
   DEFAULT_LOTTERY_CONFIG,
@@ -41,6 +49,19 @@ import { lotteryConfigFromProfile, COMMERCIAL_PROFILE } from "../src/config/prof
 const COMMERCIAL_LOTTERY_CONFIG = lotteryConfigFromProfile(COMMERCIAL_PROFILE);
 
 import { hexToField, poseidonHash2, fieldToHex } from "../src/zk/poseidon.js";
+import {
+  ticketLeaf,
+  ticketNode,
+  ticketsRoot,
+  ticketsProof,
+  rootFromProof,
+  treeDepth,
+  fallbackWinnerIndex,
+  claimJackpotData,
+  encodeBase58,
+  decodeBase58,
+  bytesToHex,
+} from "../src/lottery/ticketTree.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -66,12 +87,17 @@ function makeRoundInfo(overrides: Partial<RoundInfo> = {}): RoundInfo {
   };
 }
 
+function randomOwner(): string {
+  return encodeBase58(randomBytes(32));
+}
+
 function makeTicket(
   numbers: number[] = [1, 2, 3, 4, 5],
   roundId = 1,
   agentId = "agent-1",
+  owner: string = randomOwner(),
 ): LotteryTicket {
-  return createTicket(agentId, roundId, numbers);
+  return createTicket(agentId, roundId, numbers, 10_000_000, owner);
 }
 
 function makeBatch(tickets: LotteryTicket[], roundId = 1): TicketBatch {
@@ -244,35 +270,49 @@ describe("DrawMachine — buildFallbackWinnerIndex", () => {
   const seed = makeSeed();
 
   test("is deterministic", () => {
-    expect(buildFallbackWinnerIndex(seed, 100)).toBe(
-      buildFallbackWinnerIndex(seed, 100)
+    expect(buildFallbackWinnerIndex(seed, 3, 100)).toBe(
+      buildFallbackWinnerIndex(seed, 3, 100)
     );
   });
 
   test("result is in [0, poolSize)", () => {
     for (const size of [1, 10, 99, 1000]) {
-      const idx = buildFallbackWinnerIndex(seed, size);
+      const idx = buildFallbackWinnerIndex(seed, 3, size);
       expect(idx).toBeGreaterThanOrEqual(0);
       expect(idx).toBeLessThan(size);
     }
   });
 
-  test("different seeds produce different indices (probabilistic)", () => {
+  test("different seeds or rounds produce different indices (probabilistic)", () => {
     const s1 = "a".repeat(64);
     const s2 = "b".repeat(64);
     // Very unlikely to collide with poolSize 10000
-    expect(buildFallbackWinnerIndex(s1, 10000)).not.toBe(
-      buildFallbackWinnerIndex(s2, 10000)
+    expect(buildFallbackWinnerIndex(s1, 3, 10000)).not.toBe(
+      buildFallbackWinnerIndex(s2, 3, 10000)
+    );
+    expect(buildFallbackWinnerIndex(s1, 3, 10000)).not.toBe(
+      buildFallbackWinnerIndex(s1, 4, 10000)
     );
   });
 
+  test("is SHA-256(tag || seed || round_id_le) mod poolSize", () => {
+    const rid = Buffer.alloc(8);
+    rid.writeBigUInt64LE(7n);
+    const h = createHash("sha256")
+      .update("dark-null-lottery:fallback:v1")
+      .update(Buffer.from(seed, "hex"))
+      .update(rid)
+      .digest();
+    expect(buildFallbackWinnerIndex(seed, 7, 1000)).toBe(Number(h.readBigUInt64LE(0) % 1000n));
+  });
+
   test("poolSize=1 always returns 0", () => {
-    expect(buildFallbackWinnerIndex(seed, 1)).toBe(0);
-    expect(buildFallbackWinnerIndex(generateSeed(), 1)).toBe(0);
+    expect(buildFallbackWinnerIndex(seed, 3, 1)).toBe(0);
+    expect(buildFallbackWinnerIndex(generateSeed(), 3, 1)).toBe(0);
   });
 
   test("throws on poolSize=0", () => {
-    expect(() => buildFallbackWinnerIndex(seed, 0)).toThrow();
+    expect(() => buildFallbackWinnerIndex(seed, 3, 0)).toThrow();
   });
 });
 
@@ -382,43 +422,70 @@ describe("TicketStore — batchTicketsToArchive", () => {
   });
 });
 
-describe("TicketStore — buildBatchRoot", () => {
+describe("TicketStore — buildBatchRoot (ticket.rs tree)", () => {
+  const leafOf = (t: LotteryTicket) => {
+    const rid = Buffer.alloc(8);
+    rid.writeBigUInt64LE(BigInt(t.roundId));
+    return createHash("sha256")
+      .update("dark-null-lottery:ticket:v1")
+      .update(rid)
+      .update(decodeBase58(t.owner!))
+      .update(Uint8Array.from(t.numbers))
+      .update(Buffer.from(t.nullifier, "hex"))
+      .digest();
+  };
+  const node = (l: Buffer, r: Buffer) =>
+    createHash("sha256").update(Uint8Array.of(1)).update(l).update(r).digest();
+
   test("empty tickets returns zero string", () => {
     expect(buildBatchRoot([])).toBe("0".repeat(64));
   });
 
-  test("1 ticket returns the nullifier itself (single-leaf tree)", () => {
+  test("1 ticket returns its leaf", () => {
     const t = makeTicket();
-    // iterativePoseidonRoot with 1 leaf returns the leaf unchanged
-    expect(buildBatchRoot([t])).toBe(t.nullifier);
+    expect(buildBatchRoot([t])).toBe(leafOf(t).toString("hex"));
+    expect(bytesToHex(ticketLeafOf(t))).toBe(leafOf(t).toString("hex"));
   });
 
-  test("2 tickets returns poseidon(n1, n2)", () => {
-    const t1 = makeTicket([1, 2, 3, 4, 5], 1, "a1");
-    const t2 = makeTicket([6, 7, 8, 9, 10], 1, "a2");
-    const expected = fieldToHex(
-      poseidonHash2(hexToField(t1.nullifier), hexToField(t2.nullifier))
-    );
-    expect(buildBatchRoot([t1, t2])).toBe(expected);
+  test("the leaf commits to owner, round, numbers and nullifier", () => {
+    const t = makeTicket([1, 2, 3, 4, 5], 1, "a1");
+    const root = buildBatchRoot([t]);
+    expect(buildBatchRoot([{ ...t, owner: randomOwner() }])).not.toBe(root);
+    expect(buildBatchRoot([{ ...t, roundId: 2 }])).not.toBe(root);
+    expect(buildBatchRoot([{ ...t, numbers: [1, 2, 3, 4, 6] }])).not.toBe(root);
+    expect(buildBatchRoot([{ ...t, nullifier: "11".repeat(32) }])).not.toBe(root);
   });
 
-  test("4 tickets produces correct tree", () => {
+  test("3 tickets: odd level repeats its last node", () => {
     const ts = [
       makeTicket([1, 2, 3, 4, 5], 1, "a1"),
       makeTicket([6, 7, 8, 9, 10], 1, "a2"),
       makeTicket([11, 12, 13, 14, 15], 1, "a3"),
-      makeTicket([16, 17, 18, 19, 20], 1, "a4"),
     ];
-    // Manual: h(h(n0,n1), h(n2,n3))
-    const h01 = poseidonHash2(hexToField(ts[0].nullifier), hexToField(ts[1].nullifier));
-    const h23 = poseidonHash2(hexToField(ts[2].nullifier), hexToField(ts[3].nullifier));
-    const root = fieldToHex(poseidonHash2(h01, h23));
-    expect(buildBatchRoot(ts)).toBe(root);
+    const [l0, l1, l2] = ts.map(leafOf);
+    const root = node(node(l0, l1), node(l2, l2));
+    expect(buildBatchRoot(ts)).toBe(root.toString("hex"));
   });
 
-  test("is consistent across calls", () => {
-    const ts = [makeTicket([1, 2, 3, 4, 5]), makeTicket([6, 7, 8, 9, 10], 1, "a2")];
-    expect(buildBatchRoot(ts)).toBe(buildBatchRoot(ts));
+  test("proofs from buildTicketProof reach the root, only at their own index", () => {
+    const ts = Array.from({ length: 6 }, (_, i) => makeTicket([1, 2, 3, 4, 5 + i], 1, `a${i}`));
+    const root = buildBatchRoot(ts);
+    ts.forEach((t, i) => {
+      const proof = buildTicketProof(ts, i).map((h) => Uint8Array.from(Buffer.from(h, "hex")));
+      expect(proof).toHaveLength(treeDepth(ts.length));
+      expect(bytesToHex(rootFromProof(ticketLeafOf(t), i, proof))).toBe(root);
+      expect(bytesToHex(rootFromProof(ticketLeafOf(t), (i + 1) % ts.length, proof))).not.toBe(root);
+    });
+  });
+
+  test("a ticket without an owner key cannot be anchored", () => {
+    const t = createTicket("a", 1, [1, 2, 3, 4, 5]);
+    expect(() => buildBatchRoot([t])).toThrow(/owner/);
+  });
+
+  test("an owner that is not a 32-byte key is refused", () => {
+    expect(() => createTicket("a", 1, [1, 2, 3, 4, 5], 0, "not-base58-0OIl")).toThrow();
+    expect(() => createTicket("a", 1, [1, 2, 3, 4, 5], 0, encodeBase58(randomBytes(31)))).toThrow(/32-byte/);
   });
 });
 
@@ -429,14 +496,11 @@ describe("TicketStore — buildFallbackPool", () => {
     makeBatch([makeTicket([16, 17, 18, 19, 20], 3, "a4"), makeTicket([21, 22, 23, 24, 25], 3, "a5")], 3),
   ];
 
-  test("combines tickets from 3 rounds", () => {
+  test("the pool is the third round's anchored batch", () => {
     const pool = buildFallbackPool(batches);
-    expect(pool.allTickets).toHaveLength(5);
-  });
-
-  test("poolSize equals sum of ticket counts", () => {
-    const pool = buildFallbackPool(batches);
-    expect(pool.poolSize).toBe(5);
+    expect(pool.allTickets).toEqual(batches[2].tickets);
+    expect(pool.poolSize).toBe(2);
+    expect(pool.poolRoot).toBe(batches[2].batchRoot);
   });
 
   test("round IDs are captured", () => {
@@ -444,25 +508,24 @@ describe("TicketStore — buildFallbackPool", () => {
     expect(pool.rounds).toEqual([1, 2, 3]);
   });
 
-  test("poolRoot is deterministic", () => {
-    const p1 = buildFallbackPool(batches);
-    const p2 = buildFallbackPool(batches);
-    expect(p1.poolRoot).toBe(p2.poolRoot);
+  test("needs 3 consecutive rounds", () => {
+    expect(() => buildFallbackPool(batches.slice(0, 2))).toThrow(/3 rounds/);
+    expect(() => buildFallbackPool([batches[0], batches[2], batches[1]])).toThrow(/consecutive/);
   });
 
-  test("poolRoot is 64 hex chars", () => {
-    const pool = buildFallbackPool(batches);
-    expect(pool.poolRoot).toMatch(/^[0-9a-f]{64}$/);
+  test("refuses a ticket of another round in the third round's batch", () => {
+    const bad = { ...batches[2], tickets: [...batches[2].tickets, makeTicket([1, 2, 3, 4, 5], 2, "x")] };
+    expect(() => buildFallbackPool([batches[0], batches[1], bad])).toThrow(/round 3/);
   });
 });
 
 describe("TicketStore — findFallbackWinner", () => {
   const tickets = [
-    makeTicket([1, 2, 3, 4, 5], 1, "a1"),
-    makeTicket([6, 7, 8, 9, 10], 1, "a2"),
-    makeTicket([11, 12, 13, 14, 15], 1, "a3"),
+    makeTicket([1, 2, 3, 4, 5], 3, "a1"),
+    makeTicket([6, 7, 8, 9, 10], 3, "a2"),
+    makeTicket([11, 12, 13, 14, 15], 3, "a3"),
   ];
-  const pool = buildFallbackPool([makeBatch(tickets, 1)]);
+  const pool = buildFallbackPool([makeBatch([], 1), makeBatch([], 2), makeBatch(tickets, 3)]);
 
   test("returns correct ticket by index", () => {
     expect(findFallbackWinner(pool, 0)).toEqual(tickets[0]);
@@ -676,7 +739,7 @@ describe("LotterySDK — executeFallbackDraw", () => {
   const batches: TicketBatch[] = [
     makeBatch([makeTicket([1, 2, 3, 4, 5], 1, "a1"), makeTicket([6, 7, 8, 9, 10], 1, "a2")], 1),
     makeBatch([makeTicket([11, 12, 13, 14, 15], 2, "a3")], 2),
-    makeBatch([makeTicket([16, 17, 18, 19, 20], 3, "a4")], 3),
+    makeBatch([makeTicket([16, 17, 18, 19, 20], 3, "a4"), makeTicket([21, 22, 23, 24, 25], 3, "a5")], 3),
   ];
   const fallbackSeed = "d".repeat(64);
 
@@ -686,16 +749,15 @@ describe("LotterySDK — executeFallbackDraw", () => {
     expect(result.winnerTicket).toBeDefined();
   });
 
-  test("winnerTicket is from one of the 3 rounds", () => {
+  test("winnerTicket is the third round's ticket at the selected index", () => {
     const result = executeFallbackDraw(batches, fallbackSeed);
-    const allTickets = batches.flatMap((b) => b.tickets);
-    const ids = allTickets.map((t) => t.ticketId);
-    expect(ids).toContain(result.winnerTicket.ticketId);
+    expect(result.winnerTicket).toEqual(batches[2].tickets[fallbackWinnerIndex(fallbackSeed, 3, 2)]);
   });
 
-  test("poolSize = total ticket count across 3 rounds", () => {
+  test("poolSize / poolRoot = the third round's ticket_count / tickets_root", () => {
     const result = executeFallbackDraw(batches, fallbackSeed);
-    expect(result.poolSize).toBe(4);
+    expect(result.poolSize).toBe(2);
+    expect(result.poolRoot).toBe(batches[2].batchRoot);
   });
 
   test("rounds array contains all 3 round IDs", () => {
@@ -709,8 +771,8 @@ describe("LotterySDK — executeFallbackDraw", () => {
     expect(result.winnerIndex).toBeLessThan(result.poolSize);
   });
 
-  test("throws on empty rounds", () => {
-    expect(() => executeFallbackDraw([], fallbackSeed)).toThrow(/empty/);
+  test("throws without 3 rounds", () => {
+    expect(() => executeFallbackDraw([], fallbackSeed)).toThrow(/3 rounds/);
   });
 });
 
@@ -833,8 +895,7 @@ describe("Full round simulation", () => {
     }
   });
 
-  test("full fallback simulation: 3 rounds no winner → fallback → winner found", () => {
-    // Build 3 rounds with tickets that definitely don't match (we won't draw)
+  test("full fallback simulation: 3 rounds no winner → fallback → selected ticket + proof", () => {
     const batches: TicketBatch[] = [];
     for (let r = 1; r <= 3; r++) {
       const batchTickets: LotteryTicket[] = [];
@@ -842,25 +903,40 @@ describe("Full round simulation", () => {
         const base = (r - 1) * 10 + i;
         const nums: number[] = [];
         for (let j = 0; j < 5; j++) nums.push(((base + j) % 30) + 1);
-        const uniq = [...new Set(nums)];
-        while (uniq.length < 5) uniq.push(uniq.length + 1);
-        batchTickets.push(makeTicket(uniq.slice(0, 5) as any, r, `agent-r${r}-${i}`));
+        batchTickets.push(makeTicket(nums, r, `agent-r${r}-${i}`));
       }
       batches.push(makeBatch(batchTickets, r));
     }
 
-    const fallbackSeed = generateSeed();
-    const result = executeFallbackDraw(batches, fallbackSeed);
+    // The third round's committed draw seed.
+    const { seed, commitment } = commitDraw(3);
+    const result = executeFallbackDraw(batches, seed, commitment);
 
-    expect(result.winnerTicket).toBeDefined();
-    expect(result.poolSize).toBe(15); // 5 tickets * 3 rounds
-    expect(result.winnerIndex).toBeGreaterThanOrEqual(0);
-    expect(result.winnerIndex).toBeLessThan(15);
+    expect(result.poolSize).toBe(5); // the third round's tickets
+    expect(result.poolRoot).toBe(batches[2].batchRoot);
     expect(result.rounds).toEqual([1, 2, 3]);
+    expect(result.winnerIndex).toBe(fallbackWinnerIndex(seed, 3, 5));
+    expect(result.winnerTicket).toEqual(batches[2].tickets[result.winnerIndex]);
 
-    // Winner ticket must be from one of the batches
-    const allIds = batches.flatMap((b) => b.tickets.map((t) => t.ticketId));
-    expect(allIds).toContain(result.winnerTicket.ticketId);
+    // The proof reaches the anchored root from the winner's leaf at the selected index.
+    const proof = result.proof.map((h) => Uint8Array.from(Buffer.from(h, "hex")));
+    expect(bytesToHex(rootFromProof(ticketLeafOf(result.winnerTicket), result.winnerIndex, proof)))
+      .toBe(batches[2].batchRoot);
+    // ClaimJackpot data for that ticket.
+    const data = buildClaimJackpotData(batches[2].tickets, result.winnerIndex);
+    expect(data[0]).toBe(0x06);
+    expect(bytesToHex(data.subarray(1, 33))).toBe(result.winnerTicket.nullifier);
+    expect(Buffer.from(data.subarray(38, 46)).readBigUInt64LE(0)).toBe(BigInt(result.winnerIndex));
+    expect(data[46]).toBe(proof.length);
+    expect(data).toHaveLength(47 + 32 * proof.length);
+  });
+
+  test("fallback refuses a seed that does not match the third round's commitment", () => {
+    const batches = [1, 2, 3].map((r) => makeBatch([makeTicket([1, 2, 3, 4, 5], r, `a${r}`)], r));
+    const { commitment } = commitDraw(3);
+    expect(() => executeFallbackDraw(batches, generateSeed(), commitment)).toThrow(/commitment/);
+    const empty = [makeBatch([], 1), makeBatch([], 2), makeBatch([], 3)];
+    expect(() => executeFallbackDraw(empty, generateSeed())).toThrow(/empty/);
   });
 
   test("house cut test: 10 tickets × 10_000_000 NULL = 100_000_000 total (commercial config)", () => {
@@ -871,5 +947,75 @@ describe("Full round simulation", () => {
     expect(houseCut).toBe(500_000);
     expect(jackpot).toBe(99_500_000);
     expect(jackpot + houseCut).toBe(totalDeposit);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cross-check against the program (tests/ticket_vectors.rs)
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface VectorTicket { owner: string; numbers: number[]; nullifier: string; leaf: string; proof: string[] }
+interface VectorCase {
+  roundId: string; seed: string; drawn: number[]; fallbackIndex: number; root: string;
+  tickets: VectorTicket[]; fallbackClaimData: string;
+}
+const vectorsPath = process.env.TICKET_VECTORS ?? join(__dirname, "fixtures", "lottery-ticket-vectors.json");
+const vectors: { prngSeed: string; cases: VectorCase[] } = JSON.parse(readFileSync(vectorsPath, "utf8"));
+const hexBytes = (h: string) => Uint8Array.from(Buffer.from(h, "hex"));
+
+describe("ticketTree — matches the program's ticket.rs, draw and FallbackDraw", () => {
+  test("vectors are present", () => {
+    expect(vectors.cases.length).toBeGreaterThanOrEqual(10);
+  });
+
+  test.each(vectors.cases.map((c, i) => [i, c] as const))("case %i: leaves, root, proofs", (_i, c) => {
+    const rid = BigInt(c.roundId);
+    const leaves = c.tickets.map((t) => {
+      const owner = encodeBase58(hexBytes(t.owner)); // base58 Solana key form
+      const leaf = ticketLeaf(rid, owner, t.numbers, t.nullifier);
+      expect(bytesToHex(leaf)).toBe(t.leaf);
+      return leaf;
+    });
+    expect(bytesToHex(ticketsRoot(leaves))).toBe(c.root);
+    c.tickets.forEach((t, i) => {
+      const proof = ticketsProof(leaves, i);
+      expect(proof.map(bytesToHex)).toEqual(t.proof);
+      expect(bytesToHex(rootFromProof(leaves[i], i, proof))).toBe(c.root);
+    });
+  });
+
+  test.each(vectors.cases.map((c, i) => [i, c] as const))("case %i: draw, fallback index, claim data", (_i, c) => {
+    const rid = BigInt(c.roundId);
+    expect(drawNumbers(c.seed, rid)).toEqual(c.drawn);
+    expect(fallbackWinnerIndex(c.seed, rid, c.tickets.length)).toBe(c.fallbackIndex);
+    const w = c.tickets[c.fallbackIndex];
+    const data = claimJackpotData(w.nullifier, w.numbers, c.fallbackIndex, w.proof.map(hexBytes));
+    expect(bytesToHex(data)).toBe(c.fallbackClaimData);
+  });
+
+  test("random trees: every proof verifies, node is SHA-256(0x01 || l || r)", () => {
+    for (let n = 1; n <= 33; n++) {
+      const leaves = Array.from({ length: n }, () => Uint8Array.from(randomBytes(32)));
+      const root = ticketsRoot(leaves);
+      for (let i = 0; i < n; i++) {
+        const proof = ticketsProof(leaves, i);
+        expect(proof).toHaveLength(treeDepth(n));
+        expect(bytesToHex(rootFromProof(leaves[i], i, proof))).toBe(bytesToHex(root));
+      }
+    }
+    const [a, b] = [Uint8Array.from(randomBytes(32)), Uint8Array.from(randomBytes(32))];
+    expect(bytesToHex(ticketsRoot([a, b]))).toBe(bytesToHex(ticketNode(a, b)));
+    expect(treeDepth(1)).toBe(0);
+    expect(treeDepth(5)).toBe(3);
+    expect(treeDepth(1 << 20)).toBe(20);
+  });
+
+  test("base58 owner keys round-trip", () => {
+    for (let i = 0; i < 50; i++) {
+      const b = Uint8Array.from(randomBytes(32));
+      if (i < 3) b.fill(0, 0, i + 1); // leading zero bytes
+      expect(Buffer.from(decodeBase58(encodeBase58(b))).equals(Buffer.from(b))).toBe(true);
+    }
+    expect(encodeBase58(new Uint8Array(32))).toBe("11111111111111111111111111111111");
   });
 });

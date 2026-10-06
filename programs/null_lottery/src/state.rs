@@ -90,7 +90,7 @@ impl LotteryConfig {
 /// Layout:
 ///   disc[1]                    = 0xC2
 ///   round_id[8]                — u64 LE
-///   tickets_root[32]           — Poseidon Merkle root
+///   tickets_root[32]           — SHA-256 tickets tree root (see ticket.rs)
 ///   ticket_count[8]            — u64 LE
 ///   total_null_deposited[8]    — u64 LE
 ///   seed_commitment[32]        — SHA-256(seed)
@@ -98,7 +98,9 @@ impl LotteryConfig {
 ///   drawn_numbers[5]           — u8 × 5 (zeros until drawn)
 ///   status[1]                  — RoundStatus byte
 ///   winner_nullifier[32]       — winning ticket nullifier (zeros until won)
-///   no_winner_count[1]         — u8: consecutive rounds without a winner
+///   no_winner_count[1]         — u8, not maintained on-chain: FallbackDraw
+///                                proves the no-winner streak from three
+///                                consecutive Drawn rounds instead
 ///
 /// Total: 1+8+32+8+8+32+32+5+1+32+1 = 160 bytes
 pub const ROUND_STATE_SIZE: usize = 160;
@@ -126,6 +128,8 @@ pub enum RoundStatus {
     Drawn     = 3,
     Won       = 4,
     NoWinner  = 5,
+    /// Third round of a FallbackDraw: claimable only by the selected ticket.
+    FallbackDrawn = 6,
 }
 
 impl RoundStatus {
@@ -137,6 +141,7 @@ impl RoundStatus {
             3 => Some(Self::Drawn),
             4 => Some(Self::Won),
             5 => Some(Self::NoWinner),
+            6 => Some(Self::FallbackDrawn),
             _ => None,
         }
     }

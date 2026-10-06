@@ -209,9 +209,10 @@ export { createCoalition, buildCoalitionSignal, verifyCoalitionThreshold, addCoa
 export type { GuildCoalition, CoalitionMember, CoalitionSignal } from "./coalitions/index.js";
 
 // NULL Lottery
-export { buildCommitment, revealDraw, verifyDraw, checkWin as checkLotteryWin, generateSeed, buildFallbackWinnerIndex } from "./lottery/DrawMachine.js";
-export { createTicket, batchTicketsToArchive, buildFallbackPool, findFallbackWinner, checkBatchForWin, buildBatchRoot } from "./lottery/TicketStore.js";
-export { buyTicket, commitDraw, submitRoundTickets, revealAndDraw, executeFallbackDraw, computeJackpot, buildClaimReceipt, DEFAULT_LOTTERY_CONFIG } from "./lottery/LotterySDK.js";
+export { buildCommitment, revealDraw, verifyDraw, checkWin as checkLotteryWin, generateSeed, buildFallbackWinnerIndex, drawNumbers as lotteryDrawNumbers } from "./lottery/DrawMachine.js";
+export { createTicket, batchTicketsToArchive, buildFallbackPool, findFallbackWinner, checkBatchForWin, buildBatchRoot, buildTicketProof, ticketLeafOf } from "./lottery/TicketStore.js";
+export { buyTicket, commitDraw, submitRoundTickets, revealAndDraw, executeFallbackDraw, buildClaimJackpotData, computeJackpot, buildClaimReceipt, DEFAULT_LOTTERY_CONFIG } from "./lottery/LotterySDK.js";
+export { ticketLeaf, ticketsRoot, ticketsProof, rootFromProof, treeDepth, fallbackWinnerIndex, claimJackpotData } from "./lottery/ticketTree.js";
 export type { LotteryTicket, TicketBatch, FallbackPool } from "./lottery/TicketStore.js";
 export type { LotteryConfig, RoundInfo, BuyTicketResult, RoundDrawResult, FallbackDrawResult } from "./lottery/LotterySDK.js";
 export type { DrawResult, DrawVerification } from "./lottery/DrawMachine.js";

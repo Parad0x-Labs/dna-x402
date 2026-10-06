@@ -4,14 +4,20 @@
  * Tickets are signed messages (zero SOL cost), batched via Liquefy for
  * 1 on-chain tx per round. Nullifiers are Poseidon-derived so the ZK layer
  * can later verify spend-once properties.
+ *
+ * A round's tickets_root (AnchorTickets) is the dark_null_lottery ticket.rs
+ * SHA-256 tree over ticket leaves H(tag, round_id, owner, numbers, nullifier);
+ * see ticketTree.ts. A ticket needs an `owner` Solana key to be anchored and
+ * claimed: ClaimJackpot rebuilds the leaf with the claimant's key.
  */
 
-import { createHash, randomBytes } from "crypto";
+import { createHash } from "crypto";
 import { poseidonHash2, hexToField, fieldToHex } from "../zk/poseidon.js";
 import { createNullArchive } from "../liquefy/bridge.js";
 import type { NullArchive, NullArchiveEntry } from "../liquefy/bridge.js";
 
 import { checkWin } from "./DrawMachine.js";
+import { bytesToHex, ownerKeyBytes, ticketLeaf, ticketsProof, ticketsRoot } from "./ticketTree.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -24,20 +30,21 @@ export interface LotteryTicket {
   pricePaid:  number;   // NULL atomic (10_000_000 = 10 NULL with 6 decimals)
   timestamp:  number;   // unix ms
   signature:  string;   // hex: SHA-256("ticket-sig-v1:" + ticketId + ":" + agentId) — devnet only
+  owner?:     string;   // base58 Solana key that claims the ticket (required to anchor/claim)
 }
 
 export interface TicketBatch {
   roundId:    number;
   tickets:    LotteryTicket[];
-  batchRoot:  string;   // Poseidon Merkle root of ticket nullifiers
+  batchRoot:  string;   // hex: ticket.rs SHA-256 tickets root (buildBatchRoot)
   entryCount: number;
 }
 
 export interface FallbackPool {
-  rounds:     number[];           // round IDs included (e.g., [1, 2, 3])
-  allTickets: LotteryTicket[];
-  poolSize:   number;
-  poolRoot:   string;             // Poseidon Merkle root of all ticket nullifiers across 3 rounds
+  rounds:     number[];           // the three consecutive round IDs (e.g., [1, 2, 3])
+  allTickets: LotteryTicket[];    // the third round's anchored tickets, in leaf order
+  poolSize:   number;             // = the third round's ticket_count
+  poolRoot:   string;             // = the third round's tickets_root (hex)
 }
 
 // ── Ticket Creation ───────────────────────────────────────────────────────────
@@ -51,6 +58,7 @@ export function createTicket(
   roundId:  number,
   numbers:  number[],
   pricePaid = 10_000_000,
+  owner?:   string,
 ): LotteryTicket {
   if (numbers.length !== 5) {
     throw new Error(
@@ -68,6 +76,7 @@ export function createTicket(
   if (unique.size !== 5) {
     throw new Error("TicketStore: numbers must be distinct");
   }
+  if (owner !== undefined) ownerKeyBytes(owner); // validates a 32-byte base58 key
 
   const timestamp = Date.now();
   const numbersStr = [...numbers].sort((a, b) => a - b).join(",");
@@ -97,6 +106,7 @@ export function createTicket(
     pricePaid,
     timestamp,
     signature,
+    ...(owner !== undefined ? { owner } : {}),
   };
 }
 
@@ -128,59 +138,58 @@ export function batchTicketsToArchive(
   return createNullArchive(entries);
 }
 
-// ── Poseidon Merkle Root ──────────────────────────────────────────────────────
+// ── Tickets tree (ticket.rs) ──────────────────────────────────────────────────
 
-function iterativePoseidonRoot(leaves: bigint[]): bigint {
-  if (leaves.length === 0) return 0n;
-  let current = leaves;
-  while (current.length > 1) {
-    const next: bigint[] = [];
-    for (let i = 0; i < current.length; i += 2) {
-      const left  = current[i];
-      const right = i + 1 < current.length ? current[i + 1] : current[i]; // pad with self
-      next.push(poseidonHash2(left, right));
-    }
-    current = next;
+/** ticket.rs leaf of a ticket: H(tag, roundId, owner, numbers, nullifier). */
+export function ticketLeafOf(ticket: LotteryTicket): Uint8Array {
+  if (!ticket.owner) {
+    throw new Error(`TicketStore: ticket ${ticket.ticketId} has no owner key (the leaf commits to the claimant)`);
   }
-  return current[0];
+  return ticketLeaf(ticket.roundId, ticket.owner, ticket.numbers, ticket.nullifier);
 }
 
 /**
- * Build a batch root from an array of tickets.
- * Poseidon Merkle root: iterative poseidon reduction of ticket nullifiers.
+ * tickets_root for AnchorTickets: the ticket.rs SHA-256 tree over the tickets'
+ * leaves in the given order (64 zero hex chars for no tickets).
  */
 export function buildBatchRoot(tickets: LotteryTicket[]): string {
-  if (tickets.length === 0) return "0".repeat(64);
-  const leaves = tickets.map((t) => hexToField(t.nullifier));
-  return fieldToHex(iterativePoseidonRoot(leaves));
+  return bytesToHex(ticketsRoot(tickets.map(ticketLeafOf)));
+}
+
+/** Merkle proof (hex sibling hashes, leaf up) of tickets[index] for ClaimJackpot. */
+export function buildTicketProof(tickets: LotteryTicket[], index: number): string[] {
+  return ticketsProof(tickets.map(ticketLeafOf), index).map(bytesToHex);
 }
 
 // ── Fallback Pool ─────────────────────────────────────────────────────────────
 
 /**
- * Build fallback pool from 3 rounds of tickets (for fallback draw).
- * Concatenates all tickets from all 3 rounds, computes combined Poseidon root.
+ * Fallback pool for FallbackDraw over three consecutive no-winner rounds. The
+ * program draws from the third round's anchored tickets tree, so the pool is
+ * that round's batch; tickets of the first two rounds take part only if the
+ * operator anchored them in the third round's set (as third-round tickets).
  */
 export function buildFallbackPool(rounds: TicketBatch[]): FallbackPool {
-  const allTickets: LotteryTicket[] = [];
-  const roundIds: number[] = [];
-
-  for (const batch of rounds) {
-    roundIds.push(batch.roundId);
-    allTickets.push(...batch.tickets);
+  if (rounds.length !== 3) {
+    throw new Error("TicketStore: the fallback takes exactly 3 rounds");
   }
-
-  const poolSize = allTickets.length;
-  const leaves   = allTickets.map((t) => hexToField(t.nullifier));
-  const poolRoot = poolSize === 0
-    ? "0".repeat(64)
-    : fieldToHex(iterativePoseidonRoot(leaves));
-
+  for (let i = 1; i < 3; i++) {
+    if (rounds[i].roundId !== rounds[i - 1].roundId + 1) {
+      throw new Error("TicketStore: fallback rounds must be consecutive");
+    }
+  }
+  const third = rounds[2];
+  for (const t of third.tickets) {
+    if (t.roundId !== third.roundId) {
+      throw new Error(`TicketStore: ticket ${t.ticketId} is not a round ${third.roundId} ticket`);
+    }
+  }
+  const allTickets = [...third.tickets];
   return {
-    rounds:     roundIds,
+    rounds:     rounds.map((b) => b.roundId),
     allTickets,
-    poolSize,
-    poolRoot,
+    poolSize:   allTickets.length,
+    poolRoot:   buildBatchRoot(allTickets),
   };
 }
 
