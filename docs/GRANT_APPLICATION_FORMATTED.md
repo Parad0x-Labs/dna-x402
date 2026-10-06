@@ -32,7 +32,7 @@ DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-
 
 DNA x402 is an open-source, on-chain payment rail for AI agents. It implements the HTTP 402 "Payment Required" protocol directly on Solana: an agent hits a gated resource, receives a 402 response, signs and submits a Solana transaction, and the resource is delivered — no backend custody, no intermediate signing service, no API keys mediating money movement. The project also includes Dark Passport (biometric passkey identity for agents) and Liquefy (compressed, private bulk receipt settlement). All code is MIT-licensed.
 
-This is not a whitepaper project. Eight programs ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14; their transaction history stays readable. The grant is to fund the external security audit that gates production launch and to finish two ZK components currently in documented stub/bypass state.
+This is not a whitepaper project. Eight programs ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14; their transaction history stays readable. The grant is to fund the external security audit that gates production launch and to finish two ZK components.
 
 ---
 
