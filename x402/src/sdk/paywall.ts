@@ -11,6 +11,7 @@ import {
 } from "../receipts.js";
 import type { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import {
+  assertUnverifiedNettingAllowed,
   createPaymentVerifier,
   defaultUsdcMintForNetwork,
   inferPaymentNetwork,
@@ -743,6 +744,7 @@ export function dnaPaywall(options: PaywallOptions) {
   const ttl = options.quoteTtlSeconds ?? 180;
   const mint = options.mint ?? defaultUsdcMintForNetwork(options.network, options.solanaRpcUrl);
   const settlement = options.settlement ?? ["transfer"];
+  assertUnverifiedNettingAllowed(options.unsafeUnverifiedNettingEnabled);
   const paymentVerifier = createPaymentVerifier({
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,

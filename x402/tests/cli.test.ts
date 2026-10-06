@@ -34,6 +34,14 @@ describe("dna-x402 cli", () => {
     expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("dnaSeller");
     expect(readFileSync(path.join(targetDir, "index.ts"), "utf8")).toContain("DNA_TRUSTED_LOCAL_NETTING");
     expect(readFileSync(path.join(targetDir, "package.json"), "utf8")).toContain("\"dna-x402\": \"file:./vendor/");
+    // Unverified netting is opt-in and labelled development-only.
+    const index = readFileSync(path.join(targetDir, "index.ts"), "utf8");
+    expect(index).toContain('process.env.DNA_TRUSTED_LOCAL_NETTING === "1"');
+    expect(index).not.toContain('DNA_TRUSTED_LOCAL_NETTING !== "0"');
+    expect(index).toMatch(/DEVELOPMENT ONLY/);
+    const envExample = readFileSync(path.join(targetDir, ".env.example"), "utf8");
+    expect(envExample).toMatch(/^DNA_TRUSTED_LOCAL_NETTING=0$/m);
+    expect(envExample).toMatch(/Development only/);
   }, 30_000);
 
   it("scaffolds a buyer starter without installing dependencies", async () => {

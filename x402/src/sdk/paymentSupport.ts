@@ -18,6 +18,18 @@ export interface PaymentSupportOptions {
   paymentVerifier?: PaymentVerifier;
 }
 
+/**
+ * Unverified netting accepts a payment claim without any on-chain check. It is a
+ * local development aid only; refuse it when NODE_ENV=production.
+ */
+export function assertUnverifiedNettingAllowed(enabled: boolean | undefined, env: NodeJS.ProcessEnv = process.env): void {
+  if (enabled && env.NODE_ENV === "production") {
+    throw new Error(
+      "unsafeUnverifiedNettingEnabled cannot be true in production: netting proofs are accepted without verification. It is for local development only.",
+    );
+  }
+}
+
 const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com"; // for network INFERENCE only, not for actual connections
 
 export function inferPaymentNetwork(

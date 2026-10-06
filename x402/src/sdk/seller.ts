@@ -35,6 +35,7 @@ import {
 } from "../receipts.js";
 import { PaymentAccept, PaymentProof, SignedReceipt } from "../types.js";
 import {
+  assertUnverifiedNettingAllowed,
   createPaymentVerifier,
   defaultUsdcMintForNetwork,
   inferPaymentNetwork,
@@ -165,6 +166,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
   const ttl = options.quoteTtlSeconds ?? 300;
   const settlement = options.settlement ?? ["transfer"];
   const receiptSigner = options.receiptSigner ?? ReceiptSigner.generate();
+  assertUnverifiedNettingAllowed(options.unsafeUnverifiedNettingEnabled);
   const paymentVerifier = createPaymentVerifier({
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,

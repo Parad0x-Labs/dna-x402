@@ -266,7 +266,9 @@ app.use(express.json());
 
 const recipient = process.env.RECIPIENT ?? "YOUR_SOLANA_WALLET_ADDRESS";
 const port = Number(process.env.PORT ?? 3000);
-const trustedLocalNetting = process.env.DNA_TRUSTED_LOCAL_NETTING !== "0";
+// DEVELOPMENT ONLY: netting accepts a buyer's payment claim without any on-chain
+// check. Off unless DNA_TRUSTED_LOCAL_NETTING=1; refused when NODE_ENV=production.
+const trustedLocalNetting = process.env.DNA_TRUSTED_LOCAL_NETTING === "1";
 
 const pay = dnaSeller(app, {
   recipient,
@@ -307,7 +309,8 @@ function sellerEnvExample(): string {
   return [
     "RECIPIENT=YOUR_SOLANA_WALLET_ADDRESS",
     "PORT=3000",
-    "DNA_TRUSTED_LOCAL_NETTING=1",
+    "# Development only: 1 accepts unverified netting claims (no on-chain check). Keep 0 outside local testing.",
+    "DNA_TRUSTED_LOCAL_NETTING=0",
     "",
   ].join("\n");
 }
@@ -422,6 +425,7 @@ console.log("Receipts stored:", receipts.receipts.size);
 function buyerEnvExample(): string {
   return [
     "DNA_SERVER=http://127.0.0.1:3000",
+    "# netting works only against a seller started with DNA_TRUSTED_LOCAL_NETTING=1 (development only).",
     "DNA_BUYER_MODE=netting",
     "",
   ].join("\n");
@@ -628,7 +632,7 @@ function agentEnvExample(template: AgentTemplate): string {
     "OWNER_PUBKEY=YOUR_SOLANA_WALLET_ADDRESS",
     "OWNER_SECRET_BASE58=",
     "PORT=3000",
-    "SOLANA_RPC_URL=https://api.mainnet-beta.solana.com",
+    "SOLANA_RPC_URL=https://api.devnet.solana.com",
     "DNA_TRUSTED_LOCAL_NETTING=0",
   ];
   if (template === "restricted-market") {
