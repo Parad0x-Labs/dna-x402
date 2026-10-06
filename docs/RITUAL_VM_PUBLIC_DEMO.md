@@ -102,9 +102,10 @@ The shape hash for `AgentSpendNoCustodyV1` has been observed **5 times** in this
 
 The on-chain leg of this demo (the ROGUE nullifier ritual on `dark_nullifier_banks` and the
 EchoProof / VerifyRitualShape calls to `dark_ritual_gate`) ran against devnet deployments that
-are now withdrawn, so its transaction evidence has been removed. A devnet redeploy under a
-fresh key is pending; `crates/dark-ritual-gate-verify` reruns the gate calls against the
-program named in `DARK_RITUAL_GATE_PROGRAM_ID`.
+are now withdrawn, so its transaction evidence has been removed. Since 2026-10-06
+`dark_ritual_gate` runs on devnet at `GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo` and `dark_nullifier_banks` at `499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue`;
+`crates/dark-ritual-gate-verify` reruns the gate calls against the program named in
+`DARK_RITUAL_GATE_PROGRAM_ID`.
 
 ---
 

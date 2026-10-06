@@ -15,8 +15,8 @@ The devnet harness (`scripts/passport/01-devnet-faceid-e2e.mjs`) checks:
 | Negative — wrong message signed | REJECTED `0x400b ChallengeNotSigned` |
 | Negative — different P-256 key signs | REJECTED `0x4009 PasskeyPubkeyMismatch` |
 
-A devnet redeploy of `dark_secp256r1_vault` under a fresh key is pending, so the
-harness takes the program ID as a required argument.
+`dark_secp256r1_vault` runs on devnet at `GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC` since 2026-10-06 (4/4 and 3/3,
+[evidence](../devnet-2026-10-06/README.md)); the harness takes the program ID as a required argument.
 
 The two negative tests are the point: a valid signature over the *wrong* message,
 and a valid signature from the *wrong* key, are both rejected on-chain. The

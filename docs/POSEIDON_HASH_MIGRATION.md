@@ -5,7 +5,7 @@
 The v1 DARKNULL on-chain ritual uses:
   SHA256(nullifier || epoch_le64 || "dark_null_v1")[0]
 
-The devnet deployment it ran on is withdrawn (devnet redeploy under a fresh key pending).
+The devnet deployment it ran on is withdrawn; the 2026-10-06 devnet programs are listed in [`configs/devnet.oss.json`](../configs/devnet.oss.json).
 Changing the hash function would break compatibility with v1 NullRec PDA derivation.
 
 v1 formula remains SHA-256 forever. It is the canonical on-chain nullifier formula.

@@ -85,7 +85,7 @@ test("full accountability: an equivocating batch is NOT accountable even if a ro
 });
 
 test("receipt anchoring refuses without an explicit receipt_anchor program (no network call)", async () => {
-  const UNAVAILABLE = /unavailable until the redeploy under a fresh key/;
+  const UNAVAILABLE = /no default receipt_anchor program is configured/;
   assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
   assert.match(RECEIPT_ANCHOR_UNAVAILABLE, UNAVAILABLE);
   assert.throws(() => resolveReceiptAnchorProgramId(), UNAVAILABLE);

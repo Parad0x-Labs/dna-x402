@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Anchor a real cross-layer accountability root on Solana via a `receipt_anchor`
- * deployment named in ANCHOR_PROGRAM (required: receipt anchoring is unavailable
- * until the redeploy under a fresh key, and receipt-dag refuses without a program).
+ * deployment named in ANCHOR_PROGRAM (required: no receipt_anchor is deployed on mainnet, the
+ * devnet one is HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs, and receipt-dag refuses without a program).
  *
  * Builds a cross-layer DAG batch (a payment → a private x402 access bound to it),
  * commits its Merkle root to the on-chain bucket accumulator, then reads the bucket
@@ -18,7 +18,7 @@ const KEY = process.env.KEY ?? "/key.json";
 const DAG = process.env.DAG ?? "/work/dag/src/index.ts";
 const ANCHOR_PROGRAM = process.env.ANCHOR_PROGRAM;
 if (!ANCHOR_PROGRAM) {
-  console.error("ERROR: set ANCHOR_PROGRAM: receipt anchoring is unavailable until the redeploy under a fresh key.");
+  console.error("ERROR: set ANCHOR_PROGRAM: no receipt_anchor is deployed on mainnet (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).");
   process.exit(2);
 }
 

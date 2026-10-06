@@ -41,12 +41,12 @@ import {
   SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY,
 } from "https://esm.sh/@solana/web3.js@1.95.3";
 
-// No dark_secp256r1_vault devnet deployment is configured until the redeploy under
-// a fresh key: serve this page with ?program=<PROGRAM_ID> naming a deployment you control.
+// No default dark_secp256r1_vault is configured: serve this page with
+// ?program=<PROGRAM_ID> naming a deployment (devnet: GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC).
 const PROGRAM_PARAM = new URLSearchParams(location.search).get("program");
 if (!PROGRAM_PARAM) {
   document.getElementById("log").textContent =
-    "No program configured: open this page with ?program=<PROGRAM_ID>. The dark_secp256r1_vault devnet redeploy under a fresh key is pending.";
+    "No program configured: open this page with ?program=<PROGRAM_ID>. The devnet dark_secp256r1_vault is GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC.";
   throw new Error("missing ?program=<PROGRAM_ID>");
 }
 const PROGRAM_ID = new PublicKey(PROGRAM_PARAM);

@@ -17,9 +17,10 @@ import { Connection, PublicKey, Keypair } from "@solana/web3.js";
 // was retired on 2026-07-14 (ProgramData closed); accounts they own stay
 // readable, so lookup_passport still reads dark_secp256k1_auth records.
 // The previously listed receipt_anchor, dark_nullifier_record,
-// dark_reputation_gate and receipt_commitment_tree deployments are withdrawn
-// until the redeploy under a fresh key, so they are not listed here and the
-// tools that used them refuse (see UNAVAILABLE_PROGRAMS).
+// dark_reputation_gate and receipt_commitment_tree mainnet deployments are
+// withdrawn; these programs now run on devnet only (configs/devnet.oss.json), so
+// they are not listed here and the tools that used them refuse (see
+// UNAVAILABLE_PROGRAMS).
 const PROGRAMS = {
   dark_secp256k1_auth: "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
   dark_semaphore: "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
@@ -29,7 +30,7 @@ const PROGRAMS = {
   dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
 } as const;
 
-const REDEPLOY_PENDING = "unavailable until the redeploy under a fresh key";
+const REDEPLOY_PENDING = "not available from this server: no default program is configured (devnet IDs in configs/devnet.oss.json)";
 
 // Programs with no usable deployment on any cluster. Tools that depend on them
 // return an error instead of sending or reading anything.
@@ -603,7 +604,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "anchor_receipt",
         description:
-          "Anchor a 32-byte receipt hash on Solana via the receipt_anchor program. Receipt anchoring is unavailable until the redeploy under a fresh key: this tool validates the hash and returns an error; no transaction is built or sent.",
+          "Anchor a 32-byte receipt hash on Solana via the receipt_anchor program. This server configures no receipt_anchor program (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs): this tool validates the hash and returns an error; no transaction is built or sent.",
         inputSchema: {
           type: "object",
           properties: {
@@ -696,7 +697,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "check_nullifier",
         description:
-          "Check whether a privacy-proof nullifier has already been spent on Solana (single-use enforcement) via the dark_nullifier_record program. Nullifier lookup is unavailable until the redeploy under a fresh key: this tool validates the nullifier and returns an error; no RPC call is made.",
+          "Check whether a privacy-proof nullifier has already been spent on Solana (single-use enforcement) via the dark_nullifier_record program. This server configures no dark_nullifier_record program (devnet: CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et): this tool validates the nullifier and returns an error; no RPC call is made.",
         inputSchema: {
           type: "object",
           properties: {
@@ -714,7 +715,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_stack_status",
-        description: "Get the status of the Parad0x Labs mainnet pilot programs (all retired 2026-07-14) and of programs pending a redeploy under a fresh key",
+        description: "Get the status of the Parad0x Labs mainnet pilot programs (all retired 2026-07-14) and of programs this server does not configure (devnet only)",
         inputSchema: {
           type: "object",
           properties: {},
@@ -741,7 +742,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             anchor: {
               type: "boolean",
-              description: "If true, request a commitment of (input_hash, result_hash) via receipt_anchor. Receipt anchoring is unavailable until the redeploy under a fresh key, so commitment_tx reports anchor_failed.",
+              description: "If true, request a commitment of (input_hash, result_hash) via receipt_anchor. This server configures no receipt_anchor program (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs), so commitment_tx reports anchor_failed.",
             },
             rpc_url: {
               type: "string",

@@ -435,8 +435,8 @@ fn run_ritual_blink_gateway() -> Value {
     let intent = create_x402_intent(&resource_hash, 1_000_000, &payer_bytes, &nonce, now);
 
     // Ceremony layout
-    // Off-chain simulation: no ritual programs are configured until the redeploy
-    // under a fresh key, so the layout names local simulation programs.
+    // Off-chain simulation: the layout names local simulation programs. The devnet
+    // ritual programs (dark_ritual_gate GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo, hook 9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf) are in configs/devnet.oss.json.
     let ceremony = build_ceremony_layout_with_programs(
         &intent,
         "sim-dark-ritual-transfer-hook",

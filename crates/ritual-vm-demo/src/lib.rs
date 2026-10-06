@@ -306,7 +306,7 @@ pub fn build_ritual_vm_demo() -> RitualVmDemo {
             message:     "ROGUE".to_string(),
             shard_path:  vec![82, 79, 71, 85, 69],
             note:        "ritual grammar verified; shard_path spell-checks ROGUE via onchain-puzzle-compiler".to_string(),
-            // Devnet ritual evidence withdrawn; devnet redeploy under a fresh key pending.
+            // Earlier devnet ritual evidence withdrawn; current devnet dark_ritual_gate: GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo.
             solscan_links: Vec::new(),
         },
     }

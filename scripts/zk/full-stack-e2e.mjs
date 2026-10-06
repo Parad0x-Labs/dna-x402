@@ -10,7 +10,7 @@
  * Usage: node scripts/zk/full-stack-e2e.mjs --tree <ID> --gate <ID> --nullifier-record <ID>
  *
  * All three program IDs are required: no receipt_commitment_tree / dark_reputation_gate /
- * dark_nullifier_record deployment is configured until the redeploy under a fresh key.
+ * dark_nullifier_record default is configured (devnet IDs in configs/devnet.oss.json).
  */
 
 // LEGACY: this script targets the removed receipt_commitment_tree 0x01 authorized insert and the 6-input track_record layout.
@@ -37,7 +37,7 @@ const TREE_PROGRAM = arg("tree");
 const GATE_PROGRAM = arg("gate");
 const NULLIFIER_RECORD = arg("nullifier-record");
 if (!TREE_PROGRAM || !GATE_PROGRAM || !NULLIFIER_RECORD) {
-  console.error("ERROR: pass --tree <ID> --gate <ID> --nullifier-record <ID>: no receipt_commitment_tree / dark_reputation_gate / dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  console.error("ERROR: pass --tree <ID> --gate <ID> --nullifier-record <ID>: no receipt_commitment_tree / dark_reputation_gate / dark_nullifier_record default program is configured (devnet: tree Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP, gate Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g, nullifier record CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et).");
   process.exit(2);
 }
 const SNARKJS = join(REPO, ".tools", "external", "dark-null-protocol", "node_modules", "snarkjs", "build", "cli.cjs");

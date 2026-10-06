@@ -82,8 +82,8 @@ pub fn run_edge_capstone() -> Value {
     let alpha_chain_2 = chain_receipt(Some(&alpha_chain_1), &paid_reveal.reveal_hash);
     let alpha_chain_ok = verify_chain_integrity(&alpha_chain_2, Some(&alpha_chain_1));
 
-    // Off-chain simulation: no ritual programs are configured until the redeploy
-    // under a fresh key, so the layout names local simulation programs.
+    // Off-chain simulation: the layout names local simulation programs. The devnet
+    // ritual programs (dark_ritual_gate GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo, hook 9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf) are in configs/devnet.oss.json.
     let ceremony = build_ceremony_layout_with_programs(
         &intent,
         "sim-dark-ritual-transfer-hook",

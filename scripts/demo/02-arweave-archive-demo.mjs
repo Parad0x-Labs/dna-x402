@@ -156,9 +156,9 @@ try {
   const { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } =
     await import("@solana/web3.js");
 
-  // No receipt_anchor program is usable until the redeploy under a fresh key.
+  // No receipt_anchor is deployed on mainnet (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).
   const RECEIPT_ANCHOR = process.env.RECEIPT_ANCHOR_PROGRAM_ID;
-  if (!RECEIPT_ANCHOR) throw new Error("receipt anchoring is unavailable until the redeploy under a fresh key: set RECEIPT_ANCHOR_PROGRAM_ID to a receipt_anchor deployment you control");
+  if (!RECEIPT_ANCHOR) throw new Error("receipt anchoring needs RECEIPT_ANCHOR_PROGRAM_ID: no receipt_anchor is deployed on mainnet (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs); set it to a deployment you control");
   const RPC = "https://api.mainnet-beta.solana.com";
 
   const keyPath = execSync("solana config get", { encoding: "utf8" })

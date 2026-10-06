@@ -12,7 +12,7 @@
  * Usage: node scripts/zk/track-record-e2e.mjs --program <ID> --nullifier-record <ID> --cluster devnet|mainnet-beta
  *
  * Both program IDs are required: no dark_reputation_gate / dark_nullifier_record
- * deployment is configured until the redeploy under a fresh key.
+ * default is configured (devnet: gate Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g, nullifier record CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et).
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -29,7 +29,7 @@ const arg = (n, d) => { const i = process.argv.indexOf("--" + n); return i !== -
 const PROGRAM_ID = arg("program");
 const NULLIFIER_RECORD_ID = arg("nullifier-record");
 if (!PROGRAM_ID || !NULLIFIER_RECORD_ID) {
-  console.error("ERROR: pass --program <ID> and --nullifier-record <ID>: no dark_reputation_gate / dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  console.error("ERROR: pass --program <ID> and --nullifier-record <ID>: no dark_reputation_gate / dark_nullifier_record default program is configured (devnet: gate Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g, nullifier record CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et).");
   process.exit(2);
 }
 const CLUSTER = arg("cluster", "devnet");

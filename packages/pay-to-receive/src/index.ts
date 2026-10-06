@@ -16,7 +16,7 @@
  *      anchors it on-chain via anchorDeliveryReceipt().
  *
  * On-chain anchor: a receipt_anchor deployment the caller names. None is
- *   configured until the redeploy under a fresh key, so anchoring refuses
+ *   configured by default (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs), so anchoring refuses
  *   without one.
  *
  * Instruction data layout:  [0x01][0x00][32 bytes SHA-256 commitment]  = 34 bytes
@@ -40,8 +40,8 @@ export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
 
 /** Error message thrown when anchoring is requested without a usable program. */
 export const RECEIPT_ANCHOR_UNAVAILABLE =
-  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
-  "program is configured. Pass the program ID of a receipt_anchor deployment you control.";
+  "receipt anchoring needs an explicit program: no default receipt_anchor " +
+  "program is configured (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs). Pass the program ID of a receipt_anchor deployment you control.";
 
 function resolveAnchorProgramId(programId?: string | null): string {
   const resolved = programId ?? RECEIPT_ANCHOR_PROGRAM_ID;

@@ -169,7 +169,7 @@ This is the cryptographic proof that the agent **cannot** be a honeypot.
 
 The word "ROGUE" maps to the nullifier shard plan `[82, 79, 71, 85, 69]` (one `InsertNullifier`
 per letter on `dark_nullifier_banks`). The earlier devnet run targeted a deployment that is now
-withdrawn, so its transaction links are removed; a devnet redeploy under a fresh key is pending.
+withdrawn, so its transaction links are removed; `dark_nullifier_banks` runs on devnet at `499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue` since 2026-10-06.
 
 ---
 

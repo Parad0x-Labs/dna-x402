@@ -30,8 +30,8 @@ use std::{fs, path::Path, str::FromStr, thread, time::Duration};
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-/// Env vars naming the hook and ritual-gate programs. No deployment of either is
-/// configured until the redeploy under a fresh key, so the binary refuses to run
+/// Env vars naming the hook and ritual-gate programs (devnet: gate GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo,
+/// hook 9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf). No default is configured, so the binary refuses to run
 /// without both.
 const HOOK_PROGRAM_ENV: &str = "RITUAL_HOOK_PROGRAM_ID";
 const RITUAL_GATE_ENV: &str = "DARK_RITUAL_GATE_PROGRAM_ID";
@@ -42,7 +42,7 @@ fn required_program_id(var: &str) -> String {
         _ => {
             eprintln!(
                 "ERROR: {var} is not set: no dark_ritual_gate / dark_ritual_transfer_hook program \
-                 is configured until the redeploy under a fresh key. Set it to a deployment you control."
+                 is configured by default (devnet IDs in configs/devnet.oss.json). Set it to a deployment you control."
             );
             std::process::exit(2);
         }

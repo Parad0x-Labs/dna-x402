@@ -9,11 +9,11 @@ Exposes the Parad0x Labs stack as MCP tools. Works with Claude Desktop, Cursor, 
 | Tool | Description |
 |---|---|
 | `x402_get_quote` | Get a payment quote for an x402-gated API endpoint |
-| `anchor_receipt` | Anchor a 32-byte receipt hash via `receipt_anchor`. Receipt anchoring is unavailable until the redeploy under a fresh key; the tool returns an error and sends nothing |
+| `anchor_receipt` | Anchor a 32-byte receipt hash via `receipt_anchor`. This server configures no `receipt_anchor` program (devnet: `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`); the tool returns an error and sends nothing |
 | `lookup_passport` | Check if an ETH address or Solana wallet has a Dark Passport binding record from the retired mainnet pilot (records stay readable) |
 | `build_outcome_receipt` | Build a signed outcome receipt with PnL, accuracy, or delivery result |
 | `compress_receipts` | Compress a batch of receipts (Liquefy format, 83x typical ratio) |
-| `get_stack_status` | Status of the mainnet pilot programs (all retired 2026-07-14) and of programs pending a redeploy |
+| `get_stack_status` | Status of the mainnet pilot programs (all retired 2026-07-14) and of programs this server does not configure |
 
 ## Install
 
@@ -80,7 +80,7 @@ npm start
 
 ## Programs (mainnet pilot, retired)
 
-The mainnet pilot programs ran from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed); accounts they own stay readable. `receipt_anchor` and `dark_nullifier_record` have no usable deployment on any cluster until the redeploy under a fresh key, so `anchor_receipt` and `check_nullifier` return an error without sending or reading anything.
+The mainnet pilot programs ran from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed); accounts they own stay readable. `receipt_anchor` (`HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`) and `dark_nullifier_record` (`CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et`) run on devnet only ([`configs/devnet.oss.json`](../../configs/devnet.oss.json)); this server configures neither, so `anchor_receipt` and `check_nullifier` return an error without sending or reading anything.
 
 | Program | Address | Status |
 |---|---|---|

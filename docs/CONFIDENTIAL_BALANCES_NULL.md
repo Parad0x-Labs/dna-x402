@@ -195,7 +195,7 @@ Update `ReceiptPayload` to carry an optional `confidentialReceipt` field so the 
 
 ### 3.4 `receipt_anchor` Program Update
 
-**Program:** `programs/receipt_anchor` (mainnet pilot `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`, retired 2026-07-14; redeploy under a fresh key pending)
+**Program:** `programs/receipt_anchor` (mainnet pilot `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`, retired 2026-07-14; devnet `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` since 2026-10-06)
 
 The current `AnchorBucket` stores a 32-byte Merkle root of receipt hashes. No change to the on-chain layout is required. The `anchor32` field passed from `ReceiptAnchorClient.sendSingle()` should be the SHA-256 of the `ConfidentialReceipt` struct (including the ciphertext and range proof bytes) rather than the plaintext amount. This means the on-chain anchor commits to the encrypted receipt without revealing the amount.
 

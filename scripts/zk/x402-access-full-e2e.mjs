@@ -36,7 +36,7 @@ const arg = (n, d) => { const i = process.argv.indexOf("--" + n); return i !== -
 
 const PROGRAM_ID = arg("program");
 if (!PROGRAM_ID) {
-  console.error("ERROR: pass --program <ID>: no dark_x402_access_gate program is configured until the redeploy under a fresh key.");
+  console.error("ERROR: pass --program <ID>: no default dark_x402_access_gate program is configured (devnet: 7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR).");
   process.exit(2);
 }
 const CLUSTER    = arg("cluster", "devnet");

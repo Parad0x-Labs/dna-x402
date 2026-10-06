@@ -311,13 +311,13 @@ test("tampered delivery receipt fails verification", async () => {
 
 test("anchorDeliveryReceipt refuses before any network call when no receipt_anchor program is named", async () => {
   assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
-  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, /unavailable until the redeploy under a fresh key/);
+  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, /no default receipt_anchor program is configured/);
   let calls = 0;
   const connection = new Proxy({}, { get: () => () => { calls += 1; throw new Error("network touched"); } });
   const payer = { publicKey: { toBase58: () => "payer" }, secretKey: new Uint8Array(64) };
   await assert.rejects(
     anchorDeliveryReceipt({ quoteId: "q" }, connection, payer),
-    /unavailable until the redeploy under a fresh key/,
+    /no default receipt_anchor program is configured/,
   );
   assert.equal(calls, 0);
 });

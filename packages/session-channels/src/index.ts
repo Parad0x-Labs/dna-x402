@@ -86,7 +86,7 @@ export interface CloseSessionResult {
  *
  * Hand `x402Payment` to the DNA x402 facilitator.
  * Hand `anchorIxData` to a receipt_anchor deployment you control (none is
- *   configured until the redeploy under a fresh key).
+ *   configured by default; devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).
  * Store `compressedReceiptBatch` off-chain (Arweave / IPFS / DB).
  */
 export interface SettlementPayload {

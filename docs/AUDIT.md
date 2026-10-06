@@ -9,7 +9,7 @@
 
 ## Devnet Programs
 
-The devnet deployments of `dark_nullifier_banks`, `dark_compressed_receipts` and `dark_chaff` recorded at this snapshot are withdrawn; a devnet redeploy under a fresh key is pending. Program source: [`programs/dark_nullifier_banks/`](../programs/dark_nullifier_banks/), [`programs/dark_compressed_receipts/`](../programs/dark_compressed_receipts/), [`programs/dark_chaff/`](../programs/dark_chaff/).
+The devnet deployments of `dark_nullifier_banks`, `dark_compressed_receipts` and `dark_chaff` recorded at this snapshot are withdrawn; since 2026-10-06 they run on devnet at `499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue`, `7uELrEpcSkbDgYA3xq623QaQmxUi2BXRHUPsKoDVM1oB` and `4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B` (banks, compressed receipts and chaff suite 19/19, [evidence](../evidence/devnet-2026-10-06/dna-shard-message-banks-compressed-chaff.json)). Program source: [`programs/dark_nullifier_banks/`](../programs/dark_nullifier_banks/), [`programs/dark_compressed_receipts/`](../programs/dark_compressed_receipts/), [`programs/dark_chaff/`](../programs/dark_chaff/).
 
 ---
 

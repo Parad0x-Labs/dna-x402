@@ -330,7 +330,7 @@ pub fn build_wow_demo() -> RogueWowDemo {
     let puzzle = compile_puzzle(&puzzle_input).expect("puzzle compile ROGUE");
     let shard_path: Vec<u8> = puzzle.shard_targets.iter().map(|t| t.shard_byte).collect();
 
-    // Devnet ritual evidence withdrawn; devnet redeploy under a fresh key pending.
+    // Earlier devnet ritual evidence withdrawn; current devnet dark_ritual_gate: GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo.
     let solscan_links: Vec<String> = Vec::new();
 
     RogueWowDemo {
@@ -519,7 +519,7 @@ pub fn build_rogue_steal_attempt_demo() -> RogueStealAttemptDemo {
     };
     let puzzle = compile_puzzle(&puzzle_input).expect("compile ROGUE");
     let shard_path: Vec<u8> = puzzle.shard_targets.iter().map(|t| t.shard_byte).collect();
-    // Devnet ritual evidence withdrawn; devnet redeploy under a fresh key pending.
+    // Earlier devnet ritual evidence withdrawn; current devnet dark_ritual_gate: GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo.
     let solscan_links: Vec<String> = Vec::new();
 
     RogueStealAttemptDemo {

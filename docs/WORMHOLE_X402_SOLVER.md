@@ -128,9 +128,9 @@ keeping the receipt ledger unified across DNA x402 packages.
 
 ### Program IDs
 
-No cluster has a usable receipt_anchor program: the earlier mainnet deployment is retired and
-the earlier devnet deployment is withdrawn. Receipt anchoring is unavailable until the redeploy
-under a fresh key, so `solveIntent` and `verifyCrossChainReceipt` throw
+`RECEIPT_ANCHOR_PROGRAM_IDS` names the devnet receipt_anchor `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` (2026-10-06,
+equal to `programs.receiptAnchor` in [`configs/devnet.oss.json`](../configs/devnet.oss.json)). Mainnet-beta has
+none: the earlier mainnet deployment is retired, so there `solveIntent` and `verifyCrossChainReceipt` throw
 `RECEIPT_ANCHOR_UNAVAILABLE` unless the caller passes `anchorProgramId` (for example a
 receipt_anchor deployment on a local validator). `solveIntent` checks this before sending the
 payment, so no payment is made without a usable anchor. The x402 payment

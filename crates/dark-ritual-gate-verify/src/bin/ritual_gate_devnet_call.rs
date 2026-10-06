@@ -6,9 +6,8 @@
 //   1. EchoProof    — [0x01][ritual_hash:32]    — echoes back the ritual hash
 //   2. VerifyRitualShape — [0x00][0x01][shape_hash:32] — verifies AgentSpendNoCustodyV1 grammar
 //
-// Program ID: read from DARK_RITUAL_GATE_PROGRAM_ID. No dark_ritual_gate deployment
-// is configured until the redeploy under a fresh key, so the binary refuses to run
-// without it.
+// Program ID: read from DARK_RITUAL_GATE_PROGRAM_ID (devnet: GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo). No default is
+// configured, so the binary refuses to run without it.
 // Writes: dist/ritual-vm/RITUAL_GATE_DEVNET.json
 
 use sha2::{Digest, Sha256};

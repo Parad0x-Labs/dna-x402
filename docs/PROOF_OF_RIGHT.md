@@ -142,7 +142,7 @@ Prove you are in a group (Semaphore nullifier tree) without revealing which memb
 |---|---|
 | Groth16 verifier on Solana mainnet | ⛔ Excluded from pilot (`GCptvBYF...` — `0xDE 0xAD` bypass; fail-closed pending real VK + trustless ceremony). Off-chain verification works today. |
 | Nullifier registry | Retired 2026-07-14 (`Ev7HEFhh...`, mainnet pilot) |
-| Compressed private receipt batches | Retired 2026-07-14 (`6HSRGivd...`, mainnet pilot); redeploy under a fresh key pending |
+| Compressed private receipt batches | Retired 2026-07-14 (`6HSRGivd...`, mainnet pilot); devnet `receipt_anchor` `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` since 2026-10-06 |
 | Dark Pool (shielded transfers) | 🔲 Post-audit |
 | Multi-party ceremony (N > 2) | 🔲 Post-audit |
 | Full WebAuthn authenticatorData binding | 🔲 Sprint 2 |

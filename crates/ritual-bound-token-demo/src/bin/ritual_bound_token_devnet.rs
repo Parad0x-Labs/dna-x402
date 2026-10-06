@@ -20,7 +20,7 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 
-/// No dark_ritual_gate deployment is configured until the redeploy under a fresh key.
+/// No dark_ritual_gate default is configured here (devnet: GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo).
 const DARK_RITUAL_GATE: &str = "pending_redeploy";
 
 // ── SHA256 helper ─────────────────────────────────────────────────────────────

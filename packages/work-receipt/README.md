@@ -20,7 +20,7 @@ trusted party.
 4. **`checkGate`** — for the deterministic subset (output-hash match, JSON-schema), anyone can
    re-run the predicate; it's bound to the pinned hash, so a worker can't supply its own grader.
    Everything else returns **`undecided`** — never a silent accept.
-5. **`bindToDag`** — anchor a canonical `actionHash` through receipt-dag to a receipt_anchor deployment the caller names (none is configured until the redeploy under a fresh key).
+5. **`bindToDag`** — anchor a canonical `actionHash` through receipt-dag to a receipt_anchor deployment the caller names (no default is configured; devnet: `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`).
 
 ```js
 import { pinTask, signWorkBinding, verifyWorkBinding, signAccept, verifyAccept, checkGate } from "@parad0x_labs/work-receipt";

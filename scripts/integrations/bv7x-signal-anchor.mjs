@@ -22,7 +22,7 @@
  *
  * BV-7X contract: 0xD88FD4a11255E51f64f78b4a7d74456325c2d8dC (Base mainnet)
  * RECEIPT_ANCHOR_PROGRAM_ID — receipt_anchor deployment to anchor to (required: receipt
- *                             anchoring is unavailable until the redeploy under a fresh key)
+ *                             no receipt_anchor is deployed on mainnet; devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs)
  */
 
 import { createHash } from "node:crypto";
@@ -34,7 +34,7 @@ import { execSync } from "node:child_process";
 const BV7X_CONTRACT   = "0xD88FD4a11255E51f64f78b4a7d74456325c2d8dC";
 const RECEIPT_ANCHOR  = process.env.RECEIPT_ANCHOR_PROGRAM_ID;
 if (!RECEIPT_ANCHOR) {
-  console.error("ERROR: "+"receipt anchoring is unavailable until the redeploy under a fresh key: set RECEIPT_ANCHOR_PROGRAM_ID to a receipt_anchor deployment you control");
+  console.error("ERROR: "+"receipt anchoring needs RECEIPT_ANCHOR_PROGRAM_ID: no receipt_anchor is deployed on mainnet (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs, with SOLANA_RPC_URL on devnet); set it to a deployment you control");
   process.exit(2);
 }
 const BASE_RPC        = process.env.BASE_RPC_URL || "https://mainnet.base.org";

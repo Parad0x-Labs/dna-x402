@@ -101,7 +101,7 @@ legacy_repo_name: Parad0x-Labs/x402-dna  # earlier name, not publicly available
 | a buyer integration | [`fetchWith402`](../x402/README.md) |
 | a seller/paywall integration | `dnaSeller()` and seller middleware |
 | proof and verification | signed receipts + replay-safe verification |
-| on-chain verifiability | `receipt_anchor` (redeploy pending) and VERIFIED semantics |
+| on-chain verifiability | `receipt_anchor` (devnet `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`) and VERIFIED semantics |
 | privacy settlement | optional Dark Null receipt path, or use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) directly |
 
 ## If you already built agent payment infrastructure
@@ -400,7 +400,7 @@ Run the Rust regression suite with: `cargo test --workspace`
 - Proof and rollout docs: [`docs/`](../docs)
 - Public site: [`site/`](../site)
 - `/agent` UI: [`site-agent/`](../site-agent)
-- Legacy `.null` names: the `.null` registrar and auctions ran on mainnet June–August 2026 and are retired, so no `.null` name can currently be registered, updated, or transferred on mainnet. The companion MCP [`@parad0x_labs/null-mcp`](https://www.npmjs.com/package/@parad0x_labs/null-mcp) can still resolve legacy name records (read-only); its write tools target the retired mainnet programs. Pay-by-name to a one-time stealth address is implemented in code with tests; a devnet redeploy under a fresh key is pending.
+- Legacy `.null` names: the `.null` registrar and auctions ran on mainnet June–August 2026 and are retired, so no `.null` name can currently be registered, updated, or transferred on mainnet. The companion MCP [`@parad0x_labs/null-mcp`](https://www.npmjs.com/package/@parad0x_labs/null-mcp) can still resolve legacy name records (read-only); its write tools target the retired mainnet programs. Pay-by-name to a one-time stealth address runs on devnet against `null_registrar` `3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ` (8/8 on 2026-10-06, [evidence](../evidence/devnet-2026-10-06/dna-nullpay-stealth-pay-by-name.json)).
 
 ## Quick Start
 

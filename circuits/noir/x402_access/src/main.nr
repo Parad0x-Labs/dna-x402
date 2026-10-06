@@ -14,7 +14,7 @@
 //   nonce          - for nullifier binding (per-request slot)
 //
 // Deployment status:
-//   Circom path: verifier implemented (dark_x402_access_gate); devnet redeploy under a fresh key pending
+//   Circom path: verifier implemented (dark_x402_access_gate); devnet 7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR since 2026-10-06
 //   Noir path:   Source here — pending nargo + Sunspot toolchain installation
 //   Both use Groth16 over BN254 — same on-chain verifier math.
 

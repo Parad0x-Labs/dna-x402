@@ -33,8 +33,8 @@ export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
 
 /** Error message thrown when anchoring is requested without a usable program. */
 export const RECEIPT_ANCHOR_UNAVAILABLE =
-  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
-  "program is configured. Pass the program ID of a receipt_anchor deployment you control.";
+  "receipt anchoring needs an explicit program: no default receipt_anchor " +
+  "program is configured (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs). Pass the program ID of a receipt_anchor deployment you control.";
 
 function resolveAnchorProgramId(programId?: string | null): string {
   const resolved = programId ?? RECEIPT_ANCHOR_PROGRAM_ID;

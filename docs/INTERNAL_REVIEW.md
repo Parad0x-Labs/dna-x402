@@ -166,8 +166,10 @@ A protocol runs a ritual state transition — a smart contract that advances a s
 
 The ritual-bound token programs (`dark_ritual_gate`, `dark_ritual_transfer_hook`) and the
 `dark_nullifier_banks` deployment used for the DARKNULL ritual are withdrawn from devnet,
-and their transaction evidence has been removed from this review. A devnet redeploy under
-a fresh key is pending; the programs remain implemented in code with tests.
+and their transaction evidence has been removed from this review. Since 2026-10-06 they run
+on devnet again: `dark_ritual_gate` `GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo`, `dark_ritual_transfer_hook` `9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf`,
+`dark_nullifier_banks` `499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue` (ritual gate and hook suite 11/11,
+[evidence](../evidence/devnet-2026-10-06/dna-probe-ritual-gate-and-hook.json)).
 
 ### True Frontier Primitive Hashes (devnet-confirmed)
 

@@ -19,11 +19,11 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// No dark_nullifier_record deployment is configured until the redeploy under a fresh key, so the
+// No dark_nullifier_record default is configured (devnet: CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et), so the
 // program ID must be passed explicitly (--program <ID> or NULLIFIER_RECORD_PROGRAM_ID=<ID>).
 const programArg = (() => { const i = process.argv.indexOf("--program"); return i !== -1 ? process.argv[i + 1] : process.env.NULLIFIER_RECORD_PROGRAM_ID; })();
 if (!programArg) {
-  console.error("ERROR: pass --program <ID> (or set NULLIFIER_RECORD_PROGRAM_ID): no dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  console.error("ERROR: pass --program <ID> (or set NULLIFIER_RECORD_PROGRAM_ID): no default dark_nullifier_record program is configured (devnet: CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et).");
   process.exit(2);
 }
 const PROGRAM_ID = new PublicKey(programArg);

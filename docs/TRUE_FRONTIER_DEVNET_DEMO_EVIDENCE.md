@@ -1,7 +1,7 @@
 # Dark Null True Frontier Primitives — Devnet Demo Evidence
 
 > **Network:** Solana Devnet
-> **Mode:** primitive hashes from the demo run; the on-chain ROGUE leg ran against a `dark_nullifier_banks` devnet deployment that is now withdrawn, so its transaction links are removed (devnet redeploy under a fresh key pending)
+> **Mode:** primitive hashes from the demo run; the on-chain ROGUE leg ran against a `dark_nullifier_banks` devnet deployment that is now withdrawn, so its transaction links are removed (`dark_nullifier_banks` runs on devnet at `499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue` since 2026-10-06)
 > **Commit:** `66765c973f0b1a9ba0a3ee7bdee87d4f85b6d186`
 > **Puzzle:** `ROGUE` → `[82, 79, 71, 85, 69]`
 > **NOT PRODUCTION — no mainnet, no audit, no custody**

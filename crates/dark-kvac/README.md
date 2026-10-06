@@ -74,8 +74,8 @@ on-chain: ≈18 MUL + 17 ADD/SUB + 2 SHA-512 ≈ 120–227k CU (well under budge
 - [x] wire (de)serialization (448 bytes) with canonical-encoding checks on every field.
 - [x] host e2e binary (`kvac_e2e`) — issue → present → verify (×2 contexts) + adversarial checks.
 - [ ] on-chain nullifier recording via `dark_nullifier_record`: the client
-      (`scripts/kvac/devnet-record-e2e.mjs`) is implemented; a devnet redeploy under a
-      fresh key is pending, so the script needs `--program <ID>`.
+      (`scripts/kvac/devnet-record-e2e.mjs`) passes 3/3 on devnet `dark_nullifier_record`
+      `CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et` (2026-10-06); the script takes it with `--program <ID>`.
 - [ ] tier predicate (set-membership); blind issuance (v2); external audit before mainnet value.
 
 Run: `cargo test -p dark-kvac` · `cargo run -p dark-kvac --bin kvac_e2e` · `node scripts/kvac/devnet-record-e2e.mjs --program <ID>`.

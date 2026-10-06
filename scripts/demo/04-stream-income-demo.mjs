@@ -232,7 +232,7 @@ console.log(`     periodEnd:    ${receipt.periodEnd}  (Unix s)`);
 console.log(`     receiptHash:  ${receipt.receiptHash}`);
 
 log("ANCHOR", `Receipt hash ${receipt.receiptHash.slice(0, 32)}… ready to anchor via a receipt_anchor deployment.`);
-log("ANCHOR", `  Receipt anchoring is unavailable until the redeploy under a fresh key.`);
+log("ANCHOR", `  Receipt anchoring: no receipt_anchor on mainnet; devnet HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs.`);
 
 // 6. Scale projection
 console.log("\n  ── Scale Projection ────────────────────────────────────────");

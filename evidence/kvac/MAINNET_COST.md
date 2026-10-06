@@ -1,6 +1,6 @@
 # KVAC — mainnet launch cost
 
-All figures derived from the earlier devnet deploy measurements + `solana rent` (that deployment is withdrawn; a devnet redeploy under a fresh key is pending). Rent rates are a
+All figures derived from the earlier devnet deploy measurements + `solana rent` (that deployment is withdrawn; `dark_nullifier_record` runs on devnet at `CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et` since 2026-10-06). Rent rates are a
 protocol constant — **identical on mainnet and devnet** — so these are exact, not
 estimates. USD shown at an assumed **SOL ≈ $180** (mark-to-market before acting).
 

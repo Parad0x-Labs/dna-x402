@@ -24,10 +24,10 @@ import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 
-// No dark_secp256r1_vault devnet deployment is configured until the redeploy
-// under a fresh key, so <PROGRAM_ID> is required.
+// No default dark_secp256r1_vault is configured, so <PROGRAM_ID> is required
+// (devnet: GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC).
 if (!process.argv[2]) {
-  console.error("ERROR: pass <PROGRAM_ID>: no dark_secp256r1_vault devnet program is configured until the redeploy under a fresh key.");
+  console.error("ERROR: pass <PROGRAM_ID>: no default dark_secp256r1_vault program is configured (devnet: GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC).");
   process.exit(2);
 }
 const PROGRAM_ID = new PublicKey(process.argv[2]);

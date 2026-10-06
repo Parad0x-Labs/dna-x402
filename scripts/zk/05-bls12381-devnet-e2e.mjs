@@ -16,8 +16,8 @@
  * Usage:
  *   node scripts/zk/05-bls12381-devnet-e2e.mjs <PROGRAM_ID>
  *
- *   PROGRAM_ID is required: no dark_bls12_381_credential deployment is configured
- *   until the redeploy under a fresh key.
+ *   PROGRAM_ID is required: no default dark_bls12_381_credential is configured
+ *   (devnet: C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE).
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -30,7 +30,7 @@ const REPO = join(__dirname, "..", "..");
 
 const PROG_ID = process.argv[2];
 if (!PROG_ID) {
-  console.error("ERROR: pass <PROGRAM_ID>: no dark_bls12_381_credential program is configured until the redeploy under a fresh key.");
+  console.error("ERROR: pass <PROGRAM_ID>: no default dark_bls12_381_credential program is configured (devnet: C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE).");
   process.exit(2);
 }
 const RPC     = process.env.SOLANA_RPC ?? "https://api.devnet.solana.com";

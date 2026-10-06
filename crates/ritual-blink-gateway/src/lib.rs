@@ -25,15 +25,15 @@ use sha2::{Digest, Sha256};
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-/// Configured dark_ritual_gate program. `None`: no usable deployment exists
-/// until the redeploy under a fresh key, so `build_ceremony_layout` refuses with
+/// Configured dark_ritual_gate program. `None`: no default is configured (devnet:
+/// GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo), so `build_ceremony_layout` refuses with
 /// `RitualBlinkError::ProgramsUnavailable`. Callers targeting their own
 /// deployment (e.g. a local validator) use `build_ceremony_layout_with_programs`.
 pub const DARK_RITUAL_GATE_PROGRAM: Option<&str> = None;
-/// Configured dark_ritual_transfer_hook program. `None` until the redeploy.
+/// Configured dark_ritual_transfer_hook program. `None`: no default (devnet: 9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf).
 pub const DARK_RITUAL_HOOK_PROGRAM: Option<&str> = None;
 /// Configured ritual-bound Token-2022 mint (its transfer hook is
-/// DARK_RITUAL_HOOK_PROGRAM). `None` until the redeploy.
+/// DARK_RITUAL_HOOK_PROGRAM). `None`: no default is configured.
 pub const RITUAL_MINT: Option<&str> = None;
 pub const HOOK_VERDICT_PREFIX: u8 = 0x01;
 pub const VERIFY_RITUAL_SHAPE_TAG: u8 = 0x00;
@@ -155,8 +155,8 @@ pub enum RitualBlinkError {
     #[error("ceremony layout invalid: expected 5 instructions")]
     InvalidCeremonyLayout,
     #[error(
-        "ritual programs unavailable until the redeploy under a fresh key: no dark_ritual_gate / \
-         dark_ritual_transfer_hook program is configured; use build_ceremony_layout_with_programs \
+        "ritual programs not configured: no default dark_ritual_gate / \
+         dark_ritual_transfer_hook program is set (devnet IDs in configs/devnet.oss.json); use build_ceremony_layout_with_programs \
          to target a deployment you control"
     )]
     ProgramsUnavailable,
@@ -951,10 +951,10 @@ mod tests {
 // This crate is the first implementation combining:
 // 1. Solana Actions/Blinks (live production standard, Phantom-native)
 // 2. x402 V2 payment binding (35M+ Solana transactions on x402 as of March 2026)
-// 3. Dark Null ritual grammar enforcement (dark_ritual_gate; devnet redeploy
-//    under a fresh key pending)
+// 3. Dark Null ritual grammar enforcement (dark_ritual_gate; devnet
+//    GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo)
 // 4. Token-2022 Transfer Hook verification (dark_ritual_transfer_hook; devnet
-//    redeploy under a fresh key pending)
+//    9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf)
 // 5. HookVerdict 33-byte capsule as atomic receipt
 // 6. Receipt DAG chaining for tamper-proof trade history
 //

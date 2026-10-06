@@ -38,10 +38,10 @@ const RESOURCE_PATH  = "/api/agent-data";
 const AGENT_NAME     = "Agent-Alpha-001";
 const CLUSTER        = "mainnet-beta";
 
-// Program IDs. No receipt_anchor program is usable until the redeploy under a
-// fresh key, so the anchoring step needs RECEIPT_ANCHOR_PROGRAM_ID and refuses without it.
+// Program IDs. No receipt_anchor is deployed on mainnet (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs), so the
+// anchoring step needs RECEIPT_ANCHOR_PROGRAM_ID and refuses without it.
 const RECEIPT_ANCHOR = process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? null;
-const RECEIPT_ANCHOR_UNAVAILABLE = "receipt anchoring is unavailable until the redeploy under a fresh key: set RECEIPT_ANCHOR_PROGRAM_ID to a receipt_anchor deployment you control";
+const RECEIPT_ANCHOR_UNAVAILABLE = "receipt anchoring needs RECEIPT_ANCHOR_PROGRAM_ID: no receipt_anchor is deployed on mainnet (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs); set it to a deployment you control";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

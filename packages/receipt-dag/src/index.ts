@@ -320,16 +320,16 @@ export function verifyDagChain(receipts: DagReceipt[]): DagVerifyResult {
 
 /**
  * Configured receipt_anchor program, or null while none is usable. No
- * receipt_anchor program is usable on any cluster until the redeploy under a
- * fresh key, so anchoring and on-chain verification require an explicit
+ * default receipt_anchor program is configured (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs),
+ * so anchoring and on-chain verification require an explicit
  * `programId`.
  */
 export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
 
 /** Error message thrown when anchoring is requested without a usable program. */
 export const RECEIPT_ANCHOR_UNAVAILABLE =
-  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
-  "program is configured. Pass options.programId for a receipt_anchor deployment you control.";
+  "receipt anchoring needs an explicit program: no default receipt_anchor " +
+  "program is configured (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs). Pass options.programId for a receipt_anchor deployment you control.";
 
 /**
  * Resolve the receipt_anchor program: an explicit `programId` wins, otherwise
