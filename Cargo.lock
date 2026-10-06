@@ -5523,6 +5523,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "null-fair-draw"
+version = "0.1.0"
+dependencies = [
+ "null-draw-common",
+ "serde_json",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "null-flywheel-core"
 version = "0.1.0"
 dependencies = [

@@ -219,7 +219,9 @@ members = [
     "programs/null_lottery",
     # Permissionless creator-seeded rolling-jackpot lottery pools
     "programs/null_lottery_pools",
-    # Shared SlotHashes selection and PDA creation (null_lottery_pools, null_fair_draw)
+    # Provably fair draw primitive (raffles, giveaways, reward roll-outs)
+    "programs/null_fair_draw",
+    # Shared SlotHashes selection and PDA creation for the two programs above
     "crates/null-draw-common",
     "programs/null_mint_gate",
     "programs/live_attestation",

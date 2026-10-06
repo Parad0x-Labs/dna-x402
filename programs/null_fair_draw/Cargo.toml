@@ -1,0 +1,29 @@
+[package]
+name = "null-fair-draw"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "Provably fair draw primitive for Solana raffles, giveaways and reward roll-outs (native program)"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+# Build as a library for CPI callers (no entrypoint symbol).
+no-entrypoint = []
+
+[dependencies]
+solana-program = { workspace = true }
+null-draw-common = { path = "../../crates/null-draw-common" }
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk         = { workspace = true }
+tokio              = { workspace = true }
+serde_json         = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("custom-heap", "custom-panic"))',
+    'cfg(target_os, values("solana"))',
+] }

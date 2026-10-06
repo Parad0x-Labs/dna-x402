@@ -1,0 +1,50 @@
+{
+  "name": "@parad0x_labs/fair-draw",
+  "version": "0.1.0",
+  "description": "Client SDK for the null_fair_draw Solana program: provably fair raffles, giveaways and reward roll-outs. Sum-tree lists and proofs, the draw stream, instruction builders, account decoding, crank, claim and verify.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./core": {
+      "import": "./src/core.ts",
+      "types": "./src/core.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "verify.html",
+    "README.md"
+  ],
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "build:verify": "node scripts/build-verify-page.mjs",
+    "test": "node --experimental-strip-types --test test/vectors.test.ts test/sdk.test.ts"
+  },
+  "keywords": [
+    "solana",
+    "raffle",
+    "giveaway",
+    "airdrop",
+    "merkle",
+    "provably-fair"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/fair-draw",
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}
