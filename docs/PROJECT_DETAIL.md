@@ -30,11 +30,11 @@ https://github.com/Parad0x-Labs/dna-x402
 | | |
 |---|---|
 | **Real Groth16 verification on Solana** | BN254 proofs verified on-chain via the `alt_bn128_pairing` syscall against Poseidon commitment state — shielded deposits and withdrawals, not client-trusted claims |
-| **1,000,000 receipts → 32 bytes** | ZK-compressed receipt anchoring: a million payment proofs cost ~$0.001/day to keep verifiable on-chain forever |
+| **1,000,000 receipts → one 32-byte root** | Receipts batch into an RFC-6962 Merkle root (`receipt-dag`), so a million payment receipts are covered by 32 bytes; on-chain anchoring of that root resumes with the `receipt_anchor` redeploy under a fresh key |
 | **Trusted setup without toxic waste** | Hermez Perpetual Powers of Tau + drand League-of-Entropy beacon, SHA-256-pinned transcript in [`ceremony/`](../ceremony/shielded_withdraw_v3/transcript_v3.json) — no single party holds ceremony material |
 | **Devnet attack-replay suite: T1–T10 pass** | A public suite fires credential-revocation forgery, unsigned credential upgrade, nullifier-bank re-init, forged hook admin, PDA prefund grief and unauthorized emission claims at security-fix builds deployed on devnet. Each attack is rejected with the expected program error (or, for prefund grief, absorbed); one informational finding (F1) is recorded with the results. Signatures: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) |
 | **1,568 x402 tests passing in CI** | Continuous `mainnet-readiness` CI on every push: x402 build and test suite (1,568 passed as of 2026-10-05), site-agent tests, dependency audits, secret scan, Rust tests for `receipt_anchor` and `x402_refund_escrow`, and a smoke job |
-| **Payments that verify themselves** | x402 402-flow gates check ed25519 payer signatures, enforce single-use proofs, confirm USDC settlement on-chain before unlocking, and anchor a compressed receipt after |
+| **Payments that verify themselves** | x402 402-flow gates check ed25519 payer signatures, enforce single-use proofs, confirm USDC settlement on-chain before unlocking, and return a signed, hash-chained receipt |
 
 ## What you could build with it
 
@@ -101,7 +101,7 @@ legacy_repo_name: Parad0x-Labs/x402-dna  # earlier name, not publicly available
 | a buyer integration | [`fetchWith402`](../x402/README.md) |
 | a seller/paywall integration | `dnaSeller()` and seller middleware |
 | proof and verification | signed receipts + replay-safe verification |
-| on-chain auditability | `receipt_anchor` and VERIFIED semantics |
+| on-chain verifiability | `receipt_anchor` (redeploy pending) and VERIFIED semantics |
 | privacy settlement | optional Dark Null receipt path, or use [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) directly |
 
 ## If you already built agent payment infrastructure
@@ -112,10 +112,10 @@ GPU/compute marketplace on Solana? You don't need to rebuild anything.
 | If your stack has... | What DNA x402 adds |
 |---|---|
 | Your own 402 payment handler | x402-standard adapter — your agents reach every x402-gated API without code changes |
-| Off-chain settlement records | `receipt_anchor` + Liquefy — 83× compressed receipts, permanent Merkle root on Solana, tamper-proof billing history |
+| Off-chain settlement records | `receipt-dag` + Liquefy — 83× compressed receipts under one Merkle root, tamper-evident billing history (on-chain anchoring after the redeploy) |
 | Ed25519 agent keys | Dark Passport — hardware-bind those keys to a Secure Enclave or passkey, on-chain provable identity |
 | GPU/compute operators claiming hardware | NullLive — continuous hardware-attested proof heartbeat, verifiable on Solana |
-| Per-request USDC settlement | Compressed audit trail — 1M payment receipts → 32 bytes on-chain, $0.001/day |
+| Per-request USDC settlement | Compressed receipt trail — 1M payment receipts under one 32-byte Merkle root |
 | Inference market or compute routing layer | x402 + receipt_anchor — agents pay for compute per-call, receipts prove delivery, permanent audit trail. Settlement infrastructure under your market structure |
 | Private signal API behind a key or token gate | x402 paywall — replace key management with per-call USDC. Agents pay the signal endpoint directly, no subscriptions, no admin |
 | Autonomous trading agents, execution logs off-chain only | `receipt_anchor` — every signal → filter → execution event anchored permanently on Solana. Verifiable strategy history, no centralized log |
@@ -227,8 +227,8 @@ paths, NULL emission accounting, and lottery/root primitives.
 |---|---|
 | Devnet deployment | The earlier devnet deployment of the deploy-profile programs is withdrawn and its entries are removed from [`configs/devnet.oss.json`](../configs/devnet.oss.json); a devnet redeploy under a fresh key is pending. The remaining `nullRegistrar` entry in that file is retired. The attack-replay suite ([`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md)) targets separately deployed security-fix builds of `agent_credential_mint`, `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree`, and `dark_null_mint_gate` |
 | Mainnet | No active DNA x402 production deployment. The mainnet pilot programs (semaphore, secp256k1 auth, token hook, lottery, mint gate, receipt_anchor `6HSRGivd…`, proof gate `PmSCTue…`) ran from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed): their transaction history stays readable on explorers, but they cannot be invoked. Canonical deployment inventory available to reviewers on request |
-| Commercial profile | Deploy profile kept in this repo; no commercial deployment is currently active. A new deploy needs wallet/RPC/program-id provisioning and external audit review |
-| Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
+| Commercial profile | Deploy profile kept in this repo; no commercial deployment is currently active. A new deploy needs wallet/RPC/program-id provisioning |
+| Program enforcement flag | Off by default; enabled only by a `--features mainnet` rebuild |
 | NULL token | Live on mainnet: Token-2022 mint `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`, fixed supply (mint and freeze authority revoked) |
 
 ### Deploy profile programs
@@ -246,28 +246,21 @@ paths, NULL emission accounting, and lottery/root primitives.
 
 The mainnet pilot (2026-05-29 to 2026-07-14) ran under this profile and was retired on 2026-07-14; nothing from it is currently deployed. This section documents the profile for any future deployment.
 
-The commercial profile can be deployed to mainnet as a pilot ahead of external
-audit sign-off. It creates public transaction evidence and supports
-audit/grant funding. This status
-must stay visible anywhere the pilot is promoted:
+The commercial profile can run on mainnet as a pilot with enforcement paths compiled out. It creates
+public transaction evidence while settlement enforcement stays off:
 
-- external audit sign-off required before enforcement activates
+- enforcement flag off by default; it turns on only with a `--features mainnet` rebuild
 - internal technical review, automated analysis tools, and regression tests completed
-- enforcement flag off until post-audit `--features mainnet` rebuild
-- pre-audit production: program accounts live, settlement paths off
+- pilot build: program accounts and ledgers on-chain, settlement enforcement off
 
-The pilot may expose mainnet program accounts and public receipts before the
-audit is complete. Stronger enforcement paths activate after audit sign-off
-via a `--features mainnet` rebuild.
-
-| Feature | Pre-audit pilot | Post-audit activation |
+| Feature | Pilot build (enforcement off) | `--features mainnet` build |
 |---|---|---|
 | Program accounts on mainnet | Yes, after deploy txs exist | Yes |
 | Receipt/nullifier ledgers | Yes | Yes |
 | Passkey vault storage | Yes | Yes, with reviewed enforcement path |
-| NULL emission accounting | Yes | SPL mint CPI only after audit sign-off |
-| Lottery root/draw records | Yes | Token settlement/winner enforcement only after audit sign-off |
-| Enforcement flag | `off` | `on` with `--features mainnet` post-audit rebuild |
+| NULL emission accounting | Yes | SPL mint CPI enabled |
+| Lottery root/draw records | Yes | Token settlement/winner enforcement enabled |
+| Enforcement flag | `off` | `on` |
 
 ### Dual-track: OSS + Commercial
 
@@ -277,14 +270,14 @@ via a `--features mainnet` rebuild.
 | NULL emission | Disabled | 5% accounting config |
 | Lottery ticket price | Free | 10 NULL config |
 | License | MIT | MIT code, Parad0x-operated deployment |
-| Audit gate | Off | Off until external audit review and explicit activation |
-| Who it serves | Builders, forks, research | Public tx evidence, commercial mainnet pilot ahead of external audit sign-off |
+| Enforcement flag | Off | Off until a `--features mainnet` rebuild |
+| Who it serves | Builders, forks, research | Public tx evidence, commercial mainnet pilot |
 
 ```bash
 # OSS devnet - free, MIT, zero extraction
 ./scripts/deploy/devnet-oss.sh
 
-# Commercial mainnet pilot - program deployment only, audit gate remains off
+# Commercial mainnet pilot - program deployment only, enforcement flag off
 ./scripts/deploy/mainnet-commercial.sh
 ```
 

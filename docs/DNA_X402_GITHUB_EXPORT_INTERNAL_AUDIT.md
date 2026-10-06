@@ -254,7 +254,6 @@ The Rust toolchain setup was fixed in commit `6385712`, and the required site da
 The README uses three SVG assets:
 
 - `docs/assets/dna-header.svg`
-- `docs/assets/dna-proof-card.svg`
 - `docs/assets/dna-architecture.svg`
 
 The proof and architecture cards were tightened in commit `628e47c`. The header card was then widened/reduced slightly so GitHub's README renderer keeps card text inside boundaries.
@@ -262,7 +261,6 @@ The proof and architecture cards were tightened in commit `628e47c`. The header 
 Local render checks were saved under:
 
 - `reports/svg-card-check/dna-header.png`
-- `reports/svg-card-check/dna-proof-card.png`
 - `reports/svg-card-check/dna-architecture.png`
 
 The `reports/` directory is runtime evidence and is not part of the GitHub source export unless explicitly promoted into docs.
