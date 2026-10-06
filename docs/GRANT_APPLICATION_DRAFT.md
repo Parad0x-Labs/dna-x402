@@ -12,7 +12,7 @@
 
 ## Project Title
 
-DNA x402: First Solana x402 Micropayment Protocol for AI Agents — External Audit and Mainnet Hardening
+DNA x402: x402 Micropayment Protocol for AI Agents on Solana — External Security Review and Mainnet Hardening
 
 ---
 

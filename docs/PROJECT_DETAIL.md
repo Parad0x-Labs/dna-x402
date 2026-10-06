@@ -30,7 +30,7 @@ https://github.com/Parad0x-Labs/dna-x402
 | | |
 |---|---|
 | **Real Groth16 verification on Solana** | BN254 proofs verified on-chain via the `alt_bn128_pairing` syscall against Poseidon commitment state — shielded deposits and withdrawals, not client-trusted claims |
-| **1,000,000 receipts → one 32-byte root** | Receipts batch into an RFC-6962 Merkle root (`receipt-dag`), so a million payment receipts are covered by 32 bytes; on-chain anchoring of that root resumes with the `receipt_anchor` redeploy under a fresh key |
+| **Any receipt batch → one 32-byte root** | Receipts batch into an RFC-6962 style Merkle root (`liquefy-receipts`), so one 32-byte value commits to the whole batch while the receipts stay off-chain with their holders; on-chain anchoring of that root needs a `receipt_anchor` deployment the operator names (none is configured by default) |
 | **Trusted setup without toxic waste** | Hermez Perpetual Powers of Tau + drand League-of-Entropy beacon, SHA-256-pinned transcript in [`ceremony/`](../ceremony/shielded_withdraw_v3/transcript_v3.json) — no single party holds ceremony material |
 | **Devnet attack-replay suite: T1–T10 pass** | A public suite fires credential-revocation forgery, unsigned credential upgrade, nullifier-bank re-init, forged hook admin, PDA prefund grief and unauthorized emission claims at security-fix builds deployed on devnet. Each attack is rejected with the expected program error (or, for prefund grief, absorbed); one informational finding (F1) is recorded with the results. Signatures: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) |
 | **1,568 x402 tests passing in CI** | Continuous `mainnet-readiness` CI on every push: x402 build and test suite (1,568 passed as of 2026-10-05), site-agent tests, dependency audits, secret scan, Rust tests for `receipt_anchor` and `x402_refund_escrow`, and a smoke job |
@@ -112,10 +112,10 @@ GPU/compute marketplace on Solana? You don't need to rebuild anything.
 | If your stack has... | What DNA x402 adds |
 |---|---|
 | Your own 402 payment handler | x402-standard adapter — your agents reach every x402-gated API without code changes |
-| Off-chain settlement records | `receipt-dag` + Liquefy — 83× compressed receipts under one Merkle root, tamper-evident billing history (on-chain anchoring after the redeploy) |
+| Off-chain settlement records | `receipt-dag` + `liquefy-receipts` — compressed receipts (62-66x on the package's synthetic test batches; real receipts with more distinct values compress less) under one Merkle root, tamper-evident billing history (on-chain anchoring with a `receipt_anchor` deployment you name) |
 | Ed25519 agent keys | Dark Passport — hardware-bind those keys to a Secure Enclave or passkey, on-chain provable identity |
 | GPU/compute operators claiming hardware | NullLive — continuous hardware-attested proof heartbeat, verifiable on Solana |
-| Per-request USDC settlement | Compressed receipt trail — 1M payment receipts under one 32-byte Merkle root |
+| Per-request USDC settlement | Compressed receipt trail — a payment receipt batch of any size committed by one 32-byte Merkle root; the receipts stay off-chain |
 | Inference market or compute routing layer | x402 + receipt_anchor — agents pay for compute per-call, receipts prove delivery, permanent audit trail. Settlement infrastructure under your market structure |
 | Private signal API behind a key or token gate | x402 paywall — replace key management with per-call USDC. Agents pay the signal endpoint directly, no subscriptions, no admin |
 | Autonomous trading agents, execution logs off-chain only | `receipt_anchor` — every signal → filter → execution event anchored permanently on Solana. Verifiable strategy history, no centralized log |

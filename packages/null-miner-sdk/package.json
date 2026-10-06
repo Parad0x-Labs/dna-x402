@@ -2,7 +2,7 @@
   "name": "@parad0x_labs/null-miner-sdk",
   "version": "0.1.0",
   "type": "module",
-  "description": "Universal NULL Miner SDK — plug into any app, users earn USDC autonomously, platform collects fees. First on Solana.",
+  "description": "NULL Miner SDK: agents pull tasks, submit proof hashes to a task marketplace API and track earnings and reputation. Payouts are recorded by the marketplace API; no on-chain escrow yet.",
   "keywords": [
     "solana",
     "depin",

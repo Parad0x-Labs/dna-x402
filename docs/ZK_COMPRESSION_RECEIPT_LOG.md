@@ -16,16 +16,16 @@ ZK Compression is a Solana primitive that compresses on-chain state using concur
 - **Light Protocol provides the indexer and proof generation infrastructure.** Their hosted indexer tracks all leaf insertions, maintains the off-chain state database, and generates Merkle proofs on demand. Self-hosting is possible for privacy-sensitive deployments.
 - **npm package:** `@lightprotocol/stateless.js`
 
-Cost summary at scale:
+Cost comparison at scale, against a hypothetical design with one regular account per receipt. `receipt_anchor`
+does not use per-receipt accounts (see section 3), so this table compares storage models, not the current
+program:
 
-| Receipts | Regular PDAs (SOL) | ZK Compressed (SOL) | Savings |
+| Receipts | One account per receipt (SOL) | ZK Compressed (SOL) | Ratio |
 |----------|-------------------|---------------------|---------|
-| 1        | ~0.002            | ~0.000002           | 1000x   |
-| 10,000   | ~20               | ~0.02               | 1000x   |
-| 1,000,000| ~2,000            | ~2                  | 1000x   |
-| 10,000,000| ~20,000          | ~20                 | 1000x   |
-
-At 10M receipts: **~20 SOL compressed vs ~20,000 SOL regular accounts.**
+| 1        | ~0.002            | ~0.000002           | ~1/1,000 |
+| 10,000   | ~20               | ~0.02               | ~1/1,000 |
+| 1,000,000| ~2,000            | ~2                  | ~1/1,000 |
+| 10,000,000| ~20,000          | ~20                 | ~1/1,000 |
 
 ---
 
@@ -73,22 +73,30 @@ Off-chain leaf data is served by:
 
 ### Current State
 
-`receipt_anchor` (Anchor program, `programs/receipt-anchor/`) stores one PDA per receipt:
-- PDA seed: `[b"receipt", receipt_id]`
-- Account data: 34-byte commitment (`[u8; 32]` hash + 2 metadata bytes)
-- Cost: ~0.002 SOL per receipt (rent-exempt minimum for a 34-byte account)
+`receipt_anchor` (native Solana program, `programs/receipt_anchor/`) does **not** create one account per
+receipt. It keeps one bucket account per hour:
+- PDA seed: `["bucket", bucket_id as u64 little-endian]`, where `bucket_id` is the unix hour
+- Account data: 54 bytes (version, bump, bucket id, count, 32-byte root, updated-at)
+- Each anchor folds a 32-byte value into the bucket's hash chain: `root = sha256(prev_root || value)`
+- Cost: the bucket account's rent-exempt deposit once per hour that sees an anchor, plus a transaction fee per
+  anchor transaction; up to 32 anchors fit in one transaction (`MAX_BATCH_ANCHORS`)
+- Showing that one value was anchored needs the ordered anchors of its bucket; there is no per-receipt lookup
+  account
+
+No `receipt_anchor` deployment is configured by default; operators name one with `RECEIPT_ANCHOR_PROGRAM_ID`.
 
 ### Upgrade Path
 
-**Phase 1 — Parallel run (sprint target):**
-- New receipts are ALSO appended to the ZK compressed tree.
-- PDA creation continues for receipts above a configurable `RECEIPT_VALUE_THRESHOLD` (e.g., any receipt > 1 USDC keeps a PDA for fast on-chain lookup).
-- Low-value receipts (< threshold) go compressed-only.
+The hourly hash chain already avoids per-receipt rent. A compressed tree would add per-leaf inclusion proofs
+against an on-chain root, which the hash chain does not provide:
 
-**Phase 2 — Full migration (post-audit):**
-- PDA creation disabled for all new receipts.
-- Compressed tree is the sole on-chain record.
-- A migration script compresses all existing PDAs into a genesis tree and closes the accounts (reclaiming rent SOL).
+**Phase 1 — Parallel run:**
+- New anchors are also appended to the ZK compressed tree.
+- The hourly bucket chain stays the primary record.
+
+**Phase 2 — Migration:**
+- The compressed tree becomes the record for per-receipt inclusion proofs.
+- Bucket accounts can be closed once their history is archived (reclaiming rent SOL).
 
 ### Batching Strategy
 
@@ -101,14 +109,14 @@ Cost per batch: ~0.00025 SOL
 Cost per receipt (amortized): ~0.00000025 SOL
 ```
 
-Comparison:
+Comparison against the hypothetical one-account-per-receipt design (not what `receipt_anchor` does):
 | Method | Cost per receipt | 1M receipts |
 |--------|-----------------|-------------|
-| PDA (current) | ~0.002 SOL | ~2000 SOL |
+| One account per receipt (hypothetical) | ~0.002 SOL | ~2000 SOL |
 | ZK Compressed (batched 1000) | ~0.00000025 SOL | ~0.25 SOL |
-| **Savings** | **~8000x** | **~8000x** |
 
-The 8x figure in the TDL brief uses a conservative unbatched estimate. With 1000-receipt batching the savings are ~8000x at scale.
+Against the current hourly bucket chain the difference is smaller: there the per-receipt cost is already a
+share of a transaction fee plus one bucket deposit per hour.
 
 ### EU AI Act Compliance
 
@@ -256,16 +264,14 @@ At the time of writing (2026), approximate Solana costs:
 | Append 1 leaf (unbatched) | ~0.000025 |
 | Append 1000 leaves (batched, 1 tx) | ~0.00025 |
 | Proof verification (on-chain CPI) | ~0.000005 |
-| Regular PDA creation (34 bytes) | ~0.002 |
+| Regular account creation (hypothetical per-receipt design) | ~0.002 |
 
 Tree creation is paid once. 10M receipts across ~150 trees (67M leaves/tree):
 - Tree creation: 150 x 0.01 = **1.5 SOL**
 - Leaf insertions (batched 1000): 10,000 batches x 0.00025 = **2.5 SOL**
 - **Total: ~4 SOL for 10M receipts**
 
-Regular PDAs: 10M x 0.002 = **20,000 SOL**
-
-**Ratio: ~5,000x cheaper at 10M scale.**
+One account per receipt (hypothetical): 10M x 0.002 = **20,000 SOL**
 
 ---
 
@@ -284,6 +290,5 @@ Regular PDAs: 10M x 0.002 = **20,000 SOL**
 ## Related Docs
 
 - `ZK_COMPRESSION_ADAPTER.md` — existing local simulator and blocked Light Protocol adapter
-- `RECEIPT_VERIFICATION.md` — current receipt_anchor PDA scheme
-- `GOBLIN_ENGINEERING_ROADMAP.md` — overall roadmap context (TDL #15 listed)
+- `RECEIPT_VERIFICATION.md` — receipt verification
 - `DARK_ZK_PRIMITIVES.md` — ZK primitives used in Dark NULL layer

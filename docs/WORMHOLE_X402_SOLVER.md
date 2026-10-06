@@ -209,6 +209,6 @@ console.log("Receipt verified:", ok);
 | Package | Role |
 |---|---|
 | `@parad0x_labs/receipt-dag` | Anti-equivocation DAG; same `receipt_anchor` program |
-| `@parad0x_labs/liquefy-receipts` | Monetises receipts as SPL tokens |
+| `@parad0x_labs/liquefy-receipts` | Compresses, nets, encrypts and Merkle-commits receipt batches and builds `receipt_anchor` instruction bytes; it mints no tokens and sends no transactions |
 | `@parad0x_labs/blind-access` | ZK-gated API access (complements x402 payment gating) |
 | `@parad0x_labs/context-capsule` | Compressed (zlib, not encrypted) agent session history with a Merkle root; correction chains can be posted as an SPL Memo, separate from `receipt_anchor` |

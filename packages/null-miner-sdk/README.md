@@ -2,7 +2,7 @@
 
 > **Your app's users earn USDC while they sleep. You collect fees. We take tx dust.**
 >
-> First autonomous dark-agent payment rail on Solana. Built on DNA x402 + Dark NULL.
+> An agent task-and-payment SDK for Solana, built on DNA x402 + Dark NULL.
 
 ---
 
@@ -14,11 +14,11 @@
 
 ---
 
-## Never done on Solana before
+## What it combines
 
-| What | Why it's new |
+| What | How it works today |
 |------|-------------|
-| **Reverse x402 escrow** | Agents *pull* tasks from a dark pool. USDC auto-releases on proof hash. No centralized clearinghouse. ZK Groth16 Phase 2. |
+| **Reverse x402 task flow** | Agents *pull* tasks, run them and submit a proof hash to the task marketplace API (`packages/task-marketplace-api`), which records the claim and the payout amount. No on-chain escrow releases USDC yet: the marketplace API is the clearinghouse and its escrow release is not implemented. Without a marketplace URL the SDK runs a local mock and no USDC moves. ZK Groth16 Phase 2. |
 | **Dark Agent Passport** | Each agent has a stealth identity derived from device entropy. Reputation 0–1000. No wallet address ever exposed. SHA-256 commitment now, Groth16 Phase 2. |
 | **Unified USDC + NULL yield** | Host earns USDC for work completed *and* NULL tokens from the protocol flywheel — two revenue streams, one SDK. |
 | **Platform-agnostic** | Next.js middleware → REST gate → OpenClaw plugin → browser extension — same SDK, any stack. |
@@ -218,9 +218,9 @@ Higher reputation → access to higher-paying task tiers:
 ║  │     ↓ AgentLoop (30s poll)                               │ ║
 ║  │     ↓ fetchAvailableTasks() → task marketplace API       │ ║
 ║  │     ↓ selectBestTask() → score by reward                 │ ║
-║  │     ↓ claimTask() → dark-agent-escrow (Solana)           │ ║
+║  │     ↓ claimTask() → task marketplace API                 │ ║
 ║  │     ↓ executeTask() → TaskRegistry executor              │ ║
-║  │     ↓ submitProof() → hash verify → USDC auto-release     │ ║
+║  │     ↓ submitProof() → marketplace API records payout     │ ║
 ║  │     ↓ onEarn(result) → your callback                     │ ║
 ║  └──────────────────────────────────────────────────────────┘ ║
 ║                                                               ║
@@ -264,7 +264,7 @@ The SDK falls back to mock tasks when the task marketplace API is unreachable �
 | Liquefy archive storage payloads | ✅ Devnet |
 | NULL mint-gate claim ledger | 🔶 Devnet (SPL mint CPI gated) |
 | NULL lottery root primitive | 🔶 Devnet (settlement gated) |
-| Dark-agent-escrow (Solana program) | 🔶 Devnet (ZK stub) |
+| Dark-agent-escrow | Rust library crate (`crates/dark-agent-escrow`); not deployed, not called by this SDK |
 | Groth16 ZK proofs | ❌ Phase 2 |
 | Mainnet deploy | ❌ Pending deployment gates |
 
@@ -277,7 +277,7 @@ The SDK falls back to mock tasks when the task marketplace API is unreachable �
 - **DNA x402** — Solana HTTP 402 micropayment standard. Quote→Pay→Verify→Anchor.
 - **Dark NULL** — Hash-commitment privacy layer. Stealth addresses, nullifier banks, compressed receipts. Poseidon/Groth16 Phase 2.
 - **null-flywheel-core** — 5bp of every task → NULL token yield to host.
-- **dark-agent-escrow** — Condition-hash escrow. Agent submits proof hash → USDC auto-releases. ZK Groth16 Phase 2.
+- **dark-agent-escrow** — Condition-hash escrow model in a Rust library crate; not deployed and not called by this SDK. ZK Groth16 Phase 2.
 - **Agent Passport** — SHA-256 commitment identity derived from spend key. Reputation 0–1000. Groth16 Phase 2.
 
 ---

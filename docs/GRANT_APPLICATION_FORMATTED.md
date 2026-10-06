@@ -12,7 +12,7 @@
 
 ## PIECE 1 — Elevator Pitch (initial application form, <100 words)
 
-DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-gated services on-chain — no backend custody, no API keys for money movement. Eight programs ran on mainnet-beta from 2026-05-29 (retired 2026-07-14), including a biometric passkey identity layer proven on real hardware (Solana Seeker) using the secp256r1 precompile, and a compressed receipt settlement system that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. The grant funds an external security audit of all 8 programs and completes two ZK components needed for production readiness.
+DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-gated services on-chain — no backend custody, no API keys for money movement. Eight programs ran on mainnet-beta from 2026-05-29 (retired 2026-07-14), including a biometric passkey identity layer proven on real hardware (Solana Seeker) using the secp256r1 precompile, and an off-chain receipt library that nets, compresses and encrypts receipt batches and commits each batch as one 32-byte on-chain root (it computes net balances; it does not settle them). The grant funds an external security audit of all 8 programs and completes two ZK components needed for production readiness.
 
 ---
 
@@ -54,11 +54,11 @@ The pilot programs were deployed on 2026-05-29 and retired on 2026-07-14 (Progra
 
 **Test coverage:** 1990+ unit tests, 12-scenario adversarial mayhem suite (12/12 pass), devnet CI, BETA_READY gate at 0 blockers.
 
-**Liquefy receipt compression (MIT, separate repo):**
-- 62x columnar compression on structured payment receipt JSON
-- Bilateral netting: 1M receipts collapse to ~4,950 net settlements before compression
-- AES-256-GCM encryption — only transacting parties see amounts
-- Streaming Merkle root: O(log N) memory, any batch size → 32 bytes on-chain
+**Liquefy receipt compression (MIT, `packages/liquefy-receipts`; an off-chain receipt library, not a settlement layer: it computes net balances and builds anchor instruction bytes, and moves no funds):**
+- Columnar compression: 66.1x for 1,000 and 62.4x for 500 receipts on the package's synthetic test batches (the test asserts more than 10x); real receipts with more distinct values compress less
+- Bilateral netting: one net balance per counterparty pair, so the count depends on pairs, not receipts (at most 4,950 for 100 agents); computed, not signed or enforced
+- AES-256-GCM encryption under a caller-managed key — only key holders see amounts
+- Streaming Merkle root: O(log N) memory, any batch size → one 32-byte commitment; the receipts stay off-chain
 
 ---
 
@@ -70,7 +70,7 @@ We do not claim to be first with passkeys, ZK, or x402 on Solana or elsewhere. T
 
 **Challenge-rotation biometric identity attestation on Solana.** A P-256 public key bound to a PDA via SIMD-0075 (secp256r1 precompile), with per-request challenge rotation and on-chain enforcement. This is agent identity attestation, not a passkey wallet — a distinct use case. The SIMD-0075 precompile does not exist on Ethereum L1; the architecture depends on it.
 
-**Compressed, private, netted bulk receipt settlement.** Liquefy + `receipt_anchor`: bulk agent payment flows are bilaterally netted, compressed 62x, AES-encrypted, and committed as a single 32-byte Merkle root in one transaction. No amounts are visible on-chain.
+**Compressed, private, netted bulk receipt batches.** `liquefy-receipts` + `receipt_anchor`: bulk agent payment flows are bilaterally netted, compressed (62-66x on synthetic test batches), AES-encrypted, and committed as a single 32-byte Merkle root in one anchor instruction. No amounts are visible on-chain. Net balances are computed off-chain; on-chain settlement of them is not implemented.
 
 **One MIT-licensed deployable stack.** x402 routing + biometric agent identity + compressed private receipts + ZK enforcement — assembled together, permissively licensed, no Parad0x backend required for the OSS fork.
 
