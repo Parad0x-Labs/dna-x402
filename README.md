@@ -71,7 +71,7 @@ start from [`x402/README.md`](./x402/README.md); agents should read [`x402/AGENT
 
 | Component | Status | Notes |
 |---|---|---|
-| `x402/` server, buyer and seller SDKs, CLI | `Usable today` | Transfer, stream and netting modes; 1,568 tests in CI |
+| `x402/` server, buyer and seller SDKs, CLI | `Usable today` | Public Beta: transfer, stream and netting modes; 1,568 tests in CI |
 | `/agent` front door ([`site-agent/`](./site-agent)) | `Usable today` | Onboarding and control-room UI; Playwright 9/9 in CI |
 | Dark Null private receipt path (SDK) | `Usable today` | Optional hash-only request after a DNA receipt; fails closed without settlement evidence |
 | NULL token | `Usable today` | Token-2022 mint on mainnet `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`, fixed supply (mint and freeze authority revoked) |
