@@ -127,6 +127,22 @@ function canonicalPayload(
   return new TextEncoder().encode(msg);
 }
 
+/** BN254 scalar field order (r). */
+const BN254_R =
+  21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+
+/** True if the credential's signature verifies under its own issuedByPubkey. */
+function signatureValid(cred: AccessCredential): boolean {
+  const payload = canonicalPayload(
+    cred.agentPubkey,
+    cred.tier,
+    cred.callsRemaining,
+    cred.validUntilSlot,
+    cred.issuedByPubkey,
+  );
+  return ed25519.verify(hexToBytes(cred.signature), payload, hexToBytes(cred.issuedByPubkey));
+}
+
 // ─── Issue ────────────────────────────────────────────────────────────────────
 
 /**
@@ -158,6 +174,18 @@ export function issueAccessCredential(
   if (issuerPrivkey.length !== 32) {
     throw new Error("issuerPrivkey must be 32 bytes (Ed25519 seed)");
   }
+  // NaN/Infinity/fractions would be signed verbatim; NaN in particular slips
+  // past the `<= 0` and `>` checks in verifyAccessCredential (never exhausts,
+  // never expires).
+  if (!Number.isInteger(params.tier) || params.tier < AccessTier.FREE || params.tier > AccessTier.ELITE) {
+    throw new Error(`tier must be an AccessTier (0-3), got ${params.tier}`);
+  }
+  if (!Number.isSafeInteger(params.callsRemaining) || params.callsRemaining < 0) {
+    throw new Error(`callsRemaining must be a non-negative integer, got ${params.callsRemaining}`);
+  }
+  if (!Number.isSafeInteger(params.validUntilSlot) || params.validUntilSlot < 0) {
+    throw new Error(`validUntilSlot must be a non-negative integer, got ${params.validUntilSlot}`);
+  }
 
   const issuedByPubkey = bytesToHex(ed25519.getPublicKey(issuerPrivkey));
   const payload        = canonicalPayload(
@@ -185,6 +213,7 @@ export function issueAccessCredential(
  * Verify an AccessCredential.
  *
  * Checks (in order):
+ *   0. `currentSlot` is a non-negative integer (NaN would skip the expiry check).
  *   1. `callsRemaining > 0` — credential has not been exhausted.
  *   2. `currentSlot <= validUntilSlot` — credential has not expired.
  *   3. Ed25519 signature over the canonical payload is valid.
@@ -203,32 +232,25 @@ export function verifyAccessCredential(
   cred:        AccessCredential,
   currentSlot: number,
 ): VerifyResult {
-  if (cred.callsRemaining <= 0) {
+  if (!Number.isSafeInteger(currentSlot) || currentSlot < 0) {
+    return { valid: false, reason: `currentSlot must be a non-negative integer (got ${currentSlot})` };
+  }
+
+  // Written as !(x > 0) / !(a <= b) so NaN fields fail closed.
+  if (!(cred.callsRemaining > 0)) {
     return { valid: false, reason: "callsRemaining is 0 — credential exhausted" };
   }
 
-  if (currentSlot > cred.validUntilSlot) {
+  if (!(currentSlot <= cred.validUntilSlot)) {
     return {
       valid:  false,
       reason: `credential expired at slot ${cred.validUntilSlot} (current: ${currentSlot})`,
     };
   }
 
-  const payload = canonicalPayload(
-    cred.agentPubkey,
-    cred.tier,
-    cred.callsRemaining,
-    cred.validUntilSlot,
-    cred.issuedByPubkey,
-  );
-
   let sigValid: boolean;
   try {
-    sigValid = ed25519.verify(
-      hexToBytes(cred.signature),
-      payload,
-      hexToBytes(cred.issuedByPubkey),
-    );
+    sigValid = signatureValid(cred);
   } catch {
     return { valid: false, reason: "signature bytes malformed" };
   }
@@ -252,7 +274,8 @@ export function verifyAccessCredential(
  * @param issuerPrivkey - Issuer's Ed25519 private key (must match cred.issuedByPubkey).
  * @returns             New credential with callsRemaining decremented by 1.
  *
- * @throws              If credential is already exhausted.
+ * @throws              If credential is already exhausted, the key does not match,
+ *                      or the credential's signature does not verify.
  *
  * @example
  * ```ts
@@ -276,6 +299,18 @@ export function consumeCall(
       `issuerPrivkey does not match cred.issuedByPubkey — ` +
       `expected ${cred.issuedByPubkey}, got ${expectedIssuerPubkey}`,
     );
+  }
+
+  // Never re-sign fields the issuer did not sign: a holder could otherwise
+  // edit tier/callsRemaining/validUntilSlot and have consumeCall launder them.
+  let sigOk: boolean;
+  try {
+    sigOk = signatureValid(cred);
+  } catch {
+    sigOk = false;
+  }
+  if (!sigOk) {
+    throw new Error("Cannot consume: credential signature verification failed");
   }
 
   return issueAccessCredential(
@@ -314,10 +349,11 @@ export function consumeCall(
  */
 export function buildAccessProofInput(cred: AccessCredential): ZKProofInput {
   // Helper: SHA-256 of bytes → 32-byte BN254 field element (mod scalar field).
-  // BN254 scalar field r ≈ 2^254, so a raw sha256 is already < r with probability ~1.
-  // For correctness in Phase 2 replace with Poseidon.
+  // r ≈ 2^253.6, so roughly 81% of raw SHA-256 outputs are >= r and must be
+  // reduced to be valid circuit inputs. For Phase 2 replace with Poseidon.
   function sha256Field(data: Uint8Array): string {
-    return bytesToHex(sha256(data));
+    const v = BigInt("0x" + bytesToHex(sha256(data))) % BN254_R;
+    return v.toString(16).padStart(64, "0");
   }
 
   // Encode agentPubkey bytes into a field element hash
