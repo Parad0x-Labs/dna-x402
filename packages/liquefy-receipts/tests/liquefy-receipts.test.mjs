@@ -11,7 +11,13 @@ import { deflateSync } from "fflate";
 import { compressReceipts, decompressReceipts } from "../src/compress.ts";
 import { netReceipts }                          from "../src/net.ts";
 import { generateKey, importKey, encryptBlob, decryptBlob, serializeBlob, deserializeBlob } from "../src/encrypt.ts";
-import { buildAnchorIxData, batchHash }         from "../src/anchor.ts";
+import {
+  buildAnchorIxData,
+  batchHash,
+  RECEIPT_ANCHOR_PROGRAM_ID,
+  RECEIPT_ANCHOR_UNAVAILABLE,
+  resolveReceiptAnchorProgramId,
+} from "../src/anchor.ts";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -153,6 +159,15 @@ test("buildAnchorIxData: version=0x01, flags=0x00, 34 bytes total", () => {
   assert.equal(data[0], 0x01);   // INSTRUCTION_VERSION_V1
   assert.equal(data[1], 0x00);   // flags: no bucket
   assert.deepEqual(data.slice(2), commitment);
+});
+
+test("receipt anchoring refuses without an explicit receipt_anchor program", () => {
+  assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
+  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, /unavailable until the redeploy under a fresh key/);
+  assert.throws(() => resolveReceiptAnchorProgramId(), /unavailable until the redeploy under a fresh key/);
+  assert.throws(() => resolveReceiptAnchorProgramId(null), /unavailable until the redeploy under a fresh key/);
+  const own = "Anchor1111111111111111111111111111111111111";
+  assert.equal(resolveReceiptAnchorProgramId(own), own);
 });
 
 test("batchHash is deterministic", () => {

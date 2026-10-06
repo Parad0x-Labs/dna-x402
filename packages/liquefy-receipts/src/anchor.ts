@@ -1,16 +1,35 @@
 /**
  * Build the receipt_anchor on-chain instruction for a compressed batch.
  *
- * The receipt_anchor program (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN,
- * live on Solana mainnet-beta) stores an arbitrary payload on-chain.
- * We use it to anchor the compressed+encrypted batch receipt.
+ * The receipt_anchor program stores a 32-byte commitment on-chain. We use it to
+ * anchor the compressed+encrypted batch receipt. No receipt_anchor program is
+ * usable on any cluster until the redeploy under a fresh key, so
+ * RECEIPT_ANCHOR_PROGRAM_ID is null and resolveReceiptAnchorProgramId() refuses
+ * unless the caller names a deployment it controls.
  *
  * One tx per epoch = 1000× cheaper than one tx per receipt.
  */
 
 import { createHash } from "node:crypto";
 
-export const RECEIPT_ANCHOR_PROGRAM_ID = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+/** Configured receipt_anchor program, or null while none is usable. */
+export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
+
+/** Error message thrown when anchoring is requested without a usable program. */
+export const RECEIPT_ANCHOR_UNAVAILABLE =
+  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
+  "program is configured. Pass the program ID of a receipt_anchor deployment you control.";
+
+/**
+ * Resolve the receipt_anchor program to target: an explicit `programId` wins,
+ * otherwise RECEIPT_ANCHOR_PROGRAM_ID. Throws RECEIPT_ANCHOR_UNAVAILABLE when
+ * neither is set.
+ */
+export function resolveReceiptAnchorProgramId(programId?: string | null): string {
+  const resolved = programId ?? RECEIPT_ANCHOR_PROGRAM_ID;
+  if (!resolved) throw new Error(RECEIPT_ANCHOR_UNAVAILABLE);
+  return resolved;
+}
 
 export interface BatchAnchorPayload {
   /** The compressed (+ optionally encrypted) receipt batch bytes. */

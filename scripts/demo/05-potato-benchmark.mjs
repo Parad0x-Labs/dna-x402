@@ -20,7 +20,7 @@ const OLLAMA_URL = 'http://127.0.0.1:11434'
 const SESSION = Array.from({ length: 50 }, (_, i) => ({
   role: i % 2 === 0 ? 'user' : 'assistant',
   content: i % 2 === 0
-    ? `Task ${i}: Analyse the Fibonacci sequence implementation. Consider edge cases, performance at n=1000, memoization strategies, and compare recursive vs iterative. Also check the receipt_anchor program at 6HSRGivd... for any issues.`
+    ? `Task ${i}: Analyse the Fibonacci sequence implementation. Consider edge cases, performance at n=1000, memoization strategies, and compare recursive vs iterative. Also check the receipt_anchor program for any issues.`
     : `Understood. The recursive approach has O(2^n) complexity. With memoization we reduce to O(n). The iterative approach is O(n) time O(1) space. For n=1000 we'd need BigInt. The receipt_anchor instruction expects exactly 34 bytes: [0x01][0x00][32B hash]. Confirmed working on Solana mainnet slot ${420000000 + i}.`
 }))
 

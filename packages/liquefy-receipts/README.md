@@ -67,22 +67,22 @@ const ixData = buildAnchorIxData({
 | **Streaming Merkle** | O(log N) memory — 36B receipts → 32 bytes on-chain |
 | **Salted hiding leaves** | Per-leaf salt (HKDF from a per-batch secret) blinds the public root — low-entropy receipt fields can't be brute-forced from the on-chain commitment |
 | **Inclusion proofs** | Anyone can verify any receipt is in the batch |
-| **Anchor instruction** | Builds instruction for `receipt_anchor` (Solana mainnet `6HSRGivd...`) |
+| **Anchor instruction** | Builds instruction data for a `receipt_anchor` deployment the caller names |
 
 ## Compression algorithm
 
-Based on [Liquefy](https://github.com/Parad0x-Labs/liquefy) Columnar Gun v1:
+Based on [Liquefy](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) Columnar Gun v1:
 - Transpose array-of-receipts into columns
 - Delta encode numerics (amounts, timestamps)
 - Dictionary encode low-cardinality strings (receivers, program IDs)
 - Deflate each column independently
 - Same receiver 1000× → stored once
 
-## On-chain programs (Solana mainnet)
+## On-chain programs
 
-| Program | Address |
-|---|---|
-| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` |
+No `receipt_anchor` program is usable on any cluster until the redeploy under a fresh key.
+`RECEIPT_ANCHOR_PROGRAM_ID` is `null` and `resolveReceiptAnchorProgramId()` throws
+`RECEIPT_ANCHOR_UNAVAILABLE` unless you pass the program ID of a deployment you control.
 
 ## License
 

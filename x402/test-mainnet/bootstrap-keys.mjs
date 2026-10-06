@@ -64,7 +64,9 @@ function writeRuntimeEnv(keysDir, cluster, keys) {
   const receiptSigner = writeKeypairIfMissing(keyPath(keysDir, "receipt-signer"));
   const rpc = cluster === "mainnet" ? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com";
   const clusterLabel = cluster === "mainnet" ? "mainnet-beta" : "devnet";
-  const receiptAnchorProgram = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+  // No receipt_anchor program is usable until the redeploy under a fresh key:
+  // anchoring stays off unless the operator names a deployment they control.
+  const receiptAnchorProgram = process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "";
   const runtimeEnvPath = path.join(keysDir, "runtime.env");
   const templatePath = path.join(keysDir, "runtime.env.template");
 
@@ -77,8 +79,10 @@ function writeRuntimeEnv(keysDir, cluster, keys) {
     `MAINNET_DEPLOYER_KEYPAIR=${deployer.path}`,
     `GAUNTLET_FUNDER_KEYPAIR=${deployer.path}`,
     `ANCHORING_KEYPAIR_PATH=${anchoring.path}`,
-    `RECEIPT_ANCHOR_PROGRAM_ID=${receiptAnchorProgram}`,
-    "ANCHORING_ENABLED=1",
+    receiptAnchorProgram
+      ? `RECEIPT_ANCHOR_PROGRAM_ID=${receiptAnchorProgram}`
+      : "# RECEIPT_ANCHOR_PROGRAM_ID= (receipt anchoring is unavailable until the redeploy under a fresh key)",
+    receiptAnchorProgram ? "ANCHORING_ENABLED=1" : "ANCHORING_ENABLED=0",
     "ANCHORING_IMMEDIATE=1",
     `ANCHORING_SIGNATURE_LOG_PATH=${path.join(keysDir, "anchor-signatures.log")}`,
     `ADMIN_SECRET=${secretHex(32)}`,

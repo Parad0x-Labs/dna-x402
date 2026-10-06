@@ -38,8 +38,10 @@ const RESOURCE_PATH  = "/api/agent-data";
 const AGENT_NAME     = "Agent-Alpha-001";
 const CLUSTER        = "mainnet-beta";
 
-// Program IDs (live on mainnet)
-const RECEIPT_ANCHOR = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+// Program IDs. No receipt_anchor program is usable until the redeploy under a
+// fresh key, so the anchoring step needs RECEIPT_ANCHOR_PROGRAM_ID and refuses without it.
+const RECEIPT_ANCHOR = process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? null;
+const RECEIPT_ANCHOR_UNAVAILABLE = "receipt anchoring is unavailable until the redeploy under a fresh key: set RECEIPT_ANCHOR_PROGRAM_ID to a receipt_anchor deployment you control";
 const VAULT_PROGRAM  = "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -167,12 +169,13 @@ async function anchorReceipts(receipts, walletAddress) {
   root.copy(ixData, 2);
 
   log("ANCHOR", `Submitting anchor tx to Solana ${CLUSTER}…`);
-  log("ANCHOR", `Program: ${RECEIPT_ANCHOR}`);
+  log("ANCHOR", `Program: ${RECEIPT_ANCHOR ?? "(none configured)"}`);
 
   // Attempt real on-chain anchor using Solana CLI wallet
   let txSig = null;
   let anchorErr = null;
   try {
+    if (!RECEIPT_ANCHOR) throw new Error(RECEIPT_ANCHOR_UNAVAILABLE);
     const { Connection, Keypair, PublicKey, Transaction,
             TransactionInstruction, SystemProgram } =
       await import("@solana/web3.js");

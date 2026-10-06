@@ -17,8 +17,12 @@ export const NULL_TOKEN = "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump";
 export const X402_VERSION = 1;
 export const MEMO_PREFIX = "null-miner-v1";
 
+/**
+ * receipt_anchor program per network. null everywhere: receipt anchoring is
+ * unavailable until the redeploy under a fresh key.
+ */
 export const RECEIPT_ANCHOR_PROGRAM_ID: Record<SolanaNetwork, string | null> = {
-  "solana-mainnet": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+  "solana-mainnet": null,
   "solana-devnet": null,
 };
 

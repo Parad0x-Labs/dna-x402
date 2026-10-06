@@ -887,7 +887,6 @@ export function buildCorrectionChain(
 
 // ── anchorCorrectionChain ─────────────────────────────────────────────────────
 
-const RECEIPT_ANCHOR_PROGRAM = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
 const DEFAULT_ANCHOR_RPC = "https://api.mainnet-beta.solana.com";
 
 /**
@@ -901,7 +900,7 @@ function correctionMerkleRoot(hashes: string[]): string {
 }
 
 /**
- * Anchor a CorrectionChainReceipt[] on Solana via the receipt_anchor program.
+ * Anchor a CorrectionChainReceipt[] on Solana via an SPL Memo.
  *
  * Steps:
  *  1. Compute a Merkle root over all correctionHashes in the chain.
@@ -925,7 +924,7 @@ export async function anchorCorrectionChain(
   const keypairEnv = process.env["SOLANA_KEYPAIR"];
   if (!keypairEnv) {
     const result = `dry_run:${merkleRoot}`;
-    console.log(`dry run: would anchor ${merkleRoot} via ${RECEIPT_ANCHOR_PROGRAM}`);
+    console.log(`dry run: would anchor ${merkleRoot} via SPL Memo`);
     return result;
   }
 
@@ -958,7 +957,7 @@ export async function anchorCorrectionChain(
   const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
   const memoData = Buffer.from(
-    `correction_chain:${merkleRoot}:${RECEIPT_ANCHOR_PROGRAM}`,
+    `correction_chain:${merkleRoot}`,
     "utf8",
   );
 

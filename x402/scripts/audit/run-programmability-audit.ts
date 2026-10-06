@@ -977,7 +977,8 @@ async function main(): Promise<void> {
       : fs.existsSync(workspaceDeployerPath)
         ? workspaceDeployerPath
         : undefined);
-  const autoProgramId = base.receiptAnchorProgramId ?? process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+  // No default receipt_anchor program: anchoring is unavailable until the redeploy under a fresh key.
+  const autoProgramId = base.receiptAnchorProgramId ?? process.env.RECEIPT_ANCHOR_PROGRAM_ID;
   const anchoringEnabled = Boolean(autoProgramId && autoKeypairPath);
   const baseConfig: X402Config = {
     ...base,

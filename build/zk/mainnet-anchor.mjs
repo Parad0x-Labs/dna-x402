@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Anchor a real cross-layer accountability root on Solana MAINNET via the LIVE
- * `receipt_anchor` program (6HSRGivd…) — no new deploy, just a transaction.
+ * Anchor a real cross-layer accountability root on Solana via a `receipt_anchor`
+ * deployment named in ANCHOR_PROGRAM (required: receipt anchoring is unavailable
+ * until the redeploy under a fresh key, and receipt-dag refuses without a program).
  *
  * Builds a cross-layer DAG batch (a payment → a private x402 access bound to it),
  * commits its Merkle root to the on-chain bucket accumulator, then reads the bucket
  * back and verifies the accumulation. Deterministic values → reproducible root.
  *
- * Env: RPC (mainnet), KEY (payer keypair), DAG (path to receipt-dag src).
+ * Env: RPC, KEY (payer keypair), DAG (path to receipt-dag src), ANCHOR_PROGRAM.
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -15,10 +16,15 @@ import { createHash } from "node:crypto";
 const RPC = process.env.RPC ?? "https://api.mainnet-beta.solana.com";
 const KEY = process.env.KEY ?? "/key.json";
 const DAG = process.env.DAG ?? "/work/dag/src/index.ts";
+const ANCHOR_PROGRAM = process.env.ANCHOR_PROGRAM;
+if (!ANCHOR_PROGRAM) {
+  console.error("ERROR: set ANCHOR_PROGRAM: receipt anchoring is unavailable until the redeploy under a fresh key.");
+  process.exit(2);
+}
 
 const {
   buildDagReceipt, buildX402AccessReceipt, verifyDagChain, traceProvenance,
-  buildDagMerkleRoot, anchorDagRoot, hashAction, RECEIPT_ANCHOR_PROGRAM_ID,
+  buildDagMerkleRoot, anchorDagRoot, hashAction,
 } = await import(DAG);
 const { Connection, Keypair, PublicKey } = await import("@solana/web3.js");
 
@@ -26,7 +32,7 @@ const payer = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(KEY,
 const conn = new Connection(RPC, "confirmed");
 const before = await conn.getBalance(payer.publicKey);
 console.log(`payer ${payer.publicKey.toBase58()}  mainnet bal ${before / 1e9} SOL`);
-console.log(`anchor program ${RECEIPT_ANCHOR_PROGRAM_ID} (live mainnet)\n`);
+console.log(`anchor program ${ANCHOR_PROGRAM}\n`);
 
 // ── a real cross-layer batch: agent pays, then privately proves access bound to that payment ──
 const AGENT = "web0:agent-commitment:demo";
@@ -50,9 +56,9 @@ const root = buildDagMerkleRoot(batch).toString("hex");
 console.log(`DAG valid: ${vr.valid}   access traces: ${[...prov.reachedLayers].join(" + ")}`);
 console.log(`cross-layer accountability root: ${root}\n`);
 
-// ── commit it on mainnet (default programId = the live 6HSRGivd). Fresh bucket for a clean verify. ──
+// ── commit it on-chain to ANCHOR_PROGRAM. Fresh bucket for a clean verify. ──
 const bucketId = BigInt(Date.now());
-const ar = await anchorDagRoot(batch, conn, payer, { bucketId });
+const ar = await anchorDagRoot(batch, conn, payer, { bucketId, programId: ANCHOR_PROGRAM });
 
 // ── verify the on-chain bucket accumulated it: root == SHA-256([0;32] || anchor), count == 1 ──
 const acc = await conn.getAccountInfo(new PublicKey(ar.bucketPda), "confirmed");

@@ -85,8 +85,8 @@ export interface CloseSessionResult {
  * Ready-to-submit settlement payload.
  *
  * Hand `x402Payment` to the DNA x402 facilitator.
- * Hand `anchorIxData` to the Solana receipt_anchor program
- *   (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN).
+ * Hand `anchorIxData` to a receipt_anchor deployment you control (none is
+ *   configured until the redeploy under a fresh key).
  * Store `compressedReceiptBatch` off-chain (Arweave / IPFS / DB).
  */
 export interface SettlementPayload {

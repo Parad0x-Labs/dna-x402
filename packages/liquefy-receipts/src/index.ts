@@ -5,9 +5,10 @@
  * for x402 payment receipt batches.
  *
  * 1000 receipts → 1 on-chain anchor tx.
- * Uses receipt_anchor (6HSRGivd…) already live on Solana mainnet-beta.
+ * Anchors via a caller-named receipt_anchor deployment (none is configured until
+ * the redeploy under a fresh key).
  *
- * Based on Liquefy Columnar Gun v1 algorithm (github.com/Parad0x-Labs/liquefy)
+ * Based on Liquefy Columnar Gun v1 algorithm (github.com/Parad0x-Labs/liquefy-openclaw-integration)
  * ported to TypeScript.
  */
 
@@ -17,7 +18,13 @@ export { netReceipts }                            from "./net.js";
 export type { NetSettlement }                     from "./net.js";
 export { importKey, generateKey, encryptBlob, decryptBlob, serializeBlob, deserializeBlob } from "./encrypt.js";
 export type { EncryptedBlob }                     from "./encrypt.js";
-export { buildAnchorIxData, batchHash, RECEIPT_ANCHOR_PROGRAM_ID } from "./anchor.js";
+export {
+  buildAnchorIxData,
+  batchHash,
+  RECEIPT_ANCHOR_PROGRAM_ID,
+  RECEIPT_ANCHOR_UNAVAILABLE,
+  resolveReceiptAnchorProgramId,
+} from "./anchor.js";
 export type { BatchAnchorPayload }                from "./anchor.js";
 export {
   StreamingMerkleBuilder,

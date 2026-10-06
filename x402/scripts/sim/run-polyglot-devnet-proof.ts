@@ -447,10 +447,11 @@ async function main(): Promise<void> {
     USDC_MINT: mintAndFund.mint.toBase58(),
     PAYMENT_RECIPIENT: recipientOwner.toBase58(),
     SOLANA_RPC_URL: args.rpcUrl,
-    ANCHORING_ENABLED: "1",
+    // No default receipt_anchor program (unavailable until the redeploy under a fresh key).
+    ANCHORING_ENABLED: process.env.RECEIPT_ANCHOR_PROGRAM_ID ? "1" : "0",
     ANCHORING_IMMEDIATE: "1",
     ANCHORING_FLUSH_INTERVAL_MS: "1000",
-    RECEIPT_ANCHOR_PROGRAM_ID: process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+    RECEIPT_ANCHOR_PROGRAM_ID: process.env.RECEIPT_ANCHOR_PROGRAM_ID,
     ANCHORING_KEYPAIR_PATH: process.env.ANCHORING_KEYPAIR_PATH ?? funderKeyPath,
     ANCHORING_BATCH_SIZE: "1",
     ANCHORING_SIGNATURE_LOG_PATH: path.join(outDir, "anchor-signatures.log"),

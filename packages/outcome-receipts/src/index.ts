@@ -5,8 +5,9 @@
  *
  * Design:
  *   - OutcomeReceipt is signed by the creator (Ed25519 over the canonical struct)
- *   - anchorOutcomeReceipt stores the SHA-256 of the receipt JSON on-chain via
- *     receipt_anchor (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN, mainnet-beta)
+ *   - anchorOutcomeReceipt stores the SHA-256 of the receipt JSON on-chain via a
+ *     receipt_anchor deployment the caller names (none is configured until the
+ *     redeploy under a fresh key, so anchoring refuses without one)
  *   - No fake PnL can be mechanically enforced here — but any false claim is
  *     on-chain provable because the signed struct is permanently anchored.
  *
@@ -27,8 +28,19 @@ import {
 // Constants
 // ---------------------------------------------------------------------------
 
-export const RECEIPT_ANCHOR_PROGRAM_ID =
-  "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+/** Configured receipt_anchor program, or null while none is usable. */
+export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
+
+/** Error message thrown when anchoring is requested without a usable program. */
+export const RECEIPT_ANCHOR_UNAVAILABLE =
+  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
+  "program is configured. Pass the program ID of a receipt_anchor deployment you control.";
+
+function resolveAnchorProgramId(programId?: string | null): string {
+  const resolved = programId ?? RECEIPT_ANCHOR_PROGRAM_ID;
+  if (!resolved) throw new Error(RECEIPT_ANCHOR_UNAVAILABLE);
+  return resolved;
+}
 
 // ---------------------------------------------------------------------------
 // Core types
@@ -279,13 +291,16 @@ export async function verifyOutcomeReceipt(
  *   [0x01][0x00][32-byte SHA-256 of UTF-8 JSON of the full receipt]
  *
  * The payer signs and submits the transaction.  Returns the transaction
- * signature string on success.
+ * signature string on success.  Throws RECEIPT_ANCHOR_UNAVAILABLE before any
+ * network call when no receipt_anchor program is named or configured.
  */
 export async function anchorOutcomeReceipt(
   receipt: OutcomeReceipt,
   connection: Connection,
   payer: Signer,
+  anchorProgramId?: string,
 ): Promise<string> {
+  const programId = new PublicKey(resolveAnchorProgramId(anchorProgramId));
   const receiptJson = JSON.stringify(receipt);
   const digest = createHash("sha256")
     .update(receiptJson, "utf8")
@@ -295,8 +310,6 @@ export async function anchorOutcomeReceipt(
   ixData[0] = 0x01;
   ixData[1] = 0x00;
   ixData.set(digest, 2);
-
-  const programId = new PublicKey(RECEIPT_ANCHOR_PROGRAM_ID);
 
   const ix = new TransactionInstruction({
     programId,

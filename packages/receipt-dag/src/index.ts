@@ -318,8 +318,28 @@ export function verifyDagChain(receipts: DagReceipt[]): DagVerifyResult {
 
 // ── Merkle root + Solana anchoring ─────────────────────────────────────────────
 
-/** The receipt_anchor program on Solana mainnet-beta. */
-export const RECEIPT_ANCHOR_PROGRAM_ID = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+/**
+ * Configured receipt_anchor program, or null while none is usable. No
+ * receipt_anchor program is usable on any cluster until the redeploy under a
+ * fresh key, so anchoring and on-chain verification require an explicit
+ * `programId`.
+ */
+export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
+
+/** Error message thrown when anchoring is requested without a usable program. */
+export const RECEIPT_ANCHOR_UNAVAILABLE =
+  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
+  "program is configured. Pass options.programId for a receipt_anchor deployment you control.";
+
+/**
+ * Resolve the receipt_anchor program: an explicit `programId` wins, otherwise
+ * RECEIPT_ANCHOR_PROGRAM_ID. Throws RECEIPT_ANCHOR_UNAVAILABLE when neither is set.
+ */
+export function resolveReceiptAnchorProgramId(programId?: string | null): string {
+  const resolved = programId ?? RECEIPT_ANCHOR_PROGRAM_ID;
+  if (!resolved) throw new Error(RECEIPT_ANCHOR_UNAVAILABLE);
+  return resolved;
+}
 
 /**
  * Build a Merkle root over a DAG receipt batch.
@@ -372,7 +392,11 @@ export const RECEIPT_ANCHOR_BUCKET_SEED = "bucket";
 export const RECEIPT_ANCHOR_BUCKET_WINDOW_SECONDS = 3600;
 
 export interface AnchorDagRootOptions {
-  /** Anchor program id. Defaults to the mainnet program; pass a devnet id to anchor on devnet. */
+  /**
+   * receipt_anchor program id. Required while no program is configured
+   * (RECEIPT_ANCHOR_PROGRAM_ID is null): without it anchorDagRoot throws
+   * RECEIPT_ANCHOR_UNAVAILABLE before any network call.
+   */
   programId?: string;
   /**
    * Explicit bucket id (the program accumulates each anchor into a per-bucket running root).
@@ -409,6 +433,8 @@ export async function anchorDagRoot(
   payer: Keypair,
   options: AnchorDagRootOptions = {}
 ): Promise<AnchorDagRootResult> {
+  const programIdStr = resolveReceiptAnchorProgramId(options.programId);
+
   // Dynamic import so the package stays importable in environments without @solana/web3.js.
   const { Transaction, TransactionInstruction, PublicKey, SystemProgram, sendAndConfirmTransaction } =
     await import("@solana/web3.js");
@@ -417,7 +443,7 @@ export async function anchorDagRoot(
     throw new Error("Cannot anchor an empty receipt batch");
   }
 
-  const programId = new PublicKey(options.programId ?? RECEIPT_ANCHOR_PROGRAM_ID);
+  const programId = new PublicKey(programIdStr);
   const bucketId =
     options.bucketId ??
     BigInt(Math.floor(Date.now() / 1000 / RECEIPT_ANCHOR_BUCKET_WINDOW_SECONDS));
@@ -616,12 +642,13 @@ export async function verifyAnchoredRoot(
   options: { programId?: string; bucketId?: bigint; bucketPda?: string }
 ): Promise<VerifyAnchoredRootResult> {
   const { PublicKey } = await import("@solana/web3.js");
-  const programId = new PublicKey(options.programId ?? RECEIPT_ANCHOR_PROGRAM_ID);
 
   let bucketPda: InstanceType<typeof PublicKey>;
   if (options.bucketPda !== undefined) {
     bucketPda = new PublicKey(options.bucketPda);
   } else if (options.bucketId !== undefined) {
+    // Deriving the bucket PDA needs the receipt_anchor program: refuse without one.
+    const programId = new PublicKey(resolveReceiptAnchorProgramId(options.programId));
     const le = Buffer.alloc(8); le.writeBigUInt64LE(options.bucketId);
     bucketPda = PublicKey.findProgramAddressSync([Buffer.from(RECEIPT_ANCHOR_BUCKET_SEED), le], programId)[0];
   } else {

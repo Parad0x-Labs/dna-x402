@@ -47,7 +47,7 @@ console.log(`╚═════════════════════�
 // ── 1. Generate receipts (simulated 1 day of agent payments) ─────────────────
 const AGENTS   = ["AgentAlpha", "AgentBeta", "AgentGamma", "AgentDelta", "AgentEpsilon"];
 const APIS     = ["DataFeed-Pro", "ImageGen-Fast", "LLM-Turbo", "Search-Premium"];
-const PROGRAMS = ["6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN"];
+const PROGRAMS = [process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? "receipt_anchor"];
 
 console.log(`\n[1/5] Generating ${RECEIPT_COUNT.toLocaleString()} receipts...`);
 const t0 = performance.now();
@@ -156,7 +156,9 @@ try {
   const { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } =
     await import("@solana/web3.js");
 
-  const RECEIPT_ANCHOR = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+  // No receipt_anchor program is usable until the redeploy under a fresh key.
+  const RECEIPT_ANCHOR = process.env.RECEIPT_ANCHOR_PROGRAM_ID;
+  if (!RECEIPT_ANCHOR) throw new Error("receipt anchoring is unavailable until the redeploy under a fresh key: set RECEIPT_ANCHOR_PROGRAM_ID to a receipt_anchor deployment you control");
   const RPC = "https://api.mainnet-beta.solana.com";
 
   const keyPath = execSync("solana config get", { encoding: "utf8" })

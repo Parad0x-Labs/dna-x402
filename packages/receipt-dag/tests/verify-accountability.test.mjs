@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import {
   buildDagReceipt, buildX402AccessReceipt, verifyDagChain,
   buildDagMerkleRoot, checkAccumulatedRoot, hashAction,
+  anchorDagRoot, verifyAnchoredRoot, resolveReceiptAnchorProgramId,
+  RECEIPT_ANCHOR_PROGRAM_ID, RECEIPT_ANCHOR_UNAVAILABLE,
 } from "../src/index.ts";
 
 const AGENT = "web0:agent:verify-test";
@@ -80,4 +82,20 @@ test("full accountability: an equivocating batch is NOT accountable even if a ro
   assert.equal(chain.valid, false);       // equivocation caught
   assert.equal(anchor.anchored, true);    // the bytes are anchored, but...
   assert.equal(chain.valid && anchor.anchored, false); // ...not accountable
+});
+
+test("receipt anchoring refuses without an explicit receipt_anchor program (no network call)", async () => {
+  const UNAVAILABLE = /unavailable until the redeploy under a fresh key/;
+  assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
+  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, UNAVAILABLE);
+  assert.throws(() => resolveReceiptAnchorProgramId(), UNAVAILABLE);
+  const own = "Anchor1111111111111111111111111111111111111";
+  assert.equal(resolveReceiptAnchorProgramId(own), own);
+
+  let calls = 0;
+  const connection = new Proxy({}, { get: () => () => { calls += 1; throw new Error("network touched"); } });
+  const receipt = buildDagReceipt({ agentPubkey: AGENT, actionHash: hashAction("a"), sequenceNonce: 0 });
+  await assert.rejects(anchorDagRoot([receipt], connection, {}), UNAVAILABLE);
+  await assert.rejects(verifyAnchoredRoot("00".repeat(32), connection, { bucketId: 1n }), UNAVAILABLE);
+  assert.equal(calls, 0);
 });

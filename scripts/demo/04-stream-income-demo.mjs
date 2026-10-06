@@ -231,8 +231,8 @@ console.log(`     periodStart:  ${receipt.periodStart}  (Unix s)`);
 console.log(`     periodEnd:    ${receipt.periodEnd}  (Unix s)`);
 console.log(`     receiptHash:  ${receipt.receiptHash}`);
 
-log("ANCHOR", `Receipt hash ${receipt.receiptHash.slice(0, 32)}… ready to anchor via receipt_anchor program.`);
-log("ANCHOR", `  Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN (Solana mainnet)`);
+log("ANCHOR", `Receipt hash ${receipt.receiptHash.slice(0, 32)}… ready to anchor via a receipt_anchor deployment.`);
+log("ANCHOR", `  Receipt anchoring is unavailable until the redeploy under a fresh key.`);
 
 // 6. Scale projection
 console.log("\n  ── Scale Projection ────────────────────────────────────────");

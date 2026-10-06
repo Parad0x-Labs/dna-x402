@@ -35,7 +35,7 @@ const receipts = Array.from({ length: 1000 }, (_, i) => ({
   receiver:    `FakeAPI_BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB`,
   timestamp:   1700000000 + i,
   receiptId:   `fake_rid_${i}`,
-  programId:   "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+  programId:   "SYNTHETIC_RECEIPT_ANCHOR_PROGRAM",
 }));
 
 // ── 2. Compress ───────────────────────────────────────────────────────────────
