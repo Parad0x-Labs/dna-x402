@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 // Import receipt primitives directly from source
 // verifySignedReceipt and ReceiptSigner live in src/receipts.ts
 import { ReceiptSigner, verifySignedReceipt } from "../src/receipts.js";
+import * as sdk from "../src/sdk/index.js";
 import type { ReceiptPayload, SignedReceipt } from "../src/types.js";
 
 function buildMockPayload(overrides: Partial<ReceiptPayload> = {}): ReceiptPayload {
@@ -32,6 +33,12 @@ describe("receipt verification SDK layer", () => {
   it("importing ReceiptSigner and verifySignedReceipt does not throw", () => {
     expect(typeof ReceiptSigner).toBe("function");
     expect(typeof verifySignedReceipt).toBe("function");
+  }, 10_000);
+
+  it("the package entry exports verifySignedReceipt", () => {
+    expect(sdk.verifySignedReceipt).toBe(verifySignedReceipt);
+    const signed = ReceiptSigner.generate().sign(buildMockPayload());
+    expect(sdk.verifySignedReceipt(signed)).toBe(true);
   }, 10_000);
 
   it("a correctly signed receipt passes verifySignedReceipt", () => {

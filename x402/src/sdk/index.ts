@@ -104,6 +104,9 @@ export type {
   PaymentAccept,
 } from "../types.js";
 
+// Local receipt check: recomputes the receipt hash and verifies the Ed25519 signature.
+export { verifySignedReceipt } from "../receipts.js";
+
 export type { MarketPolicy } from "../market/policy.js";
 export type { MarketQuote, MarketOrder, ShopEndpoint } from "../market/types.js";
 

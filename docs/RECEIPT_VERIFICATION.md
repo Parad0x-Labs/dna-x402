@@ -7,7 +7,7 @@ Receipts bind quote, commit, payment proof, request digest, response digest, pol
 ## Verify With SDK
 
 ```ts
-import { verifySignedReceipt } from "dna-x402";
+import { verifySignedReceipt } from "@parad0x_labs/x402";
 
 const ok = verifySignedReceipt(receipt);
 if (!ok) throw new Error("invalid receipt");

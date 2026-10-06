@@ -30,7 +30,7 @@ import {
   createDarkNullPrivacyRequest,
   resolveDnaX402SettlementPath,
   verifyDarkNullPrivacyRequest,
-} from "dna-x402";
+} from "@parad0x_labs/x402";
 ```
 
 `createDarkNullPrivacyRequest()` consumes a signed DNA receipt and produces a Dark Null request object that stores hashes for resource, recipient, mint, receipt signature, request digest, and response digest.

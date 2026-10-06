@@ -189,7 +189,7 @@ Returns the signed receipt payload and signature.
 Local SDK verification:
 
 ```ts
-import { verifySignedReceipt } from "dna-x402";
+import { verifySignedReceipt } from "@parad0x_labs/x402";
 
 if (!verifySignedReceipt(receipt)) throw new Error("invalid receipt");
 ```
@@ -204,7 +204,7 @@ SDK helpers:
 import {
   createDarkNullPrivacyRequest,
   verifyDarkNullPrivacyRequest,
-} from "dna-x402";
+} from "@parad0x_labs/x402";
 ```
 
 The helper consumes a signed DNA receipt plus settlement evidence and returns a hash-only request object for Dark Null. It stores hashes for the resource, recipient, mint, receipt signature, request digest, and response digest.

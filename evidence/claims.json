@@ -70,7 +70,7 @@
         "native SOL payments"
       ],
       "operational_limitations": [
-        "npm latest is 0.2.0 (0.1.0 and 0.1.1 are deprecated); Git 0.2.1 changes only README, AGENTS.md, .env.example and the shipped examples' import path, and is built but not yet on npm."
+        "npm latest is 0.2.0 (0.1.0 and 0.1.1 are deprecated); Git 0.2.1 exports verifySignedReceipt from the package entry and changes README, AGENTS.md, .env.example and the shipped examples' import path; it is built but not yet on npm."
       ],
       "supersedes": null
     },

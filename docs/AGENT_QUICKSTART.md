@@ -7,7 +7,7 @@ Buyer agents use DNA x402 to discover listings, request quotes, commit, submit p
 ## Install
 
 ```bash
-npm install dna-x402
+npm install @parad0x_labs/x402
 ```
 
 Local repo development:
