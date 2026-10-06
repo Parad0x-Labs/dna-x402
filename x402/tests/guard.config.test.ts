@@ -259,7 +259,7 @@ describe("DNA Guard config", () => {
       "X402_REAL_CHAIN_ALLOWED_SIGNERS must include at least one allowlisted signer wallet.",
       "X402_REAL_CHAIN_MAX_TX_ATOMIC must be set for dust-size drill limits.",
       "X402_REAL_CHAIN_DAILY_CAP_ATOMIC must be set for dust-size drill limits.",
-      "Real-chain fee drill must use exactly 10 bps when fee display/accrual is enabled.",
+      "Real-chain fee drill must use exactly the 5 bps x402 protocol fee when fee display/accrual is enabled.",
       "X402_REAL_CHAIN_PLATFORM_RECIPIENT must be set when fee display/accrual is enabled.",
     ]));
 
@@ -270,7 +270,7 @@ describe("DNA Guard config", () => {
       X402_REAL_CHAIN_MAX_TX_ATOMIC: "100000",
       X402_REAL_CHAIN_DAILY_CAP_ATOMIC: "5000000",
       X402_REAL_CHAIN_FEE_MODE: "display_only",
-      X402_REAL_CHAIN_PLATFORM_FEE_BPS: "10",
+      X402_REAL_CHAIN_PLATFORM_FEE_BPS: "5",
       X402_REAL_CHAIN_PLATFORM_RECIPIENT: "treasury-wallet",
     });
 
@@ -281,15 +281,16 @@ describe("DNA Guard config", () => {
       maxTxAtomic: "100000",
       dailyCapAtomic: "5000000",
       feeMode: "display_only",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: "treasury-wallet",
     });
   });
 
   it("centralizes builder monetization gates and keeps direct split disabled by default", () => {
     const defaults = loadConfig({});
+    expect(defaults.feePolicy.feeBps).toBe(0);
     expect(defaults.builderMonetization).toMatchObject({
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformFeeMode: "display_only",
       builderFeesEnabled: true,
       builderFeeDefaultMode: "display_only",
@@ -307,6 +308,8 @@ describe("DNA Guard config", () => {
       X402_ENABLE_AUTO_SWEEP: "1",
       X402_AUTO_SWEEP_THRESHOLD_SOL: "0.05",
       X402_BUILDER_FEE_MAX_BPS: "600",
+      X402_PLATFORM_FEE_BPS: "10",
+      FEE_BPS: "30",
     });
 
     expect(validateRuntimeGateConfig(unsafe)).toEqual(expect.arrayContaining([
@@ -315,6 +318,8 @@ describe("DNA Guard config", () => {
       "X402_DIRECT_SPLIT_GATE_REF is required before enabling direct split fees.",
       "Legacy FEE_BPS/BASE_FEE_ATOMIC/MIN_FEE_ATOMIC must be zero when direct split platform fees are enabled.",
       "X402_BUILDER_FEE_MAX_BPS cannot exceed 500 bps without a new risk review.",
+      "X402_PLATFORM_FEE_BPS must be 0 or the 5 bps x402 protocol fee; Parad0x takes no other fee.",
+      "DNA platform direct split must use exactly the 5 bps x402 protocol fee for the current Public Beta direct split gate.",
     ]));
 
     const builderAccrual = loadConfig({
@@ -338,7 +343,7 @@ describe("DNA Guard config", () => {
       X402_ENABLE_DIRECT_SPLIT_FEES: "1",
       X402_DIRECT_SPLIT_GATE_REF: "public-beta-direct-split-2026-05",
       X402_PLATFORM_FEE_MODE: "direct_split",
-      X402_PLATFORM_FEE_BPS: "10",
+      X402_PLATFORM_FEE_BPS: "5",
       X402_PLATFORM_FEE_TREASURY: "dna-treasury",
       FEE_BPS: "0",
       BASE_FEE_ATOMIC: "0",
@@ -458,6 +463,8 @@ describe("DNA Guard config", () => {
       X402_PUBLIC_BETA_MAX_DAILY_LOSS_USD: "301",
       X402_PUBLIC_BETA_MAX_OPEN_EXPOSURE_USD: "501",
       X402_ENABLE_POLYMARKET_LIVE: "1",
+      X402_PLATFORM_FEE_BPS: "10",
+      FEE_BPS: "30",
     });
     expect(validateRuntimeGateConfig(unsafe)).toEqual(expect.arrayContaining([
       "X402_PUBLIC_BETA_REQUIRE_CLIENT_SIGNATURE=1 is required for capped live beta flows.",
@@ -465,6 +472,7 @@ describe("DNA Guard config", () => {
       "X402_PLATFORM_FEE_MODE=direct_split is required for Public Beta live paid flows.",
       "X402_DIRECT_SPLIT_GATE_REF is required for Public Beta live paid flows.",
       "X402_PLATFORM_FEE_TREASURY is required for Public Beta live paid flows.",
+      "X402_PLATFORM_FEE_BPS must be exactly 5 for Public Beta live paid flows.",
       "Legacy FEE_BPS/BASE_FEE_ATOMIC/MIN_FEE_ATOMIC must be zero for Public Beta live paid direct split flows.",
       "X402_PUBLIC_BETA_MAX_TX_USD cannot exceed 200 without a new beta risk review.",
       "X402_PUBLIC_BETA_MAX_DAILY_SPEND_USD cannot exceed 1500 without a new beta risk review.",
@@ -491,7 +499,7 @@ describe("DNA Guard config", () => {
       X402_ENABLE_DIRECT_SPLIT_FEES: "1",
       X402_DIRECT_SPLIT_GATE_REF: "PUBLIC_BETA_DIRECT_SPLIT_2026",
       X402_PLATFORM_FEE_MODE: "direct_split",
-      X402_PLATFORM_FEE_BPS: "10",
+      X402_PLATFORM_FEE_BPS: "5",
       X402_PLATFORM_FEE_TREASURY: "dna-treasury",
       FEE_BPS: "0",
       BASE_FEE_ATOMIC: "0",

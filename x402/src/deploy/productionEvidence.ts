@@ -1,3 +1,5 @@
+import { X402_PROTOCOL_FEE_BPS } from "../fees/paywallFee.js";
+
 export type ProductionEvidenceStatus = "PASS" | "BLOCKED";
 
 export type ProductionEvidenceField = {
@@ -200,15 +202,15 @@ export function buildProductionEvidenceReport(
     });
   }
 
-  if (clean(env.X402_PLATFORM_FEE_BPS) !== "10") {
-    blockers.push("X402_PLATFORM_FEE_BPS=10 is required for Public Beta live paid fee collection.");
+  if (clean(env.X402_PLATFORM_FEE_BPS) !== String(X402_PROTOCOL_FEE_BPS)) {
+    blockers.push(`X402_PLATFORM_FEE_BPS=${X402_PROTOCOL_FEE_BPS} (the 0.05% x402 protocol fee) is required for Public Beta live paid fee collection.`);
     checks.push({
       name: "platform_fee_bps",
       status: "BLOCKED",
       detail: clean(env.X402_PLATFORM_FEE_BPS) ?? "missing",
     });
   } else {
-    checks.push({ name: "platform_fee_bps", status: "PASS", detail: "10 bps" });
+    checks.push({ name: "platform_fee_bps", status: "PASS", detail: `${X402_PROTOCOL_FEE_BPS} bps` });
   }
 
   if (!clean(env.X402_PLATFORM_FEE_TREASURY)) {

@@ -551,7 +551,7 @@ export async function runServerMayhem(): Promise<ServerMayhemResult[]> {
   results.push(await expectSafe("builder fee visible in quote and receipt-bound on finalize", async () => {
     const app = makeApp({
       builderMonetization: {
-        platformFeeBps: 10,
+        platformFeeBps: 5,
         platformFeeMode: "seller_accrual",
         platformTreasury: "dna-treasury",
         builderFeesEnabled: true,
@@ -599,7 +599,7 @@ export async function runServerMayhem(): Promise<ServerMayhemResult[]> {
   results.push(await expectSafe("builder fee hidden attempt, cap violation, suspension, and DNA override fail safely", async () => {
     const app = makeApp({
       builderMonetization: {
-        platformFeeBps: 10,
+        platformFeeBps: 5,
         platformFeeMode: "display_only",
         platformTreasury: "dna-treasury",
         builderFeesEnabled: true,
@@ -652,7 +652,7 @@ export async function runServerMayhem(): Promise<ServerMayhemResult[]> {
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: "dna",
       platformMode: "direct_split",
       builderProfile: {
@@ -740,7 +740,7 @@ export async function runServerMayhem(): Promise<ServerMayhemResult[]> {
         minFeeAtomic: 0n,
       },
       builderMonetization: {
-        platformFeeBps: 10,
+        platformFeeBps: 5,
         platformFeeMode: "direct_split",
         platformTreasury: "dna-treasury-mayhem",
         builderFeesEnabled: true,
@@ -761,8 +761,8 @@ export async function runServerMayhem(): Promise<ServerMayhemResult[]> {
       const lines = quote.body.feeWaterfallV2.lines.filter((line: any) => line.requiredForFinalize);
       const provider = lines.find((line: any) => line.kind === "PROVIDER_AMOUNT");
       const dna = lines.find((line: any) => line.kind === "DNA_PLATFORM_FEE");
-      assert.equal(provider.amount, "999000");
-      assert.equal(dna.amount, "1000");
+      assert.equal(provider.amount, "999500");
+      assert.equal(dna.amount, "500");
       assert.equal(dna.recipient, "dna-treasury-mayhem");
 
       const missingCommit = await request(app.app)

@@ -108,12 +108,12 @@ export interface PaywallOptions {
   // ── Fee split ──────────────────────────────────────────────────────────────
   /**
    * Fee collected by whoever runs this endpoint, in basis points (1 bps = 0.01%).
-   * Each app builder sets this independently — there is no global default.
+   * This is the operator's own service pricing, not a Parad0x fee. Each app builder
+   * sets it independently — there is no global default.
    *
    * Examples:
    *   free endpoint            0
    *   light API wrapper        10  (0.1%)
-   *   Parad0x commercial rail  50  (0.5%) — Parad0x's own default, not a rule
    *   high-value agent service up to 2000 (20%)
    *
    * Range: 0–2000. Default: 0.
@@ -126,11 +126,11 @@ export interface PaywallOptions {
    */
   operatorFeeRecipient?: string;
   /**
-   * Parad0x official protocol rail fee in basis points.
+   * x402 protocol fee in basis points — Parad0x's only fee.
    * Only applies when using the official Parad0x commercial config path.
    * OSS / grant / devnet configs set this to 0 — the SDK is free to fork and use.
    *
-   * Range: 0–100 (max 1%). Parad0x commercial default: 5 (0.05%).
+   * Range: 0–5 (X402_PROTOCOL_FEE_BPS). Parad0x commercial value: 5 (0.05%).
    */
   protocolFeeBps?: number;
   /**
@@ -736,7 +736,7 @@ function getRuntime(req: Request, options: PaywallOptions): PaywallRuntime {
  *   2. Agent pays, gets commitId
  *   3. GET /api/inference with x-dnp-commit-id header -> 200
  */
-// Default Parad0x protocol treasury — receives protocolFee when protocolFeeBps > 0.
+// Default Parad0x protocol treasury — receives the x402 protocol fee (5 bps) when protocolFeeBps > 0.
 const PARAD0X_TREASURY = "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5";
 
 export function dnaPaywall(options: PaywallOptions) {

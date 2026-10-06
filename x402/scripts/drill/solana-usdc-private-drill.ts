@@ -214,7 +214,7 @@ function baseConfig(params: {
       maxTxAtomic: "100000",
       dailyCapAtomic: "500000",
       feeMode: directSplit ? "direct_split" : "seller_accrual",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: params.treasury.toBase58(),
     },
     telegramAlerts: directSplit
@@ -233,7 +233,7 @@ function baseConfig(params: {
       : undefined,
     builderMonetization: directSplit
       ? {
-        platformFeeBps: 10,
+        platformFeeBps: 5,
         platformFeeMode: "direct_split",
         platformTreasury: params.treasury.toBase58(),
         builderFeesEnabled: true,
@@ -785,7 +785,7 @@ async function runDirectSplitDrill(params: {
       grossAtomic: DIRECT_SPLIT_AMOUNT_ATOMIC.toString(10),
       providerAtomic: directSplit.lines.provider.amount,
       dnaFeeAtomic: directSplit.lines.dna.amount,
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       solBefore: (params.solBefore / LAMPORTS_PER_SOL).toString(),
       solAfter: (solAfter / LAMPORTS_PER_SOL).toString(),
       usdcBeforeAtomic: params.usdcBefore.toString(10),

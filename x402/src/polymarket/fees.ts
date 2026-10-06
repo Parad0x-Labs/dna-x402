@@ -2,6 +2,9 @@ import type { CopyLotStatus } from "./types.js";
 
 export const POLYMARKET_V1_BUILDER_FEE_BPS = 0;
 export const DNA_V1_POLYMARKET_NOTIONAL_FEE_ENABLED = false;
+// Success fee on a follower's positive realized PnL from a copied lot. Paid by the
+// follower to the alpha (the signal provider whose trades were copied) — a market
+// participant, not Parad0x. Parad0x takes no cut of it.
 export const ALPHA_SUCCESS_FEE_BPS = 200;
 
 export interface AlphaFeeAssessment {

@@ -139,7 +139,7 @@ export function runMayhem(): MayhemResult[] {
       grossAmount: "1000",
       token: "USDC",
       providerRecipient: "seller",
-      platformFeeBps: 100,
+      platformFeeBps: 5,
       platformRecipient: "platform",
       noDoubleChargeScope: "receipt-1",
     });

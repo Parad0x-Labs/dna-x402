@@ -3,8 +3,13 @@
  *
  * Fee model (two independent parties):
  *
- *   operatorFee  → whoever runs the paid endpoint (app builder sets operatorFeeBps freely)
- *   protocolFee  → Parad0x treasury (fixed at 5 bps on the official commercial rail)
+ *   operatorFee  → whoever runs the paid endpoint (app builder sets operatorFeeBps freely;
+ *                  this is the operator's own service pricing, not a Parad0x fee)
+ *   protocolFee  → Parad0x treasury: the x402 protocol fee, X402_PROTOCOL_FEE_BPS = 5 (0.05%)
+ *
+ * The x402 protocol fee is Parad0x's only fee. Every other Parad0x, house, platform,
+ * protocol or treasury cut across the stack is 0. protocolFeeBps is therefore either
+ * 0 (OSS / grant / free path) or 5; anything above 5 is rejected.
  *
  * Both fees are deducted from priceAtomic — the payer sends the listed price unchanged:
  *
@@ -14,11 +19,8 @@
  *
  * Typical configs:
  *   OSS / grant / free path       operatorFeeBps: 0,  protocolFeeBps: 0
- *   Parad0x commercial default    operatorFeeBps: 50, protocolFeeBps: 5  (0.5% + 0.05%)
+ *   Parad0x commercial rail       operatorFeeBps: 0,  protocolFeeBps: 5  (0.05% total to Parad0x)
  *   Third-party builder           operatorFeeBps: <their choice>, protocolFeeBps: 5
- *
- * The 50 bps operator default is Parad0x's own setting for Parad0x-run endpoints.
- * Other builders set their own operatorFeeBps — there is no global rule.
  *
  * All arithmetic is BigInt floor division matching the `bps()` helper in
  * waterfall.ts:  fee = (amount * feeBps) / 10_000  (floors toward zero).
@@ -26,10 +28,17 @@
  * Pure function: no I/O, no side effects, safe to call in hot paths.
  */
 
+/**
+ * The x402 protocol fee in basis points: 5 bps = 0.05%. This is Parad0x's only fee.
+ * Every Parad0x fee setting in this package (paywall protocolFeeBps, server
+ * X402_PLATFORM_FEE_BPS, X402_REAL_CHAIN_PLATFORM_FEE_BPS) is either 0 or this value.
+ */
+export const X402_PROTOCOL_FEE_BPS = 5;
+
 export interface PaywallFeeResult {
   /** Fee going to the endpoint operator (floor division, may be "0"). */
   operatorFeeAtomic: string;
-  /** Fee going to the Parad0x protocol treasury (floor division, may be "0"). */
+  /** x402 protocol fee going to the Parad0x treasury (floor division, may be "0"). */
   protocolFeeAtomic: string;
   /** Sum of operator + protocol fees. */
   totalFeeAtomic: string;
@@ -47,10 +56,9 @@ function applyBps(amount: bigint, feeBps: number): bigint {
  *
  * @param priceAtomic    - The listed price (total payer sends).
  * @param operatorFeeBps - Endpoint builder's fee (0–2000 bps). Each builder sets this
- *                         independently. Parad0x's own commercial default is 50 bps (0.5%)
- *                         — that is NOT a global cap or requirement for other builders.
- * @param protocolFeeBps - Parad0x official rail fee (0–100 bps). The official commercial
- *                         config uses 5 bps (0.05%). OSS / grant configs use 0.
+ *                         independently as their own service pricing; it is not a Parad0x fee.
+ * @param protocolFeeBps - x402 protocol fee (0–X402_PROTOCOL_FEE_BPS, i.e. 0–5 bps). The
+ *                         official commercial config uses 5 bps (0.05%). OSS / grant configs use 0.
  *
  * Returned amounts are decimal strings.  All are "0" when both feeBps are 0.
  *
@@ -64,8 +72,8 @@ export function computePaywallFees(
   if (!Number.isInteger(operatorFeeBps) || operatorFeeBps < 0 || operatorFeeBps > 2_000) {
     throw new Error(`operatorFeeBps out of range [0, 2000]: ${operatorFeeBps}`);
   }
-  if (!Number.isInteger(protocolFeeBps) || protocolFeeBps < 0 || protocolFeeBps > 100) {
-    throw new Error(`protocolFeeBps out of range [0, 100]: ${protocolFeeBps}`);
+  if (!Number.isInteger(protocolFeeBps) || protocolFeeBps < 0 || protocolFeeBps > X402_PROTOCOL_FEE_BPS) {
+    throw new Error(`protocolFeeBps out of range [0, ${X402_PROTOCOL_FEE_BPS}]: ${protocolFeeBps}`);
   }
 
   const price = BigInt(priceAtomic);
@@ -76,7 +84,7 @@ export function computePaywallFees(
   const totalFee = operatorFee + protocolFee;
 
   if (totalFee > price) {
-    // Arithmetic can't reach here with valid bps (max combined = 2100 bps = 21% < 100%),
+    // Arithmetic can't reach here with valid bps (max combined = 2005 bps, about 20% < 100%),
     // but guard defensively.
     throw new Error(`Total fees (${totalFee}) exceed priceAtomic (${price}).`);
   }

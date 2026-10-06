@@ -8,7 +8,7 @@ export function buildBuilderFeeWaterfall() {
     decimals: 6,
     providerRecipient: "seller-treasury",
     platformRecipient: "dna-treasury",
-    platformFeeBps: 10,
+    platformFeeBps: 5, // the 0.05% x402 protocol fee, Parad0x's only fee
     platformMode: "seller_accrual",
     builderProfile: {
       builderId: process.env.BUILDER_ID ?? "builder_demo",

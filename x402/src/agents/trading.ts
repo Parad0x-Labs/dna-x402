@@ -283,6 +283,8 @@ export class AgentTradingError extends Error {
 }
 
 export const PAPER_USDC_STARTING_BALANCE_ATOMIC = "10000000000";
+// Success-fee levels a source agent's owner may charge followers on positive copied PnL.
+// The accrual is owed to the source agent's owner (a market participant), not Parad0x.
 export const ALLOWED_ALPHA_SUCCESS_FEE_BPS = [50, 100, 150, 200, 250, 300] as const;
 
 const PRIVATE_KEY_FIELD_PATTERNS = [

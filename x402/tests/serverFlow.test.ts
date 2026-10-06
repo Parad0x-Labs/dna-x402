@@ -83,7 +83,7 @@ const directSplitConfig: X402Config = {
     minFeeAtomic: 0n,
   },
   builderMonetization: {
-    platformFeeBps: 10,
+    platformFeeBps: 5,
     platformFeeMode: "direct_split",
     platformTreasury: "dna-treasury-public-beta",
     builderFeesEnabled: true,
@@ -300,21 +300,28 @@ describe("x402 server flow", () => {
       receiptSigner: ReceiptSigner.generate(),
     });
 
-    const first = await request(app).get("/resource").expect(402);
+    // /inference is 5,000 atomic: the 5 bps x402 protocol fee is 2 atomic (floor).
+    const first = await request(app).get("/inference").expect(402);
     const requirements = first.body.paymentRequirements;
     expect(requirements.splitPaymentRequirements).toHaveLength(2);
     expect(requirements.splitPaymentRequirements.map((item: any) => item.kind)).toEqual([
       "PROVIDER_AMOUNT",
       "DNA_PLATFORM_FEE",
     ]);
+    expect(requirements.splitPaymentRequirements[1].amount).toBe("2");
+
+    // /resource is 1,000 atomic: 5 bps floors to 0, so no protocol fee leg is required.
+    const small = await request(app).get("/resource").expect(402);
+    const smallKinds = (small.body.paymentRequirements.splitPaymentRequirements ?? []).map((item: any) => item.kind);
+    expect(smallKinds).not.toContain("DNA_PLATFORM_FEE");
 
     const quoteId: string = requirements.quote.quoteId;
     const quote = await request(app).get("/quote").query({ resource: "/resource", amountAtomic: "1000000" }).expect(200);
     const lines = quote.body.feeWaterfallV2.lines.filter((line: any) => line.requiredForFinalize);
     const provider = lines.find((line: any) => line.kind === "PROVIDER_AMOUNT");
     const dna = lines.find((line: any) => line.kind === "DNA_PLATFORM_FEE");
-    expect(provider.amount).toBe("999000");
-    expect(dna.amount).toBe("1000");
+    expect(provider.amount).toBe("999500");
+    expect(dna.amount).toBe("500");
     expect(dna.recipient).toBe("dna-treasury-public-beta");
 
     const commit = await request(app)

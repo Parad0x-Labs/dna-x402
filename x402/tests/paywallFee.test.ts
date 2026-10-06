@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computePaywallFees,
   assertFeeRecipientNotProgramId,
+  X402_PROTOCOL_FEE_BPS,
 } from "../src/fees/paywallFee.js";
 
 // ── computePaywallFees ────────────────────────────────────────────────────────
@@ -61,10 +62,14 @@ describe("computePaywallFees — protocol fee only", () => {
     expect(r.providerNetAtomic).toBe("100");
   });
 
-  it("100 bps (1%) of 1000 = 10 atomic", () => {
-    const r = computePaywallFees("1000", 0, 100);
-    expect(r.protocolFeeAtomic).toBe("10");
-    expect(r.providerNetAtomic).toBe("990");
+  it("5 bps (0.05%) of 200000 = 100 atomic", () => {
+    const r = computePaywallFees("200000", 0, 5);
+    expect(r.protocolFeeAtomic).toBe("100");
+    expect(r.providerNetAtomic).toBe("199900");
+  });
+
+  it("the x402 protocol fee constant is 5 bps (0.05%)", () => {
+    expect(X402_PROTOCOL_FEE_BPS).toBe(5);
   });
 });
 
@@ -107,7 +112,9 @@ describe("computePaywallFees — range validation", () => {
     expect(() => computePaywallFees("1000", 0, -1)).toThrow(/protocolFeeBps.*range/i);
   });
 
-  it("throws on protocolFeeBps > 100", () => {
+  it("throws on protocolFeeBps > 5 (above the x402 protocol fee)", () => {
+    expect(() => computePaywallFees("1000", 0, 6)).toThrow(/protocolFeeBps.*range/i);
+    expect(() => computePaywallFees("1000", 0, 10)).toThrow(/protocolFeeBps.*range/i);
     expect(() => computePaywallFees("1000", 0, 101)).toThrow(/protocolFeeBps.*range/i);
   });
 
@@ -124,8 +131,8 @@ describe("computePaywallFees — range validation", () => {
     expect(() => computePaywallFees("1000", 2000, 0)).not.toThrow();
   });
 
-  it("allows protocolFeeBps = 100 (max 1%)", () => {
-    expect(() => computePaywallFees("1000", 0, 100)).not.toThrow();
+  it("allows protocolFeeBps = 5 (max: the 0.05% x402 protocol fee)", () => {
+    expect(() => computePaywallFees("1000", 0, 5)).not.toThrow();
   });
 });
 

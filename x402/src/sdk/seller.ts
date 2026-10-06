@@ -47,6 +47,7 @@ import type { StreamflowClientLike } from "../verifier/streamflow.js";
 export interface DnaSellerOptions {
   recipient: string;
   mint?: string;
+  /** Seller surcharge in bps, added on top of the price and paid to `recipient` (the seller). Not a Parad0x fee. Default 0. */
   feeBps?: number;
   quoteTtlSeconds?: number;
   settlement?: Array<"transfer" | "stream" | "netting">;

@@ -217,8 +217,8 @@ describe("Telegram ops alert route", () => {
       resource: "/resource",
       payerCommitment32B: "0x" + "11".repeat(32),
       amountAtomic: "50000",
-      platformFeeBps: 10,
-      platformFeeAtomic: "50",
+      platformFeeBps: 5,
+      platformFeeAtomic: "25",
       platformRecipient: "treasury",
       settlement: "transfer",
       createdAt: "2026-05-15T12:00:00.000Z",
@@ -235,7 +235,7 @@ describe("Telegram ops alert route", () => {
     expect(response.text).toContain("x402_volume_atomic_total 50000");
     expect(response.text).toContain("x402_agents_observed_total 1");
     expect(response.text).toContain("x402_real_chain_fee_accruals_total 1");
-    expect(response.text).toContain("x402_real_chain_fee_accrued_atomic_total 50");
+    expect(response.text).toContain("x402_real_chain_fee_accrued_atomic_total 25");
   });
 
   it("requires the relay shared secret when enabled", async () => {

@@ -75,7 +75,7 @@ describe("production evidence collector", () => {
       X402_ENABLE_HIGH_RISK_CATEGORIES: "0",
       X402_ENABLE_POLYMARKET_LIVE: "0",
       X402_PLATFORM_FEE_MODE: "direct_split",
-      X402_PLATFORM_FEE_BPS: "10",
+      X402_PLATFORM_FEE_BPS: "5",
       X402_PLATFORM_FEE_TREASURY: "dna-treasury",
       FEE_BPS: "0",
       BASE_FEE_ATOMIC: "0",
@@ -84,6 +84,18 @@ describe("production evidence collector", () => {
 
     expect(report.status).toBe("PASS");
     expect(report.blockers).toEqual([]);
+  });
+
+  it("requires the 5 bps x402 protocol fee and rejects any other Parad0x fee rate", () => {
+    for (const bps of ["10", "30", "0"]) {
+      const report = buildProductionEvidenceReport({ X402_PLATFORM_FEE_BPS: bps }, "2026-05-15T00:00:00.000Z");
+      expect(report.blockers).toContain(
+        "X402_PLATFORM_FEE_BPS=5 (the 0.05% x402 protocol fee) is required for Public Beta live paid fee collection.",
+      );
+      expect(report.checks.find((check) => check.name === "platform_fee_bps")).toMatchObject({ status: "BLOCKED", detail: bps });
+    }
+    const ok = buildProductionEvidenceReport({ X402_PLATFORM_FEE_BPS: "5" }, "2026-05-15T00:00:00.000Z");
+    expect(ok.checks.find((check) => check.name === "platform_fee_bps")).toMatchObject({ status: "PASS", detail: "5 bps" });
   });
 
   it("redacts production secrets and token-like URL query params", () => {

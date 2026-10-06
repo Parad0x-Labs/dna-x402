@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { z } from "zod";
 import { FeePolicy, parseAtomic } from "./feePolicy.js";
+import { X402_PROTOCOL_FEE_BPS } from "./fees/paywallFee.js";
 import type { DnaGuardSpendCeilings } from "./guard/engine.js";
 
 const DEFAULT_USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
@@ -31,8 +32,10 @@ const schema = z.object({
   DEFAULT_CURRENCY: z.literal("USDC").default("USDC"),
   ENABLED_PRICING_MODELS: z.string().default("flat,surge,stream"),
   MARKETPLACE_SELECTION: z.string().default("cheapest_sla_else_limit_order"),
+  // Legacy operator surcharge: added on top of the resource price and paid to
+  // PAYMENT_RECIPIENT (the server operator), never to Parad0x. Operator pricing; default 0.
   BASE_FEE_ATOMIC: z.string().regex(/^\d+$/).default("0"),
-  FEE_BPS: z.coerce.number().int().min(0).max(10000).default(30),
+  FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   MIN_FEE_ATOMIC: z.string().regex(/^\d+$/).default("0"),
   ACCRUE_THRESHOLD_ATOMIC: z.string().regex(/^\d+$/).default("1000"),
   MIN_SETTLE_ATOMIC: z.string().regex(/^\d+$/).default("0"),
@@ -98,11 +101,15 @@ const schema = z.object({
   X402_REAL_CHAIN_FEE_MODE: z.enum(["none", "display_only", "direct_split", "seller_accrual"]).default("none"),
   X402_REAL_CHAIN_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(0),
   X402_REAL_CHAIN_PLATFORM_RECIPIENT: z.string().optional(),
-  X402_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(10),
+  // The x402 protocol fee to the Parad0x treasury (X402_PLATFORM_FEE_TREASURY):
+  // X402_PROTOCOL_FEE_BPS = 5 bps (0.05%), Parad0x's only fee. Validation allows 0 or 5.
+  X402_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(X402_PROTOCOL_FEE_BPS),
   X402_PLATFORM_FEE_MODE: z.enum(["off", "display_only", "seller_accrual", "direct_split"]).default("display_only"),
   X402_PLATFORM_FEE_TREASURY: z.string().optional(),
   X402_ENABLE_BUILDER_FEES: z.string().optional(),
   X402_BUILDER_FEE_DEFAULT_MODE: z.enum(["display_only", "builder_accrual", "direct_split"]).default("display_only"),
+  // Caps on fees set by third parties: builder fees go to the builder's treasury and
+  // affiliate fees to the affiliate. Neither is a Parad0x fee.
   X402_BUILDER_FEE_MAX_BPS: z.coerce.number().int().min(0).max(10_000).default(500),
   X402_ENABLE_AFFILIATE_FEES: z.string().optional(),
   X402_AFFILIATE_FEE_MAX_BPS: z.coerce.number().int().min(0).max(10_000).default(200),
@@ -742,8 +749,8 @@ export function validateRuntimeGateConfig(config: Partial<X402Config>): string[]
     if (drill.feeMode === "none" && drill.platformFeeBps !== 0) {
       issues.push("X402_REAL_CHAIN_PLATFORM_FEE_BPS must be 0 when fee mode is none.");
     }
-    if (drill.feeMode !== "none" && drill.platformFeeBps !== 10) {
-      issues.push("Real-chain fee drill must use exactly 10 bps when fee display/accrual is enabled.");
+    if (drill.feeMode !== "none" && drill.platformFeeBps !== X402_PROTOCOL_FEE_BPS) {
+      issues.push(`Real-chain fee drill must use exactly the ${X402_PROTOCOL_FEE_BPS} bps x402 protocol fee when fee display/accrual is enabled.`);
     }
     if (drill.feeMode !== "none" && !drill.platformRecipient) {
       issues.push("X402_REAL_CHAIN_PLATFORM_RECIPIENT must be set when fee display/accrual is enabled.");
@@ -767,8 +774,11 @@ export function validateRuntimeGateConfig(config: Partial<X402Config>): string[]
     if (builder.directSplitFeesEnabled && !builder.directSplitGateRef) {
       issues.push("X402_DIRECT_SPLIT_GATE_REF is required before enabling direct split fees.");
     }
-    if (builder.platformFeeMode === "direct_split" && builder.platformFeeBps !== 10) {
-      issues.push("DNA platform direct split must use exactly 10 bps for the current Public Beta direct split gate.");
+    if (builder.platformFeeBps !== 0 && builder.platformFeeBps !== X402_PROTOCOL_FEE_BPS) {
+      issues.push(`X402_PLATFORM_FEE_BPS must be 0 or the ${X402_PROTOCOL_FEE_BPS} bps x402 protocol fee; Parad0x takes no other fee.`);
+    }
+    if (builder.platformFeeMode === "direct_split" && builder.platformFeeBps !== X402_PROTOCOL_FEE_BPS) {
+      issues.push(`DNA platform direct split must use exactly the ${X402_PROTOCOL_FEE_BPS} bps x402 protocol fee for the current Public Beta direct split gate.`);
     }
     if (builder.platformFeeMode === "direct_split" && config.feePolicy && (
       config.feePolicy.baseFeeAtomic > 0n
@@ -845,8 +855,8 @@ export function validateRuntimeGateConfig(config: Partial<X402Config>): string[]
         if (!builder.platformTreasury) {
           issues.push("X402_PLATFORM_FEE_TREASURY is required for Public Beta live paid flows.");
         }
-        if (builder.platformFeeBps !== 10) {
-          issues.push("X402_PLATFORM_FEE_BPS must be exactly 10 for Public Beta live paid flows.");
+        if (builder.platformFeeBps !== X402_PROTOCOL_FEE_BPS) {
+          issues.push(`X402_PLATFORM_FEE_BPS must be exactly ${X402_PROTOCOL_FEE_BPS} for Public Beta live paid flows.`);
         }
         if (config.feePolicy && (
           config.feePolicy.baseFeeAtomic > 0n

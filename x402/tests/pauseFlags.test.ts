@@ -151,7 +151,7 @@ describe("pause flags", () => {
     expect(finalize.body.error.cause).toBe("X402_ENABLE_FINALIZE is disabled.");
   });
 
-  it("shows display-only 10 bps real-chain drill fee without collecting it", async () => {
+  it("shows display-only 5 bps real-chain drill fee without collecting it", async () => {
     const { app } = createX402App(
       {
         ...baseConfig,
@@ -165,7 +165,7 @@ describe("pause flags", () => {
           maxTxAtomic: "100000",
           dailyCapAtomic: "500000",
           feeMode: "display_only",
-          platformFeeBps: 10,
+          platformFeeBps: 5,
           platformRecipient: "treasury-wallet",
         },
       },
@@ -185,8 +185,8 @@ describe("pause flags", () => {
     expect(quote.body.totalAtomic).toBe("10000");
     expect(quote.body.feeWaterfall).toMatchObject({
       mode: "display_only",
-      platformFeeBps: 10,
-      platformFeeAtomic: "10",
+      platformFeeBps: 5,
+      platformFeeAtomic: "5",
       platformRecipient: "treasury-wallet",
       collected: false,
     });
@@ -212,7 +212,7 @@ describe("pause flags", () => {
           maxTxAtomic: "100000",
           dailyCapAtomic: "500000",
           feeMode: "seller_accrual",
-          platformFeeBps: 10,
+          platformFeeBps: 5,
           platformRecipient: "treasury-wallet",
         },
       },
@@ -229,7 +229,7 @@ describe("pause flags", () => {
 
     expect(quote.body.feeWaterfall).toMatchObject({
       mode: "seller_accrual",
-      platformFeeAtomic: "50",
+      platformFeeAtomic: "25",
       collected: false,
     });
 
@@ -254,8 +254,8 @@ describe("pause flags", () => {
 
     expect(finalized.body.feeAccrual).toMatchObject({
       status: "ACCRUED_NOT_COLLECTED",
-      platformFeeAtomic: "50",
-      platformFeeBps: 10,
+      platformFeeAtomic: "25",
+      platformFeeBps: 5,
       platformRecipient: "treasury-wallet",
       collected: false,
     });
@@ -266,13 +266,13 @@ describe("pause flags", () => {
       mode: "seller_accrual",
       collected: false,
       count: 1,
-      totalPlatformFeeAtomic: "50",
+      totalPlatformFeeAtomic: "25",
     });
     expect(accruals.body.accruals[0]).toMatchObject({
       quoteId: quote.body.quoteId,
       commitId: commit.body.commitId,
       receiptId: finalized.body.receiptId,
-      platformFeeAtomic: "50",
+      platformFeeAtomic: "25",
       status: "ACCRUED_NOT_COLLECTED",
       collected: false,
     });

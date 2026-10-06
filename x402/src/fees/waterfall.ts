@@ -1,5 +1,6 @@
 import { parseAtomic, toAtomicString } from "../feePolicy.js";
 import { stableHash } from "../common/stable.js";
+import { X402_PROTOCOL_FEE_BPS } from "./paywallFee.js";
 
 export type FeeKind = "provider" | "platform" | "affiliate" | "alpha" | "network" | "refund_reserve";
 
@@ -96,6 +97,7 @@ export function buildFeeWaterfall(input: FeeWaterfallInput): FeeWaterfall {
   if (alpha > 0n && input.alphaRecipient) {
     lines.push({
       kind: "alpha",
+      // Paid to the alpha seller (the copied agent's owner), not to Parad0x.
       label: "Alpha success fee",
       amountAtomic: toAtomicString(alpha),
       recipient: input.alphaRecipient,
@@ -377,17 +379,22 @@ export function buildFeeWaterfallV2(input: BuildFeeWaterfallV2Input): FeeWaterfa
 
   const platformMode = input.platformMode ?? "display_only";
   const platformBps = input.platformFeeBps ?? 0;
-  const platformAmount = input.platformRecipient && platformMode !== "off" ? bps(gross, platformBps) : 0n;
-  if (input.platformRecipient && platformMode !== "off" && platformBps > 0 && platformAmount === 0n) {
-    requireRepresentableFee("DNA_PLATFORM_FEE", gross, platformAmount, platformBps);
+  // The DNA_PLATFORM_FEE line is the x402 protocol fee to the Parad0x treasury —
+  // Parad0x's only fee. It is either 0 or X402_PROTOCOL_FEE_BPS (5 bps = 0.05%).
+  if (platformBps !== 0 && platformBps !== X402_PROTOCOL_FEE_BPS) {
+    throw new Error(`DNA_PLATFORM_FEE must be 0 or the ${X402_PROTOCOL_FEE_BPS} bps x402 protocol fee`);
   }
+  // Floor division, like computePaywallFees: Parad0x never takes more than 5 bps. When
+  // the fee floors to 0 (gross below 2,000 atomic units) no protocol fee line is added
+  // and the payment goes through without one, instead of being refused as dust.
+  const platformAmount = input.platformRecipient && platformMode !== "off" ? bps(gross, platformBps) : 0n;
   if (platformAmount > 0n && input.platformRecipient) {
     requireRepresentableFee("DNA_PLATFORM_FEE", gross, platformAmount, platformBps);
     totalFees += platformAmount;
     lines.push({
       id: stableHash(["fee-line", input.quoteId, "DNA_PLATFORM_FEE", input.platformRecipient]),
       kind: "DNA_PLATFORM_FEE",
-      label: "DNA platform fee",
+      label: "x402 protocol fee",
       amount: toAtomicString(platformAmount),
       token: input.token,
       decimals: input.decimals,
@@ -482,6 +489,7 @@ export function buildFeeWaterfallV2(input: BuildFeeWaterfallV2Input): FeeWaterfa
     lines.push({
       id: stableHash(["fee-line", input.quoteId, "ALPHA_SUCCESS_FEE", input.alphaRecipient]),
       kind: "ALPHA_SUCCESS_FEE",
+      // Paid to the alpha seller (the copied agent's owner), not to Parad0x.
       label: "Alpha success fee",
       amount: toAtomicString(alphaAmount),
       token: input.token,

@@ -77,7 +77,7 @@ describe("modular commerce services", () => {
       grossAmount: "10000",
       token: "USDC",
       providerRecipient: "seller",
-      platformFeeBps: 100,
+      platformFeeBps: 5,
       platformRecipient: "platform",
       affiliateFeeBps: 50,
       affiliateRecipient: "affiliate",
@@ -85,8 +85,8 @@ describe("modular commerce services", () => {
       alphaRecipient: "alpha",
       noDoubleChargeScope: "receipt-1",
     });
-    expect(waterfall.providerAmount).toBe("9650");
-    expect(waterfall.platformFee).toBe("100");
+    expect(waterfall.providerAmount).toBe("9745");
+    expect(waterfall.platformFee).toBe("5");
     expect(waterfall.affiliateFee).toBe("50");
     expect(waterfall.alphaFee).toBe("200");
     expect(waterfall.buyerVisibleBreakdown.map((line) => line.kind)).toContain("alpha");
@@ -127,7 +127,7 @@ describe("modular commerce services", () => {
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: "dna-treasury",
       platformMode: "seller_accrual",
       builderProfile: builder,
@@ -142,8 +142,8 @@ describe("modular commerce services", () => {
     });
 
     expect(waterfall.version).toBe("fee_waterfall_v2");
-    expect(waterfall.providerAmount).toBe("99100000");
-    expect(waterfall.totalFees).toBe("900000");
+    expect(waterfall.providerAmount).toBe("99150000");
+    expect(waterfall.totalFees).toBe("850000");
     expect(waterfall.lines.map((line) => line.kind)).toEqual([
       "PROVIDER_AMOUNT",
       "DNA_PLATFORM_FEE",
@@ -152,7 +152,9 @@ describe("modular commerce services", () => {
       "ALPHA_SUCCESS_FEE",
     ]);
     expect(waterfall.lines.find((line) => line.kind === "DNA_PLATFORM_FEE")).toMatchObject({
-      amount: "100000",
+      amount: "50000",
+      bps: 5,
+      label: "x402 protocol fee",
       recipient: "dna-treasury",
       visibleToBuyer: true,
     });
@@ -167,7 +169,7 @@ describe("modular commerce services", () => {
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: "dna-treasury",
       platformMode: "seller_accrual",
       builderProfile: builder,
@@ -218,22 +220,50 @@ describe("modular commerce services", () => {
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 10,
-      platformRecipient: "dna",
+      builderProfile: profile,
+      builderFee: { ...fee, feeBps: 50 },
       noDoubleChargeScope: "dust",
     })).toThrow(/dust amount/);
+    // The x402 protocol fee floors like computePaywallFees: below 2,000 atomic units it
+    // is 0, so no protocol fee line is added and the provider keeps the whole amount.
+    const subAtomicProtocolFee = buildFeeWaterfallV2({
+      quoteId: "dust-protocol",
+      grossAmount: "1999",
+      token: "USDC",
+      decimals: 6,
+      providerRecipient: "seller",
+      platformFeeBps: 5,
+      platformRecipient: "dna",
+      noDoubleChargeScope: "dust-protocol",
+    });
+    expect(subAtomicProtocolFee.totalFees).toBe("0");
+    expect(subAtomicProtocolFee.providerAmount).toBe("1999");
+    expect(subAtomicProtocolFee.lines.map((line) => line.kind)).toEqual(["PROVIDER_AMOUNT"]);
     expect(() => buildFeeWaterfallV2({
       quoteId: "too-much",
       grossAmount: "1000",
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 9000,
-      platformRecipient: "dna",
       builderProfile: { ...profile, allowedFeeBpsMax: 2000 },
       builderFee: { ...fee, feeBps: 2000, capBps: 2000 },
+      alphaFeeAtomic: "900",
+      alphaRecipient: "alpha",
       noDoubleChargeScope: "too-much",
     })).toThrow(/exceeds gross/);
+    // The DNA_PLATFORM_FEE line is the x402 protocol fee: 0 or 5 bps, never more.
+    for (const platformFeeBps of [1, 10, 30, 100, 9000]) {
+      expect(() => buildFeeWaterfallV2({
+        quoteId: `protocol-fee-${platformFeeBps}`,
+        grossAmount: "100000000",
+        token: "USDC",
+        decimals: 6,
+        providerRecipient: "seller",
+        platformFeeBps,
+        platformRecipient: "dna",
+        noDoubleChargeScope: `protocol-fee-${platformFeeBps}`,
+      })).toThrow(/0 or the 5 bps x402 protocol fee/);
+    }
   });
 
   it("creates receipt-bound accruals and validates gated direct split proofs", () => {
@@ -243,7 +273,7 @@ describe("modular commerce services", () => {
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: "dna",
       platformMode: "direct_split",
       builderProfile: {
@@ -321,7 +351,7 @@ describe("modular commerce services", () => {
       token: "USDC",
       decimals: 6,
       providerRecipient: "seller",
-      platformFeeBps: 10,
+      platformFeeBps: 5,
       platformRecipient: "dna",
       platformMode: "seller_accrual",
       noDoubleChargeScope: "accrual-q",

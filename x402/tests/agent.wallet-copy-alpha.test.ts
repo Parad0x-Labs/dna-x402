@@ -129,7 +129,7 @@ describe("agent wallets, copy controls, and alpha monetization", () => {
         minFeeAtomic: 0n,
       },
       builderMonetization: {
-        platformFeeBps: 10,
+        platformFeeBps: 5,
         platformFeeMode: "direct_split",
         platformTreasury: "dna-treasury-public-beta",
         builderFeesEnabled: true,
