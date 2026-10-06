@@ -1,0 +1,236 @@
+{
+  "program": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+  "cfg": "3eAqTwvNbPREAycC22c8MSkhzN83YGtRP8CLYwWLqDhg",
+  "round": 3,
+  "roundPda": "JBCc6EDnhmzQfDxni6tSPtT1FA8rqxvGPqSxXeYTTJHj",
+  "ticketsRoot": "8b4a93c62522862fd4fdd342a8d96a581d3ff671c7a450d00f8a05cda32d4073",
+  "ticketCount": 5,
+  "drawn": [
+    6,
+    16,
+    17,
+    23,
+    27
+  ],
+  "winnerIndex": 2,
+  "winnerNullifier": "242ad120d393395afc16c5342b24e294236702edc5102f4d42d4270943745cfb",
+  "results": [
+    {
+      "label": "fund loser + attacker 0.01 SOL each",
+      "expected": "success",
+      "pass": true,
+      "sig": "52u4QJoBVBWMHZ7BW7W5CNkieVY4HxTWEBfTebUnjM2cpLLuZpZ2BF1djnUgr9VvTv3RnAvqewSKZJNqDY7FNZJC",
+      "slot": 508064149,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/52u4QJoBVBWMHZ7BW7W5CNkieVY4HxTWEBfTebUnjM2cpLLuZpZ2BF1djnUgr9VvTv3RnAvqewSKZJNqDY7FNZJC?cluster=devnet",
+      "logs": []
+    },
+    {
+      "label": "CommitRound id=3",
+      "expected": "success",
+      "pass": true,
+      "sig": "65bQm1eJnyG38MZndTxWdonCygijXYcphiR9RU4juZtr3NUeeHxrtDiBfD2ejLnq9So82ArVZMZk5b44ainjT1xA",
+      "slot": 508064157,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/65bQm1eJnyG38MZndTxWdonCygijXYcphiR9RU4juZtr3NUeeHxrtDiBfD2ejLnq9So82ArVZMZk5b44ainjT1xA?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: CommitRound id=3",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 7331 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "AnchorTickets (5-ticket SHA-256 tickets tree)",
+      "expected": "success",
+      "pass": true,
+      "sig": "fBJj9GabXV8KdKMFQxn1qJ3ahUDBzfTZz85Uvjw88udbncadDfT51VFTpJbLzP17VQWQRU85seSGABcykRZ35Qz",
+      "slot": 508064164,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/fBJj9GabXV8KdKMFQxn1qJ3ahUDBzfTZz85Uvjw88udbncadDfT51VFTpJbLzP17VQWQRU85seSGABcykRZ35Qz?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: AnchorTickets round_id=3",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 2986 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "RevealDraw (committed seed) -> Drawn",
+      "expected": "success",
+      "pass": true,
+      "sig": "5D18zYpdjF1fWVcrFjQKK4JQVjJ8ta9G1YA5xkd52AZZJXM2pqkn1BEsE3D8oVXTy7SbpkW1eNknyaJu92PFcKYh",
+      "slot": 508064172,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5D18zYpdjF1fWVcrFjQKK4JQVjJ8ta9G1YA5xkd52AZZJXM2pqkn1BEsE3D8oVXTy7SbpkW1eNknyaJu92PFcKYh?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: RevealDraw round=3 drawn=16,17,23,27,6",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 4831 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "on-chain drawn numbers == off-chain draw_numbers(seed, round_id); status Drawn",
+      "expected": [
+        6,
+        16,
+        17,
+        23,
+        27
+      ],
+      "pass": true,
+      "onchain": [
+        6,
+        16,
+        17,
+        23,
+        27
+      ],
+      "status": 3
+    },
+    {
+      "label": "ATTACK nullifier-only claim on Drawn round (old gap) -> InvalidTicketProof (0x600B)",
+      "expected": {
+        "custom": 24587
+      },
+      "pass": true,
+      "sig": "4ApghQJd4v1szitEHGjfEjTcPuquuUC6gFqDb7S1Qo48aFVPZETt4ktb6kbrKLgKFHv9a4PSHnCfz1PAjZaGsEDc",
+      "slot": 508064187,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24587
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4ApghQJd4v1szitEHGjfEjTcPuquuUC6gFqDb7S1Qo48aFVPZETt4ktb6kbrKLgKFHv9a4PSHnCfz1PAjZaGsEDc?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 3033 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x600b"
+      ]
+    },
+    {
+      "label": "ATTACK anchored LOSING ticket (valid proof) -> TicketNotWinning (0x600A)",
+      "expected": {
+        "custom": 24586
+      },
+      "pass": true,
+      "sig": "2qmpN4rGLfuTPgN11gqAZ6TXAMyMM7C9hgAKtVdj6xuMYPHSxuWFGDLs4bU5Mjifeg9fCdwxE9xF6RDgdBo8sQ2N",
+      "slot": 508064194,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24586
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2qmpN4rGLfuTPgN11gqAZ6TXAMyMM7C9hgAKtVdj6xuMYPHSxuWFGDLs4bU5Mjifeg9fCdwxE9xF6RDgdBo8sQ2N?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 3243 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x600a"
+      ]
+    },
+    {
+      "label": "ATTACK own ticket relabelled with the drawn numbers -> InvalidTicketProof (0x600B)",
+      "expected": {
+        "custom": 24587
+      },
+      "pass": true,
+      "sig": "Hb57j3PB28BSdVP33DGrZWY4Jrt8Tg8xzZpwEdGrP8MJAF6brZsj4edvDfU7khvjcucP1YuithoDaWcjYA3wXg4",
+      "slot": 508064201,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24587
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/Hb57j3PB28BSdVP33DGrZWY4Jrt8Tg8xzZpwEdGrP8MJAF6brZsj4edvDfU7khvjcucP1YuithoDaWcjYA3wXg4?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 4079 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x600b"
+      ]
+    },
+    {
+      "label": "ATTACK front-run: winner's ticket + proof signed by attacker -> InvalidTicketProof (0x600B)",
+      "expected": {
+        "custom": 24587
+      },
+      "pass": true,
+      "sig": "4F12owh1GsPL5a9Svmk7vphrnhRMiDX58iUpqCXLbL6XiE1w3E3AytVsv1a4EsSiGSxEExR7h5RL7gYWDY4tXYUL",
+      "slot": 508064208,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24587
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4F12owh1GsPL5a9Svmk7vphrnhRMiDX58iUpqCXLbL6XiE1w3E3AytVsv1a4EsSiGSxEExR7h5RL7gYWDY4tXYUL?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 4079 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x600b"
+      ]
+    },
+    {
+      "label": "Winner (ticket owner) claims with numbers + proof -> Won",
+      "expected": "success",
+      "pass": true,
+      "sig": "3VCHYkbTVcXMpZGYu4qHhLTTyN7M99wBpwMgkEf6VueU9y87RFT752E8vjSceH1aKLGg8Yns9zaPbVr5jUEEf6jn",
+      "slot": 508064224,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3VCHYkbTVcXMpZGYu4qHhLTTyN7M99wBpwMgkEf6VueU9y87RFT752E8vjSceH1aKLGg8Yns9zaPbVr5jUEEf6jn?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: ClaimJackpot round=3",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 19362 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "round status Won, winner_nullifier = winning ticket nullifier",
+      "expected": "status 4",
+      "pass": true,
+      "status": 4
+    },
+    {
+      "label": "ATTACK second claim of the same ticket -> AlreadyClaimed (0x6005)",
+      "expected": {
+        "custom": 24581
+      },
+      "pass": true,
+      "sig": "2J9edTuEURhp4jwt8rELgwdXSjpxvH2nKd4B3nFECbXXYsRCCcyxF1Tb5KqYjyMfwHghidS34CnWG8X2668vwDGK",
+      "slot": 508064239,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24581
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2J9edTuEURhp4jwt8rELgwdXSjpxvH2nKd4B3nFECbXXYsRCCcyxF1Tb5KqYjyMfwHghidS34CnWG8X2668vwDGK?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 15244 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6005"
+      ]
+    },
+    {
+      "label": "sweep loser back to payer",
+      "expected": "success",
+      "pass": true,
+      "sig": "9u136yoD7yaGraFzPASr7j9aGgSKD675xTVJ8x1NHuBsMsCsnRJsDDkaEim6aFPfa7t6TvY71kdbLza4fVVUxDP",
+      "slot": 508064250,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/9u136yoD7yaGraFzPASr7j9aGgSKD675xTVJ8x1NHuBsMsCsnRJsDDkaEim6aFPfa7t6TvY71kdbLza4fVVUxDP?cluster=devnet",
+      "logs": []
+    },
+    {
+      "label": "sweep attacker back to payer",
+      "expected": "success",
+      "pass": true,
+      "sig": "4dN5DRcHtHLsDmDAswNB5HgKpJLF31Jd51qKHY6EyxyY1CGarG9NEx6Qmw8K49YiTmr6FMo6eU53mDYpZekhJ46t",
+      "slot": 508064261,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4dN5DRcHtHLsDmDAswNB5HgKpJLF31Jd51qKHY6EyxyY1CGarG9NEx6Qmw8K49YiTmr6FMo6eU53mDYpZekhJ46t?cluster=devnet",
+      "logs": []
+    }
+  ]
+}

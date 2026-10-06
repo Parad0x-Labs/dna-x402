@@ -1,0 +1,173 @@
+{
+  "suite": "dna-passport-03-metamask",
+  "repo": "dna-x402@a32933d (fixes aabb759 dark_secp256k1_auth, a32933d dark_null_lottery)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/passport/03-devnet-metamask-e2e.mjs 7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+  "programId": {
+    "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+  },
+  "result": "PASS",
+  "pass": 10,
+  "fail": 0,
+  "timestamp": "2026-10-06T10:33:27.758Z",
+  "signatures": [
+    {
+      "sig": "4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy",
+      "slot": 508064037,
+      "err": null,
+      "fee": 10000,
+      "delta": -1300320,
+      "explorer": "https://explorer.solana.com/tx/4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy?cluster=devnet"
+    },
+    {
+      "sig": "53Qa5DcSzoFC848QWx21QUu3i4Mctxod2wMCicydWxcbxPgN57NpxCZzQ5fcZ9Gb59QyJQAkoAxcAZJP8ByN2j8C",
+      "slot": 508064044,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20488
+          }
+        ]
+      },
+      "fee": 10000,
+      "delta": -10000,
+      "explorer": "https://explorer.solana.com/tx/53Qa5DcSzoFC848QWx21QUu3i4Mctxod2wMCicydWxcbxPgN57NpxCZzQ5fcZ9Gb59QyJQAkoAxcAZJP8ByN2j8C?cluster=devnet"
+    },
+    {
+      "sig": "2sPmghjZppng3vGg5giLCVvVu4gkpPF2EqrdavGDQ2qDmXszLY6u9vqxGg6A3FmQyBEquaicXzL1gP2R8E6s5f5i",
+      "slot": 508064051,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20489
+          }
+        ]
+      },
+      "fee": 10000,
+      "delta": -10000,
+      "explorer": "https://explorer.solana.com/tx/2sPmghjZppng3vGg5giLCVvVu4gkpPF2EqrdavGDQ2qDmXszLY6u9vqxGg6A3FmQyBEquaicXzL1gP2R8E6s5f5i?cluster=devnet"
+    },
+    {
+      "sig": "HJ1PkrsqZQazAnzvkroDAVrwcLjxMmntk1DuU6MSRHK7aFVGYzMTmEmdiHuHERdjZ5LVukLiS1Vuxsn4HENZF1f",
+      "slot": 508064061,
+      "err": null,
+      "fee": 5000,
+      "delta": -5005000,
+      "explorer": "https://explorer.solana.com/tx/HJ1PkrsqZQazAnzvkroDAVrwcLjxMmntk1DuU6MSRHK7aFVGYzMTmEmdiHuHERdjZ5LVukLiS1Vuxsn4HENZF1f?cluster=devnet"
+    },
+    {
+      "sig": "AJt31VZoBGR3rMmX31MpWuRVjH4mAQonkuqPSaNFy3Mx6pK7JBpqa1zsVjbX8fqzZs5o9HdGCNkqvbggN7d6Rcs",
+      "slot": 508064076,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20490
+          }
+        ]
+      },
+      "fee": 10000,
+      "delta": 0,
+      "explorer": "https://explorer.solana.com/tx/AJt31VZoBGR3rMmX31MpWuRVjH4mAQonkuqPSaNFy3Mx6pK7JBpqa1zsVjbX8fqzZs5o9HdGCNkqvbggN7d6Rcs?cluster=devnet"
+    },
+    {
+      "sig": "4XiXjR5upJw7F4mZRSXEMpdQejuwiaFetGfjPfLji8jD9rk4bu5CAsXzJFJ47Lh6MbeSTsg4bbqVu4nT6EJC4JTs",
+      "slot": 508064084,
+      "err": null,
+      "fee": 10000,
+      "delta": -1300320,
+      "explorer": "https://explorer.solana.com/tx/4XiXjR5upJw7F4mZRSXEMpdQejuwiaFetGfjPfLji8jD9rk4bu5CAsXzJFJ47Lh6MbeSTsg4bbqVu4nT6EJC4JTs?cluster=devnet"
+    },
+    {
+      "sig": "5PoUtbKNutYijUKEQonMRm4BCHz56UCHzNaSv2Yv7CktRma4fMZvJNjRQEu1vQbjR79E2zhWzKqiJM5Ljn7iRH3A",
+      "slot": 508064092,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20490
+          }
+        ]
+      },
+      "fee": 10000,
+      "delta": -10000,
+      "explorer": "https://explorer.solana.com/tx/5PoUtbKNutYijUKEQonMRm4BCHz56UCHzNaSv2Yv7CktRma4fMZvJNjRQEu1vQbjR79E2zhWzKqiJM5Ljn7iRH3A?cluster=devnet"
+    },
+    {
+      "sig": "3gedjv1KruwRixE5MUutE4N18wf5Eep5Aquk4rfyR2QUV2vFRc7Dg5Qy77xz7YXHFWshT1dNKSs17fdhj2Z2Ad6Y",
+      "slot": 508064100,
+      "err": null,
+      "fee": 5000,
+      "delta": 4985000,
+      "explorer": "https://explorer.solana.com/tx/3gedjv1KruwRixE5MUutE4N18wf5Eep5Aquk4rfyR2QUV2vFRc7Dg5Qy77xz7YXHFWshT1dNKSs17fdhj2Z2Ad6Y?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register",
+      "expected": "success",
+      "r": "PASS ok",
+      "sig": "4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy"
+    },
+    {
+      "t": "wrong-eth-addr",
+      "expected": "0x5008",
+      "r": "PASS {\"InstructionError\":[1,{\"Custom\":20488}]}",
+      "sig": "53Qa5DcSzoFC848QWx21QUu3i4Mctxod2wMCicydWxcbxPgN57NpxCZzQ5fcZ9Gb59QyJQAkoAxcAZJP8ByN2j8C"
+    },
+    {
+      "t": "msg-mismatch",
+      "expected": "0x5009",
+      "r": "PASS {\"InstructionError\":[1,{\"Custom\":20489}]}",
+      "sig": "2sPmghjZppng3vGg5giLCVvVu4gkpPF2EqrdavGDQ2qDmXszLY6u9vqxGg6A3FmQyBEquaicXzL1gP2R8E6s5f5i"
+    },
+    {
+      "t": "fund-squatter",
+      "expected": "success",
+      "r": "PASS ok",
+      "sig": "HJ1PkrsqZQazAnzvkroDAVrwcLjxMmntk1DuU6MSRHK7aFVGYzMTmEmdiHuHERdjZ5LVukLiS1Vuxsn4HENZF1f"
+    },
+    {
+      "t": "squat-replay",
+      "expected": "0x500a",
+      "r": "PASS {\"InstructionError\":[1,{\"Custom\":20490}]}",
+      "sig": "AJt31VZoBGR3rMmX31MpWuRVjH4mAQonkuqPSaNFy3Mx6pK7JBpqa1zsVjbX8fqzZs5o9HdGCNkqvbggN7d6Rcs"
+    },
+    {
+      "t": "victim-register-after-squat",
+      "expected": "success",
+      "r": "PASS ok",
+      "sig": "4XiXjR5upJw7F4mZRSXEMpdQejuwiaFetGfjPfLji8jD9rk4bu5CAsXzJFJ47Lh6MbeSTsg4bbqVu4nT6EJC4JTs"
+    },
+    {
+      "t": "legacy-unbound-message",
+      "expected": "0x500a",
+      "r": "PASS {\"InstructionError\":[1,{\"Custom\":20490}]}",
+      "sig": "5PoUtbKNutYijUKEQonMRm4BCHz56UCHzNaSv2Yv7CktRma4fMZvJNjRQEu1vQbjR79E2zhWzKqiJM5Ljn7iRH3A"
+    },
+    {
+      "t": "sweep-squatter",
+      "expected": "success",
+      "r": "PASS ok",
+      "sig": "3gedjv1KruwRixE5MUutE4N18wf5Eep5Aquk4rfyR2QUV2vFRc7Dg5Qy77xz7YXHFWshT1dNKSs17fdhj2Z2Ad6Y"
+    },
+    {
+      "t": "squat-record-absent",
+      "r": "PASS record PDA not created by the squat attempt"
+    },
+    {
+      "t": "record-bound-to-intended-agent",
+      "r": "PASS agent GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3"
+    }
+  ],
+  "notes": [
+    "dark_secp256k1_auth upgraded in place 2026-10-06 (rerun 2): the precompile-verified message must be the canonical EIP-191 binding message naming the program id, the agent signer, the ETH address, domain_hash and auth_hash.",
+    "squat-replay: a funded second Solana key submitted the precompile ix + fields of a signature made for the test payer, signing as agent -> 0x500A BindingMessageMismatch (20490); the record PDA stayed absent and the intended agent then registered the same ETH address.",
+    "legacy-unbound-message: the pre-fix format (bare 32-byte message) -> 0x500A.",
+    "Outcomes graded from the ledger (getTransaction meta.err)."
+  ],
+  "log": "evidence/devnet-2026-10-06/raw/rerun2/logs/passport-03-rerun2.log"
+}

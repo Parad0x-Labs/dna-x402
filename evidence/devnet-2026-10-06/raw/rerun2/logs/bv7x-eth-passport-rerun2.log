@@ -1,0 +1,11 @@
+BV-7X Dark Passport — ETH wallet binding
+
+ETH wallet:  0x1b25b9f21861bc4cc315359acd3aaaa67a4a39f2
+Solana payer: GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3
+Registering...
+
+Registered.
+PDA:         21MMzTyHrVVN24cp2s47Ju2rbQTnYUvvzFEgVZogLqhs
+Solana tx:   59c62aMJEVj5DpyhiKkoAs8iC4GYGp2C1tBaBYBqCpvBrkWCESKVEFEkUoCpbkVPWCrSLcwaa8cZtznfG3f78hvn
+Explorer:    https://explorer.solana.com/tx/59c62aMJEVj5DpyhiKkoAs8iC4GYGp2C1tBaBYBqCpvBrkWCESKVEFEkUoCpbkVPWCrSLcwaa8cZtznfG3f78hvn?cluster=devnet
+Evidence:    evidence/integrations/bv7x-passports.json

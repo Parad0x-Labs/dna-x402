@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-06",
+  "cluster": "devnet",
+  "repo": "dna-x402@7439dde (fix(dark_null_lottery): a FallbackDraw winner must be the selected anchored ticket)",
+  "deployer": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+  "build": "cargo build-sbf (platform-tools v1.54, cargo-build-sbf 4.1.0), offline in container dnax-sbf-build from the tree committed as 7439dde; program tests run natively and against this .so (SBF_OUT_DIR)",
+  "upgrades": [
+    {
+      "program": "dark_null_lottery",
+      "id": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+      "commit": "7439dde",
+      "bytes": 95432,
+      "sha256": "d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda",
+      "extend": 0,
+      "programDataLength": 99512,
+      "sig": "359dmp5QAd9vYteatBnXTpHteHwjCszwZurSzSc3c7MsWznB8GSSjZzHH8Grx1zwk9uoLLJuC7dSyoH8haysSwhU",
+      "tx": {
+        "sig": "359dmp5QAd9vYteatBnXTpHteHwjCszwZurSzSc3c7MsWznB8GSSjZzHH8Grx1zwk9uoLLJuC7dSyoH8haysSwhU",
+        "slot": 508071735,
+        "err": null,
+        "fee": 5000,
+        "delta": 485668400,
+        "explorer": "https://explorer.solana.com/tx/359dmp5QAd9vYteatBnXTpHteHwjCszwZurSzSc3c7MsWznB8GSSjZzHH8Grx1zwk9uoLLJuC7dSyoH8haysSwhU?cluster=devnet"
+      },
+      "onchainPrefixSha256Match": true,
+      "nonzeroTail": 0,
+      "lastDeployedSlot": 508071735
+    }
+  ],
+  "deployerLamports": {
+    "before": 1449213745,
+    "after": 1448723745,
+    "spent": 490000
+  },
+  "buffersOpenAfter": 0,
+  "notes": [
+    "solana program deploy <so> --program-id <keypair> --upgrade-authority deployer (Agave CLI 4.2.1). The .so (95432 bytes) fits the existing 99512-byte program data, so no extend; the buffer rent came back on upgrade.",
+    "On-chain program bytes re-dumped; the first 95432 bytes hash to the built .so and the remainder is zero."
+  ]
+}

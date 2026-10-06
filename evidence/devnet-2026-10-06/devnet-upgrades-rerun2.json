@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-06",
+  "cluster": "devnet",
+  "repo": "dna-x402@a32933d (fixes aabb759 dark_secp256k1_auth, a32933d dark_null_lottery)",
+  "deployer": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+  "build": "cargo build-sbf (platform-tools v1.54, cargo-build-sbf 4.1.0), offline in container dnax-sbf-build from the working tree later committed as aabb759/a32933d; program tests also run against these .so files (SBF_OUT_DIR)",
+  "upgrades": [
+    {
+      "program": "dark_secp256k1_auth",
+      "id": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      "commit": "aabb759",
+      "bytes": 89104,
+      "sha256": "3af9a00dd6ab9d7110da4b4c293a89633c702211f09d9af2ba0469b3f13457b3",
+      "extend": 10240,
+      "programDataLength": 94056,
+      "sig": "23ddExeQE77PMdDMfbWzG5KUUjNUSkj8ZcHETk97z7a7VFWH7AbR7vYPi7VD4t2bjar4ghetbtZvVgrwi9phiQP5",
+      "tx": {
+        "sig": "23ddExeQE77PMdDMfbWzG5KUUjNUSkj8ZcHETk97z7a7VFWH7AbR7vYPi7VD4t2bjar4ghetbtZvVgrwi9phiQP5",
+        "slot": 508063592,
+        "err": null,
+        "fee": 5000,
+        "delta": 453522160,
+        "explorer": "https://explorer.solana.com/tx/23ddExeQE77PMdDMfbWzG5KUUjNUSkj8ZcHETk97z7a7VFWH7AbR7vYPi7VD4t2bjar4ghetbtZvVgrwi9phiQP5?cluster=devnet"
+      },
+      "onchainPrefixSha256Match": true
+    },
+    {
+      "program": "dark_null_lottery",
+      "id": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+      "commit": "a32933d",
+      "bytes": 94872,
+      "sha256": "be7f3cc6456be06fd6b3d917be1c94b14f1e213c2fe6ed000d96676d2ef845a1",
+      "extend": 10240,
+      "programDataLength": 99512,
+      "sig": "2VhbnYX8U4xdVhbqAyqrvgK9xvTbeNMUPVczHQe8JCLioJCk6yVhZBpTQjtBi7Q46ZjiYwNaxCDJQF94BVAoCxPS",
+      "tx": {
+        "sig": "2VhbnYX8U4xdVhbqAyqrvgK9xvTbeNMUPVczHQe8JCLioJCk6yVhZBpTQjtBi7Q46ZjiYwNaxCDJQF94BVAoCxPS",
+        "slot": 508063672,
+        "err": null,
+        "fee": 5000,
+        "delta": 482823600,
+        "explorer": "https://explorer.solana.com/tx/2VhbnYX8U4xdVhbqAyqrvgK9xvTbeNMUPVczHQe8JCLioJCk6yVhZBpTQjtBi7Q46ZjiYwNaxCDJQF94BVAoCxPS?cluster=devnet"
+      },
+      "onchainPrefixSha256Match": true
+    }
+  ],
+  "deployerLamports": {
+    "before": 1554207145,
+    "after": 1449213745,
+    "spent": 104993400
+  },
+  "buffersOpenAfter": 0,
+  "notes": [
+    "solana program extend <id> 10240 then solana program deploy <so> --program-id <keypair> --upgrade-authority deployer (Agave CLI 4.2.1). On-chain program bytes re-dumped; the first <bytes> bytes hash to the built .so and the remainder is zero."
+  ]
+}

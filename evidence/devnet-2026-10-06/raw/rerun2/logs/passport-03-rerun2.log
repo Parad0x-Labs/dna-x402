@@ -1,0 +1,31 @@
+
+=== MetaMask ETH binding e2e (devnet) ===
+Program: 7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu
+
+[1] Register with the canonical binding message...
+ETH address: 0xe101f55879d65ea0ca44a5568db86999748fb28a
+Record PDA:  AXJZJhLGgszKUuEJW7ZxpqMLoFyqg6Hqp4dMbYeGGZ1L
+  PASS register: err=null 4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy
+
+[2] Wrong ETH address in precompile (expect 0x5008 EthAddressMismatch)...
+  PASS wrong-eth-addr: err={"InstructionError":[1,{"Custom":20488}]} 53Qa5DcSzoFC848QWx21QUu3i4Mctxod2wMCicydWxcbxPgN57NpxCZzQ5fcZ9Gb59QyJQAkoAxcAZJP8ByN2j8C
+
+[3] msg_hash != keccak256(signed message) (expect 0x5009 MessageMismatch)...
+  PASS msg-mismatch: err={"InstructionError":[1,{"Custom":20489}]} 2sPmghjZppng3vGg5giLCVvVu4gkpPF2EqrdavGDQ2qDmXszLY6u9vqxGg6A3FmQyBEquaicXzL1gP2R8E6s5f5i
+
+[4] Replay a signature made for another agent (expect 0x500A BindingMessageMismatch)...
+  PASS fund-squatter: err=null HJ1PkrsqZQazAnzvkroDAVrwcLjxMmntk1DuU6MSRHK7aFVGYzMTmEmdiHuHERdjZ5LVukLiS1Vuxsn4HENZF1f
+  PASS squat-replay: err={"InstructionError":[1,{"Custom":20490}]} AJt31VZoBGR3rMmX31MpWuRVjH4mAQonkuqPSaNFy3Mx6pK7JBpqa1zsVjbX8fqzZs5o9HdGCNkqvbggN7d6Rcs
+  record after squat attempt: absent (PASS)
+
+[5] Intended agent registers the same ETH address...
+  PASS victim-register-after-squat: err=null 4XiXjR5upJw7F4mZRSXEMpdQejuwiaFetGfjPfLji8jD9rk4bu5CAsXzJFJ47Lh6MbeSTsg4bbqVu4nT6EJC4JTs
+  record agent: GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3 (PASS)
+
+[6] Legacy unbound 32-byte message (expect 0x500A)...
+  PASS legacy-unbound-message: err={"InstructionError":[1,{"Custom":20490}]} 5PoUtbKNutYijUKEQonMRm4BCHz56UCHzNaSv2Yv7CktRma4fMZvJNjRQEu1vQbjR79E2zhWzKqiJM5Ljn7iRH3A
+  PASS sweep-squatter: err=null 3gedjv1KruwRixE5MUutE4N18wf5Eep5Aquk4rfyR2QUV2vFRc7Dg5Qy77xz7YXHFWshT1dNKSs17fdhj2Z2Ad6Y
+
+PASS: MetaMask ETH binding verified on-chain.
+TX: https://explorer.solana.com/tx/4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy?cluster=devnet
+Evidence: evidence/passport/metamask-eth-binding-e2e.json

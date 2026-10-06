@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-06",
+  "cluster": "devnet",
+  "repo": "dna-x402@a32933d",
+  "commits": {
+    "aabb759": "fix(dark_secp256k1_auth): bind the signed message to the agent key, program id and domain",
+    "a32933d": "fix(dark_null_lottery): ClaimJackpot on a Drawn round requires the winning anchored ticket"
+  },
+  "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
+  "suites": [
+    {
+      "file": "evidence/devnet-2026-10-06/dna-passport-03-metamask-rerun2.json",
+      "suite": "dna-passport-03-metamask",
+      "program": {
+        "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+      },
+      "result": "PASS",
+      "pass": 10,
+      "fail": 0,
+      "signatures": 8
+    },
+    {
+      "file": "evidence/devnet-2026-10-06/dna-bv7x-eth-passport-rerun2.json",
+      "suite": "dna-bv7x-eth-passport",
+      "program": {
+        "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+      },
+      "result": "PASS",
+      "pass": 1,
+      "fail": 0,
+      "signatures": 1
+    },
+    {
+      "file": "evidence/devnet-2026-10-06/dna-probe-lottery-claim-rerun2.json",
+      "suite": "dna-probe-lottery-claim",
+      "program": {
+        "dark_null_lottery": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd"
+      },
+      "result": "PASS",
+      "pass": 14,
+      "fail": 0,
+      "signatures": 12
+    }
+  ],
+  "sol": {
+    "deployer_lamports_spent": 104993400,
+    "test_payer_lamports_spent": 6215680,
+    "test_payer_before": 494079640,
+    "test_payer_after": 487863960,
+    "child_wallets_swept_to_zero": [
+      "DLMKuLrTxP6rF5NaHcfxscUEQh3ggeoYp8QSSLNgWEHe",
+      "F7oAXmcm7cyyBCsfarvtKri982mwy2SpRv34nGdsThn8",
+      "3ajxBBfXeBiDzy6C31SUgEirNzEbkrh5r6BVu5u68WNP"
+    ]
+  },
+  "sig_status": "evidence/devnet-2026-10-06/raw/rerun2/sig-status.json (21 signatures: 12 ok, 9 failed as expected negatives, 0 not found)"
+}

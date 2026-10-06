@@ -1,0 +1,36 @@
+{
+  "suite": "dna-bv7x-eth-passport",
+  "repo": "dna-x402@a32933d (fixes aabb759 dark_secp256k1_auth, a32933d dark_null_lottery)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "SECP256K1_AUTH_PROGRAM_ID=7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu SOLANA_RPC_URL=https://api.devnet.solana.com node scripts/integrations/bv7x-eth-passport.mjs --test",
+  "programId": {
+    "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+  },
+  "result": "PASS",
+  "pass": 1,
+  "fail": 0,
+  "timestamp": "2026-10-06T10:36:12Z",
+  "signatures": [
+    {
+      "sig": "59c62aMJEVj5DpyhiKkoAs8iC4GYGp2C1tBaBYBqCpvBrkWCESKVEFEkUoCpbkVPWCrSLcwaa8cZtznfG3f78hvn",
+      "slot": 508064138,
+      "err": null,
+      "fee": 10000,
+      "delta": -1300320,
+      "explorer": "https://explorer.solana.com/tx/59c62aMJEVj5DpyhiKkoAs8iC4GYGp2C1tBaBYBqCpvBrkWCESKVEFEkUoCpbkVPWCrSLcwaa8cZtznfG3f78hvn?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register (binding message via scripts/passport/lib/eth-agent.mjs)",
+      "r": "PASS 59c62aMJEVj5DpyhiKko...",
+      "recordPda": "21MMzTyHrVVN24cp2s47Ju2rbQTnYUvvzFEgVZogLqhs",
+      "recordAgent": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3"
+    }
+  ],
+  "notes": [
+    "bv7x-eth-passport now signs the canonical binding message (program id + Solana key) through the shared client lib."
+  ],
+  "log": "evidence/devnet-2026-10-06/raw/rerun2/logs/bv7x-eth-passport-rerun2.log"
+}

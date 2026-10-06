@@ -1,0 +1,14 @@
+before=1449213745
+== dark_null_lottery Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd new=95432 sha256=d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda commit=7439dde 14:03:45
+Program Id: Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd
+
+Signature: 359dmp5QAd9vYteatBnXTpHteHwjCszwZurSzSc3c7MsWznB8GSSjZzHH8Grx1zwk9uoLLJuC7dSyoH8haysSwhU
+
+deployer: 1449213745 -> 1448723745 lamports (spent 490000)
+
+Buffer Address                               | Authority                                    | Balance
+
+dark_null_lottery dump=99512 prefix_sha256=d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda built_sha256=d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda match=True nonzero_tail=0
+Authority: 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q
+Last Deployed In Slot: 508071735
+Data Length: 99512 (0x184b8) bytes

@@ -8,8 +8,10 @@ Recorded runs against the 21 programs deployed on devnet on 2026-10-06 under upg
 Cluster: devnet (`https://api.devnet.solana.com`; two reruns used the public OnFinality devnet endpoint).
 Test payer: `GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3`. Every transaction signature in the per-suite
 files was re-read from the ledger (slot and error) after the run. Scripts ran from a `git archive` of this
-repository inside a tmpfs container with `npm ci --ignore-scripts`. Raw console logs are not published; each
-per-suite file keeps the command, program IDs, signatures, slots, on-chain errors and the graded result.
+repository inside a tmpfs container with `npm ci --ignore-scripts`. Each per-suite file keeps the command,
+program IDs, signatures, slots, on-chain errors and the graded result. Raw console logs, probe sources and
+evidence builders are published for reruns 2 and 3 under [`raw/`](./raw/); the earlier runs keep the per-suite
+files only.
 
 ## First run (dna-x402 `8743fd7` plus the program-ID change committed as `121109d`)
 
@@ -75,15 +77,58 @@ compiled VK).
 
 Rerun totals: 43 pass, 0 fail across 8 suites ([`summary-rerun.json`](./summary-rerun.json)).
 
-## Not demonstrated by these runs
+## Rerun 2: ETH binding message and lottery claim binding (dna-x402 `a32933d`)
+
+Two programs were upgraded in place from the fix commits; build, hashes and the on-chain dump check are in
+[`devnet-upgrades-rerun2.json`](./devnet-upgrades-rerun2.json).
+
+| Program | Change | Commit | Upgrade tx | Slot |
+|---|---|---|---|---|
+| dark_secp256k1_auth `7dF2…` | the precompile-verified message must be the EIP-191 binding message naming the program, agent key, ETH address, domain and auth hashes; new error 0x500A BindingMessageMismatch | `aabb759` | `23ddExeQ…` | 508063592 |
+| dark_null_lottery `Ecs5…` | ClaimJackpot on a Drawn round requires the claimant's anchored ticket: numbers, leaf index and SHA-256 Merkle proof under `tickets_root` | `a32933d` | `2VhbnYX8…` | 508063672 |
+
+| Suite | Result | Pass/Total | File |
+|---|---|---|---|
+| passport 03 metamask (wrong address 0x5008, message mismatch 0x5009, squat replay by a second Solana key 0x500A, intended agent registers the same address afterwards, legacy unbound message 0x500A) | PASS | 10/10 | [dna-passport-03-metamask-rerun2.json](./dna-passport-03-metamask-rerun2.json) |
+| bv7x eth passport (binding message built by `scripts/passport/lib/eth-agent.mjs`) | PASS | 1/1 | [dna-bv7x-eth-passport-rerun2.json](./dna-bv7x-eth-passport-rerun2.json) |
+| lottery claim (nullifier-only claim 0x600B, anchored losing ticket 0x600A, relabelled ticket 0x600B, winner's ticket and proof under another signer 0x600B, owner claims, second claim 0x6005) | PASS | 14/14 | [dna-probe-lottery-claim-rerun2.json](./dna-probe-lottery-claim-rerun2.json) |
+
+Rerun 2 totals: 25 pass, 0 fail across 3 suites ([`summary-rerun2.json`](./summary-rerun2.json)). All 21
+signatures were re-read from the ledger: 12 succeeded and 9 failed as the expected negatives
+([`raw/rerun2/sig-status.json`](./raw/rerun2/sig-status.json)).
+
+## Rerun 3: lottery FallbackDraw selection (dna-x402 `7439dde`)
+
+dark_null_lottery was upgraded in place from `7439dde` (`359dmp5Q…`, slot 508071735, deployed bytes SHA-256
+`d7048db0…`; [`devnet-upgrades-rerun3.json`](./devnet-upgrades-rerun3.json)). FallbackDraw takes three
+consecutive Drawn rounds, requires the third round's committed draw seed and its anchored tickets root and
+count, and records no winner; only the owner of the selected anchored ticket can claim.
+
+| Suite | Result | Pass/Total | File |
+|---|---|---|---|
+| lottery claim and fallback. Part A: the rerun 2 cases on a fresh round. Part B: FallbackDraw by a non-admin 0x6008, with an uncommitted or another round's seed 0x6004, a pool root or size that is not the anchored tree 0x600C, rounds out of order 0x600E; the valid FallbackDraw; claims with the old synthetic nullifier 0x600B, an unselected ticket carrying the drawn numbers 0x600D, the selected ticket under another signer 0x600B; the selected owner claims; second claim 0x6005; claim on a NoWinner round 0x6007; FallbackDraw again 0x6007 | PASS | 41/41 | [dna-probe-lottery-claim-rerun3.json](./dna-probe-lottery-claim-rerun3.json) |
+
+Rerun 3 totals: 41 pass, 0 fail ([`summary-rerun3.json`](./summary-rerun3.json)).
+
+### Raw files for reruns 2 and 3
+
+- [`raw/rerun2/logs/`](./raw/rerun2/logs/): console logs, the lottery probe (`lottery-claim-rerun2.mjs`), its
+  helper `lib.mjs` and `build-rerun2-evidence.mjs`, which produced the rerun 2 files above.
+- [`raw/rerun2/src/evidence/`](./raw/rerun2/src/evidence/): the files the passport and bv7x scripts wrote.
+- [`raw/rerun3/logs/`](./raw/rerun3/logs/): console log, upgrade log, the probe (`lottery-claim-rerun3.mjs`),
+  `lib.mjs` and `build-rerun3-evidence.mjs`.
+
+The scripts ran in a container and read the payer key from `/w/keys/payer.json` there; no key material is in
+these files. Signatures sampled from reruns 2 and 3 (the three upgrades, passport register, squat replay,
+intended-agent register, bv7x register, and six lottery claim and FallbackDraw cases) were confirmed on devnet
+with `solana confirm -v <sig> --url devnet`; slot and status match the recorded files. Both upgraded programs
+were dumped again after rerun 3: `dark_secp256k1_auth` hashes to `3af9a00d…` and `dark_null_lottery` to
+`d7048db0…` over the built length, with a zero tail.
+
+## Not covered by these runs
 
 - Reputation gate positive path: only the rejection paths ran; no proving key in the repository matches the
   compiled 7-input `track_record` VK.
-- ETH-address squatting: the deployed `dark_secp256k1_auth` binds the precompile-verified address, message and
-  signature, but not the registering Solana key to the signed message. Anyone holding a signature from an ETH
-  key can register that ETH address to their own Solana key first, until a fix is committed and deployed.
-- Lottery `ClaimJackpot`: the devnet build binds the first nullifier that claims a drawn round as its winner
-  (no proof of ticket ownership); replay and a second nullifier are refused.
 - Passkey browser flows (Face ID / WebAuthn in a real browser) need a person at the device; the runs above
   use scripted P-256 keys.
 - `dark_semaphore` and `dark_bls12_381_credential` run with `IS_MAINNET_READY = false`: Signal records

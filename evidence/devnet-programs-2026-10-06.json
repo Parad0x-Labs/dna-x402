@@ -6,7 +6,7 @@
   "upgrade_authority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
   "source_base_commit": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
   "source_build_match": "match",
-  "source_build_note": "Each program's deployed bytes equal the cargo-build-sbf output of the committed source named in source_commit. 121109d is byte-identical in programs/, crates/, Cargo.toml and Cargo.lock to the tree the 16 programs that were not upgraded were built from (8743fd7 plus the program-ID and devnet-feature change, compared with diff -r). The five programs upgraded later the same day were built from a git archive of 1157630 (programs/ and crates/ unchanged at 9ff95ee); their fixes are 01f5e35, 34047e2, 3134df4, 30a0ce6 and c9f03f8. Upgrade builds: cargo-build-sbf 4.1.0, platform-tools v1.54, offline container. Builds were not repeated in this pass; the match is the hash comparison above.",
+  "source_build_note": "Each program's deployed bytes equal the cargo-build-sbf output of the committed source named in source_commit. 121109d is byte-identical in programs/, crates/, Cargo.toml and Cargo.lock to the tree the 16 programs that were not upgraded were built from (8743fd7 plus the program-ID and devnet-feature change, compared with diff -r). The five programs upgraded later the same day were built from a git archive of 1157630 (programs/ and crates/ unchanged at 9ff95ee); their fixes are 01f5e35, 34047e2, 3134df4, 30a0ce6 and c9f03f8. Upgrade builds: cargo-build-sbf 4.1.0, platform-tools v1.54, offline container. Builds were not repeated in this pass; the match is the hash comparison above. Two more in-place upgrades followed: dark_secp256k1_auth from aabb759 (slot 508063592) and dark_null_lottery from a32933d (slot 508063672) and then 7439dde (slot 508071735), built with the same toolchain from those commits; after each upgrade the program was re-dumped and its first so_length bytes hash to so_sha256 with a zero tail (re-checked for both on 2026-10-06 after slot 508072616). upgrade_history lists every in-place upgrade of the two programs.",
   "not_deployed": [
     "agent_credential_mint",
     "dark_bn254_g2_ref",
@@ -193,19 +193,39 @@
       "name": "dark_secp256k1_auth",
       "source_dir": "programs/dark_secp256k1_auth",
       "program_id": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
-      "last_deployed_slot": 508051858,
-      "programdata_length": 83816,
-      "so_sha256": "b7855dd852ec99caba73acb47e125619892a22125acf783a040ad4be4dc0dca2",
+      "last_deployed_slot": 508063592,
+      "programdata_length": 94056,
+      "so_sha256": "3af9a00dd6ab9d7110da4b4c293a89633c702211f09d9af2ba0469b3f13457b3",
       "build_variant": "default",
-      "so_length": 80336,
-      "source_commit": "1157630",
-      "fix_commit": "34047e2",
-      "upgrade_signature": "2DwGkrg4r6BAAatynyYNEZguKv7kvEVZEZty4bz3TSHDWhHXo5xX669iyadomyJAgfnvqY3q3ghsxSZsteFqw3DK",
-      "previous_so_sha256": "01f990e948306a5249bad9ec2be71fce3578c70005d3fda599809d8e6f62691e",
+      "so_length": 89104,
+      "source_commit": "aabb759",
+      "fix_commit": "aabb759",
+      "upgrade_signature": "23ddExeQE77PMdDMfbWzG5KUUjNUSkj8ZcHETk97z7a7VFWH7AbR7vYPi7VD4t2bjar4ghetbtZvVgrwi9phiQP5",
+      "previous_so_sha256": "b7855dd852ec99caba73acb47e125619892a22125acf783a040ad4be4dc0dca2",
       "build_command": "cargo build-sbf",
       "test_suites": [
         "evidence/devnet-2026-10-06/dna-passport-03-metamask-rerun.json",
-        "evidence/devnet-2026-10-06/dna-bv7x-eth-passport-rerun.json"
+        "evidence/devnet-2026-10-06/dna-bv7x-eth-passport-rerun.json",
+        "evidence/devnet-2026-10-06/dna-passport-03-metamask-rerun2.json",
+        "evidence/devnet-2026-10-06/dna-bv7x-eth-passport-rerun2.json"
+      ],
+      "upgrade_history": [
+        {
+          "fix_commit": "34047e2",
+          "so_sha256": "b7855dd852ec99caba73acb47e125619892a22125acf783a040ad4be4dc0dca2",
+          "so_length": 80336,
+          "upgrade_signature": "2DwGkrg4r6BAAatynyYNEZguKv7kvEVZEZty4bz3TSHDWhHXo5xX669iyadomyJAgfnvqY3q3ghsxSZsteFqw3DK",
+          "slot": 508051858,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json"
+        },
+        {
+          "fix_commit": "aabb759",
+          "so_sha256": "3af9a00dd6ab9d7110da4b4c293a89633c702211f09d9af2ba0469b3f13457b3",
+          "so_length": 89104,
+          "upgrade_signature": "23ddExeQE77PMdDMfbWzG5KUUjNUSkj8ZcHETk97z7a7VFWH7AbR7vYPi7VD4t2bjar4ghetbtZvVgrwi9phiQP5",
+          "slot": 508063592,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json"
+        }
       ]
     },
     {
@@ -285,18 +305,46 @@
       "name": "dark_null_lottery",
       "source_dir": "programs/null_lottery",
       "program_id": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
-      "last_deployed_slot": 508051933,
-      "programdata_length": 89272,
-      "so_sha256": "43537e1da61b65b2f6628485fe41cd166b6abeef765dd890b6f9a570050c365b",
+      "last_deployed_slot": 508071735,
+      "programdata_length": 99512,
+      "so_sha256": "d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda",
       "build_variant": "default",
-      "so_length": 89096,
-      "source_commit": "1157630",
-      "fix_commit": "3134df4",
-      "upgrade_signature": "53Kb2UMFwuGYTych2sAkBLzdFcfXRJfjEeakyRVRuj73zHXkE1vKrMQX2GzqgLkHeXcXjNceqmifZTjAQP2hqiWD",
-      "previous_so_sha256": "b20ffb895a8d9581122ad818ff955af9876207bfc079f3c9d0b0761f74614129",
+      "so_length": 95432,
+      "source_commit": "7439dde",
+      "fix_commit": "7439dde",
+      "upgrade_signature": "359dmp5QAd9vYteatBnXTpHteHwjCszwZurSzSc3c7MsWznB8GSSjZzHH8Grx1zwk9uoLLJuC7dSyoH8haysSwhU",
+      "previous_so_sha256": "be7f3cc6456be06fd6b3d917be1c94b14f1e213c2fe6ed000d96676d2ef845a1",
       "build_command": "cargo build-sbf",
       "test_suites": [
-        "evidence/devnet-2026-10-06/dna-probe-lottery-rerun.json"
+        "evidence/devnet-2026-10-06/dna-probe-lottery-rerun.json",
+        "evidence/devnet-2026-10-06/dna-probe-lottery-claim-rerun2.json",
+        "evidence/devnet-2026-10-06/dna-probe-lottery-claim-rerun3.json"
+      ],
+      "upgrade_history": [
+        {
+          "fix_commit": "3134df4",
+          "so_sha256": "43537e1da61b65b2f6628485fe41cd166b6abeef765dd890b6f9a570050c365b",
+          "so_length": 89096,
+          "upgrade_signature": "53Kb2UMFwuGYTych2sAkBLzdFcfXRJfjEeakyRVRuj73zHXkE1vKrMQX2GzqgLkHeXcXjNceqmifZTjAQP2hqiWD",
+          "slot": 508051933,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json"
+        },
+        {
+          "fix_commit": "a32933d",
+          "so_sha256": "be7f3cc6456be06fd6b3d917be1c94b14f1e213c2fe6ed000d96676d2ef845a1",
+          "so_length": 94872,
+          "upgrade_signature": "2VhbnYX8U4xdVhbqAyqrvgK9xvTbeNMUPVczHQe8JCLioJCk6yVhZBpTQjtBi7Q46ZjiYwNaxCDJQF94BVAoCxPS",
+          "slot": 508063672,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json"
+        },
+        {
+          "fix_commit": "7439dde",
+          "so_sha256": "d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda",
+          "so_length": 95432,
+          "upgrade_signature": "359dmp5QAd9vYteatBnXTpHteHwjCszwZurSzSc3c7MsWznB8GSSjZzHH8Grx1zwk9uoLLJuC7dSyoH8haysSwhU",
+          "slot": 508071735,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json"
+        }
       ]
     },
     {
@@ -364,7 +412,27 @@
     "not_run": [
       "dark_reputation_gate positive path: no committed zkey matches the compiled track_record VK"
     ],
-    "note": "Every first-run failure is in a program upgraded afterwards (dark_secp256r1_vault, dark_secp256k1_auth, dark_null_lottery); the rerun of each passes."
+    "note": "Every first-run failure is in a program upgraded afterwards (dark_secp256r1_vault, dark_secp256k1_auth, dark_null_lottery); the rerun of each passes. Rerun 2 (ETH binding message, lottery claim binding): passport 03 10/10 including the squat replay refused with 0x500A, bv7x 1/1, lottery claim 14/14. Rerun 3 (lottery FallbackDraw selection): 41/41.",
+    "rerun2": {
+      "commit": "a32933d",
+      "suites": 3,
+      "pass": 25,
+      "fail": 0,
+      "summary": "evidence/devnet-2026-10-06/summary-rerun2.json",
+      "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json"
+    },
+    "rerun3": {
+      "commit": "7439dde",
+      "suites": 1,
+      "pass": 41,
+      "fail": 0,
+      "summary": "evidence/devnet-2026-10-06/summary-rerun3.json",
+      "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json"
+    }
   },
-  "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json"
+  "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json",
+  "upgrades_later": [
+    "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
+    "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json"
+  ]
 }

@@ -1,0 +1,15 @@
+[PASS] fund loser + attacker 0.01 SOL each  err=""  52u4QJoBVBWMHZ7BW7W5CNkieVY4HxTWEBfTebUnjM2cpLLuZpZ2BF1djnUgr9VvTv3RnAvqewSKZJNqDY7FNZJC
+[PASS] CommitRound id=3  err=""  65bQm1eJnyG38MZndTxWdonCygijXYcphiR9RU4juZtr3NUeeHxrtDiBfD2ejLnq9So82ArVZMZk5b44ainjT1xA
+[PASS] AnchorTickets (5-ticket SHA-256 tickets tree)  err=""  fBJj9GabXV8KdKMFQxn1qJ3ahUDBzfTZz85Uvjw88udbncadDfT51VFTpJbLzP17VQWQRU85seSGABcykRZ35Qz
+[PASS] RevealDraw (committed seed) -> Drawn  err=""  5D18zYpdjF1fWVcrFjQKK4JQVjJ8ta9G1YA5xkd52AZZJXM2pqkn1BEsE3D8oVXTy7SbpkW1eNknyaJu92PFcKYh
+[PASS] drawn 6,16,17,23,27 status=3
+[PASS] ATTACK nullifier-only claim on Drawn round (old gap) -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  4ApghQJd4v1szitEHGjfEjTcPuquuUC6gFqDb7S1Qo48aFVPZETt4ktb6kbrKLgKFHv9a4PSHnCfz1PAjZaGsEDc
+[PASS] ATTACK anchored LOSING ticket (valid proof) -> TicketNotWinning (0x600A)  err={"InstructionError":[0,{"Custom":24586}]}  2qmpN4rGLfuTPgN11gqAZ6TXAMyMM7C9hgAKtVdj6xuMYPHSxuWFGDLs4bU5Mjifeg9fCdwxE9xF6RDgdBo8sQ2N
+[PASS] ATTACK own ticket relabelled with the drawn numbers -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  Hb57j3PB28BSdVP33DGrZWY4Jrt8Tg8xzZpwEdGrP8MJAF6brZsj4edvDfU7khvjcucP1YuithoDaWcjYA3wXg4
+[PASS] ATTACK front-run: winner's ticket + proof signed by attacker -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  4F12owh1GsPL5a9Svmk7vphrnhRMiDX58iUpqCXLbL6XiE1w3E3AytVsv1a4EsSiGSxEExR7h5RL7gYWDY4tXYUL
+[PASS] Winner (ticket owner) claims with numbers + proof -> Won  err=""  3VCHYkbTVcXMpZGYu4qHhLTTyN7M99wBpwMgkEf6VueU9y87RFT752E8vjSceH1aKLGg8Yns9zaPbVr5jUEEf6jn
+[PASS] round status=4 winner bound
+[PASS] ATTACK second claim of the same ticket -> AlreadyClaimed (0x6005)  err={"InstructionError":[0,{"Custom":24581}]}  2J9edTuEURhp4jwt8rELgwdXSjpxvH2nKd4B3nFECbXXYsRCCcyxF1Tb5KqYjyMfwHghidS34CnWG8X2668vwDGK
+[PASS] sweep loser back to payer  err=""  9u136yoD7yaGraFzPASr7j9aGgSKD675xTVJ8x1NHuBsMsCsnRJsDDkaEim6aFPfa7t6TvY71kdbLza4fVVUxDP
+[PASS] sweep attacker back to payer  err=""  4dN5DRcHtHLsDmDAswNB5HgKpJLF31Jd51qKHY6EyxyY1CGarG9NEx6Qmw8K49YiTmr6FMo6eU53mDYpZekhJ46t
+RESULT 14/14 PASS

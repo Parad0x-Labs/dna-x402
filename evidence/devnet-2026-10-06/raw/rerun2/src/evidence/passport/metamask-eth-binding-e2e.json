@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.1",
+  "generatedAt": "2026-10-06T10:33:27.758Z",
+  "test": "metamask-eth-binding-devnet",
+  "cluster": "devnet",
+  "program": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+  "results": {
+    "register": {
+      "pass": true,
+      "signature": "4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy"
+    },
+    "rejectWrong": {
+      "pass": true,
+      "expectedError": "0x5008 EthAddressMismatch"
+    },
+    "rejectMessageMismatch": {
+      "pass": true,
+      "expectedError": "0x5009 MessageMismatch"
+    },
+    "rejectSquatReplay": {
+      "pass": true,
+      "expectedError": "0x500A BindingMessageMismatch"
+    },
+    "intendedAgentRegisters": {
+      "pass": true,
+      "signature": "4XiXjR5upJw7F4mZRSXEMpdQejuwiaFetGfjPfLji8jD9rk4bu5CAsXzJFJ47Lh6MbeSTsg4bbqVu4nT6EJC4JTs"
+    },
+    "rejectLegacyMessage": {
+      "pass": true,
+      "expectedError": "0x500A BindingMessageMismatch"
+    }
+  },
+  "transactions": [
+    {
+      "label": "register",
+      "sig": "4yibMxr9kZqjvrUYxsQvz7zYXPquLwExNSDHPEv1TKnUqhcSMNn61GUqdho99xiDkkYdoqyh37JTXoCxTjui6tiy",
+      "slot": 508064037,
+      "err": null,
+      "expected": "success",
+      "pass": true
+    },
+    {
+      "label": "wrong-eth-addr",
+      "sig": "53Qa5DcSzoFC848QWx21QUu3i4Mctxod2wMCicydWxcbxPgN57NpxCZzQ5fcZ9Gb59QyJQAkoAxcAZJP8ByN2j8C",
+      "slot": 508064044,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20488
+          }
+        ]
+      },
+      "expected": "0x5008",
+      "pass": true
+    },
+    {
+      "label": "msg-mismatch",
+      "sig": "2sPmghjZppng3vGg5giLCVvVu4gkpPF2EqrdavGDQ2qDmXszLY6u9vqxGg6A3FmQyBEquaicXzL1gP2R8E6s5f5i",
+      "slot": 508064051,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20489
+          }
+        ]
+      },
+      "expected": "0x5009",
+      "pass": true
+    },
+    {
+      "label": "fund-squatter",
+      "sig": "HJ1PkrsqZQazAnzvkroDAVrwcLjxMmntk1DuU6MSRHK7aFVGYzMTmEmdiHuHERdjZ5LVukLiS1Vuxsn4HENZF1f",
+      "slot": 508064061,
+      "err": null,
+      "expected": "success",
+      "pass": true
+    },
+    {
+      "label": "squat-replay",
+      "sig": "AJt31VZoBGR3rMmX31MpWuRVjH4mAQonkuqPSaNFy3Mx6pK7JBpqa1zsVjbX8fqzZs5o9HdGCNkqvbggN7d6Rcs",
+      "slot": 508064076,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20490
+          }
+        ]
+      },
+      "expected": "0x500a",
+      "pass": true
+    },
+    {
+      "label": "victim-register-after-squat",
+      "sig": "4XiXjR5upJw7F4mZRSXEMpdQejuwiaFetGfjPfLji8jD9rk4bu5CAsXzJFJ47Lh6MbeSTsg4bbqVu4nT6EJC4JTs",
+      "slot": 508064084,
+      "err": null,
+      "expected": "success",
+      "pass": true
+    },
+    {
+      "label": "legacy-unbound-message",
+      "sig": "5PoUtbKNutYijUKEQonMRm4BCHz56UCHzNaSv2Yv7CktRma4fMZvJNjRQEu1vQbjR79E2zhWzKqiJM5Ljn7iRH3A",
+      "slot": 508064092,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 20490
+          }
+        ]
+      },
+      "expected": "0x500a",
+      "pass": true
+    },
+    {
+      "label": "sweep-squatter",
+      "sig": "3gedjv1KruwRixE5MUutE4N18wf5Eep5Aquk4rfyR2QUV2vFRc7Dg5Qy77xz7YXHFWshT1dNKSs17fdhj2Z2Ad6Y",
+      "slot": 508064100,
+      "err": null,
+      "expected": "success",
+      "pass": true
+    }
+  ],
+  "allPass": true,
+  "notes": [
+    "The ETH key personal_signs a message naming the program id, the Solana agent key, the ETH address, domain_hash and auth_hash; the program rebuilds it on-chain and requires the precompile-verified message to equal it.",
+    "Identity binding only, no funds."
+  ]
+}

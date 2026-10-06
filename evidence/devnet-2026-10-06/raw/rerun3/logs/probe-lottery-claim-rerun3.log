@@ -1,0 +1,42 @@
+[PASS] fund loser + attacker 0.01 SOL each  err=""  3qodTjvDYn7rEwdzaS2eWYDSi9wEiTjQ2nmordSqCD4kqxe6YR5WBuY7o4SUZRmHQM7NCbdfAhLS7MBcYdtnCADb
+[PASS] A CommitRound id=4  err=""  3jMRDfoLPRhDYJPm9xNzaEPCJVNawBRKeS8TzuZbqytZEeti4niQpYdd5yvjZEwjcpeNMoGHGhw8uCnAmvJAezbN
+[PASS] A AnchorTickets (5-ticket SHA-256 tickets tree)  err=""  5TvdbwG5KZJrasNUxwp748veBp36rMedsXGt5qLbK1znVS3Lzk6kzYF8KMKV2rkomej91aWchB3x3LbdL6tLBoUH
+[PASS] A RevealDraw (committed seed) -> Drawn  err=""  4yfAqKucJ8hC8SbtbPMxuZobZZAgb5XXruHHVAZymHud5drP9kZS3nL8wAtrM8Jx1oqtvcRADytQph4SK2iGQqSo
+[PASS] A on-chain drawn numbers == draw_numbers(seed, round_id); status Drawn
+[PASS] A ATTACK nullifier-only claim on Drawn round -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  3a8Hbx8iME2ve2XLrSkw1ktWd1rSGedMgmv19sWGsrz8kaiWPP54Qj4rVehnnJvXGL2D6kEVWX8yrAnDqjwiEK3u
+[PASS] A ATTACK anchored LOSING ticket (valid proof) -> TicketNotWinning (0x600A)  err={"InstructionError":[0,{"Custom":24586}]}  2yknDXumo4yFQZuXw3afwMgFT77pWGpuGs1Fttg3gdz7ATkhcazn6XzQhMqehWMZUgu2XSw9w8QbAvxdjJrBcvCa
+[PASS] A ATTACK own ticket relabelled with the drawn numbers -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  B85uqSZ24taUxGT7UNNawAAP88wboW2YTzDCYbEZ1LbU69TMSqHU7ZH6JhqmYEv7GoYCbfyqqECmpK4P5ouWk7J
+[PASS] A ATTACK front-run: winner's ticket + proof signed by attacker -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  5jqPpcS8ig1ZJdKxH4okgQf6KxnEWGbizBq8wPD84cCzCvHNeSJvPsd7cF1piHzhYoU7QtjNsSSWrz2uScBLNYMi
+[PASS] A Winner (ticket owner) claims with numbers + proof -> Won  err=""  2ZWwW27hsQWgSTwyMpWrynXykVpgSSeAP3eEFrgmu1kmkTSo4vYAYLLogDsevvCiDUbvomemvz5k5ctBxPMf7Q12
+[PASS] A round status Won, winner_nullifier = winning ticket nullifier
+[PASS] A ATTACK second claim of the same ticket -> AlreadyClaimed (0x6005)  err={"InstructionError":[0,{"Custom":24581}]}  3GQMj4DmGBydA9MB7KRNa6uFVFmybYg5u4iyi8vWoSLzLuBE9WqxbVD17CoohwLbCXxoZDJe2CJJQRP1fkTw1RQG
+[PASS] B CommitRound id=5  err=""  3WtDhUkmTgx1GGbgMrbF7j4n6Zu21HYELC9CXvtp4q3b16gQbq3Jnkw31phEs8nXAninRntDfe5HvXTpedVqLqnd
+[PASS] B AnchorTickets id=5 (1 ticket)  err=""  24ueqsERpS38nNw6FUhSmvdbjrrh86JGLq89JnVCCJQjMq9vw6hmLzoLCdrq8VvCZnWUMq2QzzqFdqjcsBGwk5iw
+[PASS] B RevealDraw id=5 -> Drawn  err=""  5e7CtN79Zk8XiqBkjn1APnwYZKMEKijujjRsrDuAEcw86uiWXzmhR7feJpyK6JcQcFy1jiNySUv2QmzmTaTT5LCT
+[PASS] B CommitRound id=6  err=""  4qdPgvxFYfwpHVvwnj3UCH3Dugsu3x56g2oFZaMP95L9t5N5DMLad28LxM2HiwPpqqsE6iS6RHxSuKVdiqtT3q9a
+[PASS] B AnchorTickets id=6 (1 ticket)  err=""  aNTDDkVA59XMHFH3Bpw4XChNwLsoVKjEks7gb25XSkQKnVCqd5oVF3bRuUBHAgGJF3vius9SBdiixsc4fxuYHwQ
+[PASS] B RevealDraw id=6 -> Drawn  err=""  d666ggbMQuF15dhEEBvRDCT6H5mXQGKCoWHMVnTVQm28sBkzZsLQVqneHuJW59vCyJbG3c8SN7yNntsosTjcFvx
+[PASS] B CommitRound id=7 (fallback pool round)  err=""  237ELmMpkvhM9DNBaGh8RHeezaBAjzf5MyzAdievdhYyimPsekotN4iGAdG4i5pLhpjVKEtuQqgRrt3GNFVckqka
+[PASS] B AnchorTickets id=7 (5-ticket tree; selected index 0)  err=""  36HirrrvN9UPBJbihvGspemchSjEywkMVwNTRZkghNXNoL6LCWtaMkqEMrC2WB1QnGJKjjerrCBEDwEL6KpqKHog
+[PASS] B RevealDraw id=7 -> Drawn  err=""  4xkmxEL7VBpGXkQFmRFniGhjxLrQ3VtRCBHs9kAA1PxcaSFCMCEdQs1DPREXMBmYdpAcTrND3C1Cts5HFWTwvB2z
+[PASS] B ATTACK FallbackDraw by non-admin -> NotAdmin (0x6008)  err={"InstructionError":[0,{"Custom":24584}]}  pAygTiy3rGYQJZTv7wF5Kfc7RvjCtJGKhkQ9X8ttD3Ej8C1mHXqHydgWdoaVvdeLJn5o4ByEiUndFZwEWqhtFkQ
+[PASS] B ATTACK FallbackDraw with a fresh (uncommitted) seed -> InvalidSeed (0x6004)  err={"InstructionError":[0,{"Custom":24580}]}  5EgxR9j524nVigiV8A4i3ZQBPtSM3Qy4eiGwVqXHUoJDTGR98Tw9ANcybR8vDfhxddHjKj5DWjnR7kBgJRH4Jiz3
+[PASS] B ATTACK FallbackDraw with another round's seed -> InvalidSeed (0x6004)  err={"InstructionError":[0,{"Custom":24580}]}  2q3LnRqrMuwAEEiqmaSjYLbAtUQXcr8EVShSpvbbQYnFN427CdDwtjh1v5HFkPxsT5XW1R6Jv274Hn9KnCgaB61L
+[PASS] B ATTACK FallbackDraw with a pool root that is not the anchored tree -> FallbackPoolMismatch (0x600C)  err={"InstructionError":[0,{"Custom":24588}]}  5B75ZooLMuydy1zNm7YMzy6J3kb1Nb4HN8uk6TLksQ4QLzRmJAXrJNaAyY8qRDXtyE338zDywjiUjEiKz9PBb716
+[PASS] B ATTACK FallbackDraw with a different pool size -> FallbackPoolMismatch (0x600C)  err={"InstructionError":[0,{"Custom":24588}]}  4McRdPzJKzgGKSihMtwynRk1TYirEa4ScyC68A8DuA3LzHRYA33MkhLMgexitk3SyM8U7n9CASZ2Msq9HVe7V6oG
+[PASS] B ATTACK FallbackDraw rounds out of order -> FallbackRoundsNotConsecutive (0x600E)  err={"InstructionError":[0,{"Custom":24590}]}  3RvTidP56buHWQNxbXpdLHnefcEkCitRHqLf4WgaFRfaDDPa2uuqxWASH2bNocPKw5jmojyYwnLpHFy69vVU7UHz
+[PASS] B all three rounds still Drawn after the rejected FallbackDraws
+[PASS] B FallbackDraw (admin, committed seed, anchored pool)  err=""  vZ98oHzbvEcHhmaTGAY81KJboAtRgD3pV5TYdRbjhH4v8naHYgZNJszZ19DPj8djEitBjthgStp7QmhxCPhsRwM
+[PASS] B statuses NoWinner, NoWinner, FallbackDrawn; no winner recorded
+[PASS] B ATTACK old synthetic fallback nullifier, no ticket -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  5dpwkspV8sJKv3KYUM4dzXVDALdUZAYF5b8vZTQsGp3WdGrkrT2dFnsmbX8dMvgyHhMnwjeYCFXzz6MTJfyCvuWo
+[PASS] B ATTACK selected ticket's nullifier, no ticket -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  3TQ8EZbSbfYcEFMFtcPfSESpjRrPZZLXJApr32CNXUrASuXUq5kTFcZodoRWVWRFzdfVYn5JvhVbq7Rcnm8ZXMH9
+[PASS] B ATTACK unselected ticket with the drawn numbers, owner signs, valid proof -> NotFallbackWinner (0x600D)  err={"InstructionError":[0,{"Custom":24589}]}  3XnPJdtpNZtGqSxF4tvvHc6LU927V83qbto2o4tMPjrCsjZ2PLJJD8njdYAv7zUFoQdSrcDMMvL2rU3Pcsu2FuXp
+[PASS] B ATTACK copied selected ticket + proof under another claimant -> InvalidTicketProof (0x600B)  err={"InstructionError":[0,{"Custom":24587}]}  2FTjkwAvTshtC4LrAKyE3cGrCNiPYkM6gDwK2tZDpSNAnpnBrgh79pLLiaGCpbJVsEpmQxPEpskjh6VQwEBJLgJp
+[PASS] B Selected ticket owner claims with leaf + proof -> Won  err=""  2Jx6ZzPactJnk2Rho4Y3u4Bafhpw7HEwVv7NQVtDVSCxpy4wWrEXLW9ttnoGdX5Cn1nMUjQgiNwku9SLo7qWtTK2
+[PASS] B fallback round Won, winner_nullifier = selected ticket nullifier
+[PASS] B ATTACK second claim of the selected ticket -> AlreadyClaimed (0x6005)  err={"InstructionError":[0,{"Custom":24581}]}  4TRHmy8GLET4i5r11gYVXsRTYLZC4QoLiNPLtWc9YakNq49U8m3uGLV5gfrNSwDdtx1zV3wzXZZxeFZmCiCbyHwF
+[PASS] B ATTACK claim on a NoWinner round with its drawn-numbers ticket -> WrongStatus (0x6007)  err={"InstructionError":[0,{"Custom":24583}]}  vEFp9EhtHrHF4HLqGFKqmRnp8wZh97BEbXC9okQ7hZfr6jXPV4pnSA9sjmvp3WpxrF6USNka2xj57UA8zrbg4qb
+[PASS] B ATTACK FallbackDraw again on the same rounds -> WrongStatus (0x6007)  err={"InstructionError":[0,{"Custom":24583}]}  3G69p3EUN3UiqDKcBsEngfSqiEELDWZVcbz1QHhWw5A4LDtnVCfWarqL1bsdHJ56U6uPuAWjhHAvThUyBpa1oJqp
+[PASS] sweep loser back to payer  err=""  5P1oMQwh4vddoCJRFbFyEoontMs341yjVw2fugY151nbEGQEC1HC7xhki8czihX6p5jiuw6RUanRGsuYhgzLK37B
+[PASS] sweep attacker back to payer  err=""  2RWskGLiM27xep6pvtEVRPSwjNdiNiUFV7FCizc8n31rhFL762rjEcQVxxCfj7NzaMTAP6UwhHXYaMdSRtMJTTqS
+RESULT 41/41 PASS

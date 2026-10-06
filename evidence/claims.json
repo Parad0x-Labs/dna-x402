@@ -328,7 +328,7 @@
         "result": "pass",
         "date": "2026-10-06",
         "environment": "devnet",
-        "note": "anchorDagRoot landed on HSdE…mhXs (bucket root = SHA256(0^32 || anchor), count 1); accountability and proof-of-agency verification read it back; the x402 access gate v2 rerun anchored through it (6/6)."
+        "note": "anchorDagRoot landed on HSdE\u2026mhXs (bucket root = SHA256(0^32 || anchor), count 1); accountability and proof-of-agency verification read it back; the x402 access gate v2 rerun anchored through it (6/6)."
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
@@ -336,8 +336,8 @@
         "with ANCHORING_ENABLED set, a missing program id or keypair, or an anchor client that cannot be built, stops server start-up with RECEIPT_ANCHOR_UNAVAILABLE (x402 test, 2026-10-06)",
         "the x402 transaction builders have no default program id and throw RECEIPT_ANCHOR_UNAVAILABLE without one",
         "liquefy-receipts 0.3.0 has no default program and throws RECEIPT_ANCHOR_UNAVAILABLE",
-        "wormhole-x402 resolves devnet to HSdE…mhXs and refuses mainnet-beta (no configured program)",
-        "a receipt-dag root anchored on devnet HSdE…mhXs on 2026-10-06 and was read back by the accountability and proof-of-agency verifiers",
+        "wormhole-x402 resolves devnet to HSdE\u2026mhXs and refuses mainnet-beta (no configured program)",
+        "a receipt-dag root anchored on devnet HSdE\u2026mhXs on 2026-10-06 and was read back by the accountability and proof-of-agency verifiers",
         "deployed devnet bytes equal the build of committed source 121109d (SHA-256 in the proof file)"
       ],
       "not_demonstrated": [
@@ -596,7 +596,7 @@
       "id": "programs.devnet-set-2026-10-06",
       "plain_claim": "21 of the 28 programs in programs/ are deployed on devnet under one upgrade authority as of 2026-10-06.",
       "component": "programs/",
-      "source_sha": "9ff95ee70934fd99faaeeafd722f1d1d7fcc5373",
+      "source_sha": "7439dde273000bc5fc76988cf5129cf6bdc444ea",
       "source_paths": [
         "programs"
       ],
@@ -640,13 +640,13 @@
         "dark_reputation_gate": "c214925401c28d4bbffba53dfdda5fcf74f7c4986941d190beed6dee6d4495dc",
         "dark_chaff": "64b353589e815414ea0d2867b71fd7abe3c58fb6e7dc41b60870a351f8fd676d",
         "dark_secp256r1_vault": "60f778ec297f8f09b1bd585f5b1389b1f6616c633748b1d614acfe27e4c513bd",
-        "dark_secp256k1_auth": "b7855dd852ec99caba73acb47e125619892a22125acf783a040ad4be4dc0dca2",
+        "dark_secp256k1_auth": "3af9a00dd6ab9d7110da4b4c293a89633c702211f09d9af2ba0469b3f13457b3",
         "dark_nullifier_banks": "222495b68aacec17b306348aa5d46b70e36c46edec1881f6fc6616936465758d",
         "receipt_anchor": "c4d62f2b8eb52809eca0ca8c7df547dc7d608719e2bfefb087e954b3a0fb1231",
         "dark_bls12_381_credential": "ef61da23a3a97c8bcf4a4b8a6200fdc0f83f9e8b071b718e7165372ab1d1f473",
         "dark_proof_gate_lite": "cf617f0128d5618ca4aa8809e23d2f092c000dc2135186954c1d92823c776044",
         "dark_ritual_gate": "3dd11d349f94e70bc572cc0ebbd0ecf4f9ba97269e29be69134fe04880f476a6",
-        "dark_null_lottery": "43537e1da61b65b2f6628485fe41cd166b6abeef765dd890b6f9a570050c365b",
+        "dark_null_lottery": "d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda",
         "null_token_hook": "25371bfee6eefb51b684509651621ed4a27b592d5ff5132a9646f34d7e07cbba",
         "dark_nullifier_record": "025519af608369a658da4f5333c4450f57146eb07864392d0cda46aa8a5b9f73",
         "dark_semaphore": "1d738e8778f8960a4c35ddd3820f1f28bd5232246bcac92392ade210a21ae3a2"
@@ -655,13 +655,17 @@
       "authority_assumptions": [
         "Single upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q for all 21 programs; it can replace any program."
       ],
-      "evidence_checked_at": "2026-10-06T10:12:36Z",
+      "evidence_checked_at": "2026-10-06T11:19:50Z",
       "proof_files": [
         "evidence/devnet-programs-2026-10-06.json",
         "evidence/devnet-2026-10-06/README.md",
         "evidence/devnet-2026-10-06/summary.json",
         "evidence/devnet-2026-10-06/summary-rerun.json",
         "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json",
+        "evidence/devnet-2026-10-06/summary-rerun2.json",
+        "evidence/devnet-2026-10-06/summary-rerun3.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json",
         "configs/devnet.oss.json"
       ],
       "test_command": "per-suite commands in evidence/devnet-2026-10-06/*.json",
@@ -669,23 +673,23 @@
         "result": "partial",
         "date": "2026-10-06",
         "environment": "devnet",
-        "note": "First run 158 pass / 8 fail across 26 suites; the 8 failures were in dark_secp256r1_vault, dark_secp256k1_auth and dark_null_lottery, which were fixed and upgraded in place; their reruns and the other affected suites pass 43/43 across 8 suites. dark_reputation_gate positive path not run."
+        "note": "First run 158 pass / 8 fail across 26 suites; the 8 failures were in dark_secp256r1_vault, dark_secp256k1_auth and dark_null_lottery, which were fixed and upgraded in place; their reruns and the other affected suites pass 43/43 across 8 suites. Rerun 2 after the ETH binding-message and lottery claim-binding upgrades: 25/25 across 3 suites. Rerun 3 after the lottery FallbackDraw upgrade: 41/41. dark_reputation_gate positive path not run."
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
-        "each program account exists on devnet under upgrade authority 9Jkp…pU2q and its deployed bytes equal the cargo-build-sbf output of committed source (121109d, or 1157630 for the five programs upgraded on 2026-10-06); per-program SHA-256 in the proof file",
+        "each program account exists on devnet under upgrade authority 9Jkp\u2026pU2q and its deployed bytes equal the cargo-build-sbf output of committed source (121109d; 1157630 for the five programs upgraded first on 2026-10-06; aabb759 for dark_secp256k1_auth and 7439dde for dark_null_lottery after their later upgrades); per-program SHA-256 in the proof file",
         "instruction-level suites recorded for all 21 programs with signatures and slots read back from the ledger",
         "dark_secp256r1_vault and dark_secp256k1_auth reject a wrong key, wrong address and wrong message via the precompile binding (0x4009, 0x400b, 0x5008, 0x5009)",
         "dark_null_lottery refuses non-admin CommitRound, AnchorTickets and RevealDraw (0x6008)",
+        "dark_secp256k1_auth refuses an ETH signature replayed by another Solana key to register the same address (0x500A BindingMessageMismatch); the intended agent then registers it (passport 03 10/10)",
+        "dark_null_lottery pays a Drawn round only to the owner of an anchored ticket carrying the drawn numbers, and a FallbackDrawn round only to the owner of the selected anchored ticket (14/14 and 41/41)",
         "receipt_commitment_tree settles to recipients whose keys exceed the BN254 modulus",
         "null_registrar pay-by-name to a one-time stealth address, swept with the recovered scalar (8/8)",
         "dark_fedimint_redeem_program held 22 of 22 adversarial cases",
-        "attack-replay suite T1–T10 passes against the new null_token_hook, dark_nullifier_banks, receipt_commitment_tree and dark_null_mint_gate (13/13)"
+        "attack-replay suite T1\u2013T10 passes against the new null_token_hook, dark_nullifier_banks, receipt_commitment_tree and dark_null_mint_gate (13/13)"
       ],
       "not_demonstrated": [
         "dark_reputation_gate positive path: no committed zkey matches the compiled track_record VK",
-        "ETH-address squatting: dark_secp256k1_auth does not bind the registering Solana key to the signed message, so a holder of any signature from an ETH key can register that address first (open until a fix is deployed)",
-        "dark_null_lottery ClaimJackpot: the devnet build binds the first nullifier that claims a drawn round as winner, with no proof of ticket ownership",
         "passkey browser flows (Face ID / WebAuthn on a device); runs use scripted P-256 keys",
         "membership proofs in dark_semaphore and the BLS pairing in dark_bls12_381_credential (IS_MAINNET_READY = false in these builds)",
         "a multi-party trusted setup for any verifying key",
@@ -695,6 +699,134 @@
         "Earlier devnet program IDs referenced in older docs and evidence files are retired.",
         "One upgrade authority can replace any of the 21 programs.",
         "Three shielded-pool buckets created before the upgrade have derivable authority keys and stay pausable by anyone; use the PDA buckets."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.dark-secp256k1-auth.eth-binding",
+      "plain_claim": "On devnet, dark_secp256k1_auth binds an ETH address only to the Solana agent key that the ETH key signed for, so a signature replayed by another key is refused.",
+      "component": "programs/dark_secp256k1_auth",
+      "source_sha": "aabb7595afd1620db3753424c27676298b958845",
+      "source_paths": [
+        "programs/dark_secp256k1_auth/src/binding.rs",
+        "programs/dark_secp256k1_auth/src/processor.rs",
+        "programs/dark_secp256k1_auth/src/error.rs",
+        "scripts/passport/lib/eth-agent.mjs"
+      ],
+      "implementation_status": "implemented",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      "deployed_build_hash": "3af9a00dd6ab9d7110da4b4c293a89633c702211f09d9af2ba0469b3f13457b3",
+      "source_build_match": "match",
+      "authority_assumptions": [
+        "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q can replace the program.",
+        "The secp256k1 precompile verifies the signature; the program checks that the verified message is the binding message."
+      ],
+      "evidence_checked_at": "2026-10-06T11:19:50Z",
+      "proof_files": [
+        "evidence/devnet-2026-10-06/dna-passport-03-metamask-rerun2.json",
+        "evidence/devnet-2026-10-06/dna-bv7x-eth-passport-rerun2.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
+        "evidence/devnet-2026-10-06/raw/rerun2/logs/passport-03-rerun2.log",
+        "evidence/devnet-2026-10-06/raw/rerun2/sig-status.json",
+        "programs/dark_secp256k1_auth/tests/precompile_binding.rs",
+        "evidence/devnet-programs-2026-10-06.json"
+      ],
+      "test_command": "node scripts/passport/03-devnet-metamask-e2e.mjs 7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "devnet, node:22 tmpfs container from a git archive, npm ci --ignore-scripts",
+        "command": "node scripts/passport/03-devnet-metamask-e2e.mjs 7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+        "note": "10/10: register; wrong ETH address 0x5008; msg_hash mismatch 0x5009; squat replay by a funded second Solana key 0x500A with no record created; intended agent registers the same address; legacy bare 32-byte message 0x500A. bv7x-eth-passport 1/1 with the same message format. Upgrade tx 23ddExeQ\u2026 at slot 508063592; signatures re-read from the ledger and a sample confirmed with solana confirm -v."
+      },
+      "mocks_or_skips": [
+        "The ETH key is a scripted secp256k1 key, not a MetaMask browser session; the message is the EIP-191 personal_sign format MetaMask produces."
+      ],
+      "demonstrated_properties": [
+        "the precompile-verified message must equal the EIP-191 binding message naming the program id, agent signer, ETH address, domain_hash and auth_hash (0x500A BindingMessageMismatch otherwise)",
+        "a signature made for one agent and replayed by another Solana key is refused and creates no record",
+        "the pre-fix bare 32-byte message format is refused (0x500A)",
+        "wrong ETH address (0x5008) and msg_hash not keccak256 of the verified message (0x5009) are refused",
+        "deployed bytes equal the cargo-build-sbf output of aabb759 (SHA-256 3af9a00d\u2026, zero tail after the build length)"
+      ],
+      "not_demonstrated": [
+        "a MetaMask browser signing session (the run signs with a scripted key)",
+        "the agent_credential_mint CPI on registration (not deployed)",
+        "mainnet deployment"
+      ],
+      "operational_limitations": [
+        "One upgrade authority can replace the program.",
+        "Clients must sign the new binding message; signatures over the earlier 32-byte format no longer register."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.dark-null-lottery.claim-binding",
+      "plain_claim": "On devnet, dark_null_lottery records a jackpot claim only for the owner of the winning anchored ticket, on a Drawn round or after a FallbackDraw.",
+      "component": "programs/null_lottery",
+      "source_sha": "7439dde273000bc5fc76988cf5129cf6bdc444ea",
+      "source_paths": [
+        "programs/null_lottery/src/ticket.rs",
+        "programs/null_lottery/src/processor.rs",
+        "programs/null_lottery/src/error.rs",
+        "packages/null-miner-sdk/src/lottery/LotterySDK.ts",
+        "packages/null-miner-sdk/src/lottery/DrawMachine.ts"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+      "deployed_build_hash": "d7048db0d48a427237deb5f5702c8dad326fe6d240f1b4cb79043701e51e1fda",
+      "source_build_match": "match",
+      "authority_assumptions": [
+        "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q can replace the program.",
+        "The config admin commits the draw seed, builds and anchors the tickets tree and chooses ticket order; players trust the admin for the tree contents and order."
+      ],
+      "evidence_checked_at": "2026-10-06T11:19:50Z",
+      "proof_files": [
+        "evidence/devnet-2026-10-06/dna-probe-lottery-claim-rerun2.json",
+        "evidence/devnet-2026-10-06/dna-probe-lottery-claim-rerun3.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json",
+        "evidence/devnet-2026-10-06/raw/rerun3/logs/lottery-claim-rerun3.mjs",
+        "evidence/devnet-2026-10-06/raw/rerun3/logs/probe-lottery-claim-rerun3.log",
+        "programs/null_lottery/tests/claim_binding.rs",
+        "programs/null_lottery/tests/fallback_binding.rs",
+        "evidence/devnet-programs-2026-10-06.json"
+      ],
+      "test_command": "PROGRAM=Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd node evidence/devnet-2026-10-06/raw/rerun3/logs/lottery-claim-rerun3.mjs",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "devnet, node:22 tmpfs container; the test payer is also the lottery admin",
+        "command": "PROGRAM=Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd node lottery-claim-rerun3.mjs",
+        "note": "Rerun 2 (a32933d, upgrade 2VhbnYX8\u2026 at slot 508063672): 14/14. Rerun 3 (7439dde, upgrade 359dmp5Q\u2026 at slot 508071735): 41/41, covering the Drawn-round cases again and the FallbackDraw path. Outcomes read from the ledger; a sample confirmed with solana confirm -v."
+      },
+      "mocks_or_skips": [
+        "The test payer is the lottery admin and builds the winning tickets from the committed seed before anchoring (fixture)."
+      ],
+      "demonstrated_properties": [
+        "tickets_root is a SHA-256 Merkle tree of ticket leaves committing to round id, owner key, numbers and nullifier",
+        "a Drawn-round claim needs the claimant's own anchored ticket with the drawn numbers: nullifier-only 0x600B, losing ticket 0x600A, relabelled ticket 0x600B, another signer's copy 0x600B",
+        "FallbackDraw takes three consecutive Drawn rounds and the third round's committed seed and anchored pool: non-admin 0x6008, wrong seed 0x6004, wrong pool 0x600C, rounds out of order 0x600E",
+        "after FallbackDraw only the selected ticket's owner claims; an unselected ticket with the drawn numbers 0x600D; the old synthetic nullifier 0x600B",
+        "a second claim 0x6005; claims on a NoWinner round and a repeated FallbackDraw 0x6007",
+        "deployed bytes equal the cargo-build-sbf output of 7439dde (SHA-256 d7048db0\u2026, zero tail after the build length)"
+      ],
+      "not_demonstrated": [
+        "ticket order in the admin-run lottery is set by the admin, who also commits the seed",
+        "null_lottery v1 has no claim window",
+        "the claim record PDA is keyed by nullifier only",
+        "SPL token payout: ClaimJackpot records the claim and makes no token transfer",
+        "mainnet deployment"
+      ],
+      "operational_limitations": [
+        "One upgrade authority can replace the program.",
+        "Rounds marked Won by the earlier FallbackDraw are closed to further claims."
       ],
       "supersedes": null
     },
@@ -738,7 +870,7 @@
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
-        "Groth16 withdraw proofs from the committed ceremony/shielded_withdraw_v3 zkey verify on devnet FmLW…BSZ3 (2026-10-06)",
+        "Groth16 withdraw proofs from the committed ceremony/shielded_withdraw_v3 zkey verify on devnet FmLW\u2026BSZ3 (2026-10-06)",
         "double-spend Custom(3), wrong root Custom(12), wrong recipient Custom(4) and relayer mismatch Custom(4) rejected on-chain; over-fee rejected by the circuit",
         "relay-rail buckets are PDA-keyed and only the admin can Pause/Resume (InitBucketPool, 30a0ce6)"
       ],
