@@ -59,5 +59,14 @@
     "@noble/hashes": "^2.2.0",
     "dna-x402": "^1.0.0",
     "null-miner-sdk": "^0.1.0"
+  },
+  "overrides": {
+    "jayson": "^5.0.0",
+    "toml": "^4.2.0",
+    "qs": "^6.16.0",
+    "bn.js@5": "^5.2.3",
+    "@ethersproject/providers": {
+      "ws": "^8.21.0"
+    }
   }
 }
