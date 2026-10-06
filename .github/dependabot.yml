@@ -62,6 +62,11 @@ updates:
       # solana-program-test harness; a lone solana-program 2.x bump does not compile.
       - dependency-name: "solana-*"
         update-types: ["version-update:semver-major"]
+      # rand 0.9+ drops rand::RngCore / rand::rngs::OsRng; dark-kvac and
+      # dark-fedimint-ecash feed the RNG into curve25519-dalek 3.x (rand_core 0.5/0.6),
+      # so the rand major moves with the curve25519-dalek 4.x migration.
+      - dependency-name: "rand"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
