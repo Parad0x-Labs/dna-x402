@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "devDependencies": {
-    "@solana/web3.js": "^1.98.4",
-    "tsx": "^4.22.4"
+    "@solana/web3.js": "^1.99.0",
+    "tsx": "^4.23.15"
   },
   "workspaces": [
     "packages/*"
