@@ -2,6 +2,8 @@
 
 **DNA x402 is a pay-per-call payment rail on Solana for AI agents and the APIs they buy from.**
 
+**Review:** [REVIEW.md](./REVIEW.md) lists what each component does, what has been demonstrated, where it runs and what is not established (generated from [evidence/claims.json](./evidence/claims.json)).
+
 An agent asks for a resource, the API answers with a price, the agent pays in USDC, and the API serves the
 response together with a signed receipt. No accounts, API keys or invoices sit between buyer and seller, and
 every paid call leaves a receipt both sides can check later.
@@ -10,7 +12,7 @@ every paid call leaves a receipt both sides can check later.
 
 | **1,568** | **T1–T10** | **3 settlement modes** |
 |---|---|---|
-| x402 tests passing in the `mainnet-readiness` CI workflow, alongside site-agent Playwright tests (9/9) and Rust program tests | Devnet attack-replay suite: forged-authority and re-init attacks rejected with the expected program error, prefund grief absorbed; finding F1 recorded | Settle in USDC by on-chain transfer, Streamflow stream, or off-chain netting |
+| x402 tests passing in the `mainnet-readiness` CI workflow, alongside site-agent Playwright tests (9/9) and Rust program tests | Devnet attack-replay suite: forged-authority and re-init attacks rejected with the expected program error, prefund grief absorbed; finding F1 recorded | Pay by on-chain USDC transfer (verified by RPC); Streamflow streams when the seller supplies a Streamflow client; development-only off-chain netting that records charges without moving funds |
 
 [![mainnet-readiness](https://img.shields.io/github/actions/workflow/status/Parad0x-Labs/dna-x402/security-scan.yml?branch=main&label=mainnet-readiness&style=flat&labelColor=0a0a0a)](https://github.com/Parad0x-Labs/dna-x402/actions/workflows/security-scan.yml)
 [![x402 tests](https://img.shields.io/badge/x402_tests-1%2C568_passing-92aa7c?style=flat&color=92aa7c&labelColor=0a0a0a)](https://github.com/Parad0x-Labs/dna-x402/actions/workflows/security-scan.yml)
@@ -38,9 +40,9 @@ sequenceDiagram
 ```
 
 - **Quote.** The seller names the price, the recipient wallet and an expiry.
-- **Pay.** The buyer settles by USDC transfer or stream; trusted local setups can net many calls off-chain.
-- **Verify.** The seller checks the amount, the mint and the recipient against the quote, and refuses any
-  proof it has already seen.
+- **Pay.** The buyer pays by USDC transfer (or a Streamflow stream where the seller verifies streams); development setups can record calls in an off-chain ledger, which nothing in this repo pays out.
+- **Verify.** The seller checks the amount, the mint and the recipient against the quote, and refuses a
+  proof it has already seen while the server process is running.
 - **Receipt.** The response carries an ed25519-signed receipt. Each receipt includes the hash of the one before
   it, so a seller's receipts form a tamper-evident chain.
 
@@ -71,7 +73,7 @@ start from [`x402/README.md`](./x402/README.md); agents should read [`x402/AGENT
 
 | Component | Status | Notes |
 |---|---|---|
-| `x402/` server, buyer and seller SDKs, CLI | `Usable today` | Public Beta: transfer, stream and netting modes; 1,568 tests in CI |
+| `x402/` server, buyer and seller SDKs, CLI | `Usable today` | Public Beta: transfer mode verified on-chain; stream needs a Streamflow client; netting is development-only; 1,576 tests |
 | `/agent` front door ([`site-agent/`](./site-agent)) | `Usable today` | Onboarding and control-room UI; Playwright 9/9 in CI |
 | Dark Null private receipt path (SDK) | `Usable today` | Optional hash-only request after a DNA receipt; fails closed without settlement evidence |
 | NULL token | `Usable today` | Token-2022 mint on mainnet `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`, fixed supply (mint and freeze authority revoked) |
@@ -121,8 +123,8 @@ flowchart LR
     CR -->|linked into| PR
 ```
 
-The hot path stays fast: no zero-knowledge proving happens per request. Privacy settlement is a separate
-lane, [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol), reachable through the
+The hot path stays fast: no zero-knowledge proving happens per request. Proof-verified settlement is a separate
+lane, [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) (a devnet prototype; its payout fields and note commitment are public, so withdrawals are linkable to deposits today), reachable through the
 optional Dark Null receipt path.
 
 ### Run the tests
@@ -145,21 +147,22 @@ The devnet attack-replay suite lives in [`devnet-tests/`](./devnet-tests) (`node
 |---|---|
 | [`docs/PROJECT_DETAIL.md`](./docs/PROJECT_DETAIL.md) | Full project detail: packages, deploy profiles, pilot record, frontier research, stack map |
 | [`docs/API_REFERENCE.md`](./docs/API_REFERENCE.md) | HTTP API reference |
+| [`docs/DARK_CRATES_STATUS.md`](./docs/DARK_CRATES_STATUS.md) | Dated inventory of the `crates/` workspace: which crates are real, prototype or scaffold |
 | [`docs/BUILDER_QUICKSTART.md`](./docs/BUILDER_QUICKSTART.md) · [`docs/AGENT_QUICKSTART.md`](./docs/AGENT_QUICKSTART.md) | Building a paid API or a paying agent |
 | [`docs/X402_COMPAT.md`](./docs/X402_COMPAT.md) | Compatibility with other x402 dialects |
 | [`docs/DARK_NULL_PRIVACY_PATH.md`](./docs/DARK_NULL_PRIVACY_PATH.md) | The optional private receipt path |
 | [`docs/PUBLIC_FRONTIER_WORKSPACE.md`](./docs/PUBLIC_FRONTIER_WORKSPACE.md) | Inventory of the Rust workspace |
 | [`DEPLOYMENT.md`](./DEPLOYMENT.md) | Deploy profiles and scripts |
 
-Related public repos: [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) (privacy
-settlement), [`vool`](https://github.com/Parad0x-Labs/vool) (local-first AI runtime),
-[`liquefy-openclaw-integration`](https://github.com/Parad0x-Labs/liquefy-openclaw-integration) (Solana-anchored
-audit trails).
+Related public repos: [`Dark-Null-Protocol`](https://github.com/Parad0x-Labs/Dark-Null-Protocol) (proof-verified
+withdrawals, devnet prototype), [`vool`](https://github.com/Parad0x-Labs/vool) (local-first AI runtime),
+[`openclaw-skills`](https://github.com/Parad0x-Labs/openclaw-skills) (agent payment skills and the Liquefy vault
+appliance).
 
 ## Security
 
-Payment gates verify ed25519 payer signatures, treat every payment proof as single-use, and check amount, mint
-and recipient before unlocking a resource; server-side callbacks reject loopback and private-range targets.
+The x402 server checks amount, mint and recipient by RPC before unlocking a resource and refuses a reused proof
+within a running process; the openclaw x402-gate also checks an ed25519 payer signature and keeps a durable replay file; server-side callbacks reject loopback and private-range targets.
 CI runs a secret and path scan plus dependency checks on every push. To report a vulnerability, follow
 [`SECURITY.md`](./SECURITY.md) and keep exploit details out of public issues.
 
