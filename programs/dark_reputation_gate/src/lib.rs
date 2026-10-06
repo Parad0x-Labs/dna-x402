@@ -30,7 +30,7 @@ entrypoint!(process_instruction);
 // DEVNET program id of dark_receipt_commitment_tree. Mainnet redeploy MUST update this
 // (matches the existing convention of hardcoding sibling program ids).
 const RECEIPT_TREE_PROGRAM: Pubkey =
-    solana_program::pubkey!("H9nL9tErFXFmr2ZGkgFVz2NpjAsAeDBXDgS85qBWFGAe");
+    solana_program::pubkey!("Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP");
 const RECEIPT_TREE_SEED: &[u8] = b"receipt_tree";
 /// Canonical reputation tree id (the one settlement writes receipts into). Devnet POC = 0.
 const CANONICAL_TREE_ID: [u8; 8] = [0u8; 8];

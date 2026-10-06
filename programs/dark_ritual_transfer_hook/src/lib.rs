@@ -35,8 +35,9 @@ solana_program::entrypoint!(process_instruction);
 /// dark_ritual_gate program this hook trusts. `None`: no usable dark_ritual_gate
 /// deployment exists until the redeploy under a fresh key, so Execute fails
 /// closed with `RitualGateUnavailable` for every transfer. Set it to the new
-/// program ID when the gate is redeployed.
-pub const DARK_RITUAL_GATE_ID_STR: Option<&str> = None;
+/// program ID when the gate is redeployed: build with
+/// `DARK_RITUAL_GATE_ID=<gate program id> cargo build-sbf ...`. Unset -> None -> fail closed.
+pub const DARK_RITUAL_GATE_ID_STR: Option<&str> = option_env!("DARK_RITUAL_GATE_ID");
 /// VerifyRitualShape instruction tag
 pub const VERIFY_RITUAL_SHAPE_TAG: u8 = 0x00;
 /// AgentSpendNoCustodyV1 ritual type byte

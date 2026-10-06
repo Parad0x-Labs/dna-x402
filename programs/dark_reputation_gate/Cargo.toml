@@ -8,6 +8,9 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = []
+# `devnet` compiles out the mainnet_ready fail-closed VK guard (single-party devnet
+# ceremony). Mainnet omits it -> guard active. Mirrors dark_x402_access_gate.
+devnet = []
 
 [dependencies]
 solana-program    = { workspace = true }

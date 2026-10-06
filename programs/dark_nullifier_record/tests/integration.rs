@@ -22,7 +22,7 @@ mod tests {
 
     /// Derive the expected PDA address for the given nullifier.
     fn derive_pda(program_id: &Pubkey, nullifier: &[u8; 32]) -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[SEED_PREFIX, &nullifier[0..8]], program_id)
+        Pubkey::find_program_address(&[SEED_PREFIX, &nullifier[..]], program_id)
     }
 
     fn program_test(program_id: Pubkey) -> ProgramTest {
@@ -151,7 +151,7 @@ mod tests {
             .expect("first record should succeed");
 
         // Second transaction — must fail with Custom(10) AlreadyRecorded.
-        let recent_blockhash2 = banks_client.get_latest_blockhash().await.unwrap();
+        let recent_blockhash2 = banks_client.get_new_latest_blockhash(&recent_blockhash).await.unwrap();
         let mut tx2 = Transaction::new_with_payer(&[build_ix()], Some(&payer.pubkey()));
         tx2.sign(&[&payer], recent_blockhash2);
         let result = banks_client.process_transaction(tx2).await;

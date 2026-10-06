@@ -32,7 +32,7 @@ entrypoint!(process_instruction);
 // both gates bind the SAME tree). Mainnet redeploy MUST update this.
 // The gate constant below is the canonical receipt tree id.
 const RECEIPT_TREE_PROGRAM: Pubkey =
-    solana_program::pubkey!("H9nL9tErFXFmr2ZGkgFVz2NpjAsAeDBXDgS85qBWFGAe");
+    solana_program::pubkey!("Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP");
 const RECEIPT_TREE_SEED: &[u8] = b"receipt_tree";
 /// Canonical reputation/receipt tree id (the one settlement writes receipts into). Devnet POC = 0.
 const CANONICAL_TREE_ID: [u8; 8] = [0u8; 8];
