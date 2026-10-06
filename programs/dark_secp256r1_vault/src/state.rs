@@ -16,7 +16,7 @@
 ///   enc_key_ciphertext[64] — AES-256-GCM ciphertext of ed25519 keypair
 ///   enc_key_tag[16]       — AES-256-GCM authentication tag
 ///   has_enc_key[1]        — 0 = not yet stored, 1 = stored
-///   p256_compressed[33]   — bound P-256 passkey (compressed), 0 in devnet mode
+///   p256_compressed[33]   — bound P-256 passkey (compressed); all zero on legacy unbound vaults
 ///   has_p256[1]           — 0 = no bound passkey, 1 = secp256r1-verified binding
 ///
 /// Size: 1 + 32 + 32 + 32 + 32 + 8 + 1 + 12 + 64 + 16 + 1 + 33 + 1 = 265 bytes

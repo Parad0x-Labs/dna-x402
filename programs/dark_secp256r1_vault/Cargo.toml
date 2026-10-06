@@ -9,6 +9,8 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = []
+# No-op: the secp256r1 precompile binding is enforced in every build. Kept so
+# existing `cargo build-sbf --features mainnet` commands keep working.
 mainnet = []
 
 [dependencies]

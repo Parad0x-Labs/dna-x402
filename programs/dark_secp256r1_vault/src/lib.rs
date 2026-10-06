@@ -3,7 +3,7 @@
 //! Binds a WebAuthn/passkey credential (secp256r1 / P-256) to a Solana agent public key.
 //! Each vault is uniquely identified by the wallet pubkey and the SHA-256 of the credential ID.
 //!
-//! Production flow (IS_MAINNET_READY = true, `--features mainnet`):
+//! Flow (every build; the precompile binding is not feature-gated):
 //!   1. The transaction includes a secp256r1 precompile instruction (SIMD-0075)
 //!      at index 0. The runtime verifies the P-256 signature before this program runs.
 //!   2. Register: this program parses the precompile instruction, extracts the
@@ -13,17 +13,12 @@
 //!      assertion proving the SAME bound pubkey signed EXACTLY the live challenge,
 //!      then rotates the challenge. Replay and key-substitution both fail closed.
 //!
-//! v1 scope (honest): the precompile message is the 32-byte challenge — i.e. a
-//! P-256 key (biometric-gated in the client) signs the challenge directly. Full
-//! WebAuthn authenticatorData/clientDataJSON parsing on-chain is the audit-scope
-//! enhancement; it is NOT done here.
+//! v1 scope: the precompile message is the 32-byte challenge, i.e. a P-256 key
+//! (biometric-gated in the client) signs the challenge directly. Full WebAuthn
+//! authenticatorData/clientDataJSON parsing on-chain is not done here.
 //!
-//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
-//!    Deploy: `cargo build-sbf --features mainnet`
-//!
-//! Devnet flow (IS_MAINNET_READY = false, default):
-//!   Signature verification is skipped and no P-256 binding is stored. The program
-//!   trusts client-supplied fields (devnet trust model only).
+//! Accounts: Register [vault_pda, wallet_owner, system_program, instructions_sysvar];
+//! VerifyPasskeySignal [vault_pda, wallet_owner, instructions_sysvar].
 //!
 //! Instruction layout:
 //!   0x01  RegisterPasskeyVault  [agent_pubkey[32], credential_id_hash[32],

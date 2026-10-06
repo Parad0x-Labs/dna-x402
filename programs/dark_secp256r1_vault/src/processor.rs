@@ -17,25 +17,15 @@ use solana_program::{
 };
 
 /// The secp256r1 precompile program ID (SIMD-0075, live on Solana since June 2025).
-/// In production, the transaction must include a secp256r1 precompile instruction
-/// that verifies the P-256 assertion *before* this instruction runs.
-/// The precompile validates signature + pubkey atomically at the tx level.
-#[allow(dead_code)]
-const SECP256R1_PROGRAM_ID: Pubkey =
-    solana_program::pubkey!("Secp256r1SigVerify1111111111111111111111111");
-
-/// When false, P-256 signature verification is not enforced on-chain.
-/// The transaction is expected to include a secp256r1 precompile instruction,
-/// but this program does not verify its presence (devnet trust model).
+/// Register and VerifyPasskeySignal require a secp256r1 precompile instruction at
+/// transaction index 0. The runtime verifies the P-256 signature before this program
+/// runs; this program binds the verified (pubkey, message) tuple to the vault.
 ///
-// ⚠️  EXTERNALLY UNAUDITED — test pilot deployment. Not audited by any third party.
-//    Deploy with: cargo build-sbf --features mainnet
-//    IS_MAINNET_READY=true enables full on-chain verification (signature checks,
-//    SPL transfers, precompile validation). Use at your own risk until audited.
-#[cfg(feature = "mainnet")]
-pub const IS_MAINNET_READY: bool = true;
-#[cfg(not(feature = "mainnet"))]
-pub const IS_MAINNET_READY: bool = false;
+/// The binding is enforced in every build. It used to be compiled only with the
+/// `mainnet` cargo feature, so default (devnet) builds accepted any key and any
+/// message; that feature is kept as a no-op so existing build commands keep working.
+pub const SECP256R1_PROGRAM_ID: Pubkey =
+    solana_program::pubkey!("Secp256r1SigVerify1111111111111111111111111");
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     match VaultInstruction::unpack(data)? {
@@ -72,8 +62,8 @@ fn process_register(
     agent_pubkey:       [u8; 32],
     credential_id_hash: [u8; 32],
     challenge_hash:     [u8; 32],
-    _p256_pubkey_x:     [u8; 32],  // stored in tx precompile; we record the vault binding only
-    _p256_pubkey_y:     [u8; 32],
+    p256_pubkey_x:      [u8; 32],
+    p256_pubkey_y:      [u8; 32],
 ) -> ProgramResult {
     let iter         = &mut accounts.iter();
     let vault_pda    = next_account_info(iter)?;
@@ -84,23 +74,17 @@ fn process_register(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    // When compiled with --features mainnet the tx MUST include a secp256r1
-    // (SIMD-0075) precompile instruction at index 0. We extract the pubkey the
-    // precompile cryptographically verified and require it to match the P-256
-    // key supplied here — binding the vault to a key that actually signed.
-    // Devnet skips this (devnet trust model) and stores no P-256 binding.
-    #[cfg(feature = "mainnet")]
-    let (p256_compressed, has_p256) = {
-        let ix_sysvar = next_account_info(iter)?;
-        let verified_pubkey = verify_and_extract_precompile_pubkey(ix_sysvar)?;
-        let expected = crate::secp256r1::compress_xy(&_p256_pubkey_x, &_p256_pubkey_y);
-        if verified_pubkey != expected {
-            return Err(VaultError::PasskeyPubkeyMismatch.into());
-        }
-        (expected, 1u8)
-    };
-    #[cfg(not(feature = "mainnet"))]
-    let (p256_compressed, has_p256) = ([0u8; 33], 0u8);
+    // The tx MUST include a secp256r1 (SIMD-0075) precompile instruction at
+    // index 0. Extract the pubkey the precompile cryptographically verified and
+    // require it to match the P-256 key supplied here, binding the vault to a
+    // key that actually signed.
+    let ix_sysvar = next_account_info(iter)?;
+    let verified_pubkey = verify_and_extract_precompile_pubkey(ix_sysvar)?;
+    let p256_compressed = crate::secp256r1::compress_xy(&p256_pubkey_x, &p256_pubkey_y);
+    if verified_pubkey != p256_compressed {
+        return Err(VaultError::PasskeyPubkeyMismatch.into());
+    }
+    let has_p256 = 1u8;
 
     // Derive the vault PDA: [b"passkey-vault", wallet_pubkey, credential_id_hash]
     let (expected_pda, bump) = Pubkey::find_program_address(
@@ -208,17 +192,14 @@ fn process_verify_signal(
         return Err(VaultError::ReplayedChallenge.into());
     }
 
-    // Mainnet: require a secp256r1 precompile (index 0) proving the bound passkey
-    // signed exactly this challenge. This is the real "sign in with Face ID" check:
-    // same P-256 key as registration, fresh signature over the live challenge.
-    #[cfg(feature = "mainnet")]
-    {
-        if record.has_p256 != 1 {
-            return Err(VaultError::PasskeyNotBound.into());
-        }
-        let ix_sysvar = next_account_info(iter)?;
-        verify_precompile_signal(ix_sysvar, &record.p256_compressed, &challenge_hash)?;
+    // Require a secp256r1 precompile (index 0) proving the bound passkey signed
+    // exactly this challenge: same P-256 key as registration, fresh signature
+    // over the live challenge. Vaults without a bound key cannot sign in.
+    if record.has_p256 != 1 {
+        return Err(VaultError::PasskeyNotBound.into());
     }
+    let ix_sysvar = next_account_info(iter)?;
+    verify_precompile_signal(ix_sysvar, &record.p256_compressed, &challenge_hash)?;
 
     // Advance the challenge to prevent reuse of this assertion.
     record.challenge_hash = new_challenge_hash;
@@ -338,7 +319,6 @@ fn process_store_enc_key(
 /// Load the secp256r1 (SIMD-0075) precompile instruction at index 0 and return
 /// the compressed pubkey it cryptographically verified. The vault instruction
 /// must not itself be at index 0 (the precompile occupies it).
-#[cfg(feature = "mainnet")]
 fn verify_and_extract_precompile_pubkey(
     ix_sysvar: &AccountInfo,
 ) -> Result<[u8; 33], ProgramError> {
@@ -358,7 +338,6 @@ fn verify_and_extract_precompile_pubkey(
 /// Verify that the index-0 secp256r1 precompile proves `expected_pubkey` signed
 /// exactly `expected_message` (the live challenge). Used by the recurring
 /// sign-in (VerifyPasskeySignal).
-#[cfg(feature = "mainnet")]
 fn verify_precompile_signal(
     ix_sysvar: &AccountInfo,
     expected_pubkey: &[u8; 33],

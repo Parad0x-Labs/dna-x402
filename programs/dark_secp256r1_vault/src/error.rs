@@ -20,7 +20,7 @@ pub enum VaultError {
     KeyAlreadyStored,
     /// The secp256r1 precompile-verified pubkey does not match the supplied P-256 key.
     PasskeyPubkeyMismatch,
-    /// This vault has no bound P-256 passkey (registered in devnet mode).
+    /// This vault has no bound P-256 passkey (legacy vault registered before the binding was enforced).
     PasskeyNotBound,
     /// The signed message does not equal the challenge being consumed.
     ChallengeNotSigned,
