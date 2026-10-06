@@ -16,7 +16,7 @@ An earlier version of this report listed **"Receipts Anchored On-Chain | 80/80"*
 Re-verified against Solana mainnet on 2026-06-05:
 
 - The **20 real USDC transfer TXs, SOL funding, and USDC drains** below are **genuine and finalized** on mainnet (spot-checked via `getSignatureStatuses`: transfers #1/#20, a funding tx, and a drain tx all `finalized`, slots ~402.64M ≈ 2026-02-25).
-- **No batch-anchor transaction exists for this run.** Every row in the receipts table below is the literal placeholder `batched`, not a signature — there is no anchor TX to verify. The `receipt_anchor` program (`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`) shows **no on-chain activity until 2026-05-29** (its first txs post-date this run by ~3 months), consistent with `receiptsAnchored: 0`. (retired 2026-07-14)
+- **No batch-anchor transaction exists for this run.** Every row in the receipts table below is the literal value `batched`, not a signature — there is no anchor TX to verify. The `receipt_anchor` program (`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`, retired 2026-07-14) shows **no on-chain activity until 2026-05-29** (its first txs post-date this run by ~3 months), consistent with `receiptsAnchored: 0`.
 
 **Truthful figure:** the 80 receipts were **built, chained (anti-equivocation DAG), and batched off-chain**, but the batch Merkle root was **never anchored on-chain** in this run. **On-chain anchors = 0/80.** "80/80" refers to off-chain batching, not on-chain anchoring. Do not cite this run as proof of on-chain receipt anchoring until a real anchor TX is produced and listed here.
 

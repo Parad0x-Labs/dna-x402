@@ -11,7 +11,7 @@
 
 ## 1. Executive Summary
 
-DNA x402 is an open-source, on-chain payment rail that lets AI agents pay for services using the HTTP 402 protocol — no backend custody, no intermediary signing, no API keys for money movement. We ran a mainnet-beta pilot of 8 programs (retired on 2026-07-14) and shipped a compressed/private receipt settlement layer (Liquefy) that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. We are requesting a grant to fund an external security audit of all 8 programs and to complete the two ZK programs currently blocked on stubs, so that each program can flip `IS_MAINNET_READY=true` on audit sign-off.
+DNA x402 is an open-source, on-chain payment rail that lets AI agents pay for services using the HTTP 402 protocol — no backend custody, no intermediary signing, no API keys for money movement. We ran a mainnet-beta pilot of 8 programs (retired on 2026-07-14) and shipped a compressed/private receipt settlement layer (Liquefy) that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. We are requesting a grant to fund an external security audit of all 8 programs and to complete the two ZK programs, so that each program can flip `IS_MAINNET_READY=true` on audit sign-off.
 
 ---
 
