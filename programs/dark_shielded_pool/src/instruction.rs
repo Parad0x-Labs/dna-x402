@@ -11,6 +11,7 @@ use solana_program::pubkey::Pubkey;
 ///                     relayer:[u8;32], fee:u64 }                    — 1+32+32+256+32+32+8 = 393 bytes
 ///   0x03 PausePool  {}                                             — 1 byte
 ///   0x04 ResumePool {}                                             — 1 byte
+///   0x05 InitBucketPool { denomination: u64 }                     — 1 + 8 = 9 bytes
 #[derive(Debug, PartialEq)]
 pub enum PoolInstruction {
     /// Initialise a new shielded pool with a fixed denomination (lamports per note).
@@ -62,6 +63,19 @@ pub enum PoolInstruction {
     ///
     /// Accounts: [pool_config (mut), authority (signer)]
     ResumePool,
+
+    /// Initialise a denomination bucket pool whose config key is a program PDA,
+    /// so no private key exists for it. The pool is keyed exactly like InitPool
+    /// (`[b"pool_config", bucket_authority]`), but `bucket_authority` is
+    /// `PDA([b"bucket_authority", admin, denomination_le])` and the stored
+    /// Pause/Resume authority is the `admin` signer. Use this for public
+    /// relay-rail buckets instead of InitPool with a keypair derived from
+    /// public data.
+    ///
+    /// Accounts: [pool_config (mut PDA), pool_vault (mut PDA),
+    ///            bucket_authority (PDA, read-only), admin (signer, mut, payer),
+    ///            system_program]
+    InitBucketPool { denomination: u64 },
 }
 
 /// Withdraw instruction wire length: 1 + 32 + 32 + 256 + 32 + 32 + 8.
@@ -110,6 +124,13 @@ impl PoolInstruction {
             }
             0x03 => Ok(Self::PausePool),
             0x04 => Ok(Self::ResumePool),
+            0x05 => {
+                if data.len() < 9 {
+                    return Err(ShieldedPoolError::InvalidInstruction.into());
+                }
+                let denomination = u64::from_le_bytes(data[1..9].try_into().unwrap());
+                Ok(Self::InitBucketPool { denomination })
+            }
             _ => Err(ShieldedPoolError::InvalidInstruction.into()),
         }
     }
@@ -145,6 +166,11 @@ impl PoolInstruction {
             }
             Self::PausePool => vec![0x03],
             Self::ResumePool => vec![0x04],
+            Self::InitBucketPool { denomination } => {
+                let mut v = vec![0x05];
+                v.extend_from_slice(&denomination.to_le_bytes());
+                v
+            }
         }
     }
 }

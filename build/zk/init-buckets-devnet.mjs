@@ -8,9 +8,13 @@
  * exact amount they are moving. Arbitrary amounts are moved by SPLITTING across buckets
  * (see the printed splitting guide / docs/DARK_RELAY_RAIL.md).
  *
- * Each bucket is its own pool PDA, keyed by a distinct authority. We derive one fresh
- * authority per denomination deterministically from a base keypair + the denomination,
- * so re-running is idempotent (same authority => same pool PDA => "already initialized").
+ * Each bucket is its own pool, created with InitBucketPool (0x05): the pool seed key is
+ * the program PDA ["bucket_authority", admin, denom_le] (no private key exists for it)
+ * and the Pause/Resume authority stored in the config is the admin wallet (the signer of
+ * this script). Re-running is idempotent (same admin + denom => same pool PDA).
+ *
+ * Earlier revisions used Keypair.fromSeed(sha256(tag || denom || wallet pubkey)) as the
+ * authority; anyone can recompute that key from public data and Pause/Resume the bucket.
  *
  * Usage: node build/zk/init-buckets-devnet.mjs <PROGRAM_ID> [--denoms 100000000,1000000000,10000000000]
  */
@@ -18,7 +22,6 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createHash } from "node:crypto";
 import {
   Connection, Keypair, PublicKey, Transaction, TransactionInstruction, SystemProgram,
 } from "@solana/web3.js";
@@ -39,12 +42,9 @@ const SEEDS = { config: Buffer.from("pool_config"), vault: Buffer.from("pool_vau
 const u64le = (n) => { const b = Buffer.alloc(8); b.writeBigUInt64LE(BigInt(n)); return b; };
 const SYS = SystemProgram.programId;
 
-// Deterministic per-denomination authority: sha256("dark-relay-bucket" || denom || wallet).
+// Program-derived bucket key: PDA(["bucket_authority", admin, denom_le]). Not a keypair.
 function bucketAuthority(denom) {
-  const seed = createHash("sha256")
-    .update("dark-relay-bucket-v3").update(u64le(denom)).update(wallet.publicKey.toBuffer())
-    .digest();
-  return Keypair.fromSeed(seed.subarray(0, 32));
+  return PublicKey.findProgramAddressSync([Buffer.from("bucket_authority"), wallet.publicKey.toBuffer(), u64le(denom)], PROGRAM_ID)[0];
 }
 
 async function send(ixs, signers, feePayer, label) {
@@ -71,11 +71,11 @@ async function main() {
   const buckets = [];
 
   for (const denom of DENOMS) {
-    const authority = bucketAuthority(denom);
-    const [poolConfig] = PublicKey.findProgramAddressSync([SEEDS.config, authority.publicKey.toBuffer()], PROGRAM_ID);
+    const bucket = bucketAuthority(denom);
+    const [poolConfig] = PublicKey.findProgramAddressSync([SEEDS.config, bucket.toBuffer()], PROGRAM_ID);
     const [poolVault] = PublicKey.findProgramAddressSync([SEEDS.vault, poolConfig.toBuffer()], PROGRAM_ID);
     const sol = Number(denom) / 1e9;
-    console.log(`\n[bucket ${sol} SOL] authority ${authority.publicKey.toBase58()}`);
+    console.log(`\n[bucket ${sol} SOL] bucket PDA ${bucket.toBase58()}  admin ${wallet.publicKey.toBase58()}`);
     console.log(`  config ${poolConfig.toBase58()}  vault ${poolVault.toBase58()}`);
 
     // Already initialized?
@@ -83,27 +83,25 @@ async function main() {
     if (existing && existing.data.length > 0) {
       const onChainDenom = Buffer.from(existing.data.slice(36, 44)).readBigUInt64LE();
       console.log(`  already initialized (denom=${onChainDenom}); skipping`);
-      buckets.push({ denomLamports: denom.toString(), denomSol: sol, authority: authority.publicKey.toBase58(), poolConfig: poolConfig.toBase58(), poolVault: poolVault.toBase58(), initSig: null, status: "already-initialized" });
+      buckets.push({ denomLamports: denom.toString(), denomSol: sol, bucketAuthority: bucket.toBase58(), admin: wallet.publicKey.toBase58(), poolConfig: poolConfig.toBase58(), poolVault: poolVault.toBase58(), initSig: null, status: "already-initialized" });
       continue;
     }
 
-    // Fund the bucket authority enough for config+vault rent (~0.013 SOL) + fees.
-    const fund = await send([SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: authority.publicKey, lamports: 30_000_000 })], [wallet], wallet.publicKey, "fund");
-    if (!fund.ok) { console.log(`  fund FAILED: ${JSON.stringify(fund.err)}`); continue; }
-
+    // InitBucketPool: the admin wallet pays config+vault rent (~0.013 SOL) and signs.
     const initIx = new TransactionInstruction({
       programId: PROGRAM_ID,
       keys: [
         { pubkey: poolConfig, isSigner: false, isWritable: true },
         { pubkey: poolVault, isSigner: false, isWritable: true },
-        { pubkey: authority.publicKey, isSigner: true, isWritable: true },
+        { pubkey: bucket, isSigner: false, isWritable: false },
+        { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
         { pubkey: SYS, isSigner: false, isWritable: false },
       ],
-      data: Buffer.concat([Buffer.from([0x00]), u64le(denom)]),
+      data: Buffer.concat([Buffer.from([0x05]), u64le(denom)]),
     });
-    const r = await send([initIx], [authority], authority.publicKey, "init");
+    const r = await send([initIx], [wallet], wallet.publicKey, "init");
     console.log(`  init: ${r.ok ? "OK " + r.sig : "FAIL " + JSON.stringify(r.err)}`);
-    buckets.push({ denomLamports: denom.toString(), denomSol: sol, authority: authority.publicKey.toBase58(), poolConfig: poolConfig.toBase58(), poolVault: poolVault.toBase58(), initSig: r.sig, status: r.ok ? "initialized" : "failed" });
+    buckets.push({ denomLamports: denom.toString(), denomSol: sol, bucketAuthority: bucket.toBase58(), admin: wallet.publicKey.toBase58(), poolConfig: poolConfig.toBase58(), poolVault: poolVault.toBase58(), initSig: r.sig, status: r.ok ? "initialized" : "failed" });
   }
 
   // splitting guidance

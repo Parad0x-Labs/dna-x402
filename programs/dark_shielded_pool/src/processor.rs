@@ -160,6 +160,17 @@ pub const POOL_CONFIG_SEED: &[u8] = b"pool_config";
 pub const POOL_VAULT_SEED: &[u8] = b"pool_vault";
 pub const NOTE_LEAF_SEED: &[u8] = b"note_leaf";
 pub const NULLIFIER_SEED: &[u8] = b"nullifier";
+pub const BUCKET_AUTHORITY_SEED: &[u8] = b"bucket_authority";
+
+/// Program-derived bucket key for `(admin, denomination)`. A bucket pool's
+/// config is `PDA([POOL_CONFIG_SEED, bucket_authority])`; no private key exists
+/// for `bucket_authority`, and Pause/Resume authority is the `admin` signer.
+pub fn bucket_authority_address(program_id: &Pubkey, admin: &Pubkey, denomination: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[BUCKET_AUTHORITY_SEED, admin.as_ref(), &denomination.to_le_bytes()],
+        program_id,
+    )
+}
 
 // ─── entrypoint dispatcher ────────────────────────────────────────────────────
 
@@ -188,6 +199,9 @@ pub fn process_instruction(
         ),
         PoolInstruction::PausePool => process_pause(program_id, accounts, true),
         PoolInstruction::ResumePool => process_pause(program_id, accounts, false),
+        PoolInstruction::InitBucketPool { denomination } => {
+            process_init_bucket_pool(program_id, accounts, denomination)
+        }
     }
 }
 
@@ -205,14 +219,73 @@ fn process_init_pool(
     let authority_info = next_account_info(iter)?;
     let system_program = next_account_info(iter)?;
 
+    // The authority funds both accounts (create_account debits it), so it signs;
+    // it is also the seed key of the pool and its Pause/Resume authority.
+    init_pool_accounts(
+        program_id,
+        pool_config_info,
+        pool_vault_info,
+        authority_info.key,
+        authority_info,
+        system_program,
+        denomination,
+    )
+}
+
+/// InitBucketPool: the pool seed key is a program PDA (no private key exists),
+/// and the stored Pause/Resume authority is the `admin` signer.
+#[inline(never)]
+fn process_init_bucket_pool(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    denomination: u64,
+) -> ProgramResult {
+    let iter = &mut accounts.iter();
+    let pool_config_info = next_account_info(iter)?;
+    let pool_vault_info = next_account_info(iter)?;
+    let bucket_authority_info = next_account_info(iter)?;
+    let admin_info = next_account_info(iter)?;
+    let system_program = next_account_info(iter)?;
+
+    if !admin_info.is_signer {
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+    let (bucket_authority, _) =
+        bucket_authority_address(program_id, admin_info.key, denomination);
+    if bucket_authority != *bucket_authority_info.key {
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    init_pool_accounts(
+        program_id,
+        pool_config_info,
+        pool_vault_info,
+        &bucket_authority,
+        admin_info,
+        system_program,
+        denomination,
+    )
+}
+
+/// Create + initialise `pool_config = PDA([POOL_CONFIG_SEED, seed_key])` and its
+/// vault. `admin` pays rent and is stored as the Pause/Resume authority.
+#[allow(clippy::too_many_arguments)]
+#[inline(never)]
+fn init_pool_accounts<'a>(
+    program_id: &Pubkey,
+    pool_config_info: &AccountInfo<'a>,
+    pool_vault_info: &AccountInfo<'a>,
+    seed_key: &Pubkey,
+    admin_info: &AccountInfo<'a>,
+    system_program: &AccountInfo<'a>,
+    denomination: u64,
+) -> ProgramResult {
     if denomination == 0 {
         return Err(ShieldedPoolError::ZeroDenomination.into());
     }
 
-    let (pool_config_key, config_bump) = Pubkey::find_program_address(
-        &[POOL_CONFIG_SEED, authority_info.key.as_ref()],
-        program_id,
-    );
+    let (pool_config_key, config_bump) =
+        Pubkey::find_program_address(&[POOL_CONFIG_SEED, seed_key.as_ref()], program_id);
     if pool_config_key != *pool_config_info.key {
         return Err(ProgramError::InvalidArgument);
     }
@@ -230,31 +303,31 @@ fn process_init_pool(
     let config_lamports = rent.minimum_balance(POOL_CONFIG_LEN);
     invoke_signed(
         &system_instruction::create_account(
-            authority_info.key,
+            admin_info.key,
             pool_config_info.key,
             config_lamports,
             POOL_CONFIG_LEN as u64,
             program_id,
         ),
         &[
-            authority_info.clone(),
+            admin_info.clone(),
             pool_config_info.clone(),
             system_program.clone(),
         ],
-        &[&[POOL_CONFIG_SEED, authority_info.key.as_ref(), &[config_bump]]],
+        &[&[POOL_CONFIG_SEED, seed_key.as_ref(), &[config_bump]]],
     )?;
 
     let vault_lamports = rent.minimum_balance(0);
     invoke_signed(
         &system_instruction::create_account(
-            authority_info.key,
+            admin_info.key,
             pool_vault_info.key,
             vault_lamports,
             0,
             program_id,
         ),
         &[
-            authority_info.clone(),
+            admin_info.clone(),
             pool_vault_info.clone(),
             system_program.clone(),
         ],
@@ -268,7 +341,7 @@ fn process_init_pool(
     config.bump = config_bump;
     config.is_initialized = true;
     config.is_paused = false;
-    config.authority = authority_info.key.to_bytes();
+    config.authority = admin_info.key.to_bytes();
     config.denomination = denomination;
     config.merkle_root = zeros[TREE_DEPTH];
     config.note_count = 0;
@@ -281,7 +354,7 @@ fn process_init_pool(
 
     PoolConfig::pack_boxed(&config, &mut pool_config_info.data.borrow_mut());
 
-    msg!("ShieldedPool v2: initialized denomination={}", denomination);
+    msg!("ShieldedPool v3: initialized denomination={}", denomination);
     Ok(())
 }
 

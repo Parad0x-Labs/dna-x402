@@ -53,7 +53,10 @@ relayer key is rejected because `relayer != fee_payer` / the bound relayer misma
 
 `InitPool` takes a denomination; the rail stands up N fixed-denom pools. The devnet init
 script (`build/zk/init-buckets-devnet.mjs`) creates **0.1 / 1 / 10 SOL** buckets, each a
-distinct pool PDA keyed by a deterministic per-denomination authority (idempotent).
+distinct pool created with `InitBucketPool` (0x05). The pool seed key is the program PDA
+`["bucket_authority", admin, denomination_le]`, so no private key exists for it, and the
+Pause/Resume authority stored in the config is the admin signer (idempotent per admin +
+denomination).
 
 **Splitting arbitrary amounts.** To move an arbitrary amount privately, the wallet
 decomposes it (largest-bucket-first) into a multiset of identical notes, then deposits +
