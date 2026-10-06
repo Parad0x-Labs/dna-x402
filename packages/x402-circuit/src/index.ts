@@ -280,6 +280,17 @@ export function serializeAccessProof(ap: AccessProof): Uint8Array {
   if (proofBytes.length !== 256) {
     throw new Error(`proof must be 256 bytes, got ${proofBytes.length}`);
   }
+  // A public input wider than 32 bytes would spill into the next slot and be
+  // silently overwritten, producing a payload for different public inputs.
+  for (const [name, b] of [
+    ["commitment", commitmentBytes],
+    ["threshold",  thresholdBytes],
+    ["nullifier",  nullifierBytes],
+  ] as const) {
+    if (b.length !== 32) {
+      throw new Error(`${name} must be 32 bytes, got ${b.length}`);
+    }
+  }
 
   const payload = new Uint8Array(352);
   payload.set(proofBytes,      0);
@@ -297,7 +308,8 @@ export function serializeAccessProof(ap: AccessProof): Uint8Array {
  * This is a lightweight check for:
  *   1. Correct byte lengths on proof and public inputs
  *   2. All public inputs are valid BN254 field elements (< r)
- *   3. Proof bytes are non-zero (liveness check)
+ *   3. The hex fields agree with the publicInputs array
+ *   4. Proof bytes are non-zero (liveness check)
  *
  * For real soundness verification, call `verifyAccessProof()` which submits
  * to the dark_bn254_gate program on Solana.
@@ -313,6 +325,15 @@ export function checkAccessProofShape(ap: AccessProof): VerifyResult {
     if (ap.commitment.replace(/^0+/, "").length === 0 || ap.nullifier.replace(/^0+/, "").length === 0) {
       return { valid: false, reason: "commitment or nullifier is zero — likely uninitialized" };
     }
+    for (const [name, h] of [
+      ["commitment", ap.commitment],
+      ["threshold",  ap.threshold],
+      ["nullifier",  ap.nullifier],
+    ] as const) {
+      if (!/^[0-9a-fA-F]{1,64}$/.test(h)) {
+        return { valid: false, reason: `${name} must be 1-64 hex chars (<= 32 bytes)` };
+      }
+    }
     const commitmentBig = BigInt("0x" + ap.commitment.padStart(64, "0"));
     const thresholdBig  = BigInt("0x" + ap.threshold.padStart(64, "0"));
     const nullifierBig  = BigInt("0x" + ap.nullifier.padStart(64, "0"));
@@ -327,6 +348,15 @@ export function checkAccessProofShape(ap: AccessProof): VerifyResult {
     }
     if (ap.publicInputs.length < 3) {
       return { valid: false, reason: `expected 3 public inputs, got ${ap.publicInputs.length}` };
+    }
+    // The hex fields (what serializeAccessProof sends on-chain) must agree with
+    // the publicInputs array they were encoded from.
+    const fieldValues = [commitmentBig, thresholdBig, nullifierBig];
+    const fieldNames  = ["commitment", "threshold", "nullifier"];
+    for (let i = 0; i < 3; i++) {
+      if (BigInt(ap.publicInputs[i]) !== fieldValues[i]) {
+        return { valid: false, reason: `${fieldNames[i]} does not match publicInputs[${i}]` };
+      }
     }
     // Liveness: proof bytes must not be all zeros
     const proofBytes = hexToBytes(ap.proof);
