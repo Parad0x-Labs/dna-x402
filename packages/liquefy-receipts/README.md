@@ -48,7 +48,8 @@ const root = buildReceiptRoot(receipts, batchSecret);   // omit batchSecret for 
 const proof    = new MerkleTree(receipts, batchSecret).proof(42);
 const verified = verifyReceiptInBatch(receipts[42], proof);
 
-// Anchor instruction for receipt_anchor program (live on Solana mainnet)
+// Anchor instruction data for a receipt_anchor deployment you control
+// (receipt anchoring is unavailable until the redeploy under a fresh key)
 const ixData = buildAnchorIxData({
   batchBytes: compressed,
   receiptCount: receipts.length,

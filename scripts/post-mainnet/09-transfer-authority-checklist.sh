@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Historical: every program below was retired on 2026-07-14 (ProgramData closed).
+# Kept as a record only; the script refuses to run, so it cannot send a transaction.
+echo "REFUSED: the mainnet pilot programs listed here were retired on 2026-07-14 (ProgramData closed). Kept as a historical record only." >&2
+exit 1
+
 # Upgrade authority transfer checklist — prints current authorities and
 # the exact commands needed to transfer to a Squads multisig.
 #
@@ -14,10 +19,9 @@ CLUSTER_URL="https://api.mainnet-beta.solana.com"
 DOCS_DIR="docs"
 DOCS_FILE="${DOCS_DIR}/UPGRADE_AUTHORITY.md"
 
-# The 8 deployed program IDs
+# Pilot program IDs (retired 2026-07-14)
 declare -A PROGRAMS=(
   [dark_semaphore]="Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p"
-  [dark_secp256r1_vault]="3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi"
   [dark_secp256k1_auth]="AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B"
   [null_token_hook]="14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g"
   [null_lottery]="3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG"

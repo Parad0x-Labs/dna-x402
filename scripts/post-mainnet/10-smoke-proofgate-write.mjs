@@ -26,6 +26,11 @@ import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+// Historical: the mainnet pilot programs were retired on 2026-07-14 (ProgramData
+// closed). This script is kept as a record and refuses to run.
+console.error("REFUSED: the mainnet pilot programs this script targets were retired on 2026-07-14 (ProgramData closed). Kept as a historical record only.");
+process.exit(1);
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT  = join(__dirname, "..", "..");
 

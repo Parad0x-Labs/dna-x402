@@ -5,7 +5,7 @@
  * DNA x402 Solana payment standard.
  *
  * What this is:
- *   The DNA x402 anchor is live on Solana mainnet (119M+ txs).
+ *   The DNA x402 receipt_anchor mainnet pilot ran in 2026 and was retired on 2026-07-14.
  *   This module generates compatible payment requirements, verifies receipts,
  *   and produces receipt anchor payloads that fit the existing on-chain format.
  *
@@ -15,7 +15,7 @@
  *   via @solana/web3.js or any Solana wallet adapter.
  *
  * Production status:
- *   - DNA x402 anchor: LIVE on Solana mainnet
+ *   - DNA x402 anchor: mainnet pilot retired 2026-07-14; redeploy under a fresh key pending
  *   - NULL token:      LIVE on Solana mainnet (8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump)
  *   - null-miner rails: SDK/devnet until promoted (no audit yet)
  */

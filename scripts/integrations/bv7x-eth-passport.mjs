@@ -5,7 +5,8 @@
  * Any BV-7X participant with a MetaMask/Base wallet binds their
  * ETH address to a Solana identity PDA via dark_secp256k1_auth.
  *
- * dark_secp256k1_auth: AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B (mainnet)
+ * SECP256K1_AUTH_PROGRAM_ID — dark_secp256k1_auth deployment to bind against (required:
+ *                             the mainnet pilot program was retired on 2026-07-14)
  *
  * What it does:
  *   ETH address (Base wallet) → secp256k1 precompile → EthAgentRecord PDA
@@ -30,7 +31,11 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 
-const SECP256K1_AUTH = new PublicKey("AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B");
+if (!process.env.SECP256K1_AUTH_PROGRAM_ID) {
+  console.error("ERROR: set SECP256K1_AUTH_PROGRAM_ID: the mainnet dark_secp256k1_auth pilot program was retired on 2026-07-14.");
+  process.exit(2);
+}
+const SECP256K1_AUTH = new PublicKey(process.env.SECP256K1_AUTH_PROGRAM_ID);
 const SOLANA_RPC     = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
 
 // ── ETH address ───────────────────────────────────────────────────────────────

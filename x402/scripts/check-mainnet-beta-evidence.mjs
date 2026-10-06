@@ -76,12 +76,13 @@ function checkV1(e, blockers) {
   if (e.backendSigning !== false)
     add(blockers, "backend-signing", "backendSigning must be false.", "Payments must be user-signed, not backend-signed.");
 
-  // Programs: must have all 8 with valid base58 IDs
+  // Programs: must have the pilot programs with valid base58 IDs. The pilot was
+  // retired on 2026-07-14; dark_secp256r1_vault is no longer part of the record.
   const programs = Array.isArray(e.programs)
     ? Object.fromEntries(e.programs.map((p) => [p.programLabel ?? p.configKey, p.programId]))
     : e.programs ?? {};
 
-  const required = ["dark_semaphore", "dark_secp256r1_vault", "dark_secp256k1_auth",
+  const required = ["dark_semaphore", "dark_secp256k1_auth",
     "null_token_hook", "null_lottery", "null_mint_gate", "receipt_anchor", "dark_proof_gate_lite"];
   for (const label of required) {
     const id = programs[label];

@@ -13,6 +13,11 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
+// Historical: the mainnet pilot programs were retired on 2026-07-14 (ProgramData
+// closed). This script is kept as a record and refuses to run.
+console.error("REFUSED: the mainnet pilot programs this script describes were retired on 2026-07-14 (ProgramData closed). Kept as a historical record only.");
+process.exit(1);
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, "..", "..");
 
@@ -38,7 +43,6 @@ function explorerUrl(id) {
 
 const PROGRAM_IDS = {
   dark_semaphore:       "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
-  dark_secp256r1_vault: "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
   dark_secp256k1_auth:  "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
   null_token_hook:      "14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g",
   null_lottery:         "3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG",

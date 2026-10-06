@@ -11,10 +11,13 @@ import {
 } from "@solana/web3.js";
 
 const CLUSTER    = "https://api.mainnet-beta.solana.com";
-// Live registrar from config — no hardcoded program IDs.
-const PROGRAM_ID = new PublicKey(
-  JSON.parse(readFileSync("configs/mainnet.commercial.json", "utf8")).programs.nullRegistrar
-);
+// The mainnet registrar in configs/mainnet.commercial.json was retired
+// (ProgramData closed), so the registrar must be named explicitly.
+if (!process.env.NULL_REGISTRAR_PROGRAM_ID) {
+  console.error("ERROR: set NULL_REGISTRAR_PROGRAM_ID: the mainnet registrar in configs/mainnet.commercial.json is retired.");
+  process.exit(2);
+}
+const PROGRAM_ID = new PublicKey(process.env.NULL_REGISTRAR_PROGRAM_ID);
 const HTML_PATH  = "site/null/parad0x.html";
 const DOMAIN_SEED = Buffer.from("null-domain");
 

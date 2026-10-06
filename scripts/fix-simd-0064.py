@@ -28,13 +28,13 @@ Picking this up. — sls_0x / Parad0x Labs (https://github.com/Parad0x-Labs/dna-
 ### Why
 
 We built x402 payment receipts for AI agents on Solana. The application layer
-is live on mainnet: `receipt_anchor` (`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`)
-anchors 32-byte SHA-256 receipt hashes in hourly Merkle buckets on-chain.
+ran on mainnet: `receipt_anchor` (`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`, retired 2026-07-14)
+anchored 32-byte SHA-256 receipt hashes in hourly Merkle buckets on-chain.
 The missing piece is block-level inclusion proof so downstream verifiers do not
 have to trust an RPC.
 
-We also have `dark_bn254_gate` (`GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd`)
-live on mainnet — a Groth16 BN254 verifier using the native `alt_bn128_pairing` syscall,
+We also ran `dark_bn254_gate` (`GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd`, retired 2026-07-14)
+on mainnet — a Groth16 BN254 verifier using the native `alt_bn128_pairing` syscall,
 demonstrated at ~200k CU. This is the on-chain primitive the ZK extension would use.
 
 DNA x402 repo: https://github.com/Parad0x-Labs/dna-x402

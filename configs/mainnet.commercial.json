@@ -2,6 +2,7 @@
   "track": "commercial",
   "network": "mainnet-beta",
   "description": "Parad0x commercial mainnet pilot. operatorFeeBps=50 is Parad0x's own default for Parad0x-run endpoints — not a rule for third-party builders. protocolFeeBps=5 (0.05%) is the Parad0x official rail fee on all commercial deployments. OSS/grant path uses 0/0.",
+  "status": "retired: the mainnet programs in this profile ran from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). Their IDs are kept as historical records; nothing in this profile is active.",
   "houseFeeBps": 50,
   "nullEmissionPct": 5,
   "lotteryHouseFeeBps": 50,
@@ -14,7 +15,6 @@
   "epochDurationSlots": 432000,
   "programs": {
     "semaphore": "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
-    "vault": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
     "ethAuth": "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
     "tokenHook": "14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g",
     "lottery": "3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG",

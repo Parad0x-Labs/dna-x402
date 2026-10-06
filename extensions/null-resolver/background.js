@@ -9,7 +9,8 @@ importScripts("codec.js"); // provides base58Encode, buildDomainFilters, decodeC
 // Config (overridable via chrome.storage.sync)
 // ---------------------------------------------------------------------------
 
-// Live null_registrar program ID on Solana mainnet-beta. Canonical source is
+// null_registrar program ID from the Solana mainnet-beta pilot (retired; its
+// domain records stay readable, so the resolver reads them). Canonical source is
 // configs/mainnet.commercial.json (programs.nullRegistrar) — keep this in sync.
 // Overridable at runtime via chrome.storage.sync.
 const DEFAULT_PROGRAM_ID = "NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np"; // mainnet null_registrar

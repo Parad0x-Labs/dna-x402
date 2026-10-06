@@ -9,7 +9,8 @@
  *   - the REAL pack (the batch actually anchored)        -> must verify GREEN (accountable)
  *   - a forged-but-internally-valid pack (different root) -> must go RED (not the anchored root)
  *
- * Local proof/kill. No on-chain writes — a single read of the live bucket.
+ * Local proof/kill. No on-chain writes — a single read of the anchored bucket (written by the
+ * receipt_anchor mainnet pilot, retired 2026-07-14; the bucket account stays readable).
  * Env: RPC (mainnet), DAG (receipt-dag src), BUCKET (the anchored bucket PDA).
  */
 import { deflateRawSync, inflateRawSync } from "node:zlib";
@@ -80,6 +81,6 @@ const pass =
   unpack(realPack).batch.length === realBatch.length;
 
 console.log(`\nRESULT: ${pass
-  ? "PASS — the real proof pack verifies GREEN against the live mainnet anchor; a forged-but-valid pack goes RED (its root was never anchored). Paste-to-verify works, keyless, no trust in web0."
+  ? "PASS — the real proof pack verifies GREEN against the historical mainnet anchor (receipt_anchor pilot, retired 2026-07-14); a forged-but-valid pack goes RED (its root was never anchored). Paste-to-verify works, keyless, no trust in web0."
   : "FAIL — see verdicts above."}`);
 process.exit(pass ? 0 : 1);

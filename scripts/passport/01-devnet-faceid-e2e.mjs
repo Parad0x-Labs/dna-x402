@@ -200,7 +200,6 @@ async function main() {
       "Real on-chain P-256 verification via the Agave secp256r1 precompile — proven on devnet, replayable.",
       "v1: the precompile message IS the 32-byte challenge (P-256 key signs it directly). Full WebAuthn authenticatorData parsing on-chain is the audit-scope enhancement.",
       "EXTERNALLY UNAUDITED test pilot. Identity binding only — no funds custody.",
-      "Mainnet vault (3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi) still runs devnet-mode until the in-place --features mainnet upgrade.",
     ],
   };
   const { writeFileSync, mkdirSync } = await import("node:fs");

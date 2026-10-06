@@ -12,7 +12,8 @@
 //   L3 CHECK    — for the deterministic, no-sandbox subset (output-hash match, frozen schema, a
 //                 verifiable proof/sig), anyone can re-run the predicate and the requester signs an
 //                 accept/reject verdict. Non-deterministic work returns UNDECIDED — never a silent accept.
-//   AUDIT       — bindToDag() anchors a canonical actionHash via receipt-dag to live mainnet, giving a
+//   AUDIT       — bindToDag() anchors a canonical actionHash via receipt-dag to a caller-named
+//                 receipt_anchor deployment (none configured until the redeploy), giving a
 //                 tamper-evident, time-ordered trail. verifyDagChain catches two receipts at the SAME
 //                 (worker, sequenceNonce) slot; detecting two CONTRADICTORY bindings for one task
 //                 (different nonces) is an application scan over the anchored log — each binding

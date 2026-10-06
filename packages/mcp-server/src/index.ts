@@ -13,21 +13,19 @@ import { Connection, PublicKey, Keypair } from "@solana/web3.js";
 // Constants
 // ---------------------------------------------------------------------------
 
-// Solana mainnet-beta program addresses — verified against evidence/mainnet.
+// Solana mainnet-beta program addresses from the 2026 pilot. Every program here
+// was retired on 2026-07-14 (ProgramData closed); accounts they own stay
+// readable, so lookup_passport still reads dark_secp256k1_auth records.
 // The previously listed receipt_anchor, dark_nullifier_record,
 // dark_reputation_gate and receipt_commitment_tree deployments are withdrawn
 // until the redeploy under a fresh key, so they are not listed here and the
 // tools that used them refuse (see UNAVAILABLE_PROGRAMS).
 const PROGRAMS = {
-  dark_x402_access_gate: "EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS",
-  dark_secp256r1_vault: "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
   dark_secp256k1_auth: "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
   dark_semaphore: "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
   null_token: "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
-  // EXCLUDED STUB — NOT a live/usable program. Contains a literal 0xDE 0xAD
-  // unconditional bypass (any proof passes), a documented P0; excluded from the
-  // pilot and fail-closed pending bypass removal + a trustless ceremony / real VK.
-  // Kept here only so get_stack_status can surface it as "stub — do not use".
+  // Retired 2026-07-14. Was excluded from the pilot: it contained a literal
+  // 0xDE 0xAD unconditional bypass (any proof passes), a documented P0.
   dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
 } as const;
 
@@ -39,6 +37,8 @@ const UNAVAILABLE_PROGRAMS = {
   receipt_anchor: `receipt anchoring is ${REDEPLOY_PENDING}`,
   dark_nullifier_record: `nullifier lookup is ${REDEPLOY_PENDING}`,
   dark_reputation_gate: `private track-record verification is ${REDEPLOY_PENDING}`,
+  dark_x402_access_gate: `private x402 access verification is ${REDEPLOY_PENDING}`,
+  dark_secp256r1_vault: `passkey vault binding is ${REDEPLOY_PENDING}`,
   receipt_commitment_tree: `the receipt commitment tree is ${REDEPLOY_PENDING}`,
 } as const;
 
@@ -519,37 +519,23 @@ function getStackStatus(): object {
   return {
     programs: [
       {
-        name: "dark_x402_access_gate",
-        address: PROGRAMS.dark_x402_access_gate,
-        status: "live (mainnet) — VK single-party until the trusted-setup ceremony finalizes",
-        explorer_url: explorerAccount(PROGRAMS.dark_x402_access_gate),
-        description: "Groth16 BN254 access gate — prove funded + authorized WITHOUT revealing wallet or balance. On-chain verify via alt_bn128_pairing (~93k CU, ~$0.0007).",
-      },
-      {
-        name: "dark_secp256r1_vault",
-        address: PROGRAMS.dark_secp256r1_vault,
-        status: "live",
-        explorer_url: explorerAccount(PROGRAMS.dark_secp256r1_vault),
-        description: "WebAuthn / P-256 vault — stores secp256r1 public keys on-chain",
-      },
-      {
         name: "dark_secp256k1_auth",
         address: PROGRAMS.dark_secp256k1_auth,
-        status: "live",
+        status: "retired 2026-07-14 (mainnet pilot; ProgramData closed, records readable)",
         explorer_url: explorerAccount(PROGRAMS.dark_secp256k1_auth),
         description: "ETH address binding — links MetaMask / secp256k1 identities to Solana wallets",
       },
       {
         name: "dark_bn254_gate",
         address: PROGRAMS.dark_bn254_gate,
-        status: "excluded stub — do not use",
+        status: "retired 2026-07-14 (mainnet pilot; ProgramData closed) — was excluded from the pilot, do not use",
         explorer_url: explorerAccount(PROGRAMS.dark_bn254_gate),
         description: "EXCLUDED from the pilot — contains a literal 0xDE 0xAD unconditional bypass (any proof passes), a documented P0. NOT a real verifier; fail-closed pending bypass removal + a trustless ceremony / real VK. A trustless on-chain verifier is pending a clean redeploy + a trustless ceremony. Listed for transparency only.",
       },
       {
         name: "dark_semaphore",
         address: PROGRAMS.dark_semaphore,
-        status: "live",
+        status: "retired 2026-07-14 (mainnet pilot; ProgramData closed, records readable)",
         explorer_url: explorerAccount(PROGRAMS.dark_semaphore),
         description: "Semaphore-style anonymous group membership proofs",
       },
@@ -640,7 +626,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "lookup_passport",
         description:
-          "Look up a Dark Passport — check if an ETH address or Solana wallet has a verified identity binding on Solana mainnet",
+          "Look up a Dark Passport — check if an ETH address or Solana wallet has an identity binding record from the Solana mainnet pilot (dark_secp256k1_auth, retired 2026-07-14; records stay readable)",
         inputSchema: {
           type: "object",
           properties: {
@@ -728,7 +714,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_stack_status",
-        description: "Get the current status of all Parad0x Labs mainnet programs",
+        description: "Get the status of the Parad0x Labs mainnet pilot programs (all retired 2026-07-14) and of programs pending a redeploy under a fresh key",
         inputSchema: {
           type: "object",
           properties: {},

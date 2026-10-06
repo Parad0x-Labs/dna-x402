@@ -5,9 +5,9 @@
 //! treasury (never burned), and resolve to Arweave/IPFS content hashes —
 //! permanent, unstoppable, agent-native.
 //!
-//! ⚠️  LEGACY / ILLUSTRATIVE SOURCE — NOT the live mainnet program.
-//!     This is the v1 design (NULL-priced, IS_MAINNET_READY gate). The LIVE mainnet
-//!     registrar is v2 — SOL-priced (~0.01 SOL all-in), config-driven via SetConfig,
+//! ⚠️  LEGACY / ILLUSTRATIVE SOURCE — NOT the mainnet pilot program.
+//!     This is the v1 design (NULL-priced, IS_MAINNET_READY gate). The mainnet pilot
+//!     registrar (retired; records readable) was v2 — SOL-priced (~0.01 SOL all-in), config-driven via SetConfig,
 //!     free during the pilot — at NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np.
 //!     Canonical v2 source/spec is maintained privately. Do NOT deploy this v1 source.
 //!

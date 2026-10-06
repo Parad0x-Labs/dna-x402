@@ -42,7 +42,6 @@ const CLUSTER        = "mainnet-beta";
 // fresh key, so the anchoring step needs RECEIPT_ANCHOR_PROGRAM_ID and refuses without it.
 const RECEIPT_ANCHOR = process.env.RECEIPT_ANCHOR_PROGRAM_ID ?? null;
 const RECEIPT_ANCHOR_UNAVAILABLE = "receipt anchoring is unavailable until the redeploy under a fresh key: set RECEIPT_ANCHOR_PROGRAM_ID to a receipt_anchor deployment you control";
-const VAULT_PROGRAM  = "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -289,7 +288,6 @@ async function main() {
     passportId,
     programs: {
       receiptAnchor: RECEIPT_ANCHOR,
-      passportVault: VAULT_PROGRAM,
     },
     whatThisProves: [
       "AI agents discovered a paid API endpoint via HTTP 402",

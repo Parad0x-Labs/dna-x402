@@ -15,11 +15,13 @@ import { homedir } from "node:os";
 
 const CLUSTER      = "https://api.mainnet-beta.solana.com";
 const CONFIG_PATH  = "configs/mainnet.commercial.json";
-// Default to the live registrar from config (no hardcoded program IDs); an
-// explicit CLI arg still overrides.
-const PROGRAM_ID   = new PublicKey(
-  process.argv[2] ?? JSON.parse(readFileSync(CONFIG_PATH, "utf8")).programs.nullRegistrar
-);
+// The mainnet registrar in the config was retired (ProgramData closed), so there
+// is no default: name the registrar deployment to initialise explicitly.
+if (!process.argv[2]) {
+  console.error("ERROR: pass <PROGRAM_ID>: the mainnet registrar in configs/mainnet.commercial.json is retired.");
+  process.exit(2);
+}
+const PROGRAM_ID   = new PublicKey(process.argv[2]);
 const NULL_MINT    = new PublicKey("8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump");
 
 const REGISTRY_SEED = Buffer.from("null-registry");

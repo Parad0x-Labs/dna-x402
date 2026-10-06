@@ -8,10 +8,10 @@ Exposes the Parad0x Labs stack as MCP tools. Works with Claude Desktop, Cursor, 
 |---|---|
 | `x402_get_quote` | Get a payment quote for an x402-gated API endpoint |
 | `anchor_receipt` | Anchor a 32-byte receipt hash via `receipt_anchor`. Receipt anchoring is unavailable until the redeploy under a fresh key; the tool returns an error and sends nothing |
-| `lookup_passport` | Check if an ETH address or Solana wallet has a verified Dark Passport binding |
+| `lookup_passport` | Check if an ETH address or Solana wallet has a Dark Passport binding record from the retired mainnet pilot (records stay readable) |
 | `build_outcome_receipt` | Build a signed outcome receipt with PnL, accuracy, or delivery result |
 | `compress_receipts` | Compress a batch of receipts (Liquefy format, 83x typical ratio) |
-| `get_stack_status` | Discover all live Parad0x Labs mainnet program addresses |
+| `get_stack_status` | Status of the mainnet pilot programs (all retired 2026-07-14) and of programs pending a redeploy |
 
 ## Install
 
@@ -76,14 +76,13 @@ npm start
 | `SOLANA_RPC_URL` | `https://api.mainnet-beta.solana.com` | Solana RPC endpoint |
 | `SOLANA_KEYPAIR` | _(unset)_ | JSON array of 64 bytes — enables real transaction submission |
 
-## Programs (mainnet)
+## Programs (mainnet pilot, retired)
 
-`receipt_anchor` and `dark_nullifier_record` have no usable deployment on any cluster until the redeploy under a fresh key, so `anchor_receipt` and `check_nullifier` return an error without sending or reading anything.
+The mainnet pilot programs ran from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed); accounts they own stay readable. `receipt_anchor` and `dark_nullifier_record` have no usable deployment on any cluster until the redeploy under a fresh key, so `anchor_receipt` and `check_nullifier` return an error without sending or reading anything.
 
 | Program | Address | Status |
 |---|---|---|
-| dark_secp256r1_vault | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | Live |
-| dark_secp256k1_auth | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Live |
-| dark_semaphore | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Live |
+| dark_secp256k1_auth | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Retired 2026-07-14 (records readable) |
+| dark_semaphore | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Retired 2026-07-14 (records readable) |
 | null_token | `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` | Live |
-| dark_bn254_gate | `GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd` | ⛔ Excluded stub — `0xDE 0xAD` unconditional bypass (any proof passes), documented P0. NOT a real verifier, do not use. A trustless on-chain verifier is pending (clean redeploy + ceremony). |
+| dark_bn254_gate | `GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd` | Retired 2026-07-14. Was excluded from the pilot (`0xDE 0xAD` unconditional bypass, documented P0); do not use |
