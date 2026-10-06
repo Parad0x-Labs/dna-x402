@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "network": "devnet",
+  "observed_at": "2026-10-06T08:26:58Z",
+  "observation_method": "solana program show / solana program dump (read-only RPC); so_sha256 is the SHA-256 of the deployed ELF, equal to the ProgramData bytes up to the ELF length",
+  "upgrade_authority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+  "source_base_commit": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+  "source_build_match": "unknown",
+  "source_build_note": "Built from the base commit plus program-ID constants and a `devnet` cargo feature that are not committed at the base commit. Until that change is committed, the deployed bytes cannot be reproduced from a public commit.",
+  "not_deployed": [
+    "agent_credential_mint",
+    "dark_bn254_g2_ref",
+    "dark_bn254_gate",
+    "dark_registrar",
+    "dark_scratch",
+    "live_attestation",
+    "x402_refund_escrow"
+  ],
+  "test_results": {
+    "status": "pending",
+    "note": "Devnet test runs against this deployment are being recorded separately; this file records identity and bytes only."
+  },
+  "supersedes": "All earlier devnet program IDs referenced in docs and evidence files of this repository are retired.",
+  "programs": [
+    {
+      "name": "null_registrar",
+      "source_dir": "programs/null_registrar",
+      "program_id": "3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ",
+      "last_deployed_slot": 508027879,
+      "programdata_length": 98184,
+      "so_sha256": "3a44c0b18934da591f18c26593103fdf88f3b8c4685216e4250ab903068d19ae",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_null_mint_gate",
+      "source_dir": "programs/null_mint_gate",
+      "program_id": "FE3PfXGhKBWexG9d8DB6a4ZCxTVDjGDtvjMyVCHnMh3N",
+      "last_deployed_slot": 508027713,
+      "programdata_length": 78448,
+      "so_sha256": "3ac84dc3bcd5b9b2141ed0d3ef2e495498486e5f57b4af2f34dbee6cde42b0af",
+      "build_variant": "default"
+    },
+    {
+      "name": "receipt_commitment_tree",
+      "source_dir": "programs/receipt_commitment_tree",
+      "program_id": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+      "last_deployed_slot": 508027224,
+      "programdata_length": 81088,
+      "so_sha256": "ef76cca1d25fdb3f4048133923049ea6273eec305ebd197fef0e30c9af687143",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_ritual_transfer_hook",
+      "source_dir": "programs/dark_ritual_transfer_hook",
+      "program_id": "9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf",
+      "last_deployed_slot": 508028302,
+      "programdata_length": 149984,
+      "so_sha256": "171c88142b7bc779e5a0435dfb78c81edded1b2a561b7d4a92a1ce37be9ad36b",
+      "build_variant": "rebuilt-with-program-ids"
+    },
+    {
+      "name": "dark_shielded_pool_program",
+      "source_dir": "programs/dark_shielded_pool",
+      "program_id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+      "last_deployed_slot": 508029622,
+      "programdata_length": 126320,
+      "so_sha256": "ddcf6a7986c8a02a65266c7be4d080fdae1f042509467ce44f0399a7e64ae4b2",
+      "build_variant": "devnet-feature"
+    },
+    {
+      "name": "dark_x402_access_gate",
+      "source_dir": "programs/dark_x402_access_gate",
+      "program_id": "7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR",
+      "last_deployed_slot": 508028231,
+      "programdata_length": 92496,
+      "so_sha256": "86f2e5d9de4de41201288d19575399aa08175232981b3df319b1e15be31fb5d3",
+      "build_variant": "rebuilt-with-program-ids"
+    },
+    {
+      "name": "dark_compressed_receipts",
+      "source_dir": "programs/dark_compressed_receipts",
+      "program_id": "7uELrEpcSkbDgYA3xq623QaQmxUi2BXRHUPsKoDVM1oB",
+      "last_deployed_slot": 508029398,
+      "programdata_length": 81544,
+      "so_sha256": "cb2b117cf23d23b3970ef47014b7e837352d8d80af81c2e6c968c689628d898e",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_fedimint_redeem_program",
+      "source_dir": "programs/dark_fedimint_redeem",
+      "program_id": "26v61JPcTKyrUfTpULVaP5w9dCN3GtCW3gu5X1LunrNd",
+      "last_deployed_slot": 508028013,
+      "programdata_length": 164408,
+      "so_sha256": "56fcc0ee97df5eec2dd22bb527ff6c892aaa311537f1a759cdf290b4ae37eef4",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_reputation_gate",
+      "source_dir": "programs/dark_reputation_gate",
+      "program_id": "Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g",
+      "last_deployed_slot": 508028159,
+      "programdata_length": 90016,
+      "so_sha256": "c214925401c28d4bbffba53dfdda5fcf74f7c4986941d190beed6dee6d4495dc",
+      "build_variant": "rebuilt-with-program-ids"
+    },
+    {
+      "name": "dark_chaff",
+      "source_dir": "programs/dark_chaff",
+      "program_id": "4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B",
+      "last_deployed_slot": 508029330,
+      "programdata_length": 77432,
+      "so_sha256": "64b353589e815414ea0d2867b71fd7abe3c58fb6e7dc41b60870a351f8fd676d",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_secp256r1_vault",
+      "source_dir": "programs/dark_secp256r1_vault",
+      "program_id": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC",
+      "last_deployed_slot": 508027434,
+      "programdata_length": 82352,
+      "so_sha256": "3bc56cfa26686aee2cee9a39a5d35f1f22b5333be5f9c92c6f1231ec12f6c331",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_secp256k1_auth",
+      "source_dir": "programs/dark_secp256k1_auth",
+      "program_id": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      "last_deployed_slot": 508027506,
+      "programdata_length": 73576,
+      "so_sha256": "01f990e948306a5249bad9ec2be71fce3578c70005d3fda599809d8e6f62691e",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_nullifier_banks",
+      "source_dir": "programs/dark_nullifier_banks",
+      "program_id": "499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue",
+      "last_deployed_slot": 508029472,
+      "programdata_length": 76800,
+      "so_sha256": "222495b68aacec17b306348aa5d46b70e36c46edec1881f6fc6616936465758d",
+      "build_variant": "default"
+    },
+    {
+      "name": "receipt_anchor",
+      "source_dir": "programs/receipt_anchor",
+      "program_id": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
+      "last_deployed_slot": 508027776,
+      "programdata_length": 83120,
+      "so_sha256": "c4d62f2b8eb52809eca0ca8c7df547dc7d608719e2bfefb087e954b3a0fb1231",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_bls12_381_credential",
+      "source_dir": "programs/dark_bls12_381_credential",
+      "program_id": "C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE",
+      "last_deployed_slot": 508029541,
+      "programdata_length": 23056,
+      "so_sha256": "ef61da23a3a97c8bcf4a4b8a6200fdc0f83f9e8b071b718e7165372ab1d1f473",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_proof_gate_lite",
+      "source_dir": "programs/dark_proof_gate_lite",
+      "program_id": "pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P",
+      "last_deployed_slot": 508027805,
+      "programdata_length": 27496,
+      "so_sha256": "cf617f0128d5618ca4aa8809e23d2f092c000dc2135186954c1d92823c776044",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_ritual_gate",
+      "source_dir": "programs/dark_ritual_gate",
+      "program_id": "GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo",
+      "last_deployed_slot": 508027295,
+      "programdata_length": 84992,
+      "so_sha256": "3dd11d349f94e70bc572cc0ebbd0ecf4f9ba97269e29be69134fe04880f476a6",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_null_lottery",
+      "source_dir": "programs/null_lottery",
+      "program_id": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+      "last_deployed_slot": 508027642,
+      "programdata_length": 89272,
+      "so_sha256": "b20ffb895a8d9581122ad818ff955af9876207bfc079f3c9d0b0761f74614129",
+      "build_variant": "default"
+    },
+    {
+      "name": "null_token_hook",
+      "source_dir": "programs/null_token_hook",
+      "program_id": "Fg9rnhjfHTh6nKAvcmNvi1B3vn5q4XQPMpytnQR9YGHj",
+      "last_deployed_slot": 508027574,
+      "programdata_length": 77888,
+      "so_sha256": "25371bfee6eefb51b684509651621ed4a27b592d5ff5132a9646f34d7e07cbba",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_nullifier_record",
+      "source_dir": "programs/dark_nullifier_record",
+      "program_id": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et",
+      "last_deployed_slot": 508027945,
+      "programdata_length": 74840,
+      "so_sha256": "025519af608369a658da4f5333c4450f57146eb07864392d0cda46aa8a5b9f73",
+      "build_variant": "default"
+    },
+    {
+      "name": "dark_semaphore",
+      "source_dir": "programs/dark_semaphore",
+      "program_id": "4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu",
+      "last_deployed_slot": 508027363,
+      "programdata_length": 75600,
+      "so_sha256": "1d738e8778f8960a4c35ddd3820f1f28bd5232246bcac92392ade210a21ae3a2",
+      "build_variant": "default"
+    }
+  ]
+}

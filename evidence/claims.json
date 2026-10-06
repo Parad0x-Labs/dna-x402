@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "repository": "Parad0x-Labs/dna-x402",
+  "snapshot": {
+    "default_branch": "main",
+    "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+    "observed_at": "2026-10-06T08:23:22Z",
+    "method": "GitHub API for the default-branch head; npm registry metadata (read-only) for publication; read-only devnet RPC for deployments"
+  },
+  "claims": [
+    {
+      "id": "x402.transfer-verification",
+      "plain_claim": "In transfer mode the x402 server verifies an SPL token payment on-chain before serving the resource.",
+      "component": "x402 server and seller SDK",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "x402/src/paymentVerifier.ts",
+        "x402/src/verifier/splTransfer.ts",
+        "x402/src/verifier/replayStore.ts",
+        "x402/src/config.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": {
+        "name": "@parad0x_labs/x402",
+        "package_json": "x402/package.json",
+        "git_version": "0.2.0",
+        "npm_latest": "0.1.1",
+        "npm_checked_at": "2026-10-06T08:23:41Z"
+      },
+      "publication_status": "deprecated",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "The seller trusts its configured Solana RPC endpoint to report transaction status and balances."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "x402/tests/replay.test.ts",
+        "x402/tests/receipt.binding.test.ts"
+      ],
+      "test_command": "npm --prefix x402 ci --ignore-scripts && npm --prefix x402 run build && npm --prefix x402 test",
+      "test_run": {
+        "result": "partial",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npx vitest run (x402)",
+        "note": "1565 passed, 8 skipped, 3 failed of 1576: repo-identity needs git and two polyglot tests need python3 and cargo, none installed in the container"
+      },
+      "mocks_or_skips": [
+        "Unit tests use mocked RPC responses; no devnet transfer was executed in this pass."
+      ],
+      "demonstrated_properties": [
+        "transaction must exist without error at the configured commitment (default confirmed; finalized can be required)",
+        "recipient balance increase for the quoted mint must cover the quote total",
+        "payment proof older than 900 s is refused",
+        "a reused proof is refused within one running process"
+      ],
+      "not_demonstrated": [
+        "replay rejection across restarts or instances (ReplayStore is an in-process Map even when a database URL is set)",
+        "binding of the payment to the quote nonce unless REQUIRE_PAYMENT_MEMO is enabled (off by default)",
+        "binding of the transaction sender to the buyer",
+        "native SOL payments"
+      ],
+      "operational_limitations": [
+        "npm latest 0.1.1 is deprecated; Git 0.2.0 is not on npm, so install from source until it is published."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "x402.signed-receipts",
+      "plain_claim": "Every paid response carries an Ed25519-signed receipt that links to the previous receipt hash.",
+      "component": "x402 server and seller SDK",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "x402/src/receipts.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "The seller holds RECEIPT_SIGNING_SECRET; whoever holds it can sign any receipt."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "x402/tests/receipts.test.ts",
+        "x402/tests/receiptChain.test.ts"
+      ],
+      "test_command": "npm --prefix x402 test -- tests/receipts.test.ts tests/receiptChain.test.ts",
+      "test_run": {
+        "result": "partial",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npx vitest run (x402)",
+        "note": "1565 passed, 8 skipped, 3 failed of 1576: repo-identity needs git and two polyglot tests need python3 and cargo, none installed in the container"
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "signature over sha256(JSON of prevHash and payload)",
+        "per-signer hash chain via prevHash"
+      ],
+      "not_demonstrated": [
+        "that the served content is correct; a receipt attests what the seller signed",
+        "stable key ordering: JSON.stringify does not sort keys",
+        "a persistent signing key in the SDK seller and paywall, which generate an ephemeral key when none is supplied"
+      ],
+      "operational_limitations": [
+        "The server requires RECEIPT_SIGNING_SECRET only in production; elsewhere it generates an ephemeral key with a warning."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "x402.netting-ledger",
+      "plain_claim": "Netting mode records per payer-provider charges in an off-chain ledger for development use.",
+      "component": "x402 server and seller SDK",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "x402/src/nettingLedger.ts",
+        "x402/src/paymentVerifier.ts",
+        "x402/src/cli.ts"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "Buyer and seller trust each other; the netting claim is accepted without verification."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "x402/tests/nettingLedger.test.ts",
+        "x402/tests/paymentVerifier.netting.test.ts"
+      ],
+      "test_command": "npm --prefix x402 test -- tests/nettingLedger.test.ts tests/paymentVerifier.netting.test.ts",
+      "test_run": {
+        "result": "partial",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npx vitest run (x402)",
+        "note": "1565 passed, 8 skipped, 3 failed of 1576: repo-identity needs git and two polyglot tests need python3 and cargo, none installed in the container"
+      },
+      "mocks_or_skips": [
+        "The README quickstart runs netting mode with stand-in payment proofs; no funds move."
+      ],
+      "demonstrated_properties": [
+        "sums payer to provider totals and fees",
+        "refused unless UNSAFE_UNVERIFIED_NETTING_ENABLED=1, which the server rejects when NODE_ENV=production"
+      ],
+      "not_demonstrated": [
+        "offsetting obligations in the reverse direction",
+        "any verification of the netting claim",
+        "a production guard in the SDK seller and paywall",
+        "netting off by default in the init seller starter (it is on unless DNA_TRUSTED_LOCAL_NETTING=0)"
+      ],
+      "operational_limitations": [
+        "Development and trusted local setups only."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "x402.net-settlement",
+      "plain_claim": "Net obligations computed by netting are discharged by an on-chain payment.",
+      "component": "x402 server",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "x402/src/server.ts",
+        "x402/src/nettingLedger.ts"
+      ],
+      "implementation_status": "missing",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [],
+      "test_command": null,
+      "test_run": null,
+      "mocks_or_skips": [],
+      "demonstrated_properties": [],
+      "not_demonstrated": [
+        "POST /settlements/flush returns and clears due totals as JSON; no code builds or sends a transfer for them"
+      ],
+      "operational_limitations": [
+        "Not a clearinghouse: there is no custody, collateral or enforcement of netted amounts."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "x402.stream-verification",
+      "plain_claim": "Stream mode accepts a Streamflow stream as payment when the seller verifies it.",
+      "component": "x402 server and seller SDK",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "x402/src/verifier/streamflow.ts",
+        "x402/src/streaming.ts"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "The seller trusts the Streamflow program and its RPC endpoint."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "x402/tests/paymentVerifier.streamSafety.test.ts",
+        "x402/tests/server.stream-replay.test.ts"
+      ],
+      "test_command": "npm --prefix x402 test -- tests/paymentVerifier.streamSafety.test.ts",
+      "test_run": {
+        "result": "partial",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npx vitest run (x402)",
+        "note": "1565 passed, 8 skipped, 3 failed of 1576: repo-identity needs git and two polyglot tests need python3 and cargo, none installed in the container"
+      },
+      "mocks_or_skips": [
+        "Stream verification tests use a mocked Streamflow client."
+      ],
+      "demonstrated_properties": [
+        "checks mint, recipient, open stream and remaining deposit against the quote (SDK, when a streamflowClient is passed)"
+      ],
+      "not_demonstrated": [
+        "stream payments through the bundled x402 server, which advertises stream mode but passes no Streamflow client, so stream proofs are refused",
+        "protection against the sender cancelling the stream (streams are created cancelable by sender)"
+      ],
+      "operational_limitations": [],
+      "supersedes": null
+    },
+    {
+      "id": "x402.refund-escrow",
+      "plain_claim": "A refund-escrow program holds a SOL bond and releases it on a signed receipt or refunds on timeout.",
+      "component": "programs/x402_refund_escrow",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "programs/x402_refund_escrow/src/processor.rs",
+        "programs/x402_refund_escrow/src/instruction.rs"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "Escrow parties and the receipt signer key named at OpenEscrow."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "programs/x402_refund_escrow/tests"
+      ],
+      "test_command": "cargo test --manifest-path programs/x402_refund_escrow/Cargo.toml",
+      "test_run": null,
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "instructions: OpenEscrow, PostBond, SettleSuccess (ed25519 receipt via instructions sysvar), RefundOnTimeout, ProveEquivocation, CloseAfterDispute"
+      ],
+      "not_demonstrated": [
+        "any deployment (not part of the 2026-10-06 devnet set)",
+        "a TypeScript client or use in the x402 payment flow",
+        "USDC or other SPL tokens (lamports only)"
+      ],
+      "operational_limitations": [],
+      "supersedes": null
+    },
+    {
+      "id": "x402.receipt-anchoring",
+      "plain_claim": "Receipt anchoring is opt-in and refuses to run unless the operator names a receipt_anchor deployment.",
+      "component": "x402 anchoring client, liquefy-receipts, programs/receipt_anchor",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "x402/src/onchain/receiptAnchorClient.ts",
+        "x402/src/config.ts",
+        "packages/liquefy-receipts/src/anchor.ts",
+        "programs/receipt_anchor/src/processor.rs"
+      ],
+      "implementation_status": "implemented",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
+      "deployed_build_hash": "c4d62f2b8eb52809eca0ca8c7df547dc7d608719e2bfefb087e954b3a0fb1231",
+      "source_build_match": "unknown",
+      "authority_assumptions": [
+        "Program upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q (devnet).",
+        "Any signer can append to any bucket; the program does not authenticate who anchors."
+      ],
+      "evidence_checked_at": "2026-10-06T08:26:58Z",
+      "proof_files": [
+        "evidence/devnet-programs-2026-10-06.json",
+        "packages/liquefy-receipts/tests/liquefy-receipts.test.mjs",
+        "programs/receipt_anchor/tests/integration.rs"
+      ],
+      "test_command": "cargo test --manifest-path programs/receipt_anchor/Cargo.toml",
+      "test_run": {
+        "result": "pending",
+        "date": null,
+        "environment": "devnet",
+        "note": "Devnet test evidence for the 2026-10-06 deployment is being recorded separately."
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "server anchoring needs ANCHORING_ENABLED, RECEIPT_ANCHOR_PROGRAM_ID and ANCHORING_KEYPAIR_PATH (all unset by default)",
+        "liquefy-receipts 0.3.0 has no default program and throws RECEIPT_ANCHOR_UNAVAILABLE",
+        "deployed devnet bytes match the 2026-10-06 build output"
+      ],
+      "not_demonstrated": [
+        "that one anchor proves a single receipt: the program folds each 32-byte value into an hourly hash chain (root = sha256(prev_root || value)); inclusion needs the ordered list of anchors in that bucket",
+        "that the receipt hash is anchored: the server anchors the commit's payer commitment",
+        "a deployment configured as default in source (none, by design)"
+      ],
+      "operational_limitations": [
+        "If the anchoring client fails to build, the server keeps running with anchoring off.",
+        "The mainnet pilot receipt_anchor 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN is closed; configs/mainnet.*.json still name it."
+      ],
+      "supersedes": "x402.mainnet-pilot"
+    },
+    {
+      "id": "x402.mainnet-pilot",
+      "plain_claim": "A DNA x402 mainnet pilot ran from 2026-05-29 and was retired on 2026-07-14.",
+      "component": "mainnet pilot programs",
+      "source_sha": null,
+      "source_paths": [
+        "evidence/mainnet/programs.json"
+      ],
+      "implementation_status": "retired",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "mainnet-beta",
+      "program_id": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+      "deployed_build_hash": null,
+      "source_build_match": "unknown",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06T08:30:00Z",
+      "proof_files": [
+        "evidence/mainnet/MAINNET_BETA_EVIDENCE.json"
+      ],
+      "test_command": null,
+      "test_run": null,
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "receipt_anchor program account reported closed by mainnet RPC on 2026-10-06"
+      ],
+      "not_demonstrated": [
+        "any active DNA x402 mainnet deployment"
+      ],
+      "operational_limitations": [
+        "Historical records only."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "liquefy-receipts.compression",
+      "plain_claim": "liquefy-receipts compresses a receipt batch with a columnar transform and DEFLATE.",
+      "component": "packages/liquefy-receipts",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "packages/liquefy-receipts/src/compress.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": {
+        "name": "@parad0x_labs/liquefy-receipts",
+        "package_json": "packages/liquefy-receipts/package.json",
+        "git_version": "0.3.0",
+        "npm_latest": "0.2.0",
+        "npm_checked_at": "2026-10-06T08:23:41Z"
+      },
+      "publication_status": "published-older-version",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "packages/liquefy-receipts/tests/liquefy-receipts.test.mjs",
+        "evidence/demo/privacy-proof.json",
+        "evidence/demo/arweave-archive.json"
+      ],
+      "test_command": "npm --prefix packages/liquefy-receipts test",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npm test (packages/liquefy-receipts)",
+        "note": "48 of 48 passed"
+      },
+      "mocks_or_skips": [
+        "Committed ratios (66x, 83x) come from synthetic, highly repetitive batches."
+      ],
+      "demonstrated_properties": [
+        "delta, dictionary and raw-string column encodings, DEFLATE per column",
+        "test asserts a ratio above 10x"
+      ],
+      "not_demonstrated": [
+        "lossless round trip for every receipt shape: non-integer numbers throw, bigint above 2^53 loses precision, null becomes 0 or empty string, keys missing from some rows are added",
+        "the README figure of 62x (no committed measurement)",
+        "a ratio on real production receipts"
+      ],
+      "operational_limitations": [
+        "npm latest is 0.2.0, whose default anchor program is the retired mainnet pilot; Git 0.3.0 removes that default and is not yet published."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "liquefy-receipts.encryption",
+      "plain_claim": "liquefy-receipts can encrypt a compressed batch with AES-256-GCM under a caller-supplied key.",
+      "component": "packages/liquefy-receipts",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "packages/liquefy-receipts/src/encrypt.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "The caller manages and shares the key; no key exchange is implemented."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "packages/liquefy-receipts/tests/liquefy-receipts.test.mjs"
+      ],
+      "test_command": "npm --prefix packages/liquefy-receipts test",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npm test (packages/liquefy-receipts)",
+        "note": "48 of 48 passed"
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "AES-256-GCM via WebCrypto with a random 12-byte nonce; opt-in (caller calls encryptBlob)"
+      ],
+      "not_demonstrated": [
+        "key agreement between counterparties",
+        "the README example, which passes raw key bytes where a CryptoKey is required"
+      ],
+      "operational_limitations": [],
+      "supersedes": null
+    },
+    {
+      "id": "liquefy-receipts.merkle-commitment",
+      "plain_claim": "liquefy-receipts reduces a receipt batch of any size to a 32-byte SHA-256 Merkle root.",
+      "component": "packages/liquefy-receipts",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "packages/liquefy-receipts/src/merkle.ts",
+        "packages/liquefy-receipts/src/anchor.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "packages/liquefy-receipts/tests/merkle.test.mjs"
+      ],
+      "test_command": "npm --prefix packages/liquefy-receipts test",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npm test (packages/liquefy-receipts)",
+        "note": "48 of 48 passed"
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "RFC 6962 style leaf/node prefixes",
+        "optional salted leaves derived with HKDF from a batch secret",
+        "34-byte anchor instruction data for one 32-byte commitment"
+      ],
+      "not_demonstrated": [
+        "storage of receipts on-chain: the 32-byte root is a commitment; receipt data stays off-chain with the caller",
+        "that this SHA-256 root is the root a Groth16 circuit proves against (the ZK path uses a separate Poseidon root)",
+        "Arweave archiving: archiveReceipts is not exported and fails at runtime"
+      ],
+      "operational_limitations": [],
+      "supersedes": null
+    },
+    {
+      "id": "liquefy-receipts.bilateral-netting",
+      "plain_claim": "liquefy-receipts computes one net balance per counterparty pair from a list of receipts.",
+      "component": "packages/liquefy-receipts",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "packages/liquefy-receipts/src/net.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [
+        "Inputs are unauthenticated receipt objects supplied by the caller."
+      ],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "packages/liquefy-receipts/tests/liquefy-receipts.test.mjs"
+      ],
+      "test_command": "npm --prefix packages/liquefy-receipts test",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "node:22 container, network off, sources from git archive of 8743fd7",
+        "command": "npm test (packages/liquefy-receipts)",
+        "note": "48 of 48 passed"
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "pure arithmetic: gross flows per ordered pair netted against the reverse direction"
+      ],
+      "not_demonstrated": [
+        "signatures or counterparty agreement on the result",
+        "multilateral netting",
+        "the README figure of about 4,950 settlements for 1M receipts (that is N(N-1)/2 for 100 agents, not a measurement)"
+      ],
+      "operational_limitations": [],
+      "supersedes": null
+    },
+    {
+      "id": "liquefy-receipts.onchain-settlement",
+      "plain_claim": "liquefy-receipts settles netted receipt obligations on-chain.",
+      "component": "packages/liquefy-receipts",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "packages/liquefy-receipts/src/index.ts"
+      ],
+      "implementation_status": "missing",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [],
+      "test_command": null,
+      "test_run": null,
+      "mocks_or_skips": [],
+      "demonstrated_properties": [],
+      "not_demonstrated": [
+        "any token movement: the package builds anchor instruction bytes and sends nothing; no custody, collateral or finality rules exist"
+      ],
+      "operational_limitations": [
+        "The separate receipt_commitment_tree program does a gross per-receipt SOL transfer; it is not used by liquefy-receipts and does no netting."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.devnet-set-2026-10-06",
+      "plain_claim": "21 of the 28 programs in programs/ are deployed on devnet under one upgrade authority as of 2026-10-06.",
+      "component": "programs/",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "programs"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": null,
+      "program_ids": {
+        "null_registrar": "3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ",
+        "dark_null_mint_gate": "FE3PfXGhKBWexG9d8DB6a4ZCxTVDjGDtvjMyVCHnMh3N",
+        "receipt_commitment_tree": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+        "dark_ritual_transfer_hook": "9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf",
+        "dark_shielded_pool_program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+        "dark_x402_access_gate": "7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR",
+        "dark_compressed_receipts": "7uELrEpcSkbDgYA3xq623QaQmxUi2BXRHUPsKoDVM1oB",
+        "dark_fedimint_redeem_program": "26v61JPcTKyrUfTpULVaP5w9dCN3GtCW3gu5X1LunrNd",
+        "dark_reputation_gate": "Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g",
+        "dark_chaff": "4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B",
+        "dark_secp256r1_vault": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC",
+        "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+        "dark_nullifier_banks": "499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue",
+        "receipt_anchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
+        "dark_bls12_381_credential": "C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE",
+        "dark_proof_gate_lite": "pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P",
+        "dark_ritual_gate": "GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo",
+        "dark_null_lottery": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+        "null_token_hook": "Fg9rnhjfHTh6nKAvcmNvi1B3vn5q4XQPMpytnQR9YGHj",
+        "dark_nullifier_record": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et",
+        "dark_semaphore": "4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu"
+      },
+      "deployed_build_hash": null,
+      "source_build_match": "unknown",
+      "authority_assumptions": [
+        "Single upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q for all 21 programs; it can replace any program."
+      ],
+      "evidence_checked_at": "2026-10-06T08:26:58Z",
+      "proof_files": [
+        "evidence/devnet-programs-2026-10-06.json"
+      ],
+      "test_command": null,
+      "test_run": {
+        "result": "pending",
+        "date": null,
+        "environment": "devnet",
+        "note": "Devnet test results for this deployment are being recorded separately."
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "each program account exists on devnet and its deployed bytes match the 2026-10-06 build output (per-program SHA-256 in the proof file)"
+      ],
+      "not_demonstrated": [
+        "reproducible build from a public commit: the build used program-ID constants and a devnet cargo feature not committed at the snapshot",
+        "instruction-level behaviour on devnet for this deployment (results pending)",
+        "mainnet deployment"
+      ],
+      "operational_limitations": [
+        "Earlier devnet program IDs referenced in older docs and evidence files are retired."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.dark-shielded-pool",
+      "plain_claim": "The dark_shielded_pool program verifies a Groth16 withdraw proof over the alt_bn128 syscalls.",
+      "component": "programs/dark_shielded_pool",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "programs/dark_shielded_pool/src/processor.rs",
+        "crates/dark-groth16-core",
+        "crates/dark-poseidon-real"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+      "deployed_build_hash": "ddcf6a7986c8a02a65266c7be4d080fdae1f042509467ce44f0399a7e64ae4b2",
+      "source_build_match": "unknown",
+      "authority_assumptions": [
+        "Single-party devnet verifying key (mainnet_ready = false).",
+        "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q."
+      ],
+      "evidence_checked_at": "2026-10-06T08:26:58Z",
+      "proof_files": [
+        "docs/DARK_CRATES_STATUS.md",
+        "evidence/devnet-programs-2026-10-06.json",
+        "evidence/shielded-pool-devnet.json",
+        "evidence/zk/shielded-withdraw-v3-hardening-devnet.json"
+      ],
+      "test_command": null,
+      "test_run": {
+        "result": "pending",
+        "date": null,
+        "environment": "devnet",
+        "note": "Devnet test results for the 2026-10-06 deployment are being recorded separately."
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "Groth16 pairing check wired through dark-groth16-core in source",
+        "historical: 2026-06-09 devnet run (v2 circuit, program since closed) with valid withdraw and double-spend, wrong-root and wrong-recipient rejections"
+      ],
+      "not_demonstrated": [
+        "withdrawals from a build of this commit: the mainnet_ready guard is active and Cargo.toml declares no devnet feature, so every proof is refused",
+        "a multi-party trusted setup",
+        "that this program shares code or a deployment with Dark-Null-Protocol (it does not)"
+      ],
+      "operational_limitations": [
+        "The 2026-10-06 devnet build compiles out the guard with a devnet feature that is not yet committed."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "crates.dark-library",
+      "plain_claim": "The crates/ library holds 332 Rust crates; most model flows with SHA-256 and only a listed subset call real cryptographic dependencies.",
+      "component": "crates/",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "crates",
+        "docs/DARK_CRATES_STATUS.md"
+      ],
+      "implementation_status": "scaffold",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "docs/DARK_CRATES_STATUS.md"
+      ],
+      "test_command": "cargo test -p dark-macaroons",
+      "test_run": null,
+      "mocks_or_skips": [
+        "about 236 crates carry a self-declared non-production marker (IS_STUB, is_mock, MAINNET_READY=false, NOT_PRODUCTION)"
+      ],
+      "demonstrated_properties": [
+        "real dependencies in the subset listed in docs/DARK_CRATES_STATUS.md (alt_bn128, light-poseidon, curve25519-dalek, ed25519-dalek, hmac)"
+      ],
+      "not_demonstrated": [
+        "that a crate name describes a working primitive; check its row in docs/DARK_CRATES_STATUS.md",
+        "use by any deployed program for most crates"
+      ],
+      "operational_limitations": [],
+      "supersedes": "docs/DARK_CRATES_STATUS.md revision 1 (2026-06-06)"
+    },
+    {
+      "id": "context-capsule.dataflow",
+      "plain_claim": "Context Capsule stores session history as a lossless zlib archive, gives the model a short pointer, and returns matching messages only when the caller runs a keyword search.",
+      "component": "packages/context-capsule",
+      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_paths": [
+        "packages/context-capsule/src/index.ts"
+      ],
+      "implementation_status": "implemented",
+      "package_version": {
+        "name": "@parad0x_labs/context-capsule",
+        "package_json": "packages/context-capsule/package.json",
+        "git_version": "1.1.0",
+        "npm_latest": "1.0.0",
+        "npm_checked_at": "2026-10-06T08:23:41Z"
+      },
+      "publication_status": "published-older-version",
+      "network": null,
+      "program_id": null,
+      "deployed_build_hash": null,
+      "source_build_match": "not-applicable",
+      "authority_assumptions": [],
+      "evidence_checked_at": "2026-10-06",
+      "proof_files": [
+        "docs/CONTEXT_CAPSULE_DATAFLOW.md",
+        "docs/CONTEXT_CAPSULE_BENCHMARK.md"
+      ],
+      "test_command": "npm --prefix packages/context-capsule test",
+      "test_run": null,
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "zlib level 9 archive of the JSONL history, lossless (3.1x on the bundled 109-message fixture)",
+        "initial prompt pointer of about 53 estimated tokens versus 7,919 for the full fixture (retrieval not counted)",
+        "deterministic topic extraction; no model call",
+        "searchCapsule decompresses and keyword-matches; the caller must invoke it"
+      ],
+      "not_demonstrated": [
+        "end-to-end task token or cost savings",
+        "the earlier unqualified 83x and 98% figures",
+        "that the model can use details it was not given (omitted history must be retrieved and placed in the prompt)",
+        "npm publication of 1.1.0 (npm latest is 1.0.0)"
+      ],
+      "operational_limitations": [],
+      "supersedes": null
+    }
+  ]
+}
