@@ -163,9 +163,9 @@ test("buildAnchorIxData: version=0x01, flags=0x00, 34 bytes total", () => {
 
 test("receipt anchoring refuses without an explicit receipt_anchor program", () => {
   assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
-  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, /unavailable until the redeploy under a fresh key/);
-  assert.throws(() => resolveReceiptAnchorProgramId(), /unavailable until the redeploy under a fresh key/);
-  assert.throws(() => resolveReceiptAnchorProgramId(null), /unavailable until the redeploy under a fresh key/);
+  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, /no default receipt_anchor program is configured/);
+  assert.throws(() => resolveReceiptAnchorProgramId(), /no default receipt_anchor program is configured/);
+  assert.throws(() => resolveReceiptAnchorProgramId(null), /no default receipt_anchor program is configured/);
   const own = "Anchor1111111111111111111111111111111111111";
   assert.equal(resolveReceiptAnchorProgramId(own), own);
 });

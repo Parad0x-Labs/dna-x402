@@ -2,10 +2,10 @@
  * Build the receipt_anchor on-chain instruction for a compressed batch.
  *
  * The receipt_anchor program stores a 32-byte commitment on-chain. We use it to
- * anchor the compressed+encrypted batch receipt. No receipt_anchor program is
- * usable on any cluster until the redeploy under a fresh key, so
+ * anchor the compressed+encrypted batch receipt. There is no default program:
  * RECEIPT_ANCHOR_PROGRAM_ID is null and resolveReceiptAnchorProgramId() refuses
- * unless the caller names a deployment it controls.
+ * unless the caller names a deployment (devnet receipt_anchor:
+ * HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).
  *
  * One 32-byte commitment per batch instead of one per receipt. This module only
  * builds instruction bytes; it sends no transaction.
@@ -13,13 +13,13 @@
 
 import { createHash } from "node:crypto";
 
-/** Configured receipt_anchor program, or null while none is usable. */
+/** Default receipt_anchor program: null, so the caller always names one. */
 export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
 
 /** Error message thrown when anchoring is requested without a usable program. */
 export const RECEIPT_ANCHOR_UNAVAILABLE =
-  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
-  "program is configured. Pass the program ID of a receipt_anchor deployment you control.";
+  "receipt anchoring needs a program ID: no default receipt_anchor program is configured. " +
+  "Pass the program ID of a receipt_anchor deployment (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).";
 
 /**
  * Resolve the receipt_anchor program to target: an explicit `programId` wins,

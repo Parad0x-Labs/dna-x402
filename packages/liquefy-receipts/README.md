@@ -56,7 +56,8 @@ const included = verifyReceiptInBatch(receipts[42], proof);
 
 // Anchor instruction data for one 32-byte commitment: [0x01][0x00][32 bytes] = 34 bytes.
 // There is no default program: resolveReceiptAnchorProgramId() throws
-// RECEIPT_ANCHOR_UNAVAILABLE unless you name a receipt_anchor deployment you control.
+// RECEIPT_ANCHOR_UNAVAILABLE unless you name a receipt_anchor deployment
+// (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).
 const programId = resolveReceiptAnchorProgramId(process.env.RECEIPT_ANCHOR_PROGRAM_ID);
 const ixData = buildAnchorIxData(new Uint8Array(root));
 // Build and send the transaction yourself; this package sends nothing.
@@ -86,9 +87,9 @@ Based on [Liquefy](https://github.com/Parad0x-Labs/liquefy-openclaw-integration)
 
 ## On-chain programs
 
-No `receipt_anchor` program is configured for any cluster. `RECEIPT_ANCHOR_PROGRAM_ID` is `null` and
-`resolveReceiptAnchorProgramId()` throws `RECEIPT_ANCHOR_UNAVAILABLE` unless you pass the program ID of a
-deployment you control. The program folds each 32-byte value into an hourly hash chain; showing that one
+This package has no default `receipt_anchor` program. `RECEIPT_ANCHOR_PROGRAM_ID` is `null` and
+`resolveReceiptAnchorProgramId()` throws `RECEIPT_ANCHOR_UNAVAILABLE` unless you pass a program ID. The devnet
+`receipt_anchor` program is `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`. The program folds each 32-byte value into an hourly hash chain; showing that one
 receipt was anchored needs its Merkle proof plus the ordered anchors in that bucket.
 
 ## License
