@@ -8,13 +8,13 @@ export function createSellerApp() {
   const recipient = process.env.SELLER_RECIPIENT_WALLET ?? "seller-wallet-placeholder";
   const priceAtomic = process.env.SELLER_PRICE_ATOMIC ?? "100000";
 
-  dnaSeller(app, {
+  const pay = dnaSeller(app, {
     recipient,
-    network: "devnet",
+    network: "solana-devnet",
     unsafeUnverifiedNettingEnabled: true,
   });
 
-  app.get("/api/summary", dnaPrice(priceAtomic), (_req, res) => {
+  app.get("/api/summary", dnaPrice(priceAtomic, pay), (_req, res) => {
     res.json({
       ok: true,
       result: "paid seller data",
