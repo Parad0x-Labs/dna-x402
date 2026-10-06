@@ -122,6 +122,9 @@ test("no cluster has a configured receipt_anchor program", () => {
   assert.match(RECEIPT_ANCHOR_UNAVAILABLE, UNAVAILABLE);
   // The cluster configs carry no receipt_anchor entry either.
   assert.equal(readConfig("devnet.oss.json").programs.receiptAnchor, undefined);
+  for (const name of ["mainnet.oss.json", "mainnet.commercial.json"]) {
+    assert.equal(readConfig(name).programs.receiptAnchor, undefined, `${name} must not name a receipt_anchor program`);
+  }
 });
 
 test("the only base58 pubkey literal in src is the Wormhole bridge", () => {

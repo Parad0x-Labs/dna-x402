@@ -10,13 +10,15 @@
   "platformFeePct": 0,
   "maxNullPerEpochAtomic": 0,
   "epochDurationSlots": 432000,
+  "retiredPrograms": {
+    "receiptAnchor": "retired 2026-07-14; program closed; no receipt_anchor deployment is configured for mainnet-beta"
+  },
   "programs": {
     "semaphore": "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
     "ethAuth": "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
     "tokenHook": "14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g",
     "lottery": "3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG",
     "mintGate": "5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1",
-    "receiptAnchor": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
     "proofGate": "PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2"
   },
   "nullMint": "8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump",
