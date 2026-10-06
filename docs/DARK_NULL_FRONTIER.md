@@ -33,7 +33,7 @@
 
 ## Why These Primitives Matter
 
-The current Dark Null stack proves one thing: Groth16 settlement on Solana works, the proof fits in 256 bytes (128-byte compressed target), and a relayer can execute the full shield-unshield cycle without ever touching user keys.
+The current Dark Null stack proves one thing: Groth16 settlement on Solana works, the proof fits in 256 bytes (128-byte compressed target), and in the dna-x402 fixed-denomination pool a relayer submits the withdrawal without ever touching user keys (the Dark Null root program requires the receiver to sign).
 
 That is not the ceiling. It is the foundation.
 
@@ -307,7 +307,7 @@ MEV-resistant settlement:
 
 ## 9. Alpenglow-Ready Private Payments — Instant Feel
 
-Dark Null currently recommends a maturity window of ~10 minutes on mainnet for meaningful anonymity. The reason: more deposits in the same time window means a larger anonymity set for each withdrawal. 10 minutes is enough to accumulate sufficient deposits at expected adoption levels.
+This section applies to a pool whose withdrawal does not publish the deposit commitment, such as the dna-x402 fixed-denomination pool. The current Dark Null root program publishes the commitment at withdrawal, so each withdrawal is linkable to its deposit and it has no anonymity set to grow. For a pool of the first kind, more deposits in the same time window means a larger anonymity set for each withdrawal, so a maturity window (how long a note waits before withdrawal) trades latency for privacy.
 
 Alpenglow (Solana's next-generation consensus protocol) is designed to reduce slot times and push finality toward ~150ms.
 
@@ -315,11 +315,11 @@ The implication for Dark Null:
 
 - Denser blocks at higher throughput compress the time needed to accumulate a meaningful anonymity set
 - The same anonymity set that required 10 minutes at 400ms slots might require 90 seconds at 150ms slots
-- The maturity window parameter is not hardcoded — it is set by the protocol as a function of expected deposits per window
+- A maturity window would be set as a function of expected deposits per window rather than hardcoded
 
 **The UX that becomes possible:** a private payment flow that feels like a fast wallet transfer. Shield. Wait a few minutes as the anonymity set fills. Unshield. The proof is 256 bytes. The settlement is one transaction.
 
-**What it needs:** nothing. No circuit changes, no protocol changes. The maturity window shrinks as Alpenglow rolls out and deposit density grows. The privacy gets better automatically as adoption increases.
+**What it needs:** a withdrawal path that does not publish the deposit commitment, and deposit volume. Alpenglow shortens the wait for a given anonymity set; it does not add privacy to a linkable withdrawal.
 
 ---
 
