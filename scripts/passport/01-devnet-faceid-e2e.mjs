@@ -15,7 +15,7 @@
  * Usage: node scripts/passport/01-devnet-faceid-e2e.mjs <PROGRAM_ID>
  */
 
-import { p256 } from "@noble/curves/p256";
+import { p256 } from "@noble/curves/nist.js"; // @noble/curves 2.x (repo pin)
 import {
   Connection, Keypair, PublicKey, Transaction, TransactionInstruction,
   SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, sendAndConfirmTransaction,
@@ -32,7 +32,7 @@ if (!process.argv[2]) {
 }
 const PROGRAM_ID = new PublicKey(process.argv[2]);
 const SECP256R1_PROGRAM_ID = new PublicKey("Secp256r1SigVerify1111111111111111111111111");
-const RPC = "https://api.devnet.solana.com";
+const RPC = process.env.FACEID_RPC ?? "https://api.devnet.solana.com";
 
 // ── secp256r1 precompile instruction builder (self-contained, one signature) ──
 function secp256r1Ix({ pubkeyCompressed, signature64, message, ixIndex }) {
@@ -59,10 +59,11 @@ function secp256r1Ix({ pubkeyCompressed, signature64, message, ixIndex }) {
 // P-256 ECDSA over SHA-256(message); the precompile hashes with SHA-256 and
 // REQUIRES low-S (s <= n/2). noble emits valid but sometimes high-S sigs, so we
 // normalize s -> n-s when needed (both are valid; Agave only accepts low-S).
-const P256_N = p256.CURVE.n;
+const P256_N = BigInt("0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551");
 const P256_HALF = P256_N >> 1n;
 function signP256(priv, message) {
-  const raw = p256.sign(message, priv, { prehash: true }).toCompactRawBytes(); // 64, maybe high-S
+  const sig = p256.sign(message, priv, { prehash: true }); // noble 2.x: compact r||s bytes
+  const raw = sig instanceof Uint8Array ? sig : sig.toCompactRawBytes(); // 64, maybe high-S
   let s = BigInt("0x" + Buffer.from(raw.slice(32, 64)).toString("hex"));
   if (s > P256_HALF) {
     s = P256_N - s;
@@ -71,6 +72,8 @@ function signP256(priv, message) {
   }
   return Buffer.from(raw);
 }
+
+const randomP256Key = () => (p256.utils.randomSecretKey ?? p256.utils.randomPrivateKey)();
 
 function vaultPda(walletOwner, credIdHash) {
   return PublicKey.findProgramAddressSync(
@@ -97,7 +100,7 @@ async function main() {
   console.log("Wallet :", wallet.publicKey.toBase58());
 
   // P-256 keypair (the "passkey")
-  const priv = p256.utils.randomPrivateKey();
+  const priv = randomP256Key();
   const pubCompressed = p256.getPublicKey(priv, true);   // 33 bytes
   const pubUncompressed = p256.getPublicKey(priv, false); // 65: 0x04||x||y
   const x = Buffer.from(pubUncompressed.slice(1, 33));
@@ -161,7 +164,7 @@ async function main() {
 
   // 4. Negative — different key signs C1 (expect PasskeyPubkeyMismatch 0x4009)
   console.log("\n[3] Negative: different P-256 key (expect PasskeyPubkeyMismatch 0x4009)...");
-  const priv2 = p256.utils.randomPrivateKey();
+  const priv2 = randomP256Key();
   const pub2 = p256.getPublicKey(priv2, true);
   const neg2Pre = secp256r1Ix({ pubkeyCompressed: pub2, signature64: signP256(priv2, C1), message: C1, ixIndex: 0 });
   const n2 = await send("neg-wrong-key", [neg2Pre, negIx], false, "0x4009");
@@ -196,10 +199,10 @@ async function main() {
       rejectWrongKey:      { pass: n2, expectedError: "0x4009 PasskeyPubkeyMismatch" },
     },
     allPass,
-    honestCaveats: [
-      "Real on-chain P-256 verification via the Agave secp256r1 precompile — proven on devnet, replayable.",
-      "v1: the precompile message IS the 32-byte challenge (P-256 key signs it directly). Full WebAuthn authenticatorData parsing on-chain is the audit-scope enhancement.",
-      "EXTERNALLY UNAUDITED test pilot. Identity binding only — no funds custody.",
+    notes: [
+      "On-chain P-256 verification via the Agave secp256r1 precompile; the program binds the verified key and message in every build.",
+      "v1: the precompile message is the 32-byte challenge (the P-256 key signs it directly). WebAuthn authenticatorData parsing on-chain is a later step.",
+      "Identity binding only, no funds custody.",
     ],
   };
   const { writeFileSync, mkdirSync } = await import("node:fs");

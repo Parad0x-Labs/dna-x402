@@ -29,6 +29,14 @@
  * Run: node scripts/zk/07-x402-access-e2e.mjs
  */
 
+// LEGACY: this script targets the v1 x402_access circuit (352-byte ix: proof + 3 public inputs).
+// The deployed dark_x402_access_gate takes the v2 448-byte layout (proof + 6 public inputs, receipt-tree bound). Use build/zk/x402-access-v2-e2e.mjs.
+// Run with --legacy only against a program built from the matching older revision.
+if (!process.argv.includes("--legacy")) {
+  console.error("LEGACY script: targets the v1 x402_access circuit (352-byte ix: proof + 3 public inputs).\nThe deployed dark_x402_access_gate takes the v2 448-byte layout (proof + 6 public inputs, receipt-tree bound). Use build/zk/x402-access-v2-e2e.mjs.\nPass --legacy to run it anyway.");
+  process.exit(2);
+}
+
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";

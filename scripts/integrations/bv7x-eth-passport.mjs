@@ -82,7 +82,7 @@ export async function registerBV7XPassport(ethPriv, solanaPayer, rpcUrl = SOLANA
 
   // noble/curves v2: sign() returns raw 64-byte Uint8Array (r||s)
   // Use Signature.fromCompact + addRecoveryBit to find recovery id
-  const sig64raw = secp256k1.sign(msgDigest, ethPriv);
+  const sig64raw = secp256k1.sign(msgDigest, ethPriv, { prehash: false });
   const r        = Buffer.from(sig64raw.slice(0, 32));
   const s        = Buffer.from(sig64raw.slice(32, 64));
   const sig64    = Buffer.concat([r, s]);
@@ -91,10 +91,10 @@ export async function registerBV7XPassport(ethPriv, solanaPayer, rpcUrl = SOLANA
   let recovId = 0;
   for (let bit = 0; bit < 2; bit++) {
     try {
-      const rec = secp256k1.Signature.fromCompact(sig64raw)
+      const rec = secp256k1.Signature.fromBytes(sig64raw, "compact")
         .addRecoveryBit(bit)
         .recoverPublicKey(msgDigest);
-      if (Buffer.from(rec.toRawBytes(false)).equals(Buffer.from(pubKeyFull))) {
+      if (Buffer.from(rec.toBytes(false)).equals(Buffer.from(pubKeyFull))) {
         recovId = bit; break;
       }
     } catch { /* try next */ }

@@ -32,7 +32,7 @@ const REPO = join(HERE, "..", "..");
 const RPC = process.env.RPC ?? "https://api.devnet.solana.com";
 const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 const PROGRAM_ID = new PublicKey(process.argv[2]);
-const DENOM = 100_000_000; // 0.1 SOL per token (one denomination)
+const DENOM = 10_000_000; // devnet-budget run: 0.01 SOL per token (was 0.1)
 const N = 5, T = 3;        // 3-of-5 guardian federation
 
 const conn = new Connection(RPC, "confirmed");
@@ -42,6 +42,8 @@ const wallet = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(key
 
 // Fresh authority per run -> fresh mint PDA, so the run is idempotent.
 const authority = Keypair.generate();
+const saveKp = (tag, kp) => { if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `enull-${tag}-${kp.publicKey.toBase58()}.json`), JSON.stringify(Array.from(kp.secretKey)), { mode: 0o600 }); };
+saveKp("authority", authority);
 const payer = authority;
 
 const SEEDS = {
@@ -177,7 +179,7 @@ async function main() {
   {
     const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
     const tx = new Transaction({ blockhash, lastValidBlockHeight, feePayer: wallet.publicKey })
-      .add(SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: authority.publicKey, lamports: 1_500_000_000 }));
+      .add(SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: authority.publicKey, lamports: 150_000_000 }));
     tx.sign(wallet);
     const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true });
     await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
@@ -203,7 +205,7 @@ async function main() {
   console.log(`  reserve balance ${reserveBal}`);
 
   // ── SCENARIO 1: valid redeem -> fresh recipient ─────────────────────────────
-  const recipient = Keypair.generate();
+  const recipient = Keypair.generate(); saveKp("recipient", recipient);
   console.log(`\n[redeem] valid federation token -> fresh ${recipient.publicKey.toBase58()}`);
   const recBefore = await conn.getBalance(recipient.publicKey, "confirmed");
   const w = await send([cuIx(1_400_000), redeemIx(art, recipient.publicKey)], [payer], "redeem");

@@ -68,6 +68,7 @@ async function main() {
   const recipientSpendSeed = randomBytes(32);
   const recipientKeys = keygen(recipientSpendSeed);
   const recipientMainWallet = Keypair.generate(); // sweep destination — funded by sender? NO.
+  if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `nullpay-recipient-${recipientMainWallet.publicKey.toBase58()}.json`), JSON.stringify(Array.from(recipientMainWallet.secretKey)), { mode: 0o600 });
   console.log("Recipient meta spend_pub:", Buffer.from(recipientKeys.spendPub).toString("hex"));
   console.log("Recipient meta view_pub :", Buffer.from(recipientKeys.viewPub).toString("hex"));
   console.log("Recipient main wallet   :", recipientMainWallet.publicKey.toBase58(), "(must stay UNLINKED)");

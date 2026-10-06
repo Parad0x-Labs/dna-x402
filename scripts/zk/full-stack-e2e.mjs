@@ -12,6 +12,14 @@
  * All three program IDs are required: no receipt_commitment_tree / dark_reputation_gate /
  * dark_nullifier_record deployment is configured until the redeploy under a fresh key.
  */
+
+// LEGACY: this script targets the removed receipt_commitment_tree 0x01 authorized insert and the 6-input track_record layout.
+// receipt_commitment_tree now only accepts payment-backed settle_and_record (0x02) and dark_reputation_gate takes 480 bytes (7 public inputs). Use build/zk/reputation-serverless-e2e.mjs.
+// Run with --legacy only against a program built from the matching older revision.
+if (!process.argv.includes("--legacy")) {
+  console.error("LEGACY script: targets the removed receipt_commitment_tree 0x01 authorized insert and the 6-input track_record layout.\nreceipt_commitment_tree now only accepts payment-backed settle_and_record (0x02) and dark_reputation_gate takes 480 bytes (7 public inputs). Use build/zk/reputation-serverless-e2e.mjs.\nPass --legacy to run it anyway.");
+  process.exit(2);
+}
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";

@@ -2,18 +2,19 @@
 /**
  * devnet e2e: real MetaMask ETH address binding via secp256k1 precompile
  *
- * Proves dark_secp256k1_auth (mainnet-mode) correctly:
+ * Proves dark_secp256k1_auth (precompile binding, every build) correctly:
  *   1. Generates an ephemeral secp256k1 keypair (like MetaMask)
  *   2. Signs a message → builds the Solana secp256k1 precompile instruction
  *   3. Submits RegisterEthAgent + precompile to the program
  *   4. Verifies: correct ETH address → ACCEPTED
  *   5. Verifies: wrong ETH address → REJECTED (0x5008)
+ *   6. Verifies: msg_hash that differs from the signed message → REJECTED (0x5009)
  *
  * Run: node scripts/passport/03-devnet-metamask-e2e.mjs <PROGRAM_ID>
  */
 
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { keccak_256 } from "@noble/hashes/sha3";
+import { secp256k1 } from "@noble/curves/secp256k1.js"; // @noble/curves 2.x (repo pin)
+import { keccak_256 } from "@noble/hashes/sha3.js";
 import {
   Connection, Keypair, PublicKey, Transaction,
   TransactionInstruction, SystemProgram,
@@ -25,6 +26,24 @@ import { execSync } from "node:child_process";
 const PROGRAM_ID = new PublicKey(process.argv[2] ?? "7eQZxFw1ygDV38VzBsmHEbFfoyAfBw7XQ4dF9yto1nrZ");
 const RPC = process.env.FACEID_RPC ?? "https://api.devnet.solana.com";
 const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
+
+const randomEthKey = () => (secp256k1.utils.randomSecretKey ?? secp256k1.utils.randomPrivateKey)();
+
+// Sign a 32-byte digest (no prehash) and find the recovery id: noble 2.x returns
+// compact r||s bytes without the recovery bit.
+function signRecoverable(digest, priv) {
+  const sig64 = secp256k1.sign(digest, priv, { prehash: false });
+  const pub = Buffer.from(secp256k1.getPublicKey(priv, false));
+  for (const bit of [0, 1]) {
+    try {
+      const rec = secp256k1.Signature.fromBytes(sig64, "compact").addRecoveryBit(bit).recoverPublicKey(digest);
+      if (Buffer.from(rec.toBytes(false)).equals(pub)) {
+        return { r: Buffer.from(sig64.slice(0, 32)), s: Buffer.from(sig64.slice(32, 64)), sig64: Buffer.from(sig64), recovId: bit };
+      }
+    } catch { /* try next */ }
+  }
+  throw new Error("recovery id not found");
+}
 
 // ── ETH address derivation ────────────────────────────────────────────────────
 function ethAddress(privKey) {
@@ -88,7 +107,7 @@ async function main() {
   const conn = new Connection(RPC, "confirmed");
 
   // Generate ephemeral ETH key (like MetaMask)
-  const ethPriv    = secp256k1.utils.randomPrivateKey();
+  const ethPriv    = randomEthKey();
   const ethAddr    = ethAddress(ethPriv);
   const authHash   = Buffer.alloc(32, 0x01);
   const domainHash = Buffer.alloc(32, 0x02);
@@ -99,11 +118,7 @@ async function main() {
   const msgDigest  = Buffer.from(keccak_256(rawMessage)); // precompile computes this internally
   const msgHash    = rawMessage; // what we give the precompile (it will keccak it)
 
-  const sig = secp256k1.sign(msgDigest, ethPriv); // sign the digest the precompile will compute
-  const r   = Buffer.from(sig.r.toString(16).padStart(64, "0"), "hex");
-  const s   = Buffer.from(sig.s.toString(16).padStart(64, "0"), "hex");
-  const sig64 = Buffer.concat([r, s]);
-  const recovId = sig.recovery ?? 0;
+  const { r, s, sig64, recovId } = signRecoverable(msgDigest, ethPriv); // sign the digest the precompile will compute
 
   // pda_seed: 12 zero bytes + eth_address (20 bytes)
   const pdaSeed = Buffer.concat([Buffer.alloc(12), Buffer.from(ethAddr)]);
@@ -154,22 +169,19 @@ async function main() {
   //    the real ethAddr in pda_seed. PDA is correctly derived from real ethAddr.
   //    Program: PDA check passes, then ETH mismatch check fires → 0x5008.
   console.log("\n[2] Wrong ETH address in precompile (expect 0x5008 EthAddressMismatch)...");
-  const fakeEthPriv = secp256k1.utils.randomPrivateKey();
+  const fakeEthPriv = randomEthKey();
   const fakeEthAddr = ethAddress(fakeEthPriv);
-  const fakeSig     = secp256k1.sign(msgDigest, fakeEthPriv);
-  const fakeSig64   = Buffer.concat([
-    Buffer.from(fakeSig.r.toString(16).padStart(64,"0"),"hex"),
-    Buffer.from(fakeSig.s.toString(16).padStart(64,"0"),"hex"),
-  ]);
+  const fakeSig     = signRecoverable(msgDigest, fakeEthPriv);
+  const fakeSig64   = fakeSig.sig64;
   // Use a fresh target ETH addr — precompile signs with fakeEthAddr, but instruction
   // claims freshEthAddr (different). PDA is derived from freshEthAddr so PDA check passes.
   // Then ETH mismatch (fakeEthAddr ≠ freshEthAddr) → 0x5008.
-  const freshEthPriv = secp256k1.utils.randomPrivateKey();
+  const freshEthPriv = randomEthKey();
   const freshEthAddr = ethAddress(freshEthPriv);
   const freshPda     = pdaFromEthAddr(freshEthAddr);
   const freshPdaSeed = Buffer.concat([Buffer.alloc(12), Buffer.from(freshEthAddr)]);
   // Precompile has FAKE eth addr, instruction claims FRESH eth addr → mismatch
-  const wrongPreIx  = secp256k1Ix({ ethAddr: fakeEthAddr, sig64: fakeSig64, recovId: fakeSig.recovery ?? 0, msgHash, ixIndex: 0 });
+  const wrongPreIx  = secp256k1Ix({ ethAddr: fakeEthAddr, sig64: fakeSig64, recovId: fakeSig.recovId, msgHash, ixIndex: 0 });
   const wrongRegIx  = new TransactionInstruction({
     programId: PROGRAM_ID,
     keys: [
@@ -182,7 +194,26 @@ async function main() {
   });
   const n1 = await send("wrong-eth-addr", [wrongPreIx, wrongRegIx], false, "0x5008");
 
-  const allPass = r1 && n1;
+  // 3. msg_hash in the instruction differs from the message the precompile verified.
+  console.log("\n[3] msg_hash != signed message (expect 0x5009 MessageMismatch)...");
+  const mmEthPriv = randomEthKey();
+  const mmEthAddr = ethAddress(mmEthPriv);
+  const mmSig     = signRecoverable(msgDigest, mmEthPriv);
+  const mmPdaSeed = Buffer.concat([Buffer.alloc(12), Buffer.from(mmEthAddr)]);
+  const mmPre     = secp256k1Ix({ ethAddr: mmEthAddr, sig64: mmSig.sig64, recovId: mmSig.recovId, msgHash, ixIndex: 0 });
+  const mmRegIx   = new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys: [
+      { pubkey: pdaFromEthAddr(mmEthAddr), isSigner: false, isWritable: true },
+      { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: SYSVAR_INSTRUCTIONS_PUBKEY, isSigner: false, isWritable: false },
+    ],
+    data: registerIxData(mmSig.r, mmSig.s, mmSig.recovId, Buffer.alloc(32, 0x43), mmPdaSeed, authHash, domainHash),
+  });
+  const n2 = await send("msg-mismatch", [mmPre, mmRegIx], false, "0x5009");
+
+  const allPass = r1 && n1 && n2;
   console.log(`\n${allPass ? "PASS" : "FAIL"}: MetaMask ETH binding verified on-chain.`);
   if (results.register)
     console.log("TX:", `https://explorer.solana.com/tx/${results.register}?cluster=${CLUSTER}`);
@@ -198,11 +229,12 @@ async function main() {
     results: {
       register:    { pass: r1, signature: results.register ?? null },
       rejectWrong: { pass: n1, expectedError: "0x5008 EthAddressMismatch" },
+      rejectMessageMismatch: { pass: n2, expectedError: "0x5009 MessageMismatch" },
     },
     allPass,
-    honestCaveats: [
-      "Real secp256k1 signature over a message, ETH address recovered on-chain.",
-      "Unaudited mainnet pilot — identity binding only, no funds.",
+    notes: [
+      "secp256k1 signature verified by the precompile; the program binds the verified ETH address, message and signature in every build.",
+      "Identity binding only, no funds.",
     ],
   }, null, 2) + "\n");
   console.log("Evidence: evidence/passport/metamask-eth-binding-e2e.json");

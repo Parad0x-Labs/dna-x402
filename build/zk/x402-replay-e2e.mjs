@@ -8,6 +8,14 @@
  *
  * Env: X402_PROGRAM, X402_WASM, X402_ZKEY, X402_VK, RPC. Signer via `solana config get`.
  */
+
+// LEGACY: this script targets the v1 x402_access circuit (352-byte ix: proof + 3 public inputs).
+// The deployed dark_x402_access_gate takes the v2 448-byte layout (proof + 6 public inputs, receipt-tree bound); replay protection is exercised by build/zk/x402-access-v2-e2e.mjs (A4).
+// Run with --legacy only against a program built from the matching older revision.
+if (!process.argv.includes("--legacy")) {
+  console.error("LEGACY script: targets the v1 x402_access circuit (352-byte ix: proof + 3 public inputs).\nThe deployed dark_x402_access_gate takes the v2 448-byte layout (proof + 6 public inputs, receipt-tree bound); replay protection is exercised by build/zk/x402-access-v2-e2e.mjs (A4).\nPass --legacy to run it anyway.");
+  process.exit(2);
+}
 import { execFileSync, execSync } from "node:child_process";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
