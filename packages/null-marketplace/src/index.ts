@@ -122,7 +122,13 @@ export function buildBid(
   credits: number,
   opts?: { estimatedTime?: number; workProofHash?: string }
 ): TaskBid {
-  const trimmedApproach = approach.slice(0, 280);
+  let trimmedApproach = approach.slice(0, 280);
+  // Do not leave a dangling high surrogate when the cap falls inside a
+  // surrogate pair (e.g. an emoji at index 279) — that yields an ill-formed string.
+  const last = trimmedApproach.charCodeAt(trimmedApproach.length - 1);
+  if (approach.length > 280 && last >= 0xd800 && last <= 0xdbff) {
+    trimmedApproach = trimmedApproach.slice(0, -1);
+  }
   return {
     bidId: randomUUID(),
     taskId,
@@ -231,6 +237,9 @@ export function releasePayment(
  * Estimate bounty for a given task complexity tier.
  */
 export function estimateBounty(taskComplexity: TaskComplexity): BountyEstimate {
+  if (!Object.prototype.hasOwnProperty.call(COMPLEXITY_TIERS, taskComplexity)) {
+    throw new Error(`Unknown task complexity: ${String(taskComplexity)}`);
+  }
   return { ...COMPLEXITY_TIERS[taskComplexity] };
 }
 
