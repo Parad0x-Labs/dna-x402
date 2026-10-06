@@ -10,7 +10,30 @@
   "maxNullPerEpochAtomic": 0,
   "epochDurationSlots": 432000,
   "programs": {
-    "nullRegistrar": "3mqpDJ6c84nVDwGPHEbtH5vbaDqRtPidAK5JX5KRzBB4"
+    "semaphore": "4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu",
+    "vault": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC",
+    "ethAuth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+    "tokenHook": "Fg9rnhjfHTh6nKAvcmNvi1B3vn5q4XQPMpytnQR9YGHj",
+    "lottery": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+    "mintGate": "FE3PfXGhKBWexG9d8DB6a4ZCxTVDjGDtvjMyVCHnMh3N",
+    "receiptAnchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
+    "proofGate": "pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P",
+    "nullRegistrar": "3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ",
+    "receiptCommitmentTree": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+    "x402AccessGate": "7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR",
+    "reputationGate": "Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g",
+    "nullifierRecord": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et",
+    "shieldedPool": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+    "ritualGate": "GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo",
+    "ritualTransferHook": "9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf",
+    "compressedReceipts": "7uELrEpcSkbDgYA3xq623QaQmxUi2BXRHUPsKoDVM1oB",
+    "nullifierBanks": "499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue",
+    "chaff": "4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B",
+    "fedimintRedeem": "26v61JPcTKyrUfTpULVaP5w9dCN3GtCW3gu5X1LunrNd",
+    "bls12381Credential": "C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE"
   },
-  "rpcUrl": "https://api.devnet.solana.com"
+  "rpcUrl": "https://api.devnet.solana.com",
+  "deployedAt": "2026-10-06",
+  "upgradeAuthority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+  "evidence": "evidence/devnet-programs-2026-10-06.json"
 }

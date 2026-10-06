@@ -26,21 +26,23 @@ export type SolanaCluster = "mainnet-beta" | "devnet";
  * receipt_anchor program ID.
  */
 export const RECEIPT_ANCHOR_UNAVAILABLE =
-  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
-  "program is configured for any cluster. Pass options.anchorProgramId to target a " +
-  "receipt_anchor deployment you control (e.g. a local validator).";
+  "receipt anchoring is unavailable on this cluster: no receipt_anchor program is configured " +
+  "for it (only devnet has one). Pass options.anchorProgramId to target a receipt_anchor " +
+  "deployment you control (e.g. a local validator).";
 
 /**
  * receipt_anchor program per cluster.
  *
- * Empty: no cluster has a usable receipt_anchor deployment. The earlier
- * mainnet-beta deployment was retired on 2026-07-14 and the earlier devnet
- * deployment is withdrawn, so `programs.receiptAnchor` is absent from
- * configs/devnet.oss.json. A cluster entry is added here only after the
- * redeploy under a fresh key; tests/wormhole-x402.test.mjs keeps this map
- * empty until then.
+ * devnet: the redeploy under a fresh key on 2026-10-06 (upgrade authority
+ * 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q), equal to
+ * `programs.receiptAnchor` in configs/devnet.oss.json; tests/wormhole-x402.test.mjs
+ * fails if the two drift. mainnet-beta: none. The earlier deployment was retired
+ * on 2026-07-14, so anchoring on mainnet-beta fails closed with
+ * RECEIPT_ANCHOR_UNAVAILABLE unless the caller names a program.
  */
-export const RECEIPT_ANCHOR_PROGRAM_IDS: Readonly<Partial<Record<SolanaCluster, string>>> = Object.freeze({});
+export const RECEIPT_ANCHOR_PROGRAM_IDS: Readonly<Partial<Record<SolanaCluster, string>>> = Object.freeze({
+  devnet: "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
+});
 
 /**
  * The receipt_anchor program on Solana mainnet-beta, or null while no
@@ -129,8 +131,8 @@ export interface SolveIntentOptions {
   x402ProgramId: string;
   /**
    * Cluster whose configured receipt_anchor program is used. Default: "mainnet-beta".
-   * No cluster has one configured today, so solving without `anchorProgramId` throws
-   * RECEIPT_ANCHOR_UNAVAILABLE before anything is sent.
+   * Only devnet has one configured, so solving on mainnet-beta without
+   * `anchorProgramId` throws RECEIPT_ANCHOR_UNAVAILABLE before anything is sent.
    */
   cluster?: SolanaCluster;
   /** Explicit receipt_anchor program ID (e.g. a local validator). Overrides `cluster`. */
@@ -141,7 +143,7 @@ export interface SolveIntentOptions {
 export interface VerifyReceiptOptions {
   /**
    * Cluster whose configured receipt_anchor program is expected. Default: "mainnet-beta".
-   * No cluster has one configured today; pass `anchorProgramId`.
+   * Only devnet has one configured; on mainnet-beta pass `anchorProgramId`.
    */
   cluster?: SolanaCluster;
   /** Explicit receipt_anchor program ID. Overrides `cluster`. */
@@ -236,7 +238,7 @@ function isRpcUrl(rpc: string | Connection): rpc is string {
  * Resolve the receipt_anchor program ID: an explicit `anchorProgramId` wins,
  * otherwise the program configured for `cluster` (default "mainnet-beta").
  * Throws RECEIPT_ANCHOR_UNAVAILABLE when the cluster has no configured
- * program, which is every cluster until the redeploy under a fresh key.
+ * program (mainnet-beta; only devnet has one).
  */
 export function resolveReceiptAnchorProgramId(
   options: { cluster?: SolanaCluster; anchorProgramId?: string } = {}
@@ -459,9 +461,10 @@ export function buildCrossChainIntent(
  *  3. Anchoring the receipt on Solana via the receipt_anchor program named by
  *     `options.anchorProgramId` (or configured for `options.cluster`).
  *
- * No cluster has a configured receipt_anchor program today, so without
- * `options.anchorProgramId` this throws RECEIPT_ANCHOR_UNAVAILABLE before any
- * transaction is sent: the payment is never made without a usable anchor.
+ * Only devnet has a configured receipt_anchor program, so on mainnet-beta (the
+ * default) without `options.anchorProgramId` this throws
+ * RECEIPT_ANCHOR_UNAVAILABLE before any transaction is sent: the payment is
+ * never made without a usable anchor.
  *
  * The solver earns SOLVER_FEE_BPS (0.1%) spread; the gross amount debited from
  * the payer's Solana account is amountUsdc * 1.001. NULL stakers back the
@@ -473,7 +476,7 @@ export function buildCrossChainIntent(
  * @param options.x402ProgramId   - x402 payment program on the target cluster (required).
  * @param options.cluster         - Cluster for the configured receipt_anchor program. Default: "mainnet-beta".
  * @param options.anchorProgramId - Explicit receipt_anchor program ID; overrides `cluster`.
- *                                  Required until a cluster has a configured program.
+ *                                  Required on clusters without a configured program.
  * @returns Solana tx signatures and VAA hash.
  */
 export async function solveIntent(
@@ -587,7 +590,8 @@ export async function solveIntent(
  * @param intentId  - The intentId from the original CrossChainPaymentIntent.
  * @param rpc       - Solana RPC endpoint URL, or an existing Connection.
  * @param options   - Cluster or explicit receipt_anchor program ID. Default: mainnet-beta.
- *                    Without `anchorProgramId` this throws RECEIPT_ANCHOR_UNAVAILABLE.
+ *                    Without `anchorProgramId` this throws RECEIPT_ANCHOR_UNAVAILABLE
+ *                    on clusters with no configured program (mainnet-beta).
  * @returns true if the receipt is anchored on-chain and matches the intent.
  */
 export async function verifyCrossChainReceipt(

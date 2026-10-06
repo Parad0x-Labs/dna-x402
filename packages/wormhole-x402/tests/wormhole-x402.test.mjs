@@ -41,12 +41,14 @@ const SRC = join(HERE, "..", "src", "index.ts");
 const readConfig = (name) => JSON.parse(readFileSync(join(REPO_ROOT, "configs", name), "utf8"));
 
 // A receipt_anchor deployment the caller controls (e.g. a local validator).
-// No cluster has a configured receipt_anchor program, so every anchoring call
-// in these tests names this one explicitly.
+// Only devnet has a configured receipt_anchor program, so anchoring calls in
+// these tests name this one explicitly unless they test the devnet default.
 const ANCHOR = Keypair.generate().publicKey.toBase58();
 const OTHER_ANCHOR = Keypair.generate().publicKey.toBase58();
 const WITH_ANCHOR = { anchorProgramId: ANCHOR };
-const UNAVAILABLE = /receipt anchoring is unavailable until the redeploy under a fresh key/;
+const UNAVAILABLE = /receipt anchoring is unavailable on this cluster/;
+// The 2026-10-06 devnet receipt_anchor deployment (configs/devnet.oss.json programs.receiptAnchor).
+const DEVNET_ANCHOR = "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs";
 const BLOCKHASH = new PublicKey(new Uint8Array(32).fill(7)).toBase58();
 // Any valid key the caller names as its x402 payment program.
 const X402_PROGRAM = Keypair.generate().publicKey.toBase58();
@@ -115,19 +117,20 @@ const INTENT_ID = "intent-1";
 
 // ── No configured receipt_anchor program: anchoring refuses ─────────────────
 
-test("no cluster has a configured receipt_anchor program", () => {
-  assert.deepEqual(RECEIPT_ANCHOR_PROGRAM_IDS, {});
+test("only devnet has a configured receipt_anchor program, and it matches the devnet config", () => {
+  assert.deepEqual(RECEIPT_ANCHOR_PROGRAM_IDS, { devnet: DEVNET_ANCHOR });
   assert.ok(Object.isFrozen(RECEIPT_ANCHOR_PROGRAM_IDS));
   assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
   assert.match(RECEIPT_ANCHOR_UNAVAILABLE, UNAVAILABLE);
-  // The cluster configs carry no receipt_anchor entry either.
-  assert.equal(readConfig("devnet.oss.json").programs.receiptAnchor, undefined);
+  // Drift check: the source map and configs/devnet.oss.json name the same program.
+  assert.equal(readConfig("devnet.oss.json").programs.receiptAnchor, RECEIPT_ANCHOR_PROGRAM_IDS.devnet);
+  // The mainnet profiles carry no receipt_anchor entry.
   for (const name of ["mainnet.oss.json", "mainnet.commercial.json"]) {
     assert.equal(readConfig(name).programs.receiptAnchor, undefined, `${name} must not name a receipt_anchor program`);
   }
 });
 
-test("the only base58 pubkey literal in src is the Wormhole bridge", () => {
+test("the only base58 pubkey literals in src are the devnet receipt_anchor and the Wormhole bridge", () => {
   const src = readFileSync(SRC, "utf8");
   const literals = [...src.matchAll(/["'`]([1-9A-HJ-NP-Za-km-z]{32,44})["'`]/g)].map((m) => m[1]);
   const pubkeys = literals.filter((s) => {
@@ -137,13 +140,13 @@ test("the only base58 pubkey literal in src is the Wormhole bridge", () => {
       return false;
     }
   });
-  assert.deepEqual(pubkeys, [WORMHOLE_CORE_BRIDGE_SOLANA]);
+  assert.deepEqual(pubkeys, [DEVNET_ANCHOR, WORMHOLE_CORE_BRIDGE_SOLANA]);
 });
 
-test("resolveReceiptAnchorProgramId: refuses without an explicit program, honours an override", () => {
+test("resolveReceiptAnchorProgramId: devnet resolves, mainnet-beta refuses, an override wins", () => {
   assert.throws(() => resolveReceiptAnchorProgramId(), UNAVAILABLE);
   assert.throws(() => resolveReceiptAnchorProgramId({ cluster: "mainnet-beta" }), UNAVAILABLE);
-  assert.throws(() => resolveReceiptAnchorProgramId({ cluster: "devnet" }), UNAVAILABLE);
+  assert.equal(resolveReceiptAnchorProgramId({ cluster: "devnet" }), DEVNET_ANCHOR);
   assert.equal(resolveReceiptAnchorProgramId({ anchorProgramId: ANCHOR }), ANCHOR);
   assert.equal(resolveReceiptAnchorProgramId({ cluster: "devnet", anchorProgramId: ANCHOR }), ANCHOR);
   for (const cluster of ["testnet", "localnet", "__proto__", "toString", "hasOwnProperty", ""]) {
@@ -263,7 +266,6 @@ test("solveIntent refuses before paying when no receipt_anchor program is named"
   for (const options of [
     { x402ProgramId: X402_PROGRAM },
     { x402ProgramId: X402_PROGRAM, cluster: "mainnet-beta" },
-    { x402ProgramId: X402_PROGRAM, cluster: "devnet" },
   ]) {
     await assert.rejects(solveIntent(makeIntent(), payer, conn, options), UNAVAILABLE);
   }
@@ -318,6 +320,18 @@ test("solveIntent: an explicit anchorProgramId overrides cluster", async () => {
   assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, WITH_ANCHOR), false);
 });
 
+test("solveIntent on devnet anchors to the configured receipt_anchor program", async () => {
+  const conn = recordingConnection();
+  const intent = makeIntent();
+  const result = await solveIntent(intent, Keypair.generate(), conn, { x402ProgramId: X402_PROGRAM, cluster: "devnet" });
+  assert.equal(conn.sent.length, 2);
+  assert.equal(conn.sent[1].instructions[0].programId.toBase58(), DEVNET_ANCHOR);
+  const rpc = fakeRpc(txResponse(conn.sent[1].compileMessage()));
+  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, { cluster: "devnet" }), true);
+  // The same anchor does not verify against a different program.
+  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, WITH_ANCHOR), false);
+});
+
 // ── verifyCrossChainReceipt ──────────────────────────────────────────────────
 
 const expectedAnchor = computeReceiptHash(INTENT_ID, RECEIPT.solanaTx, RECEIPT.vaaHash);
@@ -329,7 +343,6 @@ test("verify: refuses without an explicit receipt_anchor program", async () => {
   const rpc = { getTransaction: async () => { fetched += 1; return txResponse(msg); } };
   await assert.rejects(verifyCrossChainReceipt(RECEIPT, INTENT_ID, rpc), UNAVAILABLE);
   await assert.rejects(verifyCrossChainReceipt(RECEIPT, INTENT_ID, rpc, { cluster: "mainnet-beta" }), UNAVAILABLE);
-  await assert.rejects(verifyCrossChainReceipt(RECEIPT, INTENT_ID, rpc, { cluster: "devnet" }), UNAVAILABLE);
   assert.equal(fetched, 0, "no RPC call is made when anchoring is unavailable");
 });
 
