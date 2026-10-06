@@ -33,7 +33,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
-    "test": "node ../../node_modules/jest/bin/jest.js"
+    "test": "node --experimental-transform-types --test tests/zk-access.test.mjs"
   },
   "dependencies": {
     "@noble/curves": "^1.7.0",
