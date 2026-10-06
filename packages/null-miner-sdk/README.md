@@ -31,7 +31,7 @@ Compare: Grass (bandwidth only, centralized), io.net (GPUs only, KYC), Helium (h
 ## Install
 
 ```bash
-npm install null-miner-sdk
+npm install @parad0x_labs/null-miner-sdk
 ```
 
 ---
@@ -39,10 +39,10 @@ npm install null-miner-sdk
 ## 3-line quickstart
 
 ```typescript
-import { NullMiner } from "null-miner-sdk";
+import { NullMiner } from "@parad0x_labs/null-miner-sdk";
 
 const miner = new NullMiner({
-  rpcUrl:     "https://api.devnet.solana.com",   // swap for mainnet when live
+  rpcUrl:     "https://api.devnet.solana.com",   // devnet RPC
   hostWallet: wallet,                             // any Solana wallet adapter
   platformId: "your-platform-id",                // for fee attribution
 });
@@ -69,7 +69,7 @@ Gate any API route behind a USDC micropayment:
 
 ```typescript
 // app/api/ai-query/route.ts
-import { nullMinerMiddleware } from "null-miner-sdk/nextjs";
+import { nullMinerMiddleware } from "@parad0x_labs/null-miner-sdk/nextjs";
 
 export const GET = nullMinerMiddleware({ priceUsdc: 0.005 }, async (req) => {
   return Response.json({ result: await runAIQuery(req) });
@@ -81,7 +81,7 @@ Returns HTTP 402 with x402 payment requirements if unpaid. Auto-verifies payment
 ### Express / Node.js
 
 ```typescript
-import { nullMinerGate } from "null-miner-sdk/express";
+import { nullMinerGate } from "@parad0x_labs/null-miner-sdk/express";
 
 app.get("/premium-data", nullMinerGate({
   priceUsdc: 0.001,
@@ -95,7 +95,7 @@ app.get("/premium-data", nullMinerGate({
 ### OpenClaw (Momo-compatible)
 
 ```typescript
-import { nullMinerPlugin } from "null-miner-sdk/openclaw";
+import { nullMinerPlugin } from "@parad0x_labs/null-miner-sdk/openclaw";
 
 const plugin = nullMinerPlugin({
   rpcUrl:     process.env.SOLANA_RPC!,
@@ -109,7 +109,7 @@ const plugin = nullMinerPlugin({
 ### Browser / Chrome Extension
 
 ```typescript
-import { createBrowserMiner } from "null-miner-sdk/browser";
+import { createBrowserMiner } from "@parad0x_labs/null-miner-sdk/browser";
 
 // Works in service workers, web pages, React apps — no Node.js required
 const miner = await createBrowserMiner({
@@ -165,7 +165,7 @@ const miner = new NullMiner({
 Register your own task types:
 
 ```typescript
-import { TaskRegistry, TaskKind } from "null-miner-sdk";
+import { TaskRegistry, TaskKind } from "@parad0x_labs/null-miner-sdk";
 
 const registry = new TaskRegistry();
 registry.register("my_custom_task" as TaskKind, {
@@ -183,7 +183,7 @@ registry.register("my_custom_task" as TaskKind, {
 Each agent has a deterministic stealth identity derived from device entropy. No wallet address is ever exposed to the task marketplace.
 
 ```typescript
-import { AgentPassport } from "null-miner-sdk";
+import { AgentPassport } from "@parad0x_labs/null-miner-sdk";
 
 const passport = new AgentPassport({ spendKey: "your-32-byte-hex-key" });
 
@@ -194,7 +194,7 @@ console.log(passport.tier);            // bronze | silver | gold | elite
 // Derive one-time stealth address for each task (privacy)
 const stealth = passport.deriveStealthAddress(taskId);
 
-// Attest reputation (ZK stub now → Groth16 Phase 2)
+// Attest reputation (SHA-256 commitment today; Groth16 in Phase 2)
 const attestation = passport.attest(passport.reputationScore);
 ```
 
@@ -212,7 +212,7 @@ Higher reputation → access to higher-paying task tiers:
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    YOUR APP (any stack)                       ║
 ║                                                               ║
-║  npm install null-miner-sdk                                   ║
+║  npm install @parad0x_labs/null-miner-sdk                     ║
 ║  ┌──────────────────────────────────────────────────────────┐ ║
 ║  │  NullMiner.start()                                       │ ║
 ║  │     ↓ AgentLoop (30s poll)                               │ ║
@@ -240,7 +240,7 @@ Higher reputation → access to higher-paying task tiers:
 git clone https://github.com/Parad0x-Labs/dna-x402
 cd packages/null-miner-sdk
 npm install
-npm test         # 418 unit tests
+npm test         # 466 unit tests
 npm run test:devnet  # live devnet integration (requires SOL)
 ```
 
@@ -252,21 +252,21 @@ The SDK falls back to mock tasks when the task marketplace API is unreachable �
 
 | Component | Status |
 |-----------|--------|
-| Core SDK | ✅ Devnet |
-| Next.js adapter | ✅ Devnet |
-| Express adapter | ✅ Devnet |
-| OpenClaw adapter | ✅ Devnet |
-| Browser adapter | ✅ Devnet |
-| Task marketplace API | ✅ Devnet |
-| Browser extension | ✅ Devnet |
-| On-chain encrypted vault storage | ✅ Devnet |
-| Direct receipt-anchor callback | ✅ Devnet |
-| Liquefy archive storage payloads | ✅ Devnet |
-| NULL mint-gate claim ledger | 🔶 Devnet (SPL mint CPI gated) |
-| NULL lottery root primitive | 🔶 Devnet (settlement gated) |
+| Core SDK | Devnet |
+| Next.js adapter | Devnet |
+| Express adapter | Devnet |
+| OpenClaw adapter | Devnet |
+| Browser adapter | Devnet |
+| Task marketplace API | Devnet |
+| Browser extension | Devnet |
+| On-chain encrypted vault storage | Devnet |
+| Direct receipt-anchor callback | Devnet |
+| Liquefy archive storage payloads | Devnet |
+| NULL mint-gate claim ledger | Devnet (SPL mint CPI gated) |
+| NULL lottery root primitive | Devnet (settlement gated) |
 | Dark-agent-escrow | Rust library crate (`crates/dark-agent-escrow`); not deployed, not called by this SDK |
-| Groth16 ZK proofs | ❌ Phase 2 |
-| Mainnet deploy | ❌ Pending deployment gates |
+| Groth16 ZK proofs | Phase 2 |
+| Mainnet deploy | After the deployment gates |
 
 **`IS_MAINNET_READY = false`** — Devnet works fully. Mainnet opens after deploy funding, final config, and smoke evidence.
 
