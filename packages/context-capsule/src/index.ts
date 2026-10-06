@@ -250,18 +250,33 @@ export function injectCapsule(capsule: ContextCapsule, maxTokens?: number): stri
   );
 }
 
+/** Options for searchCapsule(). */
+export interface SearchOptions {
+  /**
+   * Maximum number of messages to return. When more messages match, the ones
+   * containing the most distinct query terms are kept (ties: earlier message
+   * first) and returned in original order. Default: no limit (every match).
+   */
+  limit?: number;
+}
+
 /**
  * Search the capsule for messages relevant to a query.
  *
- * Decompresses the capsule and returns only messages whose content
- * contains one or more query terms. Never returns the full history
- * unless the query matches every message.
+ * Decompresses the whole archive and returns every message whose content
+ * contains one or more query terms (case-insensitive substring match), in
+ * original order. Results are unranked and uncapped unless `opts.limit` is set.
+ * A query made of common words can return most of the history.
+ *
+ * The header line reports counts only; it does not repeat the query, so the
+ * returned text contains session content and nothing taken from the query.
  *
  * @param capsule   The ContextCapsule to search
  * @param query     Space-separated search terms (case-insensitive)
+ * @param opts      Optional { limit }
  * @returns         Matching messages formatted as a readable string
  */
-export function searchCapsule(capsule: ContextCapsule, query: string): string {
+export function searchCapsule(capsule: ContextCapsule, query: string, opts: SearchOptions = {}): string {
   if (!query || query.trim() === "") {
     return "[CAPSULE SEARCH: empty query — provide search terms to retrieve relevant context]";
   }
@@ -280,20 +295,37 @@ export function searchCapsule(capsule: ContextCapsule, query: string): string {
   const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
 
   // Filter: message must contain at least one term
-  const matches = messages.filter(m =>
-    terms.some(term => m.content.toLowerCase().includes(term))
-  );
+  const scored = messages
+    .map((m, index) => {
+      const lower = m.content.toLowerCase();
+      return { m, index, hits: new Set(terms.filter(term => lower.includes(term))).size };
+    })
+    .filter(x => x.hits > 0);
 
-  if (matches.length === 0) {
-    return `[CAPSULE SEARCH: no messages matched "${query}"]`;
+  if (scored.length === 0) {
+    return "[CAPSULE SEARCH: no messages matched]";
   }
 
-  const formatted = matches
-    .map(m => `[${m.role.toUpperCase()}]: ${m.content}`)
+  const limit = opts.limit !== undefined && Number.isFinite(opts.limit)
+    ? Math.max(1, Math.floor(opts.limit))
+    : undefined;
+  const kept = limit !== undefined && scored.length > limit
+    ? scored
+        .slice()
+        .sort((a, b) => b.hits - a.hits || a.index - b.index)
+        .slice(0, limit)
+        .sort((a, b) => a.index - b.index)
+    : scored;
+
+  const formatted = kept
+    .map(x => `[${x.m.role.toUpperCase()}]: ${x.m.content}`)
     .join("\n\n");
 
+  const limitNote = kept.length < scored.length
+    ? ` (limit ${limit}; ${scored.length} matched)`
+    : "";
   return (
-    `[CAPSULE SEARCH RESULTS for "${query}" — ${matches.length}/${messages.length} messages]\n\n` +
+    `[CAPSULE SEARCH RESULTS${limitNote} — ${kept.length}/${messages.length} messages]\n\n` +
     formatted
   );
 }
@@ -887,7 +919,11 @@ export function buildCorrectionChain(
 
 // ── anchorCorrectionChain ─────────────────────────────────────────────────────
 
-const DEFAULT_ANCHOR_RPC = "https://api.mainnet-beta.solana.com";
+/**
+ * Environment variable naming the Solana RPC endpoint for anchorCorrectionChain()
+ * when no rpcUrl argument is passed. There is no built-in default cluster.
+ */
+export const ANCHOR_RPC_ENV = "CONTEXT_CAPSULE_ANCHOR_RPC";
 
 /**
  * Internal: build a SHA-256 Merkle root over an array of hex-encoded hashes.
@@ -908,23 +944,38 @@ function correctionMerkleRoot(hashes: string[]): string {
  *  3. Sign + send with the keypair from SOLANA_KEYPAIR env var (JSON number[]).
  *  4. Return the transaction signature.
  *
- * Falls back to "dry_run:<merkleRoot>" if SOLANA_KEYPAIR is not set or
- * if @solana/web3.js is not installed.
+ * Sends nothing and returns "dry_run:<merkleRoot>" (with a console warning that
+ * names the reason) when any of these holds:
+ *  - SOLANA_KEYPAIR is not set;
+ *  - no RPC endpoint is given, neither as `rpcUrl` nor in CONTEXT_CAPSULE_ANCHOR_RPC
+ *    (there is no default cluster; since 1.2.0 it no longer falls back to mainnet-beta);
+ *  - @solana/web3.js is not installed.
+ * A dry-run string is not a transaction, receipt or settlement.
  *
  * @param chain    Output of buildCorrectionChain()
- * @param rpcUrl   Solana RPC endpoint (defaults to mainnet-beta)
+ * @param rpcUrl   Solana RPC endpoint; falls back to process.env.CONTEXT_CAPSULE_ANCHOR_RPC
  * @returns        Solana tx signature, or "dry_run:<merkleRoot>"
  */
 export async function anchorCorrectionChain(
   chain: CorrectionChainReceipt[],
-  rpcUrl = DEFAULT_ANCHOR_RPC,
+  rpcUrl?: string,
 ): Promise<string> {
   const merkleRoot = correctionMerkleRoot(chain.map(r => r.correctionHash));
 
   const keypairEnv = process.env["SOLANA_KEYPAIR"];
   if (!keypairEnv) {
     const result = `dry_run:${merkleRoot}`;
-    console.log(`dry run: would anchor ${merkleRoot} via SPL Memo`);
+    console.log(`dry run: would anchor ${merkleRoot} via SPL Memo (SOLANA_KEYPAIR not set)`);
+    return result;
+  }
+
+  const endpoint = (rpcUrl ?? process.env[ANCHOR_RPC_ENV] ?? "").trim();
+  if (!endpoint) {
+    const result = `dry_run:${merkleRoot}`;
+    console.warn(
+      `anchorCorrectionChain: no RPC endpoint given (pass rpcUrl or set ${ANCHOR_RPC_ENV}); ` +
+      `there is no default cluster, nothing was sent — ${result}`,
+    );
     return result;
   }
 
@@ -951,7 +1002,7 @@ export async function anchorCorrectionChain(
 
   const secretKey = Uint8Array.from(JSON.parse(keypairEnv) as number[]);
   const payer = Keypair.fromSecretKey(secretKey);
-  const connection = new Connection(rpcUrl, "confirmed");
+  const connection = new Connection(endpoint, "confirmed");
 
   // Memo program is available on all Solana clusters
   const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
@@ -981,7 +1032,10 @@ export interface VerifiableCapsuleOptions extends CompressOptions {
    * Defaults to true when SOLANA_KEYPAIR is set and chain is non-empty.
    */
   anchor?: boolean;
-  /** Solana RPC URL override (passed to anchorCorrectionChain). */
+  /**
+   * Solana RPC URL passed to anchorCorrectionChain(). Without it (and without
+   * CONTEXT_CAPSULE_ANCHOR_RPC) anchoring is a dry run.
+   */
   rpcUrl?: string;
 }
 

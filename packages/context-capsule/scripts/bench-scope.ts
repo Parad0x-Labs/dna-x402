@@ -21,6 +21,7 @@
  *                        (this is exactly what bench-public.ts scores)
  *   capsule_search_kw    injectCapsule() + searchCapsule(capsule, <question
  *                        content words>) — stop words and words < 4 chars removed
+ *   capsule_search_kw_limit8  same query with searchCapsule(..., { limit: 8 })
  *   retrieval_top8       ordinary retrieval baseline, no capsule: the 8 messages
  *                        sharing the most distinct question content words
  *
@@ -47,7 +48,7 @@ const fixturesDir = join(__dirname, '..', 'bench', 'fixtures')
 const resultsDir = join(__dirname, '..', 'bench', 'results')
 
 type Msg = { role: string; content: string }
-type Q = { id: number; question: string; required_keywords: string[]; category?: string }
+type Q = { id: number; question: string; required_keywords: string[]; category?: string; unanswerable?: boolean }
 
 const messages: Msg[] = JSON.parse(readFileSync(join(fixturesDir, `${FIXTURE}.json`), 'utf8'))
 const questions: Q[] = JSON.parse(readFileSync(join(fixturesDir, 'recovery-questions.json'), 'utf8'))
@@ -72,9 +73,8 @@ const contentQuery = (q: string) =>
     .filter(w => w.length >= 4 && !STOP.has(w))
     .join(' ')
 
-// searchCapsule() echoes the query in its first line ("[CAPSULE SEARCH RESULTS
-// for \"<query>\" ..."). Score only the returned message bodies, so a keyword
-// that appears in the question itself cannot pass a question.
+// Score only the returned message bodies, never the header line. (Before 1.2.0
+// the header repeated the query, so a keyword taken from the question could pass.)
 const body = (r: string) => r.replace(/^\[CAPSULE SEARCH[^\n]*\n*/, '')
 
 // Count messages a searchCapsule() call returned, from its header line.
@@ -103,7 +103,7 @@ const contentOnlyChars = messages.reduce((n, m) => n + m.content.length, 0)
 type ArmRow = { tokens: number; pass: boolean; returned?: number }
 const armNames = [
   'full_history', 'window_last_10', 'window_last_20',
-  'capsule_only', 'capsule_search_q', 'capsule_search_kw', 'retrieval_top8',
+  'capsule_only', 'capsule_search_q', 'capsule_search_kw', 'capsule_search_kw_limit8', 'retrieval_top8',
 ] as const
 type Arm = typeof armNames[number]
 
@@ -111,7 +111,7 @@ type Arm = typeof armNames[number]
 const contentText = messages.map(m => m.content).join('\n')
 
 const perQuestion: Array<{
-  id: number; category?: string; query_kw: string; answerable: boolean; header_included_pass: boolean
+  id: number; category?: string; query_kw: string; answerable: boolean
 } & Record<Arm, ArmRow>> = []
 for (const q of questions) {
   const w10 = fmt(messages.slice(-10))
@@ -119,6 +119,7 @@ for (const q of questions) {
   const rq = searchCapsule(capsule, q.question)
   const kwq = contentQuery(q.question)
   const rk = searchCapsule(capsule, kwq)
+  const rk8 = searchCapsule(capsule, kwq, { limit: 8 })
   const withInj = (r: string) => `${injection}\n\n${r}`
   const terms = new Set(kwq.split(' ').filter(Boolean))
   const top8 = fmt(messages
@@ -133,22 +134,26 @@ for (const q of questions) {
     category: q.category,
     query_kw: kwq,
     answerable: pass(contentText, q.required_keywords),
-    header_included_pass: pass(rq, q.required_keywords),
     full_history: { tokens: tok(fullText), pass: pass(fullText, q.required_keywords) },
     window_last_10: { tokens: tok(w10), pass: pass(w10, q.required_keywords) },
     window_last_20: { tokens: tok(w20), pass: pass(w20, q.required_keywords) },
     capsule_only: { tokens: tok(injection), pass: pass(injection, q.required_keywords) },
     capsule_search_q: { tokens: tok(withInj(rq)), pass: pass(body(rq), q.required_keywords), returned: returnedCount(rq) },
     capsule_search_kw: { tokens: tok(withInj(rk)), pass: pass(body(rk), q.required_keywords), returned: returnedCount(rk) },
+    capsule_search_kw_limit8: { tokens: tok(withInj(rk8)), pass: pass(body(rk8), q.required_keywords), returned: returnedCount(rk8) },
     retrieval_top8: { tokens: tok(top8), pass: pass(top8, q.required_keywords) },
   })
 }
 const runtimeMs = Date.now() - t0
 
 const answerableIds = perQuestion.filter(r => r.answerable).map(r => r.id)
-const echoPasses = perQuestion
-  .filter(r => r.header_included_pass && !r.capsule_search_q.pass)
-  .map(r => r.id)
+// The question file flags unanswerable questions; the flag must agree with the
+// session text, or the fixture and the question set have drifted apart.
+const flagMismatch = questions.filter(q => (q.unanswerable === true) === pass(contentText, q.required_keywords)).map(q => q.id)
+if (flagMismatch.length) {
+  console.error(`unanswerable flag disagrees with the session text for questions: ${flagMismatch.join(', ')}`)
+  process.exit(1)
+}
 
 const summarize = (arm: Arm) => {
   const rows = perQuestion.map(r => r[arm])
@@ -196,11 +201,6 @@ const result = {
   },
   answerable_questions: answerableIds.length,
   unanswerable_question_ids: perQuestion.filter(r => !r.answerable).map(r => r.id),
-  header_included_scoring: {
-    recovery_passes: perQuestion.filter(r => r.header_included_pass).length,
-    passes_only_via_query_echo: echoPasses,
-    note: 'Scoring the whole searchCapsule() string (bench-public.ts before 2026-10-06): its first line repeats the query, so a keyword found only in the question text counts as recovered.',
-  },
   arms: Object.fromEntries(armNames.map(a => [a, summarize(a)])),
   per_question: perQuestion,
   runtime_ms: runtimeMs,
@@ -218,6 +218,7 @@ const armLabel: Record<Arm, string> = {
   capsule_only: 'injectCapsule() only (no retrieval)',
   capsule_search_q: 'injectCapsule() + searchCapsule(question text)',
   capsule_search_kw: 'injectCapsule() + searchCapsule(question content words)',
+  capsule_search_kw_limit8: 'injectCapsule() + searchCapsule(question content words, { limit: 8 })',
   retrieval_top8: 'Ordinary retrieval: top 8 messages by term overlap (no capsule)',
 }
 const md: string[] = [
@@ -246,7 +247,7 @@ const md: string[] = [
   '## Per-question arms (keyword availability, not model task success)',
   '',
   `${answerableIds.length} of ${questions.length} questions are answerable from the session text (all required keywords occur in it); unanswerable: ${result.unanswerable_question_ids.join(', ')}.`,
-  `Scoring the whole searchCapsule() string, header included (bench-public.ts before 2026-10-06), gives ${result.header_included_scoring.recovery_passes}/${questions.length}; questions ${echoPasses.join(', ') || 'none'} pass that way only because the header repeats the question. Search arms below score message bodies only.`,
+  'Search arms score the returned message bodies only (the header line is excluded).',
   '',
   '| Arm | Keyword pass (of 40) | Of answerable | Mean tokens / question | Messages returned (mean, min-max) |',
   '|---|---:|---:|---:|---:|',

@@ -9,7 +9,8 @@ import { createHash } from "node:crypto";
 import {
   compressContext, injectCapsule, searchCapsule, estimateSavings,
   tagMessageIntent, taggedCompressContext, injectEnrichedCapsule,
-  MessageIntent,
+  MessageIntent, buildCorrectionChain, anchorCorrectionChain, verifiableCapsule,
+  ANCHOR_RPC_ENV,
 } from "../src/index.ts";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -572,4 +573,87 @@ test("Redis/Postgres example: activeInstructions shows Postgres not Redis", () =
   // Show the injection string
   const injection = injectEnrichedCapsule(enriched);
   console.log(`  Injection: ${injection}`);
+});
+
+// ── 1.2.0: searchCapsule header and limit ─────────────────────────────────────
+
+test("searchCapsule header does not repeat the query", () => {
+  const capsule = compressContext(makeConversation(20));
+  const query = "Merkle zzqueryonlytoken";
+  const result = searchCapsule(capsule, query);
+  assert.ok(result.startsWith("[CAPSULE SEARCH RESULTS"), "header present");
+  assert.ok(!result.includes("zzqueryonlytoken"), "query-only term must not appear in the output");
+  const none = searchCapsule(capsule, "zzqueryonlytoken");
+  assert.equal(none, "[CAPSULE SEARCH: no messages matched]");
+});
+
+test("searchCapsule without limit returns every match (default unchanged)", () => {
+  const messages = makeConversation(20);
+  const capsule = compressContext(messages);
+  const result = searchCapsule(capsule, "Solana");
+  const expected = messages.filter(m => m.content.toLowerCase().includes("solana")).length;
+  assert.match(result, new RegExp(`— ${expected}/${messages.length} messages\\]`));
+});
+
+test("searchCapsule limit keeps the messages matching most terms, in original order", () => {
+  const messages = [
+    { role: "user", content: "alpha only" },
+    { role: "user", content: "alpha beta gamma" },
+    { role: "user", content: "beta only" },
+    { role: "user", content: "alpha beta" },
+    { role: "user", content: "nothing here" },
+  ];
+  const capsule = compressContext(messages);
+  const result = searchCapsule(capsule, "alpha beta gamma", { limit: 2 });
+  assert.ok(result.startsWith("[CAPSULE SEARCH RESULTS (limit 2; 4 matched) — 2/5 messages]"), result.split("\n")[0]);
+  const body = result.split("\n\n").slice(1);
+  assert.deepEqual(body, ["[USER]: alpha beta gamma", "[USER]: alpha beta"]);
+  // A limit at or above the match count changes nothing.
+  assert.equal(searchCapsule(capsule, "alpha beta gamma", { limit: 10 }), searchCapsule(capsule, "alpha beta gamma"));
+});
+
+// ── 1.2.0: anchoring has no default cluster ───────────────────────────────────
+
+const CORRECTION_SESSION = [
+  { role: "user", content: "use Redis for the session cache" },
+  { role: "assistant", content: "Redis it is." },
+  { role: "user", content: "actually use Postgres for the session cache instead" },
+];
+
+async function withEnv(vars, fn) {
+  const saved = {};
+  for (const k of Object.keys(vars)) {
+    saved[k] = process.env[k];
+    if (vars[k] === undefined) delete process.env[k];
+    else process.env[k] = vars[k];
+  }
+  try { return await fn(); } finally {
+    for (const k of Object.keys(saved)) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  }
+}
+
+test("anchorCorrectionChain: no keypair -> dry run", async () => {
+  const chain = buildCorrectionChain(CORRECTION_SESSION);
+  assert.ok(chain.length > 0, "fixture must contain a correction");
+  const r = await withEnv({ SOLANA_KEYPAIR: undefined, [ANCHOR_RPC_ENV]: undefined }, () => anchorCorrectionChain(chain));
+  assert.match(r, /^dry_run:[0-9a-f]{64}$/);
+});
+
+test("anchorCorrectionChain: keypair but no RPC -> dry run, no default cluster", async () => {
+  const chain = buildCorrectionChain(CORRECTION_SESSION);
+  const fakeKeypair = JSON.stringify(Array.from({ length: 64 }, () => 0));
+  const r = await withEnv({ SOLANA_KEYPAIR: fakeKeypair, [ANCHOR_RPC_ENV]: undefined }, () => anchorCorrectionChain(chain));
+  assert.match(r, /^dry_run:[0-9a-f]{64}$/);
+  const v = await withEnv({ SOLANA_KEYPAIR: fakeKeypair, [ANCHOR_RPC_ENV]: undefined }, () => verifiableCapsule(CORRECTION_SESSION, { anchor: true }));
+  assert.match(v.anchorTx ?? "", /^dry_run:[0-9a-f]{64}$/);
+});
+
+test("anchorCorrectionChain source names no default RPC endpoint", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+  assert.ok(!src.includes("api.mainnet-beta.solana.com"), "no hard-coded mainnet RPC");
+  assert.ok(!/rpcUrl\s*=\s*["'A-Z_]/.test(src), "rpcUrl has no default value");
 });

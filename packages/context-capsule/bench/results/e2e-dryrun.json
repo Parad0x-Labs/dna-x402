@@ -13,8 +13,8 @@
     "window": 630,
     "retrieval": 1131,
     "capsule_first_request": 152,
-    "capsule_after_one_search": 2820,
-    "capsule_both_requests": 2972,
+    "capsule_after_one_search": 2806,
+    "capsule_both_requests": 2958,
     "summary": "requires model"
   },
   "params": {
@@ -39,8 +39,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 150,
-        "simulated_retrieval_response_tokens": 3416,
-        "second_request_input_tokens": 3586
+        "simulated_retrieval_response_tokens": 3405,
+        "second_request_input_tokens": 3575
       }
     },
     {
@@ -60,8 +60,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 149,
-        "simulated_retrieval_response_tokens": 3983,
-        "second_request_input_tokens": 4152
+        "simulated_retrieval_response_tokens": 3970,
+        "second_request_input_tokens": 4139
       }
     },
     {
@@ -81,8 +81,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 146,
-        "simulated_retrieval_response_tokens": 490,
-        "second_request_input_tokens": 656
+        "simulated_retrieval_response_tokens": 484,
+        "second_request_input_tokens": 650
       }
     },
     {
@@ -102,8 +102,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 150,
-        "simulated_retrieval_response_tokens": 2101,
-        "second_request_input_tokens": 2271
+        "simulated_retrieval_response_tokens": 2089,
+        "second_request_input_tokens": 2259
       }
     },
     {
@@ -123,8 +123,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 152,
-        "simulated_retrieval_response_tokens": 5585,
-        "second_request_input_tokens": 5757
+        "simulated_retrieval_response_tokens": 5570,
+        "second_request_input_tokens": 5742
       }
     },
     {
@@ -144,8 +144,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 152,
-        "simulated_retrieval_response_tokens": 3103,
-        "second_request_input_tokens": 3275
+        "simulated_retrieval_response_tokens": 3092,
+        "second_request_input_tokens": 3264
       }
     },
     {
@@ -165,8 +165,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 147,
-        "simulated_retrieval_response_tokens": 2336,
-        "second_request_input_tokens": 2503
+        "simulated_retrieval_response_tokens": 2326,
+        "second_request_input_tokens": 2493
       }
     },
     {
@@ -186,8 +186,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 149,
-        "simulated_retrieval_response_tokens": 3111,
-        "second_request_input_tokens": 3280
+        "simulated_retrieval_response_tokens": 3100,
+        "second_request_input_tokens": 3269
       }
     },
     {
@@ -207,8 +207,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 145,
-        "simulated_retrieval_response_tokens": 2893,
-        "second_request_input_tokens": 3058
+        "simulated_retrieval_response_tokens": 2885,
+        "second_request_input_tokens": 3050
       }
     },
     {
@@ -228,8 +228,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 154,
-        "simulated_retrieval_response_tokens": 4807,
-        "second_request_input_tokens": 4981
+        "simulated_retrieval_response_tokens": 4789,
+        "second_request_input_tokens": 4963
       }
     },
     {
@@ -249,8 +249,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 153,
-        "simulated_retrieval_response_tokens": 5395,
-        "second_request_input_tokens": 5568
+        "simulated_retrieval_response_tokens": 5381,
+        "second_request_input_tokens": 5554
       }
     },
     {
@@ -270,8 +270,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 151,
-        "simulated_retrieval_response_tokens": 4198,
-        "second_request_input_tokens": 4369
+        "simulated_retrieval_response_tokens": 4186,
+        "second_request_input_tokens": 4357
       }
     },
     {
@@ -291,8 +291,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 147,
-        "simulated_retrieval_response_tokens": 5841,
-        "second_request_input_tokens": 6008
+        "simulated_retrieval_response_tokens": 5829,
+        "second_request_input_tokens": 5996
       }
     },
     {
@@ -312,8 +312,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 149,
-        "simulated_retrieval_response_tokens": 3761,
-        "second_request_input_tokens": 3930
+        "simulated_retrieval_response_tokens": 3748,
+        "second_request_input_tokens": 3917
       }
     },
     {
@@ -333,8 +333,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 148,
-        "simulated_retrieval_response_tokens": 1607,
-        "second_request_input_tokens": 1775
+        "simulated_retrieval_response_tokens": 1596,
+        "second_request_input_tokens": 1764
       }
     },
     {
@@ -354,8 +354,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 158,
-        "simulated_retrieval_response_tokens": 2754,
-        "second_request_input_tokens": 2932
+        "simulated_retrieval_response_tokens": 2737,
+        "second_request_input_tokens": 2915
       }
     },
     {
@@ -375,8 +375,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 147,
-        "simulated_retrieval_response_tokens": 2059,
-        "second_request_input_tokens": 2226
+        "simulated_retrieval_response_tokens": 2049,
+        "second_request_input_tokens": 2216
       }
     },
     {
@@ -396,8 +396,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 152,
-        "simulated_retrieval_response_tokens": 2258,
-        "second_request_input_tokens": 2430
+        "simulated_retrieval_response_tokens": 2247,
+        "second_request_input_tokens": 2419
       }
     },
     {
@@ -417,8 +417,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 151,
-        "simulated_retrieval_response_tokens": 3290,
-        "second_request_input_tokens": 3461
+        "simulated_retrieval_response_tokens": 3277,
+        "second_request_input_tokens": 3448
       }
     },
     {
@@ -438,8 +438,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 149,
-        "simulated_retrieval_response_tokens": 4179,
-        "second_request_input_tokens": 4348
+        "simulated_retrieval_response_tokens": 4167,
+        "second_request_input_tokens": 4336
       }
     },
     {
@@ -459,8 +459,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 150,
-        "simulated_retrieval_response_tokens": 857,
-        "second_request_input_tokens": 1027
+        "simulated_retrieval_response_tokens": 845,
+        "second_request_input_tokens": 1015
       }
     },
     {
@@ -480,8 +480,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 156,
-        "simulated_retrieval_response_tokens": 2948,
-        "second_request_input_tokens": 3124
+        "simulated_retrieval_response_tokens": 2931,
+        "second_request_input_tokens": 3107
       }
     },
     {
@@ -501,8 +501,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 152,
-        "simulated_retrieval_response_tokens": 2104,
-        "second_request_input_tokens": 2276
+        "simulated_retrieval_response_tokens": 2091,
+        "second_request_input_tokens": 2263
       }
     },
     {
@@ -522,8 +522,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 148,
-        "simulated_retrieval_response_tokens": 763,
-        "second_request_input_tokens": 931
+        "simulated_retrieval_response_tokens": 751,
+        "second_request_input_tokens": 919
       }
     },
     {
@@ -543,8 +543,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 150,
-        "simulated_retrieval_response_tokens": 2928,
-        "second_request_input_tokens": 3098
+        "simulated_retrieval_response_tokens": 2915,
+        "second_request_input_tokens": 3085
       }
     },
     {
@@ -564,8 +564,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 154,
-        "simulated_retrieval_response_tokens": 1596,
-        "second_request_input_tokens": 1770
+        "simulated_retrieval_response_tokens": 1578,
+        "second_request_input_tokens": 1752
       }
     },
     {
@@ -585,8 +585,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 154,
-        "simulated_retrieval_response_tokens": 3400,
-        "second_request_input_tokens": 3574
+        "simulated_retrieval_response_tokens": 3384,
+        "second_request_input_tokens": 3558
       }
     },
     {
@@ -606,8 +606,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 155,
-        "simulated_retrieval_response_tokens": 2335,
-        "second_request_input_tokens": 2510
+        "simulated_retrieval_response_tokens": 2320,
+        "second_request_input_tokens": 2495
       }
     },
     {
@@ -627,8 +627,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 151,
-        "simulated_retrieval_response_tokens": 4273,
-        "second_request_input_tokens": 4444
+        "simulated_retrieval_response_tokens": 4261,
+        "second_request_input_tokens": 4432
       }
     },
     {
@@ -648,8 +648,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 154,
-        "simulated_retrieval_response_tokens": 3392,
-        "second_request_input_tokens": 3566
+        "simulated_retrieval_response_tokens": 3379,
+        "second_request_input_tokens": 3553
       }
     },
     {
@@ -669,8 +669,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 147,
-        "simulated_retrieval_response_tokens": 1671,
-        "second_request_input_tokens": 1838
+        "simulated_retrieval_response_tokens": 1662,
+        "second_request_input_tokens": 1829
       }
     },
     {
@@ -690,8 +690,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 146,
-        "simulated_retrieval_response_tokens": 1668,
-        "second_request_input_tokens": 1834
+        "simulated_retrieval_response_tokens": 1658,
+        "second_request_input_tokens": 1824
       }
     },
     {
@@ -711,8 +711,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 149,
-        "simulated_retrieval_response_tokens": 987,
-        "second_request_input_tokens": 1156
+        "simulated_retrieval_response_tokens": 977,
+        "second_request_input_tokens": 1146
       }
     },
     {
@@ -732,8 +732,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 152,
-        "simulated_retrieval_response_tokens": 826,
-        "second_request_input_tokens": 998
+        "simulated_retrieval_response_tokens": 812,
+        "second_request_input_tokens": 984
       }
     },
     {
@@ -753,8 +753,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 166,
-        "simulated_retrieval_response_tokens": 874,
-        "second_request_input_tokens": 1060
+        "simulated_retrieval_response_tokens": 853,
+        "second_request_input_tokens": 1039
       }
     },
     {
@@ -774,8 +774,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 161,
-        "simulated_retrieval_response_tokens": 3315,
-        "second_request_input_tokens": 3496
+        "simulated_retrieval_response_tokens": 3292,
+        "second_request_input_tokens": 3473
       }
     },
     {
@@ -795,8 +795,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 159,
-        "simulated_retrieval_response_tokens": 993,
-        "second_request_input_tokens": 1172
+        "simulated_retrieval_response_tokens": 975,
+        "second_request_input_tokens": 1154
       }
     },
     {
@@ -816,8 +816,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 159,
-        "simulated_retrieval_response_tokens": 1251,
-        "second_request_input_tokens": 1430
+        "simulated_retrieval_response_tokens": 1233,
+        "second_request_input_tokens": 1412
       }
     },
     {
@@ -837,8 +837,8 @@
       },
       "capsule": {
         "first_request_input_tokens": 162,
-        "simulated_retrieval_response_tokens": 1916,
-        "second_request_input_tokens": 2098
+        "simulated_retrieval_response_tokens": 1895,
+        "second_request_input_tokens": 2077
       }
     },
     {
@@ -858,11 +858,11 @@
       },
       "capsule": {
         "first_request_input_tokens": 160,
-        "simulated_retrieval_response_tokens": 651,
-        "second_request_input_tokens": 831
+        "simulated_retrieval_response_tokens": 636,
+        "second_request_input_tokens": 816
       }
     }
   ],
   "node": "v22.23.3",
-  "timestamp": "2026-10-06T08:38:26.778Z"
+  "timestamp": "2026-10-06T08:45:43.482Z"
 }

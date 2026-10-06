@@ -7,11 +7,14 @@
   "savings_scope": "initial prompt payload only (injectCapsule() string vs full JSONL history, chars/4); excludes retrieval",
   "recovery_score_percent": 85,
   "recovery_scope": "required keywords present in searchCapsule(question) message bodies; keyword availability, not model task success",
-  "retrieval_tokens_mean": 6769,
+  "retrieval_tokens_mean": 6750,
   "messages_total": 109,
-  "runtime_ms": 35,
+  "runtime_ms": 20,
   "questions_total": 40,
   "questions_passed": 34,
+  "questions_answerable": 35,
+  "questions_passed_answerable": 34,
+  "recovery_answerable_percent": 97.1,
   "passed_gates": true,
   "gate_savings_ok": true,
   "gate_recovery_ok": true,
@@ -20,8 +23,9 @@
     {
       "question": "Which TypeScript source files were changed during this session?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 35,
-      "retrieved_tokens": 4280,
+      "retrieved_tokens": 4262,
       "matched_keywords": [
         "compress.ts",
         "merkle.ts",
@@ -32,8 +36,9 @@
     {
       "question": "What function in anchor.ts submits the Solana transaction?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 100,
-      "retrieved_tokens": 7155,
+      "retrieved_tokens": 7138,
       "matched_keywords": [
         "anchorReceipts",
         "anchor.ts"
@@ -43,8 +48,9 @@
     {
       "question": "What is the npm package name for this module?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 100,
-      "retrieved_tokens": 7058,
+      "retrieved_tokens": 7045,
       "matched_keywords": [
         "@parad0x_labs",
         "receipt-anchor"
@@ -54,8 +60,9 @@
     {
       "question": "What is the canonical field ordering used in compressReceipt?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 104,
-      "retrieved_tokens": 7233,
+      "retrieved_tokens": 7216,
       "matched_keywords": [
         "amount",
         "paymentId",
@@ -66,8 +73,9 @@
     {
       "question": "What interface is defined in compress.ts to represent a payment receipt?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 106,
-      "retrieved_tokens": 7285,
+      "retrieved_tokens": 7266,
       "matched_keywords": [
         "Receipt",
         "paymentId",
@@ -78,8 +86,9 @@
     {
       "question": "What was the BigInt bug found in compress.ts and what exactly crashed?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 100,
-      "retrieved_tokens": 7177,
+      "retrieved_tokens": 7158,
       "matched_keywords": [
         "BigInt(null)",
         "TypeError",
@@ -90,8 +99,9 @@
     {
       "question": "How was the BigInt null crash in compress.ts fixed?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 98,
-      "retrieved_tokens": 7105,
+      "retrieved_tokens": 7091,
       "matched_keywords": [
         "0n",
         "BigInt",
@@ -102,8 +112,9 @@
     {
       "question": "What was wrong with the hash combination order in merkle.ts?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 99,
-      "retrieved_tokens": 7122,
+      "retrieved_tokens": 7106,
       "matched_keywords": [
         "carry",
         "node",
@@ -114,8 +125,9 @@
     {
       "question": "How was the merkle.ts hash order bug fixed?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 89,
-      "retrieved_tokens": 6497,
+      "retrieved_tokens": 6485,
       "matched_keywords": [
         "hashPair",
         "right",
@@ -126,8 +138,9 @@
     {
       "question": "Which specific Merkle tests failed because of the wrong hash combination order?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 94,
-      "retrieved_tokens": 6989,
+      "retrieved_tokens": 6968,
       "matched_keywords": [
         "two-leaf",
         "four-leaf",
@@ -138,8 +151,9 @@
     {
       "question": "What error is thrown when trying to build a Merkle root from an empty array?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 107,
-      "retrieved_tokens": 7296,
+      "retrieved_tokens": 7275,
       "matched_keywords": [
         "Cannot build Merkle root",
         "empty leaves"
@@ -149,8 +163,9 @@
     {
       "question": "Why was Poseidon rejected in favour of SHA-256 for the Merkle tree?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 102,
-      "retrieved_tokens": 7207,
+      "retrieved_tokens": 7188,
       "matched_keywords": [
         "SHA-256",
         "Poseidon",
@@ -161,8 +176,9 @@
     {
       "question": "Why was storing full receipt data on-chain rejected?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 63,
-      "retrieved_tokens": 6047,
+      "retrieved_tokens": 6032,
       "matched_keywords": [
         "32-byte",
         "root",
@@ -173,8 +189,9 @@
     {
       "question": "What is the on-chain instruction format for receipt_anchor?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 100,
-      "retrieved_tokens": 7062,
+      "retrieved_tokens": 7045,
       "matched_keywords": [
         "34 bytes",
         "0x01",
@@ -185,8 +202,9 @@
     {
       "question": "Why was SHA-256 chosen over Keccak-256 for this project?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 50,
-      "retrieved_tokens": 5055,
+      "retrieved_tokens": 5039,
       "matched_keywords": [
         "SHA-256",
         "Solana",
@@ -197,8 +215,9 @@
     {
       "question": "Why does the program ID come from environment variables rather than being hard-coded in source?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 101,
-      "retrieved_tokens": 7190,
+      "retrieved_tokens": 7165,
       "matched_keywords": [
         ".env",
         "RECEIPT_ANCHOR_PROGRAM_ID",
@@ -209,8 +228,9 @@
     {
       "question": "How many tests passed after both bugs were fixed?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 28,
-      "retrieved_tokens": 2561,
+      "retrieved_tokens": 2547,
       "matched_keywords": [
         "31",
         "passed"
@@ -220,8 +240,9 @@
     {
       "question": "What is the name of the top-level test suite used in the test output?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 105,
-      "retrieved_tokens": 7246,
+      "retrieved_tokens": 7227,
       "matched_keywords": [
         "receipt-anchor"
       ],
@@ -230,8 +251,9 @@
     {
       "question": "What is the exact command to run the tests once without watch mode?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 106,
-      "retrieved_tokens": 7279,
+      "retrieved_tokens": 7260,
       "matched_keywords": [
         "vitest run"
       ],
@@ -240,8 +262,9 @@
     {
       "question": "How many tests are in the receipt-anchor > merkle sub-suite?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 99,
-      "retrieved_tokens": 7160,
+      "retrieved_tokens": 7143,
       "matched_keywords": [
         "5",
         "merkle"
@@ -251,8 +274,9 @@
     {
       "question": "What are the highest-priority remaining TODOs for this project?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 96,
-      "retrieved_tokens": 6822,
+      "retrieved_tokens": 6805,
       "matched_keywords": [
         "Arweave",
         "darkSecp256r1",
@@ -263,8 +287,9 @@
     {
       "question": "What needs to be wired into the anchorReceipts function for production authentication?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 101,
-      "retrieved_tokens": 7184,
+      "retrieved_tokens": 7160,
       "matched_keywords": [
         "darkSecp256r1",
         "vault",
@@ -275,8 +300,9 @@
     {
       "question": "What must be completed before Liquefy integration can be implemented?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 62,
-      "retrieved_tokens": 5390,
+      "retrieved_tokens": 5371,
       "matched_keywords": [
         "Arweave",
         "upload"
@@ -286,8 +312,9 @@
     {
       "question": "What external grant application remains to be submitted?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 78,
-      "retrieved_tokens": 6074,
+      "retrieved_tokens": 6059,
       "matched_keywords": [
         "Solana Foundation",
         "grant"
@@ -297,8 +324,9 @@
     {
       "question": "What types of files must never be committed to the repository?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 100,
-      "retrieved_tokens": 7152,
+      "retrieved_tokens": 7135,
       "matched_keywords": [
         "keypair",
         ".env",
@@ -309,8 +337,9 @@
     {
       "question": "Where must private keys be stored according to the project security constraints?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 100,
-      "retrieved_tokens": 7162,
+      "retrieved_tokens": 7140,
       "matched_keywords": [
         ".env",
         "private keys"
@@ -320,8 +349,9 @@
     {
       "question": "What is the exact byte layout requirement for the receipt_anchor instruction?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 101,
-      "retrieved_tokens": 7099,
+      "retrieved_tokens": 7078,
       "matched_keywords": [
         "34 bytes",
         "0x01",
@@ -332,8 +362,9 @@
     {
       "question": "What security gap exists in anchorReceipts that must be resolved before production?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 85,
-      "retrieved_tokens": 6657,
+      "retrieved_tokens": 6634,
       "matched_keywords": [
         "darkSecp256r1",
         "authentication",
@@ -344,8 +375,9 @@
     {
       "question": "What cargo command was used to build the Solana on-chain program?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 99,
-      "retrieved_tokens": 7169,
+      "retrieved_tokens": 7151,
       "matched_keywords": [
         "cargo build-sbf",
         "receipt_anchor.so"
@@ -355,8 +387,9 @@
     {
       "question": "What was the solana CLI command used to deploy the compiled program to devnet?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 99,
-      "retrieved_tokens": 7172,
+      "retrieved_tokens": 7151,
       "matched_keywords": [
         "solana program deploy",
         "--url devnet"
@@ -366,8 +399,9 @@
     {
       "question": "What was the FINAL decision on the storage system?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 103,
-      "retrieved_tokens": 7172,
+      "retrieved_tokens": 7158,
       "matched_keywords": [
         "postgres"
       ],
@@ -376,8 +410,9 @@
     {
       "question": "Was the storage decision corrected at any point?",
       "passed": false,
+      "answerable": false,
       "messages_returned": 100,
-      "retrieved_tokens": 7143,
+      "retrieved_tokens": 7129,
       "matched_keywords": [
         "correct",
         "postgres",
@@ -391,8 +426,9 @@
     {
       "question": "What was the original storage choice before the correction?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 88,
-      "retrieved_tokens": 6346,
+      "retrieved_tokens": 6330,
       "matched_keywords": [
         "redis"
       ],
@@ -401,8 +437,9 @@
     {
       "question": "What security constraint was explicitly stated as a rule not to violate?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 106,
-      "retrieved_tokens": 7285,
+      "retrieved_tokens": 7266,
       "matched_keywords": [
         "keypair",
         "private",
@@ -414,8 +451,9 @@
     {
       "question": "If earlier messages said to use one approach and later messages said use a different approach, which approach should be used?",
       "passed": false,
+      "answerable": false,
       "messages_returned": 107,
-      "retrieved_tokens": 7305,
+      "retrieved_tokens": 7272,
       "matched_keywords": [
         "later"
       ],
@@ -429,8 +467,9 @@
     {
       "question": "When instructions conflict across different points in the conversation, which instruction takes precedence?",
       "passed": false,
+      "answerable": false,
       "messages_returned": 97,
-      "retrieved_tokens": 7110,
+      "retrieved_tokens": 7081,
       "matched_keywords": [
         "later",
         "last"
@@ -443,8 +482,9 @@
     {
       "question": "What reason was given for abandoning the original storage approach in favour of the corrected one?",
       "passed": true,
+      "answerable": true,
       "messages_returned": 102,
-      "retrieved_tokens": 7217,
+      "retrieved_tokens": 7191,
       "matched_keywords": [
         "complexity",
         "infrastructure",
@@ -455,8 +495,9 @@
     {
       "question": "Which storage technology was explicitly rejected and what was the stated reason for rejecting it?",
       "passed": false,
+      "answerable": true,
       "messages_returned": 93,
-      "retrieved_tokens": 6725,
+      "retrieved_tokens": 6699,
       "matched_keywords": [
         "redis",
         "abandoned"
@@ -468,8 +509,9 @@
     {
       "question": "What is the final, settled decision on session storage — not an intermediate proposal, but the concluded choice?",
       "passed": false,
+      "answerable": false,
       "messages_returned": 107,
-      "retrieved_tokens": 7295,
+      "retrieved_tokens": 7266,
       "matched_keywords": [
         "postgres",
         "session"
@@ -481,8 +523,9 @@
     {
       "question": "Was the phrase 'scratch that' or an equivalent retraction used at any point, and what did it retract?",
       "passed": false,
+      "answerable": false,
       "messages_returned": 106,
-      "retrieved_tokens": 7291,
+      "retrieved_tokens": 7264,
       "matched_keywords": [
         "scratch",
         "redis"
@@ -492,5 +535,5 @@
       ]
     }
   ],
-  "timestamp": "2026-10-06T08:38:26.552Z"
+  "timestamp": "2026-10-06T08:45:43.294Z"
 }

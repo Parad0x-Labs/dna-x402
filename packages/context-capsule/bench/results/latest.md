@@ -1,7 +1,7 @@
 # Context Capsule Public Benchmark Report
 
 **Fixture:** `agent-session-100`  
-**Timestamp:** 2026-10-06T08:38:26.552Z
+**Timestamp:** 2026-10-06T08:45:43.294Z
 
 ## Metrics
 
@@ -9,12 +9,13 @@
 |--------|-------|------|--------|
 | Initial-prompt savings (pointer only, retrieval excluded) | 99.3% | >= 95% | **PASS** |
 | Keyword recovery via searchCapsule(question) | 85.0% | >= 85% | **PASS** |
-| Runtime | 35ms | < 1000ms | **PASS** |
+| Runtime | 20ms | < 1000ms | **PASS** |
 | Original tokens | 7919 | — | — |
 | Capsule tokens | 53 | — | — |
 | Saved tokens | 7866 | — | — |
 | Questions passed | 34/40 | — | — |
-| Retrieved tokens per question (mean) | 6769 | — | — |
+| Questions passed, answerable set | 34/35 (97.1%) | not gated | — |
+| Retrieved tokens per question (mean) | 6750 | — | — |
 
 **Overall: ALL GATES PASSED**
 

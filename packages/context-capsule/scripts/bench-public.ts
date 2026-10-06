@@ -19,7 +19,15 @@
  * question text counted as recovered (questions 39 and 40). Scoring now uses the
  * message bodies only; that moved the reported score from 36/40 to 34/40 with no
  * change to retrieval behaviour, and the recovery gate moved from 90% to 85% to
- * match. See docs/CONTEXT_CAPSULE_BENCHMARK.md and scripts/bench-scope.ts.
+ * match. Since 1.2.0 the searchCapsule() header no longer repeats the query.
+ *
+ * Gate choice (1.2.0): questions flagged `unanswerable: true` in
+ * recovery-questions.json (32, 35, 36, 39, 40: a required keyword never occurs
+ * in the session) are reported separately. Recovery is reported both over all
+ * 40 questions (34/40) and over the 35 answerable ones (34/35). The gate stays
+ * on the total at 85%: an answerable-set gate with a margin below the measured
+ * 97.1% would tolerate zero further misses (33/35 = 94.3%), so it adds no
+ * headroom. See docs/CONTEXT_CAPSULE_BENCHMARK.md and scripts/bench-scope.ts.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -34,11 +42,13 @@ const FIXTURE = process.argv.find(a => a.startsWith('--fixture='))?.split('=')[1
 interface RecoveryQuestion {
   question: string
   required_keywords: string[]
+  unanswerable?: boolean
 }
 
 interface QuestionResult {
   question: string
   passed: boolean
+  answerable: boolean
   messages_returned: number
   retrieved_tokens: number
   matched_keywords: string[]
@@ -59,6 +69,9 @@ interface BenchResults {
   runtime_ms: number
   questions_total: number
   questions_passed: number
+  questions_answerable: number
+  questions_passed_answerable: number
+  recovery_answerable_percent: number
   passed_gates: boolean
   gate_savings_ok: boolean
   gate_recovery_ok: boolean
@@ -133,6 +146,7 @@ for (const q of recoveryQuestions) {
   questionResults.push({
     question:          q.question,
     passed:            missing.length === 0,
+    answerable:        q.unanswerable !== true,
     messages_returned: returned,
     retrieved_tokens:  Math.ceil(result.length / 4),
     matched_keywords:  matched,
@@ -144,6 +158,9 @@ const runtimeMs       = Date.now() - startMs
 const questionsPassed = questionResults.filter(r => r.passed).length
 const questionsTotal  = questionResults.length
 const recoveryScore   = Math.round((questionsPassed / questionsTotal) * 100 * 10) / 10
+const answerableTotal  = questionResults.filter(r => r.answerable).length
+const answerablePassed = questionResults.filter(r => r.answerable && r.passed).length
+const recoveryAnswerable = Math.round((answerablePassed / Math.max(1, answerableTotal)) * 100 * 10) / 10
 
 // 5. Gate checks
 const gateSavings  = savingsNum  >= 95
@@ -167,6 +184,9 @@ const benchResults: BenchResults = {
   runtime_ms:             runtimeMs,
   questions_total:        questionsTotal,
   questions_passed:       questionsPassed,
+  questions_answerable:   answerableTotal,
+  questions_passed_answerable: answerablePassed,
+  recovery_answerable_percent: recoveryAnswerable,
   passed_gates:           allGatesPassed,
   gate_savings_ok:        gateSavings,
   gate_recovery_ok:       gateRecovery,
@@ -207,6 +227,7 @@ const mdLines: string[] = [
   `| Capsule tokens | ${capsuleTokens} | — | — |`,
   `| Saved tokens | ${benchResults.saved_tokens} | — | — |`,
   `| Questions passed | ${questionsPassed}/${questionsTotal} | — | — |`,
+  `| Questions passed, answerable set | ${answerablePassed}/${answerableTotal} (${recoveryAnswerable.toFixed(1)}%) | not gated | — |`,
   `| Retrieved tokens per question (mean) | ${benchResults.retrieval_tokens_mean} | — | — |`,
   '',
   `**Overall: ${allGatesPassed ? 'ALL GATES PASSED' : 'ONE OR MORE GATES FAILED'}**`,
@@ -265,7 +286,7 @@ console.log(`    Savings %         : ${savingsNum.toFixed(1)}%   [gate: >= 95%] 
 console.log('')
 console.log('  MEMORY RECOVERY QUALITY')
 console.log(`    Questions tested  : ${questionsTotal}`)
-console.log(`    Questions passed  : ${questionsPassed}`)
+console.log(`    Questions passed  : ${questionsPassed}  (answerable: ${answerablePassed}/${answerableTotal})`)
 console.log(`    Recovery score    : ${recoveryScore.toFixed(1)}%   [gate: >= 85%]  ${gateRecovery ? 'PASS' : 'FAIL'}`)
 console.log(`    Retrieved tokens  : ${benchResults.retrieval_tokens_mean} per question (mean; not in savings %)`)
 console.log('')

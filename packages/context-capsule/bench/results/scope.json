@@ -30,14 +30,6 @@
     39,
     40
   ],
-  "header_included_scoring": {
-    "recovery_passes": 36,
-    "passes_only_via_query_echo": [
-      39,
-      40
-    ],
-    "note": "Scoring the whole searchCapsule() string (bench-public.ts before 2026-10-06): its first line repeats the query, so a keyword found only in the question text counts as recovered."
-  },
   "arms": {
     "full_history": {
       "keyword_pass": 35,
@@ -71,8 +63,8 @@
       "keyword_pass": 34,
       "keyword_pass_percent": 85,
       "keyword_pass_answerable": 34,
-      "tokens_mean_per_question": 6822,
-      "tokens_total_40q": 272894,
+      "tokens_mean_per_question": 6803,
+      "tokens_total_40q": 272116,
       "messages_returned_mean": 92.9,
       "messages_returned_min": 28,
       "messages_returned_max": 107
@@ -81,11 +73,21 @@
       "keyword_pass": 33,
       "keyword_pass_percent": 82.5,
       "keyword_pass_answerable": 33,
-      "tokens_mean_per_question": 2612,
-      "tokens_total_40q": 104470,
+      "tokens_mean_per_question": 2599,
+      "tokens_total_40q": 103943,
       "messages_returned_mean": 22.4,
       "messages_returned_min": 1,
       "messages_returned_max": 59
+    },
+    "capsule_search_kw_limit8": {
+      "keyword_pass": 32,
+      "keyword_pass_percent": 80,
+      "keyword_pass_answerable": 32,
+      "tokens_mean_per_question": 1131,
+      "tokens_total_40q": 45256,
+      "messages_returned_mean": 7.7,
+      "messages_returned_min": 1,
+      "messages_returned_max": 8
     },
     "retrieval_top8": {
       "keyword_pass": 32,
@@ -101,7 +103,6 @@
       "category": "files",
       "query_kw": "typescript source files changed",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -119,14 +120,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 4333,
+        "tokens": 4315,
         "pass": true,
         "returned": 35
       },
       "capsule_search_kw": {
-        "tokens": 2838,
+        "tokens": 2828,
         "pass": true,
         "returned": 18
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1485,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1416,
@@ -138,7 +144,6 @@
       "category": "files",
       "query_kw": "function anchor.ts submits solana transaction",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -156,14 +161,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7208,
+        "tokens": 7191,
         "pass": true,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 4036,
+        "tokens": 4023,
         "pass": true,
         "returned": 34
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1204,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1134,
@@ -175,7 +185,6 @@
       "category": "files",
       "query_kw": "package name module",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -193,12 +202,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7111,
+        "tokens": 7098,
         "pass": true,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 543,
+        "tokens": 537,
+        "pass": true,
+        "returned": 7
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 537,
         "pass": true,
         "returned": 7
       },
@@ -212,7 +226,6 @@
       "category": "files",
       "query_kw": "canonical field ordering compressreceipt",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -230,14 +243,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7286,
+        "tokens": 7269,
         "pass": true,
         "returned": 104
       },
       "capsule_search_kw": {
-        "tokens": 2154,
+        "tokens": 2142,
         "pass": true,
         "returned": 17
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1250,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1180,
@@ -249,7 +267,6 @@
       "category": "files",
       "query_kw": "interface defined compress.ts represent payment receipt",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -267,14 +284,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7338,
+        "tokens": 7319,
         "pass": true,
         "returned": 106
       },
       "capsule_search_kw": {
-        "tokens": 5638,
+        "tokens": 5623,
         "pass": true,
         "returned": 54
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 934,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 865,
@@ -286,7 +308,6 @@
       "category": "bugs",
       "query_kw": "bigint found compress.ts crashed",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -304,14 +325,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7230,
+        "tokens": 7211,
         "pass": true,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 1990,
+        "tokens": 1980,
         "pass": true,
         "returned": 17
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1104,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1035,
@@ -323,7 +349,6 @@
       "category": "bugs",
       "query_kw": "bigint null crash compress.ts fixed",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -341,14 +366,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7158,
+        "tokens": 7144,
         "pass": true,
         "returned": 98
       },
       "capsule_search_kw": {
-        "tokens": 2389,
+        "tokens": 2379,
         "pass": true,
         "returned": 18
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1217,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1147,
@@ -360,7 +390,6 @@
       "category": "bugs",
       "query_kw": "wrong hash combination order merkle.ts",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -378,14 +407,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7175,
+        "tokens": 7159,
         "pass": true,
         "returned": 99
       },
       "capsule_search_kw": {
-        "tokens": 3164,
+        "tokens": 3153,
         "pass": true,
         "returned": 26
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1371,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1302,
@@ -397,7 +431,6 @@
       "category": "bugs",
       "query_kw": "merkle.ts hash order fixed",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -415,14 +448,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 6550,
+        "tokens": 6538,
         "pass": true,
         "returned": 89
       },
       "capsule_search_kw": {
-        "tokens": 2946,
+        "tokens": 2938,
         "pass": true,
         "returned": 25
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1277,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1207,
@@ -434,7 +472,6 @@
       "category": "bugs",
       "query_kw": "merkle tests failed because wrong hash combination order",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -452,14 +489,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7042,
+        "tokens": 7021,
         "pass": true,
         "returned": 94
       },
       "capsule_search_kw": {
-        "tokens": 4858,
+        "tokens": 4842,
         "pass": true,
         "returned": 44
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1184,
+        "pass": false,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1115,
@@ -471,7 +513,6 @@
       "category": "bugs",
       "query_kw": "error thrown trying build merkle root empty array",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -489,14 +530,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7349,
+        "tokens": 7328,
         "pass": true,
         "returned": 107
       },
       "capsule_search_kw": {
-        "tokens": 5448,
+        "tokens": 5434,
         "pass": true,
         "returned": 51
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1497,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1427,
@@ -508,7 +554,6 @@
       "category": "decisions",
       "query_kw": "poseidon rejected favour sha-256 merkle tree",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -526,14 +571,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7260,
+        "tokens": 7241,
         "pass": true,
         "returned": 102
       },
       "capsule_search_kw": {
-        "tokens": 4251,
+        "tokens": 4239,
         "pass": true,
         "returned": 37
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1180,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1111,
@@ -545,7 +595,6 @@
       "category": "decisions",
       "query_kw": "storing full receipt data on-chain rejected",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -563,14 +612,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 6100,
+        "tokens": 6085,
         "pass": true,
         "returned": 63
       },
       "capsule_search_kw": {
-        "tokens": 5894,
+        "tokens": 5882,
         "pass": true,
         "returned": 59
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1346,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1277,
@@ -582,7 +636,6 @@
       "category": "decisions",
       "query_kw": "on-chain instruction format receipt_anchor",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -600,14 +653,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7115,
+        "tokens": 7098,
         "pass": true,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 3814,
+        "tokens": 3801,
         "pass": true,
         "returned": 34
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1470,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1400,
@@ -619,7 +677,6 @@
       "category": "decisions",
       "query_kw": "sha-256 chosen over keccak-256 project",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -637,14 +694,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 5108,
+        "tokens": 5092,
         "pass": true,
         "returned": 50
       },
       "capsule_search_kw": {
-        "tokens": 1660,
+        "tokens": 1649,
         "pass": true,
         "returned": 14
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 976,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 906,
@@ -656,7 +718,6 @@
       "category": "decisions",
       "query_kw": "program come environment variables rather hard-coded source",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -674,14 +735,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7243,
+        "tokens": 7218,
         "pass": true,
         "returned": 101
       },
       "capsule_search_kw": {
-        "tokens": 2807,
+        "tokens": 2790,
         "pass": true,
         "returned": 23
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1486,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1417,
@@ -693,7 +759,6 @@
       "category": "tests",
       "query_kw": "many tests passed both bugs fixed",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -711,14 +776,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 2614,
+        "tokens": 2600,
         "pass": true,
         "returned": 28
       },
       "capsule_search_kw": {
-        "tokens": 2112,
+        "tokens": 2102,
         "pass": true,
         "returned": 20
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 778,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 709,
@@ -730,7 +800,6 @@
       "category": "tests",
       "query_kw": "name top-level test suite test output",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -748,14 +817,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7299,
+        "tokens": 7280,
         "pass": true,
         "returned": 105
       },
       "capsule_search_kw": {
-        "tokens": 2311,
+        "tokens": 2300,
         "pass": true,
         "returned": 29
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 698,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 628,
@@ -767,7 +841,6 @@
       "category": "tests",
       "query_kw": "exact command tests once without watch mode",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -785,14 +858,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7332,
+        "tokens": 7313,
         "pass": true,
         "returned": 106
       },
       "capsule_search_kw": {
-        "tokens": 3343,
+        "tokens": 3330,
         "pass": true,
         "returned": 29
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1420,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1351,
@@ -804,7 +882,6 @@
       "category": "tests",
       "query_kw": "many tests receipt-anchor merkle sub-suite",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -822,14 +899,19 @@
         "pass": true
       },
       "capsule_search_q": {
-        "tokens": 7213,
+        "tokens": 7196,
         "pass": true,
         "returned": 99
       },
       "capsule_search_kw": {
-        "tokens": 4232,
+        "tokens": 4220,
         "pass": true,
         "returned": 39
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 900,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 831,
@@ -841,7 +923,6 @@
       "category": "todos",
       "query_kw": "highest-priority remaining todos project",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -859,12 +940,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 6875,
+        "tokens": 6858,
         "pass": true,
         "returned": 96
       },
       "capsule_search_kw": {
-        "tokens": 910,
+        "tokens": 898,
+        "pass": true,
+        "returned": 8
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 898,
         "pass": true,
         "returned": 8
       },
@@ -878,7 +964,6 @@
       "category": "todos",
       "query_kw": "needs wired anchorreceipts function production authentication",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -896,14 +981,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7237,
+        "tokens": 7213,
         "pass": true,
         "returned": 101
       },
       "capsule_search_kw": {
-        "tokens": 3001,
+        "tokens": 2984,
         "pass": true,
         "returned": 18
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1510,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1441,
@@ -915,7 +1005,6 @@
       "category": "todos",
       "query_kw": "must completed liquefy integration implemented",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -933,14 +1022,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 5443,
+        "tokens": 5424,
         "pass": true,
         "returned": 62
       },
       "capsule_search_kw": {
-        "tokens": 2157,
+        "tokens": 2144,
         "pass": true,
         "returned": 14
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1347,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1278,
@@ -952,7 +1046,6 @@
       "category": "todos",
       "query_kw": "external grant application remains submitted",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -970,12 +1063,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 6127,
+        "tokens": 6112,
         "pass": true,
         "returned": 78
       },
       "capsule_search_kw": {
-        "tokens": 816,
+        "tokens": 804,
+        "pass": true,
+        "returned": 6
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 804,
         "pass": true,
         "returned": 6
       },
@@ -989,7 +1087,6 @@
       "category": "security",
       "query_kw": "types files must never committed repository",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1007,14 +1104,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7205,
+        "tokens": 7188,
         "pass": true,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 2981,
+        "tokens": 2968,
         "pass": true,
         "returned": 20
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1412,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1342,
@@ -1026,7 +1128,6 @@
       "category": "security",
       "query_kw": "must private keys stored according project security constraints",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1044,14 +1145,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7215,
+        "tokens": 7193,
         "pass": true,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 1649,
+        "tokens": 1631,
         "pass": true,
         "returned": 12
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1325,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1256,
@@ -1063,7 +1169,6 @@
       "category": "security",
       "query_kw": "exact byte layout requirement receipt_anchor instruction",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1081,14 +1186,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7152,
+        "tokens": 7131,
         "pass": true,
         "returned": 101
       },
       "capsule_search_kw": {
-        "tokens": 3453,
+        "tokens": 3437,
         "pass": true,
         "returned": 34
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1676,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1606,
@@ -1100,7 +1210,6 @@
       "category": "security",
       "query_kw": "security exists anchorreceipts must resolved production",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1118,14 +1227,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 6710,
+        "tokens": 6687,
         "pass": true,
         "returned": 85
       },
       "capsule_search_kw": {
-        "tokens": 2388,
+        "tokens": 2373,
         "pass": true,
         "returned": 16
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1378,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1309,
@@ -1137,7 +1251,6 @@
       "category": "commands",
       "query_kw": "cargo command build solana on-chain program",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1155,14 +1268,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7222,
+        "tokens": 7204,
         "pass": true,
         "returned": 99
       },
       "capsule_search_kw": {
-        "tokens": 4326,
+        "tokens": 4314,
         "pass": true,
         "returned": 41
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 936,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 866,
@@ -1174,7 +1292,6 @@
       "category": "commands",
       "query_kw": "solana command deploy compiled program devnet",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1192,14 +1309,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7225,
+        "tokens": 7204,
         "pass": true,
         "returned": 99
       },
       "capsule_search_kw": {
-        "tokens": 3445,
+        "tokens": 3432,
         "pass": true,
         "returned": 33
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1308,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1239,
@@ -1211,7 +1333,6 @@
       "category": "corrections",
       "query_kw": "final decision storage system",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1229,14 +1350,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7225,
+        "tokens": 7211,
         "pass": true,
         "returned": 103
       },
       "capsule_search_kw": {
-        "tokens": 1724,
+        "tokens": 1715,
         "pass": true,
         "returned": 14
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 876,
+        "pass": true,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 807,
@@ -1248,7 +1374,6 @@
       "category": "corrections",
       "query_kw": "storage decision corrected",
       "answerable": false,
-      "header_included_pass": false,
       "full_history": {
         "tokens": 7281,
         "pass": false
@@ -1266,14 +1391,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7196,
+        "tokens": 7182,
         "pass": false,
         "returned": 100
       },
       "capsule_search_kw": {
-        "tokens": 1116,
+        "tokens": 1108,
         "pass": false,
         "returned": 9
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1051,
+        "pass": false,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 982,
@@ -1285,7 +1415,6 @@
       "category": "corrections",
       "query_kw": "original storage choice correction",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1303,12 +1432,17 @@
         "pass": true
       },
       "capsule_search_q": {
-        "tokens": 6399,
+        "tokens": 6383,
         "pass": true,
         "returned": 88
       },
       "capsule_search_kw": {
-        "tokens": 1040,
+        "tokens": 1030,
+        "pass": true,
+        "returned": 8
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1030,
         "pass": true,
         "returned": 8
       },
@@ -1322,7 +1456,6 @@
       "category": "corrections",
       "query_kw": "security constraint explicitly stated rule violate",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1340,12 +1473,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7338,
+        "tokens": 7319,
         "pass": true,
         "returned": 106
       },
       "capsule_search_kw": {
-        "tokens": 879,
+        "tokens": 865,
+        "pass": true,
+        "returned": 6
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 865,
         "pass": true,
         "returned": 6
       },
@@ -1359,7 +1497,6 @@
       "category": "corrections",
       "query_kw": "earlier messages said approach later messages said different approach approach",
       "answerable": false,
-      "header_included_pass": false,
       "full_history": {
         "tokens": 7281,
         "pass": false
@@ -1377,12 +1514,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7358,
+        "tokens": 7325,
         "pass": false,
         "returned": 107
       },
       "capsule_search_kw": {
-        "tokens": 927,
+        "tokens": 906,
+        "pass": false,
+        "returned": 8
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 906,
         "pass": false,
         "returned": 8
       },
@@ -1396,7 +1538,6 @@
       "category": "corrections",
       "query_kw": "instructions conflict across different points conversation instruction takes precedence",
       "answerable": false,
-      "header_included_pass": false,
       "full_history": {
         "tokens": 7281,
         "pass": false
@@ -1414,14 +1555,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7163,
+        "tokens": 7134,
         "pass": false,
         "returned": 97
       },
       "capsule_search_kw": {
-        "tokens": 3368,
+        "tokens": 3345,
         "pass": false,
         "returned": 26
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1304,
+        "pass": false,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1235,
@@ -1433,7 +1579,6 @@
       "category": "corrections",
       "query_kw": "reason given abandoning original storage approach favour corrected",
       "answerable": true,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1451,12 +1596,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7270,
+        "tokens": 7244,
         "pass": true,
         "returned": 102
       },
       "capsule_search_kw": {
-        "tokens": 1046,
+        "tokens": 1028,
+        "pass": false,
+        "returned": 8
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1028,
         "pass": false,
         "returned": 8
       },
@@ -1470,7 +1620,6 @@
       "category": "corrections",
       "query_kw": "storage technology explicitly rejected stated reason rejecting",
       "answerable": true,
-      "header_included_pass": false,
       "full_history": {
         "tokens": 7281,
         "pass": true
@@ -1488,14 +1637,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 6778,
+        "tokens": 6752,
         "pass": false,
         "returned": 93
       },
       "capsule_search_kw": {
-        "tokens": 1304,
+        "tokens": 1286,
         "pass": false,
         "returned": 9
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1150,
+        "pass": false,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 1081,
@@ -1507,7 +1661,6 @@
       "category": "corrections",
       "query_kw": "final settled decision storage intermediate proposal concluded choice",
       "answerable": false,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": false
@@ -1525,14 +1678,19 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7348,
+        "tokens": 7319,
         "pass": false,
         "returned": 107
       },
       "capsule_search_kw": {
-        "tokens": 1415,
+        "tokens": 1396,
         "pass": false,
         "returned": 11
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 1051,
+        "pass": false,
+        "returned": 8
       },
       "retrieval_top8": {
         "tokens": 982,
@@ -1544,7 +1702,6 @@
       "category": "corrections",
       "query_kw": "phrase scratch retraction retract",
       "answerable": false,
-      "header_included_pass": true,
       "full_history": {
         "tokens": 7281,
         "pass": false
@@ -1562,12 +1719,17 @@
         "pass": false
       },
       "capsule_search_q": {
-        "tokens": 7344,
+        "tokens": 7317,
         "pass": false,
         "returned": 106
       },
       "capsule_search_kw": {
-        "tokens": 97,
+        "tokens": 87,
+        "pass": false,
+        "returned": 1
+      },
+      "capsule_search_kw_limit8": {
+        "tokens": 87,
         "pass": false,
         "returned": 1
       },
@@ -1577,7 +1739,7 @@
       }
     }
   ],
-  "runtime_ms": 66,
+  "runtime_ms": 55,
   "node": "v22.23.3",
-  "timestamp": "2026-10-06T08:38:26.685Z"
+  "timestamp": "2026-10-06T08:45:43.403Z"
 }

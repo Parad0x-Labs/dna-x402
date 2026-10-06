@@ -24,12 +24,15 @@ Token counts are `chars / 4` estimates.
 | Archive (zlib, lossless) | 31,818 -> 10,382 bytes (3.1x) | stored history |
 | Initial prompt payload | 7,919 -> 53 tokens | pointer string only; retrieval not counted |
 | Pointer alone, answer keywords present | 2 / 40 | no-retrieval control |
-| `searchCapsule(question)` keyword recovery | 34 / 40, ~6,800 tokens retrieved per question | retrieval returns 93 of 109 messages on average |
+| `searchCapsule(question)` keyword recovery | 34 / 40 (34 / 35 answerable), ~6,750 tokens retrieved per question | retrieval returns 93 of 109 messages on average |
 | `searchCapsule(content words)` keyword recovery | 33 / 40, ~2,600 tokens per question | 22 of 109 messages on average |
+| `searchCapsule(content words, { limit: 8 })` | 32 / 40, ~1,130 tokens per question | at most 8 messages |
 | End-to-end model task success / total tokens | not measured yet | harness defined, see benchmark doc |
 
 Keyword recovery means every required keyword occurs in the retrieved message
-text; it is not a model answering the question. Method, baselines (sliding
+text; it is not a model answering the question. Five questions are flagged
+`unanswerable` in the question file (a required keyword never occurs in the
+session); recovery is reported over all 40 and over the 35 answerable ones. Method, baselines (sliding
 window, top-k retrieval), result files and the planned model-task comparison:
 [docs/CONTEXT_CAPSULE_BENCHMARK.md](https://github.com/Parad0x-Labs/dna-x402/blob/main/docs/CONTEXT_CAPSULE_BENCHMARK.md).
 
@@ -83,11 +86,14 @@ Builds a SHA-256 Merkle root over per-message hashes, so a stored history can be
 Returns a short pointer string (53 estimated tokens on the bundled fixture) with session ID,
 zlib ratio, up to 5 topic words, and a truncated Merkle root. It does not include facts or decisions.
 
-### `searchCapsule(capsule, query): string`
+### `searchCapsule(capsule, query, opts?): string`
 
 Decompresses the capsule and returns, in original order and untruncated, every message that
-contains any query term (case-insensitive substring). Results are not ranked or capped, so
-common words return most of the history; use specific terms.
+contains any query term (case-insensitive substring). Without `opts.limit` results are not
+capped, so common words return most of the history; use specific terms. With
+`{ limit: n }` it keeps the `n` messages containing the most distinct query terms (ties:
+earlier first), still in original order. The header line gives counts only and does not
+repeat the query.
 
 ### `estimateSavings(messages, capsule): SavingsEstimate`
 
@@ -118,11 +124,12 @@ keyword heuristics and builds `activeInstructions`, where a correction replaces 
 instruction it overlaps most. `injectEnrichedCapsule()` prints only the counts; render
 `capsule.activeInstructions` into your prompt if the model should see the corrected instructions.
 
-`anchorCorrectionChain()` posts a Merkle root of the correction chain as an SPL Memo
-(`correction_chain:<root>`). It returns `dry_run:<merkleRoot>` and sends nothing unless
-`SOLANA_KEYPAIR` is set and `@solana/web3.js` is installed; the dry-run string is not a
-transaction. When both are present it signs with that keypair and sends to the given RPC
-URL, defaulting to Solana mainnet-beta.
+`anchorCorrectionChain(chain, rpcUrl?)` posts a Merkle root of the correction chain as an
+SPL Memo (`correction_chain:<root>`). There is no default cluster. It sends a transaction
+only when all three are present: `SOLANA_KEYPAIR`, an RPC endpoint (the `rpcUrl` argument or
+the `CONTEXT_CAPSULE_ANCHOR_RPC` environment variable), and an installed `@solana/web3.js`.
+Otherwise it sends nothing, logs the reason, and returns `dry_run:<merkleRoot>`; that string
+is not a transaction. `verifiableCapsule(messages, { rpcUrl })` passes the endpoint through.
 
 ## Requirements
 
