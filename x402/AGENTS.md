@@ -10,15 +10,15 @@ Three settlement modes: **transfer** (on-chain USDC verified by RPC and bound to
 It is not a privacy-pool or zk-SNARK hot-path product.
 Normal DNA x402 remains the default path. Use the optional Dark Null path only after a normal signed DNA receipt exists and the receipt needs a private receipt summary.
 
-**On-chain receipt anchoring**: unavailable until the `receipt_anchor` redeploy under a fresh key; set `RECEIPT_ANCHOR_PROGRAM_ID` only to a deployment you control.
+**On-chain receipt anchoring**: opt-in, with no default program. Set `RECEIPT_ANCHOR_PROGRAM_ID` to a `receipt_anchor` deployment, for example the devnet program `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`.
 
 ## Install
 
 ```bash
-npm install @parad0x_labs/x402@0.2.0
+npm install @parad0x_labs/x402@0.2.1
 ```
 
-That gives you both the SDK and the `dna-x402` CLI. This file describes 0.2.0; the 0.1.x releases on npm are deprecated. The command above works after 0.2.0 is published to npm; until then, build from this repository.
+That gives you both the SDK and the `dna-x402` CLI. This file describes 0.2.1; the 0.1.x releases on npm are deprecated.
 
 Fastest local proof:
 
@@ -87,19 +87,26 @@ Devnet is the current Dark Null evidence lane. Mainnet-beta private receipt use 
 ### With real USDC transfer (on-chain proof)
 
 ```typescript
-import { fetchWith402 } from "@parad0x_labs/x402";
-import { Connection, Keypair } from "@solana/web3.js";
-import { getAssociatedTokenAddress, createTransferInstruction } from "@solana/spl-token";
+import { buildMemoInstruction, fetchWith402 } from "@parad0x_labs/x402";
+import { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+// npm install @solana/spl-token
+import { createTransferCheckedInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 const conn = new Connection("https://api.devnet.solana.com"); // your RPC endpoint
-const agentKeypair = Keypair.fromSecretKey(/* your key */);
+const agentKeypair = Keypair.fromSecretKey(mySecretKey); // your 64-byte secret key
+const USDC_DECIMALS = 6;
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
     payTransfer: async (quote) => {
-      // Build + send a USDC transfer to quote.recipient for quote.totalAtomic,
-      // plus buildMemoInstruction(quote.memoHash, agentKeypair.publicKey) in the same transaction
-      const tx = /* SPL transfer + memo instruction */;
+      const mint = new PublicKey(quote.mint);
+      const source = getAssociatedTokenAddressSync(mint, agentKeypair.publicKey);
+      const destination = getAssociatedTokenAddressSync(mint, new PublicKey(quote.recipient), true);
+      // USDC transfer for quote.totalAtomic plus the SPL Memo that binds it to this quote
+      const tx = new Transaction().add(
+        createTransferCheckedInstruction(source, mint, destination, agentKeypair.publicKey, BigInt(quote.totalAtomic), USDC_DECIMALS),
+        buildMemoInstruction(quote.memoHash, agentKeypair.publicKey),
+      );
       const sig = await sendAndConfirmTransaction(conn, tx, [agentKeypair]);
       return { settlement: "transfer", txSignature: sig, amountAtomic: quote.totalAtomic };
     },
@@ -216,6 +223,7 @@ await webhooks.deliver("https://your-agent/webhook", {
   receiptId: "abc-123",
   amountAtomic: "5000",
   settlement: "netting",
+  ts: new Date().toISOString(),
 });
 ```
 
@@ -386,7 +394,7 @@ const bundle = await fetch("https://dna-server/market/bundles", {
 
 Auto-generate shop endpoints from existing specs:
 
-```typescript
+```http
 // Import from OpenAPI spec
 POST /market/import/openapi
 { "specUrl": "https://my-api.com/openapi.json", "wallet": "MY_WALLET" }
@@ -400,7 +408,7 @@ Your existing API becomes a DNA shop with zero manual endpoint configuration.
 
 ## Abuse Reporting
 
-```typescript
+```http
 // Report a bad actor
 POST /market/report
 {
