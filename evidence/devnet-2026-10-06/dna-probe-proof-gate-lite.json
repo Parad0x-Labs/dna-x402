@@ -1,0 +1,146 @@
+{
+  "suite": "dna-probe-proof-gate-lite",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "PROGRAM=<dark_proof_gate_lite> node proofgate-lite.mjs",
+  "programId": {
+    "dark_proof_gate_lite": "pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P"
+  },
+  "result": "PASS",
+  "pass": 4,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:49:33Z",
+  "signatures": [
+    {
+      "sig": "368bcMea1YqvQmN4uAbaJd89MfpFf1Wib6nQhtxKvntD5BUxRN2DSdFZikvfUjygS8jReYsVB6a3dCzwH86PV3Ph",
+      "slot": 508038041,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/368bcMea1YqvQmN4uAbaJd89MfpFf1Wib6nQhtxKvntD5BUxRN2DSdFZikvfUjygS8jReYsVB6a3dCzwH86PV3Ph?cluster=devnet"
+    },
+    {
+      "sig": "4xpDfnDKzNjN6PhfuoA46xnbbLupkVLsULe37wqBvBKNGuQkLSniXt4KFujjZ7rUhJ6w76gg2wc8T8xMeXZN3wDK",
+      "slot": 508038049,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 2
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4xpDfnDKzNjN6PhfuoA46xnbbLupkVLsULe37wqBvBKNGuQkLSniXt4KFujjZ7rUhJ6w76gg2wc8T8xMeXZN3wDK?cluster=devnet"
+    },
+    {
+      "sig": "48pzxyjRVHNYFf7rG9yeN9CAVRwtMbN2AHjjrdnKWKqhdgs5v4Q5CrwUZg6NJ5Vu7yHfsQjXuHKEHAVHRnsu4gwN",
+      "slot": 508038057,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/48pzxyjRVHNYFf7rG9yeN9CAVRwtMbN2AHjjrdnKWKqhdgs5v4Q5CrwUZg6NJ5Vu7yHfsQjXuHKEHAVHRnsu4gwN?cluster=devnet"
+    },
+    {
+      "sig": "5hpqj6ZfiYtVHL4qZX7JzZYfMhYpUWkJeoHveZ7uuJ7GScvMdTBuNhkBrRSFSeWMb64fqZCWHhP3gw3xdrUrTKUh",
+      "slot": 508038064,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidInstructionData"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5hpqj6ZfiYtVHL4qZX7JzZYfMhYpUWkJeoHveZ7uuJ7GScvMdTBuNhkBrRSFSeWMb64fqZCWHhP3gw3xdrUrTKUh?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "RecordVerifiedClaim (fresh claim record, authority signs)",
+      "expected": "success",
+      "pass": true,
+      "sig": "368bcMea1YqvQmN4uAbaJd89MfpFf1Wib6nQhtxKvntD5BUxRN2DSdFZikvfUjygS8jReYsVB6a3dCzwH86PV3Ph",
+      "slot": 508038041,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/368bcMea1YqvQmN4uAbaJd89MfpFf1Wib6nQhtxKvntD5BUxRN2DSdFZikvfUjygS8jReYsVB6a3dCzwH86PV3Ph?cluster=devnet",
+      "logs": [
+        "Program log: dark_proof_gate_lite: NOT_ZK_VERIFIER \u2014 records externally-verified claims only",
+        "Program log: dark_proof_gate_lite: recording claim [46, 106, 65, 251] kind=16 slot=508038041",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P consumed 2379 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ATTACK authority not a signer -> WrongAuthority (Custom 2)",
+      "expected": {
+        "custom": 2
+      },
+      "pass": true,
+      "sig": "4xpDfnDKzNjN6PhfuoA46xnbbLupkVLsULe37wqBvBKNGuQkLSniXt4KFujjZ7rUhJ6w76gg2wc8T8xMeXZN3wDK",
+      "slot": 508038049,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 2
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4xpDfnDKzNjN6PhfuoA46xnbbLupkVLsULe37wqBvBKNGuQkLSniXt4KFujjZ7rUhJ6w76gg2wc8T8xMeXZN3wDK?cluster=devnet",
+      "logs": [
+        "Program log: dark_proof_gate_lite: NOT_ZK_VERIFIER \u2014 records externally-verified claims only",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P consumed 677 of 200000 compute units",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P failed: custom program error: 0x2"
+      ]
+    },
+    {
+      "label": "ATTACK claim record already holds data -> DuplicateClaim (Custom 1)",
+      "expected": {
+        "custom": 1
+      },
+      "pass": true,
+      "sig": "48pzxyjRVHNYFf7rG9yeN9CAVRwtMbN2AHjjrdnKWKqhdgs5v4Q5CrwUZg6NJ5Vu7yHfsQjXuHKEHAVHRnsu4gwN",
+      "slot": 508038057,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/48pzxyjRVHNYFf7rG9yeN9CAVRwtMbN2AHjjrdnKWKqhdgs5v4Q5CrwUZg6NJ5Vu7yHfsQjXuHKEHAVHRnsu4gwN?cluster=devnet",
+      "logs": [
+        "Program log: dark_proof_gate_lite: NOT_ZK_VERIFIER \u2014 records externally-verified claims only",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P consumed 684 of 200000 compute units",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P failed: custom program error: 0x1"
+      ]
+    },
+    {
+      "label": "NEG truncated data -> InvalidInstructionData",
+      "expected": {
+        "errIncludes": "InvalidInstructionData"
+      },
+      "pass": true,
+      "sig": "5hpqj6ZfiYtVHL4qZX7JzZYfMhYpUWkJeoHveZ7uuJ7GScvMdTBuNhkBrRSFSeWMb64fqZCWHhP3gw3xdrUrTKUh",
+      "slot": 508038064,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidInstructionData"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5hpqj6ZfiYtVHL4qZX7JzZYfMhYpUWkJeoHveZ7uuJ7GScvMdTBuNhkBrRSFSeWMb64fqZCWHhP3gw3xdrUrTKUh?cluster=devnet",
+      "logs": [
+        "Program log: dark_proof_gate_lite: NOT_ZK_VERIFIER \u2014 records externally-verified claims only",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P consumed 654 of 200000 compute units",
+        "Program pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P failed: invalid instruction data"
+      ]
+    }
+  ],
+  "notes": [
+    "Repo smoke scripts target the retired mainnet ID and refuse to run; probe written from source. Program logs NOT_ZK_VERIFIER and writes no account."
+  ],
+  "slot": 508038064
+}

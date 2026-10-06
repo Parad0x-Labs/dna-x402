@@ -1,0 +1,152 @@
+{
+  "suite": "dna-shielded-pool-v3-relay-rail",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://solana-devnet.api.onfinality.io/public",
+  "command": "RPC=<onfinality devnet> node build/zk/e2e-v3-devnet.mjs FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3   (no SWV3_ZKEY/SWV3_VK override: committed ceremony zkey)",
+  "programId": {
+    "dark_shielded_pool_program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3"
+  },
+  "result": "PASS",
+  "pass": 8,
+  "fail": 0,
+  "timestamp": "2026-10-06T10:01:13Z",
+  "signatures": [
+    {
+      "sig": "3e6WNiAMmko27HGRQX5F4pr2vq63Q5may6VCciJPoA1dGPYsiaTZueJLKgDZN4xYA6vB6dkye9sYQgLwTLG926sr",
+      "slot": 508056034,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3e6WNiAMmko27HGRQX5F4pr2vq63Q5may6VCciJPoA1dGPYsiaTZueJLKgDZN4xYA6vB6dkye9sYQgLwTLG926sr?cluster=devnet"
+    },
+    {
+      "sig": "4N1c2gHMVdGbCyHHPRANmtPbK18vXkYgB2wy23jWvBFYGhDRVDmvRuPzSPsLdmRHKSjSeNvwiP7GgenCxEQfdXp6",
+      "slot": 508056039,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4N1c2gHMVdGbCyHHPRANmtPbK18vXkYgB2wy23jWvBFYGhDRVDmvRuPzSPsLdmRHKSjSeNvwiP7GgenCxEQfdXp6?cluster=devnet"
+    },
+    {
+      "sig": "3JsBPUPgCme5LnT51Xib6CKSXP5icc4XNFsD3BCMCo5WwE1YqKGKyvXxx88kPcbdsw1yeSs5sW69nJeKaNo5iPfs",
+      "slot": 508056044,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3JsBPUPgCme5LnT51Xib6CKSXP5icc4XNFsD3BCMCo5WwE1YqKGKyvXxx88kPcbdsw1yeSs5sW69nJeKaNo5iPfs?cluster=devnet"
+    },
+    {
+      "sig": "3JUBNeswP6Wph5x3uLgR4ujqzj9b7ofp9gfUdug74o6VF1KF3FwQCAxWne92G8bfCcBCMdtQ93YcTnXY4c9woYbm",
+      "slot": 508056050,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3JUBNeswP6Wph5x3uLgR4ujqzj9b7ofp9gfUdug74o6VF1KF3FwQCAxWne92G8bfCcBCMdtQ93YcTnXY4c9woYbm?cluster=devnet"
+    },
+    {
+      "sig": "A2uMuVf8YZspURDVLkYMaQJqvaSfUj5HnXSXSNVTnWApeesq8F1yUNjNVVLEuzDk9Am51oSeSGvErqauUVndiM9",
+      "slot": 508056061,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/A2uMuVf8YZspURDVLkYMaQJqvaSfUj5HnXSXSNVTnWApeesq8F1yUNjNVVLEuzDk9Am51oSeSGvErqauUVndiM9?cluster=devnet"
+    },
+    {
+      "sig": "ntdKz7gNiQRF4WBFbWadyig4j9w67GHCiU2DjrPhJJNL2Nn8DMqjTydTkkMPUiEaU3CZnFB2dcJ5V3DWZSDwE4s",
+      "slot": 508056144,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/ntdKz7gNiQRF4WBFbWadyig4j9w67GHCiU2DjrPhJJNL2Nn8DMqjTydTkkMPUiEaU3CZnFB2dcJ5V3DWZSDwE4s?cluster=devnet"
+    },
+    {
+      "sig": "4eRCc3F1ToXfDCPNYnjEZWb7sqUhqdHagG5o5cef3b9wNYxrC1DDzNX56WZur595579L8KcghebWSwhuF6zWGzqM",
+      "slot": 508056150,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4eRCc3F1ToXfDCPNYnjEZWb7sqUhqdHagG5o5cef3b9wNYxrC1DDzNX56WZur595579L8KcghebWSwhuF6zWGzqM?cluster=devnet"
+    },
+    {
+      "sig": "5JUNrjTCw9wGChV4pYJ6AGDnFBPYedHTRM8cK9Hyz4Qzk5xFx6uUT93gcwtd37i628mGxZCBQKK51PZFDiNcyMDq",
+      "slot": 508056156,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5JUNrjTCw9wGChV4pYJ6AGDnFBPYedHTRM8cK9Hyz4Qzk5xFx6uUT93gcwtd37i628mGxZCBQKK51PZFDiNcyMDq?cluster=devnet"
+    },
+    {
+      "sig": "Pk5LnZXfnzYaq5Ed5RJUqbH3gZXW6TvHtwwhDBa3uJyG6NSJNibGYTZxTWBM38uofnSHAd2vgYC3vH364SHNskR",
+      "slot": 508056171,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/Pk5LnZXfnzYaq5Ed5RJUqbH3gZXW6TvHtwwhDBa3uJyG6NSJNibGYTZxTWBM38uofnSHAd2vgYC3vH364SHNskR?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "root_consistency",
+      "r": "PASS"
+    },
+    {
+      "t": "valid_relayer_withdraw",
+      "r": "PASS",
+      "sig": "A2uMuVf8YZspURDVLkYMaQJqvaSfUj5HnXSXSNVTnWApeesq8F1yUNjNVVLEuzDk9Am51oSeSGvErqauUVndiM9",
+      "err": null
+    },
+    {
+      "t": "double_spend_rejected",
+      "r": "PASS",
+      "sig": "2daZ2gRNsudDwcRCWH9uj7KB9my8nb8G2MvYsAXq3QgCZfnPZv1Vz84Gk3GkKF48oZ7CguAYkyUXsGknVBEt4iEB",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      }
+    },
+    {
+      "t": "wrong_root_rejected",
+      "r": "PASS",
+      "sig": "4PT6kwQnGNenUycZmqkySv8cTntWdok6b3hs1hVgdLLv1WhXXZi6PQUCfhGAtLnpvhbJVHBufgKPj2wsPS4GTNkr",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      }
+    },
+    {
+      "t": "wrong_recipient_rejected",
+      "r": "PASS",
+      "sig": "5KpKendUT8C9dbN9Z1Sb3caXhuzzSPhvFCFejTFkRVGgVLgvJDKuT2rKHYLohU7GbhF27JKgAHS69kB8tqZntQef",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      }
+    },
+    {
+      "t": "over_fee_proof_rejected",
+      "r": "PASS"
+    },
+    {
+      "t": "relayer_mismatch_rejected",
+      "r": "PASS",
+      "sig": "2a9VYEpja8L1onwv7CGTNrL5drN5spakmE37Qh165XHeXaXYKKMTegF8codHJYWzS4XqBXacAJU27d8YxwkwEKKe",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      }
+    },
+    {
+      "t": "second_valid_withdraw",
+      "r": "PASS",
+      "sig": "ntdKz7gNiQRF4WBFbWadyig4j9w67GHCiU2DjrPhJJNL2Nn8DMqjTydTkkMPUiEaU3CZnFB2dcJ5V3DWZSDwE4s",
+      "err": null
+    }
+  ],
+  "notes": [
+    "Proofs made with the committed ceremony/shielded_withdraw_v3/shielded_withdraw_v3_final.zkey (regenerated in 7af7b21, vk sha256 d1cb06d3...) verify on-chain; the first run needed an out-of-repo zkey.",
+    "Every scenario is graded from a landed transaction (harness fix 9ff95ee): double-spend Custom(3), wrong root Custom(12), wrong recipient Custom(4), relayer mismatch Custom(4); over-fee is rejected by the circuit (witness generation).",
+    "Earlier attempts in this rerun: attempt 1 (api.devnet) crashed on an RPC 429 after deposit#0 - 0.1 SOL note locked in vault ANQbHETcUeX95n45YQu5eBxuy3G22JdNPS3BywtU652p (pool 89Y7RSoAzND22tupfaiLhuiM5uvtENjkGQ9kDFpcSG4A, note secret not retained); attempts 2-3 failed at funding (shared payer balance). Run 4 passed 8/8 but graded three negatives without landed txs (they had landed: 2LXoxfnW... Custom 12, PZcnk9Cb... Custom 4, bUyhFaD6... Custom 4); run 5 (this file) is fully ledger-graded."
+  ],
+  "poolConfig": "ARF7pbubM4EhM8daZ7cuFc7QJUrkBhzVqFgRxx8uZmq2",
+  "poolVault": "BhQpDSYZpqsepxHoqNo63RhuXb6ZeCjG2fepJ6VjefD3",
+  "vk": "shielded_withdraw_v3_vk (Hermez PPOT Phase 1 + drand-only beacon Phase 2, round 6000000 \u2014 no human Phase-2 contributor, no human held Phase-2 entropy). This is the VK the deployed program embeds."
+}

@@ -1,0 +1,146 @@
+{
+  "suite": "dna-shielded-pool-init-buckets",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node build/zk/init-buckets-devnet.mjs FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 --denoms 100000000 && PROGRAM=<pool> DENOM=100000000 node bucket-authority.mjs",
+  "programId": {
+    "dark_shielded_pool_program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3"
+  },
+  "result": "PASS",
+  "pass": 6,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:49:08Z",
+  "signatures": [
+    {
+      "sig": "5isJjabWFEsYwa1Chb9rQjoDfR9QzoGL2kQu2qQxUYh2v66fgDNNUp8WijDHdk1vHPSKiaKH2CE9hSBeAAWmtqxz",
+      "slot": 508052993,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5isJjabWFEsYwa1Chb9rQjoDfR9QzoGL2kQu2qQxUYh2v66fgDNNUp8WijDHdk1vHPSKiaKH2CE9hSBeAAWmtqxz?cluster=devnet"
+    },
+    {
+      "sig": "2Gt75XuVysxGLYbydyJcEBaWy5qfxoDUzuqJovsEEfdXqAtWGvZV9iexWAwGUZf1jwTWHobxajsLTm3kReWxyyeq",
+      "slot": 508053019,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2Gt75XuVysxGLYbydyJcEBaWy5qfxoDUzuqJovsEEfdXqAtWGvZV9iexWAwGUZf1jwTWHobxajsLTm3kReWxyyeq?cluster=devnet"
+    },
+    {
+      "sig": "4LFnYWQ1dkDFu8RW9ivWYjn7GrSWp3tMYNS8xVpc6EQNkj92rMBARtSBH3veybMyjttuzsWJo1M3fSEgS7icXQrw",
+      "slot": 508053033,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4LFnYWQ1dkDFu8RW9ivWYjn7GrSWp3tMYNS8xVpc6EQNkj92rMBARtSBH3veybMyjttuzsWJo1M3fSEgS7icXQrw?cluster=devnet"
+    },
+    {
+      "sig": "4hZtMZqF38XyJ7WC4WG3Njvagi1AL5uAbKKqr6DA4gjijkfj5cSjuM7H4F6wjURUMD6dvHfjx2i76azvkiMpzQy5",
+      "slot": 508053076,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4hZtMZqF38XyJ7WC4WG3Njvagi1AL5uAbKKqr6DA4gjijkfj5cSjuM7H4F6wjURUMD6dvHfjx2i76azvkiMpzQy5?cluster=devnet"
+    },
+    {
+      "sig": "2wgv7rJd9c8fyXxsx99KUwuLtuiSHnabw9mzx3fuHYRYC2SCirRQnE86YTFeWqVkmqowrArbMjMPNxtPEHR3A29K",
+      "slot": 508053119,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2wgv7rJd9c8fyXxsx99KUwuLtuiSHnabw9mzx3fuHYRYC2SCirRQnE86YTFeWqVkmqowrArbMjMPNxtPEHR3A29K?cluster=devnet"
+    },
+    {
+      "sig": "2ToY3zthRDvNYK6BzPcMd3Dw1wjH7Q76wMAUkFwo2EPQENDJFX4Sn4VB3WYDyb5mBxKC6VkzZkceR7j8MwTonuce",
+      "slot": 508053165,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2ToY3zthRDvNYK6BzPcMd3Dw1wjH7Q76wMAUkFwo2EPQENDJFX4Sn4VB3WYDyb5mBxKC6VkzZkceR7j8MwTonuce?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "InitBucketPool (0x05) 0.1 SOL bucket, seed key = PDA(bucket_authority, admin, denom)",
+      "pass": true
+    },
+    {
+      "label": "ATTACK PausePool signed by the public-data-derived keypair -> InvalidArgument",
+      "expected": {
+        "errIncludes": "InvalidArgument"
+      },
+      "pass": true,
+      "sig": "2Gt75XuVysxGLYbydyJcEBaWy5qfxoDUzuqJovsEEfdXqAtWGvZV9iexWAwGUZf1jwTWHobxajsLTm3kReWxyyeq",
+      "slot": 508053019,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      }
+    },
+    {
+      "label": "ATTACK PausePool signed by an unrelated keypair -> InvalidArgument",
+      "expected": {
+        "errIncludes": "InvalidArgument"
+      },
+      "pass": true,
+      "sig": "4LFnYWQ1dkDFu8RW9ivWYjn7GrSWp3tMYNS8xVpc6EQNkj92rMBARtSBH3veybMyjttuzsWJo1M3fSEgS7icXQrw",
+      "slot": 508053033,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      }
+    },
+    {
+      "label": "PausePool by admin",
+      "expected": "success",
+      "pass": true,
+      "sig": "4hZtMZqF38XyJ7WC4WG3Njvagi1AL5uAbKKqr6DA4gjijkfj5cSjuM7H4F6wjURUMD6dvHfjx2i76azvkiMpzQy5",
+      "slot": 508053076,
+      "err": null
+    },
+    {
+      "label": "ATTACK ResumePool signed by the public-data-derived keypair -> InvalidArgument",
+      "expected": {
+        "errIncludes": "InvalidArgument"
+      },
+      "pass": true,
+      "sig": "2wgv7rJd9c8fyXxsx99KUwuLtuiSHnabw9mzx3fuHYRYC2SCirRQnE86YTFeWqVkmqowrArbMjMPNxtPEHR3A29K",
+      "slot": 508053119,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      }
+    },
+    {
+      "label": "ResumePool by admin",
+      "expected": "success",
+      "pass": true,
+      "sig": "2ToY3zthRDvNYK6BzPcMd3Dw1wjH7Q76wMAUkFwo2EPQENDJFX4Sn4VB3WYDyb5mBxKC6VkzZkceR7j8MwTonuce",
+      "slot": 508053165,
+      "err": null
+    }
+  ],
+  "notes": [
+    "dark_shielded_pool upgraded in place 2026-10-06 with InitBucketPool. The keypair recomputable from public data (old init-buckets derivation) and an unrelated signer cannot Pause/Resume (InvalidArgument); the admin can.",
+    "The three buckets created by the first run with InitPool + derivable keypairs (pool configs HHLk4GnZ..., AmGvfV7W..., A7smNY12...) are legacy and remain pausable by anyone who recomputes those keys; use the PDA buckets."
+  ],
+  "bucket": {
+    "bucketPda": "8HdnAY2ww1vpzevofsA5zjrVRJ4L3anc6GrZDHStmQcq",
+    "poolConfig": "52inDqvCxpzYaEdVx525cUzKWYandLaK7jc2KqCra8ao",
+    "storedAuthority": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+    "storedAuthorityIsAdmin": true,
+    "pausedAfterAdminPause": 1,
+    "pausedAfterAdminResume": 0
+  }
+}

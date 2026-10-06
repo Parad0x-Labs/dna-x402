@@ -7,8 +7,10 @@ claim "audited", "trustless on mainnet", or any date.
 
 The Dark Relay Rail extends `dark_shielded_pool` (shielded_withdraw **v3**) into a
 decentralized payment rail, designed so a withdrawal does not name its deposit, with **no central relayer and no admin**.
-The rail is implemented in code with tests; a devnet redeploy under a fresh key is
-pending, and the e2e scripts take the program ID as an argument.
+The rail is implemented in code with tests and runs on devnet at
+`FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3` (2026-10-06, fresh key): the v3 e2e passes 8/8 with the
+committed ceremony zkey ([evidence](../evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-rerun.json)).
+The e2e scripts take the program ID as an argument.
 
 | Privacy / decentralization axis | Mechanism | State |
 |---|---|---|
@@ -102,7 +104,7 @@ e2e scripts; a pilot proof only applies to a pool you deployed yourself with the
 
 ## 4. Devnet e2e (relayer-submitted withdrawal to a fresh address)
 
-`build/zk/e2e-v3-devnet.mjs <PROGRAM_ID>` (rerun after the devnet redeploy under a fresh key):
+`build/zk/e2e-v3-devnet.mjs <PROGRAM_ID>` (recorded 2026-10-06 against `FmLW…BSZ3`, 8/8):
 deposit into a bucket → real V3 proof for a withdraw to a **fresh** recipient with a
 relayer fee → submitted by a **relayer** (`fee_payer != recipient`, recipient never
 signs) → asserts recipient gets `denom - fee`, relayer is reimbursed `fee`, and:

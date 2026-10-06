@@ -1,0 +1,148 @@
+{
+  "suite": "dna-shard-message-banks-compressed-chaff",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "DARK_NULLIFIER_BANKS_ID=... DARK_COMPRESSED_RECEIPTS_ID=... DARK_CHAFF_ID=... npx tsx scripts/devnet-shard-message.ts",
+  "programId": {
+    "dark_nullifier_banks": "499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue",
+    "dark_compressed_receipts": "7uELrEpcSkbDgYA3xq623QaQmxUi2BXRHUPsKoDVM1oB",
+    "dark_chaff": "4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B"
+  },
+  "result": "PASS",
+  "pass": 19,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:24:47Z",
+  "signatures": [
+    {
+      "sig": "L5ouhva4215TYGQyaWmdu97S1P7i96KJmA5mHwDQtxnG99gZ83z7hLUPegbuNk7ZEg8LvqAsrDdJbvu2X47Y9NB",
+      "slot": 508031805,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/L5ouhva4215TYGQyaWmdu97S1P7i96KJmA5mHwDQtxnG99gZ83z7hLUPegbuNk7ZEg8LvqAsrDdJbvu2X47Y9NB?cluster=devnet"
+    },
+    {
+      "sig": "5eWsreHPZwWzueCDMxuEGYG4RPw82pE5S8bwc7wT3yW3ZPihj1rry4PBAyqbcvaCpJ8QQ2mGJ7H5W3owRzz8aXUx",
+      "slot": 508031808,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5eWsreHPZwWzueCDMxuEGYG4RPw82pE5S8bwc7wT3yW3ZPihj1rry4PBAyqbcvaCpJ8QQ2mGJ7H5W3owRzz8aXUx?cluster=devnet"
+    },
+    {
+      "sig": "bjRu2rVcuLXgTwjok53Ghf4Y37GqN3QpaWy8VetQWkQKjM7YErUzRhsqr6ShSbM83K4rRvbweymjkpSoe5HMR8m",
+      "slot": 508031812,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/bjRu2rVcuLXgTwjok53Ghf4Y37GqN3QpaWy8VetQWkQKjM7YErUzRhsqr6ShSbM83K4rRvbweymjkpSoe5HMR8m?cluster=devnet"
+    },
+    {
+      "sig": "4gLAhqNQCQZNpBV7QwbuTgUjfpTCJr7GZnP7nDeW7t7ejSb1ad9pNzF4QVUDt6L7V2XVExnCLjze51fcgTXbkWUy",
+      "slot": 508031816,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4gLAhqNQCQZNpBV7QwbuTgUjfpTCJr7GZnP7nDeW7t7ejSb1ad9pNzF4QVUDt6L7V2XVExnCLjze51fcgTXbkWUy?cluster=devnet"
+    },
+    {
+      "sig": "4VGykAgSxoiZXbYneZGSNcmXH6nJQgWRXLDnUhwfPrfVcAkkS8KSnkQ36NPq5VML2S4TzUppwWAbSjH3X2ajP6wd",
+      "slot": 508031824,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4VGykAgSxoiZXbYneZGSNcmXH6nJQgWRXLDnUhwfPrfVcAkkS8KSnkQ36NPq5VML2S4TzUppwWAbSjH3X2ajP6wd?cluster=devnet"
+    },
+    {
+      "sig": "3aWLfH4tM3ghhbvqfFMXhphkJozVUZxsSSnegb5yuoqSJ9sYdikdFu9egChW7dLMFv6TYDme8fJnoNDsGNKPoUfP",
+      "slot": 508031832,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3aWLfH4tM3ghhbvqfFMXhphkJozVUZxsSSnegb5yuoqSJ9sYdikdFu9egChW7dLMFv6TYDme8fJnoNDsGNKPoUfP?cluster=devnet"
+    },
+    {
+      "sig": "2xm4adnSCGsxSezd3vwxZhKiJpe1AF22Ya6YpGeRcqDD2pR3uUnM5sZ1EjwxvKcdM2E1hqJ4bQHXJdqLfXB6SiZH",
+      "slot": 508031840,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2xm4adnSCGsxSezd3vwxZhKiJpe1AF22Ya6YpGeRcqDD2pR3uUnM5sZ1EjwxvKcdM2E1hqJ4bQHXJdqLfXB6SiZH?cluster=devnet"
+    },
+    {
+      "sig": "5NBmbb11bjL2vsPhKv9soHsSAJrFmV8yWbCS3bA2XVQSqD8iX9F32BrrowukFN7KJnugAko1HLcTFKTnkogAHsMD",
+      "slot": 508031844,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5NBmbb11bjL2vsPhKv9soHsSAJrFmV8yWbCS3bA2XVQSqD8iX9F32BrrowukFN7KJnugAko1HLcTFKTnkogAHsMD?cluster=devnet"
+    },
+    {
+      "sig": "4Ek4PPyMrEnZieayic3gn54k1jdsEtX6Gcvba9HRozqimy83fKJmuu49HWJk3SkCwgTLjWpv2aR8qwPLpjhT8SSe",
+      "slot": 508031848,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4Ek4PPyMrEnZieayic3gn54k1jdsEtX6Gcvba9HRozqimy83fKJmuu49HWJk3SkCwgTLjWpv2aR8qwPLpjhT8SSe?cluster=devnet"
+    },
+    {
+      "sig": "vskuA2hGsbM6cfR4pquSddAT8RgFoNnEnBYCzEC9qkdFp7jgKhgRfBomhxtah1Tqn9XvohwmtmspK7UF1aYz2wq",
+      "slot": 508031863,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/vskuA2hGsbM6cfR4pquSddAT8RgFoNnEnBYCzEC9qkdFp7jgKhgRfBomhxtah1Tqn9XvohwmtmspK7UF1aYz2wq?cluster=devnet"
+    },
+    {
+      "sig": "3ChCWHE4cqveUYHoigPN9qvmSY4kVyb2UX5brfcH9vXM5rXKZqCxLSY3z1HcjzE8ex125DM2z1d4dRtRQxA5298H",
+      "slot": 508031866,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3ChCWHE4cqveUYHoigPN9qvmSY4kVyb2UX5brfcH9vXM5rXKZqCxLSY3z1HcjzE8ex125DM2z1d4dRtRQxA5298H?cluster=devnet"
+    },
+    {
+      "sig": "2vzWpPZFfzUWXTcJzg7TD3H9ZkkJ2PqBSoL4ibN5MoRvz1Qc62C7hz3Bb4PMwDdgQasHvEknz558ULGoNnNNimhi",
+      "slot": 508031870,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2vzWpPZFfzUWXTcJzg7TD3H9ZkkJ2PqBSoL4ibN5MoRvz1Qc62C7hz3Bb4PMwDdgQasHvEknz558ULGoNnNNimhi?cluster=devnet"
+    },
+    {
+      "sig": "mhf8CYQXBbQEf77e6MuDrAEN82TodUNeUu9TqjpDcwFGQmpqekCwujXEkBoKhJTDmEG9JKFWUoauyYX4PuhFRo6",
+      "slot": 508031874,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/mhf8CYQXBbQEf77e6MuDrAEN82TodUNeUu9TqjpDcwFGQmpqekCwujXEkBoKhJTDmEG9JKFWUoauyYX4PuhFRo6?cluster=devnet"
+    },
+    {
+      "sig": "2WMU9Z7QhzN2LENZU1Kz8G1wxMgpRec3AMQo4yQTJxeUxo64tyfpfpw3bGkVFvvwuE45NS6bsgqa2aYy75WG86Yn",
+      "slot": 508031878,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2WMU9Z7QhzN2LENZU1Kz8G1wxMgpRec3AMQo4yQTJxeUxo64tyfpfpw3bGkVFvvwuE45NS6bsgqa2aYy75WG86Yn?cluster=devnet"
+    },
+    {
+      "sig": "4GLYADJx42C7rDXVd4a4LKU37dxEWGccZdnNZpiG6wu8TkvQw2fxZ8vhaUpAnx9dEM1vsmiT6avPkmSm3oGHxmng",
+      "slot": 508031882,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4GLYADJx42C7rDXVd4a4LKU37dxEWGccZdnNZpiG6wu8TkvQw2fxZ8vhaUpAnx9dEM1vsmiT6avPkmSm3oGHxmng?cluster=devnet"
+    },
+    {
+      "sig": "4p3gL239DEHyJVoE1CvFbFMj6f3NsV4zr6nrk94eeUEfAiCrQ7ECSiG1Mh68kT8GQucC5BtxduGL96x8R3QS9Lxq",
+      "slot": 508031886,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4p3gL239DEHyJVoE1CvFbFMj6f3NsV4zr6nrk94eeUEfAiCrQ7ECSiG1Mh68kT8GQucC5BtxduGL96x8R3QS9Lxq?cluster=devnet"
+    },
+    {
+      "sig": "4xHCFYrmxvA7gqLkwSY8dsHxwHBzFLu9DY1T5hdeNwiRJADjdbKFSpxoi8nyNcCJEokvKTsZoXBkkieXtRa1q1Bj",
+      "slot": 508031890,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4xHCFYrmxvA7gqLkwSY8dsHxwHBzFLu9DY1T5hdeNwiRJADjdbKFSpxoi8nyNcCJEokvKTsZoXBkkieXtRa1q1Bj?cluster=devnet"
+    },
+    {
+      "sig": "4Uu8xvb1s5DUZ3DcHvqNgsp2SqwHHCZhTwWUqv7fTz53XY6n5fusQLvBsemeRH4e41qhhjFtBStFDqNdc4g3hMKe",
+      "slot": 508031894,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4Uu8xvb1s5DUZ3DcHvqNgsp2SqwHHCZhTwWUqv7fTz53XY6n5fusQLvBsemeRH4e41qhhjFtBStFDqNdc4g3hMKe?cluster=devnet"
+    },
+    {
+      "sig": "4B6EToYBSoTWMbYuQNa3YQ2adPCrSDZF2jzfYdwwY6RSG7P51CHRkh21zWr4rf4g4wBQxaYRZoYqAM6RPCVqjM7C",
+      "slot": 508031898,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4B6EToYBSoTWMbYuQNa3YQ2adPCrSDZF2jzfYdwwY6RSG7P51CHRkh21zWr4rf4g4wBQxaYRZoYqAM6RPCVqjM7C?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "7 InitBank + 8 InsertNullifier (DARKNULL encoded in shards)",
+      "r": "PASS"
+    },
+    {
+      "t": "compressed_receipts InitRoot + UpdateRoot",
+      "r": "PASS"
+    },
+    {
+      "t": "chaff CreateChaffBatch + CloseChaffBatch",
+      "r": "PASS"
+    }
+  ],
+  "notes": [],
+  "slot": 508031898
+}

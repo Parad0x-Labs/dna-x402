@@ -1,0 +1,267 @@
+{
+  "suite": "dna-probe-ritual-gate-and-hook",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "GATE=<dark_ritual_gate> HOOK=<dark_ritual_transfer_hook> node ritual-gate-and-hook.mjs  (JS port of ritual_gate_devnet_call.rs + ritual_bound_token_live.rs, plus negatives)",
+  "programId": {
+    "dark_ritual_gate": "GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo",
+    "dark_ritual_transfer_hook": "9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf"
+  },
+  "result": "PASS",
+  "pass": 11,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:46:03Z",
+  "signatures": [
+    {
+      "sig": "2WHtwXPPhcXayiS2wk4vevpaoBoX16WYPxFhqwGhPPRx7CY9Jtd6xHavN11Wjd1pnTkZFEfAwmmaYnDMDPtVNX2n",
+      "slot": 508037160,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2WHtwXPPhcXayiS2wk4vevpaoBoX16WYPxFhqwGhPPRx7CY9Jtd6xHavN11Wjd1pnTkZFEfAwmmaYnDMDPtVNX2n?cluster=devnet"
+    },
+    {
+      "sig": "48ixqefB3EjTVYYbYkXFY1McfvzRGWf2DrV4dp2CDKBXQXc6wFmQg7ENvQzGCmH6EjjmR5JhDRm5R9L4JUw5DBC1",
+      "slot": 508037168,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/48ixqefB3EjTVYYbYkXFY1McfvzRGWf2DrV4dp2CDKBXQXc6wFmQg7ENvQzGCmH6EjjmR5JhDRm5R9L4JUw5DBC1?cluster=devnet"
+    },
+    {
+      "sig": "3iwEYirBmAYiYs8NjRtVy6ra4GJ13zwCy8qLoKV1sSCZG9qyGa6zMZAUpFXmmTA8Fo36mvmAT2QF2ULkWPrRtgBn",
+      "slot": 508037176,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3iwEYirBmAYiYs8NjRtVy6ra4GJ13zwCy8qLoKV1sSCZG9qyGa6zMZAUpFXmmTA8Fo36mvmAT2QF2ULkWPrRtgBn?cluster=devnet"
+    },
+    {
+      "sig": "2pNRfazTFW4XyDUB3Uc4UzF8gcLgVjCDzqxXQwWg6Yv77aATW1mzzRcHsGXbfvGMoR4iyX4Su7m1784K3FUXWQza",
+      "slot": 508037184,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2pNRfazTFW4XyDUB3Uc4UzF8gcLgVjCDzqxXQwWg6Yv77aATW1mzzRcHsGXbfvGMoR4iyX4Su7m1784K3FUXWQza?cluster=devnet"
+    },
+    {
+      "sig": "5eJYCWpTwe71rmt1qpAdGY7Kv49mXN6338hkgt3iMrSrpZJuHme3rQxsqoN9xCrfJnykeLF84pmGRY1Vo2rTavc3",
+      "slot": 508037196,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidInstructionData"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5eJYCWpTwe71rmt1qpAdGY7Kv49mXN6338hkgt3iMrSrpZJuHme3rQxsqoN9xCrfJnykeLF84pmGRY1Vo2rTavc3?cluster=devnet"
+    },
+    {
+      "sig": "57K1V4wNsX3PvXtrgFPTwQL4GQBm87RBKzqZD7RQZgpcQ1azotExNGakfNm5NsLUm7nGVK16yt762y22PeJnPdHt",
+      "slot": 508037204,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/57K1V4wNsX3PvXtrgFPTwQL4GQBm87RBKzqZD7RQZgpcQ1azotExNGakfNm5NsLUm7nGVK16yt762y22PeJnPdHt?cluster=devnet"
+    },
+    {
+      "sig": "4qTWZMhiEn5abCDuZ3e775NV6FSzqY8FSzJzrr3oTdF8pAXsPoXFj3Vpb9x6yvKEagWFMxKcqZB253jS7FPMCJR3",
+      "slot": 508037224,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4qTWZMhiEn5abCDuZ3e775NV6FSzqY8FSzJzrr3oTdF8pAXsPoXFj3Vpb9x6yvKEagWFMxKcqZB253jS7FPMCJR3?cluster=devnet"
+    },
+    {
+      "sig": "44cR4WERhNfJHEwaRo6W5PkgkU7j4J1cH3T1tX2EpGiDZyi3KJeBd4buM5KcWpnD4wjeY51w1tu9whhDTYrdvTeS",
+      "slot": 508037242,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/44cR4WERhNfJHEwaRo6W5PkgkU7j4J1cH3T1tX2EpGiDZyi3KJeBd4buM5KcWpnD4wjeY51w1tu9whhDTYrdvTeS?cluster=devnet"
+    },
+    {
+      "sig": "4tbGuWXCaxv69JSkUxqCrgEVCMjvxTPvrx2ydYPVhuUaWgyDvBkmgTREfAk7ozB575yEhXae66tqVRB1KAYfBuKD",
+      "slot": 508037251,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4tbGuWXCaxv69JSkUxqCrgEVCMjvxTPvrx2ydYPVhuUaWgyDvBkmgTREfAk7ozB575yEhXae66tqVRB1KAYfBuKD?cluster=devnet"
+    },
+    {
+      "sig": "2Ye29MHVvRcyNfRg8iKw1MPpYk1TXcBbm6UETZyyuU5oPMDFxtw2FHtjiJ1NJ8h6SVavYGA1M3C4AJu4tY5fdtqy",
+      "slot": 508037258,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2Ye29MHVvRcyNfRg8iKw1MPpYk1TXcBbm6UETZyyuU5oPMDFxtw2FHtjiJ1NJ8h6SVavYGA1M3C4AJu4tY5fdtqy?cluster=devnet"
+    },
+    {
+      "sig": "eEMUVRmz1B5hN8VgW2hdMneGhQYGnVttAx7Hx7gtJqtvK3d6CGGBLaBzJb7FyoYxWJToMUjZANSGENAVxCkypnn",
+      "slot": 508037266,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 9
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/eEMUVRmz1B5hN8VgW2hdMneGhQYGnVttAx7Hx7gtJqtvK3d6CGGBLaBzJb7FyoYxWJToMUjZANSGENAVxCkypnn?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "gate EchoProof (TX1 of ritual_gate_devnet_call)",
+      "pass": true,
+      "sig": "2WHtwXPPhcXayiS2wk4vevpaoBoX16WYPxFhqwGhPPRx7CY9Jtd6xHavN11Wjd1pnTkZFEfAwmmaYnDMDPtVNX2n",
+      "err": null,
+      "slot": 508037160,
+      "explorer": "https://explorer.solana.com/tx/2WHtwXPPhcXayiS2wk4vevpaoBoX16WYPxFhqwGhPPRx7CY9Jtd6xHavN11Wjd1pnTkZFEfAwmmaYnDMDPtVNX2n?cluster=devnet",
+      "keyLog": [
+        "Program log: dark_ritual_gate: echo proof"
+      ]
+    },
+    {
+      "label": "gate VerifyRitualShape AgentSpendNoCustodyV1 (TX2)",
+      "pass": true,
+      "sig": "48ixqefB3EjTVYYbYkXFY1McfvzRGWf2DrV4dp2CDKBXQXc6wFmQg7ENvQzGCmH6EjjmR5JhDRm5R9L4JUw5DBC1",
+      "err": null,
+      "slot": 508037168,
+      "explorer": "https://explorer.solana.com/tx/48ixqefB3EjTVYYbYkXFY1McfvzRGWf2DrV4dp2CDKBXQXc6wFmQg7ENvQzGCmH6EjjmR5JhDRm5R9L4JUw5DBC1?cluster=devnet",
+      "keyLog": [
+        "Program log: dark_ritual_gate: ritual ACCEPTED"
+      ]
+    },
+    {
+      "label": "gate NEG wrong shape hash -> InvalidArgument",
+      "pass": true,
+      "sig": "3iwEYirBmAYiYs8NjRtVy6ra4GJ13zwCy8qLoKV1sSCZG9qyGa6zMZAUpFXmmTA8Fo36mvmAT2QF2ULkWPrRtgBn",
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "slot": 508037176,
+      "explorer": "https://explorer.solana.com/tx/3iwEYirBmAYiYs8NjRtVy6ra4GJ13zwCy8qLoKV1sSCZG9qyGa6zMZAUpFXmmTA8Fo36mvmAT2QF2ULkWPrRtgBn?cluster=devnet",
+      "keyLog": [
+        "Program log: dark_ritual_gate: shape hash mismatch",
+        "Program GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo failed: invalid program argument"
+      ]
+    },
+    {
+      "label": "gate NEG unsupported ritual type 2 -> InvalidArgument",
+      "pass": true,
+      "sig": "2pNRfazTFW4XyDUB3Uc4UzF8gcLgVjCDzqxXQwWg6Yv77aATW1mzzRcHsGXbfvGMoR4iyX4Su7m1784K3FUXWQza",
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidArgument"
+        ]
+      },
+      "slot": 508037184,
+      "explorer": "https://explorer.solana.com/tx/2pNRfazTFW4XyDUB3Uc4UzF8gcLgVjCDzqxXQwWg6Yv77aATW1mzzRcHsGXbfvGMoR4iyX4Su7m1784K3FUXWQza?cluster=devnet",
+      "keyLog": [
+        "Program log: dark_ritual_gate: unsupported ritual_type_byte 2",
+        "Program GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo failed: invalid program argument"
+      ]
+    },
+    {
+      "label": "gate NEG unknown tag 0x09 -> InvalidInstructionData",
+      "pass": true,
+      "sig": "5eJYCWpTwe71rmt1qpAdGY7Kv49mXN6338hkgt3iMrSrpZJuHme3rQxsqoN9xCrfJnykeLF84pmGRY1Vo2rTavc3",
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidInstructionData"
+        ]
+      },
+      "slot": 508037196,
+      "explorer": "https://explorer.solana.com/tx/5eJYCWpTwe71rmt1qpAdGY7Kv49mXN6338hkgt3iMrSrpZJuHme3rQxsqoN9xCrfJnykeLF84pmGRY1Vo2rTavc3?cluster=devnet",
+      "keyLog": [
+        "Program GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo failed: invalid instruction data"
+      ]
+    },
+    {
+      "label": "hook: create Token-2022 mint with TransferHook ext -> hook",
+      "pass": true,
+      "sig": "57K1V4wNsX3PvXtrgFPTwQL4GQBm87RBKzqZD7RQZgpcQ1azotExNGakfNm5NsLUm7nGVK16yt762y22PeJnPdHt",
+      "err": null,
+      "slot": 508037204,
+      "explorer": "https://explorer.solana.com/tx/57K1V4wNsX3PvXtrgFPTwQL4GQBm87RBKzqZD7RQZgpcQ1azotExNGakfNm5NsLUm7nGVK16yt762y22PeJnPdHt?cluster=devnet",
+      "keyLog": [
+        "Program log: TransferHookInstruction::Initialize"
+      ]
+    },
+    {
+      "label": "hook: InitializeExtraAccountMetaList",
+      "pass": true,
+      "sig": "4qTWZMhiEn5abCDuZ3e775NV6FSzqY8FSzJzrr3oTdF8pAXsPoXFj3Vpb9x6yvKEagWFMxKcqZB253jS7FPMCJR3",
+      "err": null,
+      "slot": 508037224,
+      "explorer": "https://explorer.solana.com/tx/4qTWZMhiEn5abCDuZ3e775NV6FSzqY8FSzJzrr3oTdF8pAXsPoXFj3Vpb9x6yvKEagWFMxKcqZB253jS7FPMCJR3?cluster=devnet",
+      "keyLog": []
+    },
+    {
+      "label": "hook: create ATAs + mint 1_000_000",
+      "pass": true,
+      "sig": "44cR4WERhNfJHEwaRo6W5PkgkU7j4J1cH3T1tX2EpGiDZyi3KJeBd4buM5KcWpnD4wjeY51w1tu9whhDTYrdvTeS",
+      "err": null,
+      "slot": 508037242,
+      "explorer": "https://explorer.solana.com/tx/44cR4WERhNfJHEwaRo6W5PkgkU7j4J1cH3T1tX2EpGiDZyi3KJeBd4buM5KcWpnD4wjeY51w1tu9whhDTYrdvTeS?cluster=devnet",
+      "keyLog": []
+    },
+    {
+      "label": "hook Scenario A: transfer WITHOUT ritual -> MissingRitualGate (Custom 0)",
+      "pass": true,
+      "sig": "4tbGuWXCaxv69JSkUxqCrgEVCMjvxTPvrx2ydYPVhuUaWgyDvBkmgTREfAk7ozB575yEhXae66tqVRB1KAYfBuKD",
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "slot": 508037251,
+      "explorer": "https://explorer.solana.com/tx/4tbGuWXCaxv69JSkUxqCrgEVCMjvxTPvrx2ydYPVhuUaWgyDvBkmgTREfAk7ozB575yEhXae66tqVRB1KAYfBuKD?cluster=devnet",
+      "keyLog": [
+        "Program 9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf failed: custom program error: 0x0",
+        "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb failed: custom program error: 0x0"
+      ]
+    },
+    {
+      "label": "hook Scenario B: VerifyRitualShape + transfer -> accepted",
+      "pass": true,
+      "sig": "2Ye29MHVvRcyNfRg8iKw1MPpYk1TXcBbm6UETZyyuU5oPMDFxtw2FHtjiJ1NJ8h6SVavYGA1M3C4AJu4tY5fdtqy",
+      "err": null,
+      "slot": 508037258,
+      "explorer": "https://explorer.solana.com/tx/2Ye29MHVvRcyNfRg8iKw1MPpYk1TXcBbm6UETZyyuU5oPMDFxtw2FHtjiJ1NJ8h6SVavYGA1M3C4AJu4tY5fdtqy?cluster=devnet",
+      "keyLog": [
+        "Program log: dark_ritual_gate: ritual ACCEPTED"
+      ]
+    },
+    {
+      "label": "hook NEG direct Execute outside a transfer -> NotTransferring (Custom 9)",
+      "pass": true,
+      "sig": "eEMUVRmz1B5hN8VgW2hdMneGhQYGnVttAx7Hx7gtJqtvK3d6CGGBLaBzJb7FyoYxWJToMUjZANSGENAVxCkypnn",
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 9
+          }
+        ]
+      },
+      "slot": 508037266,
+      "explorer": "https://explorer.solana.com/tx/eEMUVRmz1B5hN8VgW2hdMneGhQYGnVttAx7Hx7gtJqtvK3d6CGGBLaBzJb7FyoYxWJToMUjZANSGENAVxCkypnn?cluster=devnet",
+      "keyLog": [
+        "Program 9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf failed: custom program error: 0x9"
+      ]
+    }
+  ],
+  "notes": [
+    "Rust bins not built: shared colima VM had <0.5 GB free RAM (other agents' containers) and the crates need rustc >= 1.88 (time 0.3.47). Scenario B success also confirms the hook binary trusts GdL3J\u2026 (otherwise RitualGateUnavailable Custom(10))."
+  ],
+  "slot": 508037266
+}

@@ -1,0 +1,45 @@
+{
+  "suite": "dna-passport-02-webcrypto",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/passport/02-devnet-faceid-webcrypto.mjs GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC",
+  "programId": {
+    "dark_secp256r1_vault": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC"
+  },
+  "result": "PASS",
+  "pass": 3,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:45:49Z",
+  "signatures": [
+    {
+      "sig": "43Ygx1cHpTgRLGq1mJHFS19TTh8MtaqsbVCQgfhYtwPEsm4nJRtqKT3u2qT6QuReqK2cjsmU3kFccqVi8w2XJfRJ",
+      "slot": 508052162,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/43Ygx1cHpTgRLGq1mJHFS19TTh8MtaqsbVCQgfhYtwPEsm4nJRtqKT3u2qT6QuReqK2cjsmU3kFccqVi8w2XJfRJ?cluster=devnet"
+    },
+    {
+      "sig": "5nNip4SfkjskXBXcLdxAXMqQhchHRc3u797kgC9AAs5uJFcLesD317No1EwjbyzrpXH1TbNF6qNv9aRFwzxbEhMX",
+      "slot": 508052166,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5nNip4SfkjskXBXcLdxAXMqQhchHRc3u797kgC9AAs5uJFcLesD317No1EwjbyzrpXH1TbNF6qNv9aRFwzxbEhMX?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register",
+      "r": "PASS 43Ygx1cHpTgRLGq1mJHFS1..."
+    },
+    {
+      "t": "neg-wrong-key",
+      "r": "PASS rejected (want 0x4009)"
+    },
+    {
+      "t": "signin",
+      "r": "PASS 5nNip4SfkjskXBXcLdxAXM..."
+    }
+  ],
+  "notes": [
+    "dark_secp256r1_vault upgraded in place 2026-10-06 (precompile binding unconditional). Different passkey -> 0x4009 rejected at preflight."
+  ]
+}

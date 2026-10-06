@@ -1,0 +1,31 @@
+{
+  "suite": "dna-bv7x-eth-passport",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "SECP256K1_AUTH_PROGRAM_ID=7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu SOLANA_RPC_URL=devnet node scripts/integrations/bv7x-eth-passport.mjs --test",
+  "programId": {
+    "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+  },
+  "result": "PASS",
+  "pass": 1,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:45:56Z",
+  "signatures": [
+    {
+      "sig": "3reNJkfinvz3UfANPdooGvQ1QqtJa6jrUUZPDiAkDjSohdHAh6P7XZfhjD2xwxa11jZ8ms3AfSCD5oVCtTdxHrHU",
+      "slot": 508052193,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3reNJkfinvz3UfANPdooGvQ1QqtJa6jrUUZPDiAkDjSohdHAh6P7XZfhjD2xwxa11jZ8ms3AfSCD5oVCtTdxHrHU?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register ETH->Solana PDA via secp256k1 precompile",
+      "r": "PASS (program now binds the verified address, message and signature)"
+    }
+  ],
+  "notes": [
+    "Repo script (noble 2.x fix committed in 1157630) ran unmodified. Its printed explorer link says cluster=mainnet-beta; the tx is on devnet."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "suite": "dna-receipt-dag-verify",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "RPC=devnet DAG=... BUCKET=GCSS17eN... node build/zk/verify-accountability.mjs && node build/zk/proof-of-agency.mjs",
+  "programId": {
+    "receipt_anchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs"
+  },
+  "result": "PASS",
+  "pass": 3,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:21:10Z",
+  "signatures": [],
+  "tests": [
+    {
+      "t": "verifyAccountability against devnet bucket",
+      "r": "PASS accountable=true"
+    },
+    {
+      "t": "proof-of-agency real pack",
+      "r": "PASS green"
+    },
+    {
+      "t": "proof-of-agency forged pack",
+      "r": "PASS red (root not anchored)"
+    }
+  ],
+  "notes": [
+    "Read-only; no transactions."
+  ],
+  "slot": null
+}

@@ -1,0 +1,76 @@
+{
+  "suite": "dna-nullpay-stealth-pay-by-name",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/nullpay/devnet-e2e.mjs --program <null_registrar>",
+  "programId": {
+    "null_registrar": "3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ"
+  },
+  "result": "PASS",
+  "pass": 8,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:21:55Z",
+  "signatures": [
+    {
+      "sig": "2xTxcARBVy3WHvW1RikWyqgsC1yiGJGHDLy83ds8t3r5zDkXAvAbAMkAMBMre4HXXc8kNknrTLk7jpPGCRgFqNg3",
+      "slot": 508031092,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2xTxcARBVy3WHvW1RikWyqgsC1yiGJGHDLy83ds8t3r5zDkXAvAbAMkAMBMre4HXXc8kNknrTLk7jpPGCRgFqNg3?cluster=devnet"
+    },
+    {
+      "sig": "3ttTJc7KyMmqSdN7xmfkEB9mfJQLiByo9j9v8UF9zFubYJc2D7FPQY4epGsSPyvisiaXwsQ5mkt334XQ6PQQKxjo",
+      "slot": 508031096,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3ttTJc7KyMmqSdN7xmfkEB9mfJQLiByo9j9v8UF9zFubYJc2D7FPQY4epGsSPyvisiaXwsQ5mkt334XQ6PQQKxjo?cluster=devnet"
+    },
+    {
+      "sig": "4WVAhjqsQxsm1tpcNf2Y5sctrjWCAczugrvZZfeDY8ZhpAXvCnMSbuMWpBPtw49CSwDwqAt8zAbzZESHFSeVbj8X",
+      "slot": 508031100,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4WVAhjqsQxsm1tpcNf2Y5sctrjWCAczugrvZZfeDY8ZhpAXvCnMSbuMWpBPtw49CSwDwqAt8zAbzZESHFSeVbj8X?cluster=devnet"
+    },
+    {
+      "sig": "45CWPMBhAXmVBYu1Rgu7U4di3xDXJSyXRwHW8rAiN8fvBU8WsHT7x8Ud7hWuo4z1xh28192vxrEUhdu7usEyoXoN",
+      "slot": 508031104,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/45CWPMBhAXmVBYu1Rgu7U4di3xDXJSyXRwHW8rAiN8fvBU8WsHT7x8Ud7hWuo4z1xh28192vxrEUhdu7usEyoXoN?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "Register stealthtest1.null",
+      "r": "PASS"
+    },
+    {
+      "t": "SetStealthMeta",
+      "r": "PASS"
+    },
+    {
+      "t": "on-chain meta == published",
+      "r": "PASS"
+    },
+    {
+      "t": "pay one-time address + announce R",
+      "r": "PASS"
+    },
+    {
+      "t": "view-key scan detects",
+      "r": "PASS"
+    },
+    {
+      "t": "recover scalar p (p*B==P)",
+      "r": "PASS"
+    },
+    {
+      "t": "sweep signed natively with p",
+      "r": "PASS"
+    },
+    {
+      "t": "recipient main wallet not in payment tx",
+      "r": "PASS"
+    }
+  ],
+  "notes": [],
+  "slot": 508031104
+}

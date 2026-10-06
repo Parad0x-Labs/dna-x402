@@ -1,0 +1,94 @@
+{
+  "suite": "dna-x402-access-gate-v2",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "RPC=devnet GATE=<dark_x402_access_gate> RECEIPT_TREE=<receipt_commitment_tree> KEY=payer ART=<x402_access_v2 art> DAG=... ANCHOR_PROGRAM=<receipt_anchor> node build/zk/x402-access-v2-e2e.mjs",
+  "programId": {
+    "dark_x402_access_gate": "7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR",
+    "receipt_commitment_tree": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+    "receipt_anchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs"
+  },
+  "result": "PASS",
+  "pass": 5,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:23:05Z",
+  "signatures": [
+    {
+      "sig": "5iDoiYHxhytYWY1Pqwbb2T93G8xpSYYpkQyi67bHHTu9QDtFSfbAdwye5SYo39A6EU5m7FKz82Rt3RCYETS7buVK",
+      "slot": 508031403,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5iDoiYHxhytYWY1Pqwbb2T93G8xpSYYpkQyi67bHHTu9QDtFSfbAdwye5SYo39A6EU5m7FKz82Rt3RCYETS7buVK?cluster=devnet"
+    },
+    {
+      "sig": "42Tk9kyi5GsLvDpwHoNzuyyhrTW14NCNGdceFHTKf1HX5x59gRDxMNAFwdGpo44fFW6mT2wBYNFZJXF5PwYwNncw",
+      "slot": 508031401,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 11
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/42Tk9kyi5GsLvDpwHoNzuyyhrTW14NCNGdceFHTKf1HX5x59gRDxMNAFwdGpo44fFW6mT2wBYNFZJXF5PwYwNncw?cluster=devnet"
+    },
+    {
+      "sig": "mQSSsgjqhB8xmgVVfzEc9PRuReSftt5VXuzec1cHuBGWP5m8yD669ouEKPfP7mnCFgqcZSYQ9frrsYgUDRMiHor",
+      "slot": 508031395,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/mQSSsgjqhB8xmgVVfzEc9PRuReSftt5VXuzec1cHuBGWP5m8yD669ouEKPfP7mnCFgqcZSYQ9frrsYgUDRMiHor?cluster=devnet"
+    },
+    {
+      "sig": "3saRNRPBzWbLF2MPyV3Mf8JA2FvorxDTVgDTSEunSysyerqdVRFdVDfaNdwRSWeEWcacRi5qzdiV56ijKSViQGXx",
+      "slot": 508031390,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3saRNRPBzWbLF2MPyV3Mf8JA2FvorxDTVgDTSEunSysyerqdVRFdVDfaNdwRSWeEWcacRi5qzdiV56ijKSViQGXx?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "settle_and_record real payment -> receipt leaf; JS root == on-chain root",
+      "r": "PASS"
+    },
+    {
+      "t": "L1 legit Merkle-bound proof accepted + nullifier PDA",
+      "r": "PASS"
+    },
+    {
+      "t": "A4 replay",
+      "r": "PASS Custom(3)"
+    },
+    {
+      "t": "A3 self-made tree root",
+      "r": "PASS on-chain Custom(11) (tx 42Tk9kyi\u2026; harness printed FAIL because its status re-read raced the RPC under 429s)"
+    },
+    {
+      "t": "A6 swapped scope_hash",
+      "r": "PASS Custom(1)"
+    },
+    {
+      "t": "live-mesh DAG anchor on receipt_anchor",
+      "r": "PASS"
+    }
+  ],
+  "notes": [
+    "First attempt failed at settle with receipt_commitment_tree Custom(20): the program now binds the leaf counterparty to recipient.key bytes (self-payment fix) and feeds them raw into sol_poseidon; pubkeys >= the BN254 modulus (~81% of random keys) make the syscall fail. Script also still put a random counterparty in its leaf. Container fix: grind a recipient with pubkey < p and use it as the counterparty. Program-side issue remains for real recipients (reduce mod p or hash the key).",
+    "Proving artifacts: x402_access_v2 wasm/zkey/vk from a local build of circuits for x402_access_v2 (vk sha256 1486012d\u2026 == crates/dark-groth16-core x402_access_v2_vk.rs)."
+  ],
+  "slot": 508031403
+}

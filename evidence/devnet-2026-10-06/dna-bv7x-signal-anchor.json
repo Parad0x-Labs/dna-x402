@@ -1,0 +1,20 @@
+{
+  "suite": "dna-bv7x-signal-anchor",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "RECEIPT_ANCHOR_PROGRAM_ID=<id> SOLANA_RPC_URL=devnet node scripts/integrations/bv7x-signal-anchor.mjs --once",
+  "programId": {
+    "receipt_anchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs"
+  },
+  "result": "NO-OP",
+  "pass": 0,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:21:23Z",
+  "signatures": [],
+  "tests": [],
+  "notes": [
+    "Script found no BV-7X signal events on Base in the last 1000 blocks, so nothing was anchored. External precondition, not a program result."
+  ],
+  "slot": null
+}

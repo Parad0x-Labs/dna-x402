@@ -1,0 +1,345 @@
+{
+  "suite": "dna-probe-lottery",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "PROGRAM=<dark_null_lottery> node lottery.mjs",
+  "programId": {
+    "dark_null_lottery": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd"
+  },
+  "result": "FAIL",
+  "pass": 11,
+  "fail": 1,
+  "timestamp": "2026-10-06T08:49:05Z",
+  "signatures": [
+    {
+      "sig": "5iVLRnBXAoCGRmuxK6uUEj1x2vJrKHEJtZW6j389unz2aD2h3UhDhPNGSfGYXJWLghUJAuHpVBXQpkdKUwVPY2Ez",
+      "slot": 508037925,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5iVLRnBXAoCGRmuxK6uUEj1x2vJrKHEJtZW6j389unz2aD2h3UhDhPNGSfGYXJWLghUJAuHpVBXQpkdKUwVPY2Ez?cluster=devnet"
+    },
+    {
+      "sig": "22tsY6qjukFpuKkKg5RuzyEFi135Rk7XoySk8ZengxgdrQfF9pfCXgyZgPmS79VUMxffqRAwBB2cnc6BKuJirMs9",
+      "slot": 508037932,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24578
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/22tsY6qjukFpuKkKg5RuzyEFi135Rk7XoySk8ZengxgdrQfF9pfCXgyZgPmS79VUMxffqRAwBB2cnc6BKuJirMs9?cluster=devnet"
+    },
+    {
+      "sig": "5MDnTXYfkmRsiLSR4ht4G44sXPr6dNne97YfhUATrqggGezSegmwtYXLBP8Dp3nGafE8grmZFEmuZ5E5ortQdvBa",
+      "slot": 508037945,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5MDnTXYfkmRsiLSR4ht4G44sXPr6dNne97YfhUATrqggGezSegmwtYXLBP8Dp3nGafE8grmZFEmuZ5E5ortQdvBa?cluster=devnet"
+    },
+    {
+      "sig": "5jkyMF7bzDjWv5C29bozdfVtgKkpVoaHiG5GH4iNhfRiREzxELXz7d7zvMWaVABs9ztmXoob9PUqFcx2eQQcswfy",
+      "slot": 508037953,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5jkyMF7bzDjWv5C29bozdfVtgKkpVoaHiG5GH4iNhfRiREzxELXz7d7zvMWaVABs9ztmXoob9PUqFcx2eQQcswfy?cluster=devnet"
+    },
+    {
+      "sig": "3WqouNGkbjX2PSTTaQtfsp4AM85CRqVb8fd2dmbkz9QycxT4qySSfgMrioP5JhPLE2tScAqspYeTuZCzA9PBrzVe",
+      "slot": 508037960,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3WqouNGkbjX2PSTTaQtfsp4AM85CRqVb8fd2dmbkz9QycxT4qySSfgMrioP5JhPLE2tScAqspYeTuZCzA9PBrzVe?cluster=devnet"
+    },
+    {
+      "sig": "hczCNFKSrVTKkK6EJXNc4cMdzsnCh1xhvK3GNBwhZfzXssCjbHm2pXadEo3fDDyB6kxxB5kotpuLmeFVX3n3Bjw",
+      "slot": 508037968,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/hczCNFKSrVTKkK6EJXNc4cMdzsnCh1xhvK3GNBwhZfzXssCjbHm2pXadEo3fDDyB6kxxB5kotpuLmeFVX3n3Bjw?cluster=devnet"
+    },
+    {
+      "sig": "4zY9Fdj7wH8wdPkGDEycdvtviuSyLq9wboeFzH1confvY2gP7L2gA8v5SSjcPgykdVkJoAqdFwo3VrioWXkAV9r4",
+      "slot": 508037980,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24583
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4zY9Fdj7wH8wdPkGDEycdvtviuSyLq9wboeFzH1confvY2gP7L2gA8v5SSjcPgykdVkJoAqdFwo3VrioWXkAV9r4?cluster=devnet"
+    },
+    {
+      "sig": "QrGK6FFqc9eWhuJVxy5axbFzM6tndNyJEpUAh39mjSGis82JGiULnmKEgvqCRUgnTbonPTZWw1QTS5PbZCP6ErE",
+      "slot": 508037988,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24580
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/QrGK6FFqc9eWhuJVxy5axbFzM6tndNyJEpUAh39mjSGis82JGiULnmKEgvqCRUgnTbonPTZWw1QTS5PbZCP6ErE?cluster=devnet"
+    },
+    {
+      "sig": "NusNqpubBCBZ7R4GRKY9o8B2VRrPtzNVp8jvRZ9ir5LWo3fiMcB9N21AXfLwjEQQUhqiC4NxpvbW6zcHD989wfi",
+      "slot": 508038004,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/NusNqpubBCBZ7R4GRKY9o8B2VRrPtzNVp8jvRZ9ir5LWo3fiMcB9N21AXfLwjEQQUhqiC4NxpvbW6zcHD989wfi?cluster=devnet"
+    },
+    {
+      "sig": "4iVyT3Q3WfUGo4Ua53bA1eFBUzDGqpCR1gXtB6qwpGhLqyRSfxzr8YEL8oKddo1w6rceVf9iptDxhtFQUL8E5Xts",
+      "slot": 508038012,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4iVyT3Q3WfUGo4Ua53bA1eFBUzDGqpCR1gXtB6qwpGhLqyRSfxzr8YEL8oKddo1w6rceVf9iptDxhtFQUL8E5Xts?cluster=devnet"
+    },
+    {
+      "sig": "5wR84BrRg4NaYPt8RWVg4bgfxPnfAhk1Rw5m78nmMQeKUL76zkw4YMos2NDri2utvNYFCJpW36sdkXyhAmakbUK7",
+      "slot": 508038024,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24581
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5wR84BrRg4NaYPt8RWVg4bgfxPnfAhk1Rw5m78nmMQeKUL76zkw4YMos2NDri2utvNYFCJpW36sdkXyhAmakbUK7?cluster=devnet"
+    },
+    {
+      "sig": "3d9NVai5kuT6WZdbtAW1ehscWCAVK3abSdywrkp5odE5nj5cYMsg6dKp1oALjEreX54v98Pv4778RhSx7LECseRB",
+      "slot": 508038032,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24582
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3d9NVai5kuT6WZdbtAW1ehscWCAVK3abSdywrkp5odE5nj5cYMsg6dKp1oALjEreX54v98Pv4778RhSx7LECseRB?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "InitLottery (admin=payer, devnet.oss profile: price 0, fee 0, 5/30, fallback 3)",
+      "expected": "success",
+      "pass": true,
+      "sig": "5iVLRnBXAoCGRmuxK6uUEj1x2vJrKHEJtZW6j389unz2aD2h3UhDhPNGSfGYXJWLghUJAuHpVBXQpkdKUwVPY2Ez",
+      "slot": 508037925,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5iVLRnBXAoCGRmuxK6uUEj1x2vJrKHEJtZW6j389unz2aD2h3UhDhPNGSfGYXJWLghUJAuHpVBXQpkdKUwVPY2Ez?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: InitLottery",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 5035 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "NEG InitLottery again -> AlreadyInitialized (0x6002)",
+      "expected": {
+        "custom": 24578
+      },
+      "pass": true,
+      "sig": "22tsY6qjukFpuKkKg5RuzyEFi135Rk7XoySk8ZengxgdrQfF9pfCXgyZgPmS79VUMxffqRAwBB2cnc6BKuJirMs9",
+      "slot": 508037932,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24578
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/22tsY6qjukFpuKkKg5RuzyEFi135Rk7XoySk8ZengxgdrQfF9pfCXgyZgPmS79VUMxffqRAwBB2cnc6BKuJirMs9?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 2317 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6002"
+      ]
+    },
+    {
+      "label": "fund attacker 0.01 SOL (to pay rent in attack attempts)",
+      "expected": "success",
+      "pass": true,
+      "sig": "5MDnTXYfkmRsiLSR4ht4G44sXPr6dNne97YfhUATrqggGezSegmwtYXLBP8Dp3nGafE8grmZFEmuZ5E5ortQdvBa",
+      "slot": 508037945,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5MDnTXYfkmRsiLSR4ht4G44sXPr6dNne97YfhUATrqggGezSegmwtYXLBP8Dp3nGafE8grmZFEmuZ5E5ortQdvBa?cluster=devnet",
+      "logs": []
+    },
+    {
+      "label": "ATTACK CommitRound by non-admin -> NotAdmin (0x6008)",
+      "expected": {
+        "custom": 24584
+      },
+      "pass": true,
+      "sig": "5jkyMF7bzDjWv5C29bozdfVtgKkpVoaHiG5GH4iNhfRiREzxELXz7d7zvMWaVABs9ztmXoob9PUqFcx2eQQcswfy",
+      "slot": 508037953,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5jkyMF7bzDjWv5C29bozdfVtgKkpVoaHiG5GH4iNhfRiREzxELXz7d7zvMWaVABs9ztmXoob9PUqFcx2eQQcswfy?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 1008 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6008"
+      ]
+    },
+    {
+      "label": "CommitRound id=0 by admin (sha256(seed) commitment)",
+      "expected": "success",
+      "pass": true,
+      "sig": "3WqouNGkbjX2PSTTaQtfsp4AM85CRqVb8fd2dmbkz9QycxT4qySSfgMrioP5JhPLE2tScAqspYeTuZCzA9PBrzVe",
+      "slot": 508037960,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3WqouNGkbjX2PSTTaQtfsp4AM85CRqVb8fd2dmbkz9QycxT4qySSfgMrioP5JhPLE2tScAqspYeTuZCzA9PBrzVe?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: CommitRound id=0",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 7178 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ATTACK AnchorTickets by NON-admin signer (secure expectation: reject NotAdmin 0x6008)",
+      "expected": {
+        "custom": 24584
+      },
+      "pass": false,
+      "sig": "hczCNFKSrVTKkK6EJXNc4cMdzsnCh1xhvK3GNBwhZfzXssCjbHm2pXadEo3fDDyB6kxxB5kotpuLmeFVX3n3Bjw",
+      "slot": 508037968,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/hczCNFKSrVTKkK6EJXNc4cMdzsnCh1xhvK3GNBwhZfzXssCjbHm2pXadEo3fDDyB6kxxB5kotpuLmeFVX3n3Bjw?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: AnchorTickets round_id=0",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 1078 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ATTACK AnchorTickets again on Anchored round -> WrongStatus (0x6007)",
+      "expected": {
+        "custom": 24583
+      },
+      "pass": true,
+      "sig": "4zY9Fdj7wH8wdPkGDEycdvtviuSyLq9wboeFzH1confvY2gP7L2gA8v5SSjcPgykdVkJoAqdFwo3VrioWXkAV9r4",
+      "slot": 508037980,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24583
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4zY9Fdj7wH8wdPkGDEycdvtviuSyLq9wboeFzH1confvY2gP7L2gA8v5SSjcPgykdVkJoAqdFwo3VrioWXkAV9r4?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 642 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6007"
+      ]
+    },
+    {
+      "label": "ATTACK RevealDraw with wrong seed -> InvalidSeed (0x6004)",
+      "expected": {
+        "custom": 24580
+      },
+      "pass": true,
+      "sig": "QrGK6FFqc9eWhuJVxy5axbFzM6tndNyJEpUAh39mjSGis82JGiULnmKEgvqCRUgnTbonPTZWw1QTS5PbZCP6ErE",
+      "slot": 508037988,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24580
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/QrGK6FFqc9eWhuJVxy5axbFzM6tndNyJEpUAh39mjSGis82JGiULnmKEgvqCRUgnTbonPTZWw1QTS5PbZCP6ErE?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 779 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6004"
+      ]
+    },
+    {
+      "label": "RevealDraw with committed seed -> Drawn",
+      "expected": "success",
+      "pass": true,
+      "sig": "NusNqpubBCBZ7R4GRKY9o8B2VRrPtzNVp8jvRZ9ir5LWo3fiMcB9N21AXfLwjEQQUhqiC4NxpvbW6zcHD989wfi",
+      "slot": 508038004,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/NusNqpubBCBZ7R4GRKY9o8B2VRrPtzNVp8jvRZ9ir5LWo3fiMcB9N21AXfLwjEQQUhqiC4NxpvbW6zcHD989wfi?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: RevealDraw round=0 drawn=21,9,14,8,16",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 2917 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ClaimJackpot (devnet build: first nullifier binds as winner)",
+      "expected": "success",
+      "pass": true,
+      "sig": "4iVyT3Q3WfUGo4Ua53bA1eFBUzDGqpCR1gXtB6qwpGhLqyRSfxzr8YEL8oKddo1w6rceVf9iptDxhtFQUL8E5Xts",
+      "slot": 508038012,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4iVyT3Q3WfUGo4Ua53bA1eFBUzDGqpCR1gXtB6qwpGhLqyRSfxzr8YEL8oKddo1w6rceVf9iptDxhtFQUL8E5Xts?cluster=devnet",
+      "logs": [
+        "Program log: dark-null-lottery: ClaimJackpot round=0",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 10696 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ATTACK ClaimJackpot replay same nullifier -> AlreadyClaimed (0x6005)",
+      "expected": {
+        "custom": 24581
+      },
+      "pass": true,
+      "sig": "5wR84BrRg4NaYPt8RWVg4bgfxPnfAhk1Rw5m78nmMQeKUL76zkw4YMos2NDri2utvNYFCJpW36sdkXyhAmakbUK7",
+      "slot": 508038024,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24581
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5wR84BrRg4NaYPt8RWVg4bgfxPnfAhk1Rw5m78nmMQeKUL76zkw4YMos2NDri2utvNYFCJpW36sdkXyhAmakbUK7?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 7499 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6005"
+      ]
+    },
+    {
+      "label": "ATTACK ClaimJackpot different nullifier on Won round -> InvalidWinner (0x6006)",
+      "expected": {
+        "custom": 24582
+      },
+      "pass": true,
+      "sig": "3d9NVai5kuT6WZdbtAW1ehscWCAVK3abSdywrkp5odE5nj5cYMsg6dKp1oALjEreX54v98Pv4778RhSx7LECseRB",
+      "slot": 508038032,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24582
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3d9NVai5kuT6WZdbtAW1ehscWCAVK3abSdywrkp5odE5nj5cYMsg6dKp1oALjEreX54v98Pv4778RhSx7LECseRB?cluster=devnet",
+      "logs": [
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd consumed 1422 of 200000 compute units",
+        "Program Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd failed: custom program error: 0x6006"
+      ]
+    }
+  ],
+  "notes": [
+    "FINDING: AnchorTickets (and RevealDraw) only check is_signer, not cfg.admin. A non-admin signer set tickets_root/ticket_count on a Committed round (tx hczCNFKS\u2026). Add the admin check used by CommitRound."
+  ],
+  "slot": 508038032
+}

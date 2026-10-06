@@ -1,0 +1,295 @@
+{
+  "suite": "dna-probe-lottery",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "PROGRAM=<dark_null_lottery> node lottery-rerun.mjs",
+  "programId": {
+    "dark_null_lottery": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd"
+  },
+  "result": "PASS",
+  "pass": 12,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:47:26Z",
+  "signatures": [
+    {
+      "sig": "46tupCBMqZGGp7jubJ5imziQdSK7SQg5pr2L5VrDRYryECsvS4uSN4o5nPUbE83cmJBCe6ieEjfbSjqRDxS5R3dw",
+      "slot": 508052573,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24578
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/46tupCBMqZGGp7jubJ5imziQdSK7SQg5pr2L5VrDRYryECsvS4uSN4o5nPUbE83cmJBCe6ieEjfbSjqRDxS5R3dw?cluster=devnet"
+    },
+    {
+      "sig": "5nXExRdQ1qL2efsRbQLXWv5sMNRxMt7tBabLSoUKmEn3ZGxzyXmwTHMkVEJRExGp1W6Dx8tR2zyhGrkxazoHMmAf",
+      "slot": 508052625,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5nXExRdQ1qL2efsRbQLXWv5sMNRxMt7tBabLSoUKmEn3ZGxzyXmwTHMkVEJRExGp1W6Dx8tR2zyhGrkxazoHMmAf?cluster=devnet"
+    },
+    {
+      "sig": "VK3zvgYpMKLDeDrZGyt5DhwPQc23zTki9JmkAVs2AapEhKcNB9HfvhVJpp2ACwLiaN5YTDW7uKNFYLSdfG1ydFm",
+      "slot": 508052633,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/VK3zvgYpMKLDeDrZGyt5DhwPQc23zTki9JmkAVs2AapEhKcNB9HfvhVJpp2ACwLiaN5YTDW7uKNFYLSdfG1ydFm?cluster=devnet"
+    },
+    {
+      "sig": "55RtLp2iYPVHgHxHXFwfregUDXyFzG6TiQESy8xtjxkBcaqVCBdQTN5uQ1n5XxEVne9fZJBV11o44oBjRM78nU9t",
+      "slot": 508052674,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/55RtLp2iYPVHgHxHXFwfregUDXyFzG6TiQESy8xtjxkBcaqVCBdQTN5uQ1n5XxEVne9fZJBV11o44oBjRM78nU9t?cluster=devnet"
+    },
+    {
+      "sig": "4wXDQUGa747E8c91fYMaDqyQcGo3xpy7HqbEPC3M4Vs5vzYpyccfacj7ck39JXcgYxdBnMTgoSP3CH82pUG9Buqn",
+      "slot": 508052717,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4wXDQUGa747E8c91fYMaDqyQcGo3xpy7HqbEPC3M4Vs5vzYpyccfacj7ck39JXcgYxdBnMTgoSP3CH82pUG9Buqn?cluster=devnet"
+    },
+    {
+      "sig": "5SAPCGTRuHLocMW17b64yDxvsTFbBsabWkVRzCwkz8bCAhVXjLPCs3q389t7KVP59theQJMU9oc1yK27R6Hwmj86",
+      "slot": 508052765,
+      "err": {
+        "InstructionError": [
+          0,
+          "NotEnoughAccountKeys"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5SAPCGTRuHLocMW17b64yDxvsTFbBsabWkVRzCwkz8bCAhVXjLPCs3q389t7KVP59theQJMU9oc1yK27R6Hwmj86?cluster=devnet"
+    },
+    {
+      "sig": "4ZoFZviGFxpPdp78Gc9RwgovgwzNzrgP8Fg4wcEiaGuUNpesWfzRCHPrLV1oh3PZnCdYuTsBu9P7ji5K1GFp99hp",
+      "slot": 508052794,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidAccountData"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4ZoFZviGFxpPdp78Gc9RwgovgwzNzrgP8Fg4wcEiaGuUNpesWfzRCHPrLV1oh3PZnCdYuTsBu9P7ji5K1GFp99hp?cluster=devnet"
+    },
+    {
+      "sig": "5edhaEdXekruxcfTFLDMpoLh551wqpUGPzxWKf9qAz7V9vNgZuJyhBJcRWGeEwwGgWn4g57L5mE8fBvop7KMADe9",
+      "slot": 508052834,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5edhaEdXekruxcfTFLDMpoLh551wqpUGPzxWKf9qAz7V9vNgZuJyhBJcRWGeEwwGgWn4g57L5mE8fBvop7KMADe9?cluster=devnet"
+    },
+    {
+      "sig": "2ECRyzGBJACPr8BM3c6ezWYRqAYFfb2xUN696dLjSsqBC9zd9FUgqL3TebRnQ5wy99HKjxkQfJUHNEKRfdrPcc3o",
+      "slot": 508052858,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2ECRyzGBJACPr8BM3c6ezWYRqAYFfb2xUN696dLjSsqBC9zd9FUgqL3TebRnQ5wy99HKjxkQfJUHNEKRfdrPcc3o?cluster=devnet"
+    },
+    {
+      "sig": "SBL2Y9QD8CApXGuAK9iU1KYeB8HEe4gVpwf5874ox996uGGo4jaqu6spVpAqZ2sNYmPn7u4FjsX4kZYFTkRCuEp",
+      "slot": 508052898,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24580
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/SBL2Y9QD8CApXGuAK9iU1KYeB8HEe4gVpwf5874ox996uGGo4jaqu6spVpAqZ2sNYmPn7u4FjsX4kZYFTkRCuEp?cluster=devnet"
+    },
+    {
+      "sig": "3AfYKX7FSiUMG1RpFhZYPnPfcssiLLKmysJUVnG8RJ7HT3kJPec85wC9qRJG359woaTkAyXvRiYyjjESLFBVgHHF",
+      "slot": 508052946,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3AfYKX7FSiUMG1RpFhZYPnPfcssiLLKmysJUVnG8RJ7HT3kJPec85wC9qRJG359woaTkAyXvRiYyjjESLFBVgHHF?cluster=devnet"
+    },
+    {
+      "sig": "3eLu9SAW4HpHu3QuJozSs5ZatLoB7qz7qF49uNi8qpZk2qgpEo89hiKymSZZiqcs796ayHoanNGQo81ZxShdm9A4",
+      "slot": 508052954,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3eLu9SAW4HpHu3QuJozSs5ZatLoB7qz7qF49uNi8qpZk2qgpEo89hiKymSZZiqcs796ayHoanNGQo81ZxShdm9A4?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "NEG InitLottery again -> AlreadyInitialized (0x6002)",
+      "expected": {
+        "custom": 24578
+      },
+      "pass": true,
+      "sig": "46tupCBMqZGGp7jubJ5imziQdSK7SQg5pr2L5VrDRYryECsvS4uSN4o5nPUbE83cmJBCe6ieEjfbSjqRDxS5R3dw",
+      "slot": 508052573,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24578
+          }
+        ]
+      }
+    },
+    {
+      "label": "fund attacker 0.01 SOL",
+      "expected": "success",
+      "pass": true,
+      "sig": "5nXExRdQ1qL2efsRbQLXWv5sMNRxMt7tBabLSoUKmEn3ZGxzyXmwTHMkVEJRExGp1W6Dx8tR2zyhGrkxazoHMmAf",
+      "slot": 508052625,
+      "err": null
+    },
+    {
+      "label": "ATTACK CommitRound by non-admin -> NotAdmin (0x6008)",
+      "expected": {
+        "custom": 24584
+      },
+      "pass": true,
+      "sig": "VK3zvgYpMKLDeDrZGyt5DhwPQc23zTki9JmkAVs2AapEhKcNB9HfvhVJpp2ACwLiaN5YTDW7uKNFYLSdfG1ydFm",
+      "slot": 508052633,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      }
+    },
+    {
+      "label": "CommitRound id=2 by admin",
+      "expected": "success",
+      "pass": true,
+      "sig": "55RtLp2iYPVHgHxHXFwfregUDXyFzG6TiQESy8xtjxkBcaqVCBdQTN5uQ1n5XxEVne9fZJBV11o44oBjRM78nU9t",
+      "slot": 508052674,
+      "err": null
+    },
+    {
+      "label": "ATTACK AnchorTickets by NON-admin signer -> NotAdmin (0x6008)",
+      "expected": {
+        "custom": 24584
+      },
+      "pass": true,
+      "sig": "4wXDQUGa747E8c91fYMaDqyQcGo3xpy7HqbEPC3M4Vs5vzYpyccfacj7ck39JXcgYxdBnMTgoSP3CH82pUG9Buqn",
+      "slot": 508052717,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      }
+    },
+    {
+      "label": "ATTACK AnchorTickets old 2-account layout (no config) -> NotEnoughAccountKeys",
+      "expected": {
+        "errIncludes": "NotEnoughAccountKeys"
+      },
+      "pass": true,
+      "sig": "5SAPCGTRuHLocMW17b64yDxvsTFbBsabWkVRzCwkz8bCAhVXjLPCs3q389t7KVP59theQJMU9oc1yK27R6Hwmj86",
+      "slot": 508052765,
+      "err": {
+        "InstructionError": [
+          0,
+          "NotEnoughAccountKeys"
+        ]
+      }
+    },
+    {
+      "label": "ATTACK AnchorTickets with a look-alike config (attacker wallet) -> InvalidAccountData",
+      "expected": {
+        "errIncludes": "InvalidAccountData"
+      },
+      "pass": true,
+      "sig": "4ZoFZviGFxpPdp78Gc9RwgovgwzNzrgP8Fg4wcEiaGuUNpesWfzRCHPrLV1oh3PZnCdYuTsBu9P7ji5K1GFp99hp",
+      "slot": 508052794,
+      "err": {
+        "InstructionError": [
+          0,
+          "InvalidAccountData"
+        ]
+      }
+    },
+    {
+      "label": "AnchorTickets by admin",
+      "expected": "success",
+      "pass": true,
+      "sig": "5edhaEdXekruxcfTFLDMpoLh551wqpUGPzxWKf9qAz7V9vNgZuJyhBJcRWGeEwwGgWn4g57L5mE8fBvop7KMADe9",
+      "slot": 508052834,
+      "err": null
+    },
+    {
+      "label": "ATTACK RevealDraw by NON-admin with the committed seed -> NotAdmin (0x6008)",
+      "expected": {
+        "custom": 24584
+      },
+      "pass": true,
+      "sig": "2ECRyzGBJACPr8BM3c6ezWYRqAYFfb2xUN696dLjSsqBC9zd9FUgqL3TebRnQ5wy99HKjxkQfJUHNEKRfdrPcc3o",
+      "slot": 508052858,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24584
+          }
+        ]
+      }
+    },
+    {
+      "label": "ATTACK RevealDraw by admin with wrong seed -> InvalidSeed (0x6004)",
+      "expected": {
+        "custom": 24580
+      },
+      "pass": true,
+      "sig": "SBL2Y9QD8CApXGuAK9iU1KYeB8HEe4gVpwf5874ox996uGGo4jaqu6spVpAqZ2sNYmPn7u4FjsX4kZYFTkRCuEp",
+      "slot": 508052898,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 24580
+          }
+        ]
+      }
+    },
+    {
+      "label": "RevealDraw by admin with committed seed -> Drawn",
+      "expected": "success",
+      "pass": true,
+      "sig": "3AfYKX7FSiUMG1RpFhZYPnPfcssiLLKmysJUVnG8RJ7HT3kJPec85wC9qRJG359woaTkAyXvRiYyjjESLFBVgHHF",
+      "slot": 508052946,
+      "err": null
+    },
+    {
+      "label": "sweep attacker back to payer",
+      "expected": "success",
+      "pass": true,
+      "sig": "3eLu9SAW4HpHu3QuJozSs5ZatLoB7qz7qF49uNi8qpZk2qgpEo89hiKymSZZiqcs796ayHoanNGQo81ZxShdm9A4",
+      "slot": 508052954,
+      "err": null
+    }
+  ],
+  "notes": [
+    "dark_null_lottery upgraded in place 2026-10-06: AnchorTickets/RevealDraw take [round_state, admin, lottery_config] and require the config admin. The non-admin AnchorTickets that succeeded in the first run (hczCNFKS...) now fails with NotAdmin 0x6008; the same holds for RevealDraw.",
+    "Attempt 1 committed round 1 and then crashed on an RPC 429 before anchoring; that round stays Committed (seed not retained). This run used round 2 (BNPLWHLd1u3gqbeFwzzLJFJUpAV2ewwMnFNjtk7HSvTr).",
+    "Probe source is a standalone script written for this run from programs/null_lottery/src; it is not part of the repository."
+  ]
+}

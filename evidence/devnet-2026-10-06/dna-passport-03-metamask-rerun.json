@@ -1,0 +1,40 @@
+{
+  "suite": "dna-passport-03-metamask",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/passport/03-devnet-metamask-e2e.mjs 7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+  "programId": {
+    "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+  },
+  "result": "PASS",
+  "pass": 3,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:45:51Z",
+  "signatures": [
+    {
+      "sig": "55cNWVEvWBgvnrBezq1K1EAAHHHSBbeKbzas6byhmk4XXsdmSPMwgahYgYaXJSC5E9seAj2LifQDXuvqCWktd3i3",
+      "slot": 508052180,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/55cNWVEvWBgvnrBezq1K1EAAHHHSBbeKbzas6byhmk4XXsdmSPMwgahYgYaXJSC5E9seAj2LifQDXuvqCWktd3i3?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register",
+      "r": "PASS 55cNWVEvWBgvnrBezq1K..."
+    },
+    {
+      "t": "wrong-eth-addr",
+      "r": "PASS rejected (want 0x5008)"
+    },
+    {
+      "t": "msg-mismatch",
+      "r": "PASS rejected (want 0x5009)"
+    }
+  ],
+  "notes": [
+    "dark_secp256k1_auth upgraded in place 2026-10-06 (precompile binding unconditional). Wrong ETH address -> 0x5008 and msg_hash != signed message -> 0x5009 (new MessageMismatch) are rejected (skipPreflight: the error is read from the failed send).",
+    "Script ported to @noble/curves 2.x and given the 0x5009 negative in 1157630."
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "suite": "dna-probe-semaphore",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "PROGRAM=<dark_semaphore> node semaphore.mjs",
+  "programId": {
+    "dark_semaphore": "4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu"
+  },
+  "result": "PASS",
+  "pass": 8,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:48:01Z",
+  "signatures": [
+    {
+      "sig": "5itGvjHZnh9R636WZdvv3LoaPUAJLdHPmdLxCAz4bFBqnucq2xj8cqpinU9xa4Zfy78AU7VUPWh56Yesi5UVAVxL",
+      "slot": 508037655,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5itGvjHZnh9R636WZdvv3LoaPUAJLdHPmdLxCAz4bFBqnucq2xj8cqpinU9xa4Zfy78AU7VUPWh56Yesi5UVAVxL?cluster=devnet"
+    },
+    {
+      "sig": "65XMeN6xRGj2LcCEqQJWDMMd5S18AUpgdFr5T1Xhipxrpqfvd11oDfNDZAwLmX7eEdb9Mcf21AF93suNzw1384sL",
+      "slot": 508037662,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/65XMeN6xRGj2LcCEqQJWDMMd5S18AUpgdFr5T1Xhipxrpqfvd11oDfNDZAwLmX7eEdb9Mcf21AF93suNzw1384sL?cluster=devnet"
+    },
+    {
+      "sig": "4h5cG7XcggjM2rfPFUnMykd8hREDStZ6mVoQariWhMPcVv4QK7Wd1zcAkhzyvMJjTHcEHDFVXTKqigs56eZ6UhhP",
+      "slot": 508037673,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 5
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4h5cG7XcggjM2rfPFUnMykd8hREDStZ6mVoQariWhMPcVv4QK7Wd1zcAkhzyvMJjTHcEHDFVXTKqigs56eZ6UhhP?cluster=devnet"
+    },
+    {
+      "sig": "2od8bbVsvtcmTKHxLxaiAnPRh5i1zmsNnSsY1ACn6Pp3HqEZm5nmtNEeC3PzWVjcV9HvXBeaYeKQZU8EP6UTR55E",
+      "slot": 508037684,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2od8bbVsvtcmTKHxLxaiAnPRh5i1zmsNnSsY1ACn6Pp3HqEZm5nmtNEeC3PzWVjcV9HvXBeaYeKQZU8EP6UTR55E?cluster=devnet"
+    },
+    {
+      "sig": "4FaE7ExBTD4eHeBvWub8vFqPPvKHyUiZASdUyW62iS2bZq1TeHUJTbEJW3z3Q5PG93VabYQVCTSNfGe2EiUoiu8u",
+      "slot": 508037692,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4FaE7ExBTD4eHeBvWub8vFqPPvKHyUiZASdUyW62iS2bZq1TeHUJTbEJW3z3Q5PG93VabYQVCTSNfGe2EiUoiu8u?cluster=devnet"
+    },
+    {
+      "sig": "3ZRXnHZsaVtY1BFPVX7tsEKPcjAXpfJ2aAaVrmbsCkqwTiTwcL4KBtXS5HPJBmH2NJaREEM7Tf6NWXGPjcLHiAtm",
+      "slot": 508037712,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3ZRXnHZsaVtY1BFPVX7tsEKPcjAXpfJ2aAaVrmbsCkqwTiTwcL4KBtXS5HPJBmH2NJaREEM7Tf6NWXGPjcLHiAtm?cluster=devnet"
+    },
+    {
+      "sig": "4cAMR5KvSSsSwwVmiuUjsuM1ft35M6RVVcZ2mSUKpVtyZapkrTYBeKhjzTBapiyZ9BVuU2Gi6855os8o2g5Mtt53",
+      "slot": 508037720,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4cAMR5KvSSsSwwVmiuUjsuM1ft35M6RVVcZ2mSUKpVtyZapkrTYBeKhjzTBapiyZ9BVuU2Gi6855os8o2g5Mtt53?cluster=devnet"
+    },
+    {
+      "sig": "4iUpVFmh7amBJ3eYf6xysKGWkhL11nUofCogZsKTFd4XxbiGtnJKAV3huvGCMLEkRgAKhWWcCZrLbGHvMP9Zckqb",
+      "slot": 508037728,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4iUpVFmh7amBJ3eYf6xysKGWkhL11nUofCogZsKTFd4XxbiGtnJKAV3huvGCMLEkRgAKhWWcCZrLbGHvMP9Zckqb?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "InitGroup depth=20 (admin=payer)",
+      "expected": "success",
+      "pass": true,
+      "sig": "5itGvjHZnh9R636WZdvv3LoaPUAJLdHPmdLxCAz4bFBqnucq2xj8cqpinU9xa4Zfy78AU7VUPWh56Yesi5UVAVxL",
+      "slot": 508037655,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5itGvjHZnh9R636WZdvv3LoaPUAJLdHPmdLxCAz4bFBqnucq2xj8cqpinU9xa4Zfy78AU7VUPWh56Yesi5UVAVxL?cluster=devnet",
+      "logs": [
+        "Program log: dark-semaphore: InitGroup depth=20",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 6838 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "NEG InitGroup again (same admin PDA) -> rejected (account in use)",
+      "expected": {
+        "errIncludes": "InstructionError"
+      },
+      "pass": true,
+      "sig": "65XMeN6xRGj2LcCEqQJWDMMd5S18AUpgdFr5T1Xhipxrpqfvd11oDfNDZAwLmX7eEdb9Mcf21AF93suNzw1384sL",
+      "slot": 508037662,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 0
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/65XMeN6xRGj2LcCEqQJWDMMd5S18AUpgdFr5T1Xhipxrpqfvd11oDfNDZAwLmX7eEdb9Mcf21AF93suNzw1384sL?cluster=devnet",
+      "logs": [
+        "Create Account: account Address { address: 4v4m2EupPXagnzfP1w2uAVU6rX2f3Ro6y3BmtTVTX4T2, base: None } already in use",
+        "Program 11111111111111111111111111111111 failed: custom program error: 0x0",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 6199 of 200000 compute units",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu failed: custom program error: 0x0"
+      ]
+    },
+    {
+      "label": "NEG InitGroup depth=0 -> InvalidDepth (Custom 5)",
+      "expected": {
+        "custom": 5
+      },
+      "pass": true,
+      "sig": "4h5cG7XcggjM2rfPFUnMykd8hREDStZ6mVoQariWhMPcVv4QK7Wd1zcAkhzyvMJjTHcEHDFVXTKqigs56eZ6UhhP",
+      "slot": 508037673,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 5
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4h5cG7XcggjM2rfPFUnMykd8hREDStZ6mVoQariWhMPcVv4QK7Wd1zcAkhzyvMJjTHcEHDFVXTKqigs56eZ6UhhP?cluster=devnet",
+      "logs": [
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 742 of 200000 compute units",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu failed: custom program error: 0x5"
+      ]
+    },
+    {
+      "label": "UpdateRoot by admin",
+      "expected": "success",
+      "pass": true,
+      "sig": "2od8bbVsvtcmTKHxLxaiAnPRh5i1zmsNnSsY1ACn6Pp3HqEZm5nmtNEeC3PzWVjcV9HvXBeaYeKQZU8EP6UTR55E",
+      "slot": 508037684,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2od8bbVsvtcmTKHxLxaiAnPRh5i1zmsNnSsY1ACn6Pp3HqEZm5nmtNEeC3PzWVjcV9HvXBeaYeKQZU8EP6UTR55E?cluster=devnet",
+      "logs": [
+        "Program log: dark-semaphore: UpdateRoot members=1",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 1053 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ATTACK UpdateRoot by non-admin signer -> NotAdmin (Custom 4)",
+      "expected": {
+        "custom": 4
+      },
+      "pass": true,
+      "sig": "4FaE7ExBTD4eHeBvWub8vFqPPvKHyUiZASdUyW62iS2bZq1TeHUJTbEJW3z3Q5PG93VabYQVCTSNfGe2EiUoiu8u",
+      "slot": 508037692,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4FaE7ExBTD4eHeBvWub8vFqPPvKHyUiZASdUyW62iS2bZq1TeHUJTbEJW3z3Q5PG93VabYQVCTSNfGe2EiUoiu8u?cluster=devnet",
+      "logs": [
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 612 of 200000 compute units",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu failed: custom program error: 0x4"
+      ]
+    },
+    {
+      "label": "Signal fresh nullifier -> recorded",
+      "expected": "success",
+      "pass": true,
+      "sig": "3ZRXnHZsaVtY1BFPVX7tsEKPcjAXpfJ2aAaVrmbsCkqwTiTwcL4KBtXS5HPJBmH2NJaREEM7Tf6NWXGPjcLHiAtm",
+      "slot": 508037712,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3ZRXnHZsaVtY1BFPVX7tsEKPcjAXpfJ2aAaVrmbsCkqwTiTwcL4KBtXS5HPJBmH2NJaREEM7Tf6NWXGPjcLHiAtm?cluster=devnet",
+      "logs": [
+        "Program log: dark-semaphore: Signal recorded",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 11314 of 200000 compute units"
+      ]
+    },
+    {
+      "label": "ATTACK Signal replay same nullifier -> NullifierAlreadyUsed (Custom 3)",
+      "expected": {
+        "custom": 3
+      },
+      "pass": true,
+      "sig": "4cAMR5KvSSsSwwVmiuUjsuM1ft35M6RVVcZ2mSUKpVtyZapkrTYBeKhjzTBapiyZ9BVuU2Gi6855os8o2g5Mtt53",
+      "slot": 508037720,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4cAMR5KvSSsSwwVmiuUjsuM1ft35M6RVVcZ2mSUKpVtyZapkrTYBeKhjzTBapiyZ9BVuU2Gi6855os8o2g5Mtt53?cluster=devnet",
+      "logs": [
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 8636 of 200000 compute units",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu failed: custom program error: 0x3"
+      ]
+    },
+    {
+      "label": "NEG unknown tag 0x09 -> InvalidInstruction (Custom 1)",
+      "expected": {
+        "custom": 1
+      },
+      "pass": true,
+      "sig": "4iUpVFmh7amBJ3eYf6xysKGWkhL11nUofCogZsKTFd4XxbiGtnJKAV3huvGCMLEkRgAKhWWcCZrLbGHvMP9Zckqb",
+      "slot": 508037728,
+      "err": {
+        "InstructionError": [
+          0,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4iUpVFmh7amBJ3eYf6xysKGWkhL11nUofCogZsKTFd4XxbiGtnJKAV3huvGCMLEkRgAKhWWcCZrLbGHvMP9Zckqb?cluster=devnet",
+      "logs": [
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu consumed 150 of 200000 compute units",
+        "Program 4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu failed: custom program error: 0x1"
+      ]
+    }
+  ],
+  "notes": [
+    "No repo devnet script exists for dark_semaphore; probe written from programs/dark_semaphore/src. Devnet build records Signal nullifiers without a ZK membership proof (IS_MAINNET_READY=false)."
+  ],
+  "slot": 508037728
+}

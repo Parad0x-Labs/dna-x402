@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-10-06",
+  "cluster": "devnet",
+  "run": "bug-fix rerun after in-place upgrades",
+  "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json",
+  "suites": [
+    {
+      "suite": "dna-bv7x-eth-passport",
+      "result": "PASS",
+      "pass": 1,
+      "fail": 0,
+      "txs": 1,
+      "file": "evidence/devnet-2026-10-06/dna-bv7x-eth-passport-rerun.json"
+    },
+    {
+      "suite": "dna-passport-01-faceid",
+      "result": "PASS",
+      "pass": 4,
+      "fail": 0,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-passport-01-faceid-rerun.json"
+    },
+    {
+      "suite": "dna-passport-02-webcrypto",
+      "result": "PASS",
+      "pass": 3,
+      "fail": 0,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-passport-02-webcrypto-rerun.json"
+    },
+    {
+      "suite": "dna-passport-03-metamask",
+      "result": "PASS",
+      "pass": 3,
+      "fail": 0,
+      "txs": 1,
+      "file": "evidence/devnet-2026-10-06/dna-passport-03-metamask-rerun.json"
+    },
+    {
+      "suite": "dna-probe-lottery",
+      "result": "PASS",
+      "pass": 12,
+      "fail": 0,
+      "txs": 12,
+      "file": "evidence/devnet-2026-10-06/dna-probe-lottery-rerun.json"
+    },
+    {
+      "suite": "dna-shielded-pool-init-buckets",
+      "result": "PASS",
+      "pass": 6,
+      "fail": 0,
+      "txs": 6,
+      "file": "evidence/devnet-2026-10-06/dna-shielded-pool-init-buckets-rerun.json"
+    },
+    {
+      "suite": "dna-shielded-pool-v3-relay-rail",
+      "result": "PASS",
+      "pass": 8,
+      "fail": 0,
+      "txs": 9,
+      "file": "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-rerun.json"
+    },
+    {
+      "suite": "dna-x402-access-gate-v2",
+      "result": "PASS",
+      "pass": 6,
+      "fail": 0,
+      "txs": 6,
+      "file": "evidence/devnet-2026-10-06/dna-x402-access-gate-v2-rerun.json"
+    },
+    {
+      "suite": "dna-probe-reputation-gate (positive path)",
+      "result": "NOT RUN",
+      "pass": 0,
+      "fail": 0,
+      "txs": 0,
+      "file": null,
+      "reason": "No proving key matching the compiled track_record VK (track_record_vk.rs sha256 28f6dad4..., 7 inputs, single-party setup) is in the repo: the zkey was never committed and ceremony/transcript/track_record/track_record_vk.json is a 6-input demo VK (c98ef706...). A single-party zkey cannot be re-derived. build/zk/reputation-serverless-e2e.mjs is updated (480-byte ix, clock epoch, frontier paths, hashed counterparty) for when a matching zkey exists."
+    }
+  ],
+  "pass": 43,
+  "fail": 0
+}

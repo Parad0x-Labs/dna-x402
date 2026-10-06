@@ -106,6 +106,43 @@ node scripts/init/init-all-programs.ts --profile devnet.oss
 The init helper currently prints deterministic instruction payloads for review.
 It does not send transactions.
 
+### Current devnet deployment (2026-10-06, fresh key)
+
+21 programs, upgrade authority `9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q`. The IDs below are the
+`programs` map of [`configs/devnet.oss.json`](./configs/devnet.oss.json); slots and deployed-bytes SHA-256
+are in [`evidence/devnet-programs-2026-10-06.json`](./evidence/devnet-programs-2026-10-06.json) and test runs
+in [`evidence/devnet-2026-10-06/`](./evidence/devnet-2026-10-06/README.md).
+
+| Program | Config key | Program ID |
+|---|---|---|
+| `dark_semaphore` | `semaphore` | `4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu` |
+| `dark_secp256r1_vault` | `vault` | `GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC` |
+| `dark_secp256k1_auth` | `ethAuth` | `7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu` |
+| `null_token_hook` | `tokenHook` | `Fg9rnhjfHTh6nKAvcmNvi1B3vn5q4XQPMpytnQR9YGHj` |
+| `dark_null_lottery` | `lottery` | `Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd` |
+| `dark_null_mint_gate` | `mintGate` | `FE3PfXGhKBWexG9d8DB6a4ZCxTVDjGDtvjMyVCHnMh3N` |
+| `receipt_anchor` | `receiptAnchor` | `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` |
+| `dark_proof_gate_lite` | `proofGate` | `pfvdiLZ8kkQUF3aDat6KY1T5Npga9srtCm9WS7URT8P` |
+| `null_registrar` | `nullRegistrar` | `3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ` |
+| `receipt_commitment_tree` | `receiptCommitmentTree` | `Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP` |
+| `dark_x402_access_gate` | `x402AccessGate` | `7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR` |
+| `dark_reputation_gate` | `reputationGate` | `Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g` |
+| `dark_nullifier_record` | `nullifierRecord` | `CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et` |
+| `dark_shielded_pool_program` | `shieldedPool` | `FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3` |
+| `dark_ritual_gate` | `ritualGate` | `GdL3JGhw7qht4UiTGSkdJqVja6j4WHaCQHBjAE1S5PXo` |
+| `dark_ritual_transfer_hook` | `ritualTransferHook` | `9zBLU4AE7yHKMA1eEkoWxRDerUcwWckC5nEoqxwJeEsf` |
+| `dark_compressed_receipts` | `compressedReceipts` | `7uELrEpcSkbDgYA3xq623QaQmxUi2BXRHUPsKoDVM1oB` |
+| `dark_nullifier_banks` | `nullifierBanks` | `499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue` |
+| `dark_chaff` | `chaff` | `4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B` |
+| `dark_fedimint_redeem_program` | `fedimintRedeem` | `26v61JPcTKyrUfTpULVaP5w9dCN3GtCW3gu5X1LunrNd` |
+| `dark_bls12_381_credential` | `bls12381Credential` | `C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE` |
+
+Build notes: `dark_shielded_pool`, `dark_x402_access_gate` and `dark_reputation_gate` were built with
+`--features devnet`; `dark_ritual_transfer_hook` with `DARK_RITUAL_GATE_ID` set to the `dark_ritual_gate` ID
+above. The other programs use the default build. `dark_secp256r1_vault`, `dark_secp256k1_auth`,
+`dark_null_lottery`, `dark_shielded_pool` and `receipt_commitment_tree` were upgraded in place on 2026-10-06
+with the fixes `01f5e35`, `34047e2`, `3134df4`, `30a0ce6` and `c9f03f8`.
+
 ---
 
 ## Commercial Mainnet Pilot Deploy

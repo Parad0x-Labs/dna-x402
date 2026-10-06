@@ -1,0 +1,43 @@
+{
+  "suite": "dna-passport-03-metamask",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/passport/03-devnet-metamask-e2e.mjs <dark_secp256k1_auth>",
+  "programId": {
+    "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+  },
+  "result": "FAIL",
+  "pass": 1,
+  "fail": 1,
+  "timestamp": "2026-10-06T08:19:33Z",
+  "signatures": [
+    {
+      "sig": "3G4WMi3nfmTJ7EWH5DcHfg4kVpWasR7qdHEzWtLG86Ckxyb4YjDyivAXRx5Vx1GnH4VN5Mmzwbiai7SoDD7nBX8Z",
+      "slot": 508030494,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3G4WMi3nfmTJ7EWH5DcHfg4kVpWasR7qdHEzWtLG86Ckxyb4YjDyivAXRx5Vx1GnH4VN5Mmzwbiai7SoDD7nBX8Z?cluster=devnet"
+    },
+    {
+      "sig": "2J4ioQVbvQiGFXApZ3mZYcFGAAban13Xo5LBNDSwK5riSHRhKMs7g1ytjBW9hnRvcRxuAb1zTg8BM71vsDgLqsgN",
+      "slot": 508030498,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2J4ioQVbvQiGFXApZ3mZYcFGAAban13Xo5LBNDSwK5riSHRhKMs7g1ytjBW9hnRvcRxuAb1zTg8BM71vsDgLqsgN?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register ETH address",
+      "r": "PASS"
+    },
+    {
+      "t": "wrong ETH addr -> 0x5008",
+      "r": "FAIL: accepted (check compiled out)"
+    }
+  ],
+  "notes": [
+    "Deployed dark_secp256r1_vault / dark_secp256k1_auth are default builds: precompile signature/pubkey binding is behind #[cfg(feature = \"mainnet\")] (processor.rs), so it is compiled out. Negatives that rely on that check are accepted; the accepted wrong-message signal rotates the challenge, so the real sign-in then hits Custom(0x4004) ReplayedChallenge.",
+    "Fix: rebuild these two programs with --features mainnet (the SIMD-0075 secp256r1 and secp256k1 precompiles exist on devnet) and upgrade in place, then rerun."
+  ],
+  "slot": 508030498
+}

@@ -1,0 +1,39 @@
+{
+  "suite": "dna-shielded-pool-init-buckets",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node build/zk/init-buckets-devnet.mjs <dark_shielded_pool_program>",
+  "programId": {
+    "dark_shielded_pool_program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3"
+  },
+  "result": "PASS",
+  "pass": 3,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:39:31Z",
+  "signatures": [
+    {
+      "sig": "2d68J7GGswdwrEDATiZhP2qDcRPMrjn5nyoWmouzf3WP8CCP7hZYEWdQaHWrtrtrkaaYTqLrSRVPhTwEtcrKxerd",
+      "slot": 508035518,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2d68J7GGswdwrEDATiZhP2qDcRPMrjn5nyoWmouzf3WP8CCP7hZYEWdQaHWrtrtrkaaYTqLrSRVPhTwEtcrKxerd?cluster=devnet"
+    },
+    {
+      "sig": "2M5TcSAHBRy1yzporEsK5vwSaAFMpCb4RtffXBzW8UXXExivJKDkFikvbteFR7GEfVGJ2CP6Yo3AZTYYanBFgbrt",
+      "slot": 508035527,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2M5TcSAHBRy1yzporEsK5vwSaAFMpCb4RtffXBzW8UXXExivJKDkFikvbteFR7GEfVGJ2CP6Yo3AZTYYanBFgbrt?cluster=devnet"
+    },
+    {
+      "sig": "43kmvUxPNc5LZxzyg884S77tEiLm5cgpTAmywwpLKZaLdF2J1qC4SQmwJxggEhxgxEUxT9cXguqo2oc42FeazZZn",
+      "slot": 508035535,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/43kmvUxPNc5LZxzyg884S77tEiLm5cgpTAmywwpLKZaLdF2J1qC4SQmwJxggEhxgxEUxT9cXguqo2oc42FeazZZn?cluster=devnet"
+    }
+  ],
+  "tests": [],
+  "notes": [
+    "Bucket authority keypair = Keypair.fromSeed(sha256(\"dark-relay-bucket-v3\"||denom||wallet PUBKEY)): derivable by anyone from public data, so any party can sign as the bucket authority (Pause/Resume). Use a secret in the seed."
+  ],
+  "slot": 508035535
+}

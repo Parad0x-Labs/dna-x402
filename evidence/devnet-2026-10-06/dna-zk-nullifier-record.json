@@ -1,0 +1,38 @@
+{
+  "suite": "dna-zk-nullifier-record",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/zk/nullifier-record-e2e.mjs --program <dark_nullifier_record> --cluster devnet",
+  "programId": {
+    "dark_nullifier_record": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et"
+  },
+  "result": "PASS",
+  "pass": 3,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:18:50Z",
+  "signatures": [
+    {
+      "sig": "3S6qDEt5JTbJmRD4gd2Y5SP7SLghaxzbKc5CzjThvQB3YfkKs32CZBHLj2LoixDng8qhxgujYrqAB7WZXS8hg3Gh",
+      "slot": 508030309,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3S6qDEt5JTbJmRD4gd2Y5SP7SLghaxzbKc5CzjThvQB3YfkKs32CZBHLj2LoixDng8qhxgujYrqAB7WZXS8hg3Gh?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "record fresh nullifier",
+      "r": "PASS (tx)"
+    },
+    {
+      "t": "double-spend same nullifier",
+      "r": "PASS: Custom(10) AlreadyRecorded (simulated)"
+    },
+    {
+      "t": "zero nullifier",
+      "r": "PASS: Custom(11) InvalidNullifier (simulated)"
+    }
+  ],
+  "notes": [],
+  "slot": 508030309
+}

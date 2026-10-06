@@ -1,0 +1,94 @@
+{
+  "suite": "devnet-upgrades-2026-10-06",
+  "cluster": "devnet",
+  "upgradeAuthority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+  "source": "dna-x402 git archive of HEAD 1157630 (programs + crates), cargo-build-sbf 4.1.0 / platform-tools v1.54, offline in dnax-sbf-build",
+  "verification": "solana program dump of each program: the first <so size> bytes hash to the local .so sha256 and the remaining bytes are zero",
+  "programs": [
+    {
+      "program": "dark_secp256r1_vault",
+      "programId": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC",
+      "fix": "bug 1",
+      "fixCommit": "01f5e35",
+      "previousDataLen": 82352,
+      "soBytes": 89136,
+      "extendBytes": 10240,
+      "dataLenAfter": 92592,
+      "sha256": "60f778ec297f8f09b1bd585f5b1389b1f6616c633748b1d614acfe27e4c513bd",
+      "upgradeSignature": "5hJvwyMzQ8dQ6AL1T3rLM1ZteMCwUP3tQ2PcXWNshPx4Pa8uprFkrx4Add3QavLKEccmqBTiShjqwprDP7zahjHL",
+      "lastDeploySlot": 508051817,
+      "explorer": "https://explorer.solana.com/tx/5hJvwyMzQ8dQ6AL1T3rLM1ZteMCwUP3tQ2PcXWNshPx4Pa8uprFkrx4Add3QavLKEccmqBTiShjqwprDP7zahjHL?cluster=devnet"
+    },
+    {
+      "program": "dark_secp256k1_auth",
+      "programId": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu",
+      "fix": "bug 1",
+      "fixCommit": "34047e2",
+      "previousDataLen": 73576,
+      "soBytes": 80336,
+      "extendBytes": 10240,
+      "dataLenAfter": 83816,
+      "sha256": "b7855dd852ec99caba73acb47e125619892a22125acf783a040ad4be4dc0dca2",
+      "upgradeSignature": "2DwGkrg4r6BAAatynyYNEZguKv7kvEVZEZty4bz3TSHDWhHXo5xX669iyadomyJAgfnvqY3q3ghsxSZsteFqw3DK",
+      "lastDeploySlot": 508051858,
+      "explorer": "https://explorer.solana.com/tx/2DwGkrg4r6BAAatynyYNEZguKv7kvEVZEZty4bz3TSHDWhHXo5xX669iyadomyJAgfnvqY3q3ghsxSZsteFqw3DK?cluster=devnet"
+    },
+    {
+      "program": "dark_null_lottery",
+      "programId": "Ecs5Ch2AWThxpkgqxMHcgNeAz4nTqpmoFWRDD6bufLXd",
+      "fix": "bug 2",
+      "fixCommit": "3134df4",
+      "previousDataLen": 89272,
+      "soBytes": 89096,
+      "extendBytes": 0,
+      "dataLenAfter": 89272,
+      "sha256": "43537e1da61b65b2f6628485fe41cd166b6abeef765dd890b6f9a570050c365b",
+      "upgradeSignature": "53Kb2UMFwuGYTych2sAkBLzdFcfXRJfjEeakyRVRuj73zHXkE1vKrMQX2GzqgLkHeXcXjNceqmifZTjAQP2hqiWD",
+      "lastDeploySlot": 508051933,
+      "explorer": "https://explorer.solana.com/tx/53Kb2UMFwuGYTych2sAkBLzdFcfXRJfjEeakyRVRuj73zHXkE1vKrMQX2GzqgLkHeXcXjNceqmifZTjAQP2hqiWD?cluster=devnet"
+    },
+    {
+      "program": "dark_shielded_pool_program",
+      "programId": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+      "fix": "bug 3 (built --features devnet, as deployed before)",
+      "fixCommit": "30a0ce6",
+      "previousDataLen": 126320,
+      "soBytes": 127232,
+      "extendBytes": 10240,
+      "dataLenAfter": 136560,
+      "sha256": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+      "upgradeSignature": "n1Krdkjp4WEavNxMMZ22CTqX92BemHwTJ2EwH1KuoWt8xPAvc9X223GRZyHvnkT1JR51NbkwxV53X5xpgHJ2MpN",
+      "lastDeploySlot": 508052021,
+      "explorer": "https://explorer.solana.com/tx/n1Krdkjp4WEavNxMMZ22CTqX92BemHwTJ2EwH1KuoWt8xPAvc9X223GRZyHvnkT1JR51NbkwxV53X5xpgHJ2MpN?cluster=devnet"
+    },
+    {
+      "program": "receipt_commitment_tree",
+      "programId": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+      "fix": "bug 4",
+      "fixCommit": "c9f03f8",
+      "previousDataLen": 81088,
+      "soBytes": 81584,
+      "extendBytes": 10240,
+      "dataLenAfter": 91328,
+      "sha256": "4d27a10850b365c1a088764a80eaf92f57d81237d71fb832e06b4772f00b5f9f",
+      "upgradeSignature": "2qtQsp9DthV58kg8nTGo2NWhu2cWphYKEAREB5FdBeCMnH9LSDGiLLsWVrN45o7V1oDzbS488iBJt84ASdnwSzco",
+      "lastDeploySlot": 508052091,
+      "explorer": "https://explorer.solana.com/tx/2qtQsp9DthV58kg8nTGo2NWhu2cWphYKEAREB5FdBeCMnH9LSDGiLLsWVrN45o7V1oDzbS488iBJt84ASdnwSzco?cluster=devnet"
+    }
+  ],
+  "deployerLamports": {
+    "before": 1764883945,
+    "after": 1554207145,
+    "spent": 210676800,
+    "breakdown": {
+      "extends (4 x 10240 bytes rent)": 208096800,
+      "upgrade tx fees": 2400000,
+      "first attempt (--use-rpc writes hit Max retries; 3 buffers closed, rent refunded)": 180000
+    }
+  },
+  "notes": [
+    "ExtendProgram now requires >= 10240 additional bytes, so each extend is 10240 even where the new .so needed less.",
+    "No buffers left open for the deployer authority after the run.",
+    "Dark-Null payment-stream (J6oHoysM...) not upgraded: its upgrade authority is its own program keypair, which was not available to this run. Fix committed (Dark-Null 76b4be6); the built .so (92136 bytes, sha256 af8f9a7f2c9556173dbd9e3ee1f08c88a617dff83d68daf50b4e4b547102eeb6) needs extend + upgrade by the key holder."
+  ]
+}

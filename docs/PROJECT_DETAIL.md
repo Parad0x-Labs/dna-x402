@@ -201,7 +201,7 @@ Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](../devnet
 | Area | Status | Notes |
 |---|---|---|
 | `x402/` package | Active | Canonical product surface |
-| `receipt_anchor` program | Redeploy pending | No usable deployment: the earlier devnet deployment is withdrawn and the mainnet deployment (`6HSRGivd…`) ran from 2026-05-29 and was retired 2026-07-14. Anchoring code refuses with a clear error until the redeploy under a fresh key |
+| `receipt_anchor` program | Devnet (2026-10-06, fresh key) | Devnet `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`: a receipt-dag root anchored and read back on 2026-10-06 ([evidence](../evidence/devnet-2026-10-06/dna-receipt-dag-anchor.json)). The mainnet deployment (`6HSRGivd…`) ran from 2026-05-29 and was retired 2026-07-14. The server and SDKs have no default program and refuse with a clear error unless one is named |
 | Seller / buyer SDKs | Active | Live in `x402/src/` |
 | Dark Null privacy path | Active SDK surface | Optional hash-only private receipt request path |
 | Proof / audit docs | Active | See [`docs/`](../docs) |
@@ -225,7 +225,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 
 | Surface | Status |
 |---|---|
-| Devnet deployment | The earlier devnet deployment of the deploy-profile programs is withdrawn and its entries are removed from [`configs/devnet.oss.json`](../configs/devnet.oss.json); a devnet redeploy under a fresh key is pending. The remaining `nullRegistrar` entry in that file is retired. The attack-replay suite ([`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md)) targets separately deployed security-fix builds of `agent_credential_mint`, `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree`, and `dark_null_mint_gate` |
+| Devnet deployment | 21 programs redeployed under a fresh key on 2026-10-06; IDs in [`configs/devnet.oss.json`](../configs/devnet.oss.json), deployed-bytes SHA-256 matching committed source in [`evidence/devnet-programs-2026-10-06.json`](../evidence/devnet-programs-2026-10-06.json), test runs in [`evidence/devnet-2026-10-06/`](../evidence/devnet-2026-10-06/README.md). The attack-replay suite T1–T10 passes 13/13 against the new `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree` and `dark_null_mint_gate`; the 2026-08-25 run is in [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) |
 | Mainnet | No active DNA x402 production deployment. The mainnet pilot programs (semaphore, secp256k1 auth, token hook, lottery, mint gate, receipt_anchor `6HSRGivd…`, proof gate `PmSCTue…`) ran from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed): their transaction history stays readable on explorers, but they cannot be invoked. Canonical deployment inventory available to reviewers on request |
 | Commercial profile | Deploy profile kept in this repo; no commercial deployment is currently active. A new deploy needs wallet/RPC/program-id provisioning |
 | Program enforcement flag | Off by default; enabled only by a `--features mainnet` rebuild |

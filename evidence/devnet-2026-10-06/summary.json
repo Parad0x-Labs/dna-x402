@@ -1,0 +1,216 @@
+{
+  "generatedAt": "2026-10-06",
+  "cluster": "devnet",
+  "suites": [
+    {
+      "suite": "dna-zk-nullifier-record",
+      "result": "PASS",
+      "pass": 3,
+      "fail": 0,
+      "txs": 1,
+      "file": "evidence/devnet-2026-10-06/dna-zk-nullifier-record.json"
+    },
+    {
+      "suite": "dna-kvac-devnet-record",
+      "result": "PASS",
+      "pass": 3,
+      "fail": 0,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-kvac-devnet-record.json"
+    },
+    {
+      "suite": "dna-kvac-x402-gateway",
+      "result": "PASS",
+      "pass": 4,
+      "fail": 0,
+      "txs": 3,
+      "file": "evidence/devnet-2026-10-06/dna-kvac-x402-gateway.json"
+    },
+    {
+      "suite": "dna-passport-01-faceid",
+      "result": "FAIL",
+      "pass": 1,
+      "fail": 3,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-passport-01-faceid.json"
+    },
+    {
+      "suite": "dna-passport-02-webcrypto",
+      "result": "FAIL",
+      "pass": 1,
+      "fail": 2,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-passport-02-webcrypto.json"
+    },
+    {
+      "suite": "dna-passport-03-metamask",
+      "result": "FAIL",
+      "pass": 1,
+      "fail": 1,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-passport-03-metamask.json"
+    },
+    {
+      "suite": "dna-bv7x-eth-passport",
+      "result": "PASS",
+      "pass": 1,
+      "fail": 0,
+      "txs": 1,
+      "file": "evidence/devnet-2026-10-06/dna-bv7x-eth-passport.json"
+    },
+    {
+      "suite": "dna-bv7x-signal-anchor",
+      "result": "NO-OP",
+      "pass": 0,
+      "fail": 0,
+      "txs": 0,
+      "file": "evidence/devnet-2026-10-06/dna-bv7x-signal-anchor.json"
+    },
+    {
+      "suite": "dna-receipt-dag-anchor",
+      "result": "PASS",
+      "pass": 1,
+      "fail": 0,
+      "txs": 1,
+      "file": "evidence/devnet-2026-10-06/dna-receipt-dag-anchor.json"
+    },
+    {
+      "suite": "dna-receipt-dag-verify",
+      "result": "PASS",
+      "pass": 3,
+      "fail": 0,
+      "txs": 0,
+      "file": "evidence/devnet-2026-10-06/dna-receipt-dag-verify.json"
+    },
+    {
+      "suite": "dna-null-registrar-init",
+      "result": "PASS",
+      "pass": 2,
+      "fail": 0,
+      "txs": 2,
+      "file": "evidence/devnet-2026-10-06/dna-null-registrar-init.json"
+    },
+    {
+      "suite": "dna-nullpay-stealth-pay-by-name",
+      "result": "PASS",
+      "pass": 8,
+      "fail": 0,
+      "txs": 4,
+      "file": "evidence/devnet-2026-10-06/dna-nullpay-stealth-pay-by-name.json"
+    },
+    {
+      "suite": "dna-x402-access-gate-v2",
+      "result": "PASS",
+      "pass": 5,
+      "fail": 0,
+      "txs": 4,
+      "file": "evidence/devnet-2026-10-06/dna-x402-access-gate-v2.json"
+    },
+    {
+      "suite": "dna-shard-message-banks-compressed-chaff",
+      "result": "PASS",
+      "pass": 19,
+      "fail": 0,
+      "txs": 19,
+      "file": "evidence/devnet-2026-10-06/dna-shard-message-banks-compressed-chaff.json"
+    },
+    {
+      "suite": "dna-devnet-tests-suite-asis",
+      "result": "PARTIAL",
+      "pass": 12,
+      "fail": 1,
+      "txs": 5,
+      "file": "evidence/devnet-2026-10-06/dna-devnet-tests-suite-asis.json"
+    },
+    {
+      "suite": "dna-devnet-tests-suite-newids",
+      "result": "PASS",
+      "pass": 13,
+      "fail": 0,
+      "txs": 7,
+      "file": "evidence/devnet-2026-10-06/dna-devnet-tests-suite-newids.json"
+    },
+    {
+      "suite": "dna-zk-bls12381-credential",
+      "result": "PASS",
+      "pass": 1,
+      "fail": 0,
+      "txs": 1,
+      "file": "evidence/devnet-2026-10-06/dna-zk-bls12381-credential.json"
+    },
+    {
+      "suite": "dna-enull-fedimint-e2e",
+      "result": "PASS",
+      "pass": 6,
+      "fail": 0,
+      "txs": 8,
+      "file": "evidence/devnet-2026-10-06/dna-enull-fedimint-e2e.json"
+    },
+    {
+      "suite": "dna-enull-mayhem",
+      "result": "PASS",
+      "pass": 22,
+      "fail": 0,
+      "txs": 38,
+      "file": "evidence/devnet-2026-10-06/dna-enull-mayhem.json"
+    },
+    {
+      "suite": "dna-shielded-pool-v3-relay-rail",
+      "result": "PASS",
+      "pass": 8,
+      "fail": 0,
+      "txs": 13,
+      "file": "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail.json"
+    },
+    {
+      "suite": "dna-shielded-pool-init-buckets",
+      "result": "PASS",
+      "pass": 3,
+      "fail": 0,
+      "txs": 3,
+      "file": "evidence/devnet-2026-10-06/dna-shielded-pool-init-buckets.json"
+    },
+    {
+      "suite": "dna-probe-ritual-gate-and-hook",
+      "result": "PASS",
+      "pass": 11,
+      "fail": 0,
+      "txs": 11,
+      "file": "evidence/devnet-2026-10-06/dna-probe-ritual-gate-and-hook.json"
+    },
+    {
+      "suite": "dna-probe-semaphore",
+      "result": "PASS",
+      "pass": 8,
+      "fail": 0,
+      "txs": 8,
+      "file": "evidence/devnet-2026-10-06/dna-probe-semaphore.json"
+    },
+    {
+      "suite": "dna-probe-lottery",
+      "result": "FAIL",
+      "pass": 11,
+      "fail": 1,
+      "txs": 12,
+      "file": "evidence/devnet-2026-10-06/dna-probe-lottery.json"
+    },
+    {
+      "suite": "dna-probe-proof-gate-lite",
+      "result": "PASS",
+      "pass": 4,
+      "fail": 0,
+      "txs": 4,
+      "file": "evidence/devnet-2026-10-06/dna-probe-proof-gate-lite.json"
+    },
+    {
+      "suite": "dna-probe-reputation-gate-negatives",
+      "result": "PARTIAL",
+      "pass": 7,
+      "fail": 0,
+      "txs": 7,
+      "file": "evidence/devnet-2026-10-06/dna-probe-reputation-gate-negatives.json"
+    }
+  ],
+  "pass": 158,
+  "fail": 8
+}

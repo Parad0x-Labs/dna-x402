@@ -1,0 +1,50 @@
+{
+  "suite": "dna-passport-01-faceid",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/passport/01-devnet-faceid-e2e.mjs GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC",
+  "programId": {
+    "dark_secp256r1_vault": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC"
+  },
+  "result": "PASS",
+  "pass": 4,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:45:31Z",
+  "signatures": [
+    {
+      "sig": "381Ab6CpJRfHaDKNTGL4NqT1PfNFqiEhDQMmBGqFX3v1z6fNKoEUohHrQYsrVgNEmPKTgrr86v2P4CFYDgmg5eoV",
+      "slot": null,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/381Ab6CpJRfHaDKNTGL4NqT1PfNFqiEhDQMmBGqFX3v1z6fNKoEUohHrQYsrVgNEmPKTgrr86v2P4CFYDgmg5eoV?cluster=devnet"
+    },
+    {
+      "sig": "3iRRxMu7KhMeMVB54irqexrKTFyxJK7pXkMAaiaQrTGrwK8XHuqUWhnp6FSGmAGdV3JyQDwAcjoTXYarotGDymUW",
+      "slot": null,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3iRRxMu7KhMeMVB54irqexrKTFyxJK7pXkMAaiaQrTGrwK8XHuqUWhnp6FSGmAGdV3JyQDwAcjoTXYarotGDymUW?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register",
+      "r": "PASS confirmed 381Ab6CpJRfHaDKNTGL4NqT1..."
+    },
+    {
+      "t": "neg-wrong-message",
+      "r": "PASS rejected (want 0x400b)"
+    },
+    {
+      "t": "neg-wrong-key",
+      "r": "PASS rejected (want 0x4009)"
+    },
+    {
+      "t": "signin",
+      "r": "PASS confirmed 3iRRxMu7KhMeMVB54irqexrK..."
+    }
+  ],
+  "notes": [
+    "dark_secp256r1_vault upgraded in place 2026-10-06 (precompile binding unconditional). Wrong message -> 0x400b ChallengeNotSigned and different key -> 0x4009 PasskeyPubkeyMismatch are rejected (at preflight simulation, so no landed signature); the real sign-in then succeeds because the rejected attempts no longer rotate the challenge.",
+    "Script ported to @noble/curves 2.x (repo pin) in 1157630."
+  ]
+}

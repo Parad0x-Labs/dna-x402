@@ -1,0 +1,260 @@
+{
+  "suite": "dna-probe-reputation-gate-negatives",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "PROGRAM=<dark_reputation_gate> node reputation-gate-negatives.mjs",
+  "programId": {
+    "dark_reputation_gate": "Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g"
+  },
+  "result": "PARTIAL",
+  "pass": 7,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:49:42Z",
+  "signatures": [
+    {
+      "sig": "2WLW4cwAtUakxtLPA1W87d95tx7W8Unang2q4PRF7xdHJPMtHLF3jehG5JavDPTdLyKNbnrqHhZ9mTRcux7F2L8y",
+      "slot": 508038077,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2WLW4cwAtUakxtLPA1W87d95tx7W8Unang2q4PRF7xdHJPMtHLF3jehG5JavDPTdLyKNbnrqHhZ9mTRcux7F2L8y?cluster=devnet"
+    },
+    {
+      "sig": "2UgoJopgQzCXrHzAKj5kk5LuJyhjGbi1PN7HrBh9k7HjYMKkQMH7THZSYGq1eHR63gFv4nf1EgbWyYEZjDVJSVMN",
+      "slot": 508038089,
+      "err": {
+        "InstructionError": [
+          1,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2UgoJopgQzCXrHzAKj5kk5LuJyhjGbi1PN7HrBh9k7HjYMKkQMH7THZSYGq1eHR63gFv4nf1EgbWyYEZjDVJSVMN?cluster=devnet"
+    },
+    {
+      "sig": "EeTc96VLezdSFWuSnAKGAqzoMVD3hzVmNd1SSHQKL4ofgHpWvQ9LrPVSuWXBtfp1PdbBaSomktABs2h676DAWHL",
+      "slot": 508038097,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 11
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/EeTc96VLezdSFWuSnAKGAqzoMVD3hzVmNd1SSHQKL4ofgHpWvQ9LrPVSuWXBtfp1PdbBaSomktABs2h676DAWHL?cluster=devnet"
+    },
+    {
+      "sig": "uMEsuZDSz48PfYuzYs9Hre48XzxCf3tKckHECFf6LoBsffJ4ef4smFuKBSQsD4jx7c83GDkzmHtsAWEdhLgebYV",
+      "slot": 508038112,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 11
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/uMEsuZDSz48PfYuzYs9Hre48XzxCf3tKckHECFf6LoBsffJ4ef4smFuKBSQsD4jx7c83GDkzmHtsAWEdhLgebYV?cluster=devnet"
+    },
+    {
+      "sig": "5TjeAH5piFRsDyPZ5QV8DaQe4fHiacTsVA7nNofDQM3WKtZBPK8BXpjihYELc4Q2DKktiPtC6gADVQFbxuTqtQvK",
+      "slot": 508038120,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5TjeAH5piFRsDyPZ5QV8DaQe4fHiacTsVA7nNofDQM3WKtZBPK8BXpjihYELc4Q2DKktiPtC6gADVQFbxuTqtQvK?cluster=devnet"
+    },
+    {
+      "sig": "3ecwcvDncoNE5Ly7ncM1K4oCiVF4KTmbsmmNxZnkVwSFCR5TbVRkpEZztKsng6v5ZCXZHjEFYapv5NFPuE472apF",
+      "slot": 508038132,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3ecwcvDncoNE5Ly7ncM1K4oCiVF4KTmbsmmNxZnkVwSFCR5TbVRkpEZztKsng6v5ZCXZHjEFYapv5NFPuE472apF?cluster=devnet"
+    },
+    {
+      "sig": "54HSq6vgM3u35w12ZVdinwNKhseJ4odbxJpreHJNgpEDL3DXLWCvnsytVvTVGLUenZqUbUzdyCiRrTRoYBFHCbSa",
+      "slot": 508038141,
+      "err": {
+        "InstructionError": [
+          1,
+          "InvalidInstructionData"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/54HSq6vgM3u35w12ZVdinwNKhseJ4odbxJpreHJNgpEDL3DXLWCvnsytVvTVGLUenZqUbUzdyCiRrTRoYBFHCbSa?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "label": "ATTACK stale epoch (epoch=0) -> StaleOrForgedEpoch (Custom 12)",
+      "expected": {
+        "custom": 12
+      },
+      "pass": true,
+      "sig": "2WLW4cwAtUakxtLPA1W87d95tx7W8Unang2q4PRF7xdHJPMtHLF3jehG5JavDPTdLyKNbnrqHhZ9mTRcux7F2L8y",
+      "slot": 508038077,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2WLW4cwAtUakxtLPA1W87d95tx7W8Unang2q4PRF7xdHJPMtHLF3jehG5JavDPTdLyKNbnrqHhZ9mTRcux7F2L8y?cluster=devnet",
+      "logs": [
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 1104 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: custom program error: 0xc"
+      ]
+    },
+    {
+      "label": "ATTACK non-canonical tree account -> InvalidArgument",
+      "expected": {
+        "errIncludes": "InvalidArgument"
+      },
+      "pass": true,
+      "sig": "2UgoJopgQzCXrHzAKj5kk5LuJyhjGbi1PN7HrBh9k7HjYMKkQMH7THZSYGq1eHR63gFv4nf1EgbWyYEZjDVJSVMN",
+      "slot": 508038089,
+      "err": {
+        "InstructionError": [
+          1,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2UgoJopgQzCXrHzAKj5kk5LuJyhjGbi1PN7HrBh9k7HjYMKkQMH7THZSYGq1eHR63gFv4nf1EgbWyYEZjDVJSVMN?cluster=devnet",
+      "logs": [
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 5656 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: invalid program argument"
+      ]
+    },
+    {
+      "label": "ATTACK root = 0 -> UnknownRoot (Custom 11)",
+      "expected": {
+        "custom": 11
+      },
+      "pass": true,
+      "sig": "EeTc96VLezdSFWuSnAKGAqzoMVD3hzVmNd1SSHQKL4ofgHpWvQ9LrPVSuWXBtfp1PdbBaSomktABs2h676DAWHL",
+      "slot": 508038097,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 11
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/EeTc96VLezdSFWuSnAKGAqzoMVD3hzVmNd1SSHQKL4ofgHpWvQ9LrPVSuWXBtfp1PdbBaSomktABs2h676DAWHL?cluster=devnet",
+      "logs": [
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 5703 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: custom program error: 0xb"
+      ]
+    },
+    {
+      "label": "ATTACK fabricated root (not in canonical history) -> UnknownRoot (Custom 11)",
+      "expected": {
+        "custom": 11
+      },
+      "pass": true,
+      "sig": "uMEsuZDSz48PfYuzYs9Hre48XzxCf3tKckHECFf6LoBsffJ4ef4smFuKBSQsD4jx7c83GDkzmHtsAWEdhLgebYV",
+      "slot": 508038112,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 11
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/uMEsuZDSz48PfYuzYs9Hre48XzxCf3tKckHECFf6LoBsffJ4ef4smFuKBSQsD4jx7c83GDkzmHtsAWEdhLgebYV?cluster=devnet",
+      "logs": [
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 5722 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: custom program error: 0xb"
+      ]
+    },
+    {
+      "label": "ATTACK forged proof on live canonical root, current epoch -> ProofInvalid (Custom 1)",
+      "expected": {
+        "custom": 1
+      },
+      "pass": true,
+      "sig": "5TjeAH5piFRsDyPZ5QV8DaQe4fHiacTsVA7nNofDQM3WKtZBPK8BXpjihYELc4Q2DKktiPtC6gADVQFbxuTqtQvK",
+      "slot": 508038120,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5TjeAH5piFRsDyPZ5QV8DaQe4fHiacTsVA7nNofDQM3WKtZBPK8BXpjihYELc4Q2DKktiPtC6gADVQFbxuTqtQvK?cluster=devnet",
+      "logs": [
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 115331 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: custom program error: 0x1"
+      ]
+    },
+    {
+      "label": "ATTACK zero proof on live canonical root -> ProofInvalid (Custom 1)",
+      "expected": {
+        "custom": 1
+      },
+      "pass": true,
+      "sig": "3ecwcvDncoNE5Ly7ncM1K4oCiVF4KTmbsmmNxZnkVwSFCR5TbVRkpEZztKsng6v5ZCXZHjEFYapv5NFPuE472apF",
+      "slot": 508038132,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3ecwcvDncoNE5Ly7ncM1K4oCiVF4KTmbsmmNxZnkVwSFCR5TbVRkpEZztKsng6v5ZCXZHjEFYapv5NFPuE472apF?cluster=devnet",
+      "logs": [
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 114842 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: custom program error: 0x1"
+      ]
+    },
+    {
+      "label": "NEG 448-byte (old 6-input layout) data -> InvalidInstructionData",
+      "expected": {
+        "errIncludes": "InvalidInstructionData"
+      },
+      "pass": true,
+      "sig": "54HSq6vgM3u35w12ZVdinwNKhseJ4odbxJpreHJNgpEDL3DXLWCvnsytVvTVGLUenZqUbUzdyCiRrTRoYBFHCbSa",
+      "slot": 508038141,
+      "err": {
+        "InstructionError": [
+          1,
+          "InvalidInstructionData"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/54HSq6vgM3u35w12ZVdinwNKhseJ4odbxJpreHJNgpEDL3DXLWCvnsytVvTVGLUenZqUbUzdyCiRrTRoYBFHCbSa?cluster=devnet",
+      "logs": [
+        "Program log: dark_reputation_gate: expected 480 bytes, got 448",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g consumed 1482 of 399850 compute units",
+        "Program Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g failed: invalid instruction data"
+      ]
+    }
+  ],
+  "notes": [
+    "Positive path not exercised: no track_record zkey on this machine matches the compiled VK (track_record_vk.rs alpha.x 8854949\u2026; the two vk.json files on disk differ). Repo scripts full-stack-e2e / track-record-e2e need circuits/out artifacts; reputation-serverless-e2e still builds the old 448-byte (6-input) layout vs program 480 bytes."
+  ],
+  "slot": 508038141
+}

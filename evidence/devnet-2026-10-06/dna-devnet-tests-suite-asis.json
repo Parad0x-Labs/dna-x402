@@ -1,0 +1,108 @@
+{
+  "suite": "dna-devnet-tests-suite-asis",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "DNA_KEYS_DIR=<suite key directory> node devnet-tests/suite.ts",
+  "programId": {
+    "agent_credential_mint": "5ftab12xtYNLmeNZQghGK1b3CgnZDVmfAnyCr4uNuyqN",
+    "null_token_hook": "hrCdqUDDGEzfQCTinfc9LX5MYfo33aXrjZvcWAzyygR",
+    "dark_nullifier_banks": "HqaSYLB9Uk2pLQ7kZvBoYBKVJ72NihTRVnyddQRKP4gQ",
+    "receipt_commitment_tree": "7DdJFMwrGZKcj7MrjqvftfGt9HH99s3hNvEv6SbRj4ig",
+    "dark_null_mint_gate": "Tncf2ZwE3CtyEourUxPzL1Jkknw6sAt2A7SdtM8c4up"
+  },
+  "result": "PARTIAL",
+  "pass": 12,
+  "fail": 1,
+  "timestamp": "2026-10-06T08:25:47Z",
+  "signatures": [
+    {
+      "sig": "PcYr79QhgXrBb3gvfU3sWNwAibzqbEkniJFFMyYqw4sEicLixLvorbY5wZXgDSQuSqMKgEsL43RYhW9UVdy6YiW",
+      "slot": 508032076,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/PcYr79QhgXrBb3gvfU3sWNwAibzqbEkniJFFMyYqw4sEicLixLvorbY5wZXgDSQuSqMKgEsL43RYhW9UVdy6YiW?cluster=devnet"
+    },
+    {
+      "sig": "2frZ2uWaCH3mD84ckRdSPSjhj2eh42nGS7H2LDr2hCgLU6DXnPSQXzZFws4f7hDuAo3G45msjyQgtSbQXS75UiN6",
+      "slot": 508032080,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2frZ2uWaCH3mD84ckRdSPSjhj2eh42nGS7H2LDr2hCgLU6DXnPSQXzZFws4f7hDuAo3G45msjyQgtSbQXS75UiN6?cluster=devnet"
+    },
+    {
+      "sig": "4stWZqERJppcdeJ5pKcok3Ehj3jKnwNyScEbFA9AhVpr2yu4t5JVKFJKjoFR2v7AKjMUwLtfG6e5AZmG5MAUcTMM",
+      "slot": 508032061,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4stWZqERJppcdeJ5pKcok3Ehj3jKnwNyScEbFA9AhVpr2yu4t5JVKFJKjoFR2v7AKjMUwLtfG6e5AZmG5MAUcTMM?cluster=devnet"
+    },
+    {
+      "sig": "5yRLAkmKyxZUNgncSpTWynCk2vZyRV3r29baMtXwmwhRaw8upKn8qWVNZHWwYTeU5kGFmYSMNngPSmPhmMiFzE4Z",
+      "slot": 508032065,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5yRLAkmKyxZUNgncSpTWynCk2vZyRV3r29baMtXwmwhRaw8upKn8qWVNZHWwYTeU5kGFmYSMNngPSmPhmMiFzE4Z?cluster=devnet"
+    },
+    {
+      "sig": "opB7JnScrvXdy2KCaFD4VCzXvhmx86sHMpeSJxqurLkdkDY9ecEvGKsTZhLgvYACah9qbEWi1irsFtvqx8PFZSm",
+      "slot": 508032068,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/opB7JnScrvXdy2KCaFD4VCzXvhmx86sHMpeSJxqurLkdkDY9ecEvGKsTZhLgvYACah9qbEWi1irsFtvqx8PFZSm?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "T1 IssueCredential",
+      "r": "FAIL AlreadyIssued 0x9002: test-agent-1 already holds a credential from the 2026-08-25 run; T1 is not idempotent with fixed keys"
+    },
+    {
+      "t": "T2",
+      "r": "PASS"
+    },
+    {
+      "t": "T3",
+      "r": "PASS"
+    },
+    {
+      "t": "T4a",
+      "r": "PASS"
+    },
+    {
+      "t": "T4b",
+      "r": "PASS"
+    },
+    {
+      "t": "T5-info",
+      "r": "PASS"
+    },
+    {
+      "t": "T5b",
+      "r": "PASS"
+    },
+    {
+      "t": "T5c",
+      "r": "PASS"
+    },
+    {
+      "t": "T6",
+      "r": "PASS"
+    },
+    {
+      "t": "T7 (skip-init, config exists)",
+      "r": "PASS"
+    },
+    {
+      "t": "T8 NotAdmin 0x7007",
+      "r": "PASS"
+    },
+    {
+      "t": "T9",
+      "r": "PASS"
+    },
+    {
+      "t": "T10",
+      "r": "PASS"
+    }
+  ],
+  "notes": [
+    "Programs under HKBH\u2026 authority (not the new deploy). Suite keys funded from test payer: HKBH +0.005, 2cjG +0.006, 94za +0.004, GU5J +0.010 SOL."
+  ],
+  "slot": 508032080
+}

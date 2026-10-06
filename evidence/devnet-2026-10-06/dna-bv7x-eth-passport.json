@@ -1,0 +1,32 @@
+{
+  "suite": "dna-bv7x-eth-passport",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "SECP256K1_AUTH_PROGRAM_ID=<id> SOLANA_RPC_URL=devnet node scripts/integrations/bv7x-eth-passport.mjs --test",
+  "programId": {
+    "dark_secp256k1_auth": "7dF2fZgPc9nzSwYroNzUtZGsFTzSbiKsVykcYLc7eiWu"
+  },
+  "result": "PASS",
+  "pass": 1,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:20:48Z",
+  "signatures": [
+    {
+      "sig": "4VMfnaVtuFfsQP1nF4r6R6sWNprdMryv7Wb6Tv5XxmQYmqDeGGg2Dbn6ia9v61zu7Pvey3T6BaTxsTPunf2Gmaum",
+      "slot": 508030812,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4VMfnaVtuFfsQP1nF4r6R6sWNprdMryv7Wb6Tv5XxmQYmqDeGGg2Dbn6ia9v61zu7Pvey3T6BaTxsTPunf2Gmaum?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register ETH->Solana PDA via secp256k1 precompile",
+      "r": "PASS (precompile verified; program-side binding compiled out in this build)"
+    }
+  ],
+  "notes": [
+    "First run failed: precompile Custom(2) because @noble/curves 2.x sign() prehashes by default and Signature.toRawBytes no longer exists (recovery id silently stayed 0). Fixed in container copy."
+  ],
+  "slot": 508030812
+}

@@ -1,0 +1,120 @@
+{
+  "suite": "dna-devnet-tests-suite-newids",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "DNA_KEYS_DIR=<fresh child keys> node devnet-tests/suite-newids.ts  (suite.ts with HOOK/BANKS/TREE/MINT_GATE IDs swapped to the new deploy; ACM unchanged)",
+  "programId": {
+    "null_token_hook": "Fg9rnhjfHTh6nKAvcmNvi1B3vn5q4XQPMpytnQR9YGHj",
+    "dark_nullifier_banks": "499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue",
+    "receipt_commitment_tree": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+    "dark_null_mint_gate": "FE3PfXGhKBWexG9d8DB6a4ZCxTVDjGDtvjMyVCHnMh3N",
+    "agent_credential_mint (old)": "5ftab12xtYNLmeNZQghGK1b3CgnZDVmfAnyCr4uNuyqN"
+  },
+  "result": "PASS",
+  "pass": 13,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:26:30Z",
+  "signatures": [
+    {
+      "sig": "2mVA2WPKEBqAJNcV5kSnn164T19Cmd7JUDkWjqYSqYxsG6gYyaD8DSUS7ukmpsB55SsC3nMtRA2X54Qb49ahfJqz",
+      "slot": 508032236,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2mVA2WPKEBqAJNcV5kSnn164T19Cmd7JUDkWjqYSqYxsG6gYyaD8DSUS7ukmpsB55SsC3nMtRA2X54Qb49ahfJqz?cluster=devnet"
+    },
+    {
+      "sig": "hJXrXLbqcw9oj1EvjBVydAPb8Lk6H48ru9sRKaCx9rgmH9TUAYk216wPgPgQmDBaWAV9h7AGbEdosbPQSNQNLDK",
+      "slot": 508032255,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/hJXrXLbqcw9oj1EvjBVydAPb8Lk6H48ru9sRKaCx9rgmH9TUAYk216wPgPgQmDBaWAV9h7AGbEdosbPQSNQNLDK?cluster=devnet"
+    },
+    {
+      "sig": "p2puSquKZt6trzC34dt4vfo3pkp6HtdhEt43QR4oL7JBJaP1iDTx888CwpJtPn5kDpxbevanVzuk29G7yD7XC56",
+      "slot": 508032280,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/p2puSquKZt6trzC34dt4vfo3pkp6HtdhEt43QR4oL7JBJaP1iDTx888CwpJtPn5kDpxbevanVzuk29G7yD7XC56?cluster=devnet"
+    },
+    {
+      "sig": "2aKgjFZqPVjZfqYVcwSkLiDBtk3Dc45kmDGZiGVrgh8BM21j9NawVQs4b2NGqMne2bL2iPCTQfWWQZj8SiyK5nUK",
+      "slot": 508032287,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2aKgjFZqPVjZfqYVcwSkLiDBtk3Dc45kmDGZiGVrgh8BM21j9NawVQs4b2NGqMne2bL2iPCTQfWWQZj8SiyK5nUK?cluster=devnet"
+    },
+    {
+      "sig": "EegFzgoMuHHW2oDXbpP26uK8FUQBhbt3zxxnMd1mZn1hGik1d6kyCnaokgfuVP21Qq15JBdMJrfjV4rqyEHtxKf",
+      "slot": 508032242,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/EegFzgoMuHHW2oDXbpP26uK8FUQBhbt3zxxnMd1mZn1hGik1d6kyCnaokgfuVP21Qq15JBdMJrfjV4rqyEHtxKf?cluster=devnet"
+    },
+    {
+      "sig": "3y4yGYoPR6Pmza34RfM2FEQWj888vZQvkSfpg5XYAFnpUxLTVtFdbKeby49MtYyvUyCmFDRpAvsYmSk3mQRUPrKq",
+      "slot": 508032247,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3y4yGYoPR6Pmza34RfM2FEQWj888vZQvkSfpg5XYAFnpUxLTVtFdbKeby49MtYyvUyCmFDRpAvsYmSk3mQRUPrKq?cluster=devnet"
+    },
+    {
+      "sig": "3cyo69DepUU2zxa8CV59kpRBNuVds4ghtDrXw3hoNaJccFqXdmuXPHacbeBpkpmpaqrqexRVQdYKYyhwk85AJszT",
+      "slot": 508032251,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3cyo69DepUU2zxa8CV59kpRBNuVds4ghtDrXw3hoNaJccFqXdmuXPHacbeBpkpmpaqrqexRVQdYKYyhwk85AJszT?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "T1",
+      "r": "PASS"
+    },
+    {
+      "t": "T2 Unauthorized 0x9007",
+      "r": "PASS"
+    },
+    {
+      "t": "T3 Unauthorized 0x9007",
+      "r": "PASS"
+    },
+    {
+      "t": "T4a",
+      "r": "PASS"
+    },
+    {
+      "t": "T4b BankAlreadyInitialized 9",
+      "r": "PASS"
+    },
+    {
+      "t": "T5a hook config claimed (permissionless first-come)",
+      "r": "PASS"
+    },
+    {
+      "t": "T5b ConfigAlreadyExists 0x3005",
+      "r": "PASS"
+    },
+    {
+      "t": "T5c NotAdmin 0x3006",
+      "r": "PASS"
+    },
+    {
+      "t": "T6 prefund-grief init",
+      "r": "PASS"
+    },
+    {
+      "t": "T7 InitEmission",
+      "r": "PASS"
+    },
+    {
+      "t": "T8 NotAdmin 0x7007",
+      "r": "PASS"
+    },
+    {
+      "t": "T9 operator claim",
+      "r": "PASS"
+    },
+    {
+      "t": "T10 AdvanceEpoch",
+      "r": "PASS"
+    }
+  ],
+  "notes": [
+    "Side effect: canonical null_token_hook config admin = child wallet 3a5z5ZZ1Bs7asi4K77f7RKUBmyyebxXXg52SC3TJL3kx; dark_null_mint_gate emission-config admin = child wallet DkXV8cYYswwxE3B5tFyyYi56zJuXDB1YtBS2Wi9TKinj."
+  ],
+  "slot": 508032287
+}

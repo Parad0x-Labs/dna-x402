@@ -1,0 +1,106 @@
+{
+  "suite": "dna-x402-access-gate-v2",
+  "repo": "dna-x402@9ff95ee (fixes 01f5e35..9ff95ee)",
+  "cluster": "devnet",
+  "rpc": "https://solana-devnet.api.onfinality.io/public",
+  "command": "RPC=<onfinality devnet> GATE=<dark_x402_access_gate> RECEIPT_TREE=<receipt_commitment_tree> KEY=payer ART=<x402_access_v2 art> DAG=packages/receipt-dag/src/index.ts ANCHOR_PROGRAM=<receipt_anchor> node build/zk/x402-access-v2-e2e.mjs",
+  "programId": {
+    "dark_x402_access_gate": "7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR",
+    "receipt_commitment_tree": "Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP",
+    "receipt_anchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs"
+  },
+  "result": "PASS",
+  "pass": 6,
+  "fail": 0,
+  "timestamp": "2026-10-06T09:57:07Z",
+  "signatures": [
+    {
+      "sig": "sX3TqdxCxk447AJoCfFte3ZiNjQnsdbkck1Sy3cp7phZzL4P4qpprrfbvSqGJQprBBbqjnfULQt2YHxSXLGajPh",
+      "slot": 508054997,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/sX3TqdxCxk447AJoCfFte3ZiNjQnsdbkck1Sy3cp7phZzL4P4qpprrfbvSqGJQprBBbqjnfULQt2YHxSXLGajPh?cluster=devnet"
+    },
+    {
+      "sig": "27ZrqJuow1W9L4okajucWVGkbNngUkrH8mYJk9ChKga6xZwx6KadsCcrPFED417QHFbsTEKiUPDfFCPcsh1JapAq",
+      "slot": 508055002,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/27ZrqJuow1W9L4okajucWVGkbNngUkrH8mYJk9ChKga6xZwx6KadsCcrPFED417QHFbsTEKiUPDfFCPcsh1JapAq?cluster=devnet"
+    },
+    {
+      "sig": "2piuzSgijywgr4bakNxZiLErxZniGtaWky1aoCNNF9johVMJttWSxzqC1gVLRudAANx61QtC1Dy1wHsJsX5PCqKM",
+      "slot": 508055012,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2piuzSgijywgr4bakNxZiLErxZniGtaWky1aoCNNF9johVMJttWSxzqC1gVLRudAANx61QtC1Dy1wHsJsX5PCqKM?cluster=devnet"
+    },
+    {
+      "sig": "4C3c6cYGehpsnHxDoummwvwMAafYe2bwzw5UgNSARXQ4otV5nmGLpMMDmECMKiz5V8TsDipMMHZZorMf5y85y1HF",
+      "slot": 508055029,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4C3c6cYGehpsnHxDoummwvwMAafYe2bwzw5UgNSARXQ4otV5nmGLpMMDmECMKiz5V8TsDipMMHZZorMf5y85y1HF?cluster=devnet"
+    },
+    {
+      "sig": "62LdB1Tc9p8LBHBmzxfbqAPmBQkV3kwAR6vcxYtP4Gaa3osGptewZ7NZYkoVq62ifQAGR3JbNfpwCxvgZRSSuLcQ",
+      "slot": 508055038,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 11
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/62LdB1Tc9p8LBHBmzxfbqAPmBQkV3kwAR6vcxYtP4Gaa3osGptewZ7NZYkoVq62ifQAGR3JbNfpwCxvgZRSSuLcQ?cluster=devnet"
+    },
+    {
+      "sig": "4K8iX6ppxwpSM7rLKCZxVxQhq8UBBSeZyRZKtx9fW3ZkUPkApt51WUNUjXAHCUEq3r5HzNN9jgrYxkhFeoYzyceE",
+      "slot": 508055061,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 1
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/4K8iX6ppxwpSM7rLKCZxVxQhq8UBBSeZyRZKtx9fW3ZkUPkApt51WUNUjXAHCUEq3r5HzNN9jgrYxkhFeoYzyceE?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "settle_and_record to recipient 8dn8wAkvQDGR7QcRYmrTRhdyMX9BFKV2q5FeqAGaHcV5 (raw key >= BN254 modulus) -> leaf idx 3; JS root (counterparty = Poseidon2(hi,lo)) == on-chain root",
+      "r": "PASS"
+    },
+    {
+      "t": "L1",
+      "r": "PASS accepted on-chain + nullifier PDA created  sig 2piuzSgijywg\u2026"
+    },
+    {
+      "t": "A4",
+      "r": "PASS replay rejected {\"InstructionError\":[1,{\"Custom\":3}]}"
+    },
+    {
+      "t": "A3",
+      "r": "PASS self-made root rejected {\"InstructionError\":[1,{\"Custom\":11}]}"
+    },
+    {
+      "t": "A6",
+      "r": "PASS cross-scope rejected {\"InstructionError\":[1,{\"Custom\":1}]}"
+    },
+    {
+      "t": "live-mesh DAG anchor on receipt_anchor",
+      "r": "PASS"
+    }
+  ],
+  "notes": [
+    "receipt_commitment_tree upgraded in place 2026-10-06: the leaf counterparty is Poseidon2(hi128, lo128) of the recipient key, so recipients >= the BN254 modulus settle (first run: Custom(20) until a recipient below the modulus was ground). Settles at leaf idx 1, 2 and 3 in this rerun all used recipients above the modulus (attempt logs kept).",
+    "Attempts 1-2 printed FAIL for A3/A4/A6 although the ledger shows them rejected (3yR5B5Vf... Custom 11, VasK4UNf... Custom 3, 4FpwxAj3.../24arUkLT... Custom 1): confirmTransaction rejected with a non-Error under rate limiting. Harness fixed in cf7b306; this run grades every tx from the ledger."
+  ],
+  "recipientAboveModulus": "8dn8wAkvQDGR7QcRYmrTRhdyMX9BFKV2q5FeqAGaHcV5"
+}

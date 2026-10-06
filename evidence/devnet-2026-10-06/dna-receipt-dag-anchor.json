@@ -1,0 +1,32 @@
+{
+  "suite": "dna-receipt-dag-anchor",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "RPC=devnet KEY=payer DAG=packages/receipt-dag/src/index.ts ANCHOR_PROGRAM=<receipt_anchor> node build/zk/mainnet-anchor.mjs",
+  "programId": {
+    "receipt_anchor": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs"
+  },
+  "result": "PASS",
+  "pass": 1,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:21:05Z",
+  "signatures": [
+    {
+      "sig": "2EA1mmxAaGbBgM5pe9W6doX3eGcxxwwa6ZR8nPuK3wmF5qmXfZSBrV4EhRiLVGJwAjMwQPcWS2wz89hz6CEypKUb",
+      "slot": 508030873,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2EA1mmxAaGbBgM5pe9W6doX3eGcxxwwa6ZR8nPuK3wmF5qmXfZSBrV4EhRiLVGJwAjMwQPcWS2wz89hz6CEypKUb?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "anchorDagRoot cross-layer batch; bucket root == SHA256(0^32||anchor), count==1",
+      "r": "PASS (bucket GCSS17eNWKZa9vK7CZMjCTMmBjJM1azFMj182zLMDGqR)"
+    }
+  ],
+  "notes": [
+    "Script prints \"MAINNET\" labels; the run was devnet (RPC set to devnet)."
+  ],
+  "slot": 508030873
+}

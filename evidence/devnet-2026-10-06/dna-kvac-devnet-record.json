@@ -1,0 +1,44 @@
+{
+  "suite": "dna-kvac-devnet-record",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/kvac/devnet-record-e2e.mjs --program <dark_nullifier_record>",
+  "programId": {
+    "dark_nullifier_record": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et"
+  },
+  "result": "PASS",
+  "pass": 3,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:19:00Z",
+  "signatures": [
+    {
+      "sig": "PQGhdQNDmj7RwWG6TjQ6pTKXxtXNbC8gpNLNw8kx5mDBzDqZgG1NeTeSAKbui2BopkcKCY8H9LpGsY19yMiH6ff",
+      "slot": 508030356,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/PQGhdQNDmj7RwWG6TjQ6pTKXxtXNbC8gpNLNw8kx5mDBzDqZgG1NeTeSAKbui2BopkcKCY8H9LpGsY19yMiH6ff?cluster=devnet"
+    },
+    {
+      "sig": "2TVrSG9f6MP4gS9YJPD1kqJ52RPHio9Q9m2aXePZFrYZTKJNRbfkcCKsL8D8d32MvKPAfub4yrZp9Jyx9Nvcj4GM",
+      "slot": 508030360,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2TVrSG9f6MP4gS9YJPD1kqJ52RPHio9Q9m2aXePZFrYZTKJNRbfkcCKsL8D8d32MvKPAfub4yrZp9Jyx9Nvcj4GM?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "record n_A",
+      "r": "PASS"
+    },
+    {
+      "t": "replay n_A",
+      "r": "PASS: reverted AlreadyRecorded (simulated)"
+    },
+    {
+      "t": "record n_B (new context)",
+      "r": "PASS"
+    }
+  ],
+  "notes": [],
+  "slot": 508030360
+}

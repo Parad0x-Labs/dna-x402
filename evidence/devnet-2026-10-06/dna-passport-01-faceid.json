@@ -1,0 +1,51 @@
+{
+  "suite": "dna-passport-01-faceid",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/passport/01-devnet-faceid-e2e.mjs <dark_secp256r1_vault>",
+  "programId": {
+    "dark_secp256r1_vault": "GzB2iHxxAbDkpunQiLzgCj9gUEvHL2HpQVzj4JtLzmLC"
+  },
+  "result": "FAIL",
+  "pass": 1,
+  "fail": 3,
+  "timestamp": "2026-10-06T08:19:31Z",
+  "signatures": [
+    {
+      "sig": "4UyDAwY2vBZXpxpnkKpHgMAfJ5eEvwV97MHDLx8zq6TD9RpnjZjCwA7AN6Xfebt6Qc6wXYdgT3yQoPqSdgMZLnsd",
+      "slot": 508030484,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4UyDAwY2vBZXpxpnkKpHgMAfJ5eEvwV97MHDLx8zq6TD9RpnjZjCwA7AN6Xfebt6Qc6wXYdgT3yQoPqSdgMZLnsd?cluster=devnet"
+    },
+    {
+      "sig": "2coPGVuqnMnd3GQG9v2x7husVHYuyHQVv4fdMP1XTdty3sAKazzPqpBEbCUTt7F1Zo85iUajrtew8NbJ9jCjTU6H",
+      "slot": 508030488,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2coPGVuqnMnd3GQG9v2x7husVHYuyHQVv4fdMP1XTdty3sAKazzPqpBEbCUTt7F1Zo85iUajrtew8NbJ9jCjTU6H?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "register P-256",
+      "r": "PASS"
+    },
+    {
+      "t": "wrong message signed -> 0x400b",
+      "r": "FAIL: tx accepted (check compiled out)"
+    },
+    {
+      "t": "different key -> 0x4009",
+      "r": "FAIL: got 0x4004 ReplayedChallenge"
+    },
+    {
+      "t": "sign-in",
+      "r": "FAIL: 0x4004 (challenge rotated by accepted negative)"
+    }
+  ],
+  "notes": [
+    "Deployed dark_secp256r1_vault / dark_secp256k1_auth are default builds: precompile signature/pubkey binding is behind #[cfg(feature = \"mainnet\")] (processor.rs), so it is compiled out. Negatives that rely on that check are accepted; the accepted wrong-message signal rotates the challenge, so the real sign-in then hits Custom(0x4004) ReplayedChallenge.",
+    "Fix: rebuild these two programs with --features mainnet (the SIMD-0075 secp256r1 and secp256k1 precompiles exist on devnet) and upgrade in place, then rerun."
+  ],
+  "slot": 508030488
+}

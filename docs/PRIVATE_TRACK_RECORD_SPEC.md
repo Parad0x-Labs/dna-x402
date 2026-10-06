@@ -5,7 +5,7 @@ whole history in the clear; this lets an agent prove **"I have a real payment tr
 bar X"** while revealing nothing else. Unblocks receipt-backed reputation/lending without doxxing
 the agent's business. Reuses existing primitives.*
 
-## STATUS — implemented with tests; devnet redeploy pending
+## STATUS — implemented with tests; on devnet since 2026-10-06 (positive path not yet run there)
 `dark_reputation_gate` and `receipt_commitment_tree` are implemented (K=4, depth-10 POC):
 - circuit `track_record.circom` (12,100 constraints), VK in `dark-groth16-core::track_record_vk`.
 - e2e `scripts/zk/track-record-e2e.mjs` checks: real track-record proof confirmed;
@@ -16,8 +16,13 @@ the agent's business. Reuses existing primitives.*
   match the circuit's circomlib root byte-for-byte → the gate verifies a track-record proof
   against that root → single-use.
 
-The earlier devnet runs used deployments that are withdrawn. A devnet redeploy under a fresh key
-is pending, so both scripts take the program IDs as required arguments.
+The earlier devnet runs used deployments that are withdrawn. Since 2026-10-06 `dark_reputation_gate`
+(`Cyz7WjdmDTRGBE6kJpDiHUHDkQ5jq2C8BrnHcZm8st2g`) and `receipt_commitment_tree`
+(`Fyp5xQxCsUvgrq7wR42eRsL4MaLJML5FZxJtx55HzmFP`) run on devnet under a fresh key. The gate's rejection paths
+pass there (stale epoch, non-canonical tree, unknown root, forged and zero proofs, old 448-byte layout:
+[evidence](../evidence/devnet-2026-10-06/dna-probe-reputation-gate-negatives.json)); the positive path has not
+run because no committed zkey matches the compiled 7-input `track_record` VK. Both scripts take the program
+IDs as required arguments.
 
 **Remaining before mainnet:** (1) point the tree `authority` at your real x402 settlement signer
 (one config — the leaf-writer is built, generic); (2) multi-party ceremony + public ptau (same as
@@ -26,9 +31,9 @@ the access gate); (3) scale K/depth.
 ## Reuses
 | Piece | ID | Role here |
 |---|---|---|
-| alt_bn128 Groth16 verifier (`dark_x402_access_gate`) | redeploy pending | same syscall + verify path; new VK + public-input layout → `dark_reputation_gate` |
-| `receipt_anchor` | redeploy pending | anchors the **commitment** Merkle root (not public receipts) |
-| `dark_nullifier_record` | redeploy pending | records the per-epoch reputation nullifier → single-use proofs |
+| alt_bn128 Groth16 verifier (`dark_x402_access_gate`) | devnet `7P7UpHbX9Nv3dap1DDA4GfLdX2JiNjEVisYvgbuhyNGR` | same syscall + verify path; new VK + public-input layout → `dark_reputation_gate` |
+| `receipt_anchor` | devnet `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` | anchors the **commitment** Merkle root (not public receipts) |
+| `dark_nullifier_record` | devnet `CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et` | records the per-epoch reputation nullifier → single-use proofs |
 | identity commitment | — | `agent_commitment = Poseidon(secret, agent_id)` — **identical** to the access gate, so one identity spans "prove I'm funded" and "prove my track record" |
 
 ## Leaf + receipt tree

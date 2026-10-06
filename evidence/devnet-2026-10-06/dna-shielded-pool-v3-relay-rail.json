@@ -1,0 +1,162 @@
+{
+  "suite": "dna-shielded-pool-v3-relay-rail",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "SWV3_ZKEY=<drand-beacon zkey> SWV3_VK=<its vk> node build/zk/e2e-v3-devnet.mjs <dark_shielded_pool_program>",
+  "programId": {
+    "dark_shielded_pool_program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3"
+  },
+  "result": "PASS",
+  "pass": 8,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:38:50Z",
+  "signatures": [
+    {
+      "sig": "2Ahc5T3RTJNNb667Z9p6gG7NB8Ejst2LYKTx1HarRRKK1LdHnguhY7NFMH1uFVUgwkYvjDdu29DoUEcR5zcJZGSJ",
+      "slot": 508035341,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2Ahc5T3RTJNNb667Z9p6gG7NB8Ejst2LYKTx1HarRRKK1LdHnguhY7NFMH1uFVUgwkYvjDdu29DoUEcR5zcJZGSJ?cluster=devnet"
+    },
+    {
+      "sig": "Qgym74D6CfJZVtBuCj6WA1qUpxGKvCjuXWC4QMzFTkqoYfyevJq8z2fKt22G4s2TstJ5FhxQVyCYfayuUKaZ66Z",
+      "slot": 508035344,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/Qgym74D6CfJZVtBuCj6WA1qUpxGKvCjuXWC4QMzFTkqoYfyevJq8z2fKt22G4s2TstJ5FhxQVyCYfayuUKaZ66Z?cluster=devnet"
+    },
+    {
+      "sig": "c3pJSoB7FU2iv21dpg6MEnRdqiHAYtBQvp1htP5DZQYzWMYYJDnn8vWtsYDVG67rQppZHdNXzSupR1sV2BX5sXr",
+      "slot": 508035348,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/c3pJSoB7FU2iv21dpg6MEnRdqiHAYtBQvp1htP5DZQYzWMYYJDnn8vWtsYDVG67rQppZHdNXzSupR1sV2BX5sXr?cluster=devnet"
+    },
+    {
+      "sig": "3JSP5RdAeFG78ZodrF51eZtstMQiLdUrChuGjJ7zE433onpJnLrkpryGZpNrquo5A9rm13yYERzfuqcnEgTp8ag1",
+      "slot": 508035352,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3JSP5RdAeFG78ZodrF51eZtstMQiLdUrChuGjJ7zE433onpJnLrkpryGZpNrquo5A9rm13yYERzfuqcnEgTp8ag1?cluster=devnet"
+    },
+    {
+      "sig": "4tDQYnVrvUwUPTbTXrRoBAZmuf2gHvAYdDcph2nx4AXj3A29Cvo5JTb4JzN4LoGYWsGWmAstpfGeeQQMCrEwPTfT",
+      "slot": 508035361,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4tDQYnVrvUwUPTbTXrRoBAZmuf2gHvAYdDcph2nx4AXj3A29Cvo5JTb4JzN4LoGYWsGWmAstpfGeeQQMCrEwPTfT?cluster=devnet"
+    },
+    {
+      "sig": "27YgTD7UEAPGbhDK8K5sFkYbRaXTa7CD2NWjzrsvtbtZiuUKLaT3W6nnQLZRwrF8HYiH3Pxqqe1vB2zgJFxrDphG",
+      "slot": 508035415,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/27YgTD7UEAPGbhDK8K5sFkYbRaXTa7CD2NWjzrsvtbtZiuUKLaT3W6nnQLZRwrF8HYiH3Pxqqe1vB2zgJFxrDphG?cluster=devnet"
+    },
+    {
+      "sig": "dBDsaSTsanYv7y5j9rGqaKpju5b17YzcWY1G6fnGA8K8CkMrqUUkcH7ruYvQn4LEDcJxjvsvbJkt46AAG3exNH8",
+      "slot": 508035425,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/dBDsaSTsanYv7y5j9rGqaKpju5b17YzcWY1G6fnGA8K8CkMrqUUkcH7ruYvQn4LEDcJxjvsvbJkt46AAG3exNH8?cluster=devnet"
+    },
+    {
+      "sig": "hUQuY3c38fqmxKg4whkFtxEced32rUBD4FHvhqM3Fxx4KnPVm9iKHhS1amit4J2Ym7VhfUgmr2Hih6uvWvGtZSW",
+      "slot": 508035435,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/hUQuY3c38fqmxKg4whkFtxEced32rUBD4FHvhqM3Fxx4KnPVm9iKHhS1amit4J2Ym7VhfUgmr2Hih6uvWvGtZSW?cluster=devnet"
+    },
+    {
+      "sig": "5WDoVC3n5M4s441JCTdiwuoCRH52VSbrnTE4CqEJEUK7CKeu12ic4e51B42VCD4YptNH35JM7eRWLKvEyFobcb78",
+      "slot": 508035444,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5WDoVC3n5M4s441JCTdiwuoCRH52VSbrnTE4CqEJEUK7CKeu12ic4e51B42VCD4YptNH35JM7eRWLKvEyFobcb78?cluster=devnet"
+    },
+    {
+      "sig": "5xF2J9BS3fnsS3fcsv7yyfiFsHfRQcYQJrfcB9BSdzeNS7mQvYsp4MGKS8WwtYJU9JRykvy1zDna8s5HdibxzEL8",
+      "slot": 508035366,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/5xF2J9BS3fnsS3fcsv7yyfiFsHfRQcYQJrfcB9BSdzeNS7mQvYsp4MGKS8WwtYJU9JRykvy1zDna8s5HdibxzEL8?cluster=devnet"
+    },
+    {
+      "sig": "3DfRBgG17e7yAswypEjqFCX6qbKZkfRa1WAKU7pmZFdaDMTVL33PAoeqZk3yXmERHzMGkEGSQTTkW24r4CY6A4w7",
+      "slot": 508035384,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3DfRBgG17e7yAswypEjqFCX6qbKZkfRa1WAKU7pmZFdaDMTVL33PAoeqZk3yXmERHzMGkEGSQTTkW24r4CY6A4w7?cluster=devnet"
+    },
+    {
+      "sig": "21Yj4J6srNRr8AU5dM5jAKYyfCfppfeH4UqhFJNFuJSqu9nBzen7sYaBkXwGDhHr9RARJM98arYh4YNLcTtf2b99",
+      "slot": 508035388,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/21Yj4J6srNRr8AU5dM5jAKYyfCfppfeH4UqhFJNFuJSqu9nBzen7sYaBkXwGDhHr9RARJM98arYh4YNLcTtf2b99?cluster=devnet"
+    },
+    {
+      "sig": "tmWPuACoPDNfC9KqnXPkf2vCyYv6Bk5szQVYnSymEasnQm9jYruqB4qapRZw9BHQiUj2J4ffiFs9juiXHEFvqzN",
+      "slot": 508035400,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/tmWPuACoPDNfC9KqnXPkf2vCyYv6Bk5szQVYnSymEasnQm9jYruqB4qapRZw9BHQiUj2J4ffiFs9juiXHEFvqzN?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "root_consistency",
+      "r": "PASS"
+    },
+    {
+      "t": "valid_relayer_withdraw",
+      "r": "PASS"
+    },
+    {
+      "t": "double_spend_rejected Custom(3)",
+      "r": "PASS"
+    },
+    {
+      "t": "wrong_root_rejected Custom(12)",
+      "r": "PASS"
+    },
+    {
+      "t": "wrong_recipient_rejected Custom(4)",
+      "r": "PASS"
+    },
+    {
+      "t": "over_fee_proof_rejected (circuit)",
+      "r": "PASS"
+    },
+    {
+      "t": "relayer_mismatch_rejected Custom(4)",
+      "r": "PASS"
+    },
+    {
+      "t": "second_valid_withdraw",
+      "r": "PASS"
+    }
+  ],
+  "notes": [
+    "Attempts 1-3 failed after deposits (0.2 SOL each now locked in vaults 2qMELceB\u2026, E7XDPbgH\u2026, 2FeC24aK\u2026): (1) build/zk/node_modules missing, (2) build/zk/out wasm missing (gitignored build output), (3) on-chain Custom(4) ProofInvalid with the committed ceremony zkey.",
+    "Root cause of (3): crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs (compiled into the program; header VK sha256 d1cb06d3\u2026) differs in delta_g2 from the committed ceremony/shielded_withdraw_v3/shielded_withdraw_v3_final.zkey + _vk.json (sha256 3c9cce75\u2026). Re-deriving the documented drand-only beacon (snarkjs zkey beacon 0000.zkey, round 6000000 randomness, 10 iterations) reproduces VK sha256 d1cb06d3\u2026 exactly; with that zkey the run passes 8/8. The committed final.zkey/vk.json are stale.",
+    "Budget change: authority 1 -> 0.3 SOL, relayer 0.2 -> 0.05 SOL (script sweeps leftovers back)."
+  ],
+  "slot": 508035444
+}

@@ -1,0 +1,42 @@
+{
+  "suite": "dna-null-registrar-init",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/post-devnet/init-null-registrar.mjs <null_registrar>",
+  "programId": {
+    "null_registrar": "3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ"
+  },
+  "result": "PASS",
+  "pass": 2,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:21:52Z",
+  "signatures": [
+    {
+      "sig": "5TEZtV83JKNVaUPWWQkckBa9o5yQY3Ko1Tt13yT64yhcrv9TA8Vp5RfGKPCDuQzyhr5hZdhHWPkDfLr7mATi13xw",
+      "slot": 508031073,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5TEZtV83JKNVaUPWWQkckBa9o5yQY3Ko1Tt13yT64yhcrv9TA8Vp5RfGKPCDuQzyhr5hZdhHWPkDfLr7mATi13xw?cluster=devnet"
+    },
+    {
+      "sig": "3EW9C8zueMTRxAijLLYhHuFuiMtCu4c9DjGDXDYpRUDChffL2jUFaTmyphEa4aPSQNcaJndhPQv5uRgbmQF655mD",
+      "slot": 508031076,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3EW9C8zueMTRxAijLLYhHuFuiMtCu4c9DjGDXDYpRUDChffL2jUFaTmyphEa4aPSQNcaJndhPQv5uRgbmQF655mD?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "InitRegistry",
+      "r": "PASS"
+    },
+    {
+      "t": "Register parad0x.null",
+      "r": "PASS"
+    }
+  ],
+  "notes": [
+    "Registry config admin/treasury = test payer GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3, fee 0. Script rewrote configs/devnet.oss.json in the container copy only."
+  ],
+  "slot": 508031076
+}

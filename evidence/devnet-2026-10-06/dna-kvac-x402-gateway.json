@@ -1,0 +1,54 @@
+{
+  "suite": "dna-kvac-x402-gateway",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "node scripts/kvac/x402-gateway-devnet.mjs --program <dark_nullifier_record>",
+  "programId": {
+    "dark_nullifier_record": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et"
+  },
+  "result": "PASS",
+  "pass": 4,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:19:03Z",
+  "signatures": [
+    {
+      "sig": "2tPQDi5WgF6YiMgFNaw1PCbLExHdJ8HbXsTMeAJqPQMt3iFAgnjK1cFz7nhNPR6VuZ4PhB6JhD7g262acqXCtPmP",
+      "slot": 508030368,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2tPQDi5WgF6YiMgFNaw1PCbLExHdJ8HbXsTMeAJqPQMt3iFAgnjK1cFz7nhNPR6VuZ4PhB6JhD7g262acqXCtPmP?cluster=devnet"
+    },
+    {
+      "sig": "3MqSNEVUfPAYbcauaeJXC6fFrd5fbighKqZuf41uiwpRjLNoDJe8XsZRnw3tzzURohMrHVMMH6FTcTyQzB5v4Kmz",
+      "slot": 508030372,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3MqSNEVUfPAYbcauaeJXC6fFrd5fbighKqZuf41uiwpRjLNoDJe8XsZRnw3tzzURohMrHVMMH6FTcTyQzB5v4Kmz?cluster=devnet"
+    },
+    {
+      "sig": "aTe7Ej4fPtLyy8R4X89DP4S2MK8FkTHvM2jix1rMWXf9d1djEvaWgunC5ZigV18USeCmnPXPfmThqdkDAkh1ze5",
+      "slot": 508030376,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/aTe7Ej4fPtLyy8R4X89DP4S2MK8FkTHvM2jix1rMWXf9d1djEvaWgunC5ZigV18USeCmnPXPfmThqdkDAkh1ze5?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "A/epoch7 first call",
+      "r": "PASS"
+    },
+    {
+      "t": "A/epoch7 replay",
+      "r": "PASS: rate-limited (simulated revert)"
+    },
+    {
+      "t": "A/epoch8",
+      "r": "PASS"
+    },
+    {
+      "t": "B/epoch7",
+      "r": "PASS"
+    }
+  ],
+  "notes": [],
+  "slot": 508030376
+}

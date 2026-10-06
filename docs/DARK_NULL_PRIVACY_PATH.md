@@ -54,7 +54,7 @@ It does not store:
 
 DNA x402 normal path:
 
-- On-chain receipt anchoring is unavailable on every cluster until the `receipt_anchor` redeploy under a fresh key
+- On-chain receipt anchoring runs on devnet (`receipt_anchor` `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`, 2026-10-06) when the caller names that program; no mainnet-beta deployment is configured
 - Public Beta live payment flows are capped and direct-split gated
 
 Dark Null path:

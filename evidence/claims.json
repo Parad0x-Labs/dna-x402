@@ -298,7 +298,8 @@
         "x402/src/server.ts",
         "x402/src/config.ts",
         "packages/liquefy-receipts/src/anchor.ts",
-        "programs/receipt_anchor/src/processor.rs"
+        "programs/receipt_anchor/src/processor.rs",
+        "packages/wormhole-x402/src/index.ts"
       ],
       "implementation_status": "implemented",
       "package_version": null,
@@ -306,24 +307,28 @@
       "network": "devnet",
       "program_id": "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
       "deployed_build_hash": "c4d62f2b8eb52809eca0ca8c7df547dc7d608719e2bfefb087e954b3a0fb1231",
-      "source_build_match": "unknown",
+      "source_build_match": "match",
       "authority_assumptions": [
         "Program upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q (devnet).",
         "Any signer can append to any bucket; the program does not authenticate who anchors."
       ],
-      "evidence_checked_at": "2026-10-06T08:26:58Z",
+      "evidence_checked_at": "2026-10-06T10:12:36Z",
       "proof_files": [
         "evidence/devnet-programs-2026-10-06.json",
+        "evidence/devnet-2026-10-06/dna-receipt-dag-anchor.json",
+        "evidence/devnet-2026-10-06/dna-receipt-dag-verify.json",
+        "evidence/devnet-2026-10-06/dna-x402-access-gate-v2-rerun.json",
         "x402/tests/anchoring.noDefault.test.ts",
         "packages/liquefy-receipts/tests/liquefy-receipts.test.mjs",
+        "packages/wormhole-x402/tests/wormhole-x402.test.mjs",
         "programs/receipt_anchor/tests/integration.rs"
       ],
-      "test_command": "cargo test --manifest-path programs/receipt_anchor/Cargo.toml",
+      "test_command": "node build/zk/mainnet-anchor.mjs with RPC=devnet and ANCHOR_PROGRAM=HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs (evidence/devnet-2026-10-06/dna-receipt-dag-anchor.json)",
       "test_run": {
-        "result": "pending",
-        "date": null,
+        "result": "pass",
+        "date": "2026-10-06",
         "environment": "devnet",
-        "note": "Devnet test evidence for the 2026-10-06 deployment is being recorded separately."
+        "note": "anchorDagRoot landed on HSdE…mhXs (bucket root = SHA256(0^32 || anchor), count 1); accountability and proof-of-agency verification read it back; the x402 access gate v2 rerun anchored through it (6/6)."
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
@@ -331,7 +336,9 @@
         "with ANCHORING_ENABLED set, a missing program id or keypair, or an anchor client that cannot be built, stops server start-up with RECEIPT_ANCHOR_UNAVAILABLE (x402 test, 2026-10-06)",
         "the x402 transaction builders have no default program id and throw RECEIPT_ANCHOR_UNAVAILABLE without one",
         "liquefy-receipts 0.3.0 has no default program and throws RECEIPT_ANCHOR_UNAVAILABLE",
-        "deployed devnet bytes match the 2026-10-06 build output"
+        "wormhole-x402 resolves devnet to HSdE…mhXs and refuses mainnet-beta (no configured program)",
+        "a receipt-dag root anchored on devnet HSdE…mhXs on 2026-10-06 and was read back by the accountability and proof-of-agency verifiers",
+        "deployed devnet bytes equal the build of committed source 121109d (SHA-256 in the proof file)"
       ],
       "not_demonstrated": [
         "that one anchor proves a single receipt: the program folds each 32-byte value into an hourly hash chain (root = sha256(prev_root || value)); inclusion needs the ordered list of anchors in that bucket",
@@ -339,7 +346,7 @@
         "a deployment configured as default in source (none, by design)"
       ],
       "operational_limitations": [
-        "No receipt_anchor program is configured in source or in configs/; the mainnet profiles record the retired pilot program without its id."
+        "The x402 server, liquefy-receipts and the other clients have no default receipt_anchor program; the devnet deployment is named in configs/devnet.oss.json and in wormhole-x402 for devnet only. The mainnet profiles record the retired pilot program without its id."
       ],
       "supersedes": "x402.mainnet-pilot"
     },
@@ -589,7 +596,7 @@
       "id": "programs.devnet-set-2026-10-06",
       "plain_claim": "21 of the 28 programs in programs/ are deployed on devnet under one upgrade authority as of 2026-10-06.",
       "component": "programs/",
-      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_sha": "9ff95ee70934fd99faaeeafd722f1d1d7fcc5373",
       "source_paths": [
         "programs"
       ],
@@ -621,33 +628,73 @@
         "dark_nullifier_record": "CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et",
         "dark_semaphore": "4Zff8ZdQvk8m6CrCQ5wgMzEHm1AvsiJGpkRhfEcY2Lzu"
       },
-      "deployed_build_hash": null,
-      "source_build_match": "unknown",
+      "deployed_build_hash": {
+        "null_registrar": "3a44c0b18934da591f18c26593103fdf88f3b8c4685216e4250ab903068d19ae",
+        "dark_null_mint_gate": "3ac84dc3bcd5b9b2141ed0d3ef2e495498486e5f57b4af2f34dbee6cde42b0af",
+        "receipt_commitment_tree": "4d27a10850b365c1a088764a80eaf92f57d81237d71fb832e06b4772f00b5f9f",
+        "dark_ritual_transfer_hook": "171c88142b7bc779e5a0435dfb78c81edded1b2a561b7d4a92a1ce37be9ad36b",
+        "dark_shielded_pool_program": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+        "dark_x402_access_gate": "86f2e5d9de4de41201288d19575399aa08175232981b3df319b1e15be31fb5d3",
+        "dark_compressed_receipts": "cb2b117cf23d23b3970ef47014b7e837352d8d80af81c2e6c968c689628d898e",
+        "dark_fedimint_redeem_program": "56fcc0ee97df5eec2dd22bb527ff6c892aaa311537f1a759cdf290b4ae37eef4",
+        "dark_reputation_gate": "c214925401c28d4bbffba53dfdda5fcf74f7c4986941d190beed6dee6d4495dc",
+        "dark_chaff": "64b353589e815414ea0d2867b71fd7abe3c58fb6e7dc41b60870a351f8fd676d",
+        "dark_secp256r1_vault": "60f778ec297f8f09b1bd585f5b1389b1f6616c633748b1d614acfe27e4c513bd",
+        "dark_secp256k1_auth": "b7855dd852ec99caba73acb47e125619892a22125acf783a040ad4be4dc0dca2",
+        "dark_nullifier_banks": "222495b68aacec17b306348aa5d46b70e36c46edec1881f6fc6616936465758d",
+        "receipt_anchor": "c4d62f2b8eb52809eca0ca8c7df547dc7d608719e2bfefb087e954b3a0fb1231",
+        "dark_bls12_381_credential": "ef61da23a3a97c8bcf4a4b8a6200fdc0f83f9e8b071b718e7165372ab1d1f473",
+        "dark_proof_gate_lite": "cf617f0128d5618ca4aa8809e23d2f092c000dc2135186954c1d92823c776044",
+        "dark_ritual_gate": "3dd11d349f94e70bc572cc0ebbd0ecf4f9ba97269e29be69134fe04880f476a6",
+        "dark_null_lottery": "43537e1da61b65b2f6628485fe41cd166b6abeef765dd890b6f9a570050c365b",
+        "null_token_hook": "25371bfee6eefb51b684509651621ed4a27b592d5ff5132a9646f34d7e07cbba",
+        "dark_nullifier_record": "025519af608369a658da4f5333c4450f57146eb07864392d0cda46aa8a5b9f73",
+        "dark_semaphore": "1d738e8778f8960a4c35ddd3820f1f28bd5232246bcac92392ade210a21ae3a2"
+      },
+      "source_build_match": "match",
       "authority_assumptions": [
         "Single upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q for all 21 programs; it can replace any program."
       ],
-      "evidence_checked_at": "2026-10-06T08:26:58Z",
+      "evidence_checked_at": "2026-10-06T10:12:36Z",
       "proof_files": [
-        "evidence/devnet-programs-2026-10-06.json"
+        "evidence/devnet-programs-2026-10-06.json",
+        "evidence/devnet-2026-10-06/README.md",
+        "evidence/devnet-2026-10-06/summary.json",
+        "evidence/devnet-2026-10-06/summary-rerun.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json",
+        "configs/devnet.oss.json"
       ],
-      "test_command": null,
+      "test_command": "per-suite commands in evidence/devnet-2026-10-06/*.json",
       "test_run": {
-        "result": "pending",
-        "date": null,
+        "result": "partial",
+        "date": "2026-10-06",
         "environment": "devnet",
-        "note": "Devnet test results for this deployment are being recorded separately."
+        "note": "First run 158 pass / 8 fail across 26 suites; the 8 failures were in dark_secp256r1_vault, dark_secp256k1_auth and dark_null_lottery, which were fixed and upgraded in place; their reruns and the other affected suites pass 43/43 across 8 suites. dark_reputation_gate positive path not run."
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
-        "each program account exists on devnet and its deployed bytes match the 2026-10-06 build output (per-program SHA-256 in the proof file)"
+        "each program account exists on devnet under upgrade authority 9Jkp…pU2q and its deployed bytes equal the cargo-build-sbf output of committed source (121109d, or 1157630 for the five programs upgraded on 2026-10-06); per-program SHA-256 in the proof file",
+        "instruction-level suites recorded for all 21 programs with signatures and slots read back from the ledger",
+        "dark_secp256r1_vault and dark_secp256k1_auth reject a wrong key, wrong address and wrong message via the precompile binding (0x4009, 0x400b, 0x5008, 0x5009)",
+        "dark_null_lottery refuses non-admin CommitRound, AnchorTickets and RevealDraw (0x6008)",
+        "receipt_commitment_tree settles to recipients whose keys exceed the BN254 modulus",
+        "null_registrar pay-by-name to a one-time stealth address, swept with the recovered scalar (8/8)",
+        "dark_fedimint_redeem_program held 22 of 22 adversarial cases",
+        "attack-replay suite T1–T10 passes against the new null_token_hook, dark_nullifier_banks, receipt_commitment_tree and dark_null_mint_gate (13/13)"
       ],
       "not_demonstrated": [
-        "reproducible build from a public commit: the build used program-ID constants and a devnet cargo feature not committed at the snapshot",
-        "instruction-level behaviour on devnet for this deployment (results pending)",
+        "dark_reputation_gate positive path: no committed zkey matches the compiled track_record VK",
+        "ETH-address squatting: dark_secp256k1_auth does not bind the registering Solana key to the signed message, so a holder of any signature from an ETH key can register that address first (open until a fix is deployed)",
+        "dark_null_lottery ClaimJackpot: the devnet build binds the first nullifier that claims a drawn round as winner, with no proof of ticket ownership",
+        "passkey browser flows (Face ID / WebAuthn on a device); runs use scripted P-256 keys",
+        "membership proofs in dark_semaphore and the BLS pairing in dark_bls12_381_credential (IS_MAINNET_READY = false in these builds)",
+        "a multi-party trusted setup for any verifying key",
         "mainnet deployment"
       ],
       "operational_limitations": [
-        "Earlier devnet program IDs referenced in older docs and evidence files are retired."
+        "Earlier devnet program IDs referenced in older docs and evidence files are retired.",
+        "One upgrade authority can replace any of the 21 programs.",
+        "Three shielded-pool buckets created before the upgrade have derivable authority keys and stay pausable by anyone; use the PDA buckets."
       ],
       "supersedes": null
     },
@@ -655,49 +702,53 @@
       "id": "programs.dark-shielded-pool",
       "plain_claim": "The dark_shielded_pool program verifies a Groth16 withdraw proof over the alt_bn128 syscalls.",
       "component": "programs/dark_shielded_pool",
-      "source_sha": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
+      "source_sha": "9ff95ee70934fd99faaeeafd722f1d1d7fcc5373",
       "source_paths": [
         "programs/dark_shielded_pool/src/processor.rs",
         "crates/dark-groth16-core",
-        "crates/dark-poseidon-real"
+        "crates/dark-poseidon-real",
+        "ceremony/shielded_withdraw_v3"
       ],
       "implementation_status": "prototype",
       "package_version": null,
       "publication_status": "not-applicable",
       "network": "devnet",
       "program_id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
-      "deployed_build_hash": "ddcf6a7986c8a02a65266c7be4d080fdae1f042509467ce44f0399a7e64ae4b2",
-      "source_build_match": "unknown",
+      "deployed_build_hash": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+      "source_build_match": "match",
       "authority_assumptions": [
         "Single-party devnet verifying key (mainnet_ready = false).",
         "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q."
       ],
-      "evidence_checked_at": "2026-10-06T08:26:58Z",
+      "evidence_checked_at": "2026-10-06T10:12:36Z",
       "proof_files": [
         "docs/DARK_CRATES_STATUS.md",
         "evidence/devnet-programs-2026-10-06.json",
+        "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-rerun.json",
+        "evidence/devnet-2026-10-06/dna-shielded-pool-init-buckets-rerun.json",
         "evidence/shielded-pool-devnet.json",
         "evidence/zk/shielded-withdraw-v3-hardening-devnet.json"
       ],
-      "test_command": null,
+      "test_command": "node build/zk/e2e-v3-devnet.mjs FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
       "test_run": {
-        "result": "pending",
-        "date": null,
+        "result": "pass",
+        "date": "2026-10-06",
         "environment": "devnet",
-        "note": "Devnet test results for the 2026-10-06 deployment are being recorded separately."
+        "note": "v3 relay rail 8/8 with the committed ceremony zkey, every outcome read from the ledger; bucket init and authority rejections 6/6."
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
-        "Groth16 pairing check wired through dark-groth16-core in source",
-        "historical: 2026-06-09 devnet run (v2 circuit, program since closed) with valid withdraw and double-spend, wrong-root and wrong-recipient rejections"
+        "Groth16 withdraw proofs from the committed ceremony/shielded_withdraw_v3 zkey verify on devnet FmLW…BSZ3 (2026-10-06)",
+        "double-spend Custom(3), wrong root Custom(12), wrong recipient Custom(4) and relayer mismatch Custom(4) rejected on-chain; over-fee rejected by the circuit",
+        "relay-rail buckets are PDA-keyed and only the admin can Pause/Resume (InitBucketPool, 30a0ce6)"
       ],
       "not_demonstrated": [
-        "withdrawals from a build of this commit: the mainnet_ready guard is active and Cargo.toml declares no devnet feature, so every proof is refused",
-        "a multi-party trusted setup",
+        "a multi-party trusted setup: the verifying key comes from a single-party setup plus a drand beacon",
+        "withdrawals from a mainnet build: without the devnet feature the mainnet_ready guard refuses every proof",
         "that this program shares code or a deployment with Dark-Null-Protocol (it does not)"
       ],
       "operational_limitations": [
-        "The 2026-10-06 devnet build compiles out the guard with a devnet feature that is not yet committed."
+        "The devnet build uses the committed devnet cargo feature (121109d) to compile out the mainnet_ready guard."
       ],
       "supersedes": null
     },

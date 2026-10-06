@@ -1,0 +1,120 @@
+{
+  "suite": "dna-enull-fedimint-e2e",
+  "repo": "dna-x402@8743fd7 (+source-ids.patch)",
+  "cluster": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "command": "TEST_WALLET_DIR=... node build/enull/e2e-devnet.mjs <dark_fedimint_redeem_program>",
+  "programId": {
+    "dark_fedimint_redeem_program": "26v61JPcTKyrUfTpULVaP5w9dCN3GtCW3gu5X1LunrNd"
+  },
+  "result": "PASS",
+  "pass": 6,
+  "fail": 0,
+  "timestamp": "2026-10-06T08:29:00Z",
+  "signatures": [
+    {
+      "sig": "5SXCuukmrCWDkj1kKG3iHLHK1ep62C7jDMFC2watX7b7VKSG8CG9ESczjQtKDLADywrKmntASH2FdyQVQMY1puoL",
+      "slot": 508032871,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5SXCuukmrCWDkj1kKG3iHLHK1ep62C7jDMFC2watX7b7VKSG8CG9ESczjQtKDLADywrKmntASH2FdyQVQMY1puoL?cluster=devnet"
+    },
+    {
+      "sig": "5sq1ADMs97rAq5zEYyyY2j6xBLykF5A8bZrNeufpACr8Hp4ahi3JfNWXyX94Q1Ynjs5N3KnWhuZHYd9fcV8eDCe5",
+      "slot": 508032880,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5sq1ADMs97rAq5zEYyyY2j6xBLykF5A8bZrNeufpACr8Hp4ahi3JfNWXyX94Q1Ynjs5N3KnWhuZHYd9fcV8eDCe5?cluster=devnet"
+    },
+    {
+      "sig": "38YF6fiKuYQMDidnVzKxSd7MmKtfwQFzHYeSh2a4hisM5R8Q1XrSQ2W1zj2Qpbem6wBcUEF4Mp9TRxoBmh9jNsvV",
+      "slot": 508032885,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/38YF6fiKuYQMDidnVzKxSd7MmKtfwQFzHYeSh2a4hisM5R8Q1XrSQ2W1zj2Qpbem6wBcUEF4Mp9TRxoBmh9jNsvV?cluster=devnet"
+    },
+    {
+      "sig": "29ySPs4tsLmCsxsiPzsYFPsdyvU6i9saLf2CoLur1gicC8UfrjcHnhT9Jzdi3fpsrratyzHjV1b1E6YcdpPtS1sV",
+      "slot": 508032889,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/29ySPs4tsLmCsxsiPzsYFPsdyvU6i9saLf2CoLur1gicC8UfrjcHnhT9Jzdi3fpsrratyzHjV1b1E6YcdpPtS1sV?cluster=devnet"
+    },
+    {
+      "sig": "2btXaLqhMtvsxWMXtUx3vsrtrgN2KEQGxdDP9tzSFmfVrAi1KSFkP38rqRofWEbSVNC3rMaWNbDTTiiQYGJyuxu5",
+      "slot": 508032894,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2btXaLqhMtvsxWMXtUx3vsrtrgN2KEQGxdDP9tzSFmfVrAi1KSFkP38rqRofWEbSVNC3rMaWNbDTTiiQYGJyuxu5?cluster=devnet"
+    },
+    {
+      "sig": "aHNenkBFzBouL3h1oqhFzAkxTBP29znNWokCzvAWKTygL5sh4JUsiGYamP6cQY8RghnMDddViimfPN8YH5uDnjQ",
+      "slot": 508032898,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 5
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/aHNenkBFzBouL3h1oqhFzAkxTBP29znNWokCzvAWKTygL5sh4JUsiGYamP6cQY8RghnMDddViimfPN8YH5uDnjQ?cluster=devnet"
+    },
+    {
+      "sig": "2hJ11DLjauikDYbsQ3N16osJAebG4Tkbhg8zbZUaQLa9HtB8vKXDj7gdYmXu1LEoy1qx87kZw8FaphsM2SWD89d8",
+      "slot": 508032904,
+      "err": {
+        "InstructionError": [
+          1,
+          "InvalidArgument"
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2hJ11DLjauikDYbsQ3N16osJAebG4Tkbhg8zbZUaQLa9HtB8vKXDj7gdYmXu1LEoy1qx87kZw8FaphsM2SWD89d8?cluster=devnet"
+    },
+    {
+      "sig": "seXD7syNEisD3YE9oh8pWpBNEE9o18zCKSJNF3Jedwk1BXwhuxnspepE9vypAHNPo4SmtoFfnsbKkHmKX7v7MD8",
+      "slot": 508032927,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 5
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/seXD7syNEisD3YE9oh8pWpBNEE9o18zCKSJNF3Jedwk1BXwhuxnspepE9vypAHNPo4SmtoFfnsbKkHmKX7v7MD8?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "valid 3-of-5 redeem",
+      "r": "PASS"
+    },
+    {
+      "t": "double-spend",
+      "r": "PASS Custom(3)"
+    },
+    {
+      "t": "forged C",
+      "r": "PASS Custom(5)"
+    },
+    {
+      "t": "under-threshold",
+      "r": "PASS per script, but tx did not land (send threw); on-chain coverage of this case is in enull-mayhem (HELD Custom(5))"
+    },
+    {
+      "t": "wrong nullifier PDA",
+      "r": "PASS InvalidArgument"
+    },
+    {
+      "t": "foreign federation",
+      "r": "PASS Custom(5)"
+    }
+  ],
+  "notes": [
+    "Budget change: DENOM 0.1 -> 0.01 SOL and authority funding 1.5 -> 0.15 SOL (payer held 1.5 SOL total)."
+  ],
+  "slot": 508032927
+}

@@ -38,7 +38,7 @@ A TypeScript server implementing the x402 HTTP payment protocol on Solana. When 
 
 ### How it is proven
 
-The `receipt_anchor` program is implemented with tests; a devnet redeploy under a fresh key is pending. The full TypeScript test suite runs in CI. Integration tests in `x402/test-mainnet/` cover the complete payment cycle end-to-end against real Solana devnet.
+The `receipt_anchor` program is implemented with tests and runs on devnet at `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` (2026-10-06, fresh key; [evidence](../evidence/devnet-2026-10-06/README.md)). The full TypeScript test suite runs in CI. Integration tests in `x402/test-mainnet/` cover the complete payment cycle end-to-end against real Solana devnet.
 
 ### Why it matters
 
@@ -209,17 +209,17 @@ Thirteen additional primitives solving daily operational problems. All tested. A
 
 ## Part 5 — Solana Programs
 
-Eight programs, all implemented in code with tests. `receipt_anchor`, `dark_ritual_transfer_hook` and `dark_ritual_gate` await a devnet redeploy under a fresh key; the other five are ready for deployment via the existing deploy script.
+Eight programs, all implemented in code with tests. Seven run on devnet since 2026-10-06 under a fresh key, with recorded test runs ([evidence](../evidence/devnet-2026-10-06/README.md)); `dark_scratch` is not deployed.
 
 | Program | Status | What it does |
 |---|---|---|
-| `receipt_anchor` | Redeploy pending | Anchors receipt commitments on-chain. Provides VERIFIED semantics for settled payments |
-| `dark_ritual_transfer_hook` | Redeploy pending | Token-2022 transfer hook. Scans all transaction instructions. Blocks transfer if ritual gate not present. Emits HookVerdict on success |
-| `dark_ritual_gate` | Redeploy pending | Verifies ritual grammar: instruction ordering, permission braid, ritual type |
-| `dark_nullifier_banks` | Ready to deploy | 256-shard nullifier bank. Each nullifier routes to a shard by hash. Duplicate nullifier rejected anywhere in the set |
-| `dark_compressed_receipts` | Ready to deploy | Stores receipt root on-chain. Accepts redeem instructions with nullifier. Rejects double-spend |
-| `dark_chaff` | Ready to deploy | Creates 3–7 ephemeral PDA accounts around a real action. All close at epoch end. Poisons chain analysis |
-| `dark_proof_gate_lite` | Ready to deploy | Lightweight proof gate for permissioned actions |
+| `receipt_anchor` | Devnet `HSdE…mhXs` (2026-10-06) | Anchors receipt commitments on-chain. Provides VERIFIED semantics for settled payments |
+| `dark_ritual_transfer_hook` | Devnet `9zBL…eEsf` (2026-10-06) | Token-2022 transfer hook. Scans all transaction instructions. Blocks transfer if ritual gate not present. Emits HookVerdict on success |
+| `dark_ritual_gate` | Devnet `GdL3…5PXo` (2026-10-06) | Verifies ritual grammar: instruction ordering, permission braid, ritual type |
+| `dark_nullifier_banks` | Devnet `499r…uaue` (2026-10-06) | 256-shard nullifier bank. Each nullifier routes to a shard by hash. Duplicate nullifier rejected anywhere in the set |
+| `dark_compressed_receipts` | Devnet `7uEL…M1oB` (2026-10-06) | Stores receipt root on-chain. Accepts redeem instructions with nullifier. Rejects double-spend |
+| `dark_chaff` | Devnet `4TQ4…Ut5B` (2026-10-06) | Creates 3–7 ephemeral PDA accounts around a real action. All close at epoch end. Poisons chain analysis |
+| `dark_proof_gate_lite` | Devnet `pfvd…RT8P` (2026-10-06) | Lightweight proof gate for permissioned actions |
 | `dark_scratch` | Ready to deploy | Leasable scratch account slots for temporary compute |
 
 ---
@@ -229,7 +229,7 @@ Eight programs, all implemented in code with tests. `receipt_anchor`, `dark_ritu
 This section is included deliberately. Internal reviewers should know the exact boundary between what is live, what is modelled, and what is next.
 
 **Built and tested:**
-- `receipt_anchor`, `dark_ritual_transfer_hook`, `dark_ritual_gate` — implemented with tests; devnet redeploy under a fresh key pending
+- `receipt_anchor`, `dark_ritual_transfer_hook`, `dark_ritual_gate` — implemented with tests; on devnet since 2026-10-06 with recorded runs (anchor root read back; ritual gate and hook 11/11)
 - All 807 Rust unit tests — run locally, no network needed
 
 **Modelled but not live wired:**
@@ -263,7 +263,7 @@ The claim scanner (`scripts/check-degen-claims.mjs`) runs across all documentati
 |---|---|---|
 | Rust crates | 100 | Built and tested |
 | Test cases | 807 | Passing, 0 failures |
-| Solana programs | 8 | Built and tested; devnet redeploy under a fresh key pending |
+| Solana programs | 8 | Built and tested; 7 on devnet since 2026-10-06 (fresh key) |
 | Documentation files | 116 | Written, claim-scanned |
 | zkvm guests | 2 | Skeleton ready, execution pending rzup |
 
