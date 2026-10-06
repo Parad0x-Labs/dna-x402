@@ -48,8 +48,8 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^25.9.2",
-    "typescript": "^6.0.3"
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=22.0.0"

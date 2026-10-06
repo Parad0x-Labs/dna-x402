@@ -28,10 +28,10 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.9.2",
-    "jest": "^30.4.2",
-    "ts-jest": "^29.0.0",
-    "typescript": "^6.0.3"
+    "@types/node": "^26.6.4",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.14",
+    "typescript": "^7.0.2"
   },
   "jest": {
     "preset": "ts-jest",
