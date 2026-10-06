@@ -1,4 +1,4 @@
-# @dna-x402/liquefy-receipts
+# @parad0x_labs/liquefy-receipts
 
 Columnar compression + bilateral netting + AES-256-GCM encryption for x402 AI agent payment receipt batches.
 
@@ -9,7 +9,7 @@ Part of the [DNA x402](https://github.com/Parad0x-Labs/dna-x402) stack — the x
 ## Install
 
 ```bash
-npm install @dna-x402/liquefy-receipts
+npm install @parad0x_labs/liquefy-receipts
 ```
 
 ## Quick start
@@ -20,11 +20,13 @@ import {
   decompressReceipts,
   netReceipts,
   buildReceiptRoot,
+  MerkleTree,
   verifyReceiptInBatch,
   buildAnchorIxData,
+  resolveReceiptAnchorProgramId,
   generateKey,
   encryptBlob,
-} from "@dna-x402/liquefy-receipts";
+} from "@parad0x_labs/liquefy-receipts";
 
 // Net bilateral flows (1000 receipts → a handful of settlements)
 const nets = netReceipts(receipts);
@@ -48,8 +50,9 @@ const root = buildReceiptRoot(receipts, batchSecret);   // omit batchSecret for 
 const proof    = new MerkleTree(receipts, batchSecret).proof(42);
 const verified = verifyReceiptInBatch(receipts[42], proof);
 
-// Anchor instruction data for a receipt_anchor deployment you control
-// (receipt anchoring is unavailable until the redeploy under a fresh key)
+// Anchor instruction data for a receipt_anchor deployment you control.
+// resolveReceiptAnchorProgramId() throws RECEIPT_ANCHOR_UNAVAILABLE when no program is named.
+const programId = resolveReceiptAnchorProgramId(process.env.RECEIPT_ANCHOR_PROGRAM_ID);
 const ixData = buildAnchorIxData({
   batchBytes: compressed,
   receiptCount: receipts.length,
@@ -77,7 +80,7 @@ Based on [Liquefy](https://github.com/Parad0x-Labs/liquefy-openclaw-integration)
 - Delta encode numerics (amounts, timestamps)
 - Dictionary encode low-cardinality strings (receivers, program IDs)
 - Deflate each column independently
-- Same receiver 1000× → stored once
+- A receiver repeated across 1,000 receipts is stored once
 
 ## On-chain programs
 
