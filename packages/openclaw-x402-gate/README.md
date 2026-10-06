@@ -11,8 +11,8 @@ Turn any OpenClaw skill or API into a paid endpoint. Mint an HTTP **402 Payment
 Required** challenge, verify the payment, then serve. Funds settle **straight to
 your own wallet** on Solana — the skill holds no keys and takes no custody. Pairs
 with [`openclaw-x402-pay`](https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/openclaw-x402-pay)
-(the paying side) for the full agent-to-agent loop on a rail that's **live on
-Solana mainnet**.
+(the paying side) for the full agent-to-agent loop. Settlement is a standard SPL
+USDC transfer on Solana; there is no settlement program to deploy.
 
 ## Trust model
 

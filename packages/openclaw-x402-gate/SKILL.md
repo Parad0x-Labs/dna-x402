@@ -39,7 +39,7 @@ verify the payment, then serve — funds settle straight to your own Solana wall
 ## Pairs with
 
 `x402-pay` — the paying side. Together: the full agent-to-agent payment loop on
-the DNA x402 rail (live on Solana mainnet).
+the DNA x402 rail (standard SPL USDC transfers on Solana).
 
 ## Source
 

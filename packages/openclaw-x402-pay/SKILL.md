@@ -40,7 +40,7 @@ amountUsdc }`.
 ## Pairs with
 
 `x402-gate` — the charging side. Together they're the full agent-to-agent payment
-loop on the DNA x402 rail (live on Solana mainnet).
+loop on the DNA x402 rail (standard SPL USDC transfers on Solana).
 
 ## Source
 

@@ -18,8 +18,8 @@ export const X402_VERSION = 1;
 export const MEMO_PREFIX = "null-miner-v1";
 
 /**
- * receipt_anchor program per network. null everywhere: receipt anchoring is
- * unavailable until the redeploy under a fresh key.
+ * receipt_anchor program per network. null everywhere: no default is configured
+ * (devnet receipt_anchor: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs).
  */
 export const RECEIPT_ANCHOR_PROGRAM_ID: Record<SolanaNetwork, string | null> = {
   "solana-mainnet": null,

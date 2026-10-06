@@ -410,7 +410,7 @@ function compressReceipts(receipts: object[]): object {
     merkle_root_hex: merkleRootHex,
     receipt_count: receipts.length,
     note:
-      "Compressed with zlib deflate (level 9) as a format demonstration. Real Liquefy achieves ~83x via columnar layout + domain-aware encoding on typed receipt fields. Decompress with zlib inflate.",
+      "Compressed with zlib deflate (level 9) as a format demonstration, not the columnar codec of @parad0x_labs/liquefy-receipts (which measures 66.1x on its synthetic 1,000-receipt test batch). Decompress with zlib inflate.",
   };
 }
 
@@ -681,7 +681,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "compress_receipts",
         description:
-          "Compress a batch of receipts using Liquefy columnar compression (83x typical ratio)",
+          "Compress a batch of receipts with zlib deflate (level 9) and return a SHA-256 Merkle root over them. A format demonstration; not the Liquefy columnar codec.",
         inputSchema: {
           type: "object",
           properties: {

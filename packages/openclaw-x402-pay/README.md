@@ -10,10 +10,10 @@ Published from Parad0x-Labs/openclaw-skills; this copy is not published.
 Give your agent one tool — `pay_x402` — that fetches an x402-gated URL and, if it
 answers HTTP **402 Payment Required**, pays for it on Solana and returns the
 resource. Pairs with [`openclaw-x402-gate`](https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/openclaw-x402-gate)
-(the charging side) to form the full agent-to-agent payment loop on a rail that's
-**live on Solana mainnet** — settlement is a standard SPL USDC transfer (mainnet USDC
-mint `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`) with the receipt hash carried in a
-Memo. There is no custom settlement program to trust — just the SPL Token and Memo programs.
+(the charging side) to form the full agent-to-agent payment loop. Settlement is a
+standard SPL USDC transfer (devnet by default; mainnet USDC mint
+`EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` only with `allowMainnet: true`) with the
+receipt hash carried in a Memo. There is no custom settlement program to trust — just the SPL Token and Memo programs.
 
 ## Trust model — read this first
 

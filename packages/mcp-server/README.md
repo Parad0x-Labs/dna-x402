@@ -12,8 +12,10 @@ Exposes the Parad0x Labs stack as MCP tools. Works with Claude Desktop, Cursor, 
 | `anchor_receipt` | Anchor a 32-byte receipt hash via `receipt_anchor`. This server configures no `receipt_anchor` program (devnet: `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs`); the tool returns an error and sends nothing |
 | `lookup_passport` | Check if an ETH address or Solana wallet has a Dark Passport binding record from the retired mainnet pilot (records stay readable) |
 | `build_outcome_receipt` | Build a signed outcome receipt with PnL, accuracy, or delivery result |
-| `compress_receipts` | Compress a batch of receipts (Liquefy format, 83x typical ratio) |
+| `compress_receipts` | Compress a batch of receipts with zlib deflate (level 9) and return a SHA-256 Merkle root; a format demonstration, not the Liquefy columnar codec |
+| `check_nullifier` | Validate a nullifier for `dark_nullifier_record`. This server configures no `dark_nullifier_record` program (devnet: `CPMfXL73v9PDmxyPLTM97bzrNa5eg2AEpsac9XKzX9et`); the tool returns an error and makes no RPC call |
 | `get_stack_status` | Status of the mainnet pilot programs (all retired 2026-07-14) and of programs this server does not configure |
+| `private_compute` | Encrypt an input locally (AES-256-GCM), send the ciphertext to an executor endpoint you name, and return the result hash. With `anchor: true` the commitment reports `anchor_failed`, since no `receipt_anchor` program is configured |
 
 ## Install
 
@@ -42,7 +44,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
-`SOLANA_KEYPAIR` is a JSON array of 64 bytes (the standard Solana keypair format output by `solana-keygen`). `anchor_receipt` does not use it while receipt anchoring is unavailable.
+`SOLANA_KEYPAIR` is a JSON array of 64 bytes (the standard Solana keypair format output by `solana-keygen`). `anchor_receipt` does not use it: this server configures no `receipt_anchor` program.
 
 ## Cursor / Windsurf config
 

@@ -15,6 +15,9 @@
     "src/",
     "README.md"
   ],
+  "scripts": {
+    "test": "node --test tests/royalty-waterfalls.test.mjs"
+  },
   "keywords": [
     "solana",
     "x402",

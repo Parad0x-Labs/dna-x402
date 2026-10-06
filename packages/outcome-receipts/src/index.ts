@@ -6,8 +6,8 @@
  * Design:
  *   - OutcomeReceipt is signed by the creator (Ed25519 over the canonical struct)
  *   - anchorOutcomeReceipt stores the SHA-256 of the receipt JSON on-chain via a
- *     receipt_anchor deployment the caller names (none is configured until the
- *     redeploy under a fresh key, so anchoring refuses without one)
+ *     receipt_anchor deployment the caller names (no default is configured, so
+ *     anchoring refuses without one; devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs)
  *   - No fake PnL can be mechanically enforced here — but any false claim is
  *     on-chain provable because the signed struct is permanently anchored.
  *
