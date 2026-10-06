@@ -130,8 +130,11 @@ class TaskStore {
       console.warn(`[TaskStore][DEV] Proof mismatch for ${taskId.slice(0, 16)} — allowProofMismatch=true`);
     }
 
+    // 90% to the agent; the other 10% is the integrating platform's share (operator
+    // pricing, not Parad0x). Parad0x takes no cut of task rewards.
     const usdcEarned = task.rewardUsdc * 0.9;   // 90% to agent
-    const nullYield  = (usdcEarned * 0.05);      // 5% flywheel
+    // NULL yield credited to the agent on top of the USDC payout; nothing is deducted.
+    const nullYield  = (usdcEarned * 0.05);
 
     task.completed   = true;
     task.completedAt = Date.now();

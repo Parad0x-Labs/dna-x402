@@ -47,7 +47,12 @@ fn main() {
     //   Simulation uses reduced thresholds for demonstration.
     //   Production values: min ~$50, max_single ~$250, max_daily ~$1000.
     // -----------------------------------------------------------------------
+    // The shipped DEFAULT_ALLOCATION_BPS is 0: Parad0x takes no premium-fee or treasury
+    // cut (its only fee is the 0.05% x402 protocol fee), so by default nothing accrues and
+    // nothing executes. The simulation sets an illustrative 5 bps rate only to exercise
+    // the accumulate / schedule / chunk / receipt mechanics.
     let mut config = FlywheelConfig::default();
+    config.allocation_bps = 5; // illustrative simulation rate; the default is 0
     config.min_execution_lamports = 1_000_000; // 0.001 SOL for sim
     config.max_single_lamports = 5_000_000; // 0.005 SOL for sim
     config.max_daily_lamports = 20_000_000; // 0.02  SOL for sim
@@ -55,7 +60,7 @@ fn main() {
     let epoch: u64 = 42;
 
     // -----------------------------------------------------------------------
-    // Step 1 — Accumulate fee events
+    // Step 1 — Accumulate fee events (at the illustrative 5 bps simulation rate)
     //   Signal reveal gross: 2_000_000 lamports × 5 bps = 1_000 lamports each
     //   Risk check gross:    1_000_000 lamports × 5 bps =   500 lamports each
     //   Hint tier gross:       500_000 lamports × 5 bps =   250 lamports each
@@ -184,7 +189,8 @@ fn main() {
             "burn_vault":           "disabled_by_default"
         },
         "simulation": {
-            "note": "Simulation uses scaled-down fee thresholds for demonstration. Production values: min $50, max $250 single, $1000 daily.",
+            "note": "Simulation uses scaled-down fee thresholds and an illustrative 5 bps allocation rate to exercise the mechanics. The default allocation is 0 bps: Parad0x takes no premium-fee or treasury cut. Production thresholds: min $50, max $250 single, $1000 daily.",
+            "default_allocation_bps": null_flywheel_core::DEFAULT_ALLOCATION_BPS,
             "signal_reveal_events": signal_count,
             "risk_check_events":    risk_count,
             "hint_tier_events":     hint_count,

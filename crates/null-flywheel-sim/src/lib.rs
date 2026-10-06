@@ -124,11 +124,12 @@ mod tests {
     }
 
     #[test]
-    fn test_allocation_five_bps_of_gross() {
+    fn test_default_allocation_is_zero_of_gross() {
         let config = null_flywheel_core::FlywheelConfig::default();
-        // 5 bps = 0.05% of 1_000_000 = 500
+        // Default allocation is 0 bps: nothing is routed to the vault.
         let result = null_flywheel_core::compute_allocation(&config, 1_000_000);
-        assert_eq!(result.allocated_lamports, 500);
+        assert_eq!(result.allocated_lamports, 0);
+        assert_eq!(result.remaining_lamports, 1_000_000);
     }
 
     #[test]
@@ -162,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn test_default_allocation_bps_constant_is_five() {
-        assert_eq!(null_flywheel_core::DEFAULT_ALLOCATION_BPS, 5);
+    fn test_default_allocation_bps_constant_is_zero() {
+        assert_eq!(null_flywheel_core::DEFAULT_ALLOCATION_BPS, 0);
     }
 }

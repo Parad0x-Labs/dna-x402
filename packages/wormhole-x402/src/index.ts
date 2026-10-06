@@ -15,7 +15,11 @@ import type {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-/** Solver spread in basis points (0.1%). NULL stakers back the solver float. */
+/**
+ * Solver spread in basis points (0.1%). It is kept by the solver operator that runs
+ * solveIntent and fronts the USDC float (a market participant), not by Parad0x.
+ * NULL stakers back the solver float.
+ */
 export const SOLVER_FEE_BPS = 10;
 
 /** Solana clusters the solver knows about. */

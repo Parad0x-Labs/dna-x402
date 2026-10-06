@@ -298,7 +298,7 @@ pub fn run_demo() -> DemoEvidence {
     let fee_user = sha256_label(b"fee_user");
     let fee_route = sha256_label(b"fee_route");
     let cashback_receipt =
-        mint_cashback_receipt(fee_user, 10_000, 6_000, fee_route, 500, 2_000, current_slot)
+        mint_cashback_receipt(fee_user, 10_000, 6_000, fee_route, fee_cashback_receipts::PROTOCOL_CUT_BPS, 2_000, current_slot)
             .unwrap();
     let fee_cashback = FeeCashbackSummary {
         savings: cashback_receipt.savings_lamports,

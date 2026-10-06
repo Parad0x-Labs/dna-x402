@@ -226,7 +226,8 @@ impl ExternalTaskProof {
 pub struct TaskCompletion {
     pub task_id: [u8; 32],
     pub agent_passport_id: [u8; 32],
-    /// USDC released: 90% to agent, 10% to platform.
+    /// USDC released: 90% to agent, 10% to platform. The platform is the integrating app
+    /// that sourced the task (operator pricing), not Parad0x; Parad0x takes no cut here.
     pub agent_usdc_atomic: u64,
     pub platform_usdc_atomic: u64,
     /// NULL flywheel yield: 5% of agent_usdc_atomic (in NULL atomic units, placeholder).
@@ -235,8 +236,8 @@ pub struct TaskCompletion {
 }
 
 const AGENT_SHARE_BPS:    u64 = 9_000; // 90%
-const PLATFORM_SHARE_BPS: u64 = 1_000; // 10%
-const NULL_YIELD_BPS:     u64 =   500; //  5% of agent share → NULL
+const PLATFORM_SHARE_BPS: u64 = 1_000; // 10% to the integrating platform (operator), not Parad0x
+const NULL_YIELD_BPS:     u64 =   500; //  5% of agent share, credited to the agent in NULL (not deducted)
 
 /// Verify a task proof and compute the completion payout split.
 pub fn complete_task(

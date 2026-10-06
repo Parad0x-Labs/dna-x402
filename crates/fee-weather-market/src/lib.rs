@@ -24,6 +24,10 @@ pub struct RouteWeather {
     pub estimated_fee_lamports: u64,
 }
 
+/// Protocol share of route savings, in basis points: 0. The user keeps all savings;
+/// Parad0x takes no cut. Parad0x's only fee is the 0.05% x402 protocol fee.
+pub const PROTOCOL_FEE_BPS: u64 = 0;
+
 #[derive(Debug, Clone)]
 pub struct SavingsReceipt {
     pub hot_route_fee: u64,
@@ -94,7 +98,7 @@ pub fn select_coldest_route(routes: Vec<RouteWeather>) -> Option<RouteWeather> {
 
 pub fn mint_savings_receipt(hot_fee: u64, cold_fee: u64) -> SavingsReceipt {
     let savings_lamports = hot_fee.saturating_sub(cold_fee);
-    let protocol_fee_lamports = savings_lamports / 10;
+    let protocol_fee_lamports = ((savings_lamports as u128 * PROTOCOL_FEE_BPS as u128) / 10_000) as u64;
 
     let mut hasher = Sha256::new();
     hasher.update(b"savings-receipt-v1");
@@ -190,10 +194,10 @@ mod tests {
     }
 
     #[test]
-    fn test_savings_receipt_protocol_fee_is_10pct() {
+    fn test_savings_receipt_protocol_fee_is_zero() {
         let receipt = mint_savings_receipt(10_000, 4_000);
         assert_eq!(receipt.savings_lamports, 6_000);
-        assert_eq!(receipt.protocol_fee_lamports, 600);
+        assert_eq!(receipt.protocol_fee_lamports, 0);
     }
 
     #[test]

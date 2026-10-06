@@ -138,7 +138,7 @@ fn main() {
         tax_receipt.tax_paid_lamports
     );
     println!(
-        "   protocol fee (10%):              {} lamports",
+        "   protocol fee (0%):               {} lamports",
         tax_receipt.protocol_fee_lamports
     );
     println!(
@@ -177,7 +177,7 @@ fn main() {
     };
     grow_pot(&mut pot, 500);
     grow_pot(&mut pot, 1_500);
-    let (seller_share, protocol_share) = split_hint_fees(pot.total_lamports, 90);
+    let (seller_share, protocol_share) = split_hint_fees(pot.total_lamports);
 
     let tier2_reveals_more = hint2.tier > hint1.tier;
 
@@ -186,7 +186,7 @@ fn main() {
     println!("   tier 2 price:        {} lamports", hint2.price_lamports);
     println!("   tier2 reveals more:  {}", tier2_reveals_more);
     println!("   pot total:           {} lamports", pot.total_lamports);
-    println!("   seller share (90%):  {} lamports", seller_share);
+    println!("   seller share (100%): {} lamports", seller_share);
     println!("   protocol share:      {} lamports", protocol_share);
     println!(
         "   hint receipt hash:   {}",
@@ -335,7 +335,7 @@ fn main() {
                 "proven": !sniper_is_subscriber && decoy_invalid
             },
             "4_hint_ladder": {
-                "description": "Clue ladder: tier 2 reveals more than tier 1. Pot grows with purchases. Fees split.",
+                "description": "Clue ladder: tier 2 reveals more than tier 1. Pot grows with purchases. Seller keeps the whole pot (0% protocol share).",
                 "tier2_reveals_more": tier2_reveals_more,
                 "pot_total_lamports": pot.total_lamports,
                 "seller_share": seller_share,

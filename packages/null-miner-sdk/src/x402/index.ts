@@ -97,7 +97,9 @@ export interface RejectedPayment {
 export type PaymentVerifyResult = VerifiedPayment | RejectedPayment;
 
 /**
- * Platform fee split — how a payment is divided between parties.
+ * Platform fee split — how a payment is divided between parties. The platform is the
+ * app that integrates the SDK (operator pricing it sets itself), not Parad0x. Parad0x's
+ * only fee is the 0.05% x402 protocol fee on the settlement.
  */
 export interface FeeSplit {
   /** Total USDC received (in dollars). */

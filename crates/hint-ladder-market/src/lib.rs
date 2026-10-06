@@ -110,9 +110,16 @@ pub fn grow_pot(pot: &mut HintPot, payment: u64) {
     pot.hint_count = pot.hint_count.saturating_add(1);
 }
 
-pub fn split_hint_fees(total: u64, seller_pct: u8) -> (u64, u64) {
-    let seller_share = total * (seller_pct as u64) / 100;
-    let protocol_share = total - seller_share;
+/// Protocol share of the hint pot, in basis points: 0. Parad0x takes no cut.
+/// Parad0x's only fee is the 0.05% x402 protocol fee.
+pub const PROTOCOL_SHARE_BPS: u64 = 0;
+
+/// Split the hint pot into (seller_share, protocol_share). The protocol share is
+/// PROTOCOL_SHARE_BPS of the pot (0), so the seller (the pick author) receives the
+/// whole pot. The shares always sum to `total`.
+pub fn split_hint_fees(total: u64) -> (u64, u64) {
+    let protocol_share = ((total as u128 * PROTOCOL_SHARE_BPS as u128) / 10_000) as u64;
+    let seller_share = total - protocol_share;
     (seller_share, protocol_share)
 }
 
@@ -151,9 +158,9 @@ mod tests {
 
     #[test]
     fn test_hint_fees_split_correctly() {
-        let (seller, protocol) = split_hint_fees(1000, 90);
-        assert_eq!(seller, 900);
-        assert_eq!(protocol, 100);
+        let (seller, protocol) = split_hint_fees(1000);
+        assert_eq!(seller, 1000);
+        assert_eq!(protocol, 0);
     }
 
     #[test]
@@ -226,8 +233,9 @@ mod tests {
     #[test]
     fn test_split_fees_seller_plus_protocol_equals_total() {
         let total = 5_000u64;
-        let (seller, protocol) = split_hint_fees(total, 70);
+        let (seller, protocol) = split_hint_fees(total);
         assert_eq!(seller + protocol, total);
+        assert_eq!(protocol, 0);
     }
 
     #[test]

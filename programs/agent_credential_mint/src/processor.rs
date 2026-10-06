@@ -299,7 +299,7 @@ fn process_upgrade(
         //   1. Burn old credential token via PermanentDelegate
         //   2. Create new mint (or reuse with updated TokenMetadata)
         //   3. MintTo 1 token → agent ATA
-        //   4. Verify x402 re-issuance receipt
+        //   4. (no re-issuance fee: REISSUE_FEE_USDC_MICRO = 0)
         msg!("IS_MAINNET_READY: UpgradeCredential Token-2022 CPI path not yet wired");
         return Err(CredentialError::NotMainnetReady.into());
     }

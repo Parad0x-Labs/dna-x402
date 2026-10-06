@@ -7,8 +7,10 @@ use sha2::{Digest, Sha256};
 // Constants
 // ---------------------------------------------------------------------------
 
-/// Fee allocation is 5 bps (0.05%) of premium fee collected.
-pub const DEFAULT_ALLOCATION_BPS: u64 = 5;
+/// Allocation of collected premium fees to the rewards vault (a protocol treasury), in
+/// basis points: 0. Parad0x takes no premium-fee or treasury cut; its only fee is the
+/// 0.05% x402 protocol fee. The allocation math is kept and runs on any explicit rate.
+pub const DEFAULT_ALLOCATION_BPS: u64 = 0;
 /// ~$50 at 4000 SOL/USD heuristic (lamports).
 pub const MIN_EXECUTION_LAMPORTS: u64 = 137_500_000;
 /// ~$250
@@ -61,7 +63,7 @@ impl Default for DestinationPolicy {
 
 #[derive(Debug, Clone)]
 pub struct FlywheelConfig {
-    /// Default 5 (0.05%).
+    /// Default 0 (DEFAULT_ALLOCATION_BPS).
     pub allocation_bps: u64,
     /// ~$50
     pub min_execution_lamports: u64,
@@ -184,9 +186,9 @@ pub struct TaskCompletionReward {
     /// Derived from: task_usdc_atomic × emission_rate_bps / 10_000 / null_usdc_spot.
     /// Placeholder: 1 NULL per 1000 USDC atomic until oracle integration.
     pub null_to_host_placeholder: u64,
-    /// USDC atomic units flowing through the flywheel (5% of task value).
+    /// USDC atomic units flowing through the flywheel (NULL_MINER_FLYWHEEL_BPS of task value: 0).
     pub flywheel_usdc_atomic: u64,
-    /// Remaining USDC atomic after flywheel cut (95% stays with protocol/agent).
+    /// Remaining USDC atomic after the flywheel share (all of it stays with the agent).
     pub remaining_usdc_atomic: u64,
     pub receipt_hash: [u8; 32],
     pub epoch: u64,
@@ -214,8 +216,9 @@ impl core::fmt::Display for TaskFlywheelError {
 
 /// Minimum task value to trigger flywheel: 100 atomic = $0.0001 USDC.
 pub const MIN_TASK_USDC_ATOMIC: u64 = 100;
-/// NULL Miner flywheel rate: 500 bps = 5% of task USDC value.
-pub const NULL_MINER_FLYWHEEL_BPS: u64 = 500;
+/// NULL Miner flywheel share of task USDC value, in basis points: 0. The protocol takes
+/// no cut of task rewards; Parad0x's only fee is the 0.05% x402 protocol fee.
+pub const NULL_MINER_FLYWHEEL_BPS: u64 = 0;
 
 /// Process a task completion event through the NULL flywheel.
 /// Returns the payout breakdown for the host.
@@ -235,7 +238,7 @@ pub fn process_task_completion(
         return Err(TaskFlywheelError::ReceiptHashAllZeros);
     }
 
-    let flywheel_usdc = (event.task_usdc_atomic * NULL_MINER_FLYWHEEL_BPS) / 10_000;
+    let flywheel_usdc = ((event.task_usdc_atomic as u128 * NULL_MINER_FLYWHEEL_BPS as u128) / 10_000) as u64;
     let remaining     = event.task_usdc_atomic.saturating_sub(flywheel_usdc);
 
     // Placeholder NULL yield: 1 NULL per 1000 USDC atomic units through flywheel.
@@ -410,10 +413,27 @@ mod tests {
         assert_eq!(config.destination, DestinationPolicy::RewardsVault);
     }
 
-    // 2. 5 bps of 1_000_000 lamports = 500
+    /// Config with an explicit non-default allocation rate, used only to exercise the
+    /// allocation arithmetic. The default (DEFAULT_ALLOCATION_BPS) is 0.
+    fn rate_config(allocation_bps: u64) -> FlywheelConfig {
+        FlywheelConfig { allocation_bps, ..FlywheelConfig::default() }
+    }
+
+    // 2a. Default allocation is 0: nothing is routed to the vault, everything remains.
+    #[test]
+    fn test_default_allocation_is_zero() {
+        let config = FlywheelConfig::default();
+        assert_eq!(DEFAULT_ALLOCATION_BPS, 0);
+        let result = compute_allocation(&config, 1_000_000);
+        assert_eq!(result.allocated_lamports, 0);
+        assert_eq!(result.remaining_lamports, 1_000_000);
+        assert_eq!(result.allocated_lamports + result.remaining_lamports, 1_000_000);
+    }
+
+    // 2b. Arithmetic at an explicit 5 bps rate: 5 bps of 1_000_000 lamports = 500
     #[test]
     fn test_allocation_bps_correct() {
-        let config = FlywheelConfig::default();
+        let config = rate_config(5);
         let result = compute_allocation(&config, 1_000_000);
         assert_eq!(result.allocated_lamports, 500);
         assert_eq!(result.remaining_lamports, 999_500);
@@ -443,10 +463,15 @@ mod tests {
         assert!(!threshold_met(&events, &config));
     }
 
-    // 5. Enough events to exceed MIN_EXECUTION_LAMPORTS
+    // 5. Enough events to exceed MIN_EXECUTION_LAMPORTS (at an explicit 5 bps rate;
+    //    at the default 0 the threshold is never met).
     #[test]
     fn test_threshold_met_above_min() {
-        let config = FlywheelConfig::default();
+        assert!(!threshold_met(
+            &[PremiumFeeEvent::new(SourceKind::SignalRevealFee, 275_000_000_000, 1)],
+            &FlywheelConfig::default(),
+        ));
+        let config = rate_config(5);
         // Need accumulated >= 137_500_000 lamports via 5 bps allocation.
         // allocated_per_event = gross * 5 / 10_000
         // To reach 137_500_000: gross_per_event = 137_500_000 * 10_000 / 5 = 275_000_000_000
@@ -534,7 +559,7 @@ mod tests {
 
     #[test]
     fn test_daily_cap_remaining_decreases_after_event() {
-        let config = FlywheelConfig::default();
+        let config = rate_config(5);
         let event = PremiumFeeEvent::new(SourceKind::HintTierFee, 1_000_000_000, 1);
         let events = vec![event];
         let remaining = daily_cap_remaining(&events, &config, 1);

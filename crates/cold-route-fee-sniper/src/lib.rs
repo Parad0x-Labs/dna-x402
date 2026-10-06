@@ -84,8 +84,13 @@ pub fn is_sample_fresh(sample: &WritableFeeSample, current_slot: u64, max_age_sl
     current_slot.saturating_sub(sample.slot) <= max_age_slots
 }
 
-pub fn estimate_dark_null_cut(savings_lamports: u64, cut_bps: u64) -> u64 {
-    savings_lamports * cut_bps / 10_000
+/// Dark Null's cut of route savings, in basis points: 0. The user keeps all savings;
+/// Parad0x takes no cut. Parad0x's only fee is the 0.05% x402 protocol fee.
+pub const DARK_NULL_CUT_BPS: u64 = 0;
+
+/// Dark Null's cut of `savings_lamports` at DARK_NULL_CUT_BPS (always 0).
+pub fn estimate_dark_null_cut(savings_lamports: u64) -> u64 {
+    ((savings_lamports as u128 * DARK_NULL_CUT_BPS as u128) / 10_000) as u64
 }
 
 #[cfg(test)]
@@ -153,7 +158,7 @@ mod tests {
     #[test]
     fn test_protocol_cut_bounded() {
         let savings = 5_000u64;
-        let cut = estimate_dark_null_cut(savings, 500); // 5%
+        let cut = estimate_dark_null_cut(savings);
         assert!(cut <= savings);
     }
 
@@ -193,9 +198,10 @@ mod tests {
     }
 
     #[test]
-    fn test_dark_null_cut_500bps() {
-        let cut = estimate_dark_null_cut(1_000, 500); // 5% of 1000 = 50
-        assert_eq!(cut, 50);
+    fn test_dark_null_cut_is_zero() {
+        assert_eq!(DARK_NULL_CUT_BPS, 0);
+        assert_eq!(estimate_dark_null_cut(1_000), 0);
+        assert_eq!(estimate_dark_null_cut(u64::MAX), 0);
     }
 
     #[test]

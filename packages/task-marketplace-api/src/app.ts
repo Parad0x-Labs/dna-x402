@@ -144,6 +144,7 @@ app.get("/platform/:id/stats", (req: Request, res: Response) => {
   const completions = taskStore.getCompletions(id);
   const totalUsdc   = completions.reduce((sum, c) => sum + c.usdcEarned, 0);
   const totalNull   = completions.reduce((sum, c) => sum + c.nullYield, 0);
+  // The integrating platform's share (10% of gross), paid to that platform, not Parad0x.
   const platformFee = totalUsdc * 0.1 / 0.9; // 10% of gross
 
   res.json({

@@ -23,6 +23,10 @@ pub struct SniperTaxReceipt {
     pub receipt_hash: [u8; 32],
 }
 
+/// Protocol share of a sniper tax, in basis points: 0. The whole tax goes to the
+/// seller (the pick author); Parad0x takes no cut. Parad0x's only fee is the 0.05% x402 protocol fee.
+pub const PROTOCOL_FEE_BPS: u64 = 0;
+
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum TrapError {
     #[error("invalid subscriber")]
@@ -86,7 +90,8 @@ pub fn create_decoy_reveal(
 }
 
 pub fn mint_sniper_tax_receipt(decoy: &DecoyReveal, sniper_hash: &[u8; 32]) -> SniperTaxReceipt {
-    let protocol_fee_lamports = decoy.sniper_tax_lamports / 10;
+    let protocol_fee_lamports =
+        ((decoy.sniper_tax_lamports as u128 * PROTOCOL_FEE_BPS as u128) / 10_000) as u64;
     let seller_fee_lamports = decoy.sniper_tax_lamports - protocol_fee_lamports;
 
     let receipt_hash: [u8; 32] = {
@@ -164,14 +169,15 @@ mod tests {
     }
 
     #[test]
-    fn test_protocol_fee_computed() {
+    fn test_protocol_fee_is_zero_seller_keeps_tax() {
         let pick_hash = [1u8; 32];
         let sniper_hash = [2u8; 32];
         let tax = 10_000u64;
         let decoy = create_decoy_reveal(&pick_hash, &sniper_hash, tax);
         let receipt = mint_sniper_tax_receipt(&decoy, &sniper_hash);
-        assert_eq!(receipt.protocol_fee_lamports, tax / 10);
-        assert_eq!(receipt.seller_fee_lamports, tax - tax / 10);
+        assert_eq!(PROTOCOL_FEE_BPS, 0);
+        assert_eq!(receipt.protocol_fee_lamports, 0);
+        assert_eq!(receipt.seller_fee_lamports, tax);
     }
 
     // Extended tests -----------------------------------------------------------

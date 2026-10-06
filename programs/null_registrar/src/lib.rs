@@ -1,13 +1,14 @@
 //! null-registrar — .null domain name registrar for Solana
 //!
 //! The .null namespace belongs to no government, ICANN, or corporation.
-//! Domains are registered by paying a fee that TRANSFERS to the protocol
-//! treasury (never burned), and resolve to Arweave/IPFS content hashes —
-//! permanent, unstoppable, agent-native.
+//! Registering a domain carries a 0 protocol fee (DEFAULT_REGISTRATION_FEE): the
+//! registrant pays Solana rent only. Parad0x's only fee is the 0.05% x402 protocol
+//! fee. Domains resolve to Arweave/IPFS content hashes — permanent, unstoppable,
+//! agent-native.
 //!
 //! ⚠️  LEGACY / ILLUSTRATIVE SOURCE — NOT the mainnet pilot program.
 //!     This is the v1 design (NULL-priced, IS_MAINNET_READY gate). The mainnet pilot
-//!     registrar (retired; records readable) was v2 — SOL-priced (~0.01 SOL all-in), config-driven via SetConfig,
+//!     registrar (retired; records readable) was v2 — SOL-priced fee config via SetConfig,
 //!     free during the pilot — at NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np.
 //!     Canonical v2 source/spec is maintained privately. Do NOT deploy this v1 source.
 //!
@@ -30,6 +31,10 @@ pub mod error;
 pub mod instruction;
 pub mod processor;
 pub mod state;
+
+/// Registration fee written by the init scripts into RegistryConfig: 0. Parad0x takes no
+/// registration fee; the devnet config account holds 0 and no fee is ever debited.
+pub const DEFAULT_REGISTRATION_FEE: u64 = 0;
 
 /// Pre-audit pilot flag.
 /// When false, NULL token SPL transfer CPIs are skipped.

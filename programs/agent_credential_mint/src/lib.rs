@@ -7,11 +7,11 @@
 //! Production flow (IS_MAINNET_READY = true, `--features mainnet`):
 //!   IssueCredential  — Mints 1 NonTransferable token; PermanentDelegate = protocol_authority.
 //!                      TokenMetadata stores agent_id, device_pubkey, binding_type, issued_at.
-//!                      0.01 USDC issuance fee verified via x402 receipt in instruction data.
+//!                      No issuance fee (ISSUE_FEE_USDC_MICRO = 0).
 //!   RevokeCredential — Protocol burns the token via PermanentDelegate (no agent sig needed).
 //!                      CredentialRecord PDA is zeroed + flagged revoked (kept for audit log).
 //!   UpgradeCredential — Burns old token, mints new token with updated device_pubkey.
-//!                       0.001 USDC re-issuance fee via x402.
+//!                       No re-issuance fee (REISSUE_FEE_USDC_MICRO = 0).
 //!
 //! Devnet flow (IS_MAINNET_READY = false, default):
 //!   All Token-2022 CPIs are SKIPPED. Only CredentialRecord PDAs are written/updated.
@@ -58,11 +58,12 @@ pub fn process_instruction(
 /// Until then all Token-2022 CPIs are skipped; only PDA records are written.
 pub const IS_MAINNET_READY: bool = false;
 
-/// Issuance fee in USDC micro-units (6 decimals): 0.01 USDC = 10_000
-pub const ISSUE_FEE_USDC_MICRO: u64 = 10_000;
+/// Issuance fee in USDC micro-units: 0. Parad0x takes no passport issuance fee; its
+/// only fee is the 0.05% x402 protocol fee on x402 payments.
+pub const ISSUE_FEE_USDC_MICRO: u64 = 0;
 
-/// Re-issuance fee (device upgrade): 0.001 USDC = 1_000
-pub const REISSUE_FEE_USDC_MICRO: u64 = 1_000;
+/// Re-issuance fee (device upgrade) in USDC micro-units: 0.
+pub const REISSUE_FEE_USDC_MICRO: u64 = 0;
 
 /// PermanentDelegate PDA seeds
 pub const PROTOCOL_AUTHORITY_SEED: &[u8] = b"protocol_authority";
@@ -103,18 +104,13 @@ mod tests {
     // ── Fee constants sanity ──────────────────────────────────────────────────
 
     #[test]
-    fn test_issue_fee_is_10000_micro_usdc() {
-        assert_eq!(ISSUE_FEE_USDC_MICRO, 10_000);
+    fn test_issue_fee_is_zero() {
+        assert_eq!(ISSUE_FEE_USDC_MICRO, 0);
     }
 
     #[test]
-    fn test_reissue_fee_is_1000_micro_usdc() {
-        assert_eq!(REISSUE_FEE_USDC_MICRO, 1_000);
-    }
-
-    #[test]
-    fn test_reissue_fee_less_than_issue_fee() {
-        assert!(REISSUE_FEE_USDC_MICRO < ISSUE_FEE_USDC_MICRO);
+    fn test_reissue_fee_is_zero() {
+        assert_eq!(REISSUE_FEE_USDC_MICRO, 0);
     }
 
     // ── Seeds are non-empty ───────────────────────────────────────────────────

@@ -98,6 +98,8 @@ pub fn scan_mock_targets(current_slot: u64) -> Vec<RentSweeperTarget> {
 }
 
 /// Bounty = 10% of reclaimed rent.
+/// Keeper bounty: 10% of the rent, paid to the keeper that closes the account (a market
+/// participant), not to Parad0x.
 pub fn estimate_bounty(rent_lamports: u64) -> u64 {
     rent_lamports * 10 / 100
 }
@@ -144,13 +146,18 @@ pub fn validate_close_eligibility(
     Ok(())
 }
 
-/// Split reclaimed rent by basis points (total must be 10000).
+/// Protocol cut of reclaimed rent, in basis points: 0. The rent goes to the user and the
+/// keeper; Parad0x takes no cut. Parad0x's only fee is the 0.05% x402 protocol fee.
+pub const PROTOCOL_CUT_BPS: u64 = 0;
+
+/// Split reclaimed rent by basis points (total must be 10000; protocol_bps must be 0).
 pub fn split_reclaimed_rent(
     rent_lamports: u64,
     user_bps: u64,
     keeper_bps: u64,
     protocol_bps: u64,
 ) -> RentSplit {
+    assert!(protocol_bps <= PROTOCOL_CUT_BPS, "protocol cut of reclaimed rent must be 0");
     let total_bps = user_bps + keeper_bps + protocol_bps;
     assert_eq!(total_bps, 10_000, "basis points must sum to 10000");
     let user_lamports = rent_lamports * user_bps / 10_000;
@@ -218,7 +225,7 @@ mod tests {
     #[test]
     fn test_split_adds_to_total() {
         let rent = 1_000_000u64;
-        let split = split_reclaimed_rent(rent, 8000, 1500, 500);
+        let split = split_reclaimed_rent(rent, 8500, 1500, PROTOCOL_CUT_BPS);
         assert_eq!(
             split.user_lamports + split.keeper_lamports + split.protocol_lamports,
             rent
@@ -226,10 +233,18 @@ mod tests {
     }
 
     #[test]
-    fn test_protocol_cut_computed() {
+    fn test_protocol_cut_is_zero() {
         let rent = 1_000_000u64;
-        let split = split_reclaimed_rent(rent, 8000, 1500, 500);
-        assert_eq!(split.protocol_lamports, rent * 5 / 100);
+        let split = split_reclaimed_rent(rent, 8500, 1500, PROTOCOL_CUT_BPS);
+        assert_eq!(PROTOCOL_CUT_BPS, 0);
+        assert_eq!(split.protocol_lamports, 0);
+        assert_eq!(split.user_lamports, rent * 85 / 100);
+    }
+
+    #[test]
+    #[should_panic(expected = "protocol cut of reclaimed rent must be 0")]
+    fn test_nonzero_protocol_cut_rejected() {
+        split_reclaimed_rent(1_000_000, 8000, 1500, 500);
     }
 
     #[test]
@@ -287,8 +302,8 @@ mod tests {
     #[test]
     fn test_split_user_portion() {
         let rent = 1_000_000u64;
-        let split = split_reclaimed_rent(rent, 8000, 1500, 500);
-        assert_eq!(split.user_lamports, 800_000);
+        let split = split_reclaimed_rent(rent, 8500, 1500, PROTOCOL_CUT_BPS);
+        assert_eq!(split.user_lamports, 850_000);
     }
 
     #[test]
