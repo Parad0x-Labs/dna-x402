@@ -4,7 +4,7 @@
 //! Note: doc previously said "Poseidon-compatible" — corrected. Poseidon is used off-chain
 //! in the TypeScript DrawMachine. The on-chain draw uses Keccak for cheaper compute.
 //! Off-chain tickets (Liquefy bridge pattern), 1 tx per 5-min round.
-//! House fee: 0.5% (50 bps).
+//! House fee: `house_fee_bps` is set at InitLottery; Parad0x deployments set it to 0.
 //!
 //! Round transitions (CommitRound, AnchorTickets, RevealDraw, FallbackDraw)
 //! require the admin stored in the `[b"lottery-config"]` PDA in every build.

@@ -129,7 +129,7 @@ await miner.start();
 Task completes: $0.005 USDC
 ├── Agent host:    $0.0045  (90%) — user's device did the work
 ├── Platform:      $0.0005  (10%) — you, for integrating the SDK
-└── Protocol fee:  ~0.0001  (2bp) — DNA x402 tx dust
+└── Protocol fee:  0.05% (5 bps) of the x402 settlement — DNA x402 protocol fee
          + NULL emission: 5% of task value → NULL flywheel → distributed to hosts
 ```
 

@@ -34,7 +34,7 @@ import { lotteryConfigFromProfile } from "../config/profiles.js";
 
 export interface LotteryConfig {
   ticketPriceNull: number;   // atomic units
-  houseFeeBps:     number;   // 50 = 0.5%
+  houseFeeBps:     number;   // basis points; both Parad0x profiles use 0
   numbersCount:    number;   // 5
   numbersRange:    number;   // 30
   fallbackAfter:   number;   // 3

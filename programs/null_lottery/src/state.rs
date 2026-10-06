@@ -5,7 +5,7 @@
 ///   disc[1]                = 0xC1
 ///   admin[32]              — Pubkey (authority)
 ///   ticket_price_null[8]   — u64 atomic (LE)
-///   house_fee_bps[2]       — u16 (LE), default 50 = 0.5%
+///   house_fee_bps[2]       — u16 (LE), set at init; Parad0x deployments use 0
 ///   numbers_count[1]       — u8,  default 5
 ///   numbers_range[1]       — u8,  default 30  (draw from 1..=30)
 ///   fallback_after[1]      — u8,  default 3

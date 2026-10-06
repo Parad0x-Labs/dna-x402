@@ -34,7 +34,7 @@ Every detection call routes through the DNA x402 facilitator:
 ```
 Caller  →  x402 USDC payment  →  Facilitator  →  Detection API
                                       ↓
-                             Protocol fee (10 bps)
+                             Protocol fee (0.05%, 5 bps)
                              + Provider cost pass-through
 ```
 
@@ -44,10 +44,8 @@ Caller  →  x402 USDC payment  →  Facilitator  →  Detection API
 | BitMind   | 0.005             | Protocol fee + Bittensor routing |
 | Hive      | 0.010             | Protocol fee + Hive API cost     |
 
-At 10,000 detection calls/day (conservative for a mid-size social platform)
-running the Hive provider, the protocol earns ~$100/day from compliance
-traffic alone — traffic that must happen regardless of whether DNA x402
-is the rail.
+The protocol fee is 0.05% (5 bps) of each settlement; the rest of the price
+covers the provider cost.
 
 Callers never hold upstream API keys. They hold USDC.
 

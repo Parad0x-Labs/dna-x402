@@ -3,7 +3,8 @@
  *
  * OSS track: devnet, zero fees, zero NULL extraction, MIT license.
  * Commercial track: mainnet-beta profile, not enabled in this release;
- * 0.5% mining house config, 5% NULL emission accounting, 0% lottery fee.
+ * 0% mining house fee, 5% NULL emission accounting, 0% lottery fee.
+ * Parad0x takes no house fee on either track.
  *
  * Same codebase. One profile switch.
  */
@@ -69,8 +70,8 @@ export const OSS_PROFILE: NullMinerProfile = {
 export const COMMERCIAL_PROFILE: NullMinerProfile = {
   track: "commercial",
   network: "mainnet-beta",
-  description: "Commercial mainnet-beta profile - not enabled in this release; 0.5% mining house config, 5% NULL emission accounting, 0% lottery fee.",
-  houseFeeBps: 50,
+  description: "Commercial mainnet-beta profile - not enabled in this release; 0% mining house fee, 5% NULL emission accounting, 0% lottery fee.",
+  houseFeeBps: 0,
   nullEmissionPct: 5,
   lotteryHouseFeeBps: 0,
   lotteryTicketPriceNull: 10_000_000,

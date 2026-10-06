@@ -19,7 +19,7 @@
 
 | | OSS Devnet | Commercial Mainnet Pilot |
 |---|---|---|
-| Fees | Zero | 0.5% config |
+| Fees | Zero | 0% house fee; x402 protocol fee 0.05% (5 bps) |
 | NULL emission | Disabled | 5% accounting config |
 | `IS_MAINNET_READY` | `false` | `false` until post-audit rebuild with `--features mainnet` |
 | License | MIT | MIT code, Parad0x-operated deployment |

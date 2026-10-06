@@ -39,8 +39,8 @@ test("commercial profile is labelled as not enabled in this release", () => {
   expect(COMMERCIAL_PROFILE.description.toLowerCase()).toContain("not enabled in this release");
 });
 
-test("commercial profile has pilot fee and emission accounting config", () => {
-  expect(COMMERCIAL_PROFILE.houseFeeBps).toBe(50);
+test("commercial profile takes no house fee and keeps emission accounting config", () => {
+  expect(COMMERCIAL_PROFILE.houseFeeBps).toBe(0);
   expect(COMMERCIAL_PROFILE.nullEmissionPct).toBe(5);
   expect(COMMERCIAL_PROFILE.lotteryTicketPriceNull).toBe(10_000_000);
 });

@@ -266,7 +266,7 @@ public transaction evidence while settlement enforcement stays off:
 
 | | OSS Devnet | Commercial Mainnet Pilot |
 |---|---|---|
-| House fees | 0% | 0.5% config |
+| House fees | 0% | 0% |
 | NULL emission | Disabled | 5% accounting config |
 | Lottery ticket price | Free | 10 NULL config |
 | License | MIT | MIT code, Parad0x-operated deployment |

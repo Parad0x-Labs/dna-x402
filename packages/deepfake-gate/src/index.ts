@@ -47,8 +47,8 @@ export type DetectionProvider = typeof DetectionProvider[keyof typeof DetectionP
 
 /**
  * Per-call prices in USDC charged through the x402 paywall.
- * These are the amounts the caller pays; the DNA x402 protocol retains a
- * protocol fee (default 10 bps) from each settlement.
+ * These are the amounts the caller pays; the DNA x402 protocol retains its
+ * protocol fee of 0.05% (5 bps) from each settlement.
  */
 export const DETECTION_PRICES_USDC: Record<DetectionProvider, number> = {
   [DetectionProvider.SYNTHID]:  0.001,
