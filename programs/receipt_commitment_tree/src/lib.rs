@@ -24,7 +24,18 @@
 //!   0x00 Initialize         accounts: [payer(s,w), tree_pda(w), system]      data: tree_id[8]
 //!   0x02 SettleAndRecord    accounts: [payer(s,w), recipient(w), tree_pda(w), system]
 //!                           data: tree_id[8] agent_commitment[32] amount_le[8] counterparty[32](IGNORED) nonce[32]
-//!                           (counterparty bytes are ignored; the leaf binds counterparty := recipient.key)
+//!                           (counterparty bytes are ignored; the leaf binds counterparty := H(recipient.key))
+//!
+//! Counterparty field encoding (hash to field, not reduce mod r):
+//!   counterparty = Poseidon2(hi, lo)   (Bn254X5, big-endian, circomlib poseidon2)
+//!   hi = recipient.key[0..16]  as a big-endian integer (< 2^128 < r)
+//!   lo = recipient.key[16..32] as a big-endian integer (< 2^128 < r)
+//! A raw 32-byte pubkey is >= the BN254 scalar modulus r for ~81% of keys, which made
+//! sol_poseidon fail (Custom(20)) for most recipients. Both halves are always valid field
+//! elements, and Poseidon2 keeps the encoding collision-resistant (reducing mod r would map
+//! k and k + r to the same counterparty). Off-chain provers compute the same value with
+//! poseidon-lite `poseidon2([hi, lo])`; the circuits take counterparty as a private field
+//! element, so track_record.circom and x402_access_v2.circom are unchanged.
 
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -70,6 +81,17 @@ fn poseidon5(a: &[u8; 32], b: &[u8; 32], c: &[u8; 32], d: &[u8; 32], e: &[u8; 32
         &[a.as_slice(), b.as_slice(), c.as_slice(), d.as_slice(), e.as_slice()])
         .map(|h| h.to_bytes())
         .map_err(|_| ProgramError::Custom(20))
+}
+
+/// Leaf counterparty field element for a recipient pubkey: Poseidon2(hi128, lo128).
+/// See the module docs; valid for every 32-byte key (no modulus failure).
+pub fn counterparty_field(key: &Pubkey) -> Result<[u8; 32], ProgramError> {
+    let b = key.to_bytes();
+    let mut hi = [0u8; 32];
+    hi[16..].copy_from_slice(&b[..16]);
+    let mut lo = [0u8; 32];
+    lo[16..].copy_from_slice(&b[16..]);
+    poseidon2(&hi, &lo)
 }
 
 fn rd32(d: &[u8], o: usize) -> [u8; 32] {
@@ -191,7 +213,7 @@ fn settle_and_record(program_id: &Pubkey, accounts: &[AccountInfo], rest: &[u8])
     if recipient.key == payer.key {
         return Err(ProgramError::Custom(24)); // SelfPayment — not a real counterparty
     }
-    let counterparty: [u8; 32] = recipient.key.to_bytes();
+    let counterparty: [u8; 32] = counterparty_field(recipient.key)?;
     let (pda, _bump) = Pubkey::find_program_address(&[TREE_SEED, &tree_id], program_id);
     if tree.key != &pda {
         return Err(ProgramError::InvalidArgument);

@@ -39,9 +39,19 @@ leaf = Poseidon(agent_commitment, amount, timestamp, counterparty_hash, receipt_
 ```
 
 into an incremental Poseidon Merkle tree (depth 20 = ~1M receipts). The on-chain `root` is updated
-via `receipt_anchor`. **Trust crux:** the proof is only as honest as leaf insertion — leaves must be
+via `receipt_anchor`. **Trust crux:** the proof is only as sound as leaf insertion — leaves must be
 written by the settlement layer that witnessed a real payment, never self-asserted. `counterparty_hash`
 in the leaf makes self-dealing detectable (distinct counterparties can be required).
+
+As implemented by `receipt_commitment_tree::settle_and_record`, `counterparty_hash` is derived from the
+recipient pubkey that received the payment:
+
+```
+counterparty_hash = Poseidon2(hi, lo)   hi = key[0..16], lo = key[16..32] (big-endian integers)
+```
+
+Both halves are below 2^128 and so always valid BN254 field elements (a raw 32-byte key is >= the
+modulus for ~81% of keys). The circuits take it as a private field element, so they are unchanged.
 
 ## Circuit `track_record.circom` (fixed K, e.g. K=16)
 **Public inputs:** `root`, `min_count`, `min_volume`, `window_start`, `reputation_nullifier`,

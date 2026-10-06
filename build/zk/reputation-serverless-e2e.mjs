@@ -2,12 +2,16 @@
 /**
  * SERVERLESS reputation e2e — dark_reputation_gate + receipt_commitment_tree (no authority).
  *
- *  1. init the CANONICAL receipt tree (tree_id=0) — permissionless.
+ *  1. init the CANONICAL receipt tree (tree_id=0) if missing — permissionless.
  *  2. settle_and_record K real payments (payer -> recipient) → on-chain receipt leaves,
  *     capturing each on-chain `ts` from program logs (the only chain-determined field).
- *  3. rebuild the depth-10 Poseidon tree in JS (poseidon-lite == circomlib == sol_poseidon),
+ *     The leaf counterparty is Poseidon2(hi128(recipient), lo128(recipient)), as bound
+ *     on-chain by receipt_commitment_tree.
+ *  3. rebuild the K leaves' Merkle paths from the pre-settle frontier (works on a tree that
+ *     already holds other receipts, as long as nothing else lands between our K settles),
  *     assert the JS root == the on-chain root (binding the proof to real settlements).
- *  4. snarkjs track_record proof, submit to dark_reputation_gate with the NEW accounts
+ *  4. snarkjs track_record proof (7 public inputs, epoch = floor(now / 86400) as the gate
+ *     requires), 480-byte ix to dark_reputation_gate with accounts
  *     [payer, receipt_tree, rep_nullifier_pda, system]. Expect SUCCESS + nullifier PDA.
  *  5. replay → expect Custom(10) (already recorded).
  *
@@ -30,7 +34,8 @@ const SNARKJS = join(process.cwd(), "node_modules", "snarkjs", "build", "cli.cjs
 const K = 4, DEPTH = 10, DOMAIN_REP = 7n;
 const P = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const TREE_ID = Buffer.alloc(8); // canonical [0;8]
-const O_NEXT = 32, O_RIDX = 40, O_ROOTS = 682, ROOT_HISTORY = 8, TREE_LEN = 938;
+const O_NEXT = 32, O_RIDX = 40, O_FILLED = 42, O_ZEROS = 362, O_ROOTS = 682, ROOT_HISTORY = 8, TREE_LEN = 938;
+const EPOCH_LEN = 86400n; // dark_reputation_gate: epoch must equal floor(clock / EPOCH_LEN)
 
 const dec2be32 = (d) => Buffer.from(BigInt(d).toString(16).padStart(64, "0"), "hex");
 const be2big = (buf) => BigInt("0x" + Buffer.from(buf).toString("hex"));
@@ -78,7 +83,8 @@ async function main() {
   console.log(` receipt_tree ${treePda.toBase58()}  rep_gate ${repProg.toBase58()}`);
 
   // identity
-  const secret = randFr(), agent_id = randFr(), epoch = 42n;
+  const secret = randFr(), agent_id = randFr();
+  const epoch = BigInt(Math.floor(Date.now() / 1000)) / EPOCH_LEN; // current window (gate checks the on-chain clock)
   const agent_commitment = poseidon2([secret, agent_id]);
   const reputation_nullifier = poseidon3([DOMAIN_REP, secret, epoch]);
 
@@ -89,20 +95,28 @@ async function main() {
     await send([new TransactionInstruction({ programId: treeProg,
       keys: [{ pubkey: payer.publicKey, isSigner: true, isWritable: true }, { pubkey: treePda, isSigner: false, isWritable: true }, { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }],
       data: Buffer.concat([Buffer.from([0x00]), TREE_ID]) })], [payer], "init-tree");
-  } else {
-    const next = Number(Buffer.from(treeInfo.data.slice(O_NEXT, O_NEXT + 8)).readBigUInt64LE());
-    if (next !== 0) { console.error(`tree already has ${next} leaves — this one-shot e2e needs a fresh canonical tree`); process.exit(3); }
   }
+  const pre = Buffer.from((await conn.getAccountInfo(treePda, "confirmed")).data);
+  const start = Number(pre.readBigUInt64LE(O_NEXT));
+  const preFilled = Array.from({ length: DEPTH }, (_, i) => be2big(pre.slice(O_FILLED + i * 32, O_FILLED + i * 32 + 32)));
+  const zeros = Array.from({ length: DEPTH + 1 }, (_, i) => i < DEPTH ? be2big(pre.slice(O_ZEROS + i * 32, O_ZEROS + i * 32 + 32)) : null);
+  zeros[DEPTH] = poseidon2([zeros[DEPTH - 1], zeros[DEPTH - 1]]);
+  if (start + K > (1 << DEPTH)) { console.error(`tree has ${start} leaves — no room for ${K} more`); process.exit(3); }
+  console.log(` tree next index ${start}`);
 
   // (2) settle_and_record K receipts; capture on-chain ts
   console.log(`\n[settle] ${K} real payments → receipts`);
-  const recipient = Keypair.generate().publicKey; // the paid party (settlement target)
+  const recipientKp = Keypair.generate(); // the paid party (settlement target)
+  if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `reputation-recipient-${recipientKp.publicKey.toBase58()}.json`), JSON.stringify(Array.from(recipientKp.secretKey)), { mode: 0o600 });
+  const recipient = recipientKp.publicKey;
+  const rb = recipient.toBytes();
+  const counterparty = poseidon2([be2big(rb.slice(0, 16)), be2big(rb.slice(16, 32))]); // == receipt_commitment_tree::counterparty_field
   // Pre-fund the recipient above rent-exemption so the small per-receipt transfers don't
   // leave it rent-paying (a fresh account funded below the minimum reverts InsufficientFundsForRent).
   await send([SystemProgram.transfer({ fromPubkey: payer.publicKey, toPubkey: recipient, lamports: 2_000_000 })], [payer], "fund-recipient");
   const receipts = [];
   for (let i = 0; i < K; i++) {
-    const amount = BigInt(2000 + i * 1500), counterparty = randFr(), nonce = randFr();
+    const amount = BigInt(2000 + i * 1500), nonce = randFr();
     const data = Buffer.concat([Buffer.from([0x02]), TREE_ID, dec2be32(agent_commitment),
       (() => { const b = Buffer.alloc(8); b.writeBigUInt64LE(amount); return b; })(), dec2be32(counterparty), dec2be32(nonce)]);
     const sig = await send([ComputeBudgetProgram.setComputeUnitLimit({ units: 300000 }),
@@ -116,17 +130,26 @@ async function main() {
     if (!m) throw new Error(`no receipt log for settle#${i}: ${logs.join(" | ")}`);
     const ts = BigInt(m[3]);
     console.log(`    idx=${m[1]} amount=${m[2]} ts=${ts}`);
-    receipts.push({ amount, timestamp: ts, counterparty, nonce, idx: BigInt(i) });
+    if (Number(m[1]) !== start + i) throw new Error(`settle#${i} landed at idx ${m[1]}, expected ${start + i} (another writer interleaved)`);
+    receipts.push({ amount, timestamp: ts, counterparty, nonce, idx: BigInt(start + i) });
   }
 
-  // (3) rebuild depth-10 tree (leaves at 0..K-1), assert root matches on-chain
+  // (3) rebuild our K leaves' paths from the pre-settle frontier, assert root matches on-chain.
+  // node(d, j): subtree fully past our leaves -> zeros[d]; fully before `start` -> it is a
+  // completed left node, i.e. the frontier entry preFilled[d]; otherwise hash the children.
   const leaves = receipts.map((r) => poseidon5([agent_commitment, r.amount, r.timestamp, r.counterparty, r.nonce]));
-  let level = new Array(1 << DEPTH).fill(0n);
-  receipts.forEach((r, i) => { level[Number(r.idx)] = leaves[i]; });
-  const tree = [level];
-  for (let d = 0; d < DEPTH; d++) { const nx = new Array(level.length >> 1); for (let i = 0; i < nx.length; i++) nx[i] = poseidon2([level[2*i], level[2*i+1]]); tree.push(nx); level = nx; }
-  const root = tree[DEPTH][0];
-  const pathOf = (idx) => { const el = [], ix = []; let i = Number(idx); for (let d = 0; d < DEPTH; d++) { const bit = i & 1; ix.push(bit); el.push(tree[d][bit ? i-1 : i+1]); i >>= 1; } return { el, ix }; };
+  const end = start + K, memo = new Map();
+  const node = (d, j) => {
+    const lo = j * (1 << d), hi = (j + 1) * (1 << d);
+    if (lo >= end) return zeros[d];
+    if (hi <= start) return preFilled[d];
+    if (d === 0) return leaves[j - start];
+    const key = `${d}:${j}`;
+    if (!memo.has(key)) memo.set(key, poseidon2([node(d - 1, 2 * j), node(d - 1, 2 * j + 1)]));
+    return memo.get(key);
+  };
+  const root = node(DEPTH, 0);
+  const pathOf = (idx) => { const el = [], ix = []; let i = Number(idx); for (let d = 0; d < DEPTH; d++) { const bit = i & 1; ix.push(bit); el.push(node(d, i ^ 1)); i >>= 1; } return { el, ix }; };
   const paths = receipts.map((r) => pathOf(r.idx));
 
   const ti = await conn.getAccountInfo(treePda, "confirmed");
@@ -156,7 +179,7 @@ async function main() {
 
   const proofBytes = Buffer.concat([g1(proof.pi_a), g2(proof.pi_b), g1(proof.pi_c)]);
   const ixData = Buffer.concat([proofBytes, ...pub.map((s) => dec2be32(s))]);
-  if (ixData.length !== 448) throw new Error(`ixData ${ixData.length} != 448`);
+  if (ixData.length !== 480) throw new Error(`ixData ${ixData.length} != 480 (256 proof + 7 public inputs)`);
 
   const repNullBytes = dec2be32(reputation_nullifier);
   const [repNullPda] = PublicKey.findProgramAddressSync([Buffer.from("rep_nullifier"), repNullBytes], repProg);

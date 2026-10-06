@@ -43,6 +43,8 @@ const be2big = (b) => BigInt("0x" + Buffer.from(b).toString("hex"));
 const g1 = (p) => Buffer.concat([dec2be32(p[0]), dec2be32(p[1])]);
 const g2 = (p) => Buffer.concat([dec2be32(p[0][1]), dec2be32(p[0][0]), dec2be32(p[1][1]), dec2be32(p[1][0])]);
 const randFr = () => BigInt("0x" + randomBytes(31).toString("hex")) % P;
+// Leaf counterparty for a recipient pubkey (matches receipt_commitment_tree::counterparty_field).
+const counterpartyField = (pk) => { const b = pk.toBytes(); return poseidon2([be2big(b.slice(0, 16)), be2big(b.slice(16, 32))]); };
 const u64le = (x) => { const b = Buffer.alloc(8); b.writeBigUInt64LE(BigInt(x)); return b; };
 
 const payer = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(KEY, "utf8"))));
@@ -139,9 +141,15 @@ async function main() {
   }
   const before = parseTree(treeAcc.data);
   const myIdx = before.next;
-  const recipient = Keypair.generate().publicKey;
+  // receipt_commitment_tree binds the leaf counterparty to the recipient key:
+  // counterparty = Poseidon2(hi128(recipient), lo128(recipient)). Use a recipient whose raw
+  // key is >= the BN254 modulus (~81% of keys) so the run exercises that case every time.
+  let recipientKp; do { recipientKp = Keypair.generate(); } while (be2big(recipientKp.publicKey.toBytes()) < P);
+  if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `x402v2-recipient-${recipientKp.publicKey.toBase58()}.json`), JSON.stringify(Array.from(recipientKp.secretKey)), { mode: 0o600 });
+  const recipient = recipientKp.publicKey;
+  console.log(`[recipient] ${recipient.toBase58()} (raw key >= BN254 modulus)`);
   await send([SystemProgram.transfer({ fromPubkey: payer.publicKey, toPubkey: recipient, lamports: 2_000_000 })], "fund-recipient");
-  const counterparty = randFr(), nonce = randFr();
+  const counterparty = counterpartyField(recipient), nonce = randFr();
   const sData = Buffer.concat([Buffer.from([0x02]), TREE_ID, dec2be32(agent_commitment), u64le(amount), dec2be32(counterparty), dec2be32(nonce)]);
   const s = await send([ComputeBudgetProgram.setComputeUnitLimit({ units: 300000 }),
     new TransactionInstruction({ programId: treeProg, keys: [
