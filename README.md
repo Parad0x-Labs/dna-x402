@@ -234,7 +234,7 @@ paths, NULL emission accounting, and lottery/root primitives.
 | Mainnet | No active DNA x402 production deployment. The mainnet pilot programs (semaphore, secp256k1 auth, token hook, lottery, mint gate, receipt_anchor `6HSRGivd…`, proof gate `PmSCTue…`) ran June–July 2026 and were retired on 2026-07-14 (ProgramData closed): their transaction history stays readable on explorers, but they cannot be invoked. Canonical deployment inventory available to reviewers on request |
 | Commercial profile | Deploy profile kept in this repo; no commercial deployment is currently active. A new deploy needs wallet/RPC/program-id provisioning; external audit pending |
 | Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
-| NULL token | No active token mint; token launch follows the audit gate |
+| NULL token | Live on mainnet: Token-2022 mint `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`, fixed supply (mint and freeze authority revoked) |
 
 ### Deploy profile programs
 
