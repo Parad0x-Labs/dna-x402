@@ -6,7 +6,7 @@
   "main": "./src/index.mjs",
   "files": ["src/", "README.md", "LICENSE"],
   "keywords": ["work-verification", "task-binding", "agent", "solana", "ed25519", "receipt", "non-custodial", "parad0x-labs"],
-  "dependencies": { "@noble/curves": "^2.2.0", "@noble/hashes": "^2.2.0" },
+  "dependencies": { "@noble/curves": "^2.4.0", "@noble/hashes": "^2.4.0" },
   "peerDependencies": { "@parad0x_labs/receipt-dag": "^0.2.0 || ^0.3.0" },
   "scripts": { "test": "node test/work-receipt.test.mjs" },
   "engines": { "node": ">=22" },
