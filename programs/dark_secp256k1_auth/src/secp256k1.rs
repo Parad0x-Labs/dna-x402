@@ -39,9 +39,13 @@ fn read_u16_le(data: &[u8], at: usize) -> Result<u16, ProgramError> {
     Ok(u16::from_le_bytes([*lo, *hi]))
 }
 
-/// The verified ETH address extracted from the precompile instruction.
-pub struct Secp256k1Verified {
+/// The verified tuple extracted from the precompile instruction.
+pub struct Secp256k1Verified<'a> {
     pub eth_address: [u8; ETH_ADDRESS_LEN],
+    /// r(32) || s(32) || recovery_id(1) as verified by the precompile.
+    pub signature: &'a [u8],
+    /// The message bytes the precompile hashed (keccak256) and verified.
+    pub message: &'a [u8],
 }
 
 /// Parse a self-contained secp256k1 precompile instruction with exactly one
@@ -50,7 +54,7 @@ pub struct Secp256k1Verified {
 pub fn parse_single_verified(
     data: &[u8],
     self_index: u16,
-) -> Result<Secp256k1Verified, ProgramError> {
+) -> Result<Secp256k1Verified<'_>, ProgramError> {
     if data.len() < OFFSETS_START + OFFSETS_LEN {
         return Err(AuthError::MalformedPrecompile.into());
     }
@@ -66,8 +70,8 @@ pub fn parse_single_verified(
     let sig_ix   = *data.get(o + 2).ok_or(AuthError::MalformedPrecompile)?;
     let addr_off = read_u16_le(data, o + 3)? as usize;
     let addr_ix  = *data.get(o + 5).ok_or(AuthError::MalformedPrecompile)?;
-    let _msg_off = read_u16_le(data, o + 6)?;
-    let _msg_sz  = read_u16_le(data, o + 8)?;
+    let msg_off  = read_u16_le(data, o + 6)? as usize;
+    let msg_sz   = read_u16_le(data, o + 8)? as usize;
     let msg_ix   = *data.get(o + 10).ok_or(AuthError::MalformedPrecompile)?;
 
     let self_ix_u8 = self_index as u8;
@@ -76,8 +80,9 @@ pub fn parse_single_verified(
         return Err(AuthError::MalformedPrecompile.into());
     }
 
-    // Validate signature is present (not returned — precompile already verified it)
-    data.get(sig_off..sig_off + SIG_LEN)
+    let signature = data.get(sig_off..sig_off + SIG_LEN)
+        .ok_or(AuthError::MalformedPrecompile)?;
+    let message = data.get(msg_off..msg_off + msg_sz)
         .ok_or(AuthError::MalformedPrecompile)?;
 
     // Extract the ETH address (20 bytes)
@@ -87,7 +92,7 @@ pub fn parse_single_verified(
     let mut eth_address = [0u8; ETH_ADDRESS_LEN];
     eth_address.copy_from_slice(addr_slice);
 
-    Ok(Secp256k1Verified { eth_address })
+    Ok(Secp256k1Verified { eth_address, signature, message })
 }
 
 #[cfg(test)]
@@ -124,6 +129,17 @@ mod tests {
         let buf  = build_buf(&addr, &sig, &msg, 0);
         let v = parse_single_verified(&buf, 0).expect("must parse");
         assert_eq!(v.eth_address, addr);
+        assert_eq!(v.signature, &sig[..]);
+        assert_eq!(v.message, &msg[..]);
+    }
+
+    #[test]
+    fn rejects_message_out_of_bounds() {
+        let mut buf = build_buf(&[0u8; 20], &[0u8; 65], &[0u8; 32], 0);
+        // message_data_size (bytes 9..11) larger than the buffer
+        buf[9] = 0xFF;
+        buf[10] = 0x00;
+        assert!(parse_single_verified(&buf, 0).is_err());
     }
 
     #[test]

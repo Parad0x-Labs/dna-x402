@@ -21,6 +21,7 @@ pub enum AuthInstruction {
     ///   [0] record_pda    (writable)
     ///   [1] agent_signer  (signer + writable) — the Solana agent pubkey being bound
     ///   [2] system_program
+    ///   [3] instructions sysvar (precompile at tx index 0)
     RegisterEthAgent {
         r:           [u8; 32],
         s:           [u8; 32],

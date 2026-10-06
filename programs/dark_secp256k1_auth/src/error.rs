@@ -2,7 +2,7 @@ use solana_program::program_error::ProgramError;
 
 #[derive(Debug, Clone, Copy)]
 pub enum AuthError {
-    /// secp256k1 precompile reported a verification failure or was absent.
+    /// The precompile-verified signature differs from r/s/recovery_id in the instruction.
     InvalidSignature,
     /// An EthAgentRecord already exists for this ETH address.
     AgentAlreadyRegistered,
@@ -18,6 +18,8 @@ pub enum AuthError {
     MalformedPrecompile,
     /// The precompile-verified ETH address doesn't match the supplied pda_seed.
     EthAddressMismatch,
+    /// The precompile-verified message differs from msg_hash in the instruction.
+    MessageMismatch,
 }
 
 impl From<AuthError> for ProgramError {
@@ -31,6 +33,7 @@ impl From<AuthError> for ProgramError {
             AuthError::NotOwner               => 0x5006,
             AuthError::MalformedPrecompile    => 0x5007,
             AuthError::EthAddressMismatch     => 0x5008,
+            AuthError::MessageMismatch        => 0x5009,
         })
     }
 }

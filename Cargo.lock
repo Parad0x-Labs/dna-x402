@@ -3072,6 +3072,7 @@ dependencies = [
 name = "dark-secp256k1-auth"
 version = "0.1.0"
 dependencies = [
+ "libsecp256k1",
  "solana-program",
  "solana-program-test",
  "solana-sdk",

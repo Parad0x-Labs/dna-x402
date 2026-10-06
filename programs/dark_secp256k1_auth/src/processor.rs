@@ -16,14 +16,10 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-// ⚠️  EXTERNALLY UNAUDITED — test pilot deployment. Not audited by any third party.
-//    Deploy with: cargo build-sbf --features mainnet
-//    IS_MAINNET_READY=true enables full on-chain verification (signature checks,
-//    SPL transfers, precompile validation). Use at your own risk until audited.
-#[cfg(feature = "mainnet")]
-pub const IS_MAINNET_READY: bool = true;
-#[cfg(not(feature = "mainnet"))]
-pub const IS_MAINNET_READY: bool = false;
+// The secp256k1 precompile binding below is enforced in every build. It used to
+// be compiled only with the `mainnet` cargo feature, so default (devnet) builds
+// bound any ETH address to any caller; that feature is kept as a no-op so existing
+// build commands keep working.
 
 pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     match AuthInstruction::unpack(data)? {
@@ -38,7 +34,7 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Pr
 #[allow(clippy::too_many_arguments)]
 fn process_register(
     program_id: &Pubkey, accounts: &[AccountInfo],
-    _r: [u8; 32], _s: [u8; 32], _recovery_id: u8, _msg_hash: [u8; 32],
+    r: [u8; 32], s: [u8; 32], recovery_id: u8, msg_hash: [u8; 32],
     pda_seed: [u8; 32], auth_hash: [u8; 32], domain_hash: [u8; 32],
 ) -> ProgramResult {
     let iter         = &mut accounts.iter();
@@ -63,17 +59,23 @@ fn process_register(
         return Err(AuthError::AgentAlreadyRegistered.into());
     }
 
-    // When compiled with --features mainnet: parse the secp256k1 precompile at
-    // index 0, extract the ETH address it cryptographically verified, and require
-    // it to equal the eth_address in pda_seed. This is the real MetaMask binding:
-    // "the wallet that owns this ETH address signed a message with it."
-    #[cfg(feature = "mainnet")]
+    // Parse the secp256k1 precompile at index 0 and bind what it verified:
+    //   - the recovered ETH address must equal the eth_address in pda_seed
+    //   - the signed message must be exactly msg_hash (32 bytes)
+    //   - the signature must be the r || s || recovery_id in this instruction
+    let ix_sysvar = next_account_info(iter)?;
+    let verified_ix = load_precompile_ix(ix_sysvar)?;
+    let verified = crate::secp256k1::parse_single_verified(&verified_ix.data, 0)?;
+    if verified.eth_address != eth_address {
+        return Err(AuthError::EthAddressMismatch.into());
+    }
+    if verified.message != msg_hash {
+        return Err(AuthError::MessageMismatch.into());
+    }
+    if verified.signature[..32] != r || verified.signature[32..64] != s
+        || verified.signature[64] != recovery_id
     {
-        let ix_sysvar = next_account_info(iter)?;
-        let verified_eth = extract_verified_eth_address(ix_sysvar)?;
-        if verified_eth != eth_address {
-            return Err(AuthError::EthAddressMismatch.into());
-        }
+        return Err(AuthError::InvalidSignature.into());
     }
 
     let rent     = Rent::get()?;
@@ -104,13 +106,12 @@ fn process_register(
     Ok(())
 }
 
-/// Load the secp256k1 precompile instruction at index 0 and extract the
-/// ETH address it cryptographically verified. The precompile guarantees the
-/// private key owner signed the message — we just read the result.
-#[cfg(feature = "mainnet")]
-fn extract_verified_eth_address(
+/// Load the secp256k1 precompile instruction at index 0. The precompile
+/// guarantees the private key owner signed its message; the caller binds the
+/// verified tuple. This instruction must not itself be at index 0.
+fn load_precompile_ix(
     ix_sysvar: &AccountInfo,
-) -> Result<[u8; 20], ProgramError> {
+) -> Result<solana_program::instruction::Instruction, ProgramError> {
     use solana_program::sysvar::instructions;
     let current_idx = instructions::load_current_index_checked(ix_sysvar)? as usize;
     if current_idx == 0 {
@@ -120,8 +121,7 @@ fn extract_verified_eth_address(
     if precompile_ix.program_id != solana_program::secp256k1_program::id() {
         return Err(ProgramError::InvalidInstructionData);
     }
-    let verified = crate::secp256k1::parse_single_verified(&precompile_ix.data, 0)?;
-    Ok(verified.eth_address)
+    Ok(precompile_ix)
 }
 
 fn process_revoke(

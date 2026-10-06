@@ -32,8 +32,8 @@
 | Program | Behaviour when `IS_MAINNET_READY=false` | Pilot risk |
 |---|---|---|
 | `dark_semaphore` | Signature verification skipped; nullifier PDA still written | Low — nullifier registry only, no token movement |
-| `dark_secp256r1_vault` | P-256 assertion not verified on-chain; PDA still written | Low — devnet trust model, no funds at risk |
-| `dark_secp256k1_auth` | ETH sig not verified on-chain; binding PDA still written | Low — devnet trust model, no funds at risk |
+| `dark_secp256r1_vault` | secp256r1 precompile binding enforced in every build (not feature-gated): register binds the verified P-256 key, sign-in requires that key over the live challenge | Low — identity binding only, no funds |
+| `dark_secp256k1_auth` | secp256k1 precompile binding enforced in every build (not feature-gated): verified ETH address, message and signature must match the instruction | Low — identity binding only, no funds |
 | `null_token_hook` | Permissive pass-through up to `dark_pool_limit_atomic`; allowlist admin bound to the canonical `[b"hook-config"]` PDA (re-run `InitConfig` after deploying builds from this revision) | Low — existing NULL token is standard SPL; Token-2022 hooks cannot be registered on it |
 | `null_lottery` | Commit-reveal draw recorded; SPL token settlement skipped | Low — no real currency moves in this mode |
 | `null_mint_gate` | Emission claim PDA written; SPL mint CPI skipped; claims co-signed by config authority | Low — accounting only, no NULL actually minted |

@@ -9,12 +9,15 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = []
+# No-op: the secp256k1 precompile binding is enforced in every build. Kept so
+# existing `cargo build-sbf --features mainnet` commands keep working.
 mainnet = []
 
 [dependencies]
 solana-program = { workspace = true }
 
 [dev-dependencies]
+libsecp256k1       = "0.6.0"
 solana-program-test = { workspace = true }
 solana-sdk         = { workspace = true }
 tokio              = { workspace = true }

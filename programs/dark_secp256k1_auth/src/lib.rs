@@ -3,20 +3,17 @@
 //! Binds an Ethereum address (20-byte secp256k1 public key hash) to a Solana agent
 //! public key, enabling cross-chain identity proofs for the NULL agent network.
 //!
-//! Production flow (IS_MAINNET_READY = true):
+//! Flow (every build; the precompile binding is not feature-gated):
 //!   1. The transaction includes a secp256k1 precompile instruction
-//!      (program `KeccakSecp256k11111111111111111111111111111`).
-//!   2. The precompile verifies the ETH signature over `msg_hash` and recovers
-//!      the ETH address from the provided `r`, `s`, `recovery_id`.
-//!   3. This program derives the EthAgentRecord PDA using the client-supplied
-//!      `pda_seed` and verifies the precompile ran successfully (tx ordering).
+//!      (program `KeccakSecp256k11111111111111111111111111111`) at index 0.
+//!   2. The precompile verifies the ETH signature over its message and the
+//!      ETH address it carries before this program runs.
+//!   3. RegisterEthAgent reads that instruction through the instructions sysvar
+//!      and requires: verified ETH address == pda_seed[12..32], verified message
+//!      == msg_hash, verified signature == r || s || recovery_id.
 //!
-//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
-//!    Deploy: `cargo build-sbf --features mainnet`
-//!
-//! Devnet flow (IS_MAINNET_READY = false):
-//!   Signature verification is skipped.  The `pda_seed` supplied by the client
-//!   is trusted as encoding the ETH address (last 20 bytes of pda_seed).
+//! Accounts: RegisterEthAgent [record_pda, agent_signer, system_program,
+//! instructions_sysvar]; RevokeEthAgent [record_pda, agent_signer].
 //!
 //! Instruction layout:
 //!   0x01  RegisterEthAgent   [r[32], s[32], recovery_id[1], msg_hash[32],
