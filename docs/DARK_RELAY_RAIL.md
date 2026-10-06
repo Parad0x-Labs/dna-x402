@@ -16,7 +16,7 @@ The e2e scripts take the program ID as an argument.
 |---|---|---|
 | **Deposit not named at withdrawal** | ZK membership proof over a Poseidon Merkle tree of note commitments — a withdrawal proves "I own *a* note in this pool" without revealing which; linkage narrows to the deposits in the same pool, and depositors are public at deposit time. | ✅ implemented (v2→v3) |
 | **Amount uniform per bucket** | Fixed **denomination buckets** (0.1 / 1 / 10 SOL). Every note in a bucket is identical; a withdrawal reveals the bucket and the relayer fee, not the depositor's balance. | ✅ implemented |
-| **Recipient address separate from identity** | Stealth addresses (NullPay) — recipient derives a one-time address that is not linked to their main wallet on-chain; the one-time address itself is public. | ⏳ documented stub (follow-up) |
+| **Recipient address separate from identity** | Stealth addresses (NullPay) — recipient derives a one-time address that is not linked to their main wallet on-chain; the one-time address itself is public. | ⏳ documented, follow-up |
 | **Gas paid by permissionless relayers** | Any wallet can submit a withdraw; it is reimbursed an **in-proof fee** from the pool. No central relayer server, no allow-list. | ✅ implemented (v3) |
 | **Trustless setup** | Open multi-party ceremony: public Powers-of-Tau phase-1 + multiple independent phase-2 contributions + a public drand beacon. | ⚙️ pipeline + dry-run (real beacon); needs independent humans |
 
