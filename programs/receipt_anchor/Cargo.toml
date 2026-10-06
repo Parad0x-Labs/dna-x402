@@ -11,7 +11,7 @@ default = []
 no-entrypoint = []
 
 [dependencies]
-solana-program = "=1.18.26"
+solana-program = "=2.3.0"
 thiserror = "2.0"
 
 [dev-dependencies]

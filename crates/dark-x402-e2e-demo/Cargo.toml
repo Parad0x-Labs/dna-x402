@@ -13,5 +13,5 @@ dark-x402-core             = { path = "../dark-x402-core" }
 dark-x402-nullifier-bridge = { path = "../dark-x402-nullifier-bridge" }
 dark-groth16-core          = { path = "../dark-groth16-core" }
 sha2                       = "0.11"
-solana-program             = "=1.18.26"
+solana-program             = "=2.3.0"
 hex                        = "0.4"

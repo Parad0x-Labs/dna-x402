@@ -5,5 +5,5 @@ edition = "2021"
 description = "BN254 Groth16 proof verifier for Solana — uses alt_bn128_pairing syscall on-chain"
 
 [dependencies]
-solana-program = "=1.18.26"
+solana-program = "=2.3.0"
 serde          = { version = "1", features = ["derive"] }

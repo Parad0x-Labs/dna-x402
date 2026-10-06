@@ -10,4 +10,4 @@ dark-nullifier-banks = { path = "../../programs/dark_nullifier_banks", features 
 sha2                = "0.11"
 serde               = { version = "1", features = ["derive"] }
 serde_json          = "1"
-solana-program      = "=1.18.26"
+solana-program      = "=2.3.0"
