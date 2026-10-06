@@ -227,6 +227,8 @@ members = [
     "programs/null_registrar",
     # X402_REFUND_ESCROW — refund-on-failure conditional settlement for x402
     "programs/x402_refund_escrow",
+    # Atomic x402 batch settlement: payer escrows, in-program ed25519 vouchers, channels, two-phase batches
+    "programs/x402_settle",
     # WAVE_14_BATCH_1 - privacy primitives
     "crates/dark-atomic-swap",
     "crates/dark-time-capsule",

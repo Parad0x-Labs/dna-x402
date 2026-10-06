@@ -1,0 +1,38 @@
+[package]
+name = "x402-settle"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "Atomic x402 batch settlement: payer escrows, in-program ed25519 vouchers, channels and two-phase batches (native Solana program)"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+# Use the sol_sha512 syscall (SIMD-0512) for cluster builds. The
+# solana-program-test 1.18 runtime has no sol_sha512, so the test build uses
+# the portable SHA-512 in src/crypto.rs.
+sha512-syscall = []
+no-entrypoint = []
+# Test builds only: adds a measurement instruction (tag 0xF0) for the
+# in-program SHA-512 cost. Never enabled for a cluster build.
+cu-probe = []
+
+[dependencies]
+solana-program = { workspace = true }
+
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+curve25519-dalek = "=3.2.1"
+
+[dev-dependencies]
+solana-program-test = { workspace = true }
+solana-sdk         = { workspace = true }
+tokio              = { workspace = true }
+serde_json         = { workspace = true }
+sha2               = "=0.10.9"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("custom-heap", "custom-panic", "cu-probe", "sha512-syscall", "no-entrypoint"))',
+    'cfg(target_os, values("solana"))',
+] }
