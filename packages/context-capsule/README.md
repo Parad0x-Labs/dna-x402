@@ -55,6 +55,10 @@ Limits:
 npm install @parad0x_labs/context-capsule
 ```
 
+The package ships TypeScript source (`src/index.ts`) and no compiled JavaScript. Import it from a
+TypeScript-aware runtime or bundler such as tsx, Bun, Vite or esbuild. Plain `node` refuses to
+strip types from files under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`).
+
 ## Usage
 
 ```typescript

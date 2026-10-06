@@ -14,6 +14,10 @@ Part of the [DNA x402](https://github.com/Parad0x-Labs/dna-x402) stack, the x402
 npm install @parad0x_labs/liquefy-receipts
 ```
 
+The package ships TypeScript source (`src/*.ts`) and no compiled JavaScript. Import it from a
+TypeScript-aware runtime or bundler such as tsx, Bun, Vite or esbuild. Plain `node` refuses to
+strip types from files under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`).
+
 ## Quick start
 
 ```ts
