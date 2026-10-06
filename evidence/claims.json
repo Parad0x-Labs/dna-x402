@@ -737,7 +737,7 @@
       "package_version": {
         "name": "@parad0x_labs/context-capsule",
         "package_json": "packages/context-capsule/package.json",
-        "git_version": "1.1.0",
+        "git_version": "1.2.0",
         "npm_latest": "1.0.0",
         "npm_checked_at": "2026-10-06T08:23:41Z"
       },
@@ -765,7 +765,7 @@
         "end-to-end task token or cost savings",
         "the earlier unqualified 83x and 98% figures",
         "that the model can use details it was not given (omitted history must be retrieved and placed in the prompt)",
-        "npm publication of 1.1.0 (npm latest is 1.0.0)"
+        "npm publication of 1.2.0 (release commit b03fec0) (npm latest is 1.0.0)"
       ],
       "operational_limitations": [],
       "supersedes": null
