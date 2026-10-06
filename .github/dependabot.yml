@@ -31,6 +31,19 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     labels: ["dependencies", "security"]
+    ignore:
+      # BN254 / Groth16 stack: ark-bn254, ark-ff, ark-ec, ark-serialize and
+      # light-poseidon must move together as one family and stay byte-compatible
+      # with the alt_bn128 / sol_poseidon syscalls. Single-crate 0.4 -> 0.6 bumps
+      # do not compile (trait/type mismatches across ark generations).
+      - dependency-name: "ark-*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "light-poseidon"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # sha2 0.9 is required next to curve25519-dalek 3.2.1 (digest 0.9 API,
+      # pinned by solana-program 1.18). Digest-generation moves are manual.
+      - dependency-name: "sha2"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
