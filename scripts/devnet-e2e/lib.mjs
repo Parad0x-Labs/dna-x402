@@ -9,6 +9,7 @@
 //   RPC_URL       cluster RPC (required)
 //   EVIDENCE_DIR  directory for the evidence JSON (default ./evidence)
 //   AIRDROP=1     fund wallets with requestAirdrop (local validator only)
+//   RPC_MAX_ATTEMPTS  retries on HTTP 429 / 5xx with exponential backoff (default: 6, linear)
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createPrivateKey, createPublicKey, sign as edSign } from "node:crypto";
@@ -93,6 +94,11 @@ export function freshKey() {
 // ── JSON-RPC ────────────────────────────────────────────────────────────────
 
 let rpcId = 0;
+// HTTP 429 / 5xx retry budget. Unset: 6 retries with linear backoff (400 ms steps).
+// RPC_MAX_ATTEMPTS=<n>: n retries with exponential backoff capped at 20 s, for throttled public RPCs.
+// A resent sendTransaction carries the same signed bytes, so a retry cannot double-spend.
+const RPC_MAX_ATTEMPTS = process.env.RPC_MAX_ATTEMPTS ? Number(process.env.RPC_MAX_ATTEMPTS) : null;
+const backoff = (attempt) => (RPC_MAX_ATTEMPTS === null ? 400 * (attempt + 1) : Math.min(500 * 2 ** attempt, 20_000));
 export async function rpc(method, params = []) {
   for (let attempt = 0; ; attempt++) {
     try {
@@ -110,8 +116,8 @@ export async function rpc(method, params = []) {
       }
       return j.result;
     } catch (e) {
-      if (e.rpc || attempt >= 6) throw e;
-      await sleep(400 * (attempt + 1));
+      if (e.rpc || attempt >= (RPC_MAX_ATTEMPTS ?? 6)) throw e;
+      await sleep(backoff(attempt));
     }
   }
 }
