@@ -166,6 +166,13 @@ const PROVIDER_METHOD: Record<DetectionProvider, DetectionResult["detectionMetho
   [DetectionProvider.MOCK]:     "classifier",
 };
 
+/** Reject provider strings that are not in the registry (e.g. from untyped callers). */
+function assertKnownProvider(provider: DetectionProvider): void {
+  if (!Object.prototype.hasOwnProperty.call(PROVIDER_PATHS, provider)) {
+    throw new TypeError(`Unknown detection provider: ${String(provider)}`);
+  }
+}
+
 /**
  * Build a detection request descriptor without performing any network call.
  *
@@ -186,6 +193,7 @@ export function buildDetectionRequest(
   x402Endpoint:         string;
   estimatedPriceUsdc:   number;
 } {
+  assertKnownProvider(provider);
   const mediaHash = sha256Hex(mediaBytes);
   const path      = PROVIDER_PATHS[provider];
   const x402Endpoint = facilitatorBaseUrl.replace(/\/$/, "") + path;
@@ -244,6 +252,7 @@ export async function detect(
   x402Config:  X402Config,
   opts:        DetectOpts = {},
 ): Promise<DetectionResult> {
+  assertKnownProvider(provider);
   const t0        = Date.now();
   const mediaHash = sha256Hex(mediaBytes);
   const requestId = randomBytes(16).toString("hex");
