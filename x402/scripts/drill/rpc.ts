@@ -19,6 +19,18 @@ function clean(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+function hostnameOf(rpcUrl: string): string {
+  try {
+    return new URL(rpcUrl).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function isHeliusHost(hostname: string): boolean {
+  return hostname === "helius-rpc.com" || hostname.endsWith(".helius-rpc.com");
+}
+
 function withApiKey(baseUrl: string, apiKey: string): string {
   const url = new URL(baseUrl);
   url.searchParams.set("api-key", apiKey);
@@ -33,7 +45,7 @@ export function redactRpcUrlForReport(rpcUrl: string): string {
     }
   }
 
-  if (url.hostname.endsWith("helius-rpc.com")) {
+  if (isHeliusHost(url.hostname.toLowerCase())) {
     if (!url.searchParams.has("api-key")) {
       return `${url.protocol}//${url.hostname}/<redacted>`;
     }
@@ -80,7 +92,7 @@ export function resolveDrillRpcUrl(env: NodeJS.ProcessEnv = process.env): DrillR
       rpcUrl: solanaRpc,
       source: "SOLANA_RPC_URL",
       reportValue: redactRpcUrlForReport(solanaRpc),
-      highThroughput: !solanaRpc.includes("api.mainnet-beta.solana.com"),
+      highThroughput: hostnameOf(solanaRpc) !== new URL(PUBLIC_MAINNET_RPC).hostname,
     };
   }
 

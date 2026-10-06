@@ -64,7 +64,14 @@ const TRANSFER_AGENT_SOL_LAMPORTS = 3_000_000n;
 const SOL_DUST_LAMPORTS = 5_000n;
 const USDC_MINT = new PublicKey(MAINNET_USDC_MINT);
 const RPC_RETRY_ATTEMPTS = Number(process.env.MAINNET_RPC_RETRY_ATTEMPTS ?? "12");
-const RPC_THROTTLE_MS = Number(process.env.MAINNET_RPC_THROTTLE_MS ?? (RPC_URL.includes("api.mainnet-beta.solana.com") ? "1250" : "250"));
+function rpcHostname(rpcUrl) {
+  try {
+    return new URL(rpcUrl).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+const RPC_THROTTLE_MS = Number(process.env.MAINNET_RPC_THROTTLE_MS ?? (rpcHostname(RPC_URL) === "api.mainnet-beta.solana.com" ? "1250" : "250"));
 const EXPECT_NETTING_REJECTION = boolEnv("EXPECT_NETTING_REJECTION", REQUIRE_MAINNET);
 const EXPECTED_NETTING_PROBES = 60;
 const EXPECTED_TRANSFER_TRADES = 20;

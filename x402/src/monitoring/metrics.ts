@@ -1,11 +1,16 @@
 import type { AuditLogger } from "../logging/audit.js";
 import type { X402AppContext } from "../server.js";
 
+// Prometheus text exposition format: label values escape backslash, double quote and newline.
+function escapeLabelValue(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+}
+
 function line(name: string, value: number, labels: Record<string, string> = {}): string {
   const labelEntries = Object.entries(labels);
   const suffix = labelEntries.length === 0
     ? ""
-    : `{${labelEntries.map(([key, item]) => `${key}="${item.replace(/"/g, '\\"')}"`).join(",")}}`;
+    : `{${labelEntries.map(([key, item]) => `${key}="${escapeLabelValue(item)}"`).join(",")}}`;
   return `${name}${suffix} ${Number.isFinite(value) ? value : 0}`;
 }
 
