@@ -23,7 +23,7 @@ needs the earlier detail, retrieval adds it back, and those tokens count.
 ## Dataset
 
 - Session: [`bench/fixtures/agent-session-100.json`](../packages/context-capsule/bench/fixtures/agent-session-100.json), 109 messages (55 user, 54 assistant), synthetic, about building a receipt-anchoring package. SHA-256 `18b4a6590cbde822835a70d107a2c7b29f72753edcb9e2c8c905fdaa4d1942aa`.
-- Questions: [`bench/fixtures/recovery-questions.json`](../packages/context-capsule/bench/fixtures/recovery-questions.json), 40 questions with `required_keywords` (corrections 10, bugs 6, files 5, decisions 5, tests 4, todos 4, security 4, commands 2). SHA-256 `9aae0170004d30e0cbd9cb40a28e3aaaed6af42e2c1fcf0160ee4462a6c65729`.
+- Questions: [`bench/fixtures/recovery-questions.json`](../packages/context-capsule/bench/fixtures/recovery-questions.json), 40 questions with `required_keywords` (corrections 10, bugs 6, files 5, decisions 5, tests 4, todos 4, security 4, commands 2). SHA-256 `f691e86c423a1d9bc35ce38a6a046206f162aad4514407775d984c78839ef5e0`.
 - The questions were written together with the session by the maintainers. They are a development set, not a held-out evaluation.
 - 5 questions (32, 35, 36, 39, 40) are not answerable from the session: at least one required keyword never occurs in it. They carry `"unanswerable": true` in the question file, and `bench-scope.ts` fails if a flag disagrees with the session text.
 
