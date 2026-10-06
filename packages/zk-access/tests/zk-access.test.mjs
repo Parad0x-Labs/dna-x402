@@ -19,6 +19,7 @@ import {
   verifyAccessCredential,
   consumeCall,
   buildAccessProofInput,
+  AccessCallLedger,
 } from "../src/index.ts";
 
 const R = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -44,6 +45,7 @@ const canonical = (c) =>
   `zk-access-v1:${c.agentPubkey}:${c.tier}:${c.callsRemaining}:${c.validUntilSlot}:${c.issuedByPubkey}`;
 
 const issuerSeed = randomBytes(32);
+const TRUSTED = [nodePubkeyHex(issuerSeed)];
 const agentPubkey = nodePubkeyHex(randomBytes(32));
 
 function issue(over = {}, seed = issuerSeed) {
@@ -126,18 +128,18 @@ describe("issueAccessCredential", () => {
 describe("verifyAccessCredential", () => {
   test("accepts a fresh credential up to and including its expiry slot", () => {
     const c = issue({ validUntilSlot: 1000 });
-    assert.deepEqual(verifyAccessCredential(c, 0), { valid: true, reason: null });
-    assert.deepEqual(verifyAccessCredential(c, 1000), { valid: true, reason: null });
+    assert.deepEqual(verifyAccessCredential(c, 0, TRUSTED), { valid: true, reason: null });
+    assert.deepEqual(verifyAccessCredential(c, 1000, TRUSTED), { valid: true, reason: null });
   });
 
   test("rejects once the slot passes validUntilSlot", () => {
-    const r = verifyAccessCredential(issue({ validUntilSlot: 1000 }), 1001);
+    const r = verifyAccessCredential(issue({ validUntilSlot: 1000 }), 1001, TRUSTED);
     assert.equal(r.valid, false);
     assert.equal(r.reason, "credential expired at slot 1000 (current: 1001)");
   });
 
   test("rejects an exhausted credential", () => {
-    const r = verifyAccessCredential(issue({ callsRemaining: 0 }), 1);
+    const r = verifyAccessCredential(issue({ callsRemaining: 0 }), 1, TRUSTED);
     assert.equal(r.valid, false);
     assert.match(r.reason, /exhausted/);
   });
@@ -145,7 +147,7 @@ describe("verifyAccessCredential", () => {
   test("rejects a non-numeric current slot instead of skipping the expiry check", () => {
     const c = issue({ validUntilSlot: 10 });
     for (const slot of [NaN, undefined, -1]) {
-      const r = verifyAccessCredential(c, slot);
+      const r = verifyAccessCredential(c, slot, TRUSTED);
       assert.equal(r.valid, false, String(slot));
       assert.match(r.reason, /currentSlot/);
     }
@@ -160,7 +162,7 @@ describe("verifyAccessCredential", () => {
       ["validUntilSlot", 10_000_000],
       ["agentPubkey", otherAgent],
     ]) {
-      const r = verifyAccessCredential({ ...c, [field]: value }, 1);
+      const r = verifyAccessCredential({ ...c, [field]: value }, 1, TRUSTED);
       assert.equal(r.valid, false, field);
       assert.equal(r.reason, "signature verification failed", field);
     }
@@ -172,7 +174,7 @@ describe("verifyAccessCredential", () => {
     for (const idx of [0, 31, 32, 63]) {
       const bad = Buffer.from(sig);
       bad[idx] ^= 0x01;
-      const r = verifyAccessCredential({ ...c, signature: bad.toString("hex") }, 1);
+      const r = verifyAccessCredential({ ...c, signature: bad.toString("hex") }, 1, TRUSTED);
       assert.equal(r.valid, false, `byte ${idx}`);
     }
   });
@@ -185,13 +187,13 @@ describe("verifyAccessCredential", () => {
     assert.ok(sPlusL < 2n ** 256n);
     const sBytes = Buffer.from(sPlusL.toString(16).padStart(64, "0"), "hex").reverse();
     const mall = Buffer.concat([sig.subarray(0, 32), sBytes]).toString("hex");
-    assert.equal(verifyAccessCredential({ ...c, signature: mall }, 1).valid, false);
+    assert.equal(verifyAccessCredential({ ...c, signature: mall }, 1, TRUSTED).valid, false);
   });
 
   test("swapping in a different issuer key without re-signing is rejected", () => {
     const c = issue();
     const attackerPub = nodePubkeyHex(randomBytes(32));
-    const r = verifyAccessCredential({ ...c, issuedByPubkey: attackerPub }, 1);
+    const r = verifyAccessCredential({ ...c, issuedByPubkey: attackerPub }, 1, TRUSTED);
     assert.equal(r.valid, false);
     assert.equal(r.reason, "signature verification failed");
   });
@@ -199,7 +201,7 @@ describe("verifyAccessCredential", () => {
   test("a signature from another issuer over the same fields is rejected", () => {
     const c = issue();
     const other = issue({}, randomBytes(32));
-    const r = verifyAccessCredential({ ...c, signature: other.signature }, 1);
+    const r = verifyAccessCredential({ ...c, signature: other.signature }, 1, TRUSTED);
     assert.equal(r.valid, false);
   });
 
@@ -211,42 +213,88 @@ describe("verifyAccessCredential", () => {
       { signature: "abc" },
       { issuedByPubkey: "not-hex" },
     ]) {
-      const r = verifyAccessCredential({ ...c, ...patch }, 1);
+      const r = verifyAccessCredential({ ...c, ...patch }, 1, TRUSTED);
       assert.equal(r.valid, false);
       assert.match(r.reason, /malformed|failed/);
     }
   });
 
-  test(
-    "rejects a credential signed by an issuer the verifier does not trust",
-    {
-      todo:
-        "BUG (not fixed): verifyAccessCredential() trusts cred.issuedByPubkey, so any key " +
-        "can self-issue a valid ELITE credential; it needs a trusted-issuer parameter (API change).",
-    },
-    () => {
-      const attackerSeed = randomBytes(32);
-      const forged = issueAccessCredential(
-        { agentPubkey, tier: AccessTier.ELITE, callsRemaining: 1_000_000, validUntilSlot: 2 ** 40 },
-        attackerSeed,
-      );
-      assert.equal(verifyAccessCredential(forged, 1).valid, false);
-    },
-  );
+  test("rejects a credential signed by an issuer the verifier does not trust", () => {
+    const attackerSeed = randomBytes(32);
+    const forged = issueAccessCredential(
+      { agentPubkey, tier: AccessTier.ELITE, callsRemaining: 1_000_000, validUntilSlot: 2 ** 40 },
+      attackerSeed,
+    );
+    // The forged credential is internally consistent (valid signature under its own key)...
+    assert.ok(nodeVerifyHex(forged.signature, canonical(forged), forged.issuedByPubkey));
+    // ...but its issuer is not trusted.
+    assert.deepEqual(verifyAccessCredential(forged, 1, TRUSTED), { valid: false, reason: "issuer is not trusted" });
+    // Trusting the attacker key explicitly is the only way it passes.
+    assert.equal(verifyAccessCredential(forged, 1, [forged.issuedByPubkey]).valid, true);
+  });
 
-  test(
-    "rejects a superseded credential after consumeCall (replay of an older balance)",
-    {
-      todo:
-        "BUG (not fixed, by design of Phase 1): credentials carry no nonce/counter, so the " +
-        "pre-consumption credential stays valid forever and can be replayed; needs verifier-side state.",
-    },
-    () => {
-      const before = issue({ callsRemaining: 2 });
-      consumeCall(before, issuerSeed);
-      assert.equal(verifyAccessCredential(before, 1).valid, false);
-    },
-  );
+  test("fails closed when no trusted issuers are configured", () => {
+    const c = issue();
+    for (const trusted of [[], undefined, null, "not-an-array"]) {
+      const r = verifyAccessCredential(c, 1, trusted);
+      assert.equal(r.valid, false);
+      assert.equal(r.reason, "no trusted issuers configured");
+    }
+  });
+
+  test("trusted issuer match is case-insensitive hex", () => {
+    const c = issue();
+    assert.equal(verifyAccessCredential(c, 1, [TRUSTED[0].toUpperCase()]).valid, true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AccessCallLedger (verifier-side replay protection)
+// ---------------------------------------------------------------------------
+
+describe("AccessCallLedger", () => {
+  test("rejects a superseded credential after consumeCall (replay of an older balance)", () => {
+    const ledger = new AccessCallLedger();
+    const before = issue({ callsRemaining: 2 });
+    assert.equal(verifyAccessCredential(before, 1, TRUSTED).valid, true);
+    assert.equal(ledger.accept(before).valid, true);
+    const after = consumeCall(before, issuerSeed);
+    assert.equal(ledger.accept(after).valid, true);
+    // The old credential still has a valid signature, but the ledger refuses it.
+    assert.equal(verifyAccessCredential(before, 1, TRUSTED).valid, true);
+    const r = ledger.accept(before);
+    assert.equal(r.valid, false);
+    assert.match(r.reason, /replayed/);
+  });
+
+  test("presenting the same credential twice is rejected", () => {
+    const ledger = new AccessCallLedger();
+    const c = issue({ callsRemaining: 5 });
+    assert.equal(ledger.accept(c).valid, true);
+    assert.equal(ledger.accept(c).valid, false);
+  });
+
+  test("balances are tracked per agent, issuer, tier and expiry", () => {
+    const ledger = new AccessCallLedger();
+    const a = issue({ callsRemaining: 3 });
+    const otherAgent = issue({ callsRemaining: 3, agentPubkey: nodePubkeyHex(randomBytes(32)) });
+    const otherIssuer = issue({ callsRemaining: 3 }, randomBytes(32));
+    const topUp = issue({ callsRemaining: 3, validUntilSlot: a.validUntilSlot + 1 });
+    for (const c of [a, otherAgent, otherIssuer, topUp]) assert.equal(ledger.accept(c).valid, true);
+    assert.equal(ledger.accept(a).valid, false);
+  });
+
+  test("a full consume chain is accepted once per step", () => {
+    const ledger = new AccessCallLedger();
+    let c = issue({ callsRemaining: 3 });
+    const seen = [];
+    while (c.callsRemaining > 0) {
+      assert.equal(ledger.accept(c).valid, true);
+      seen.push(c);
+      c = consumeCall(c, issuerSeed);
+    }
+    for (const old of seen) assert.equal(ledger.accept(old).valid, false);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -270,10 +318,10 @@ describe("consumeCall", () => {
   test("consumes down to exhaustion, then refuses", () => {
     let c = issue({ callsRemaining: 2 });
     c = consumeCall(c, issuerSeed);
-    assert.equal(verifyAccessCredential(c, 1).valid, true);
+    assert.equal(verifyAccessCredential(c, 1, TRUSTED).valid, true);
     c = consumeCall(c, issuerSeed);
     assert.equal(c.callsRemaining, 0);
-    assert.match(verifyAccessCredential(c, 1).reason, /exhausted/);
+    assert.match(verifyAccessCredential(c, 1, TRUSTED).reason, /exhausted/);
     assert.throws(() => consumeCall(c, issuerSeed), /already exhausted/);
   });
 

@@ -217,20 +217,29 @@ export function issueAccessCredential(
  *   1. `callsRemaining > 0` — credential has not been exhausted.
  *   2. `currentSlot <= validUntilSlot` — credential has not expired.
  *   3. Ed25519 signature over the canonical payload is valid.
+ *   4. `issuedByPubkey` is one of `trustedIssuers` (a valid signature only proves
+ *      the credential was signed by the key it names, so any key could otherwise
+ *      self-issue an ELITE credential).
  *
- * @param cred         - Credential to verify.
- * @param currentSlot  - Current Solana slot (from getSlot() or a trusted oracle).
- * @returns            VerifyResult with `valid` flag and human-readable `reason`.
+ * The result says the credential is genuine and unexpired. It does not stop the
+ * same (or an older, higher-balance) credential from being presented again; use
+ * {@link AccessCallLedger} on the verifier side for that.
+ *
+ * @param cred           - Credential to verify.
+ * @param currentSlot    - Current Solana slot (from getSlot() or a trusted oracle).
+ * @param trustedIssuers - Hex Ed25519 public keys of issuers this verifier accepts.
+ * @returns              VerifyResult with `valid` flag and human-readable `reason`.
  *
  * @example
  * ```ts
- * const { valid, reason } = verifyAccessCredential(cred, currentSlot);
+ * const { valid, reason } = verifyAccessCredential(cred, currentSlot, [ISSUER_PUBKEY_HEX]);
  * if (!valid) throw new Error(`Access denied: ${reason}`);
  * ```
  */
 export function verifyAccessCredential(
-  cred:        AccessCredential,
-  currentSlot: number,
+  cred:           AccessCredential,
+  currentSlot:    number,
+  trustedIssuers: readonly string[],
 ): VerifyResult {
   if (!Number.isSafeInteger(currentSlot) || currentSlot < 0) {
     return { valid: false, reason: `currentSlot must be a non-negative integer (got ${currentSlot})` };
@@ -259,7 +268,50 @@ export function verifyAccessCredential(
     return { valid: false, reason: "signature verification failed" };
   }
 
+  if (!Array.isArray(trustedIssuers) || trustedIssuers.length === 0) {
+    return { valid: false, reason: "no trusted issuers configured" };
+  }
+  const issuer = cred.issuedByPubkey.toLowerCase();
+  if (!trustedIssuers.some((k) => typeof k === "string" && k.toLowerCase() === issuer)) {
+    return { valid: false, reason: "issuer is not trusted" };
+  }
+
   return { valid: true, reason: null };
+}
+
+// ─── Replay protection ────────────────────────────────────────────────────────
+
+/**
+ * Verifier-side replay guard.
+ *
+ * `consumeCall()` returns a new credential with `callsRemaining` one lower, but the
+ * previous credential still carries a valid signature. A verifier that keeps this
+ * ledger accepts each credential balance once: for the same issuer, agent, tier and
+ * expiry, `callsRemaining` must be strictly lower than the last accepted value.
+ * Presenting the same credential twice, or an older higher-balance one, is rejected.
+ *
+ * Call `accept()` only after `verifyAccessCredential()` returned `valid: true`.
+ * A top-up should be issued with a new `validUntilSlot` (a new ledger key).
+ */
+export class AccessCallLedger {
+  private readonly lastAccepted = new Map<string, number>();
+
+  private static key(cred: AccessCredential): string {
+    return [cred.issuedByPubkey.toLowerCase(), cred.agentPubkey.toLowerCase(), cred.tier, cred.validUntilSlot].join(":");
+  }
+
+  accept(cred: AccessCredential): VerifyResult {
+    const key  = AccessCallLedger.key(cred);
+    const last = this.lastAccepted.get(key);
+    if (last !== undefined && !(cred.callsRemaining < last)) {
+      return {
+        valid:  false,
+        reason: `credential replayed: callsRemaining ${cred.callsRemaining} is not below last accepted ${last}`,
+      };
+    }
+    this.lastAccepted.set(key, cred.callsRemaining);
+    return { valid: true, reason: null };
+  }
 }
 
 // ─── Consume ──────────────────────────────────────────────────────────────────
