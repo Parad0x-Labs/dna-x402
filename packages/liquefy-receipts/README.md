@@ -1,10 +1,12 @@
 # @parad0x_labs/liquefy-receipts
 
-Columnar compression + bilateral netting + AES-256-GCM encryption for x402 AI agent payment receipt batches.
+Columnar compression, bilateral netting, AES-256-GCM encryption and a Merkle commitment for batches of
+x402 AI agent payment receipts.
 
-**1,000 receipts → 1 on-chain Solana tx. 62× compression. Private amounts.**
+**A batch of receipts reduces to one 32-byte Merkle root, which fits in a single 34-byte anchor
+instruction. The receipts themselves stay off-chain with you.**
 
-Part of the [DNA x402](https://github.com/Parad0x-Labs/dna-x402) stack — the x402 payment rail for AI agents on Solana.
+Part of the [DNA x402](https://github.com/Parad0x-Labs/dna-x402) stack, the x402 payment rail for AI agents on Solana.
 
 ## Install
 
@@ -15,6 +17,7 @@ npm install @parad0x_labs/liquefy-receipts
 ## Quick start
 
 ```ts
+import { randomBytes } from "node:crypto";
 import {
   compressReceipts,
   decompressReceipts,
@@ -25,53 +28,52 @@ import {
   buildAnchorIxData,
   resolveReceiptAnchorProgramId,
   generateKey,
+  importKey,
   encryptBlob,
 } from "@parad0x_labs/liquefy-receipts";
 
-// Net bilateral flows (1000 receipts → a handful of settlements)
+// Net bilateral flows: one entry per counterparty pair with a positive balance
 const nets = netReceipts(receipts);
 
-// Compress 62× (columnar, based on Liquefy Columnar Gun v1)
+// Compress (columnar transform + DEFLATE per column, based on Liquefy Columnar Gun v1)
 const compressed = compressReceipts(receipts);
 
-// Encrypt (AES-256-GCM — only parties see amounts)
-const key  = await generateKey();
+// Encrypt with AES-256-GCM. generateKey() returns raw key bytes; encryptBlob needs a CryptoKey.
+const rawKey = await generateKey();
+const key = await importKey(rawKey);
 const blob = await encryptBlob(compressed, key);
 
-// Build Merkle root (streaming, O(log N) memory — any batch → 32 bytes).
-// Pass a 32-byte per-batch secret to get SALTED leaves so the public on-chain
-// root can't be brute-forced from low-entropy receipt fields. Keep the secret
-// with the encrypted blob (e.g. archiveReceipts() stores it inside the ciphertext).
-import { randomBytes } from "node:crypto";
+// Merkle root over the batch (streaming, O(log N) memory).
+// Pass a 32-byte per-batch secret to get SALTED leaves so the public root can't be
+// brute-forced from low-entropy receipt fields. Store the secret with the encrypted
+// blob; without it the salted proofs cannot be rebuilt.
 const batchSecret = randomBytes(32);
-const root = buildReceiptRoot(receipts, batchSecret);   // omit batchSecret for the legacy unsalted root
+const root = buildReceiptRoot(receipts, batchSecret); // 32-byte Buffer; omit batchSecret for the unsalted root
 
-// Verify any receipt is in the batch (a salted tree's proofs carry their per-leaf salt)
-const proof    = new MerkleTree(receipts, batchSecret).proof(42);
-const verified = verifyReceiptInBatch(receipts[42], proof);
+// Check that a receipt is in the batch (a salted tree's proofs carry their per-leaf salt)
+const proof = new MerkleTree(receipts, batchSecret).proof(42);
+const included = verifyReceiptInBatch(receipts[42], proof);
 
-// Anchor instruction data for a receipt_anchor deployment you control.
-// resolveReceiptAnchorProgramId() throws RECEIPT_ANCHOR_UNAVAILABLE when no program is named.
+// Anchor instruction data for one 32-byte commitment: [0x01][0x00][32 bytes] = 34 bytes.
+// There is no default program: resolveReceiptAnchorProgramId() throws
+// RECEIPT_ANCHOR_UNAVAILABLE unless you name a receipt_anchor deployment you control.
 const programId = resolveReceiptAnchorProgramId(process.env.RECEIPT_ANCHOR_PROGRAM_ID);
-const ixData = buildAnchorIxData({
-  batchBytes: compressed,
-  receiptCount: receipts.length,
-  epochId: Math.floor(Date.now() / 86_400_000),
-  encrypted: false,
-});
+const ixData = buildAnchorIxData(new Uint8Array(root));
+// Build and send the transaction yourself; this package sends nothing.
 ```
 
 ## What it does
 
 | Feature | Detail |
 |---|---|
-| **Columnar compression** | 62× on structured JSON (Liquefy Columnar Gun v1 algorithm) |
-| **Bilateral netting** | 1M agent receipts → ~4,950 net settlements before anchor |
-| **AES-256-GCM** | Private amounts — only transacting parties see values |
-| **Streaming Merkle** | O(log N) memory — 36B receipts → 32 bytes on-chain |
-| **Salted hiding leaves** | Per-leaf salt (HKDF from a per-batch secret) blinds the public root — low-entropy receipt fields can't be brute-forced from the on-chain commitment |
-| **Inclusion proofs** | Anyone can verify any receipt is in the batch |
-| **Anchor instruction** | Builds instruction data for a `receipt_anchor` deployment the caller names |
+| **Columnar compression** | Delta, dictionary and raw-string column encodings, DEFLATE per column. On the package's synthetic test batches (two senders, one receiver, ten distinct amounts, sequential timestamps) the test run prints 66.1x for 1,000 receipts and 62.4x for 500; the test asserts more than 10x. Receipts with more distinct values compress less |
+| **Exact round trip** | For integer and string fields present on every receipt. Non-integer numbers throw; `bigint` above 2^53 loses precision; a missing key is filled in |
+| **Bilateral netting** | One net balance per counterparty pair, gross flows netted against the reverse direction. The number of entries depends on the number of pairs, not the number of receipts: N agents have at most N(N-1)/2 pairs (4,950 for 100 agents). Pure arithmetic; not signed or enforced |
+| **AES-256-GCM** | WebCrypto with a random 12-byte nonce, opt-in, under a key the caller manages; no key exchange |
+| **Merkle commitment** | RFC 6962 style leaf and node prefixes. A batch of any size reduces to one 32-byte root; the root commits to the receipts and does not contain them |
+| **Salted hiding leaves** | Per-leaf salt (HKDF from a per-batch secret) blinds the public root, so low-entropy receipt fields can't be brute-forced from the on-chain commitment |
+| **Inclusion proofs** | Anyone holding a receipt and its proof can check it against the root |
+| **Anchor instruction** | Builds instruction bytes for a `receipt_anchor` deployment the caller names. No transaction is built or sent, and no tokens move |
 
 ## Compression algorithm
 
@@ -84,10 +86,11 @@ Based on [Liquefy](https://github.com/Parad0x-Labs/liquefy-openclaw-integration)
 
 ## On-chain programs
 
-No `receipt_anchor` program is usable on any cluster until the redeploy under a fresh key.
-`RECEIPT_ANCHOR_PROGRAM_ID` is `null` and `resolveReceiptAnchorProgramId()` throws
-`RECEIPT_ANCHOR_UNAVAILABLE` unless you pass the program ID of a deployment you control.
+No `receipt_anchor` program is configured for any cluster. `RECEIPT_ANCHOR_PROGRAM_ID` is `null` and
+`resolveReceiptAnchorProgramId()` throws `RECEIPT_ANCHOR_UNAVAILABLE` unless you pass the program ID of a
+deployment you control. The program folds each 32-byte value into an hourly hash chain; showing that one
+receipt was anchored needs its Merkle proof plus the ordered anchors in that bucket.
 
 ## License
 
-MIT — [Parad0x Labs](https://github.com/Parad0x-Labs)
+MIT, [Parad0x Labs](https://github.com/Parad0x-Labs)

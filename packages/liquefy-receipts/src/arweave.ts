@@ -118,7 +118,7 @@ export interface ArchiveResult {
  *
  * @param receipts   Array of x402 receipts
  * @param rawKey     32-byte AES-256 key (agent holds this — never uploaded)
- * @param irysOptions Optional Irys configuration (defaults to mainnet)
+ * @param irysOptions Optional Irys configuration (defaults to devnet; pass network: "mainnet" explicitly)
  * @returns ArchiveResult with Arweave tx ID and Merkle root for Solana
  */
 export async function archiveReceipts(
@@ -163,7 +163,7 @@ export async function archiveReceipts(
     throw new Error("Solana CLI keypair not found. Configure solana CLI with your wallet.");
   }
 
-  const network = irysOptions?.network ?? "mainnet";
+  const network = irysOptions?.network ?? "devnet";
   const irys = new Irys({
     network,
     token: "solana",

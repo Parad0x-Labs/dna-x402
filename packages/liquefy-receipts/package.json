@@ -1,7 +1,7 @@
 {
   "name": "@parad0x_labs/liquefy-receipts",
   "version": "0.3.0",
-  "description": "Columnar compression + bilateral netting + AES-256-GCM for x402 receipt batches. 1000 receipts → 1 on-chain anchor tx. Used in Parad0x Labs DNA x402.",
+  "description": "Columnar compression, bilateral netting, AES-256-GCM and a 32-byte Merkle commitment for x402 receipt batches; builds receipt_anchor instruction bytes for a caller-named program. Used in Parad0x Labs DNA x402.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "type": "module",

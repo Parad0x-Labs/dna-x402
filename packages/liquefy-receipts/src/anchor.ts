@@ -7,7 +7,8 @@
  * RECEIPT_ANCHOR_PROGRAM_ID is null and resolveReceiptAnchorProgramId() refuses
  * unless the caller names a deployment it controls.
  *
- * One tx per epoch = 1000× cheaper than one tx per receipt.
+ * One 32-byte commitment per batch instead of one per receipt. This module only
+ * builds instruction bytes; it sends no transaction.
  */
 
 import { createHash } from "node:crypto";
