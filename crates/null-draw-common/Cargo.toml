@@ -1,0 +1,12 @@
+[package]
+name = "null-draw-common"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "Shared on-chain helpers for null_lottery_pools and null_fair_draw: SlotHashes target selection and PDA creation that pre-funding cannot block"
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+solana-program = { workspace = true }

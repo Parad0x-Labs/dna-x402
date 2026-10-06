@@ -40,6 +40,20 @@
 //! `cap = floor(cap_bps * p * C / 10_000)` with `C = binom(n, k)`. A ticket's
 //! jackpot share above the cap goes to the reserve. See [`DEFAULT_CAP_BPS`] for
 //! why buying every combination never pays.
+//!
+//! # Second prize tier (optional, `tier2_bps > 0`)
+//!
+//! `tier2 = floor(p * tier2_bps / 10_000)` of each sale goes to a separate
+//! tier-2 pool, taken from what would otherwise be the jackpot share:
+//! `jackpot = p - creator - reserve - tier2`. A ticket that matches exactly
+//! `k - 1` drawn numbers wins an equal share of the tier-2 pool locked at the
+//! draw; with no registered tier-2 winner the pool rolls over. The tier-2 pool
+//! is capped at `tier2_cap = floor(tier2_bps * p * C / 10_000)`; overflow goes
+//! to the reserve. CreatePool requires `cap_bps + fee_max_bps + tier2_bps <=
+//! 10_000`, so buying every combination still cannot return more than it
+//! costs (jackpot cap + whole tier-2 pool + creator fee <= p * C). Tier 2 pays
+//! only from its own pool: never from the jackpot, the reserve or a locked
+//! prize.
 
 /// Basis-point denominator.
 pub const BPS: u64 = 10_000;
@@ -74,6 +88,8 @@ pub const MIN_ROUND_SLOTS: u64 = 150;
 pub const MAX_ROUND_SLOTS: u64 = 1_512_000;
 pub const MIN_CLAIM_WINDOW_SLOTS: u64 = 150;
 pub const MAX_CLAIM_WINDOW_SLOTS: u64 = 1_512_000;
+/// Upper bound of `tier2_bps` (20%).
+pub const MAX_TIER2_BPS: u16 = 2_000;
 
 /// Creator-chosen pool parameters (fixed at creation).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,6 +104,8 @@ pub struct PoolParams {
     pub range_n: u8,
     pub round_slots: u64,
     pub claim_window_slots: u64,
+    /// Share of each sale to the tier-2 pool (0 = no second tier).
+    pub tier2_bps: u16,
 }
 
 /// Values derived from [`PoolParams`] at creation.
@@ -96,13 +114,16 @@ pub struct Derived {
     pub combos: u64,
     pub cap: u64,
     pub recoup_volume: u64,
+    /// Tier-2 pool cap (0 when tier 2 is off).
+    pub tier2_cap: u64,
 }
 
-/// One ticket's split. `creator + reserve + jackpot == ticket price`.
+/// One ticket's split. `creator + reserve + tier2 + jackpot == ticket price`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Split {
     pub creator: u64,
     pub reserve: u64,
+    pub tier2: u64,
     pub jackpot: u64,
 }
 
@@ -197,8 +218,9 @@ pub fn split_ticket(
         creator_fee(v_before, p, recoup_volume, params.fee_max_bps, params.fee_min_bps)?
     };
     let reserve = u64::try_from((p as u128) * (params.reserve_bps as u128) / BPS as u128).ok()?;
-    let jackpot = p.checked_sub(creator)?.checked_sub(reserve)?;
-    Some(Split { creator, reserve, jackpot })
+    let tier2 = u64::try_from((p as u128) * (params.tier2_bps as u128) / BPS as u128).ok()?;
+    let jackpot = p.checked_sub(creator)?.checked_sub(reserve)?.checked_sub(tier2)?;
+    Some(Split { creator, reserve, tier2, jackpot })
 }
 
 /// Add `amount` to a jackpot of `jackpot` under `cap`.
@@ -226,6 +248,9 @@ pub fn validate_params(p: &PoolParams) -> Option<Derived> {
         || p.round_slots > MAX_ROUND_SLOTS
         || p.claim_window_slots < MIN_CLAIM_WINDOW_SLOTS
         || p.claim_window_slots > MAX_CLAIM_WINDOW_SLOTS
+        || p.tier2_bps > MAX_TIER2_BPS
+        || (p.tier2_bps > 0 && p.pick_k < 2)
+        || (p.cap_bps as u64) + (p.fee_max_bps as u64) + (p.tier2_bps as u64) > BPS
     {
         return None;
     }
@@ -236,7 +261,33 @@ pub fn validate_params(p: &PoolParams) -> Option<Derived> {
         return None;
     }
     let recoup_volume = recoup_volume(p.seed, p.fee_max_bps)?;
-    Some(Derived { combos, cap, recoup_volume })
+    let tier2_cap = jackpot_cap(p.tier2_bps, p.ticket_price, combos)?;
+    Some(Derived { combos, cap, recoup_volume, tier2_cap })
+}
+
+/// Number of values two ticket number sets have in common (both are `k`
+/// strictly ascending values, zero padded; zeros are never counted).
+pub fn matches(a: &[u8; 8], b: &[u8; 8]) -> u8 {
+    let mut n = 0u8;
+    for &x in a.iter().filter(|x| **x != 0) {
+        if b.iter().any(|y| *y == x) {
+            n += 1;
+        }
+    }
+    n
+}
+
+/// Which prize tier a ticket wins: 1 (all `k` numbers), 2 (exactly `k - 1`,
+/// only when the pool has a second tier), or 0.
+pub fn prize_tier(ticket: &[u8; 8], drawn: &[u8; 8], k: u8, tier2_on: bool) -> u8 {
+    let m = matches(ticket, drawn);
+    if m == k {
+        1
+    } else if tier2_on && k >= 2 && m == k - 1 {
+        2
+    } else {
+        0
+    }
 }
 
 /// Ticket numbers: `k` strictly ascending values in `1..=n`, then zeros.
@@ -274,6 +325,24 @@ mod tests {
             range_n: 36,
             round_slots: 9_000,
             claim_window_slots: 9_000,
+            tier2_bps: 0,
+        }
+    }
+
+    /// Small-pool preset with the second tier (see the README).
+    fn small() -> PoolParams {
+        PoolParams {
+            seed: SOL / 2,
+            ticket_price: SOL / 100,
+            fee_max_bps: 3_000,
+            fee_min_bps: 1_000,
+            reserve_bps: 500,
+            cap_bps: 6_000,
+            pick_k: 3,
+            range_n: 18,
+            round_slots: 9_000,
+            claim_window_slots: 9_000,
+            tier2_bps: 1_000,
         }
     }
 
@@ -358,7 +427,8 @@ mod tests {
         let mut v = 0u64;
         for _ in 0..10_000 {
             let s = split_ticket(&p, d.recoup_volume, v, false).unwrap();
-            assert_eq!(s.creator + s.reserve + s.jackpot, p.ticket_price);
+            assert_eq!(s.creator + s.reserve + s.tier2 + s.jackpot, p.ticket_price);
+            assert_eq!(s.tier2, 0);
             v += p.ticket_price;
         }
         // Odd price: rounding remainder lands in the jackpot.
@@ -371,6 +441,111 @@ mod tests {
         let r = split_ticket(&q, d.recoup_volume, 0, true).unwrap();
         assert_eq!(r.creator, 0);
         assert_eq!(r.creator + r.reserve + r.jackpot, 10_007);
+    }
+
+    #[test]
+    fn tier2_split_conserves_and_rounds_towards_the_jackpot() {
+        let p = small();
+        let d = validate_params(&p).unwrap();
+        let mut v = 0u64;
+        for _ in 0..2_000 {
+            let s = split_ticket(&p, d.recoup_volume, v, false).unwrap();
+            assert_eq!(s.creator + s.reserve + s.tier2 + s.jackpot, p.ticket_price);
+            assert_eq!(s.tier2, SOL / 1_000);
+            v += p.ticket_price;
+        }
+        let mut q = p;
+        q.ticket_price = 10_007;
+        let s = split_ticket(&q, d.recoup_volume, 0, false).unwrap();
+        // floor(10_007 * 0.30) = 3_002, floor(10_007 * 0.05) = 500, floor(10_007 * 0.10) = 1_000.
+        assert_eq!((s.creator, s.reserve, s.tier2), (3_002, 500, 1_000));
+        assert_eq!(s.jackpot, 10_007 - 3_002 - 500 - 1_000);
+    }
+
+    #[test]
+    fn tier2_bounds_keep_full_coverage_non_positive() {
+        let p = small();
+        let d = validate_params(&p).unwrap();
+        assert_eq!(d.combos, 816);
+        assert_eq!(d.cap, 4_896_000_000); // 0.6 * 0.01 * 816 SOL
+        assert_eq!(d.tier2_cap, 816_000_000); // 0.1 * 0.01 * 816 SOL
+        // Full coverage: jackpot cap + whole tier-2 pool + max creator fee <= p * C.
+        let fee_all = (p.fee_max_bps as u64) * p.ticket_price * d.combos / BPS;
+        assert!(d.cap + d.tier2_cap + fee_all <= p.ticket_price * d.combos);
+        let bad = |f: fn(&mut PoolParams)| {
+            let mut q = small();
+            f(&mut q);
+            validate_params(&q).is_none()
+        };
+        assert!(bad(|q| q.cap_bps = 6_001)); // 6_001 + 3_000 + 1_000 > 10_000
+        assert!(bad(|q| q.tier2_bps = 2_001));
+        assert!(bad(|q| { q.pick_k = 1; q.range_n = 18; q.seed = q.ticket_price })); // tier 2 needs k >= 2
+        // Tier 2 off keeps the old bound.
+        let mut q = small();
+        q.tier2_bps = 0;
+        q.cap_bps = 7_000;
+        assert_eq!(validate_params(&q).unwrap().tier2_cap, 0);
+    }
+
+    /// Pool state after `tickets` sales with no draw: (creator fees, jackpot, reserve, tier-2 pool).
+    fn run(p: &PoolParams, tickets: u64) -> (u64, u64, u64, u64) {
+        let d = validate_params(p).unwrap();
+        let (mut v, mut c, mut j, mut r, mut t2) = (0u64, 0u64, p.seed, 0u64, 0u64);
+        for _ in 0..tickets {
+            let s = split_ticket(p, d.recoup_volume, v, false).unwrap();
+            c += s.creator;
+            r += s.reserve;
+            let (a, o) = apply_cap(j, s.jackpot, d.cap);
+            j += a;
+            r += o;
+            let (a, o) = apply_cap(t2, s.tier2, d.tier2_cap);
+            t2 += a;
+            r += o;
+            v += p.ticket_price;
+        }
+        (c, j, r, t2)
+    }
+
+    #[test]
+    fn small_preset_numbers() {
+        // README small preset: seed 0.5 SOL, ticket 0.01 SOL, fee 30% -> 10%,
+        // reserve 5%, 3 of 18. Recoup volume 1.6667 SOL (ticket 167).
+        let p = small();
+        let d = validate_params(&p).unwrap();
+        assert_eq!(d.recoup_volume, 1_666_666_667);
+        assert!(run(&p, 166).0 < p.seed && run(&p, 167).0 >= p.seed);
+        // 2 SOL and 5 SOL of sales (200 and 500 tickets).
+        assert_eq!(run(&p, 200), (591_394_000, 1_608_606_000, 100_000_000, 200_000_000));
+        assert_eq!(run(&p, 500), (1_050_150_000, 3_699_850_000, 250_000_000, 500_000_000));
+        // Without tier 2 (cap 7000): same creator fees, jackpot 4.19985 SOL at 5 SOL.
+        let mut q = p;
+        q.tier2_bps = 0;
+        q.cap_bps = 7_000;
+        assert_eq!(validate_params(&q).unwrap().cap, 5_712_000_000);
+        assert_eq!(run(&q, 500), (1_050_150_000, 4_199_850_000, 250_000_000, 0));
+        // Fee at 5 SOL of sales reached the 10% floor.
+        assert_eq!(fee_rate(d.recoup_volume, 3_000, 1_000, 5 * SOL), 1_000);
+    }
+
+    #[test]
+    fn prize_tiers() {
+        let drawn = [3, 9, 17, 0, 0, 0, 0, 0];
+        assert_eq!(prize_tier(&[3, 9, 17, 0, 0, 0, 0, 0], &drawn, 3, true), 1);
+        assert_eq!(prize_tier(&[3, 9, 18, 0, 0, 0, 0, 0], &drawn, 3, true), 2);
+        assert_eq!(prize_tier(&[1, 9, 17, 0, 0, 0, 0, 0], &drawn, 3, true), 2);
+        assert_eq!(prize_tier(&[1, 2, 17, 0, 0, 0, 0, 0], &drawn, 3, true), 0);
+        assert_eq!(prize_tier(&[3, 9, 18, 0, 0, 0, 0, 0], &drawn, 3, false), 0);
+        assert_eq!(prize_tier(&[3, 9, 17, 0, 0, 0, 0, 0], &drawn, 3, false), 1);
+        // Exhaustive count for 3 of 18: 1 jackpot, 45 tier-2 tickets.
+        let mut counts = [0u32; 3];
+        for a in 1..=18u8 {
+            for b in a + 1..=18 {
+                for c in b + 1..=18 {
+                    counts[prize_tier(&[a, b, c, 0, 0, 0, 0, 0], &drawn, 3, true) as usize] += 1;
+                }
+            }
+        }
+        assert_eq!(counts, [770, 1, 45]);
     }
 
     #[test]

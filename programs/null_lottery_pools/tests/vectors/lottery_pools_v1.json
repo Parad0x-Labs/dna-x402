@@ -14,9 +14,12 @@
       "retired": false,
       "root": "ff0c738540c645a1ad08bfb184a0c0cee34b79b9dab5842e944f30ea0d8639fe",
       "seed": "3000000000",
-      "ticket_count": "22"
+      "ticket_count": "22",
+      "tier2_bps": 1000,
+      "tier2_cap": "24",
+      "tier2_pool": "25"
     },
-    "pool_hex": "4e4c50504f4f4c3102597a56c156e15c52a9b9c175278caa344ced3f623088fdf531c5e022f7e2760200000000000000005ed0b2000000008096980000000000c409c800f401581b0524000101fe2823000000000000c04b030000000000a0c005000000000000d8516d66020000007841cb020000000b000000000000000c000000000000000d000000000000000e000000000000000f000000000000001000000000000000110000000000000012000000000000001300000000000000140000000000000015000000000000001600000000000000ff0c738540c645a1ad08bfb184a0c0cee34b79b9dab5842e944f30ea0d8639fe0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "pool_hex": "4e4c50504f4f4c3102597a56c156e15c52a9b9c175278caa344ced3f623088fdf531c5e022f7e2760200000000000000005ed0b2000000008096980000000000c409c800f401581b0524000101fe2823000000000000c04b030000000000a0c005000000000000d8516d66020000007841cb020000000b000000000000000c000000000000000d000000000000000e000000000000000f000000000000001000000000000000110000000000000012000000000000001300000000000000140000000000000015000000000000001600000000000000ff0c738540c645a1ad08bfb184a0c0cee34b79b9dab5842e944f30ea0d8639fee803180000000000000019000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     "round": {
       "attempt": "1",
       "bump": 253,
@@ -36,9 +39,13 @@
       "rent_payer": "afdb4d1a8668bc8f58fe711d8e63c9e3a28209fa2671fda6a91da3d903c55282",
       "round_id": "32",
       "share": "41",
-      "status": "drawn"
+      "status": "drawn",
+      "tier2_paid": "48",
+      "tier2_prize": "45",
+      "tier2_share": "47",
+      "tier2_winners": "46"
     },
-    "round_hex": "4e4c50524f4e44318b498470f30201b2434e4533ab6b3bdfaef35c3345f2b6e2a600afcf7909fde7200000000000000001fd010000000000000021000000000000002200000000000000963d69ecb6f06a185edf1875f366c9f21dfb9e171f2427fe00aaaaa10487f91fad9922958cbd5462a7859b58cefe927b38d38903f0938b0f046065a818f04b4d2500000000000000010203040500000026000000000000002700000000000000280000000000000029000000000000002a00000000000000afdb4d1a8668bc8f58fe711d8e63c9e3a28209fa2671fda6a91da3d903c552822c000000000000000000000000000000000000000000"
+    "round_hex": "4e4c50524f4e44328b498470f30201b2434e4533ab6b3bdfaef35c3345f2b6e2a600afcf7909fde7200000000000000001fd010000000000000021000000000000002200000000000000963d69ecb6f06a185edf1875f366c9f21dfb9e171f2427fe00aaaaa10487f91fad9922958cbd5462a7859b58cefe927b38d38903f0938b0f046065a818f04b4d2500000000000000010203040500000026000000000000002700000000000000280000000000000029000000000000002a00000000000000afdb4d1a8668bc8f58fe711d8e63c9e3a28209fa2671fda6a91da3d903c552822c000000000000002d000000000000002e000000000000002f000000000000003000000000000000000000000000"
   },
   "caps": [
     {
@@ -204,6 +211,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -218,6 +227,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -232,6 +243,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "10000000"
     },
     {
@@ -246,6 +259,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "10000000"
     },
     {
@@ -260,6 +275,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "3996666667"
     },
     {
@@ -274,6 +291,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "3996666667"
     },
     {
@@ -288,6 +307,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "3999999999"
     },
     {
@@ -302,6 +323,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "3999999999"
     },
     {
@@ -316,6 +339,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4000000000"
     },
     {
@@ -330,6 +355,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4000000000"
     },
     {
@@ -344,6 +371,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4005000000"
     },
     {
@@ -358,6 +387,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4005000000"
     },
     {
@@ -372,6 +403,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "12000000000"
     },
     {
@@ -386,6 +419,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "12000000000"
     },
     {
@@ -400,6 +435,8 @@
       "retired": false,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4000000000000"
     },
     {
@@ -414,6 +451,8 @@
       "retired": true,
       "seed": "1000000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4000000000000"
     },
     {
@@ -428,6 +467,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -442,6 +483,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -456,6 +499,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "3000000"
     },
     {
@@ -470,6 +515,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "3000000"
     },
     {
@@ -484,6 +531,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "19000000"
     },
     {
@@ -498,6 +547,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "19000000"
     },
     {
@@ -512,6 +563,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "19999999"
     },
     {
@@ -526,6 +579,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "19999999"
     },
     {
@@ -540,6 +595,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "20000000"
     },
     {
@@ -554,6 +611,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "20000000"
     },
     {
@@ -568,6 +627,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "21500000"
     },
     {
@@ -582,6 +643,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "21500000"
     },
     {
@@ -596,6 +659,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "60000000"
     },
     {
@@ -610,6 +675,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "60000000"
     },
     {
@@ -624,6 +691,8 @@
       "retired": false,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "20000000000"
     },
     {
@@ -638,6 +707,8 @@
       "retired": true,
       "seed": "5000000",
       "ticket_price": "3000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "20000000000"
     },
     {
@@ -652,6 +723,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -666,6 +739,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -680,6 +755,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "10007"
     },
     {
@@ -694,6 +771,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "10007"
     },
     {
@@ -708,6 +787,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -722,6 +803,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -736,6 +819,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "23"
     },
     {
@@ -750,6 +835,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "23"
     },
     {
@@ -764,6 +851,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "24"
     },
     {
@@ -778,6 +867,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "24"
     },
     {
@@ -792,6 +883,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "5027"
     },
     {
@@ -806,6 +899,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "5027"
     },
     {
@@ -820,6 +915,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "72"
     },
     {
@@ -834,6 +931,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "72"
     },
     {
@@ -848,6 +947,8 @@
       "retired": false,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "24000"
     },
     {
@@ -862,6 +963,8 @@
       "retired": true,
       "seed": "7",
       "ticket_price": "10007",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "24000"
     },
     {
@@ -876,6 +979,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -890,6 +995,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -904,6 +1011,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "1234567"
     },
     {
@@ -918,6 +1027,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "1234567"
     },
     {
@@ -932,6 +1043,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694336869"
     },
     {
@@ -946,6 +1059,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694336869"
     },
     {
@@ -960,6 +1075,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694748390"
     },
     {
@@ -974,6 +1091,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694748390"
     },
     {
@@ -988,6 +1107,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694748391"
     },
     {
@@ -1002,6 +1123,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694748391"
     },
     {
@@ -1016,6 +1139,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "695365674"
     },
     {
@@ -1030,6 +1155,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "695365674"
     },
     {
@@ -1044,6 +1171,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "2084245173"
     },
     {
@@ -1058,6 +1187,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "2084245173"
     },
     {
@@ -1072,6 +1203,8 @@
       "retired": false,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694748391000"
     },
     {
@@ -1086,6 +1219,8 @@
       "retired": true,
       "seed": "123456789",
       "ticket_price": "1234567",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "694748391000"
     },
     {
@@ -1100,6 +1235,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -1114,6 +1251,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "0"
     },
     {
@@ -1128,6 +1267,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "10000000"
     },
     {
@@ -1142,6 +1283,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "10000000"
     },
     {
@@ -1156,6 +1299,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1170,6 +1315,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1184,6 +1331,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1198,6 +1347,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1212,6 +1363,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1226,6 +1379,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1240,6 +1395,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1254,6 +1411,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1268,6 +1427,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1282,6 +1443,8 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1296,6 +1459,8 @@
       "retired": false,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
     },
     {
@@ -1310,13 +1475,531 @@
       "retired": true,
       "seed": "50000000",
       "ticket_price": "10000000",
+      "tier2": "0",
+      "tier2_bps": 0,
       "v_before": "4611686018427387903"
+    },
+    {
+      "creator": "3000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "5500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "0"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "0"
+    },
+    {
+      "creator": "3000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "5500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "10000000"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "10000000"
+    },
+    {
+      "creator": "3000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "5500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1663333334"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1663333334"
+    },
+    {
+      "creator": "3000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "5500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1666666666"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1666666666"
+    },
+    {
+      "creator": "3000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "5500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1666666667"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 3000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1666666667"
+    },
+    {
+      "creator": "2991000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "5509000",
+      "rate_bps": 2991,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1671666667"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 2991,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1671666667"
+    },
+    {
+      "creator": "1000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "7500000",
+      "rate_bps": 1000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "5000000001"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 1000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "5000000001"
+    },
+    {
+      "creator": "1000000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "7500000",
+      "rate_bps": 1000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": false,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1666666667000"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 1000,
+      "jackpot": "8500000",
+      "rate_bps": 1000,
+      "recoup_volume": "1666666667",
+      "reserve": "500000",
+      "reserve_bps": 500,
+      "retired": true,
+      "seed": "500000000",
+      "ticket_price": "10000000",
+      "tier2": "1000000",
+      "tier2_bps": 1000,
+      "v_before": "1666666667000"
+    },
+    {
+      "creator": "3002",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "3003",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "0"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "0"
+    },
+    {
+      "creator": "7",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "5998",
+      "rate_bps": 7,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "10007"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 7,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "10007"
+    },
+    {
+      "creator": "3002",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "3003",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "0"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "0"
+    },
+    {
+      "creator": "3002",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "3003",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "23"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "23"
+    },
+    {
+      "creator": "3002",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "3003",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "24"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 3000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "24"
+    },
+    {
+      "creator": "14",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "5991",
+      "rate_bps": 14,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "5027"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 14,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "5027"
+    },
+    {
+      "creator": "1000",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "5005",
+      "rate_bps": 1000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "72"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 1000,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "72"
+    },
+    {
+      "creator": "3",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6002",
+      "rate_bps": 3,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": false,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "24000"
+    },
+    {
+      "creator": "0",
+      "fee_max_bps": 3000,
+      "fee_min_bps": 0,
+      "jackpot": "6005",
+      "rate_bps": 3,
+      "recoup_volume": "24",
+      "reserve": "2001",
+      "reserve_bps": 2000,
+      "retired": true,
+      "seed": "7",
+      "ticket_price": "10007",
+      "tier2": "2001",
+      "tier2_bps": 2000,
+      "v_before": "24000"
     }
   ],
   "instructions": [
     {
       "hex": "002a0000000000000000ca9a3b000000008096980000000000c409c800f401581b05242823000000000000c04b030000000000",
       "name": "create_pool"
+    },
+    {
+      "hex": "0007000000000000000065cd1d000000008096980000000000b80be803f401701703122823000000000000c04b030000000000e803",
+      "name": "create_pool_tier2"
     },
     {
       "hex": "010300000000000000ddceccee7c4694ebccdf2e2e348f50f99643a6df2cf99025eafe47299de512b30309111623000000",
@@ -1571,6 +2254,133 @@
         "6550",
         "6600"
       ]
+    }
+  ],
+  "tiers": [
+    {
+      "drawn": [
+        3,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "k": 3,
+      "ticket": [
+        3,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tier_off": 1,
+      "tier_on": 1
+    },
+    {
+      "drawn": [
+        3,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "k": 3,
+      "ticket": [
+        3,
+        9,
+        18,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tier_off": 0,
+      "tier_on": 2
+    },
+    {
+      "drawn": [
+        3,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "k": 3,
+      "ticket": [
+        1,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tier_off": 0,
+      "tier_on": 2
+    },
+    {
+      "drawn": [
+        3,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "k": 3,
+      "ticket": [
+        1,
+        2,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tier_off": 0,
+      "tier_on": 0
+    },
+    {
+      "drawn": [
+        3,
+        9,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "k": 3,
+      "ticket": [
+        1,
+        2,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tier_off": 0,
+      "tier_on": 0
     }
   ],
   "trees": [

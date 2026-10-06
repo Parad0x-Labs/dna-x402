@@ -10,7 +10,7 @@ use null_lottery_pools::{
     econ::{self, PoolParams},
     error::PoolError,
     instruction as ix,
-    state::{ClaimRecord, Pool, Round, CLAIM_LEN, POOL_LEN, ROUND_DRAWN, ROUND_SETTLED},
+    state::{ClaimRecord, Pool, Round, CLAIM_LEN, POOL_LEN, ROUND_DRAWN, ROUND_SETTLED, TIER_JACKPOT, TIER_SECOND},
     tree,
 };
 use solana_program_test::*;
@@ -52,6 +52,7 @@ fn params(k: u8, n: u8, price: u64, seed: u64) -> PoolParams {
         range_n: n,
         round_slots: 150,
         claim_window_slots: 150,
+        tier2_bps: 0,
     }
 }
 
@@ -217,6 +218,14 @@ impl T {
         self.warp(slot).await;
         let pid = self.pid;
         self.send(vec![ix::settle(&pid, pool, round_id)], &[]).await
+    }
+
+    /// Amount the next Payout of this claim record pays (by its tier).
+    async fn payout_amount(&mut self, pool: &Pubkey, round_id: u64, index: u64) -> u64 {
+        let k = ix::claim_address(&self.pid, pool, round_id, index).0;
+        let rec = ClaimRecord::unpack(&self.account(&k).await.unwrap().data).unwrap();
+        let r = self.round(pool, round_id).await.unwrap();
+        if rec.tier == TIER_SECOND { r.tier2_share } else { r.share }
     }
 
     async fn payout(&mut self, pool: &Pubkey, round_id: u64, index: u64, owner: &Pubkey) -> Result<(), InstructionError> {
@@ -793,6 +802,176 @@ async fn prefunded_claim_pool_and_round_addresses_do_not_block() {
     t.solvent(&pool, false).await;
 }
 
+// ── second prize tier ───────────────────────────────────────────────────────
+
+fn tier2_params(seed: u64) -> PoolParams {
+    // k=2, n=6: C = 15. cap 6000 + fee 2500 + tier2 1000 <= 10000.
+    let mut p = params(2, 6, SOL / 100, seed);
+    p.cap_bps = 6_000;
+    p.tier2_bps = 1_000;
+    p
+}
+
+#[tokio::test]
+async fn tier2_split_claim_payout_and_rollover() {
+    let creator = Keypair::new();
+    let alice = Keypair::new();
+    let bob = Keypair::new();
+    let carol = Keypair::new();
+    let mut t = T::new(&[&creator, &alice, &bob, &carol]).await;
+    let pool = t.create(&creator, 1, tier2_params(50_000_000)).await.unwrap();
+    let st = t.pool(&pool).await;
+    assert_eq!((st.cap, st.tier2_cap, st.params.tier2_bps), (90_000_000, 15_000_000, 1_000));
+    let a = t.buy(&pool, &alice, &alice.pubkey(), nums(&[1, 2])).await.unwrap();
+    let b = t.buy(&pool, &bob, &bob.pubkey(), nums(&[1, 3])).await.unwrap();
+    let c = t.buy(&pool, &bob, &bob.pubkey(), nums(&[2, 4])).await.unwrap();
+    let d = t.buy(&pool, &carol, &carol.pubkey(), nums(&[5, 6])).await.unwrap();
+    let st = t.pool(&pool).await;
+    // Each 0.01 SOL ticket: 25% creator, 5% reserve, 10% tier 2, 60% jackpot.
+    assert_eq!((st.creator_owed, st.reserve, st.tier2_pool), (10_000_000, 2_000_000, 4_000_000));
+    assert_eq!(st.jackpot, 50_000_000 + 4 * 6_000_000);
+    t.solvent(&pool, true).await;
+
+    t.draw_pick(&pool, &carol, &|n| *n == nums(&[1, 2])).await.unwrap();
+    let r = t.round(&pool, 0).await.unwrap();
+    assert_eq!((r.prize, r.tier2_prize), (74_000_000, 4_000_000));
+    let st = t.pool(&pool).await;
+    assert_eq!((st.tier2_pool, st.locked_prize), (0, 78_000_000));
+    let lv = leaves(&[a, b, c, d]);
+    // Carol matches nothing.
+    assert_eq!(t.claim(&pool, 0, &carol, &d, &lv).await.unwrap_err(), ce(PoolError::TicketNotWinning));
+    t.claim(&pool, 0, &alice, &a, &lv).await.unwrap();
+    t.claim(&pool, 0, &bob, &b, &lv).await.unwrap();
+    t.claim(&pool, 0, &bob, &c, &lv).await.unwrap();
+    assert_eq!(t.claim(&pool, 0, &bob, &b, &lv).await.unwrap_err(), ce(PoolError::AlreadyClaimed));
+    let pid = t.pid;
+    for (idx, tier) in [(0u64, TIER_JACKPOT), (1, TIER_SECOND), (2, TIER_SECOND)] {
+        let rec = ClaimRecord::unpack(&t.account(&ix::claim_address(&pid, &pool, 0, idx).0).await.unwrap().data).unwrap();
+        assert_eq!(rec.tier, tier);
+    }
+    let r = t.round(&pool, 0).await.unwrap();
+    assert_eq!((r.winners, r.tier2_winners), (1, 2));
+    t.settle_after_window(&pool, 0).await.unwrap();
+    let r = t.round(&pool, 0).await.unwrap();
+    assert_eq!((r.share, r.tier2_share), (74_000_000, 2_000_000));
+    let st = t.pool(&pool).await;
+    assert_eq!((st.owed_prizes, st.locked_prize, st.tier2_pool), (78_000_000, 0, 0));
+    // The jackpot paid out, so the reserve seeded the next jackpot.
+    assert_eq!((st.jackpot, st.reserve), (2_000_000, 0));
+    t.solvent(&pool, true).await;
+    let rr = t.rent.minimum_balance(CLAIM_LEN);
+    let (ab, bb) = (t.lamports(&alice.pubkey()).await, t.lamports(&bob.pubkey()).await);
+    // Close refused while a tier-2 share is unpaid.
+    t.payout(&pool, 0, 0, &alice.pubkey()).await.unwrap();
+    t.payout(&pool, 0, 1, &bob.pubkey()).await.unwrap();
+    assert_eq!(
+        t.send(vec![ix::close_round(&pid, &pool, 0, &carol.pubkey())], &[]).await.unwrap_err(),
+        ce(PoolError::RoundNotFinished)
+    );
+    t.payout(&pool, 0, 2, &bob.pubkey()).await.unwrap();
+    assert_eq!(t.lamports(&alice.pubkey()).await, ab + 74_000_000 + rr);
+    assert_eq!(t.lamports(&bob.pubkey()).await, bb + 2 * (2_000_000 + rr));
+    let r = t.round(&pool, 0).await.unwrap();
+    assert_eq!((r.paid, r.tier2_paid), (1, 2));
+    t.send(vec![ix::close_round(&pid, &pool, 0, &carol.pubkey())], &[]).await.unwrap();
+    t.solvent(&pool, true).await;
+
+    // Round 1 closed during the window: roll it, then round 2 has one ticket
+    // with no tier-2 match. Its tier-2 pool rolls over to round 3.
+    t.draw_pick(&pool, &carol, &|_| true).await.unwrap();
+    let e = t.buy(&pool, &carol, &carol.pubkey(), nums(&[5, 6])).await.unwrap();
+    let rid = t.pool(&pool).await.round_id;
+    t.draw_pick(&pool, &carol, &|n| *n == nums(&[1, 2])).await.unwrap();
+    assert_eq!(t.claim(&pool, rid, &carol, &e, &[e.leaf]).await.unwrap_err(), ce(PoolError::TicketNotWinning));
+    let before = t.pool(&pool).await;
+    let r = t.round(&pool, rid).await.unwrap();
+    assert_eq!(r.tier2_prize, 1_000_000);
+    t.settle_after_window(&pool, rid).await.unwrap();
+    let st = t.pool(&pool).await;
+    assert_eq!(st.tier2_pool, before.tier2_pool + 1_000_000);
+    assert_eq!(t.round(&pool, rid).await.unwrap().tier2_share, 0);
+    t.solvent(&pool, true).await;
+}
+
+#[tokio::test]
+async fn tier2_split_with_dust_and_cap_overflow() {
+    let creator = Keypair::new();
+    let alice = Keypair::new();
+    let mut t = T::new(&[&creator, &alice]).await;
+    // Price 0.010000007 SOL: tier2 floor(10_000_007 * 0.1) = 1_000_000.
+    let mut p = tier2_params(50_000_000);
+    p.ticket_price = 10_000_007;
+    let pool = t.create(&creator, 1, p).await.unwrap();
+    let cap2 = t.pool(&pool).await.tier2_cap;
+    assert_eq!(cap2, 15_000_010); // floor(1000 * 10_000_007 * 15 / 10_000)
+    let mut tk = Vec::new();
+    for i in 0..16u8 {
+        let numbers = if i < 3 { nums(&[1, 3 + i]) } else { nums(&[5, 6]) };
+        tk.push(t.buy(&pool, &alice, &alice.pubkey(), numbers).await.unwrap());
+    }
+    let st = t.pool(&pool).await;
+    // 16 * 1_000_000 = 16_000_000 > cap: 999_990 overflowed to the reserve.
+    assert_eq!(st.tier2_pool, cap2);
+    let reserve_share = 10_000_007u64 * 500 / 10_000;
+    let jackpot_overflow = st.reserve - 16 * reserve_share - (16_000_000 - cap2);
+    assert!(jackpot_overflow > 0, "jackpot also reached its cap");
+    t.solvent(&pool, true).await;
+    // Three tier-2 winners split 15_000_010: share 5_000_003, dust 1 rolls over.
+    t.draw_pick(&pool, &alice, &|n| *n == nums(&[1, 2])).await.unwrap();
+    let lv = leaves(&tk);
+    for x in &tk[..3] {
+        t.claim(&pool, 0, &alice, x, &lv).await.unwrap();
+    }
+    t.settle_after_window(&pool, 0).await.unwrap();
+    let r = t.round(&pool, 0).await.unwrap();
+    assert_eq!((r.winners, r.tier2_winners, r.tier2_share), (0, 3, 5_000_003));
+    let st = t.pool(&pool).await;
+    assert_eq!(st.tier2_pool, 1);
+    assert_eq!(st.owed_prizes, 15_000_009);
+    for i in 0..3 {
+        t.payout(&pool, 0, i, &alice.pubkey()).await.unwrap();
+    }
+    assert_eq!(t.pool(&pool).await.owed_prizes, 0);
+    t.solvent(&pool, true).await;
+}
+
+#[tokio::test]
+async fn tier2_parameter_bounds_and_v1_encoding() {
+    let creator = Keypair::new();
+    let mut t = T::new(&[&creator]).await;
+    let pid = t.pid;
+    // cap 7000 + fee 2500 + tier2 1000 > 10000.
+    let mut p = tier2_params(50_000_000);
+    p.cap_bps = 7_000;
+    assert_eq!(t.create(&creator, 1, p).await.unwrap_err(), ce(PoolError::InvalidParams));
+    // Tier 2 needs k >= 2.
+    let mut p = params(1, 4, SOL / 100, 20_000_000);
+    p.cap_bps = 6_000;
+    p.tier2_bps = 1_000;
+    assert_eq!(t.create(&creator, 1, p).await.unwrap_err(), ce(PoolError::InvalidParams));
+    let mut p = tier2_params(10_000_000);
+    p.tier2_bps = econ::MAX_TIER2_BPS + 1;
+    p.cap_bps = 1_000;
+    assert_eq!(t.create(&creator, 1, p).await.unwrap_err(), ce(PoolError::InvalidParams));
+    // The v1 CreatePool encoding (no tier-2 field) creates a pool with tier 2 off.
+    let i = ix::create_pool(&pid, &creator.pubkey(), 2, params(2, 6, SOL / 100, 50_000_000));
+    assert_eq!(i.data.len(), ix::CREATE_POOL_LEN);
+    t.send(vec![i], &[&creator]).await.unwrap();
+    let pool = ix::pool_address(&pid, &creator.pubkey(), 2).0;
+    let st = t.pool(&pool).await;
+    assert_eq!((st.params.tier2_bps, st.tier2_cap, st.tier2_pool), (0, 0, 0));
+    // The extended encoding carries tier2_bps.
+    let i = ix::create_pool(&pid, &creator.pubkey(), 3, tier2_params(50_000_000));
+    assert_eq!(i.data.len(), ix::CREATE_POOL_TIER2_LEN);
+    t.send(vec![i], &[&creator]).await.unwrap();
+    let pool = ix::pool_address(&pid, &creator.pubkey(), 3).0;
+    assert_eq!(t.pool(&pool).await.params.tier2_bps, 1_000);
+    // Wrong lengths are refused.
+    let mut bad = ix::create_pool(&pid, &creator.pubkey(), 4, tier2_params(50_000_000));
+    bad.data.push(0);
+    assert_eq!(t.send(vec![bad], &[&creator]).await.unwrap_err(), ce(PoolError::InvalidInstruction));
+}
+
 // ── solvency fuzz ───────────────────────────────────────────────────────────
 
 struct Rng(u64);
@@ -829,6 +1008,7 @@ async fn solvency_invariant_fuzz() {
     let steps: u64 = std::env::var("NLP_FUZZ_STEPS").ok().and_then(|v| v.parse().ok()).unwrap_or(120);
     let mut counts = [0u64; 10];
     let mut wins = 0u64;
+    let mut tier2_wins = 0u64;
     for case in 0..cases {
         let mut rng = Rng(0x9E37_79B9_7F4A_7C15 ^ (case + 1));
         let creator = Keypair::new();
@@ -839,15 +1019,22 @@ async fn solvency_invariant_fuzz() {
         let pid = t.pid;
 
         // Random parameters within bounds; small C so that rounds have winners.
-        let k = rng.range(1, 2) as u8;
-        let n = rng.range(k as u64 + 1, k as u64 + 4) as u8;
+        // Half of the pools with k >= 2 run the second tier.
+        let k = rng.range(1, 3) as u8;
+        let n = rng.range(k as u64 + 1, k as u64 + 3) as u8;
         let fee_max = rng.range(0, 3_000) as u16;
         let fee_min = rng.range(0, fee_max as u64) as u16;
         let price = rng.range(10_000, 50_000_000);
         let combos = econ::binom(n, k).unwrap();
-        let cap_bps = rng.range(1_000, 10_000 - fee_max as u64) as u16;
+        let tier2 = if k >= 2 && rng.below(2) == 0 {
+            rng.range(1, (9_000 - fee_max as u64).min(econ::MAX_TIER2_BPS as u64)) as u16
+        } else {
+            0
+        };
+        let max_cap = 10_000 - fee_max as u64 - tier2 as u64;
+        let cap_bps = rng.range(1_000, max_cap) as u16;
         let cap = econ::jackpot_cap(cap_bps, price, combos).unwrap();
-        let cap_bps = if cap < price { 10_000 - fee_max } else { cap_bps };
+        let cap_bps = if cap < price { max_cap as u16 } else { cap_bps };
         let cap = econ::jackpot_cap(cap_bps, price, combos).unwrap();
         if cap < price {
             continue;
@@ -863,10 +1050,12 @@ async fn solvency_invariant_fuzz() {
             range_n: n,
             round_slots: 150,
             claim_window_slots: 150,
+            tier2_bps: tier2,
         };
         let pool = t.create(&creator, case, p).await.unwrap();
         t.solvent(&pool, true).await;
 
+        let mut paid_total = 0u64;
         let mut open: Vec<Tk> = Vec::new();
         // Drawn round in its window: (round_id, tickets, numbers, claimed indexes).
         let mut pending: Option<(u64, Vec<Tk>, [u8; 8], Vec<u64>)> = None;
@@ -919,7 +1108,9 @@ async fn solvency_invariant_fuzz() {
                 5 => {
                     let Some((rid, tickets, drawn, claimed)) = pending.as_mut() else { continue };
                     // Half of the time aim at a winning ticket when one exists.
-                    let winners: Vec<usize> = (0..tickets.len()).filter(|&j| tickets[j].numbers == *drawn).collect();
+                    let winners: Vec<usize> = (0..tickets.len())
+                        .filter(|&j| econ::prize_tier(&tickets[j].numbers, drawn, k, tier2 > 0) > 0)
+                        .collect();
                     let i = if !winners.is_empty() && rng.below(2) == 0 {
                         winners[rng.below(winners.len() as u64) as usize]
                     } else {
@@ -937,7 +1128,7 @@ async fn solvency_invariant_fuzz() {
                     let res = t.claim(&pool, *rid, signer, &tk, &lv).await;
                     let expected = if t.slot > window_end {
                         Err(ce(PoolError::ClaimWindowClosed))
-                    } else if tk.numbers != *drawn {
+                    } else if econ::prize_tier(&tk.numbers, drawn, k, tier2 > 0) == 0 {
                         Err(ce(PoolError::TicketNotWinning))
                     } else if wrong_signer {
                         Err(ce(PoolError::InvalidProof))
@@ -960,6 +1151,10 @@ async fn solvency_invariant_fuzz() {
                     if !claimed.is_empty() {
                         wins += 1;
                     }
+                    let r = t.round(&pool, rid).await.unwrap();
+                    if r.tier2_winners > 0 {
+                        tier2_wins += 1;
+                    }
                     closable.push(rid);
                 }
                 7 => {
@@ -969,9 +1164,10 @@ async fn solvency_invariant_fuzz() {
                     let i = rng.below(unpaid.len() as u64) as usize;
                     let (rid, idx, owner) = unpaid.swap_remove(i);
                     let before = t.lamports(&owner).await;
-                    let share = t.round(&pool, rid).await.unwrap().share;
+                    let share = t.payout_amount(&pool, rid, idx).await;
                     t.payout(&pool, rid, idx, &owner).await.unwrap();
                     assert!(t.lamports(&owner).await >= before + share);
+                    paid_total += share;
                 }
                 8 => {
                     let amt = rng.range(0, st.creator_owed + st.creator_owed / 5 + 1);
@@ -1009,7 +1205,7 @@ async fn solvency_invariant_fuzz() {
                                 let rid = closable[pos];
                                 let r = t.round(&pool, rid).await.unwrap();
                                 let res = t.send(vec![ix::close_round(&pid, &pool, rid, &Pubkey::new_from_array(r.rent_payer))], &[]).await;
-                                if r.paid == r.winners {
+                                if r.paid == r.winners && r.tier2_paid == r.tier2_winners {
                                     res.unwrap();
                                     closable.remove(pos);
                                 } else {
@@ -1031,6 +1227,7 @@ async fn solvency_invariant_fuzz() {
             }
         }
         for (rid, idx, owner) in unpaid.drain(..) {
+            paid_total += t.payout_amount(&pool, rid, idx).await;
             t.payout(&pool, rid, idx, &owner).await.unwrap();
         }
         let st = t.pool(&pool).await;
@@ -1039,13 +1236,22 @@ async fn solvency_invariant_fuzz() {
         }
         let st = t.pool(&pool).await;
         assert_eq!((st.owed_prizes, st.locked_prize, st.creator_owed), (0, 0, 0));
-        assert_eq!(t.lamports(&pool).await, t.rent.minimum_balance(POOL_LEN) + st.jackpot + st.reserve);
-        // Lifetime conservation: seed + sales = jackpot + reserve + creator
-        // withdrawals + prizes paid.
-        assert!(st.jackpot + st.reserve + st.creator_withdrawn <= st.params.seed + st.total_sales);
+        assert_eq!(
+            t.lamports(&pool).await,
+            t.rent.minimum_balance(POOL_LEN) + st.jackpot + st.reserve + st.tier2_pool
+        );
+        // Lifetime conservation: seed + sales = jackpot + reserve + tier-2 pool
+        // + creator withdrawals + prizes paid.
+        assert_eq!(
+            st.jackpot + st.reserve + st.tier2_pool + st.creator_withdrawn + paid_total,
+            st.params.seed + st.total_sales
+        );
     }
-    println!("fuzz: cases={cases} steps={steps} action_counts={counts:?} winning_rounds={wins}");
+    println!(
+        "fuzz: cases={cases} steps={steps} action_counts={counts:?} winning_rounds={wins} tier2_rounds={tier2_wins}"
+    );
     assert!(wins > 0, "the fuzz never exercised a win");
+    assert!(tier2_wins > 0, "the fuzz never exercised a tier-2 win");
 }
 
 // ── compute units ───────────────────────────────────────────────────────────

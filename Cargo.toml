@@ -219,6 +219,8 @@ members = [
     "programs/null_lottery",
     # Permissionless creator-seeded rolling-jackpot lottery pools
     "programs/null_lottery_pools",
+    # Shared SlotHashes selection and PDA creation (null_lottery_pools, null_fair_draw)
+    "crates/null-draw-common",
     "programs/null_mint_gate",
     "programs/live_attestation",
     # SOULBOUND_AGENT_PASSPORT - NonTransferable Token-2022 credential + PermanentDelegate revocation

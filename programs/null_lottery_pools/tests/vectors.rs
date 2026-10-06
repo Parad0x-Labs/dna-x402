@@ -67,13 +67,15 @@ fn build() -> Value {
     // Fee splits.
     let mut fee_cases = Vec::new();
     let pools = [
-        (1_000_000_000u64, 10_000_000u64, 2_500u16, 200u16, 500u16),
-        (5_000_000, 3_000_000, 2_500, 200, 500),
-        (7, 10_007, 3_000, 0, 2_000),
-        (123_456_789, 1_234_567, 1_777, 13, 333),
-        (50_000_000, 10_000_000, 0, 0, 1_000),
+        (1_000_000_000u64, 10_000_000u64, 2_500u16, 200u16, 500u16, 0u16),
+        (5_000_000, 3_000_000, 2_500, 200, 500, 0),
+        (7, 10_007, 3_000, 0, 2_000, 0),
+        (123_456_789, 1_234_567, 1_777, 13, 333, 0),
+        (50_000_000, 10_000_000, 0, 0, 1_000, 0),
+        (500_000_000, 10_000_000, 3_000, 1_000, 500, 1_000),
+        (7, 10_007, 3_000, 0, 2_000, 2_000),
     ];
-    for (seed, price, fmax, fmin, res) in pools {
+    for (seed, price, fmax, fmin, res, t2) in pools {
         let vr = econ::recoup_volume(seed, fmax).unwrap();
         let p = PoolParams {
             seed,
@@ -86,6 +88,7 @@ fn build() -> Value {
             range_n: 36,
             round_slots: 150,
             claim_window_slots: 150,
+            tier2_bps: t2,
         };
         let vs = [0, price, vr.saturating_sub(price / 3), vr.saturating_sub(1), vr, vr.saturating_add(price / 2), vr.saturating_mul(3), vr.saturating_mul(1_000)];
         for v in vs.map(|v| v.min(u64::MAX / 4)) {
@@ -93,10 +96,11 @@ fn build() -> Value {
                 let s = econ::split_ticket(&p, vr, v, retired).unwrap();
                 fee_cases.push(json!({
                     "seed": seed.to_string(), "ticket_price": price.to_string(),
-                    "fee_max_bps": fmax, "fee_min_bps": fmin, "reserve_bps": res,
+                    "fee_max_bps": fmax, "fee_min_bps": fmin, "reserve_bps": res, "tier2_bps": t2,
                     "recoup_volume": vr.to_string(), "v_before": v.to_string(), "retired": retired,
                     "rate_bps": econ::fee_rate(vr, fmax, fmin, v),
-                    "creator": s.creator.to_string(), "reserve": s.reserve.to_string(), "jackpot": s.jackpot.to_string(),
+                    "creator": s.creator.to_string(), "reserve": s.reserve.to_string(), "tier2": s.tier2.to_string(),
+                    "jackpot": s.jackpot.to_string(),
                 }));
             }
         }
@@ -167,6 +171,23 @@ fn build() -> Value {
             range_n: 36,
             round_slots: 9_000,
             claim_window_slots: 216_000,
+            tier2_bps: 0,
+        },
+    };
+    let create_t2 =PoolInstruction::CreatePool {
+        nonce: 7,
+        params: PoolParams {
+            seed: 500_000_000,
+            ticket_price: 10_000_000,
+            fee_max_bps: 3_000,
+            fee_min_bps: 1_000,
+            reserve_bps: 500,
+            cap_bps: 6_000,
+            pick_k: 3,
+            range_n: 18,
+            round_slots: 9_000,
+            claim_window_slots: 216_000,
+            tier2_bps: 1_000,
         },
     };
     let buy = PoolInstruction::BuyTicket { round_id: 3, owner: h32("owner", 9), numbers: nums(&[3, 9, 17, 22, 35]) };
@@ -177,6 +198,7 @@ fn build() -> Value {
     let claim = PoolInstruction::Claim { ticket_index: 1_234, numbers: nums(&[3, 9, 17, 22, 35]), proof: Box::new(proof) };
     let ix_cases = json!([
         { "name": "create_pool", "hex": hx(&create.pack()) },
+        { "name": "create_pool_tier2", "hex": hx(&create_t2.pack()) },
         { "name": "buy_ticket", "hex": hx(&buy.pack()) },
         { "name": "claim", "hex": hx(&claim.pack()) },
         { "name": "draw", "hex": hx(&PoolInstruction::Draw.pack()) },
@@ -198,6 +220,7 @@ fn build() -> Value {
             range_n: 36,
             round_slots: 9_000,
             claim_window_slots: 216_000,
+            tier2_bps: 1_000,
         },
         retired: false,
         last_settle_won: true,
@@ -219,6 +242,8 @@ fn build() -> Value {
         round_close_slot: 21,
         ticket_count: 22,
         root: h32("root", 23),
+        tier2_cap: 24,
+        tier2_pool: 25,
     };
     let mut pool_bytes = vec![0u8; POOL_LEN];
     pool.pack(&mut pool_bytes);
@@ -241,6 +266,10 @@ fn build() -> Value {
         paid: 42,
         rent_payer: h32("payer", 43),
         draw_slot: 44,
+        tier2_prize: 45,
+        tier2_winners: 46,
+        tier2_share: 47,
+        tier2_paid: 48,
     };
     let mut round_bytes = vec![0u8; ROUND_LEN];
     round.pack(&mut round_bytes);
@@ -249,12 +278,24 @@ fn build() -> Value {
         "pool": { "creator": hx(&pool.creator), "nonce": "2", "seed": "3000000000", "bump": 254, "has_pending": true,
                   "last_settle_won": true, "retired": false, "cap": "2638944000000", "recoup_volume": "12000000000",
                   "jackpot": "11", "owed_prizes": "16", "ticket_count": "22", "root": hx(&pool.root),
-                  "claim_window_slots": "216000" },
+                  "claim_window_slots": "216000", "tier2_bps": 1000, "tier2_cap": "24", "tier2_pool": "25" },
         "round_hex": hx(&round_bytes),
         "round": { "pool": hx(&round.pool), "round_id": "32", "status": "drawn", "bump": 253, "attempt": "1",
                    "numbers": round.numbers.to_vec(), "prize": "38", "share": "41", "rent_payer": hx(&round.rent_payer),
-                   "draw_slot": "44" },
+                   "draw_slot": "44", "tier2_prize": "45", "tier2_winners": "46", "tier2_share": "47",
+                   "tier2_paid": "48" },
     });
+
+    // Prize tiers (3 of 18 against drawn [3, 9, 17]).
+    let drawn = nums(&[3, 9, 17]);
+    let tier_cases: Vec<Value> = [[3u8, 9, 17], [3, 9, 18], [1, 9, 17], [1, 2, 17], [1, 2, 4]]
+        .iter()
+        .map(|t| {
+            let n = nums(t);
+            json!({ "ticket": n.to_vec(), "drawn": drawn.to_vec(), "k": 3,
+                    "tier_on": econ::prize_tier(&n, &drawn, 3, true), "tier_off": econ::prize_tier(&n, &drawn, 3, false) })
+        })
+        .collect();
 
     json!({
         "version": 1,
@@ -268,6 +309,7 @@ fn build() -> Value {
         "selections": sel_cases,
         "draws": draw_cases,
         "instructions": ix_cases,
+        "tiers": tier_cases,
     })
 }
 

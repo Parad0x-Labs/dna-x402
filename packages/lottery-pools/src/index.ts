@@ -24,6 +24,9 @@ export const MAX_FEE_BPS = 3_000;
 export const MAX_RESERVE_BPS = 2_000;
 export const MIN_CAP_BPS = 1_000;
 export const DEFAULT_CAP_BPS = 7_000;
+export const MAX_TIER2_BPS = 2_000;
+export const TIER_JACKPOT = 1;
+export const TIER_SECOND = 2;
 
 export const ERROR_BASE = 0x4c50_0000;
 export const POOL_ERRORS = {
@@ -215,11 +218,14 @@ export interface PoolParams {
   rangeN: number;
   roundSlots: bigint;
   claimWindowSlots: bigint;
+  /** Share of each sale to the tier-2 pool (0 or undefined = no second tier). */
+  tier2Bps?: number;
 }
 
 export interface Split {
   creator: bigint;
   reserve: bigint;
+  tier2: bigint;
   jackpot: bigint;
 }
 
@@ -269,7 +275,171 @@ export function splitTicket(p: PoolParams, vr: bigint, vBefore: bigint, retired:
   const price = p.ticketPrice;
   const creator = retired ? 0n : creatorFee(vBefore, price, vr, p.feeMaxBps, p.feeMinBps);
   const reserve = (price * BigInt(p.reserveBps)) / BPS;
-  return { creator, reserve, jackpot: price - creator - reserve };
+  const tier2 = (price * BigInt(p.tier2Bps ?? 0)) / BPS;
+  return { creator, reserve, tier2, jackpot: price - creator - reserve - tier2 };
+}
+
+/** Numbers two tickets have in common. */
+export function matches(a: ArrayLike<number>, b: ArrayLike<number>): number {
+  const bb = Array.from(b).filter((x) => x !== 0);
+  return Array.from(a).filter((x) => x !== 0 && bb.includes(x)).length;
+}
+
+/** 1 = jackpot (all k), 2 = tier 2 (exactly k - 1, when enabled), 0 = no prize. */
+export function prizeTier(ticket: ArrayLike<number>, drawn: ArrayLike<number>, k: number, tier2On: boolean): number {
+  const m = matches(ticket, drawn);
+  if (m === k) return TIER_JACKPOT;
+  if (tier2On && k >= 2 && m === k - 1) return TIER_SECOND;
+  return 0;
+}
+
+/** CreatePool bounds, as the program checks them (true when valid). */
+export function validParams(p: PoolParams): boolean {
+  const t2 = p.tier2Bps ?? 0;
+  if (
+    p.feeMaxBps > MAX_FEE_BPS || p.feeMinBps > p.feeMaxBps || p.reserveBps > MAX_RESERVE_BPS || p.capBps < MIN_CAP_BPS ||
+    p.capBps + p.feeMaxBps > 10_000 || p.pickK < 1 || p.pickK > 8 || p.rangeN > 80 || p.pickK >= p.rangeN ||
+    p.ticketPrice < 10_000n || p.ticketPrice > 1_000_000_000_000n || p.roundSlots < 150n || p.roundSlots > 1_512_000n ||
+    p.claimWindowSlots < 150n || p.claimWindowSlots > 1_512_000n || t2 > MAX_TIER2_BPS || (t2 > 0 && p.pickK < 2) ||
+    p.capBps + p.feeMaxBps + t2 > 10_000
+  ) {
+    return false;
+  }
+  const cap = jackpotCap(p.capBps, p.ticketPrice, binom(p.rangeN, p.pickK));
+  return p.seed >= p.ticketPrice && p.seed <= cap;
+}
+
+// ── presets and summary ─────────────────────────────────────────────────────
+
+const LAMPORTS = 1_000_000_000n;
+
+/**
+ * Small pool: seed 0.5 SOL, ticket 0.01 SOL, creator fee 30% until the seed
+ * is recouped then down to 10%, reserve 5%, 3 of 18 (816 combinations), a
+ * second tier funded by 10% of sales (match 2 of 3), jackpot cap 6000 bps
+ * (4.896 SOL). The cap is 6000 rather than 7000 because the program keeps
+ * cap + fee_max + tier2 <= 100%. Rounds of one hour, a one-day claim window.
+ */
+export const SMALL_POOL_PRESET: PoolParams = {
+  seed: LAMPORTS / 2n,
+  ticketPrice: LAMPORTS / 100n,
+  feeMaxBps: 3_000,
+  feeMinBps: 1_000,
+  reserveBps: 500,
+  capBps: 6_000,
+  pickK: 3,
+  rangeN: 18,
+  roundSlots: 9_000n,
+  claimWindowSlots: 216_000n,
+  tier2Bps: 1_000,
+};
+
+/** The same small pool without the second tier (cap 7000 bps, 5.712 SOL). */
+export const SMALL_POOL_JACKPOT_ONLY: PoolParams = { ...SMALL_POOL_PRESET, capBps: 7_000, tier2Bps: 0 };
+
+/** Large pool: seed 1 SOL, ticket 0.01 SOL, fee 25% -> 2%, reserve 5%, 3 of 24, no second tier. */
+export const LARGE_POOL_PRESET: PoolParams = {
+  seed: LAMPORTS,
+  ticketPrice: LAMPORTS / 100n,
+  feeMaxBps: 2_500,
+  feeMinBps: 200,
+  reserveBps: 500,
+  capBps: 7_000,
+  pickK: 3,
+  rangeN: 24,
+  roundSlots: 9_000n,
+  claimWindowSlots: 216_000n,
+};
+
+export interface PoolSummary {
+  combos: bigint;
+  jackpotCap: bigint;
+  tier2Cap: bigint;
+  seeder: {
+    seed: bigint;
+    recoupVolume: bigint;
+    recoupTickets: bigint;
+    /** Creator fees and net (fees minus seed) after the given total sales, before any draw. */
+    atSales: { sales: bigint; tickets: bigint; creatorFees: bigint; net: bigint; netPctOfSeed: number }[];
+  };
+  buyer: {
+    /** Per ticket, numbers picked uniformly at random. */
+    pJackpot: number;
+    pTier2: number;
+    pAnyPrize: number;
+    /** Long-run tier-2 payout per ticket (every lamport of the tier-2 pool is paid to tier-2 winners). */
+    tier2EvPerTicket: bigint;
+    /** Average tier-2 prize per winning ticket in the long run. */
+    typicalTier2Prize: bigint;
+    /** Jackpot after the given total sales if nobody has hit it yet (seed included, capped). */
+    jackpotAt: { sales: bigint; jackpot: bigint }[];
+    /** For a round of N quick-pick tickets: chance someone hits the jackpot, and that someone wins any prize. */
+    perRound: { tickets: number; pJackpotHit: number; pSomeoneWins: number }[];
+  };
+  assumptions: string;
+}
+
+/**
+ * The numbers a seeder and a buyer see before anyone seeds or buys, under
+ * stated sales assumptions (not a promise: they hold only if sales
+ * happen as assumed). Sales points default to 2 and 5 SOL; round sizes to
+ * 20, 50 and 100 tickets.
+ */
+export function poolSummary(
+  p: PoolParams,
+  opts: { salesPoints?: bigint[]; roundSizes?: number[] } = {},
+): PoolSummary {
+  const sales = (opts.salesPoints ?? [2n * LAMPORTS, 5n * LAMPORTS]).slice().sort((a, b) => (a < b ? -1 : 1));
+  const C = binom(p.rangeN, p.pickK);
+  const cap = jackpotCap(p.capBps, p.ticketPrice, C);
+  const t2bps = p.tier2Bps ?? 0;
+  const t2cap = jackpotCap(t2bps, p.ticketPrice, C);
+  const vr = recoupVolume(p.seed, p.feeMaxBps);
+  const atSales: PoolSummary["seeder"]["atSales"] = [];
+  const jackpotAt: PoolSummary["buyer"]["jackpotAt"] = [];
+  let v = 0n;
+  let fees = 0n;
+  let jackpot = p.seed;
+  let tickets = 0n;
+  let recoupTickets = 0n;
+  for (const target of sales) {
+    while (v < target) {
+      const s = splitTicket(p, vr, v, false);
+      fees += s.creator;
+      jackpot += applyCap(jackpot, s.jackpot, cap)[0];
+      v += p.ticketPrice;
+      tickets += 1n;
+      if (recoupTickets === 0n && fees >= p.seed) recoupTickets = tickets;
+    }
+    const net = fees - p.seed;
+    atSales.push({ sales: target, tickets, creatorFees: fees, net, netPctOfSeed: Number((net * 10_000n) / p.seed) / 100 });
+    jackpotAt.push({ sales: target, jackpot });
+  }
+  if (recoupTickets === 0n && p.feeMaxBps > 0) recoupTickets = (vr + p.ticketPrice - 1n) / p.ticketPrice;
+  const k = p.pickK;
+  const n = p.rangeN;
+  const pJackpot = 1 / Number(C);
+  const pTier2 = t2bps > 0 ? (Number(binom(k, k - 1)) * Number(binom(n - k, 1))) / Number(C) : 0;
+  const pAny = pJackpot + pTier2;
+  const t2share = (p.ticketPrice * BigInt(t2bps)) / BPS;
+  const typical = pTier2 > 0 ? BigInt(Math.round(Number(t2share) / pTier2)) : 0n;
+  const perRound = (opts.roundSizes ?? [20, 50, 100]).map((N) => ({
+    tickets: N,
+    pJackpotHit: 1 - (1 - pJackpot) ** N,
+    pSomeoneWins: 1 - (1 - pAny) ** N,
+  }));
+  return {
+    combos: C,
+    jackpotCap: cap,
+    tier2Cap: t2cap,
+    seeder: { seed: p.seed, recoupVolume: vr, recoupTickets, atSales },
+    buyer: { pJackpot, pTier2, pAnyPrize: pAny, tier2EvPerTicket: t2share, typicalTier2Prize: typical, jackpotAt, perRound },
+    assumptions:
+      "Creator fees and jackpot sizes assume the stated total sales and no jackpot win before that point. " +
+      "Win chances assume every ticket's numbers are picked uniformly at random. The tier-2 figures are long-run " +
+      "averages: a given round splits its own tier-2 pool among that round's tier-2 winners and rolls it over when there are none. " +
+      "Fees, the reserve and the jackpot cap make a ticket's expected value negative, as in any lottery.",
+  };
 }
 
 /** [toJackpot, overflowToReserve] for adding `amount` under `cap`. */
@@ -374,6 +544,8 @@ export function encodeCreatePool(nonce: bigint, p: PoolParams): Uint8Array {
     Uint8Array.of(p.pickK, p.rangeN),
     u64le(p.roundSlots),
     u64le(p.claimWindowSlots),
+    // The v1 encoding (no field) means tier 2 off.
+    (p.tier2Bps ?? 0) > 0 ? u16le(p.tier2Bps!) : new Uint8Array(0),
   ]);
 }
 
@@ -413,8 +585,10 @@ export const claimSeeds = (pool: Uint8Array, roundId: bigint, ticketIndex: bigin
 // ── accounts ────────────────────────────────────────────────────────────────
 
 export const POOL_LEN = 280 + 32 * TREE_DEPTH;
-export const ROUND_LEN = 248;
-export const CLAIM_LEN = 89;
+/** Round layout v2 (NLPROND2): v1 plus four tier-2 fields. */
+export const ROUND_LEN = 272;
+/** Claim record v2 (NLPCLAM2): v1 plus the tier byte. */
+export const CLAIM_LEN = 90;
 
 export interface PoolAccount {
   creator: Uint8Array;
@@ -440,6 +614,8 @@ export interface PoolAccount {
   roundCloseSlot: bigint;
   ticketCount: bigint;
   root: Uint8Array;
+  tier2Cap: bigint;
+  tier2Pool: bigint;
 }
 
 export function decodePool(d: Uint8Array): PoolAccount {
@@ -467,10 +643,11 @@ export function decodePool(d: Uint8Array): PoolAccount {
   const bump = u8();
   const roundSlots = u64();
   const claimWindowSlots = u64();
+  const tier2Bps = readU16(d, 246);
   return {
     creator,
     nonce,
-    params: { seed, ticketPrice, feeMaxBps, feeMinBps, reserveBps, capBps, pickK, rangeN, roundSlots, claimWindowSlots },
+    params: { seed, ticketPrice, feeMaxBps, feeMinBps, reserveBps, capBps, pickK, rangeN, roundSlots, claimWindowSlots, tier2Bps },
     retired,
     lastSettleWon,
     hasPending,
@@ -491,6 +668,8 @@ export function decodePool(d: Uint8Array): PoolAccount {
     roundCloseSlot: u64(),
     ticketCount: u64(),
     root: bytes(32),
+    tier2Cap: readU64(d, 248),
+    tier2Pool: readU64(d, 256),
   };
 }
 
@@ -513,10 +692,14 @@ export interface RoundAccount {
   paid: bigint;
   rentPayer: Uint8Array;
   drawSlot: bigint;
+  tier2Prize: bigint;
+  tier2Winners: bigint;
+  tier2Share: bigint;
+  tier2Paid: bigint;
 }
 
 export function decodeRound(d: Uint8Array): RoundAccount {
-  if (d.length !== ROUND_LEN || new TextDecoder().decode(d.subarray(0, 8)) !== "NLPROND1") {
+  if (d.length !== ROUND_LEN || new TextDecoder().decode(d.subarray(0, 8)) !== "NLPROND2") {
     throw new Error("not a round account");
   }
   let o = 8;
@@ -544,12 +727,16 @@ export function decodeRound(d: Uint8Array): RoundAccount {
     paid: u64(),
     rentPayer: bytes(32),
     drawSlot: u64(),
+    tier2Prize: u64(),
+    tier2Winners: u64(),
+    tier2Share: u64(),
+    tier2Paid: u64(),
   };
 }
 
 /** Solvency invariant as the program checks it. */
 export function poolLiabilities(p: PoolAccount): bigint {
-  return p.jackpot + p.reserve + p.creatorOwed + p.lockedPrize + p.owedPrizes;
+  return p.jackpot + p.reserve + p.tier2Pool + p.creatorOwed + p.lockedPrize + p.owedPrizes;
 }
 
 // ── logs ────────────────────────────────────────────────────────────────────

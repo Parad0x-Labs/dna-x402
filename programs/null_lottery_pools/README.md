@@ -13,7 +13,53 @@ x402 layer, outside this program.
 Program id (keypair generated for devnet, declared in `src/lib.rs`):
 `39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw`.
 
-Client math, encoders and decoders live in [`packages/lottery-pools`](../../packages/lottery-pools).
+Client math, encoders, decoders, presets and `poolSummary` live in
+[`packages/lottery-pools`](../../packages/lottery-pools). SlotHashes target selection and PDA creation are
+shared with [`null_fair_draw`](../null_fair_draw) through the `null-draw-common` crate.
+
+## At a glance: the small pool
+
+The small preset (`SMALL_POOL_PRESET` in the SDK): seed 0.5 SOL, ticket 0.01 SOL, creator fee 30% until the seed
+is recouped then down to 10%, reserve 5%, pick 3 of 18 (816 combinations), a second tier funded by 10% of sales
+for tickets that match 2 of 3, jackpot cap 6000 bps (4.896 SOL). All figures are the program's integer math
+(`econ::tests::small_preset_numbers`, `poolSummary`) under the stated sales; none is a promise.
+
+**Seeder** (fees as sales accumulate, before any draw):
+
+| Seed | Break-even sales | Creator fees at 2 SOL of sales | Net at 2 SOL | Creator fees at 5 SOL of sales | Net at 5 SOL |
+|---:|---:|---:|---:|---:|---:|
+| 0.5 SOL | 1.667 SOL (167 tickets) | 0.591 SOL | +0.091 SOL (+18%) | 1.050 SOL | +0.550 SOL (+110%) |
+
+At 5 SOL of sales the fee has reached its 10% floor. The seed itself goes into the jackpot and is never
+returned; the creator's income is the fee only.
+
+**Buyer** (one ticket, numbers picked at random):
+
+| Jackpot chance | Tier-2 chance | Any prize | Typical tier-2 prize | Jackpot if not hit yet | Someone wins something, per round |
+|---:|---:|---:|---:|---:|---:|
+| 1 in 816 (0.12%) | 1 in 18.1 (5.5%) | 1 in 17.7 (5.6%) | about 0.018 SOL (1.8x the ticket, long-run average) | 1.61 SOL at 2 SOL of sales, 3.70 SOL at 5 SOL (cap 4.896) | 69% with 20 tickets, 94.5% with 50, 99.7% with 100 |
+
+The chance that a jackpot is hit somewhere within 500 tickets is about 46%. The tier-2 pool of a round is split
+equally among that round's tier-2 winners, so the prize per winner varies with the round (a round with few
+tickets often has no tier-2 winner and rolls the pool into the next one: 57% of 10-ticket rounds, 6% of
+50-ticket rounds).
+
+**The trade-off chosen for tier 2.** The tier-2 share comes out of what would otherwise grow the jackpot; the
+creator fee and the reserve do not change. The cap must drop so that `cap + fee_max + tier2 <= 100%` (buying
+every combination never pays):
+
+| tier2_bps | Jackpot cap | Jackpot at 2 / 5 SOL of sales | Tier-2 EV per ticket | Average tier-2 prize | Creator net at 5 SOL |
+|---:|---:|---:|---:|---:|---:|
+| 0 (jackpot only, cap 7000) | 5.712 SOL | 1.81 / 4.20 SOL | 0 | n/a | +0.550 SOL |
+| 500 (cap 6500) | 5.304 SOL | 1.71 / 3.95 SOL | 0.0005 SOL | 0.009 SOL (0.9x ticket) | +0.550 SOL |
+| 800 (cap 6200) | 5.059 SOL | 1.65 / 3.80 SOL | 0.0008 SOL | 0.015 SOL (1.5x) | +0.550 SOL |
+| **1000 (cap 6000), chosen** | 4.896 SOL | 1.61 / 3.70 SOL | 0.0010 SOL | 0.018 SOL (1.8x) | +0.550 SOL |
+| 1500 (cap 5500) | 4.488 SOL | 1.51 / 3.45 SOL | 0.0015 SOL | 0.027 SOL (2.7x) | +0.550 SOL |
+
+The hit rate (1 in 18) is set by the odds; `tier2_bps` sets the size of the small win. 10% is the smallest
+share at which a tier-2 win returns clearly more than the ticket (1.8x on average) while the jackpot at 5 SOL of
+sales stays within 12% of the jackpot-only pool. `SMALL_POOL_JACKPOT_ONLY` keeps the original single-tier
+settings (cap 7000).
 
 ## Economics
 
@@ -26,7 +72,8 @@ All parameters are set once at CreatePool and bounded by program constants (`src
 | `fee_max_bps` | Creator fee until the seed is recouped | `<= 3000` |
 | `fee_min_bps` | Creator fee floor after recoup | `<= fee_max_bps` |
 | `reserve_bps` | Share of each sale to the reserve | `<= 2000` |
-| `cap_bps` | Jackpot cap, in bps of the cost of all combinations | `1000 <= cap_bps <= 10000 - fee_max_bps` (default 7000) |
+| `cap_bps` | Jackpot cap, in bps of the cost of all combinations | `1000 <= cap_bps <= 10000 - fee_max_bps - tier2_bps` (default 7000) |
+| `tier2_bps` | Share of each sale to the tier-2 pool (0 = one tier) | `<= 2000`; needs `k >= 2` |
 | `pick_k`, `range_n` | A ticket picks `k` distinct numbers from `1..=n` | `1 <= k <= 8`, `k < n <= 80` |
 | `round_slots` | Sales length of a round | 150 to 1,512,000 slots |
 | `claim_window_slots` | Claim window after a draw | 150 to 1,512,000 slots |
@@ -51,13 +98,25 @@ interval `[V, V + p)`; the part below `Vr` is charged at `fee_max`, the part at 
 ```text
 creator = floor((seg_below_Vr * fee_max_bps + seg_above_Vr * f(max(V, Vr))) / 10_000)
 reserve = floor(p * reserve_bps / 10_000)
-jackpot = p - creator - reserve
+tier2   = floor(p * tier2_bps / 10_000)           (0 when tier 2 is off)
+jackpot = p - creator - reserve - tier2
 ```
 
 All math is u64 with u128 intermediates and checked arithmetic. Rounding always goes against the
 creator and the reserve and in favour of the jackpot: the post-recoup rate is floored to whole bps,
 both the fee and the reserve share are floored to whole lamports, and the jackpot receives the exact
-remainder. Creator + reserve + jackpot equals the ticket price to the lamport.
+remainder. Creator + reserve + tier 2 + jackpot equals the ticket price to the lamport.
+
+### Second prize tier (optional)
+
+With `tier2_bps > 0` a ticket that matches exactly `k - 1` of the drawn numbers wins an equal share of the
+round's tier-2 pool. The pool collects `tier2` of every sale (capped at `tier2_bps * p * C / 10_000`, overflow to
+the reserve), is locked into the round at the draw, and at Settle is split equally among the tier-2 tickets
+registered during the claim window (`share2 = floor(prize2 / winners2)`); the dust, or the whole pool when nobody
+registered a tier-2 ticket, rolls into the next round's pool. Tier 2 pays only from its own pool: never from the
+jackpot, the reserve or a locked prize, and the pool is part of the solvency invariant. Existing configurations
+keep tier 2 off: the original 51-byte CreatePool encoding means `tier2_bps = 0`; a 53-byte encoding carries the
+field. Conservation and EV are worked out in [`null_fair_draw/MATH.md`](../null_fair_draw/MATH.md#11-null_lottery_pools-second-tier).
 
 ### Reserve
 
@@ -76,54 +135,37 @@ A ticket's jackpot share above the cap goes to the reserve. Buying every combina
 and returns at most the capped jackpot plus, for the creator, its own fee (at most
 `fee_max * p * C`). The net of that purchase is therefore at most
 `(cap_bps + fee_max_bps - 10_000) * p * C / 10_000`, which CreatePool keeps `<= 0` by requiring
-`cap_bps + fee_max_bps <= 10_000`. The default 7000 bps satisfies this at the maximum `fee_max` of
+`cap_bps + fee_max_bps <= 10_000` (with tier 2: `cap_bps + fee_max_bps + tier2_bps <= 10_000`, since the buyer
+could also collect the whole capped tier-2 pool). The default 7000 bps satisfies this at the maximum `fee_max` of
 3000 bps, before transaction fees and before any split with other winners.
 
-### Worked example
+### Large pool (secondary)
 
-S = 1 SOL, p = 0.01 SOL, `fee_max` = 25%, `fee_min` = 2%, reserve = 5%, odds 3 of 24
-(C = 2,024, one ticket wins with probability 1/2,024), cap 7000 bps = 0.7 x 0.01 x 2,024 =
-14.168 SOL. `Vr` = 1 / 0.25 = 4 SOL (400 tickets).
-
-Pool state after a number of tickets with no win yet (computed with the program's integer formulas):
+S = 1 SOL, p = 0.01 SOL, `fee_max` = 25%, `fee_min` = 2%, reserve = 5%, odds 3 of 24 (C = 2,024), cap 7000 bps =
+14.168 SOL, no second tier (`LARGE_POOL_PRESET`). `Vr` = 1 / 0.25 = 4 SOL (400 tickets). State after a number of
+tickets with no win yet:
 
 | Tickets | Sales V | Fee on the next ticket | Creator fees accrued | Jackpot | Reserve |
 |---:|---:|---:|---:|---:|---:|
-| 1 | 0.01 SOL | 25.00% | 0.0025 SOL | 1.007 SOL | 0.0005 SOL |
-| 100 | 1 SOL | 25.00% | 0.25 SOL | 1.70 SOL | 0.05 SOL |
 | 400 | 4 SOL | 25.00% | 1.00 SOL (seed recouped) | 3.80 SOL | 0.20 SOL |
-| 800 | 8 SOL | 12.50% | 1.69 SOL | 6.91 SOL | 0.40 SOL |
 | 1,600 | 16 SOL | 6.25% | 2.39 SOL | 13.81 SOL | 0.80 SOL |
-| 4,000 | 40 SOL | 2.50% | 3.30 SOL | 14.168 SOL (cap) | 23.53 SOL |
 | 5,000 | 50 SOL | 2.00% (floor) | 3.52 SOL | 14.168 SOL (cap) | 33.31 SOL |
 
-Before recoup each 0.01 SOL ticket splits 0.0025 creator / 0.0005 reserve / 0.007 jackpot. At the
-floor the split is 0.0002 / 0.0005 / 0.0093. A win pays the jackpot and the reserve becomes the next
-jackpot.
-
-Creator outcome under stated sales assumptions, from the reference simulation
-(`sim.py`: 60 rounds, normally distributed ticket counts per round with the listed mean, win
-probability 1/2,000 per ticket, fee rate fixed per round, no cap; 4,000 runs):
-
-| Tickets per round | Mean creator net (fees minus 1 SOL seed) | Median round of the first win |
-|---:|---:|---:|
-| 20 | +1.09 SOL | 26 |
-| 50 | +2.06 SOL | 20 |
-| 150 | +3.49 SOL | 10 |
-| 400 | +6.84 SOL | 4 |
-| 150, `fee_max` 15% | +2.91 SOL | 10 |
-
-These are expectations of a model, not a promise: they hold only if sales follow the assumptions.
-Ticket buyers have negative expected value by construction (fees, reserve and cap), as in any
-lottery.
+A win pays the jackpot and the reserve becomes the next jackpot. Ticket buyers have negative expected value by
+construction (fees, reserve and cap), as in any lottery.
 
 Rent (paid once, at 6,960 lamports per byte including the 128-byte account overhead):
 
 | Account | Size | Rent | Paid by | Returned |
 |---|---:|---:|---|---|
 | Pool (vault, holds all pool lamports) | 920 B | 0.00729408 SOL | creator | never (the account holds player funds) |
-| Round (one per drawn round with tickets) | 248 B | 0.00261696 SOL | Draw cranker | CloseRound, to the cranker |
-| Claim record (one per registered winning ticket) | 89 B | 0.00151032 SOL | claimant | Payout, to the ticket owner |
+| Round (one per drawn round with tickets) | 272 B | 0.002784 SOL | Draw cranker | CloseRound, to the cranker |
+| Claim record (one per registered winning ticket, either tier) | 90 B | 0.00151728 SOL | claimant | Payout, to the ticket owner |
+
+Layout versions: the pool keeps `NLPPOOL1` (the tier-2 fields use bytes that were zero padding, so a v1 pool
+reads as tier 2 off); rounds are `NLPROND2` (272 bytes, v1 was 248) and claim records `NLPCLAM2` (90 bytes, v1
+was 89), both with tier-2 fields. v1 round and claim accounts are refused by size and discriminator (the program
+has no deployment with v1 accounts).
 
 No account is created per ticket.
 
@@ -134,8 +176,8 @@ No account is created per ticket.
 | 0 | CreatePool | creator | Creates the pool PDA, moves the seed into the jackpot, opens round 0 |
 | 1 | BuyTicket | anyone | Pays `p` into the pool, applies the split, appends the ticket leaf to the round tree |
 | 2 | Draw | anyone | After `close_slot`: draws the numbers from SlotHashes, locks the jackpot as the round prize, opens the next round |
-| 3 | Claim | ticket owner | During the window: registers a winning ticket (leaf + Merkle proof), creates its claim record |
-| 4 | Settle | anyone | After the window: splits the prize among registered tickets, or rolls it over; after a win the reserve seeds the jackpot |
+| 3 | Claim | ticket owner | During the window: registers a winning ticket, jackpot or tier 2 (leaf + Merkle proof), creates its claim record |
+| 4 | Settle | anyone | After the window: splits each tier's prize among its registered tickets, or rolls it over; after a jackpot win the reserve seeds the jackpot |
 | 5 | Payout | anyone | Pays one registered ticket's share to its owner and closes the claim record |
 | 6 | WithdrawCreatorFees | creator | Withdraws up to the accrued creator fees |
 | 7 | Retire | creator | Turns the creator fee off for good (see below) |
@@ -171,7 +213,7 @@ prize.
 - **Draw.** Sales close at `close_slot`, fixed when the round opens. The draw uses the SlotHashes
   entry for the fixed target `T_0 = close_slot + 32`, or, once `T_0` has aged out of the 512-entry
   SlotHashes window, the next fixed fallback `T_i = T_0 + 512 * i`. The program computes `i` itself
-  (the lowest target still covered by the window) and takes the first produced slot at or after it,
+  (the lowest target still covered by the window) and takes the earliest produced slot at or after it,
   so every crank in the same period gets the same hash. Anyone can crank. There is no admin key, no
   creator seed and no randomness input in the instruction. Entropy is
   `SHA-256("null-lottery-pools:draw:v1" || pool || round_id || T_i || used_slot || slot_hash || tickets_root || ticket_count)`;
@@ -184,7 +226,7 @@ prize.
   touches that round, Draw of the next round is refused, Settle waits for the window end, and
   Retire is refused.
 - **Solvency.** The pool account is the vault. Every instruction ends with
-  `lamports >= jackpot + reserve + creator_owed + locked_prize + owed_prizes + rent_exempt_minimum`.
+  `lamports >= jackpot + reserve + tier2_pool + creator_owed + locked_prize + owed_prizes + rent_exempt_minimum`.
   Lamports leave the pool only through Payout (a settled share, to the ticket owner) and
   WithdrawCreatorFees (at most `creator_owed`, to the creator).
 - **No exit for the jackpot.** There is no close or emergency instruction for the pool. Retire is
@@ -203,7 +245,7 @@ prize.
 
 ## Residual risks
 
-- **Leader-skip bias.** The draw hash is the bank hash of the first produced slot at or after the
+- **Leader-skip bias.** The draw hash is the bank hash of the earliest produced slot at or after the
   target, and the leader schedule is public about an epoch ahead. The leader of the target slot sees
   its bank hash before it publishes and can withhold the block; the draw then uses the next produced
   slot, so a leader gets one extra outcome per slot it is willing to skip (up to four for its four
@@ -261,7 +303,7 @@ Custom codes are `0x4C500000 + n` (a range no other program in this repo uses).
 | 0x4C50001A | WrongRentPayer | CloseRound to an account other than the rent payer |
 | 0x4C50001B | AlreadyRetired | Retire on a retired pool |
 
-The program logs no secrets; it holds none.
+The second tier added no error codes. The program logs no secrets; it holds none.
 
 ## Tests
 
@@ -279,18 +321,22 @@ npm --prefix packages/lottery-pools install --ignore-scripts && npm --prefix pac
   ticket, split conservation, cap overflow, parameter bounds, tree append against batch root and
   proofs, zero table, SlotHashes selection (too early, skipped target, aged-out fallback), drawn
   numbers.
-- `tests/integration.rs`: on-chain split and recoup crossing, cap overflow, bounds, buy rejections,
+- `src/econ.rs` also checks the tier-2 split, its bounds, the prize tiers of 3 of 18 (1 jackpot, 45 tier-2
+  combinations) and the small-preset numbers above.
+- `tests/integration.rs`: tier-2 split, claims and payouts with rollover, tier-2 dust and cap overflow,
+  tier-2 parameter bounds and the v1 CreatePool encoding; on-chain split and recoup crossing, cap overflow, bounds, buy rejections,
   draw rejections (before close, before the target hash, forged SlotHashes account, another sysvar),
   fallback slot, skipped target, empty round, no-winner rollover, single and multi-winner payouts with
   dust, claim rejections (wrong owner, bad proof, wrong index, losing ticket, double claim, after the
   window, after settle), unclaimed winner rollover, reserve seeding the next jackpot, creator withdraw
-  rules, retire rules, pre-funded pool, round and claim addresses, a solvency fuzz (random buy, draw,
-  claim, settle, payout, withdraw and attack sequences, invariant checked after every step), and
-  compute units.
+  rules, retire rules, pre-funded pool, round and claim addresses, a solvency fuzz (random pools, about a
+  third with tier 2; random buy, draw, claim, settle, payout, withdraw and attack sequences; invariant checked
+  after every step; lifetime conservation `seed + sales = jackpot + reserve + tier-2 pool + creator
+  withdrawals + prizes paid` checked at the end), and compute units.
 - `tests/vectors.rs` writes and checks `tests/vectors/lottery_pools_v1.json`, which the TS package
   recomputes.
 
-Compute units measured against the SBF build (simulated transactions holding only the instruction,
-three runs): BuyTicket 10,773 to 10,776 (constant: one stored-bump address check and 21 SHA-256
-calls), Claim 14,615, Draw 11,883 to 16,390 with a 500-entry SlotHashes (the round PDA's bump search
-at creation costs 1,500 CU per extra attempt), Settle 5,842, Payout 7,801.
+Compute units measured against the SBF build (simulated transactions holding only the instruction):
+BuyTicket 11,052 to 11,055 (constant: one stored-bump address check and 21 SHA-256 calls), Claim 15,028,
+Draw 10,589 to 22,582 with a 500-entry SlotHashes (the round PDA's bump search at creation costs 1,500 CU per
+extra attempt), Settle 6,175, Payout 7,973.

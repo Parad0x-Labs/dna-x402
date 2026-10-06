@@ -34,6 +34,12 @@ import {
   toHex,
   u64le,
   validNumbers,
+  prizeTier,
+  poolSummary,
+  validParams,
+  SMALL_POOL_PRESET,
+  SMALL_POOL_JACKPOT_ONLY,
+  LARGE_POOL_PRESET,
   type PoolParams,
 } from "../src/index.ts";
 
@@ -84,14 +90,15 @@ test("fee curve and ticket split", () => {
       rangeN: 36,
       roundSlots: 150n,
       claimWindowSlots: 150n,
+      tier2Bps: c.tier2_bps,
     };
     const vr = recoupVolume(p.seed, p.feeMaxBps);
     assert.equal(vr.toString(), c.recoup_volume);
     const v = BigInt(c.v_before);
     assert.equal(feeRate(vr, p.feeMaxBps, p.feeMinBps, v), c.rate_bps);
     const s = splitTicket(p, vr, v, c.retired);
-    assert.deepEqual([s.creator, s.reserve, s.jackpot].map(String), [c.creator, c.reserve, c.jackpot]);
-    assert.equal(s.creator + s.reserve + s.jackpot, p.ticketPrice);
+    assert.deepEqual([s.creator, s.reserve, s.tier2, s.jackpot].map(String), [c.creator, c.reserve, c.tier2, c.jackpot]);
+    assert.equal(s.creator + s.reserve + s.tier2 + s.jackpot, p.ticketPrice);
   }
 });
 
@@ -151,6 +158,8 @@ test("instruction encodings", () => {
     claimWindowSlots: 216_000n,
   });
   assert.equal(toHex(create), byName.create_pool);
+  const createT2 = encodeCreatePool(7n, { ...SMALL_POOL_PRESET });
+  assert.equal(toHex(createT2), byName.create_pool_tier2);
   const numbers = [3, 9, 17, 22, 35];
   assert.equal(toHex(encodeBuyTicket(3n, h32("owner", 9n), numbers)), byName.buy_ticket);
   const proof = Array.from({ length: 20 }, (_, i) => h32("proof", BigInt(i)));
@@ -168,6 +177,7 @@ test("account layouts", () => {
       has_pending: p.hasPending, last_settle_won: p.lastSettleWon, retired: p.retired, cap: String(p.cap),
       recoup_volume: String(p.recoupVolume), jackpot: String(p.jackpot), owed_prizes: String(p.owedPrizes),
       ticket_count: String(p.ticketCount), root: toHex(p.root), claim_window_slots: String(p.params.claimWindowSlots),
+      tier2_bps: p.params.tier2Bps, tier2_cap: String(p.tier2Cap), tier2_pool: String(p.tier2Pool),
     },
     e,
   );
@@ -177,10 +187,48 @@ test("account layouts", () => {
     {
       pool: toHex(r.pool), round_id: String(r.roundId), status: r.status, bump: r.bump, attempt: String(r.attempt),
       numbers: r.numbers, prize: String(r.prize), share: String(r.share), rent_payer: toHex(r.rentPayer),
-      draw_slot: String(r.drawSlot),
+      draw_slot: String(r.drawSlot), tier2_prize: String(r.tier2Prize), tier2_winners: String(r.tier2Winners),
+      tier2_share: String(r.tier2Share), tier2_paid: String(r.tier2Paid),
     },
     f,
   );
+});
+
+test("prize tiers", () => {
+  for (const c of V.tiers) {
+    assert.equal(prizeTier(c.ticket, c.drawn, c.k, true), c.tier_on);
+    assert.equal(prizeTier(c.ticket, c.drawn, c.k, false), c.tier_off);
+  }
+});
+
+test("presets are valid and poolSummary matches the program's integer math", () => {
+  for (const p of [SMALL_POOL_PRESET, SMALL_POOL_JACKPOT_ONLY, LARGE_POOL_PRESET]) assert.ok(validParams(p));
+  assert.ok(!validParams({ ...SMALL_POOL_PRESET, capBps: 7_000 }), "cap + fee + tier2 above 100%");
+  const s = poolSummary(SMALL_POOL_PRESET);
+  assert.equal(s.combos, 816n);
+  assert.equal(s.jackpotCap, 4_896_000_000n);
+  assert.equal(s.tier2Cap, 816_000_000n);
+  assert.equal(s.seeder.recoupVolume, 1_666_666_667n);
+  assert.equal(s.seeder.recoupTickets, 167n);
+  // Same values as econ::tests::small_preset_numbers in the program.
+  assert.deepEqual(s.seeder.atSales.map((x) => [x.tickets, x.creatorFees, x.net]), [
+    [200n, 591_394_000n, 91_394_000n],
+    [500n, 1_050_150_000n, 550_150_000n],
+  ]);
+  assert.equal(s.seeder.atSales[1].netPctOfSeed, 110.03);
+  assert.deepEqual(s.buyer.jackpotAt.map((x) => x.jackpot), [1_608_606_000n, 3_699_850_000n]);
+  assert.ok(Math.abs(s.buyer.pTier2 - 45 / 816) < 1e-12);
+  assert.ok(Math.abs(s.buyer.pAnyPrize - 46 / 816) < 1e-12);
+  assert.equal(s.buyer.tier2EvPerTicket, 1_000_000n);
+  assert.equal(s.buyer.typicalTier2Prize, 18_133_333n);
+  const r50 = s.buyer.perRound.find((x) => x.tickets === 50)!;
+  assert.ok(Math.abs(r50.pSomeoneWins - 0.945) < 0.001);
+  const j = poolSummary(SMALL_POOL_JACKPOT_ONLY);
+  assert.deepEqual(j.buyer.jackpotAt.map((x) => x.jackpot), [1_808_606_000n, 4_199_850_000n]);
+  assert.equal(j.buyer.pTier2, 0);
+  // About 46% chance of a jackpot win within 500 quick-pick tickets.
+  const p500 = poolSummary(SMALL_POOL_JACKPOT_ONLY, { roundSizes: [500] }).buyer.perRound[0].pJackpotHit;
+  assert.ok(Math.abs(p500 - 0.4583) < 0.0005);
 });
 
 test("error names", () => {

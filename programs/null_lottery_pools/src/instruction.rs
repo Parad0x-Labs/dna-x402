@@ -2,7 +2,7 @@
 //!
 //! | Tag | Instruction | Data after the tag | Accounts |
 //! |---|---|---|---|
-//! | 0 | CreatePool | nonce u64, seed u64, ticket_price u64, fee_max_bps u16, fee_min_bps u16, reserve_bps u16, cap_bps u16, pick_k u8, range_n u8, round_slots u64, claim_window_slots u64 | creator (s,w), pool (w), system program |
+//! | 0 | CreatePool | nonce u64, seed u64, ticket_price u64, fee_max_bps u16, fee_min_bps u16, reserve_bps u16, cap_bps u16, pick_k u8, range_n u8, round_slots u64, claim_window_slots u64, [tier2_bps u16] | creator (s,w), pool (w), system program |
 //! | 1 | BuyTicket | round_id u64, owner [32], numbers [8] | payer (s,w), pool (w), system program |
 //! | 2 | Draw | - | cranker (s,w), pool (w), round (w), SlotHashes sysvar, system program |
 //! | 3 | Claim | ticket_index u64, numbers [8], proof 20 x [32] | claimant (s,w), pool, round (w), claim (w), system program |
@@ -37,7 +37,10 @@ pub enum PoolInstruction {
     CloseRound,
 }
 
+/// CreatePool without the tier-2 field (tier 2 off).
 pub const CREATE_POOL_LEN: usize = 1 + 8 * 3 + 2 * 4 + 2 + 8 * 2;
+/// CreatePool with a trailing `tier2_bps` u16.
+pub const CREATE_POOL_TIER2_LEN: usize = CREATE_POOL_LEN + 2;
 pub const BUY_TICKET_LEN: usize = 1 + 8 + 32 + 8;
 pub const CLAIM_DATA_LEN: usize = 1 + 8 + 8 + 32 * TREE_DEPTH;
 
@@ -61,7 +64,7 @@ impl PoolInstruction {
         let (&tag, _) = d.split_first()?;
         let exact = |n: usize| d.len() == n;
         Some(match tag {
-            0 if exact(CREATE_POOL_LEN) => PoolInstruction::CreatePool {
+            0 if exact(CREATE_POOL_LEN) || exact(CREATE_POOL_TIER2_LEN) => PoolInstruction::CreatePool {
                 nonce: u64_at(d, 1),
                 params: PoolParams {
                     seed: u64_at(d, 9),
@@ -74,6 +77,7 @@ impl PoolInstruction {
                     range_n: d[34],
                     round_slots: u64_at(d, 35),
                     claim_window_slots: u64_at(d, 43),
+                    tier2_bps: if d.len() == CREATE_POOL_TIER2_LEN { u16_at(d, 51) } else { 0 },
                 },
             },
             1 if exact(BUY_TICKET_LEN) => PoolInstruction::BuyTicket {
@@ -114,6 +118,10 @@ impl PoolInstruction {
                 v.push(p.range_n);
                 v.extend_from_slice(&p.round_slots.to_le_bytes());
                 v.extend_from_slice(&p.claim_window_slots.to_le_bytes());
+                // The v1 encoding (no field) means tier 2 off.
+                if p.tier2_bps > 0 {
+                    v.extend_from_slice(&p.tier2_bps.to_le_bytes());
+                }
             }
             PoolInstruction::BuyTicket { round_id, owner, numbers } => {
                 v.push(1);

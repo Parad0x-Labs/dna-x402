@@ -1,8 +1,8 @@
 //! Instruction handlers.
 //!
 //! Every handler that reads the pool ends with [`assert_solvent`]:
-//! `pool.lamports >= jackpot + reserve + creator_owed + locked_prize
-//!  + owed_prizes + rent_exempt_minimum(POOL_LEN)`.
+//! `pool.lamports >= jackpot + reserve + tier2_pool + creator_owed
+//!  + locked_prize + owed_prizes + rent_exempt_minimum(POOL_LEN)`.
 //! Lamports leave the pool only in Payout (a settled winner share, to the
 //! ticket owner) and WithdrawCreatorFees (at most `creator_owed`, to the
 //! creator). There is no other debit, no admin key and no close instruction
@@ -15,7 +15,7 @@ use crate::{
     instruction::{claim_address, pool_address, round_address, PoolInstruction},
     state::{
         ClaimRecord, Pool, Round, CLAIM_LEN, CLAIM_SEED, FRONTIER_OFFSET, POOL_LEN, POOL_SEED,
-        ROUND_DRAWN, ROUND_LEN, ROUND_SEED, ROUND_SETTLED,
+        ROUND_DRAWN, ROUND_LEN, ROUND_SEED, ROUND_SETTLED, TIER_JACKPOT, TIER_SECOND,
     },
     tree::{self, FRONTIER_LEN, MAX_TICKETS, TREE_DEPTH, ZEROS},
 };
@@ -24,7 +24,7 @@ use solana_program::{
     clock::Clock,
     entrypoint::ProgramResult,
     log::sol_log_data,
-    program::{invoke, invoke_signed},
+    program::invoke,
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
@@ -139,10 +139,8 @@ fn assert_solvent(ai: &AccountInfo, pool: &Pool) -> ProgramResult {
     Ok(())
 }
 
-/// Create a PDA owned by this program. If the address already holds lamports
-/// (anyone can transfer to it before it exists), top it up to rent exemption
-/// and allocate + assign instead of create_account, so pre-funding cannot
-/// block the creation.
+/// Create a PDA owned by this program (pre-funding cannot block it; see
+/// [`null_draw_common::pda::create_pda`]).
 fn create_pda<'a>(
     payer: &AccountInfo<'a>,
     target: &AccountInfo<'a>,
@@ -151,35 +149,7 @@ fn create_pda<'a>(
     space: usize,
     seeds: &[&[u8]],
 ) -> ProgramResult {
-    let need = Rent::get()?.minimum_balance(space);
-    if target.lamports() == 0 {
-        invoke_signed(
-            &system_instruction::create_account(payer.key, target.key, need, space as u64, program_id),
-            &[payer.clone(), target.clone(), system.clone()],
-            &[seeds],
-        )
-    } else {
-        if !system_program::check_id(target.owner) || !target.data_is_empty() {
-            return Err(PoolError::AccountInUse.into());
-        }
-        let top_up = need.saturating_sub(target.lamports());
-        if top_up > 0 {
-            invoke(
-                &system_instruction::transfer(payer.key, target.key, top_up),
-                &[payer.clone(), target.clone(), system.clone()],
-            )?;
-        }
-        invoke_signed(
-            &system_instruction::allocate(target.key, space as u64),
-            &[target.clone(), system.clone()],
-            &[seeds],
-        )?;
-        invoke_signed(
-            &system_instruction::assign(target.key, program_id),
-            &[target.clone(), system.clone()],
-            &[seeds],
-        )
-    }
+    null_draw_common::pda::create_pda(payer, target, system, program_id, space, seeds, PoolError::AccountInUse.into())
 }
 
 /// Move `amount` lamports out of a program-owned account.
@@ -265,6 +235,8 @@ fn create_pool(program_id: &Pubkey, accounts: &[AccountInfo], nonce: u64, params
         round_close_slot: add(slot, params.round_slots)?,
         ticket_count: 0,
         root: ZEROS[TREE_DEPTH],
+        tier2_cap: derived.tier2_cap,
+        tier2_pool: 0,
     };
     store_pool(pool_ai, &pool)?;
     sol_log_data(&[b"pool", pool_ai.key.as_ref(), creator.key.as_ref(), &params.seed.to_le_bytes()]);
@@ -314,6 +286,11 @@ fn buy_ticket(
     let (to_jackpot, overflow) = econ::apply_cap(pool.jackpot, split.jackpot, pool.cap);
     pool.jackpot = add(pool.jackpot, to_jackpot)?;
     pool.reserve = add(add(pool.reserve, split.reserve)?, overflow)?;
+    if split.tier2 > 0 {
+        let (to_t2, over2) = econ::apply_cap(pool.tier2_pool, split.tier2, pool.tier2_cap);
+        pool.tier2_pool = add(pool.tier2_pool, to_t2)?;
+        pool.reserve = add(pool.reserve, over2)?;
+    }
     pool.total_sales = add(pool.total_sales, price)?;
 
     let index = pool.ticket_count;
@@ -383,6 +360,7 @@ fn draw_round(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
             &[ROUND_SEED, pool_ai.key.as_ref(), &round_le, &[bump]],
         )?;
         let prize = pool.jackpot;
+        let tier2_prize = pool.tier2_pool;
         let round = Round {
             pool: pool_bytes,
             round_id,
@@ -402,11 +380,16 @@ fn draw_round(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
             paid: 0,
             rent_payer: cranker.key.to_bytes(),
             draw_slot: clock.slot,
+            tier2_prize,
+            tier2_winners: 0,
+            tier2_share: 0,
+            tier2_paid: 0,
         };
         store_round(round_ai, &round)?;
-        // The prize is locked for this round's claimants until Settle.
-        pool.locked_prize = add(pool.locked_prize, prize)?;
+        // Both prizes are locked for this round's claimants until Settle.
+        pool.locked_prize = add(add(pool.locked_prize, prize)?, tier2_prize)?;
         pool.jackpot = 0;
+        pool.tier2_pool = 0;
         pool.has_pending = true;
         pool.pending_round_id = round_id;
         sol_log_data(&[
@@ -417,6 +400,7 @@ fn draw_round(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
             &sel.used_slot.to_le_bytes(),
             &numbers,
             &prize.to_le_bytes(),
+            &tier2_prize.to_le_bytes(),
         ]);
     } else {
         // No ticket: nothing to draw, the jackpot simply carries on.
@@ -457,7 +441,8 @@ fn claim(
     if ticket_index >= round.ticket_count {
         return Err(PoolError::InvalidProof.into());
     }
-    if numbers != round.numbers {
+    let tier = econ::prize_tier(&numbers, &round.numbers, pool.params.pick_k, pool.params.tier2_bps > 0);
+    if tier == 0 {
         return Err(PoolError::TicketNotWinning.into());
     }
     // The leaf commits to the owner key: only the owner can claim.
@@ -489,11 +474,16 @@ fn claim(
         ticket_index,
         owner: claimant.key.to_bytes(),
         bump,
+        tier,
     };
     record.pack(&mut claim_ai.try_borrow_mut_data()?);
-    round.winners = add(round.winners, 1)?;
+    if tier == TIER_JACKPOT {
+        round.winners = add(round.winners, 1)?;
+    } else {
+        round.tier2_winners = add(round.tier2_winners, 1)?;
+    }
     store_round(round_ai, &round)?;
-    sol_log_data(&[b"claim", &round_le, &index_le, claimant.key.as_ref()]);
+    sol_log_data(&[b"claim", &round_le, &index_le, claimant.key.as_ref(), &[tier]]);
     assert_solvent(pool_ai, &pool)
 }
 
@@ -512,7 +502,22 @@ fn settle(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     if Clock::get()?.slot <= round.window_end {
         return Err(PoolError::ClaimWindowOpen.into());
     }
-    pool.locked_prize = sub(pool.locked_prize, round.prize)?;
+    pool.locked_prize = sub(sub(pool.locked_prize, round.prize)?, round.tier2_prize)?;
+    // Tier 2 before the jackpot: it pays only from its own locked pool. With no registered
+    // tier-2 winner the pool rolls over; the division dust rolls over too
+    // (tier-2 cap overflow to the reserve).
+    let tier2_back = if round.tier2_winners == 0 {
+        round.tier2_prize
+    } else {
+        let share2 = round.tier2_prize / round.tier2_winners;
+        let total2 = share2.checked_mul(round.tier2_winners).ok_or_else(ovf)?;
+        pool.owed_prizes = add(pool.owed_prizes, total2)?;
+        round.tier2_share = share2;
+        sub(round.tier2_prize, total2)?
+    };
+    let (t2, o2) = econ::apply_cap(pool.tier2_pool, tier2_back, pool.tier2_cap);
+    pool.tier2_pool = add(pool.tier2_pool, t2)?;
+    pool.reserve = add(pool.reserve, o2)?;
     if round.winners == 0 {
         // No claimed winner: the whole prize rolls over (cap overflow to reserve).
         let (j, o) = econ::apply_cap(pool.jackpot, round.prize, pool.cap);
@@ -538,7 +543,14 @@ fn settle(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     pool.has_pending = false;
     store_round(round_ai, &round)?;
     store_pool(pool_ai, &pool)?;
-    sol_log_data(&[b"settle", &round.round_id.to_le_bytes(), &round.winners.to_le_bytes(), &round.share.to_le_bytes()]);
+    sol_log_data(&[
+        b"settle",
+        &round.round_id.to_le_bytes(),
+        &round.winners.to_le_bytes(),
+        &round.share.to_le_bytes(),
+        &round.tier2_winners.to_le_bytes(),
+        &round.tier2_share.to_le_bytes(),
+    ]);
     assert_solvent(pool_ai, &pool)
 }
 
@@ -578,14 +590,30 @@ fn payout(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
         return Err(PoolError::InvalidAccount.into());
     }
 
-    pool.owed_prizes = sub(pool.owed_prizes, round.share)?;
-    round.paid = add(round.paid, 1)?;
-    debit(pool_ai, owner_ai, round.share)?;
+    let amount = match record.tier {
+        TIER_JACKPOT => {
+            round.paid = add(round.paid, 1)?;
+            round.share
+        }
+        TIER_SECOND => {
+            round.tier2_paid = add(round.tier2_paid, 1)?;
+            round.tier2_share
+        }
+        _ => return Err(PoolError::ClaimMismatch.into()),
+    };
+    pool.owed_prizes = sub(pool.owed_prizes, amount)?;
+    debit(pool_ai, owner_ai, amount)?;
     // The record's rent goes back to the owner, who paid it at Claim.
     close_into(claim_ai, owner_ai)?;
     store_round(round_ai, &round)?;
     store_pool(pool_ai, &pool)?;
-    sol_log_data(&[b"payout", &round.round_id.to_le_bytes(), &record.ticket_index.to_le_bytes(), &round.share.to_le_bytes()]);
+    sol_log_data(&[
+        b"payout",
+        &round.round_id.to_le_bytes(),
+        &record.ticket_index.to_le_bytes(),
+        &amount.to_le_bytes(),
+        &[record.tier],
+    ]);
     assert_solvent(pool_ai, &pool)
 }
 
@@ -650,7 +678,7 @@ fn close_round(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     if round.status != ROUND_SETTLED {
         return Err(PoolError::WrongStatus.into());
     }
-    if round.paid != round.winners {
+    if round.paid != round.winners || round.tier2_paid != round.tier2_winners {
         return Err(PoolError::RoundNotFinished.into());
     }
     if rent_payer.key.to_bytes() != round.rent_payer {
