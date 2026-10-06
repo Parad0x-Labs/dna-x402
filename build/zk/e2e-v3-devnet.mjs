@@ -93,19 +93,28 @@ async function send(ixs, signers, feePayer, label, { expectFail = false } = {}) 
     sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true });
     await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
   } catch (e) {
-    if (expectFail) {
-      console.log(`  [${label}] reverted (not landed): ${e.message?.slice(0, 90)}`);
-      return { executed: false, sig: e.signature ?? null, err: e.message };
+    // confirmTransaction can reject with a non-Error under RPC rate limiting even though the
+    // tx landed; once a signature exists, the ledger read below decides the outcome.
+    if (!sig) {
+      if (expectFail) {
+        console.log(`  [${label}] reverted (not landed): ${String(e?.message ?? e).slice(0, 90)}`);
+        return { executed: false, sig: e?.signature ?? null, err: e?.message ?? String(e) };
+      }
+      console.error(`  [${label}] send FAILED: ${String(e?.message ?? e).slice(0, 200)}`);
+      throw e;
     }
-    console.error(`  [${label}] send FAILED: ${e.message?.slice(0, 200)}`);
-    throw e;
   }
 
   let meta = null;
-  for (let attempt = 0; attempt < 8 && !meta; attempt++) {
-    const t = await conn.getTransaction(sig, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+  for (let attempt = 0; attempt < 20 && !meta; attempt++) {
+    let t = null;
+    try { t = await conn.getTransaction(sig, { commitment: "confirmed", maxSupportedTransactionVersion: 0 }); } catch { t = null; }
     if (t?.meta) meta = t.meta;
-    else await new Promise((r) => setTimeout(r, 800));
+    else await new Promise((r) => setTimeout(r, 1500));
+  }
+  if (!meta) {
+    console.error(`  [${label}] status unavailable for ${sig}`);
+    throw new Error(`${label}: transaction status unavailable (${sig})`);
   }
   const err = meta?.err ?? null;
   const executed = err === null;
