@@ -1,3 +1,5 @@
+Published from Parad0x-Labs/openclaw-skills; this copy is not published.
+
 # context-capsule — OpenClaw ContextEngine plugin
 
 > 💜 **Saving you tokens?** [Star it on ClawHub](https://clawhub.ai/parad0x-labs/context-capsule) — it's a context engine, so it works silently in the background. A star is the only way other agent builders find it.

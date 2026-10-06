@@ -1,3 +1,5 @@
+Published from Parad0x-Labs/openclaw-skills; this copy is not published.
+
 # @parad0x_labs/mcp-server
 
 Exposes the Parad0x Labs stack as MCP tools. Works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible agent runtime.

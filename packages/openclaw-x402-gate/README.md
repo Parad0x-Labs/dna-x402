@@ -1,3 +1,5 @@
+Published from Parad0x-Labs/openclaw-skills; this copy is not published.
+
 # openclaw-x402-gate — charge other agents with x402 on Solana
 
 > ⚠️ **MOVED — this copy is frozen.** The canonical home of this skill is now

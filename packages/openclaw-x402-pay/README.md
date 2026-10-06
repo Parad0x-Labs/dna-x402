@@ -1,3 +1,5 @@
+Published from Parad0x-Labs/openclaw-skills; this copy is not published.
+
 # openclaw-x402-pay — self-custody x402 payments for OpenClaw agents
 
 > ⚠️ **MOVED — this copy is frozen.** The canonical home of this skill is now

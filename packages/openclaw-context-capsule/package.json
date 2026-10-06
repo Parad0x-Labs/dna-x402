@@ -1,5 +1,6 @@
 {
   "name": "@parad0x_labs/openclaw-context-capsule",
+  "private": true,
   "version": "1.4.0",
   "description": "Self-contained OpenClaw context engine that compresses long agent session history (> 20 messages) into a compact capsule before the model call, keeping the last 10 messages verbatim. Cuts token cost on long chats with any model. No external runtime dependencies; no network, file, or on-chain access.",
   "type": "module",
