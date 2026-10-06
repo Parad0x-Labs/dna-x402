@@ -17,33 +17,9 @@
 
 ---
 
-## Deployed Devnet Programs
+## Devnet Programs
 
-| Program | Program ID | Deploy Tx |
-|---------|-----------|-----------|
-| `dark_nullifier_banks` | `7LaYJVJafLVjTpfz8x68EMR75SXd8epwQntorkNSMwQj` | [Solscan](https://solscan.io/tx/5xr7XJ5XjN7xSc3BYepNmhbxoKGo1m1dGCEJQTu2e4eYpAJw5g6uuoYaNJjDWGZXvkxmCC5f2M714S7mNrk2WXt8?cluster=devnet) |
-| `dark_compressed_receipts` | `FRmjJsZsLMcKKXBnpR9BkApfH8GWybkuX5Rkf7veSM7g` | [Solscan](https://solscan.io/tx/4uht4nvFELfXwDpRhSecLKgoStDAW5Vg2c2LYDoJG2RDU9wh4dMRvNhv1dPTG6pZ9znLj1ngdJKZumeEk4qSfTMT?cluster=devnet) |
-| `dark_chaff` | `5TTFREweFj3tJ6K3zL9fKkULA35iMSjUX3nheiMLmtYk` | [Solscan](https://solscan.io/tx/22Fr5CaCiwqQwSkRf4Vdjtvy4swLGeJ4SsRn8Jbqv8sC9qeeZ9ZJt8DNrpcq2KnXscP3H7bg9qLcDhbDeMJw6ZKt?cluster=devnet) |
-
----
-
-## DARKNULL Ritual — Live On Devnet
-
-`DARKNULL` encoded by brute-forcing 32-byte nullifiers per character where
-`SHA256(nullifier ‖ epoch_le64 ‖ "dark_null_v1")[0] == ASCII(char)`.
-
-| Char | Shard | NullRec PDA (Solscan devnet) |
-|------|-------|------------------------------|
-| D | 68 | [Solscan](https://solscan.io/account/79MbJEGy6sVnX54KaaL5pXXDAsEBs5ReJWbYMRjUGXba?cluster=devnet) |
-| A | 65 | [Solscan](https://solscan.io/account/5JtnqvHwxQvpikA9srV3K5dhU3YCPqwGXiNgUXsrJeVS?cluster=devnet) |
-| R | 82 | [Solscan](https://solscan.io/account/3QqmFXU2Xf9JrgcFkU9WJXbWvXqc8vR5NqLCLp9HMHrm?cluster=devnet) |
-| K | 75 | [Solscan](https://solscan.io/account/Bvf4kqjNYWHtVL9d5Rc3tKBKEBt2wBBAnZHTzfEb2xnN?cluster=devnet) |
-| N | 78 | [Solscan](https://solscan.io/account/4d1NXRq6wPHHGtBVw2NhXHg5Hfp5oNGKpA7v3Kqzk6Nj?cluster=devnet) |
-| U | 85 | [Solscan](https://solscan.io/account/FKLqoHW1dqJ2GQQdSXpGWVnf8Uf9K3JKrPVpU5W4XGVS?cluster=devnet) |
-| L | 76 | [Solscan](https://solscan.io/account/8JEsBRJdgEt3CPb3KNbMJJiRAeNXhE4QNr2XKyDd2dY8?cluster=devnet) |
-| L | 76 | [Solscan](https://solscan.io/account/2tRqxSwBkVf3AhLrXEiVbFhWkKvP6JxdMC3p2Wd37skT?cluster=devnet) |
-
-Evidence doc: [`docs/SHARD_MESSAGE_EVIDENCE.md`](./SHARD_MESSAGE_EVIDENCE.md)
+The devnet deployments of `dark_nullifier_banks`, `dark_compressed_receipts` and `dark_chaff` recorded at this snapshot are withdrawn; a devnet redeploy under a fresh key is pending. Program source: [`programs/dark_nullifier_banks/`](../programs/dark_nullifier_banks/), [`programs/dark_compressed_receipts/`](../programs/dark_compressed_receipts/), [`programs/dark_chaff/`](../programs/dark_chaff/).
 
 ---
 
@@ -101,8 +77,7 @@ swarm-capsule, telegram-command-receipts, useful-chaff-planner
 > **This codebase IS:**
 > - A Solana devnet prototype
 > - 304 Rust tests passing
-> - 3 programs deployed on devnet
-> - DARKNULL ritual executed on devnet
+> - 3 programs implemented (devnet redeploy under a fresh key pending)
 > - A scaffold for frontier-final privacy infrastructure
 
 ---

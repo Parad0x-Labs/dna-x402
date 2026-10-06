@@ -7,13 +7,9 @@
 
 ---
 
-## Deployed Programs
+## Devnet Programs
 
-| Program | Network | Program ID | Deploy Tx |
-|---------|---------|-----------|-----------|
-| `dark_nullifier_banks` | devnet | `7LaYJVJafLVjTpfz8x68EMR75SXd8epwQntorkNSMwQj` | [Solscan](https://solscan.io/tx/5xr7XJ5XjN7xSc3BYepNmhbxoKGo1m1dGCEJQTu2e4eYpAJw5g6uuoYaNJjDWGZXvkxmCC5f2M714S7mNrk2WXt8?cluster=devnet) |
-| `dark_compressed_receipts` | devnet | `FRmjJsZsLMcKKXBnpR9BkApfH8GWybkuX5Rkf7veSM7g` | [Solscan](https://solscan.io/tx/4uht4nvFELfXwDpRhSecLKgoStDAW5Vg2c2LYDoJG2RDU9wh4dMRvNhv1dPTG6pZ9znLj1ngdJKZumeEk4qSfTMT?cluster=devnet) |
-| `dark_chaff` | devnet | `5TTFREweFj3tJ6K3zL9fKkULA35iMSjUX3nheiMLmtYk` | [Solscan](https://solscan.io/tx/22Fr5CaCiwqQwSkRf4Vdjtvy4swLGeJ4SsRn8Jbqv8sC9qeeZ9ZJt8DNrpcq2KnXscP3H7bg9qLcDhbDeMJw6ZKt?cluster=devnet) |
+The devnet deployments of `dark_nullifier_banks`, `dark_compressed_receipts` and `dark_chaff` recorded at this snapshot are withdrawn; a devnet redeploy under a fresh key is pending. Program source: [`programs/dark_nullifier_banks/`](../programs/dark_nullifier_banks/), [`programs/dark_compressed_receipts/`](../programs/dark_compressed_receipts/), [`programs/dark_chaff/`](../programs/dark_chaff/).
 
 ---
 

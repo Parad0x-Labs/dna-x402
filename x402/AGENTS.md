@@ -10,7 +10,7 @@ Three settlement modes: **transfer** (real on-chain USDC, safest default), **str
 It is not a privacy-pool or zk-SNARK hot-path product.
 Normal DNA x402 remains the default path. Use the optional Dark Null path only after a normal signed DNA receipt exists and the receipt needs a private receipt summary.
 
-**Program**: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` (Solana mainnet)
+**On-chain receipt anchoring**: unavailable until the `receipt_anchor` redeploy under a fresh key; set `RECEIPT_ANCHOR_PROGRAM_ID` only to a deployment you control.
 
 ## Install
 
@@ -70,7 +70,7 @@ const darkNullRequest = createDarkNullPrivacyRequest({
   signedReceipt,
   target: {
     cluster: "devnet",
-    programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+    programId: "35GMe13ExGB1JGp1wZGrEvHfQnENKADroDQApeziKuwV",
     manifestLabel: "canonical-devnet-root-2",
   },
   settlementSlot: 434395918,
@@ -464,8 +464,8 @@ SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
 PAYMENT_RECIPIENT=YOUR_WALLET_ADDRESS
 RECEIPT_SIGNING_SECRET=YOUR_ED25519_SECRET_BASE58
-ANCHORING_ENABLED=1
-RECEIPT_ANCHOR_PROGRAM_ID=6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
+ANCHORING_ENABLED=0
+# RECEIPT_ANCHOR_PROGRAM_ID=<receipt_anchor deployment you control>
 FEE_BPS=30
 PORT=8080
 ```

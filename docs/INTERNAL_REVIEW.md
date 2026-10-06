@@ -38,7 +38,7 @@ A TypeScript server implementing the x402 HTTP payment protocol on Solana. When 
 
 ### How it is proven
 
-The `receipt_anchor` program is live on devnet. The full TypeScript test suite runs in CI. Integration tests in `x402/test-mainnet/` cover the complete payment cycle end-to-end against real Solana devnet.
+The `receipt_anchor` program is implemented with tests; a devnet redeploy under a fresh key is pending. The full TypeScript test suite runs in CI. Integration tests in `x402/test-mainnet/` cover the complete payment cycle end-to-end against real Solana devnet.
 
 ### Why it matters
 
@@ -162,44 +162,12 @@ A protocol runs a ritual state transition — a smart contract that advances a s
 
 ---
 
-## Part 3 — Live Devnet Evidence
+## Part 3 — Devnet Evidence
 
-The following transactions are on Solana devnet and verifiable on Solscan.
-
-### Ritual-Bound Token Programs
-
-| Program | Address |
-|---|---|
-| `dark_ritual_transfer_hook` | `F3Jt3TBWxRgzZo6NVNhc3vCLN2R5xq9DcPn2MqVCY6v1` |
-| `dark_ritual_gate` | `31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy` |
-
-| Account | Address |
-|---|---|
-| Token mint | `35TEfA2CT1XmZZFCjdKMBA5LVGMqMu3ixBXGmN8cZHZW` |
-| Source token account | `ErdSr9m2TsoHTT3mt27PQepuED9ACV86dQXz37XsZYn5` |
-| Destination token account | `9LPsXS3w1YE3jZSKB1dAbggwJsS33jnT8tF1awkYsCKp` |
-| Hook ExtraAccountMetaList PDA | `Byz2ZAAhxagbfbvp1VT8V9GLH7eeAzkbyWCTXwSu1NZB` |
-
-### Devnet Transactions
-
-| What it proves | Transaction |
-|---|---|
-| Token-2022 mint created with Transfer Hook, MemoTransfer, CpiGuard extensions | [2RvmLk…](https://solscan.io/tx/2RvmLknS1kYg8NPox6xfmuP2rpXQgHvyy2DiidYMCKM9ryu8bHha4j68VoCGNMxh28oUoHRWyX8aTtpvQvcKMPJt?cluster=devnet) |
-| Hook ExtraAccountMetaList PDA initialised — instructions sysvar registered | [3qGAGm…](https://solscan.io/tx/3qGAGm4mY1S7ZBD8LKsvFkK8sH6wPTthCfbSF7fcoGV33X8hpwSFtkGa3TTFBYLK1UTptffvNEY48WTvPEiKskrM?cluster=devnet) |
-| Bad transfer (no ritual gate) → `MissingRitualGate (Custom:0x0)` — transfer blocked | [3cSZHD…](https://solscan.io/tx/3cSZHD11vB6Z6XW1YidjXJ8czXHw9ormcH4rSNAyKqnTfYcBa2ivSfB3LTsHUstGM5xnrmBknovu2QGzPpBh68DG?cluster=devnet) |
-| Good ritual transfer (full 5-instruction ceremony) → `HookVerdict 0x01` — transfer completes | [37guny…](https://solscan.io/tx/37gunyuSecpoyxfRpqYjVLVwbEm6s9dYP8G4Ty8oogrJ6xHGMi9wWnUm4d4QywcF61GStphvXGsaR5Hha6Vxtp4J?cluster=devnet) |
-
-### DARKNULL On-Chain Ritual
-
-The word DARKNULL was encoded on Solana devnet by submitting nullifiers to shards matching the ASCII value of each character. Each nullifier is permanently locked — the PDA prevents any re-submission of the same nullifier. This proves the nullifier bank routing logic works on-chain.
-
-| Character | Shard | Devnet transaction |
-|---|---|---|
-| R (82) | 82 | [67jsL2…](https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet) |
-| O (79) | 79 | [4UDnJc…](https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet) |
-| G (71) | 71 | [5BCtk…](https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet) |
-| U (85) | 85 | [63LQ8u…](https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet) |
-| E (69) | 69 | [5Dd58Q…](https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6eb7rdiNpuzaQ?cluster=devnet) |
+The ritual-bound token programs (`dark_ritual_gate`, `dark_ritual_transfer_hook`) and the
+`dark_nullifier_banks` deployment used for the DARKNULL ritual are withdrawn from devnet,
+and their transaction evidence has been removed from this review. A devnet redeploy under
+a fresh key is pending; the programs remain implemented in code with tests.
 
 ### True Frontier Primitive Hashes (devnet-confirmed)
 
@@ -241,13 +209,13 @@ Thirteen additional primitives solving daily operational problems. All tested. A
 
 ## Part 5 — Solana Programs
 
-Eight programs. Two live on devnet with confirmed transactions. Six ready for deployment via existing deploy script.
+Eight programs, all implemented in code with tests. `receipt_anchor`, `dark_ritual_transfer_hook` and `dark_ritual_gate` await a devnet redeploy under a fresh key; the other five are ready for deployment via the existing deploy script.
 
 | Program | Status | What it does |
 |---|---|---|
-| `receipt_anchor` | Live devnet | Anchors receipt commitments on-chain. Provides VERIFIED semantics for settled payments |
-| `dark_ritual_transfer_hook` | Live devnet (`F3Jt3T…`) | Token-2022 transfer hook. Scans all transaction instructions. Blocks transfer if ritual gate not present. Emits HookVerdict on success |
-| `dark_ritual_gate` | Live devnet (`31qmvs…`) | Verifies ritual grammar: instruction ordering, permission braid, ritual type |
+| `receipt_anchor` | Redeploy pending | Anchors receipt commitments on-chain. Provides VERIFIED semantics for settled payments |
+| `dark_ritual_transfer_hook` | Redeploy pending | Token-2022 transfer hook. Scans all transaction instructions. Blocks transfer if ritual gate not present. Emits HookVerdict on success |
+| `dark_ritual_gate` | Redeploy pending | Verifies ritual grammar: instruction ordering, permission braid, ritual type |
 | `dark_nullifier_banks` | Ready to deploy | 256-shard nullifier bank. Each nullifier routes to a shard by hash. Duplicate nullifier rejected anywhere in the set |
 | `dark_compressed_receipts` | Ready to deploy | Stores receipt root on-chain. Accepts redeem instructions with nullifier. Rejects double-spend |
 | `dark_chaff` | Ready to deploy | Creates 3–7 ephemeral PDA accounts around a real action. All close at epoch end. Poisons chain analysis |
@@ -260,10 +228,8 @@ Eight programs. Two live on devnet with confirmed transactions. Six ready for de
 
 This section is included deliberately. Internal reviewers should know the exact boundary between what is live, what is modelled, and what is next.
 
-**Live and confirmed on devnet:**
-- `receipt_anchor` program — anchoring works
-- `dark_ritual_transfer_hook` + `dark_ritual_gate` — hook fires, bad transfers rejected, good ceremony passes
-- DARKNULL ritual — nullifier routing proven with real devnet transactions
+**Built and tested:**
+- `receipt_anchor`, `dark_ritual_transfer_hook`, `dark_ritual_gate` — implemented with tests; devnet redeploy under a fresh key pending
 - All 807 Rust unit tests — run locally, no network needed
 
 **Modelled but not live wired:**
@@ -297,11 +263,10 @@ The claim scanner (`scripts/check-degen-claims.mjs`) runs across all documentati
 |---|---|---|
 | Rust crates | 100 | Built and tested |
 | Test cases | 807 | Passing, 0 failures |
-| Solana programs | 8 | 2 live devnet, 6 deploy-ready |
-| Devnet transactions | 9+ | Verifiable on Solscan |
+| Solana programs | 8 | Built and tested; devnet redeploy under a fresh key pending |
 | Documentation files | 116 | Written, claim-scanned |
 | zkvm guests | 2 | Skeleton ready, execution pending rzup |
 
-The core payment rail is production-ready in design. The Dark Null primitive layer is devnet-proven and test-covered. The cost models are sourced from published benchmarks. The gap between here and a public mainnet launch is: security audit, Light Protocol integration activation, P-token migration execution, and oracle endpoint deployment.
+The core payment rail is production-ready in design. The Dark Null primitive layer is test-covered. The cost models are sourced from published benchmarks. The gap between here and a public mainnet launch is: security audit, Light Protocol integration activation, P-token migration execution, and oracle endpoint deployment.
 
 Nothing here is exaggerated. Everything listed as proven has a passing test or a devnet transaction behind it.

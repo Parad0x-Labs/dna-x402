@@ -3,33 +3,32 @@
 *The privacy inversion of SAID's public `ReceiptAnchor`+reputation. SAID lets a lender read your
 whole history in the clear; this lets an agent prove **"I have a real payment track record meeting
 bar X"** while revealing nothing else. Unblocks receipt-backed reputation/lending without doxxing
-the agent's business. Reuses primitives already live on mainnet.*
+the agent's business. Reuses existing primitives.*
 
-## STATUS — built + proven on devnet (2026-06-07)
-`dark_reputation_gate` is **live on devnet** (`9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp`) and
-on-chain-proven end-to-end (K=4, depth-10 POC):
-- real track-record proof **CONFIRMED**; **replay-same-nullifier REJECTED `Custom(10)`** (single-use
-  via CPI to `dark_nullifier_record`); forged + tampered-min_volume + zero all **REJECTED**.
-- circuit `track_record.circom` (12,100 constraints), VK in `dark-groth16-core::track_record_vk`,
-  e2e `scripts/zk/track-record-e2e.mjs`, evidence `evidence/zk/track-record-devnet.json`.
+## STATUS — implemented with tests; devnet redeploy pending
+`dark_reputation_gate` and `receipt_commitment_tree` are implemented (K=4, depth-10 POC):
+- circuit `track_record.circom` (12,100 constraints), VK in `dark-groth16-core::track_record_vk`.
+- e2e `scripts/zk/track-record-e2e.mjs` checks: real track-record proof confirmed;
+  replay-same-nullifier rejected `Custom(10)` (single-use via CPI to `dark_nullifier_record`);
+  forged, tampered-min_volume and zero proofs rejected.
+- e2e `scripts/zk/full-stack-e2e.mjs` checks the tree: insert receipts on-chain → the on-chain
+  root (incremental Poseidon via the `sol_poseidon` syscall, frontier + root history only) must
+  match the circuit's circomlib root byte-for-byte → the gate verifies a track-record proof
+  against that root → single-use.
 
-**Full stack proven (2026-06-07):** `receipt_commitment_tree`
-(`8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas`, devnet) maintains the incremental Poseidon root
-via the `sol_poseidon` syscall (constant cost — frontier + root history only, no leaves on-chain).
-e2e `scripts/zk/full-stack-e2e.mjs`: insert receipts on-chain → the on-chain root **matches the
-circuit's circomlib root byte-for-byte** → the gate verifies a track-record proof against that
-on-chain root → single-use. tree → root → proof → gate all agree.
+The earlier devnet runs used deployments that are withdrawn. A devnet redeploy under a fresh key
+is pending, so both scripts take the program IDs as required arguments.
 
 **Remaining before mainnet:** (1) point the tree `authority` at your real x402 settlement signer
 (one config — the leaf-writer is built, generic); (2) multi-party ceremony + public ptau (same as
 the access gate); (3) scale K/depth.
 
-## Reuses (already deployed)
+## Reuses
 | Piece | ID | Role here |
 |---|---|---|
 | alt_bn128 Groth16 verifier (`dark_x402_access_gate`) | `EepqzV…` | same syscall + verify path; new VK + public-input layout → `dark_reputation_gate` |
-| `receipt_anchor` | `6HSRGivd` | anchors the **commitment** Merkle root (not public receipts) |
-| `dark_nullifier_record` | `24tmjEd1` | records the per-epoch reputation nullifier → single-use proofs |
+| `receipt_anchor` | redeploy pending | anchors the **commitment** Merkle root (not public receipts) |
+| `dark_nullifier_record` | redeploy pending | records the per-epoch reputation nullifier → single-use proofs |
 | identity commitment | — | `agent_commitment = Poseidon(secret, agent_id)` — **identical** to the access gate, so one identity spans "prove I'm funded" and "prove my track record" |
 
 ## Leaf + receipt tree

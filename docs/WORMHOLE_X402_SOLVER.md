@@ -8,7 +8,8 @@ VAA proofs already exist; no new infrastructure needed.
 An agent running on Base (or Ethereum / Arbitrum) calls an API that returns HTTP
 402 Payment Required. Instead of paying with an EVM wallet, the agent hands the
 payment intent to the Wormhole x402 Solver. The solver bridges the intent to
-Solana, pays in USDC, and anchors the receipt permanently via `receipt_anchor`.
+Solana, pays in USDC, and anchors the receipt via a `receipt_anchor` deployment
+the caller names (`anchorProgramId`).
 
 NULL stakers back the solver float so the API gets instant settlement before the
 Wormhole VAA fully finalises on the source chain. The solver earns a 0.1% spread
@@ -70,12 +71,13 @@ sequenceDiagram
 | `verifyReceiptAnchorTransaction(tx, { anchorProgramId, expectedAnchor })` | async function | Same check on an already-fetched transaction |
 | `buildReceiptAnchorInstruction(params)` | async function | receipt_anchor AnchorSingle instruction with bucket PDA accounts |
 | `computeReceiptHash(intentId, solanaTx, vaaHash)` | function | 32-byte receipt hash anchored on-chain |
-| `resolveReceiptAnchorProgramId({ cluster?, anchorProgramId? })` | function | Cluster → receipt_anchor program ID |
+| `resolveReceiptAnchorProgramId({ cluster?, anchorProgramId? })` | function | Explicit ID, else cluster → configured receipt_anchor program; throws `RECEIPT_ANCHOR_UNAVAILABLE` while none is configured |
 | `grossAmount(amountUsdc)` | function | Net → gross USDC after solver fee |
 | `isIntentValid(intent)` | function | Checks expiry and VAA presence |
 | `SOLVER_FEE_BPS` | const | `10` (0.1% spread) |
-| `RECEIPT_ANCHOR_PROGRAM_IDS` | const | receipt_anchor per cluster, mirrored from `configs/*.oss.json` |
-| `RECEIPT_ANCHOR_PROGRAM_ID` | const | receipt_anchor on mainnet-beta |
+| `RECEIPT_ANCHOR_PROGRAM_IDS` | const | Configured receipt_anchor per cluster — empty until the redeploy under a fresh key |
+| `RECEIPT_ANCHOR_PROGRAM_ID` | const | receipt_anchor on mainnet-beta, or `null` while none is configured |
+| `RECEIPT_ANCHOR_UNAVAILABLE` | const | Error message used when anchoring is requested without a usable program |
 | `WORMHOLE_CORE_BRIDGE_SOLANA` | const | Wormhole Core Bridge on Solana mainnet |
 
 ---
@@ -126,9 +128,13 @@ keeping the receipt ledger unified across DNA x402 packages.
 
 ### Program IDs
 
-The receipt_anchor program comes from `configs/mainnet.oss.json` / `configs/devnet.oss.json`
-(`programs.receiptAnchor`), selected by `cluster` (default `mainnet-beta`). The x402 payment
-program is not part of those configs, so `solveIntent` requires the caller to pass
+No cluster has a usable receipt_anchor program: the earlier mainnet deployment is retired and
+the earlier devnet deployment is withdrawn. Receipt anchoring is unavailable until the redeploy
+under a fresh key, so `solveIntent` and `verifyCrossChainReceipt` throw
+`RECEIPT_ANCHOR_UNAVAILABLE` unless the caller passes `anchorProgramId` (for example a
+receipt_anchor deployment on a local validator). `solveIntent` checks this before sending the
+payment, so no payment is made without a usable anchor. The x402 payment
+program is not part of the cluster configs, so `solveIntent` requires the caller to pass
 `x402ProgramId`; it throws before sending anything if the ID is missing or malformed.
 
 ### Verification
@@ -149,8 +155,8 @@ simply:
 
 1. Reads the VAA bytes from the Wormhole Guardian network (existing REST API).
 2. Submits a standard Solana transaction referencing the VAA.
-3. Anchors a 42-byte AnchorSingle instruction to `receipt_anchor` (existing program,
-   same as used by other DNA x402 packages).
+3. Anchors a 42-byte AnchorSingle instruction to the `receipt_anchor` program the caller
+   names (same wire form as other DNA x402 packages).
 
 No new programs. No new relayer. The solver is a pure TypeScript function.
 
@@ -183,14 +189,15 @@ const receipt = await solveIntent(
   intent,
   solanaKeypair,
   "https://solana-rpc.publicnode.com",
-  { x402ProgramId: "<your x402 payment program>", cluster: "mainnet-beta" }
+  { x402ProgramId: "<your x402 payment program>", anchorProgramId: "<your receipt_anchor program>" }
 );
 
 // 4. Verify the receipt
 const ok = await verifyCrossChainReceipt(
   receipt,
   intent.intentId,
-  "https://solana-rpc.publicnode.com"
+  "https://solana-rpc.publicnode.com",
+  { anchorProgramId: "<your receipt_anchor program>" }
 );
 console.log("Receipt verified:", ok);
 ```

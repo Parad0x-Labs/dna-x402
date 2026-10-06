@@ -1,7 +1,7 @@
 # Dark Null True Frontier Primitives — Devnet Demo Evidence
 
 > **Network:** Solana Devnet
-> **Mode:** ✅ LIVE — real devnet transactions submitted
+> **Mode:** primitive hashes from the demo run; the on-chain ROGUE leg ran against a `dark_nullifier_banks` devnet deployment that is now withdrawn, so its transaction links are removed (devnet redeploy under a fresh key pending)
 > **Commit:** `66765c973f0b1a9ba0a3ee7bdee87d4f85b6d186`
 > **Puzzle:** `ROGUE` → `[82, 79, 71, 85, 69]`
 > **NOT PRODUCTION — no mainnet, no audit, no custody**
@@ -49,23 +49,13 @@ Ten cryptographic building blocks for Parad0x / Nulla / Dark Null users, proven 
 
 Each character encodes as: `shard_byte = SHA256(nullifier || epoch_le64 || "dark_null_v1")[0]`
 
-| Char | ASCII | Shard | Nullifier (first 16) | Attempts | Tx |
-|------|-------|-------|----------------------|----------|----|
-| `R` | 82 | 82 | `0720ae1399825a56...` | 91 | [Solscan](https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet) |
-| `O` | 79 | 79 | `9ae1aa64d86aa299...` | 10 | [Solscan](https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet) |
-| `G` | 71 | 71 | `89d68eaef5da1eea...` | 131 | [Solscan](https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet) |
-| `U` | 85 | 85 | `e0251d1f992b4357...` | 215 | [Solscan](https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet) |
-| `E` | 69 | 69 | `e2aec68d3bca83ec...` | 21 | [Solscan](https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet) |
-
----
-
-## Devnet Transactions
-
-- [`67jsL2KmhYfg2z1T`](https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet)
-- [`4UDnJctmmvhmctQh`](https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet)
-- [`5BCtkPKLxjELu1Sg`](https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet)
-- [`63LQ8uUZN5f9uxo9`](https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet)
-- [`5Dd58QcyJSvGtx61`](https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet)
+| Char | ASCII | Shard | Nullifier (first 16) | Attempts |
+|------|-------|-------|----------------------|----------|
+| `R` | 82 | 82 | `0720ae1399825a56...` | 91 |
+| `O` | 79 | 79 | `9ae1aa64d86aa299...` | 10 |
+| `G` | 71 | 71 | `89d68eaef5da1eea...` | 131 |
+| `U` | 85 | 85 | `e0251d1f992b4357...` | 215 |
+| `E` | 69 | 69 | `e2aec68d3bca83ec...` | 21 |
 
 ---
 

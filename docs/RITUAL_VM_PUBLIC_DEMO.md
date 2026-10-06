@@ -100,26 +100,11 @@ The shape hash for `AgentSpendNoCustodyV1` has been observed **5 times** in this
 
 ## Step 6 — The Devnet Ritual
 
-The word **ROGUE** was written onto Solana devnet by inserting 5 nullifiers — one per letter:
-
-| Letter | ASCII byte | Solscan |
-|---|---|---|
-| R | 82 | [tx 1](https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet) |
-| O | 79 | [tx 2](https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet) |
-| G | 71 | [tx 3](https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet) |
-| U | 85 | [tx 4](https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet) |
-| E | 69 | [tx 5](https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet) |
-
-The ritual grammar for the `AgentSpendNoCustodyV1` type has been **verified on-chain** by the deployed `dark_ritual_gate` program.
-
-**Program ID:** `31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy`
-
-| Instruction | Solscan |
-|---|---|
-| EchoProof | [tx](https://solscan.io/tx/24oVf27F3GWFpTDmiVDRAho1QNDGGP8Xf6TmnKH9No97PcrgZwTs62EKzDofeBgmdZFh67JHnN93FgLC4Abxq5aA?cluster=devnet) |
-| VerifyRitualShape | [tx](https://solscan.io/tx/48DRhiatEhuX3Vhx3ACyNXHsJS7CrnEcJbM6Uewvg5J8GKfKwtsUuLP21e8PuzsW37751Cp6QfbgvUAoxePQ497Z?cluster=devnet) |
-
-The EchoProof transaction echoed the ritual_hash back as a 33-byte return-data capsule. The VerifyRitualShape transaction submitted the canonical `AgentSpendNoCustodyV1` shape_hash (`58bc9168...`) to the live BPF program and received verdict `0x01` (Accepted).
+The on-chain leg of this demo (the ROGUE nullifier ritual on `dark_nullifier_banks` and the
+EchoProof / VerifyRitualShape calls to `dark_ritual_gate`) ran against devnet deployments that
+are now withdrawn, so its transaction evidence has been removed. A devnet redeploy under a
+fresh key is pending; `crates/dark-ritual-gate-verify` reruns the gate calls against the
+program named in `DARK_RITUAL_GATE_PROGRAM_ID`.
 
 ---
 

@@ -2,11 +2,11 @@
 
 ## Why v1 Ritual Stays SHA-256
 
-The DARKNULL on-chain ritual (live on devnet) uses:
+The v1 DARKNULL on-chain ritual uses:
   SHA256(nullifier || epoch_le64 || "dark_null_v1")[0]
 
-This formula is permanently committed to devnet. Changing the hash function
-would invalidate all existing NullRec PDAs and the DARKNULL ritual.
+The devnet deployment it ran on is withdrawn (devnet redeploy under a fresh key pending).
+Changing the hash function would break compatibility with v1 NullRec PDA derivation.
 
 v1 formula remains SHA-256 forever. It is the canonical on-chain nullifier formula.
 

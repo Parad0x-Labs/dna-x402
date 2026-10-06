@@ -6,14 +6,16 @@ the trustless multi-party VK is produced by a ceremony pipeline (dry-run today).
 claim "audited", "trustless on mainnet", or any date.
 
 The Dark Relay Rail extends `dark_shielded_pool` (shielded_withdraw **v3**) into a
-decentralized, unlinkable payment rail with **no central relayer and no admin**:
+decentralized, unlinkable payment rail with **no central relayer and no admin**.
+The rail is implemented in code with tests; a devnet redeploy under a fresh key is
+pending, and the e2e scripts take the program ID as an argument.
 
 | Privacy / decentralization axis | Mechanism | State |
 |---|---|---|
-| **Sender hidden** | ZK membership proof over a Poseidon Merkle tree of note commitments — a withdrawal proves "I own *a* note in this pool" without revealing which. | ✅ live (v2→v3) |
-| **Amount hidden** | Fixed **denomination buckets** (0.1 / 1 / 10 SOL). Every note in a bucket is identical, so a withdrawal reveals only the bucket, never the balance or exact transfer. | ✅ live |
+| **Sender hidden** | ZK membership proof over a Poseidon Merkle tree of note commitments — a withdrawal proves "I own *a* note in this pool" without revealing which. | ✅ implemented (v2→v3) |
+| **Amount hidden** | Fixed **denomination buckets** (0.1 / 1 / 10 SOL). Every note in a bucket is identical, so a withdrawal reveals only the bucket, never the balance or exact transfer. | ✅ implemented |
 | **Recipient hidden** | Stealth addresses (NullPay) — recipient derives a one-time address; nobody links it to their main wallet. | ⏳ documented stub (follow-up) |
-| **Gas paid by permissionless relayers** | Any wallet can submit a withdraw; it is reimbursed an **in-proof fee** from the pool. No central relayer server, no allow-list. | ✅ live (v3) |
+| **Gas paid by permissionless relayers** | Any wallet can submit a withdraw; it is reimbursed an **in-proof fee** from the pool. No central relayer server, no allow-list. | ✅ implemented (v3) |
 | **Trustless setup** | Open multi-party ceremony: public Powers-of-Tau phase-1 + multiple independent phase-2 contributions + a public drand beacon. | ⚙️ pipeline + dry-run (real beacon); needs independent humans |
 
 ## 1. In-proof relayer fee (the trustless relayer incentive)
@@ -89,7 +91,7 @@ Anyone contributes via `ceremony/CONTRIBUTING_V3.md` — that is the decentraliz
 
 **Honest scope:** the dry run's contributions are simulated-independent (one operator),
 so it is **not yet trustless** — it becomes trustless when those steps are run by
-independent humans. The **drand beacon is real**. The deployed devnet program embeds
+independent humans. The **drand beacon is real**. The `dark_shielded_pool` program embeds
 this ceremony VK, so `--vk-mode ceremony` is the **default** the e2e/fusion scripts run
 under (and `prove-v3.mjs` defaults to it). The single-party pilot VK verifies locally but
 is rejected on-chain (`Custom(4)=ProofInvalid`), so `--vk-mode pilot` is refused by the
@@ -97,7 +99,7 @@ e2e scripts; a pilot proof only applies to a pool you deployed yourself with the
 
 ## 4. Devnet e2e (full unlinkability)
 
-`build/zk/e2e-v3-devnet.mjs` (evidence → `evidence/dark-relay-rail-mainnet-beta.json`):
+`build/zk/e2e-v3-devnet.mjs <PROGRAM_ID>` (rerun after the devnet redeploy under a fresh key):
 deposit into a bucket → real V3 proof for a withdraw to a **fresh** recipient with a
 relayer fee → submitted by a **relayer** (`fee_payer != recipient`, recipient never
 signs) → asserts recipient gets `denom - fee`, relayer is reimbursed `fee`, and:
@@ -124,4 +126,3 @@ To make the recipient unlinkable, integrate stealth addresses (NullPay):
 - Setup (pilot): `build/zk/run-setup-v3.mjs`. Prover: `build/zk/prove-v3.mjs`.
 - Ceremony (trustless): `ceremony/run-ceremony-v3.mjs` + `ceremony/CONTRIBUTING_V3.md`.
 - Buckets: `build/zk/init-buckets-devnet.mjs`. E2E: `build/zk/e2e-v3-devnet.mjs`.
-- Evidence: `evidence/dark-relay-rail-mainnet-beta.json`, `evidence/dark-relay-rail-buckets-devnet.json`.

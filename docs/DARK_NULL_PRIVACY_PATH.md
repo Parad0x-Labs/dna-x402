@@ -54,7 +54,7 @@ It does not store:
 
 DNA x402 normal path:
 
-- DNA receipt anchoring runs on the devnet `receipt_commitment_tree` deployment; mainnet anchoring is not active
+- On-chain receipt anchoring is unavailable on every cluster until the `receipt_anchor` redeploy under a fresh key
 - Public Beta live payment flows are capped and direct-split gated
 
 Dark Null path:

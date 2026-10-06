@@ -167,19 +167,9 @@ This is the cryptographic proof that the agent **cannot** be a honeypot.
 
 ## The Onchain Part — "ROGUE" Ritual
 
-The word "ROGUE" was encoded as a sequence of nullifier shards on Solana devnet.
-
-Each letter → ASCII byte → shard index → `InsertNullifier` transaction:
-
-| Letter | ASCII | Shard | Devnet TX |
-|--------|-------|-------|-----------|
-| R | 82 | 0x52 | [67jsL2Km...](https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet) |
-| O | 79 | 0x4F | [4UDnJctm...](https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet) |
-| G | 71 | 0x47 | [5BCtkPKL...](https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet) |
-| U | 85 | 0x55 | [63LQ8uUZ...](https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet) |
-| E | 69 | 0x45 | [5Dd58Qcy...](https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet) |
-
-Program ID: `7LaYJVJafLVjTpfz8x68EMR75SXd8epwQntorkNSMwQj` (deployed devnet)
+The word "ROGUE" maps to the nullifier shard plan `[82, 79, 71, 85, 69]` (one `InsertNullifier`
+per letter on `dark_nullifier_banks`). The earlier devnet run targeted a deployment that is now
+withdrawn, so its transaction links are removed; a devnet redeploy under a fresh key is pending.
 
 ---
 

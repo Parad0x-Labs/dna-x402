@@ -36,7 +36,7 @@ https://github.com/Parad0x-Labs/dna-x402
 | **1,000,000 receipts → 32 bytes** | ZK-compressed receipt anchoring: a million payment proofs cost ~$0.001/day to keep verifiable on-chain forever |
 | **Trusted setup without toxic waste** | Hermez Perpetual Powers of Tau + drand League-of-Entropy beacon, SHA-256-pinned transcript in [`ceremony/`](./ceremony/shielded_withdraw_v3/transcript_v3.json) — no single party holds ceremony material |
 | **Devnet attack-replay suite: T1–T10 pass** | A public suite fires credential-revocation forgery, unsigned credential upgrade, nullifier-bank re-init, forged hook admin, PDA prefund grief and unauthorized emission claims at security-fix builds deployed on devnet. Each attack is rejected with the expected program error (or, for prefund grief, absorbed); one informational finding (F1) is recorded with the results. Signatures: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) |
-| **1,568 x402 tests passing in CI · 8 programs deployed on devnet** | Continuous `mainnet-readiness` CI on every push: x402 build and test suite (1,568 passed as of 2026-10-05), site-agent tests, dependency audits, secret scan, Rust tests for `receipt_anchor` and `x402_refund_escrow`, and a smoke job |
+| **1,568 x402 tests passing in CI** | Continuous `mainnet-readiness` CI on every push: x402 build and test suite (1,568 passed as of 2026-10-05), site-agent tests, dependency audits, secret scan, Rust tests for `receipt_anchor` and `x402_refund_escrow`, and a smoke job |
 | **Payments that verify themselves** | x402 402-flow gates check ed25519 payer signatures, enforce single-use proofs, confirm USDC settlement on-chain before unlocking, and anchor a compressed receipt after |
 
 ## 💸 What you could build with it
@@ -166,7 +166,7 @@ Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](./devnet-
 | [`@parad0x_labs/mcp-server`](./packages/mcp-server) | MCP server exposing the full stack to Claude Desktop, Cursor, Windsurf, and any MCP-compatible agent. Tools: x402_get_quote, anchor_receipt, lookup_passport, build_outcome_receipt, compress_receipts, get_stack_status, private_compute. |
 | [`@parad0x_labs/context-capsule`](./packages/context-capsule) | Compress LLM session history 83x before injecting into context. 98% token cost reduction per agent session. searchCapsule finds relevant messages without decompressing full history. |
 | [`@parad0x_labs/stream-income`](./packages/stream-income) | Agent earns from x402 calls, proceeds auto-stream to NULL stakers. Passive income rail. |
-| [`@parad0x_labs/wormhole-x402`](./packages/wormhole-x402) | Cross-chain x402 solver. Base agent pays, Solana receipt anchored permanently. 0.1% solver spread. |
+| [`@parad0x_labs/wormhole-x402`](./packages/wormhole-x402) | Cross-chain x402 solver. Base agent pays, USDC settles on Solana, receipt anchored to a `receipt_anchor` deployment the caller names. 0.1% solver spread. |
 | [`@parad0x_labs/deepfake-gate`](./packages/deepfake-gate) | x402 paywall on deepfake detection APIs. EU AI Act demand. Dual-layer with NullLive. |
 | [`@parad0x_labs/agent-token`](./packages/agent-token) | PumpFun token per agent. Market cap drives discovery. 90% trading fees to creator. |
 | [`docs/ZK_COMPRESSION_RECEIPT_LOG.md`](./docs/ZK_COMPRESSION_RECEIPT_LOG.md) | ZK Compression V2 receipt log. 10M receipts near-zero cost. EU AI Act audit trail. |
@@ -206,7 +206,7 @@ Full evidence with transaction signatures: [`devnet-tests/RESULTS.md`](./devnet-
 | Area | Status | Notes |
 |---|---|---|
 | `x402/` package | Active | Canonical product surface |
-| `receipt_anchor` program | Devnet | Deployed on devnet (`CPQ8Y1bd…`); the mainnet deployment (`6HSRGivd…`) ran June–July 2026 and was retired 2026-07-14 |
+| `receipt_anchor` program | Redeploy pending | No usable deployment: the earlier devnet deployment is withdrawn and the mainnet deployment (`6HSRGivd…`) ran June–July 2026 and was retired 2026-07-14. Anchoring code refuses with a clear error until the redeploy under a fresh key |
 | Seller / buyer SDKs | Active | Live in `x402/src/` |
 | Dark Null privacy path | Active SDK surface | Optional hash-only private receipt request path |
 | Proof / audit docs | Active | See [`docs/`](./docs) |
@@ -224,13 +224,13 @@ paths, NULL emission accounting, and lottery/root primitives.
 > Prior art note: x402 is an open standard with multiple Solana implementations (Coinbase, Pay.sh, Solana Foundation).
 > Our specific contribution is integrating these four layers in one workspace.
 
-**1,568 x402 tests passing in CI. 8 programs deployed on Solana devnet. 20+ packages in this repo. Devnet attack-replay suite T1–T10 passing.**
+**1,568 x402 tests passing in CI. 20+ packages in this repo. Devnet attack-replay suite T1–T10 passing.**
 
 ### Current public status
 
 | Surface | Status |
 |---|---|
-| Devnet deployment | 8 programs deployed on devnet per [`configs/devnet.oss.json`](./configs/devnet.oss.json): semaphore (`ADwL3Sdo…`), secp256r1 vault (`2TwExMAZ…`), secp256k1 auth (`2xH4kMwe…`), token hook (`3tmvVJxh…`), lottery (`FbsPcWiE…`), mint gate (`2M9DwyFg…`), receipt_anchor (`CPQ8Y1bd…`), proof gate (`nYyXgf9w…`); the `nullRegistrar` entry in that file is retired. The attack-replay suite ([`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md)) targets separately deployed security-fix builds of `agent_credential_mint`, `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree`, and `dark_null_mint_gate` |
+| Devnet deployment | The earlier devnet deployment of the deploy-profile programs is withdrawn and its entries are removed from [`configs/devnet.oss.json`](./configs/devnet.oss.json); a devnet redeploy under a fresh key is pending. The remaining `nullRegistrar` entry in that file is retired. The attack-replay suite ([`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md)) targets separately deployed security-fix builds of `agent_credential_mint`, `null_token_hook`, `dark_nullifier_banks`, `receipt_commitment_tree`, and `dark_null_mint_gate` |
 | Mainnet | No active DNA x402 production deployment. Eight mainnet programs (semaphore, secp256r1 vault, secp256k1 auth, token hook, lottery, mint gate, receipt_anchor `6HSRGivd…`, proof gate `PmSCTue…`) ran June–July 2026 and were retired on 2026-07-14 (ProgramData closed): their transaction history stays readable on explorers, but they cannot be invoked. Canonical deployment inventory available to reviewers on request |
 | Commercial profile | Deploy profile kept in this repo; no commercial deployment is currently active. A new deploy needs wallet/RPC/program-id provisioning; external audit pending |
 | Program enforcement flag | Off by default; flips on post-audit with `--features mainnet` rebuild |
@@ -412,7 +412,7 @@ Run the Rust regression suite with: `cargo test --workspace`
 - Proof and rollout docs: [`docs/`](./docs)
 - Public site: [`site/`](./site)
 - `/agent` UI: [`site-agent/`](./site-agent)
-- Legacy `.null` names: the `.null` registrar and auctions ran on mainnet June–August 2026 and are retired, so no `.null` name can currently be registered, updated, or transferred on mainnet. The companion MCP [`@parad0x_labs/null-mcp`](https://www.npmjs.com/package/@parad0x_labs/null-mcp) can still resolve legacy name records (read-only); its write tools target the retired mainnet programs. Pay-by-name to a stealth meta-address (private pay) was exercised end-to-end on devnet only (NullPay registrar `CpNbE8…`); no mainnet name published a stealth meta-address.
+- Legacy `.null` names: the `.null` registrar and auctions ran on mainnet June–August 2026 and are retired, so no `.null` name can currently be registered, updated, or transferred on mainnet. The companion MCP [`@parad0x_labs/null-mcp`](https://www.npmjs.com/package/@parad0x_labs/null-mcp) can still resolve legacy name records (read-only); its write tools target the retired mainnet programs. Pay-by-name to a one-time stealth address is implemented in code with tests; a devnet redeploy under a fresh key is pending.
 
 ## Quick Start
 

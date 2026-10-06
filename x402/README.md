@@ -2,7 +2,7 @@
 
 `DNA x402` is Parad0x Labs' x402 payment protocol for Solana. Any API can require payment, and any agent can pay programmatically with quote, proof, receipt, and optional on-chain anchoring.
 
-**Program**: [`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`](https://solscan.io/account/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN)
+**On-chain receipt anchoring**: unavailable until the `receipt_anchor` redeploy under a fresh key; set `RECEIPT_ANCHOR_PROGRAM_ID` only to a deployment you control.
 
 ## Why DNA
 
@@ -290,7 +290,7 @@ const request = createDarkNullPrivacyRequest({
   signedReceipt,
   target: {
     cluster: "devnet",
-    programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+    programId: "35GMe13ExGB1JGp1wZGrEvHfQnENKADroDQApeziKuwV",
     manifestLabel: "canonical-devnet-root-2",
   },
   settlementSlot: 434395918,
