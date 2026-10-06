@@ -1,5 +1,6 @@
 {
   "schemaVersion": "1.0",
+  "status": "historical record: these mainnet programs were retired on 2026-07-14 (ProgramData closed); transaction history stays readable on explorers",
   "generatedAt": "2026-05-31T09:53:16.968Z",
   "repo": "https://github.com/Parad0x-Labs/dna-x402",
   "deployCommit": "bba2ba6484a8e1d673d8d554476be8f8f6b929ed",
@@ -22,18 +23,6 @@
       "dataLen": 75440,
       "lamports": 526266480,
       "explorerUrl": "https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta"
-    },
-    {
-      "ok": true,
-      "configKey": "vault",
-      "programLabel": "dark_secp256r1_vault",
-      "programId": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
-      "executable": true,
-      "authority": "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5",
-      "lastDeployedSlot": 423142843,
-      "dataLen": 97208,
-      "lamports": 677771760,
-      "explorerUrl": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta"
     },
     {
       "ok": true,
@@ -146,7 +135,6 @@
   ],
   "explorerLinks": {
     "dark_semaphore": "https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta",
-    "dark_secp256r1_vault": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta",
     "dark_secp256k1_auth": "https://explorer.solana.com/address/AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B?cluster=mainnet-beta",
     "null_token_hook": "https://explorer.solana.com/address/14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g?cluster=mainnet-beta",
     "null_lottery": "https://explorer.solana.com/address/3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG?cluster=mainnet-beta",

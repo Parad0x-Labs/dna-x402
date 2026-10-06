@@ -1,9 +1,10 @@
 {
   "schemaVersion": "1.0",
+  "status": "historical record: these mainnet programs were retired on 2026-07-14 (ProgramData closed); transaction history stays readable on explorers",
   "generatedAt": "2026-05-31T09:35:08.274Z",
   "cluster": "mainnet-beta",
-  "totalPrograms": 8,
-  "verifiedCount": 8,
+  "totalPrograms": 7,
+  "verifiedCount": 7,
   "failedCount": 0,
   "programs": [
     {
@@ -17,18 +18,6 @@
       "dataLen": 75440,
       "lamports": 526266480,
       "explorerUrl": "https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta"
-    },
-    {
-      "ok": true,
-      "configKey": "vault",
-      "programLabel": "dark_secp256r1_vault",
-      "programId": "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
-      "executable": true,
-      "authority": "9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5",
-      "lastDeployedSlot": 423142843,
-      "dataLen": 97208,
-      "lamports": 677771760,
-      "explorerUrl": "https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta"
     },
     {
       "ok": true,

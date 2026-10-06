@@ -22,10 +22,6 @@ The two negative tests are the point: a valid signature over the *wrong* message
 and a valid signature from the *wrong* key, are both rejected on-chain. The
 verification is real, not a presence check.
 
-`evidence/passport/mainnet-faceid-e2e.json` records the mainnet pilot run (program
-since retired): register and sign-in confirmed, wrong key rejected with
-`0x4009 PasskeyPubkeyMismatch`, with tx signatures and Explorer links.
-
 ## Implementation notes (for reproducers)
 
 - The precompile verifies ECDSA-P256 with **SHA-256** over the raw message and
@@ -54,5 +50,5 @@ and the mainnet flip.
   gated client-side) signs it directly. Full WebAuthn `authenticatorData` /
   `clientDataJSON` parsing on-chain is the audit-scope enhancement, not done yet.
 - **Unaudited** test pilot. Identity binding only — no funds custody.
-- The **mainnet** vault (`3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi`) still runs
-  devnet-mode (no verification) until the in-place `--features mainnet` upgrade.
+- No mainnet `dark_secp256r1_vault` deployment is current; the earlier pilot
+  deployment and its evidence are withdrawn.
