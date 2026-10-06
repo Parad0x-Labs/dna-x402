@@ -140,7 +140,8 @@
     "bridge:liquefy:live": "curl -s http://localhost:8080/admin/audit/export | tsx src/bridge/liquefy/cli.ts --stdin --out ./vault-staging/live"
   },
   "overrides": {
-    "bn.js": "^5.2.3"
+    "bn.js": "^5.2.3",
+    "jayson": "^5.0.0"
   },
   "peerDependencies": {
     "@streamflow/stream": ">=11 <13"
@@ -171,7 +172,7 @@
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=18"
