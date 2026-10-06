@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1
+
+Docs only:
+
+- README Install states that the package ships TypeScript source and needs a
+  TypeScript-aware runtime or bundler; plain `node` refuses to strip types under
+  `node_modules`. No code change.
+
 ## 1.2.0
 
 Behaviour changes:

@@ -24,11 +24,11 @@
       "package_version": {
         "name": "@parad0x_labs/x402",
         "package_json": "x402/package.json",
-        "git_version": "0.2.0",
-        "npm_latest": "0.1.1",
-        "npm_checked_at": "2026-10-06T08:23:41Z"
+        "git_version": "0.2.1",
+        "npm_latest": "0.2.0",
+        "npm_checked_at": "2026-10-06T11:36:56Z"
       },
-      "publication_status": "deprecated",
+      "publication_status": "published-older-version",
       "network": null,
       "program_id": null,
       "deployed_build_hash": null,
@@ -70,7 +70,7 @@
         "native SOL payments"
       ],
       "operational_limitations": [
-        "npm latest 0.1.1 is deprecated; Git 0.2.0 is not on npm, so install from source until it is published."
+        "npm latest is 0.2.0 (0.1.0 and 0.1.1 are deprecated); Git 0.2.1 changes only README, AGENTS.md, .env.example and the shipped examples' import path, and is built but not yet on npm."
       ],
       "supersedes": null
     },
@@ -335,7 +335,7 @@
         "server anchoring needs ANCHORING_ENABLED, RECEIPT_ANCHOR_PROGRAM_ID and ANCHORING_KEYPAIR_PATH (all unset by default)",
         "with ANCHORING_ENABLED set, a missing program id or keypair, or an anchor client that cannot be built, stops server start-up with RECEIPT_ANCHOR_UNAVAILABLE (x402 test, 2026-10-06)",
         "the x402 transaction builders have no default program id and throw RECEIPT_ANCHOR_UNAVAILABLE without one",
-        "liquefy-receipts 0.3.0 has no default program and throws RECEIPT_ANCHOR_UNAVAILABLE",
+        "liquefy-receipts 0.3.x has no default program and throws RECEIPT_ANCHOR_UNAVAILABLE",
         "wormhole-x402 resolves devnet to HSdE\u2026mhXs and refuses mainnet-beta (no configured program)",
         "a receipt-dag root anchored on devnet HSdE\u2026mhXs on 2026-10-06 and was read back by the accountability and proof-of-agency verifiers",
         "deployed devnet bytes equal the build of committed source 121109d (SHA-256 in the proof file)"
@@ -396,9 +396,9 @@
       "package_version": {
         "name": "@parad0x_labs/liquefy-receipts",
         "package_json": "packages/liquefy-receipts/package.json",
-        "git_version": "0.3.0",
-        "npm_latest": "0.2.0",
-        "npm_checked_at": "2026-10-06T08:23:41Z"
+        "git_version": "0.3.1",
+        "npm_latest": "0.3.0",
+        "npm_checked_at": "2026-10-06T11:36:56Z"
       },
       "publication_status": "published-older-version",
       "network": null,
@@ -432,7 +432,7 @@
         "a ratio on real production receipts"
       ],
       "operational_limitations": [
-        "npm latest is 0.2.0, whose default anchor program is the retired mainnet pilot; Git 0.3.0 removes that default and is not yet published."
+        "npm latest is 0.3.0, which has no default anchor program; Git 0.3.1 changes only the RECEIPT_ANCHOR_UNAVAILABLE text, comments and README (devnet receipt_anchor named, TypeScript-source install note), and is built but not yet on npm."
       ],
       "supersedes": null
     },
@@ -933,9 +933,9 @@
       "package_version": {
         "name": "@parad0x_labs/context-capsule",
         "package_json": "packages/context-capsule/package.json",
-        "git_version": "1.2.0",
-        "npm_latest": "1.0.0",
-        "npm_checked_at": "2026-10-06T08:23:41Z"
+        "git_version": "1.2.1",
+        "npm_latest": "1.2.0",
+        "npm_checked_at": "2026-10-06T11:36:56Z"
       },
       "publication_status": "published-older-version",
       "network": null,
@@ -960,10 +960,11 @@
       "not_demonstrated": [
         "end-to-end task token or cost savings",
         "the earlier unqualified 83x and 98% figures",
-        "that the model can use details it was not given (omitted history must be retrieved and placed in the prompt)",
-        "npm publication of 1.2.0 (release commit b03fec0) (npm latest is 1.0.0)"
+        "that the model can use details it was not given (omitted history must be retrieved and placed in the prompt)"
       ],
-      "operational_limitations": [],
+      "operational_limitations": [
+        "npm latest is 1.2.0; Git 1.2.1 is docs-only (README install note for the TypeScript-source package) and is built but not yet on npm."
+      ],
       "supersedes": null
     }
   ]
