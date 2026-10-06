@@ -6,15 +6,49 @@
  */
 
 import { createHash } from "node:crypto";
-import type { Connection, Keypair, PublicKey as PublicKeyType } from "@solana/web3.js";
+import type {
+  Connection,
+  Keypair,
+  TransactionInstruction as TransactionInstructionType,
+  VersionedTransactionResponse,
+} from "@solana/web3.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 /** Solver spread in basis points (0.1%). NULL stakers back the solver float. */
 export const SOLVER_FEE_BPS = 10;
 
+/** Solana clusters with a deployed receipt_anchor program. */
+export type SolanaCluster = "mainnet-beta" | "devnet";
+
+/**
+ * receipt_anchor program per cluster.
+ *
+ * Mirrors `programs.receiptAnchor` in configs/mainnet.oss.json and
+ * configs/devnet.oss.json, the repo's canonical program-ID source. Vendored
+ * because the published package ships only src/; tests/wormhole-x402.test.mjs
+ * fails if these drift from the config files.
+ */
+export const RECEIPT_ANCHOR_PROGRAM_IDS: Readonly<Record<SolanaCluster, string>> = Object.freeze({
+  "mainnet-beta": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
+  devnet: "CPQ8Y1bdRiadxLMhrQG14Atc3E5eNJhqwPX1nXtH1Mst",
+});
+
 /** The receipt_anchor program on Solana mainnet-beta. */
-export const RECEIPT_ANCHOR_PROGRAM_ID = "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN";
+export const RECEIPT_ANCHOR_PROGRAM_ID = RECEIPT_ANCHOR_PROGRAM_IDS["mainnet-beta"];
+
+/** receipt_anchor bucket PDA seed prefix: `["bucket", bucket_id_le8]`. */
+export const RECEIPT_ANCHOR_BUCKET_SEED = "bucket";
+
+/** receipt_anchor bucket window: one bucket per hour of unix time. */
+export const RECEIPT_ANCHOR_BUCKET_WINDOW_SECONDS = 3600;
+
+/** receipt_anchor AnchorSingle wire version. */
+const ANCHOR_VERSION_V1 = 0x01;
+/** receipt_anchor flag: instruction carries an explicit bucket id. */
+const ANCHOR_FLAG_HAS_BUCKET_ID = 0x01;
+const ANCHOR_SINGLE_LEN_NO_BUCKET = 34;
+const ANCHOR_SINGLE_LEN_WITH_BUCKET = 42;
 
 /**
  * Wormhole Core Bridge program on Solana mainnet.
@@ -71,6 +105,37 @@ export interface BuildCrossChainIntentParams {
   apiEndpoint: string;
   /** TTL in milliseconds from now. Defaults to 5 minutes. */
   ttlMs?: number;
+}
+
+/** Options for solveIntent. */
+export interface SolveIntentOptions {
+  /**
+   * x402 payment program on the target cluster. Required: the cluster configs
+   * define no canonical x402 payment program for this flow, so the caller
+   * names the program its payment instruction targets. The instruction data is
+   * `[0x02][gross USDC atomic units, u64 LE]` with the payer as the only account.
+   */
+  x402ProgramId: string;
+  /** Cluster whose receipt_anchor program is used. Default: "mainnet-beta". */
+  cluster?: SolanaCluster;
+  /** Explicit receipt_anchor program ID (e.g. a local validator). Overrides `cluster`. */
+  anchorProgramId?: string;
+}
+
+/** Options for verifyCrossChainReceipt. */
+export interface VerifyReceiptOptions {
+  /** Cluster whose receipt_anchor program is expected. Default: "mainnet-beta". */
+  cluster?: SolanaCluster;
+  /** Explicit receipt_anchor program ID. Overrides `cluster`. */
+  anchorProgramId?: string;
+}
+
+/** Decoded receipt_anchor AnchorSingle instruction data. */
+export interface AnchorInstructionData {
+  /** The 32-byte anchor folded into the bucket root. */
+  anchor: Buffer;
+  /** Explicit bucket id, or null when the program derives it from the clock. */
+  bucketId: bigint | null;
 }
 
 /** Result returned by solveIntent. */
@@ -143,6 +208,172 @@ function deriveVaaHash(vaaBytes: Uint8Array): string {
   return sha256buf(sha256buf(vaaBytes)).toString("hex");
 }
 
+function isRpcUrl(rpc: string | Connection): rpc is string {
+  return typeof rpc === "string";
+}
+
+// ── Program ID + receipt_anchor encoding ──────────────────────────────────────
+
+/**
+ * Resolve the receipt_anchor program ID: an explicit `anchorProgramId` wins,
+ * otherwise the program configured for `cluster` (default "mainnet-beta").
+ */
+export function resolveReceiptAnchorProgramId(
+  options: { cluster?: SolanaCluster; anchorProgramId?: string } = {}
+): string {
+  if (options.anchorProgramId !== undefined) {
+    if (options.anchorProgramId.length === 0) {
+      throw new Error("anchorProgramId must be a non-empty base58 program ID");
+    }
+    return options.anchorProgramId;
+  }
+  const cluster = options.cluster ?? "mainnet-beta";
+  if (!Object.hasOwn(RECEIPT_ANCHOR_PROGRAM_IDS, cluster)) {
+    throw new Error(`No receipt_anchor program configured for cluster "${cluster}"`);
+  }
+  return RECEIPT_ANCHOR_PROGRAM_IDS[cluster];
+}
+
+/**
+ * Receipt hash anchored for a solved intent:
+ * sha256(intentId + ":" + solanaTx + ":" + vaaHash), 32 bytes.
+ */
+export function computeReceiptHash(intentId: string, solanaTx: string, vaaHash: string): Buffer {
+  return createHash("sha256").update(`${intentId}:${solanaTx}:${vaaHash}`, "utf8").digest();
+}
+
+/** receipt_anchor bucket id for a unix timestamp in seconds (matches the program's clock fallback). */
+export function bucketIdForUnixSeconds(unixSeconds: number): bigint {
+  if (unixSeconds <= 0) return 0n;
+  return BigInt(Math.floor(unixSeconds / RECEIPT_ANCHOR_BUCKET_WINDOW_SECONDS));
+}
+
+/**
+ * Encode receipt_anchor AnchorSingle with an explicit bucket id:
+ * `[version=1][flags=0x01][anchor32][bucket_id u64 LE]` (42 bytes).
+ */
+export function buildAnchorInstructionData(anchor: Uint8Array, bucketId: bigint): Buffer {
+  if (anchor.length !== 32) {
+    throw new Error(`anchor must be 32 bytes, got ${anchor.length}`);
+  }
+  const data = Buffer.alloc(ANCHOR_SINGLE_LEN_WITH_BUCKET);
+  data[0] = ANCHOR_VERSION_V1;
+  data[1] = ANCHOR_FLAG_HAS_BUCKET_ID;
+  data.set(anchor, 2);
+  data.writeBigUInt64LE(bucketId, ANCHOR_SINGLE_LEN_NO_BUCKET);
+  return data;
+}
+
+/**
+ * Decode receipt_anchor AnchorSingle instruction data, applying the same
+ * length/version/flag rules as the program's `unpack_single`. Returns null for
+ * anything the program would not accept as a single anchor (including batches).
+ */
+export function parseAnchorInstructionData(data: Uint8Array): AnchorInstructionData | null {
+  if (data.length !== ANCHOR_SINGLE_LEN_NO_BUCKET && data.length !== ANCHOR_SINGLE_LEN_WITH_BUCKET) {
+    return null;
+  }
+  if (data[0] !== ANCHOR_VERSION_V1) return null;
+  const hasBucket = (data[1] & ANCHOR_FLAG_HAS_BUCKET_ID) !== 0;
+  if (hasBucket !== (data.length === ANCHOR_SINGLE_LEN_WITH_BUCKET)) return null;
+  const buf = Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+  return {
+    anchor: Buffer.from(buf.subarray(2, ANCHOR_SINGLE_LEN_NO_BUCKET)),
+    bucketId: hasBucket ? buf.readBigUInt64LE(ANCHOR_SINGLE_LEN_NO_BUCKET) : null,
+  };
+}
+
+/** Derive the receipt_anchor bucket PDA `["bucket", bucket_id_le8]` as base58. */
+export async function deriveAnchorBucketPda(anchorProgramId: string, bucketId: bigint): Promise<string> {
+  const { PublicKey } = await import("@solana/web3.js");
+  const bucketIdLe = Buffer.alloc(8);
+  bucketIdLe.writeBigUInt64LE(bucketId);
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from(RECEIPT_ANCHOR_BUCKET_SEED), bucketIdLe],
+    new PublicKey(anchorProgramId)
+  );
+  return pda.toBase58();
+}
+
+/**
+ * Build the receipt_anchor instruction: AnchorSingle with an explicit bucket,
+ * accounts `[payer(signer,writable), bucket PDA(writable), system_program]`.
+ */
+export async function buildReceiptAnchorInstruction(params: {
+  anchorProgramId: string;
+  payer: string;
+  anchor: Uint8Array;
+  bucketId: bigint;
+}): Promise<TransactionInstructionType> {
+  const { PublicKey, SystemProgram, TransactionInstruction } = await import("@solana/web3.js");
+  const bucketPda = await deriveAnchorBucketPda(params.anchorProgramId, params.bucketId);
+  return new TransactionInstruction({
+    programId: new PublicKey(params.anchorProgramId),
+    keys: [
+      { pubkey: new PublicKey(params.payer), isSigner: true, isWritable: true },
+      { pubkey: new PublicKey(bucketPda), isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: buildAnchorInstructionData(params.anchor, params.bucketId),
+  });
+}
+
+/**
+ * Encode the x402 payment instruction data: `[0x02][grossAtomic u64 LE]`.
+ */
+export function buildPaymentInstructionData(grossAtomic: number): Buffer {
+  if (!Number.isSafeInteger(grossAtomic) || grossAtomic <= 0) {
+    throw new RangeError(`grossAtomic must be a positive safe integer, got ${grossAtomic}`);
+  }
+  const data = Buffer.alloc(9);
+  data[0] = 0x02; // discriminator: x402 payment
+  data.writeBigUInt64LE(BigInt(grossAtomic), 1);
+  return data;
+}
+
+/**
+ * Check a fetched transaction for a receipt_anchor instruction that anchors
+ * `expectedAnchor`. A top-level instruction matches only when:
+ *  - its program is `anchorProgramId`;
+ *  - its data decodes as a v1 AnchorSingle whose 32-byte anchor equals `expectedAnchor`;
+ *  - for the explicit-bucket form, its second account is the bucket PDA for that bucket id.
+ * The transaction must also have succeeded (`meta.err === null`).
+ */
+export async function verifyReceiptAnchorTransaction(
+  tx: Pick<VersionedTransactionResponse, "transaction" | "meta">,
+  expected: { anchorProgramId: string; expectedAnchor: Uint8Array }
+): Promise<boolean> {
+  if (!tx.meta || tx.meta.err !== null) return false;
+  if (expected.expectedAnchor.length !== 32) return false;
+
+  const message = tx.transaction.message;
+  let accountKeys: string[];
+  try {
+    accountKeys = message
+      .getAccountKeys({ accountKeysFromLookups: tx.meta.loadedAddresses })
+      .keySegments()
+      .flat()
+      .map((key) => key.toBase58());
+  } catch {
+    // v0 message with lookups but no loaded addresses: keys cannot be resolved.
+    return false;
+  }
+
+  const want = Buffer.from(expected.expectedAnchor);
+  for (const ix of message.compiledInstructions) {
+    if (accountKeys[ix.programIdIndex] !== expected.anchorProgramId) continue;
+    const decoded = parseAnchorInstructionData(ix.data);
+    if (decoded === null || !decoded.anchor.equals(want)) continue;
+    if (ix.accountKeyIndexes.length < 2) continue;
+    if (decoded.bucketId !== null) {
+      const bucketPda = await deriveAnchorBucketPda(expected.anchorProgramId, decoded.bucketId);
+      if (accountKeys[ix.accountKeyIndexes[1]] !== bucketPda) continue;
+    }
+    return true;
+  }
+  return false;
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 /**
@@ -197,8 +428,10 @@ export function buildCrossChainIntent(
 /**
  * Solve a CrossChainPaymentIntent by:
  *  1. Verifying the Wormhole VAA exists and is structurally valid.
- *  2. Submitting USDC payment on Solana via x402 (with solver fee applied).
- *  3. Anchoring the receipt on Solana via the receipt_anchor program.
+ *  2. Submitting USDC payment on Solana via the caller-named x402 program
+ *     (with solver fee applied).
+ *  3. Anchoring the receipt on Solana via the receipt_anchor program for the
+ *     configured cluster.
  *
  * The solver earns SOLVER_FEE_BPS (0.1%) spread; the gross amount debited from
  * the payer's Solana account is amountUsdc * 1.001. NULL stakers back the
@@ -206,14 +439,27 @@ export function buildCrossChainIntent(
  *
  * @param intent              - The CrossChainPaymentIntent (must have wormholeVaaBytes set).
  * @param solanaPayerKeypair  - Solana Keypair that signs and funds the USDC transfer.
- * @param rpcUrl              - Solana RPC endpoint URL.
+ * @param rpc                 - Solana RPC endpoint URL, or an existing Connection.
+ * @param options.x402ProgramId   - x402 payment program on the target cluster (required).
+ * @param options.cluster         - Cluster for the receipt_anchor program. Default: "mainnet-beta".
+ * @param options.anchorProgramId - Explicit receipt_anchor program ID; overrides `cluster`.
  * @returns Solana tx signatures and VAA hash.
  */
 export async function solveIntent(
   intent: CrossChainPaymentIntent,
   solanaPayerKeypair: Keypair,
-  rpcUrl: string
+  rpc: string | Connection,
+  options: SolveIntentOptions
 ): Promise<SolveIntentResult> {
+  // ── Guard: program IDs resolved before anything touches the network ───────
+  if (typeof options?.x402ProgramId !== "string" || options.x402ProgramId.length === 0) {
+    throw new Error(
+      "solveIntent requires options.x402ProgramId: no canonical x402 payment program " +
+      "is configured for this flow, so the caller must name one."
+    );
+  }
+  const anchorProgramIdStr = resolveReceiptAnchorProgramId(options);
+
   // ── Guard: VAA must be present ─────────────────────────────────────────────
   if (!intent.wormholeVaaBytes) {
     throw new Error(
@@ -242,32 +488,25 @@ export async function solveIntent(
     sendAndConfirmTransaction,
   } = await import("@solana/web3.js");
 
-  const connection = new Connection(rpcUrl, "confirmed");
+  // Parse both IDs up front so a malformed ID fails before any payment is sent.
+  const x402ProgramId = new PublicKey(options.x402ProgramId);
+  const anchorProgramId = new PublicKey(anchorProgramIdStr);
+  if (x402ProgramId.equals(anchorProgramId)) {
+    throw new Error("x402ProgramId must differ from the receipt_anchor program ID");
+  }
+
+  const connection = isRpcUrl(rpc) ? new Connection(rpc, "confirmed") : rpc;
 
   // ── Step 3: Submit USDC payment on Solana via x402 ────────────────────────
-  //
-  // Production integration: replace this stub instruction with a real call to
-  // the x402 payment program (or SPL Token transfer to the API's token account).
-  // The gross amount includes the solver spread.
-  const grossAmount = applyFee(intent.amountUsdc);
-  const grossLamports = Math.round(grossAmount * 1_000_000); // USDC has 6 decimals
-
-  const paymentIxData = new Uint8Array(9);
-  paymentIxData[0] = 0x02; // discriminator: x402 payment
-  // [1..8] = grossLamports as uint64 little-endian
-  const dv = new DataView(paymentIxData.buffer);
-  dv.setUint32(1, grossLamports & 0xffffffff, true);
-  dv.setUint32(5, Math.floor(grossLamports / 0x100000000), true);
-
-  // Stub: in production this would target the x402 program account.
-  const x402ProgramId = new PublicKey("x4029JZMtmjFHr6k9pJCH9cBe8p7K3n8ZVmLQwY1abc");
+  // The gross amount includes the solver spread. USDC has 6 decimals.
+  const grossAtomic = Math.round(applyFee(intent.amountUsdc) * 1_000_000);
 
   const paymentIx = new TransactionInstruction({
     programId: x402ProgramId,
     keys: [
       { pubkey: solanaPayerKeypair.publicKey, isSigner: true, isWritable: true },
     ],
-    data: Buffer.from(paymentIxData),
+    data: buildPaymentInstructionData(grossAtomic),
   });
 
   const paymentTx = new Transaction().add(paymentIx);
@@ -282,24 +521,13 @@ export async function solveIntent(
 
   // ── Step 4: Anchor receipt on Solana via receipt_anchor ───────────────────
   //
-  // Instruction data layout: [0x01][0x00][32 bytes receipt hash]
-  // receiptHash = sha256(intentId + solanaTx + vaaHash)
-  const receiptPayload = sha256hex(`${intent.intentId}:${solanaTx}:${vaaHash}`);
-  const receiptHashBytes = Buffer.from(receiptPayload, "hex");
-
-  const anchorIxData = new Uint8Array(34);
-  anchorIxData[0] = 0x01;
-  anchorIxData[1] = 0x00;
-  anchorIxData.set(receiptHashBytes, 2);
-
-  const anchorProgramId = new PublicKey(RECEIPT_ANCHOR_PROGRAM_ID);
-
-  const anchorIx = new TransactionInstruction({
-    programId: anchorProgramId,
-    keys: [
-      { pubkey: solanaPayerKeypair.publicKey, isSigner: true, isWritable: true },
-    ],
-    data: Buffer.from(anchorIxData),
+  // AnchorSingle with explicit bucket: [0x01][0x01][receiptHash32][bucket_id u64 LE]
+  // receiptHash = sha256(intentId + ":" + solanaTx + ":" + vaaHash)
+  const anchorIx = await buildReceiptAnchorInstruction({
+    anchorProgramId: anchorProgramIdStr,
+    payer: solanaPayerKeypair.publicKey.toBase58(),
+    anchor: computeReceiptHash(intent.intentId, solanaTx, vaaHash),
+    bucketId: bucketIdForUnixSeconds(Date.now() / 1000),
   });
 
   const anchorTx = new Transaction().add(anchorIx);
@@ -318,28 +546,36 @@ export async function solveIntent(
 /**
  * Verify that a receipt anchored on Solana matches the original intent.
  *
- * Queries the Solana transaction, extracts the instruction data, and
- * recomputes the expected receipt hash from the intentId.
+ * Fetches the receipt_anchor transaction, recomputes the expected receipt hash
+ * sha256(intentId + ":" + solanaTx + ":" + vaaHash), and requires a top-level
+ * instruction that targets the receipt_anchor program with AnchorSingle data
+ * carrying exactly that hash (and, for the explicit-bucket form, the matching
+ * bucket PDA). See verifyReceiptAnchorTransaction for the full matching rule.
  *
- * In a production implementation this would also verify the memo against the
- * receipt_anchor program's account state. The stub below validates the
- * transaction exists and the intentId is present in the memo field.
- *
- * @param receiptAnchorTx - Solana tx signature from solveIntent().receiptAnchorTx.
- * @param intentId        - The intentId from the original CrossChainPaymentIntent.
- * @param rpcUrl          - Solana RPC endpoint URL.
- * @returns true if the receipt is present on-chain and matches the intent.
+ * @param receipt   - The SolveIntentResult returned by solveIntent().
+ * @param intentId  - The intentId from the original CrossChainPaymentIntent.
+ * @param rpc       - Solana RPC endpoint URL, or an existing Connection.
+ * @param options   - Cluster or explicit receipt_anchor program ID. Default: mainnet-beta.
+ * @returns true if the receipt is anchored on-chain and matches the intent.
  */
 export async function verifyCrossChainReceipt(
-  receiptAnchorTx: string,
+  receipt: Pick<SolveIntentResult, "solanaTx" | "receiptAnchorTx" | "vaaHash">,
   intentId: string,
-  rpcUrl: string
+  rpc: string | Pick<Connection, "getTransaction">,
+  options: VerifyReceiptOptions = {}
 ): Promise<boolean> {
-  const { Connection, PublicKey } = await import("@solana/web3.js");
-  const connection = new Connection(rpcUrl, "confirmed");
+  const anchorProgramId = resolveReceiptAnchorProgramId(options);
+  const expectedAnchor = computeReceiptHash(intentId, receipt.solanaTx, receipt.vaaHash);
 
-  // Fetch the transaction from Solana.
-  const txDetails = await connection.getTransaction(receiptAnchorTx, {
+  let connection: Pick<Connection, "getTransaction">;
+  if (typeof rpc === "string") {
+    const { Connection } = await import("@solana/web3.js");
+    connection = new Connection(rpc, "confirmed");
+  } else {
+    connection = rpc;
+  }
+
+  const txDetails = await connection.getTransaction(receipt.receiptAnchorTx, {
     commitment: "confirmed",
     maxSupportedTransactionVersion: 0,
   });
@@ -349,37 +585,7 @@ export async function verifyCrossChainReceipt(
     return false;
   }
 
-  if (txDetails.meta?.err !== null) {
-    // Transaction failed — receipt not anchored.
-    return false;
-  }
-
-  // Verify the anchor instruction data contains a hash that embeds the intentId.
-  // In production: deserialise the instruction data and compare the stored
-  // receipt hash against sha256(intentId + solanaTx + vaaHash).
-  //
-  // Stub check: confirm the transaction account list includes the anchor program.
-  const anchorProgramId = new PublicKey(RECEIPT_ANCHOR_PROGRAM_ID);
-  const message = txDetails.transaction.message;
-  const accountKeys =
-    "getAccountKeys" in message
-      ? message.getAccountKeys().staticAccountKeys
-      : (message as { accountKeys: PublicKeyType[] }).accountKeys;
-
-  const hasAnchorProgram = accountKeys.some(
-    (key: PublicKeyType) => key.toBase58() === anchorProgramId.toBase58()
-  );
-
-  if (!hasAnchorProgram) {
-    return false;
-  }
-
-  // The intentId is incorporated into the receipt hash stored in the instruction.
-  // For the stub, we confirm the tx is successful and targets the anchor program.
-  // A full implementation would deserialise and compare the 32-byte hash at [2..33].
-  void intentId; // will be used in full implementation
-
-  return true;
+  return verifyReceiptAnchorTransaction(txDetails, { anchorProgramId, expectedAnchor });
 }
 
 // ── Utility exports ───────────────────────────────────────────────────────────

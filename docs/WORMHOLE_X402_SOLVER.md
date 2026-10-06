@@ -35,20 +35,20 @@ sequenceDiagram
     Agent->>Wormhole: Publish cross-chain message\n(intent payload via Wormhole SDK)
     Wormhole-->>Agent: Signed VAA (wormholeVaaBytes)
 
-    Agent->>Solver: solveIntent(intent + vaaBytes, solanaKeypair, rpcUrl)
+    Agent->>Solver: solveIntent(intent + vaaBytes, solanaKeypair, rpcUrl,\n  { x402ProgramId, cluster })
 
     Note over Solver: 1. Verify VAA structure
     Note over Solver: 2. Apply solver fee (×1.001)
     Solver->>Solana: Send USDC payment via x402 program
     Solana-->>Solver: solanaTx signature
 
-    Solver->>Solana: Anchor receipt via receipt_anchor\n[ 0x01 | 0x00 | sha256(intentId:solanaTx:vaaHash) ]
+    Solver->>Solana: Anchor receipt via receipt_anchor\n[ 0x01 | 0x01 | sha256(intentId:solanaTx:vaaHash) | bucket_id ]
     Solana-->>Solver: receiptAnchorTx signature
 
     Solver-->>Agent: { solanaTx, receiptAnchorTx, vaaHash }
 
-    Agent->>API: Retry request + { receiptAnchorTx, intentId }
-    API->>Solana: verifyCrossChainReceipt(receiptAnchorTx, intentId)
+    Agent->>API: Retry request + { solanaTx, receiptAnchorTx, vaaHash, intentId }
+    API->>Solana: verifyCrossChainReceipt({ solanaTx, receiptAnchorTx, vaaHash }, intentId)
     Solana-->>API: true
     API-->>Agent: 200 OK + premium data
 ```
@@ -65,12 +65,17 @@ sequenceDiagram
 |---|---|---|
 | `CrossChainPaymentIntent` | interface | Full intent object including VAA bytes slot |
 | `buildCrossChainIntent(params)` | function | Creates a payment intent; derives `requestHash` and `intentId` |
-| `solveIntent(intent, keypair, rpcUrl)` | async function | Verifies VAA, pays on Solana, anchors receipt |
-| `verifyCrossChainReceipt(tx, intentId, rpcUrl)` | async function | Confirms receipt is on-chain and matches intent |
+| `solveIntent(intent, keypair, rpc, { x402ProgramId, cluster?, anchorProgramId? })` | async function | Verifies VAA, pays via the named x402 program, anchors receipt |
+| `verifyCrossChainReceipt(receipt, intentId, rpc, { cluster?, anchorProgramId? })` | async function | Confirms the anchor instruction targets receipt_anchor and carries the expected receipt hash |
+| `verifyReceiptAnchorTransaction(tx, { anchorProgramId, expectedAnchor })` | async function | Same check on an already-fetched transaction |
+| `buildReceiptAnchorInstruction(params)` | async function | receipt_anchor AnchorSingle instruction with bucket PDA accounts |
+| `computeReceiptHash(intentId, solanaTx, vaaHash)` | function | 32-byte receipt hash anchored on-chain |
+| `resolveReceiptAnchorProgramId({ cluster?, anchorProgramId? })` | function | Cluster → receipt_anchor program ID |
 | `grossAmount(amountUsdc)` | function | Net → gross USDC after solver fee |
 | `isIntentValid(intent)` | function | Checks expiry and VAA presence |
 | `SOLVER_FEE_BPS` | const | `10` (0.1% spread) |
-| `RECEIPT_ANCHOR_PROGRAM_ID` | const | Solana receipt_anchor program address |
+| `RECEIPT_ANCHOR_PROGRAM_IDS` | const | receipt_anchor per cluster, mirrored from `configs/*.oss.json` |
+| `RECEIPT_ANCHOR_PROGRAM_ID` | const | receipt_anchor on mainnet-beta |
 | `WORMHOLE_CORE_BRIDGE_SOLANA` | const | Wormhole Core Bridge on Solana mainnet |
 
 ---
@@ -107,16 +112,33 @@ gross = amountUsdc × (1 + 10/10_000)
 
 ## Receipt Anchoring
 
-Receipt hash layout written to `receipt_anchor`:
+Instruction data written to `receipt_anchor` (AnchorSingle, explicit bucket, 42 bytes):
 
 ```
-[ 0x01 | 0x00 | sha256(intentId + ":" + solanaTx + ":" + vaaHash) ]
-  ^^^^    ^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  disc   pad    32-byte receipt hash (hex → bytes)
+[ 0x01 | 0x01 | sha256(intentId + ":" + solanaTx + ":" + vaaHash) | bucket_id ]
+  ^^^^    ^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^
+  ver    flags  32-byte receipt hash                                u64 LE
 ```
 
-This is the same 34-byte instruction data layout used by `receipt-dag` and
-`liquefy-receipts`, keeping the receipt ledger unified across all DNA x402 packages.
+Accounts: `[payer (signer, writable), bucket PDA ["bucket", bucket_id_le8] (writable), system_program]`.
+`bucket_id = floor(unix_seconds / 3600)`. This is the same wire form `receipt-dag` uses,
+keeping the receipt ledger unified across DNA x402 packages.
+
+### Program IDs
+
+The receipt_anchor program comes from `configs/mainnet.oss.json` / `configs/devnet.oss.json`
+(`programs.receiptAnchor`), selected by `cluster` (default `mainnet-beta`). The x402 payment
+program is not part of those configs, so `solveIntent` requires the caller to pass
+`x402ProgramId`; it throws before sending anything if the ID is missing or malformed.
+
+### Verification
+
+`verifyCrossChainReceipt` fetches the anchor transaction and accepts it only when it
+succeeded and a top-level instruction:
+
+1. targets the configured receipt_anchor program (as the invoked program, not just a listed account);
+2. carries v1 AnchorSingle data whose 32-byte anchor equals `sha256(intentId:solanaTx:vaaHash)`;
+3. for the explicit-bucket form, passes the bucket PDA derived from the encoded `bucket_id`.
 
 ---
 
@@ -127,8 +149,8 @@ simply:
 
 1. Reads the VAA bytes from the Wormhole Guardian network (existing REST API).
 2. Submits a standard Solana transaction referencing the VAA.
-3. Writes a 34-byte memo to `receipt_anchor` (existing program, same as used
-   by all other DNA x402 packages).
+3. Anchors a 42-byte AnchorSingle instruction to `receipt_anchor` (existing program,
+   same as used by other DNA x402 packages).
 
 No new programs. No new relayer. The solver is a pure TypeScript function.
 
@@ -157,17 +179,18 @@ const intent = buildCrossChainIntent({
 
 // 3. Solve on Solana
 const solanaKeypair = Keypair.fromSecretKey(/* ... */);
-const { solanaTx, receiptAnchorTx, vaaHash } = await solveIntent(
+const receipt = await solveIntent(
   intent,
   solanaKeypair,
-  "https://api.mainnet-beta.solana.com"
+  "https://solana-rpc.publicnode.com",
+  { x402ProgramId: "<your x402 payment program>", cluster: "mainnet-beta" }
 );
 
 // 4. Verify the receipt
 const ok = await verifyCrossChainReceipt(
-  receiptAnchorTx,
+  receipt,
   intent.intentId,
-  "https://api.mainnet-beta.solana.com"
+  "https://solana-rpc.publicnode.com"
 );
 console.log("Receipt verified:", ok);
 ```
