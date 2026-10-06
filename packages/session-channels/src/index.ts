@@ -175,11 +175,13 @@ function defaultCompress(actions: SessionAction[]): Uint8Array {
  * });
  */
 export function openSession(params: OpenSessionParams): SessionChannel {
-  if (params.maxActions < 1) {
-    throw new RangeError("maxActions must be >= 1");
+  // Number.isInteger / Number.isFinite also reject NaN, which would otherwise
+  // slip past a plain `< 1` comparison and disable the action cap entirely.
+  if (!Number.isInteger(params.maxActions) || params.maxActions < 1) {
+    throw new RangeError("maxActions must be an integer >= 1");
   }
-  if (params.pricePerAction < 0) {
-    throw new RangeError("pricePerAction must be >= 0");
+  if (!Number.isFinite(params.pricePerAction) || params.pricePerAction < 0) {
+    throw new RangeError("pricePerAction must be a finite number >= 0");
   }
   if (!params.agentPubkey || !params.providerPubkey) {
     throw new TypeError("agentPubkey and providerPubkey are required");
@@ -288,6 +290,7 @@ export function closeSession(session: SessionChannel): CloseSessionResult {
  * @param compress  Optional custom compressor — pass `compressReceipts` from
  *                  @parad0x_labs/liquefy-receipts for full columnar compression.
  *                  Defaults to JSON encoding (lossless, no extra dep required).
+ * @throws If the session has no actions or is already settled.
  *
  * @example
  * // Basic usage (JSON fallback compression):
@@ -303,6 +306,9 @@ export function buildSettlementPayload(
   network: "solana-mainnet" | "solana-devnet" = "solana-mainnet",
   compress?: (actions: SessionAction[]) => Uint8Array,
 ): SettlementPayload {
+  if (session.status === "settled") {
+    throw new Error(`Session ${session.sessionId} is already settled`);
+  }
   if (session.actions.length === 0) {
     throw new Error(`Session ${session.sessionId} has no recorded actions to settle`);
   }
@@ -361,6 +367,9 @@ export function settleSession(
     throw new Error(
       `Cannot settle session ${session.sessionId}: expected "closed", got "${session.status}"`,
     );
+  }
+  if (typeof anchorTxSig !== "string" || anchorTxSig.length === 0) {
+    throw new TypeError("anchorTxSig is required to settle a session");
   }
   return {
     ...session,
