@@ -1,6 +1,6 @@
 {
   "name": "@parad0x_labs/x402",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "description": "DNA Payment Rail — x402 SDK and CLI for AI agent buyers and sellers on Solana.",
   "keywords": [

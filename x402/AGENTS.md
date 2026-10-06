@@ -15,10 +15,10 @@ Normal DNA x402 remains the default path. Use the optional Dark Null path only a
 ## Install
 
 ```bash
-npm install @parad0x_labs/x402@0.2.1
+npm install @parad0x_labs/x402@0.2.2
 ```
 
-That gives you both the SDK and the `dna-x402` CLI. This file describes 0.2.1; the 0.1.x releases on npm are deprecated.
+That gives you both the SDK and the `dna-x402` CLI. This file describes 0.2.2; the 0.1.x releases on npm are deprecated.
 
 Fastest local proof:
 
@@ -477,7 +477,8 @@ X402_DATABASE_URL=postgres://...   # replay keys persist here; required when NOD
 REQUIRE_PAYMENT_MEMO=1             # default; 0 drops quote binding
 ANCHORING_ENABLED=0                # 1 needs RECEIPT_ANCHOR_PROGRAM_ID and ANCHORING_KEYPAIR_PATH
 # RECEIPT_ANCHOR_PROGRAM_ID=<receipt_anchor deployment you control>
-FEE_BPS=30
+FEE_BPS=0                          # operator surcharge to PAYMENT_RECIPIENT; not a Parad0x fee
+X402_PLATFORM_FEE_BPS=5            # x402 protocol fee (0.05%), Parad0x's only fee
 PORT=8080
 ```
 
