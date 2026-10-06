@@ -2,8 +2,8 @@
  * null-miner-sdk - dual-track deployment profiles.
  *
  * OSS track: devnet, zero fees, zero NULL extraction, MIT license.
- * Commercial track: mainnet pilot with external audit pending,
- * 0.5% house config, 5% NULL emission accounting.
+ * Commercial track: mainnet-beta profile, not enabled in this release;
+ * 0.5% mining house config, 5% NULL emission accounting, 0% lottery fee.
  *
  * Same codebase. One profile switch.
  */
@@ -69,10 +69,10 @@ export const OSS_PROFILE: NullMinerProfile = {
 export const COMMERCIAL_PROFILE: NullMinerProfile = {
   track: "commercial",
   network: "mainnet-beta",
-  description: "Commercial mainnet pilot - external audit pending; 0.5% house config, 5% NULL emission accounting.",
+  description: "Commercial mainnet-beta profile - not enabled in this release; 0.5% mining house config, 5% NULL emission accounting, 0% lottery fee.",
   houseFeeBps: 50,
   nullEmissionPct: 5,
-  lotteryHouseFeeBps: 50,
+  lotteryHouseFeeBps: 0,
   lotteryTicketPriceNull: 10_000_000,
   platformFeePct: 0,
   maxNullPerEpochAtomic: 1_000_000_000_000,

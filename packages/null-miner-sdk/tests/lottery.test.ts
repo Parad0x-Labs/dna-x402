@@ -939,13 +939,13 @@ describe("Full round simulation", () => {
     expect(() => executeFallbackDraw(empty, generateSeed())).toThrow(/empty/);
   });
 
-  test("house cut test: 10 tickets × 10_000_000 NULL = 100_000_000 total (commercial config)", () => {
+  test("house cut test: 10 tickets × 10_000_000 NULL = 100_000_000 total (commercial config, 0% lottery fee)", () => {
     const totalDeposit = 10 * COMMERCIAL_LOTTERY_CONFIG.ticketPriceNull; // 100_000_000 atomic = 100 NULL
     const { jackpot, houseCut } = computeJackpot(totalDeposit, COMMERCIAL_LOTTERY_CONFIG.houseFeeBps);
 
-    // 0.5% of 100_000_000 = 500_000
-    expect(houseCut).toBe(500_000);
-    expect(jackpot).toBe(99_500_000);
+    // The protocol takes no lottery fee: the full deposit goes to the jackpot.
+    expect(houseCut).toBe(0);
+    expect(jackpot).toBe(100_000_000);
     expect(jackpot + houseCut).toBe(totalDeposit);
   });
 });

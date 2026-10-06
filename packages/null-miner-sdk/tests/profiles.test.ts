@@ -35,8 +35,8 @@ test("commercial profile uses mainnet-beta track", () => {
   expect(COMMERCIAL_PROFILE.network).toBe("mainnet-beta");
 });
 
-test("commercial profile labels the pilot as external-audit pending", () => {
-  expect(COMMERCIAL_PROFILE.description.toLowerCase()).toContain("external audit pending");
+test("commercial profile is labelled as not enabled in this release", () => {
+  expect(COMMERCIAL_PROFILE.description.toLowerCase()).toContain("not enabled in this release");
 });
 
 test("commercial profile has pilot fee and emission accounting config", () => {
@@ -85,8 +85,8 @@ test("lotteryConfigFromProfile maps OSS as zero-fee", () => {
   expect(lotteryConfigFromProfile(OSS_PROFILE).ticketPriceNull).toBe(0);
 });
 
-test("lotteryConfigFromProfile maps commercial as 50 bps", () => {
-  expect(lotteryConfigFromProfile(COMMERCIAL_PROFILE).houseFeeBps).toBe(50);
+test("lotteryConfigFromProfile maps commercial as 0 bps", () => {
+  expect(lotteryConfigFromProfile(COMMERCIAL_PROFILE).houseFeeBps).toBe(0);
   expect(lotteryConfigFromProfile(COMMERCIAL_PROFILE).ticketPriceNull).toBe(10_000_000);
 });
 
