@@ -15,7 +15,7 @@ Normal DNA x402 remains the default path. Use the optional Dark Null path only a
 ## Install
 
 ```bash
-npm install dna-x402
+npm install @parad0x_labs/x402
 ```
 
 That gives you both the SDK and the `dna-x402` CLI.
@@ -23,21 +23,21 @@ That gives you both the SDK and the `dna-x402` CLI.
 Fastest local proof:
 
 ```bash
-npx dna-x402 demo seller --mode netting --port 3000
-npx dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
+npx -p @parad0x_labs/x402 dna-x402 demo seller --mode netting --port 3000
+npx -p @parad0x_labs/x402 dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
 ```
 
 Starter scaffolds:
 
 ```bash
-npx dna-x402 init seller my-seller
-npx dna-x402 init buyer my-buyer
+npx -p @parad0x_labs/x402 dna-x402 init seller my-seller
+npx -p @parad0x_labs/x402 dna-x402 init buyer my-buyer
 ```
 
 ## Buyer (Your Agent Pays for an API)
 
 ```typescript
-import { fetchWith402 } from "dna-x402";
+import { fetchWith402 } from "@parad0x_labs/x402";
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
@@ -54,7 +54,7 @@ const data = await result.response.json();
 
 That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. Netting is no longer auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for an intentional trusted loop.
 If you need deterministic receipt binding, pass `payerCommitment32B` explicitly as a 32-byte hex string instead of letting the client generate a random one per call.
-If you want a no-code buyer smoke test first, use `npx dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000`.
+If you want a no-code buyer smoke test first, use `npx -p @parad0x_labs/x402 dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000`.
 
 ## Optional Dark Null Privacy Path
 
@@ -64,7 +64,7 @@ Use this only for privacy-sensitive paid unlocks such as private alpha reveals, 
 import {
   createDarkNullPrivacyRequest,
   verifyDarkNullPrivacyRequest,
-} from "dna-x402";
+} from "@parad0x_labs/x402";
 
 const darkNullRequest = createDarkNullPrivacyRequest({
   signedReceipt,
@@ -87,7 +87,7 @@ Devnet is the current Dark Null evidence lane. Mainnet-beta private receipt use 
 ### With real USDC transfer (on-chain proof)
 
 ```typescript
-import { fetchWith402 } from "dna-x402";
+import { fetchWith402 } from "@parad0x_labs/x402";
 import { Connection, Keypair } from "@solana/web3.js";
 import { getAssociatedTokenAddress, createTransferInstruction } from "@solana/spl-token";
 
@@ -110,7 +110,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 ### With spend tracking (daily budget)
 
 ```typescript
-import { fetchWith402, InMemorySpendTracker, InMemoryReceiptStore } from "dna-x402";
+import { fetchWith402, InMemorySpendTracker, InMemoryReceiptStore } from "@parad0x_labs/x402";
 
 const tracker = new InMemorySpendTracker();
 const receipts = new InMemoryReceiptStore();
@@ -130,7 +130,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 
 ```typescript
 import express from "express";
-import { dnaSeller, dnaPrice } from "dna-x402/seller";
+import { dnaSeller, dnaPrice } from "@parad0x_labs/x402/seller";
 
 const app = express();
 app.use(express.json());
@@ -152,7 +152,7 @@ app.listen(3000);
 ```
 
 That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/health` automatically, verifies `transfer` proofs locally, and can verify `stream` proofs too if you pass a real `streamflowClient`. Signed finalize receipts preserve the transfer signature or verified `streamId`, and unlocked JSON responses can emit a stronger delivery-bound receipt for the actual protected body. Finalized commits are bound to the quoted HTTP method and full request target: a commit for `GET /api/a?x=1` will not unlock `POST /api/a?x=1`, `/api/a?x=2`, or another path. The scaffold also rejects reusing the same transfer signature across different commits, so one on-chain payment proof cannot unlock multiple paid requests. Unlocked text and binary responses also expose a signed `x-dna-receipt` header. Manual streaming/chunked protected responses and redirect/file helper responses are rejected with `501 unsupported_delivery_mode` instead of being silently delivered without a verifiable receipt. A failed protected response (`4xx` or `5xx`) does not consume the paid unlock; the scaffold restores the commit for retry.
-If you want a runnable seller before hand-writing the integration, use `npx dna-x402 demo seller --mode transfer --port 3000` or scaffold a project with `npx dna-x402 init seller my-seller`.
+If you want a runnable seller before hand-writing the integration, use `npx -p @parad0x_labs/x402 dna-x402 demo seller --mode transfer --port 3000` or scaffold a project with `npx -p @parad0x_labs/x402 dna-x402 init seller my-seller`.
 
 If you expose `stream` in a scaffolded seller or paywall, wire a real `streamflowClient`; otherwise stream verification now fails closed instead of accepting a bare top-up signature. In the current per-request quote/finalize flow, verified `streamId` proofs are also treated as single-use, just like transfer proofs. If you want long-lived subscription semantics, build that session policy explicitly instead of reusing one finalize proof forever.
 In the full server, netting ledger accrual only happens for actual `netting` settlements, and the x402 header-compat transfer path now fails closed unless verification returns the canonical `txSignature`.
@@ -171,7 +171,7 @@ app.post("/api/batch",    dnaPrice("50000", pay), handler);  // $0.05
 Use `dnaPaywall` when you want route-level payment gating with self-mounted `/commit`, `/finalize`, and `/receipt/:id` routes. For anchoring, marketplace listing, netting flush, and broader policy controls, move up to the full DNA x402 server:
 
 ```typescript
-import { dnaPaywall } from "dna-x402";
+import { dnaPaywall } from "@parad0x_labs/x402";
 
 app.use("/api/premium", dnaPaywall({
   priceAtomic: "10000",
@@ -185,7 +185,7 @@ app.use("/api/premium", dnaPaywall({
 ## Marketplace (Discover + Buy Agent Services)
 
 ```typescript
-import { marketCall } from "dna-x402";
+import { marketCall } from "@parad0x_labs/x402";
 
 const result = await marketCall({
   wallet: myWallet,
@@ -206,7 +206,7 @@ console.log("Used provider:", result.provider.shopId);
 ## Webhooks (Async Payment Notifications)
 
 ```typescript
-import { WebhookService } from "dna-x402";
+import { WebhookService } from "@parad0x_labs/x402";
 
 const webhooks = new WebhookService({ signingSecret: "your-hmac-secret" });
 
@@ -221,7 +221,7 @@ await webhooks.deliver("https://your-agent/webhook", {
 ## Audit Logging
 
 ```typescript
-import { AuditLogger } from "dna-x402";
+import { AuditLogger } from "@parad0x_labs/x402";
 
 const audit = new AuditLogger({ filePath: "./audit.ndjson" });
 audit.record({ kind: "PAYMENT_VERIFIED", amountAtomic: "5000" });
@@ -235,7 +235,7 @@ const ndjson = audit.exportNdjson();
 Use this when the user wants risk controls, provider scoring, or receipt/dispute telemetry without changing the on-chain rail.
 
 ```typescript
-import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "dna-x402";
+import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "@parad0x_labs/x402";
 
 const pay = dnaSeller(app, { recipient: "YOUR_SOLANA_WALLET" });
 const audit = new AuditLogger({ filePath: "./audit-guard.ndjson" });
@@ -291,7 +291,7 @@ python tools/tracevault_pack.py ./vault-staging/run-001 --org dna --out ./vault/
 ### Live sidecar (auto-stream to vault)
 
 ```typescript
-import { LiquefySidecar } from "dna-x402";
+import { LiquefySidecar } from "@parad0x_labs/x402";
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live",
@@ -474,20 +474,20 @@ PORT=8080
 
 ```typescript
 // Seller (self-contained — start here)
-import { dnaSeller, dnaPrice } from "dna-x402/seller";
+import { dnaSeller, dnaPrice } from "@parad0x_labs/x402/seller";
 
 // Buyer
-import { fetchWith402, marketCall } from "dna-x402";
+import { fetchWith402, marketCall } from "@parad0x_labs/x402";
 
 // Seller (advanced — requires full DNA server)
-import { dnaPaywall, apiKeyGuard } from "dna-x402";
+import { dnaPaywall, apiKeyGuard } from "@parad0x_labs/x402";
 
 // Infrastructure
-import { WebhookService, AuditLogger } from "dna-x402";
+import { WebhookService, AuditLogger } from "@parad0x_labs/x402";
 
 // Spend management
-import { InMemoryReceiptStore, InMemorySpendTracker } from "dna-x402";
+import { InMemoryReceiptStore, InMemorySpendTracker } from "@parad0x_labs/x402";
 
 // Liquefy bridge
-import { LiquefyVaultExporter, LiquefySidecar } from "dna-x402";
+import { LiquefyVaultExporter, LiquefySidecar } from "@parad0x_labs/x402";
 ```

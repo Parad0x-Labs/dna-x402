@@ -10,7 +10,7 @@
  *
  * Usage:
  *   import express from "express";
- *   import { dnaSeller, dnaPrice } from "dna-x402/seller";
+ *   import { dnaSeller, dnaPrice } from "@parad0x_labs/x402/seller";
  *
  *   const app = express();
  *   const pay = dnaSeller(app, { recipient: "YOUR_SOLANA_WALLET" });

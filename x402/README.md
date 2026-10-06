@@ -21,7 +21,7 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 ### Payments
 - **Three settlement modes**: Netting (off-chain batched, cheapest), Transfer (real on-chain USDC), Stream (Streamflow time-locked)
 - **x402 HTTP standard**: Any REST API becomes payment-gated with one middleware call
-- **Receipt anchoring**: Cryptographic receipts anchored on Solana via `receipt_anchor` program with Merkle-style accumulator hashing
+- **Receipt anchoring**: Cryptographic receipts anchored on Solana via a `receipt_anchor` deployment you configure (`RECEIPT_ANCHOR_PROGRAM_ID`), with Merkle-style accumulator hashing
 - **Optional Dark Null privacy path**: Hash-only private receipt request after a DNA receipt is issued
 - **Replay protection**: TTL-based replay attack prevention on every payment proof
 - **Surge pricing**: Dynamic price multipliers (0.8x–2.5x) based on real-time load (queue depth, inflight, latency, error rate)
@@ -103,23 +103,23 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 ## Install
 
 ```bash
-npm install dna-x402
+npm install @parad0x_labs/x402
 ```
 
-That installs the SDK and the `dna-x402` CLI. Use the SDK for production buyer/seller integrations, and use the CLI for zero-config demos or starter scaffolds.
+That installs the SDK and the `dna-x402` CLI (run it with `npx dna-x402` inside a project that has the package installed, or with `npx -p @parad0x_labs/x402 dna-x402` from anywhere). Use the SDK for production buyer/seller integrations, and use the CLI for zero-config demos or starter scaffolds.
 
 ## Zero-Config Demo
 
 Bring up a local seller in one terminal:
 
 ```bash
-npx dna-x402 demo seller --mode netting --port 3000
+npx -p @parad0x_labs/x402 dna-x402 demo seller --mode netting --port 3000
 ```
 
 Then hit it from a buyer in another terminal:
 
 ```bash
-npx dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
+npx -p @parad0x_labs/x402 dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
 ```
 
 Supported demo modes:
@@ -134,7 +134,7 @@ The demo path is for proving the full 402 handshake, receipt flow, and settlemen
 Generate a runnable seller project:
 
 ```bash
-npx dna-x402 init seller my-seller
+npx -p @parad0x_labs/x402 dna-x402 init seller my-seller
 cd my-seller
 npm start
 ```
@@ -142,19 +142,19 @@ npm start
 Generate a runnable buyer project:
 
 ```bash
-npx dna-x402 init buyer my-buyer
+npx -p @parad0x_labs/x402 dna-x402 init buyer my-buyer
 cd my-buyer
 npm start
 ```
 
-The generated seller starter enables trusted local `netting` by default via `DNA_TRUSTED_LOCAL_NETTING=1`, and the generated buyer starter uses that mode so you can validate the full loop immediately. Disable it before exposing the seller beyond local development, then replace the buyer wallet stub before using real `transfer` or `stream` money flows.
+The generated seller starter enables trusted local `netting` by default via `DNA_TRUSTED_LOCAL_NETTING=1`, and the generated buyer starter uses that mode so you can validate the full loop immediately. Disable it before exposing the seller beyond local development, then replace the generated demo buyer wallet with a real wallet before using real `transfer` or `stream` money flows.
 
 ## Quick Start
 
 ### For Buyers (AI Agents)
 
 ```typescript
-import { fetchWith402 } from "dna-x402";
+import { fetchWith402 } from "@parad0x_labs/x402";
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
@@ -172,7 +172,7 @@ const data = await result.response.json();
 For a no-code smoke test instead of writing a buyer immediately:
 
 ```bash
-npx dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000
+npx -p @parad0x_labs/x402 dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000
 ```
 
 If your buyer wants a deterministic receipt binding instead of a random per-call commitment, pass `payerCommitment32B` explicitly:
@@ -189,7 +189,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 
 ```typescript
 import express from "express";
-import { dnaSeller, dnaPrice } from "dna-x402/seller";
+import { dnaSeller, dnaPrice } from "@parad0x_labs/x402/seller";
 
 const app = express();
 app.use(express.json());
@@ -210,7 +210,7 @@ That is the fastest scaffold, not the strongest control surface. `dnaSeller()` n
 For the zero-config runnable seller instead of hand-writing the app first:
 
 ```bash
-npx dna-x402 demo seller --mode transfer --port 3000
+npx -p @parad0x_labs/x402 dna-x402 demo seller --mode transfer --port 3000
 ```
 
 Transfer is now the default buyer path. Unsigned netting is disabled by default in the main server, and the buyer SDK no longer auto-picks it just because `payNetted()` exists. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1` and pass `preferNetting: true` in the buyer call.
@@ -223,7 +223,7 @@ The x402 header-compat flow also fails closed if a verifier claims a transfer su
 
 ```typescript
 import express from "express";
-import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "dna-x402";
+import { AuditLogger, createDnaGuard, dnaPrice, dnaSeller } from "@parad0x_labs/x402";
 
 const app = express();
 app.use(express.json());
@@ -284,7 +284,7 @@ signed DNA receipt -> createDarkNullPrivacyRequest() -> Dark Null private receip
 import {
   createDarkNullPrivacyRequest,
   verifyDarkNullPrivacyRequest,
-} from "dna-x402";
+} from "@parad0x_labs/x402";
 
 const request = createDarkNullPrivacyRequest({
   signedReceipt,
@@ -324,8 +324,8 @@ Agent (buyer)                         API Provider (seller)
      |  6. Receipt + access                 |
      |<-------------------------------------|
      |                                      |
-     |  All receipts anchored on Solana     |
-     |  via receipt_anchor program          |
+     |  Receipts anchored on Solana via a   |
+     |  configured receipt_anchor program   |
 ```
 
 ## Project Structure
@@ -390,7 +390,7 @@ x402/
 
 ```bash
 git clone https://github.com/Parad0x-Labs/dna-x402
-cd dna-x402
+cd dna-x402/x402
 npm install
 cp .env.example .env       # Configure your wallet + RPC
 npm run build
@@ -400,8 +400,8 @@ npm start
 If you only want a local buyer/seller proof without running the full server, prefer:
 
 ```bash
-npx dna-x402 demo seller --mode netting --port 3000
-npx dna-x402 demo buyer --mode netting --base-url http://127.0.0.1:3000
+node dist/cli.js demo seller --mode netting --port 3000
+node dist/cli.js demo buyer --mode netting --base-url http://127.0.0.1:3000
 ```
 
 ## DNA Guard Commands
@@ -426,7 +426,7 @@ DNA_GUARD_WALLET_CEILING_ATOMIC=1000000
 For custom servers, you can also use the file-backed ledger helper directly:
 
 ```typescript
-import { createDnaGuard, createFileBackedDnaGuardLedger } from "dna-x402";
+import { createDnaGuard, createFileBackedDnaGuardLedger } from "@parad0x_labs/x402";
 
 const ledger = createFileBackedDnaGuardLedger({
   snapshotPath: "./state/dna-guard.json",
@@ -470,7 +470,7 @@ DNA Guard audit events archive through the same bridge, including:
 ### Live Sidecar (Auto-Archive)
 
 ```typescript
-import { LiquefySidecar } from "dna-x402";
+import { LiquefySidecar } from "@parad0x_labs/x402";
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live",
@@ -501,7 +501,7 @@ Agents use this to shop smart — compare providers, find deals, track trends, a
 
 ## Historical Mainnet Reports
 
-This repo includes checked-in mainnet test artifacts for the receipt-anchor and payment rail flows. Summary from the tracked 50-agent stress report:
+This repo includes checked-in mainnet test artifacts for the payment rail flows. Summary from the tracked 50-agent stress report (2026-02-25):
 
 | Metric | Result |
 |--------|--------|
@@ -509,10 +509,11 @@ This repo includes checked-in mainnet test artifacts for the receipt-anchor and 
 | Total Trades | 80 |
 | Tests Passed | 84/84 (100%) |
 | On-Chain USDC Transfers | 20 |
-| Receipts Anchored | 80/80 |
+| Receipts built, chained and batched off-chain | 80/80 |
+| Receipts anchored on-chain | 0/80 (no anchor transaction in this run) |
 | Amount Range | $0.00001 — $2.00 |
 
-Full report: [`test-mainnet/MAYHEM_50_REPORT.md`](./test-mainnet/MAYHEM_50_REPORT.md)
+Full report: [`test-mainnet/MAYHEM_50_REPORT.md`](https://github.com/Parad0x-Labs/dna-x402/blob/main/x402/test-mainnet/MAYHEM_50_REPORT.md).
 
 ## API Reference
 

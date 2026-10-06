@@ -50,8 +50,8 @@ function trackedFiles() {
 
 const failures = [];
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "x402", "package.json"), "utf8"));
-if (packageJson.repository?.url !== canonical) {
-  failures.push(`x402/package.json repository.url must be ${canonical}`);
+if (![canonical, `${canonical}.git`, `git+${canonical}.git`].includes(packageJson.repository?.url)) {
+  failures.push(`x402/package.json repository.url must be ${canonical}.git`);
 }
 if (packageJson.homepage !== `${canonical}#readme`) {
   failures.push(`x402/package.json homepage must be ${canonical}#readme`);
