@@ -9,6 +9,8 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 default = []
+# No-op: the admin checks and the ClaimJackpot winner binding apply in every
+# build. Kept so existing `cargo build-sbf --features mainnet` commands keep working.
 mainnet = []
 
 [dependencies]

@@ -48,10 +48,24 @@ pub enum LotteryInstruction {
     },
 
     /// 0x06 ClaimJackpot
-    /// Data: [0x06, winner_nullifier[32]] = 33 bytes total
+    /// Data, Drawn round (ticket proof required):
+    ///   [0x06, nullifier[32], numbers[5], leaf_index[8] (u64 LE), proof_len[1],
+    ///    proof[32 * proof_len]]
+    /// Data, Won round (FallbackDraw winner): [0x06, nullifier[32]] = 33 bytes;
+    ///   a ticket section, if present, is ignored.
+    /// `numbers` ascending; `proof` = sibling hashes from the leaf up (see ticket.rs).
     ClaimJackpot {
         winner_nullifier: [u8; 32],
+        ticket:           Option<TicketClaim>,
     },
+}
+
+/// The ticket a ClaimJackpot presents on a Drawn round.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TicketClaim {
+    pub numbers:    [u8; 5],
+    pub leaf_index: u64,
+    pub proof:      Vec<[u8; 32]>,
 }
 
 impl LotteryInstruction {
@@ -144,7 +158,38 @@ impl LotteryInstruction {
                 }
                 let mut winner_nullifier = [0u8; 32];
                 winner_nullifier.copy_from_slice(&rest[0..32]);
-                Ok(Self::ClaimJackpot { winner_nullifier })
+                let tail = &rest[32..];
+                if tail.is_empty() {
+                    return Ok(Self::ClaimJackpot { winner_nullifier, ticket: None });
+                }
+                // numbers[5] + leaf_index[8] + proof_len[1] + proof[32 * proof_len]
+                if tail.len() < 14 {
+                    return Err(LotteryError::InvalidInstruction.into());
+                }
+                let mut numbers = [0u8; 5];
+                numbers.copy_from_slice(&tail[0..5]);
+                let mut idx_bytes = [0u8; 8];
+                idx_bytes.copy_from_slice(&tail[5..13]);
+                let proof_len = tail[13] as usize;
+                if proof_len > crate::ticket::MAX_PROOF_DEPTH || tail.len() != 14 + 32 * proof_len {
+                    return Err(LotteryError::InvalidInstruction.into());
+                }
+                let proof = tail[14..]
+                    .chunks_exact(32)
+                    .map(|c| {
+                        let mut h = [0u8; 32];
+                        h.copy_from_slice(c);
+                        h
+                    })
+                    .collect();
+                Ok(Self::ClaimJackpot {
+                    winner_nullifier,
+                    ticket: Some(TicketClaim {
+                        numbers,
+                        leaf_index: u64::from_le_bytes(idx_bytes),
+                        proof,
+                    }),
+                })
             }
 
             _ => Err(LotteryError::InvalidInstruction.into()),

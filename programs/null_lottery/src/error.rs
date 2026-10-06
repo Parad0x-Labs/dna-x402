@@ -20,6 +20,12 @@ pub enum LotteryError {
     NotAdmin,
     /// no_winner_count < fallback_after; fallback not yet available.
     FallbackNotReady,
+    /// The claimed ticket's numbers are not the round's drawn numbers.
+    TicketNotWinning,
+    /// The claimed ticket (claimant key, numbers, nullifier) is not at
+    /// leaf_index < ticket_count under the anchored tickets_root, or no ticket
+    /// proof was supplied for a Drawn round.
+    InvalidTicketProof,
 }
 
 impl From<LotteryError> for ProgramError {
@@ -34,6 +40,8 @@ impl From<LotteryError> for ProgramError {
             LotteryError::WrongStatus         => 0x6007,
             LotteryError::NotAdmin            => 0x6008,
             LotteryError::FallbackNotReady    => 0x6009,
+            LotteryError::TicketNotWinning    => 0x600A,
+            LotteryError::InvalidTicketProof  => 0x600B,
         })
     }
 }

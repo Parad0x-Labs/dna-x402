@@ -9,10 +9,14 @@
 //! Round transitions (CommitRound, AnchorTickets, RevealDraw, FallbackDraw)
 //! require the admin stored in the `[b"lottery-config"]` PDA in every build.
 //!
-//! Default build (IS_MAINNET_READY = false):
-//!   - SPL token transfers are skipped.
-//!   - ClaimJackpot on a Drawn round binds the first claimed nullifier as winner.
-//!   - Winner verification is off-chain only; on-chain just marks state.
+//! ClaimJackpot binds the winner to the draw in every build:
+//!   - Drawn round: the claimant presents a ticket (numbers, nullifier, leaf
+//!     index, Merkle proof). The numbers must equal the drawn numbers and the
+//!     ticket leaf, which commits to the claimant key, must be under the anchored
+//!     tickets_root (see `ticket.rs`). The first valid winning ticket claims and
+//!     the round becomes Won with that ticket's nullifier.
+//!   - Won round: the nullifier must equal the stored winner nullifier.
+//!   - No SPL token transfer is made; the claim is recorded on-chain.
 
 use solana_program::{
     account_info::AccountInfo,
@@ -25,6 +29,7 @@ pub mod error;
 pub mod instruction;
 pub mod processor;
 pub mod state;
+pub mod ticket;
 
 entrypoint!(process_instruction);
 
@@ -280,8 +285,9 @@ mod tests {
         data.extend_from_slice(&nullifier);
 
         match LotteryInstruction::unpack(&data).expect("unpack failed") {
-            LotteryInstruction::ClaimJackpot { winner_nullifier } => {
+            LotteryInstruction::ClaimJackpot { winner_nullifier, ticket } => {
                 assert_eq!(winner_nullifier, nullifier);
+                assert!(ticket.is_none());
             }
             _ => panic!("wrong variant"),
         }
@@ -400,5 +406,76 @@ mod tests {
         assert_eq!(parsed.status, RoundStatus::Committed);
         // Attempting commit again while status != non-existent → WrongStatus
         assert_ne!(parsed.status, RoundStatus::Open);
+    }
+    // ── 15. ClaimJackpot with a ticket section unpacks ───────────────────
+
+    #[test]
+    fn test_unpack_0x06_with_ticket() {
+        let mut data = vec![0x06u8];
+        data.extend_from_slice(&[0xEEu8; 32]);
+        data.extend_from_slice(&[1, 2, 3, 4, 5]);
+        data.extend_from_slice(&7u64.to_le_bytes());
+        data.push(2);
+        data.extend_from_slice(&[0xA1u8; 32]);
+        data.extend_from_slice(&[0xA2u8; 32]);
+        match LotteryInstruction::unpack(&data).expect("unpack") {
+            LotteryInstruction::ClaimJackpot { winner_nullifier, ticket: Some(t) } => {
+                assert_eq!(winner_nullifier, [0xEE; 32]);
+                assert_eq!(t.numbers, [1, 2, 3, 4, 5]);
+                assert_eq!(t.leaf_index, 7);
+                assert_eq!(t.proof, vec![[0xA1u8; 32], [0xA2u8; 32]]);
+            }
+            other => panic!("unexpected {:?}", other),
+        }
+        // proof_len that does not match the data length
+        let mut bad = data.clone();
+        bad.pop();
+        assert!(LotteryInstruction::unpack(&bad).is_err());
+        let mut short = vec![0x06u8];
+        short.extend_from_slice(&[0u8; 32 + 6]);
+        assert!(LotteryInstruction::unpack(&short).is_err());
+    }
+
+    // ── 16. Tickets tree: every leaf proves into the root, nothing else does ─
+
+    #[test]
+    fn test_tickets_tree_proofs() {
+        use crate::ticket::{root_from_proof, ticket_leaf, tickets_proof, tickets_root, tree_depth};
+        for count in 1usize..=9 {
+            let leaves: Vec<[u8; 32]> = (0..count)
+                .map(|i| ticket_leaf(3, &[i as u8; 32], &[1, 2, 3, 4, 5], &[0x10 + i as u8; 32]))
+                .collect();
+            let root = tickets_root(&leaves);
+            for (i, leaf) in leaves.iter().enumerate() {
+                let proof = tickets_proof(&leaves, i);
+                assert_eq!(proof.len(), tree_depth(count as u64), "depth for count {count}");
+                assert_eq!(root_from_proof(*leaf, i as u64, &proof), root);
+                // wrong position or wrong leaf does not reach the root
+                if count > 1 {
+                    let j = (i + 1) % count;
+                    if leaves[j] != *leaf {
+                        assert_ne!(root_from_proof(*leaf, j as u64, &proof), root);
+                    }
+                }
+                let other = ticket_leaf(3, &[0xFF; 32], &[1, 2, 3, 4, 5], &[0x10 + i as u8; 32]);
+                assert_ne!(root_from_proof(other, i as u64, &proof), root);
+            }
+        }
+        assert_eq!(tree_depth(0), 0);
+        assert_eq!(tree_depth(1), 0);
+        assert_eq!(tree_depth(2), 1);
+        assert_eq!(tree_depth(3), 2);
+        assert_eq!(tree_depth(4), 2);
+        assert_eq!(tree_depth(5), 3);
+        assert_eq!(tree_depth(1 << 20), 20);
+        assert_eq!(tree_depth((1 << 20) + 1), 21);
+    }
+
+    #[test]
+    fn test_sorted_numbers() {
+        use crate::ticket::sorted_numbers;
+        assert_eq!(sorted_numbers(&[28, 3, 22, 7, 15]), [3, 7, 15, 22, 28]);
+        assert_eq!(sorted_numbers(&[1, 2, 3, 4, 5]), [1, 2, 3, 4, 5]);
+        assert_eq!(sorted_numbers(&[30, 29, 28, 27, 26]), [26, 27, 28, 29, 30]);
     }
 }

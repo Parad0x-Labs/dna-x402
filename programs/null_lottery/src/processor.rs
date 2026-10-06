@@ -1,6 +1,7 @@
 use crate::{
+    ticket,
     error::LotteryError,
-    instruction::LotteryInstruction,
+    instruction::{LotteryInstruction, TicketClaim},
     state::{
         CLAIM_NULLIFIER_DISC, CLAIM_NULLIFIER_SIZE,
         LOTTERY_CONFIG_DISC, LOTTERY_CONFIG_SIZE,
@@ -23,12 +24,10 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-// `mainnet` feature: ClaimJackpot requires the stored winner nullifier. The
-// admin checks on round transitions (require_admin) apply in every build.
-#[cfg(feature = "mainnet")]
-pub const IS_MAINNET_READY: bool = true;
-#[cfg(not(feature = "mainnet"))]
-pub const IS_MAINNET_READY: bool = false;
+// The admin checks on round transitions (require_admin) and the ClaimJackpot
+// winner binding apply in every build. The `mainnet` cargo feature used to switch
+// ClaimJackpot between "first claimed nullifier wins" (default build) and "stored
+// winner nullifier only"; it is kept as a no-op so existing build commands work.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public entry-point
@@ -70,8 +69,8 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Pr
             fallback_pool_size,
         } => process_fallback(program_id, accounts, seed, fallback_pool_size),
 
-        LotteryInstruction::ClaimJackpot { winner_nullifier } => {
-            process_claim(program_id, accounts, winner_nullifier)
+        LotteryInstruction::ClaimJackpot { winner_nullifier, ticket } => {
+            process_claim(program_id, accounts, winner_nullifier, ticket)
         }
     }
 }
@@ -319,7 +318,8 @@ fn process_reveal(program_id: &Pubkey, accounts: &[AccountInfo], seed: [u8; 32])
 
     round.seed_revealed  = seed;
     round.drawn_numbers  = drawn;
-    // IS_MAINNET_READY=false: no on-chain winner verification; mark Drawn only.
+    // The winner is whoever holds an anchored ticket with these numbers;
+    // ClaimJackpot verifies that against tickets_root.
     round.status         = RoundStatus::Drawn;
     // no_winner_count persists; ClaimJackpot or FallbackDraw updates it.
     round.pack_into(&mut data);
@@ -414,6 +414,7 @@ fn process_claim(
     program_id:       &Pubkey,
     accounts:         &[AccountInfo],
     winner_nullifier: [u8; 32],
+    ticket:           Option<TicketClaim>,
 ) -> ProgramResult {
     let iter                  = &mut accounts.iter();
     let round_state           = next_account_info(iter)?;
@@ -430,28 +431,47 @@ fn process_claim(
     }
 
     // ── Validate round state ──────────────────────────────────────────────
+    if round_state.owner != program_id {
+        return Err(ProgramError::InvalidAccountData);
+    }
     let mut data  = round_state.try_borrow_mut_data()?;
     let mut round = RoundState::unpack_from(&data)
         .ok_or(ProgramError::InvalidAccountData)?;
-
-    if round.status != RoundStatus::Drawn && round.status != RoundStatus::Won {
-        return Err(LotteryError::WrongStatus.into());
+    let (expected_round_pda, _) =
+        Pubkey::find_program_address(&[b"round", &round.round_id.to_le_bytes()], program_id);
+    if expected_round_pda != *round_state.key {
+        return Err(ProgramError::InvalidAccountData);
     }
-    if round.winner_nullifier != winner_nullifier {
-        // On IS_MAINNET_READY=false this field is zeroes until FallbackDraw sets it.
-        // For normal Drawn rounds the off-chain house calls this after setting
-        // winner_nullifier via a separate mechanism; for devnet we accept any
-        // non-zero nullifier supplied against a Drawn round.
-        if !IS_MAINNET_READY {
-            // devnet: only reject if round is Won and nullifier truly mismatches.
-            if round.status == RoundStatus::Won {
+
+    match round.status {
+        // Drawn: the claimant must hold an anchored ticket whose numbers are the
+        // drawn numbers. The ticket leaf commits to the claimant key, so a ticket
+        // can only be claimed by its owner.
+        RoundStatus::Drawn => {
+            let t = ticket.ok_or(LotteryError::InvalidTicketProof)?;
+            if t.numbers != ticket::sorted_numbers(&round.drawn_numbers) {
+                return Err(LotteryError::TicketNotWinning.into());
+            }
+            if t.leaf_index >= round.ticket_count
+                || t.proof.len() != ticket::tree_depth(round.ticket_count)
+            {
+                return Err(LotteryError::InvalidTicketProof.into());
+            }
+            let leaf = ticket::ticket_leaf(
+                round.round_id, &claimant.key.to_bytes(), &t.numbers, &winner_nullifier,
+            );
+            if ticket::root_from_proof(leaf, t.leaf_index, &t.proof) != round.tickets_root {
+                return Err(LotteryError::InvalidTicketProof.into());
+            }
+            round.winner_nullifier = winner_nullifier;
+        }
+        // Won: the winner was fixed on-chain (FallbackDraw, or an earlier claim).
+        RoundStatus::Won => {
+            if round.winner_nullifier != winner_nullifier {
                 return Err(LotteryError::InvalidWinner.into());
             }
-            // For Drawn rounds on devnet: accept, store the supplied nullifier.
-            round.winner_nullifier = winner_nullifier;
-        } else {
-            return Err(LotteryError::InvalidWinner.into());
         }
+        _ => return Err(LotteryError::WrongStatus.into()),
     }
 
     // ── Create ClaimNullifier PDA (double-claim prevention) ───────────────
@@ -490,7 +510,8 @@ fn process_claim(
         claim_record.pack_into(&mut claim_data);
     }
 
-    // IS_MAINNET_READY=false: skip actual SPL token transfer; mark round Won.
+    // No SPL token transfer is made by this program; the claim is recorded and
+    // the round is marked Won.
     round.status = RoundStatus::Won;
     round.pack_into(&mut data);
 
