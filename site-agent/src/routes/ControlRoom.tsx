@@ -4,7 +4,7 @@ import { AgentApiClient, parsePaymentRequirements } from "../lib/api";
 import { payQuoteViaSplTransfer } from "../lib/payments";
 import { usePolling } from "../lib/polling";
 import { verifySignedReceipt } from "../lib/receipt";
-import { clusterRpc, explorerClusterParam, loadRuntimeConfig, saveRuntimeConfig } from "../lib/runtimeConfig";
+import { clusterRpc, explorerClusterParam, loadRuntimeConfig, normalizeRuntimeConfig, saveRuntimeConfig } from "../lib/runtimeConfig";
 import { WalletMultiButton, useWallet } from "../lib/wallet";
 import {
   AnchoredReceiptResponse,
@@ -369,10 +369,12 @@ export const ControlRoom: React.FC = () => {
   };
 
   const saveConfig = () => {
-    saveRuntimeConfig(draftConfig);
-    setConfig(draftConfig);
+    const nextConfig = normalizeRuntimeConfig(draftConfig);
+    saveRuntimeConfig(nextConfig);
+    setConfig(nextConfig);
+    setDraftConfig(nextConfig);
     setConfigOpen(false);
-    appendLog("health", "Runtime config updated", draftConfig);
+    appendLog("health", "Runtime config updated", nextConfig);
   };
 
   const resetConfig = () => {

@@ -33,7 +33,28 @@ function cleanUrl(value: string | undefined, fallback: string): string {
   if (!trimmed) {
     return fallback;
   }
+  // Only http(s) URLs are rendered as links and fetched; anything else
+  // (javascript:, data:, relative junk) falls back to the default.
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return fallback;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return fallback;
+  }
   return trimmed.replace(/\/$/, "");
+}
+
+export function normalizeRuntimeConfig(config: Partial<RuntimeConfig>): RuntimeConfig {
+  const defaults = defaultRuntimeConfig();
+  return {
+    x402BaseUrl: cleanUrl(config.x402BaseUrl, defaults.x402BaseUrl),
+    walletUrl: cleanUrl(config.walletUrl, defaults.walletUrl),
+    cluster: normalizeCluster(config.cluster),
+    pollIntervalMs: toPositiveMs(config.pollIntervalMs, defaults.pollIntervalMs),
+  };
 }
 
 export function defaultRuntimeConfig(): RuntimeConfig {
@@ -57,13 +78,7 @@ export function loadRuntimeConfig(): RuntimeConfig {
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<RuntimeConfig>;
-    return {
-      x402BaseUrl: cleanUrl(parsed.x402BaseUrl, defaults.x402BaseUrl),
-      walletUrl: cleanUrl(parsed.walletUrl, defaults.walletUrl),
-      cluster: normalizeCluster(parsed.cluster),
-      pollIntervalMs: toPositiveMs(parsed.pollIntervalMs, defaults.pollIntervalMs),
-    };
+    return normalizeRuntimeConfig(JSON.parse(raw) as Partial<RuntimeConfig>);
   } catch {
     return defaults;
   }
