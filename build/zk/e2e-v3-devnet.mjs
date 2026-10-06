@@ -18,6 +18,14 @@
  * binds relayer + fee, so the 2-way payout split is fixed by the proof.
  *
  * Usage: node build/zk/e2e-v3-devnet.mjs <PROGRAM_ID> [--vk-mode ceremony]
+ *
+ * Optional env:
+ *   WALLET_KEYPAIR      payer keypair file (default: `solana config get` keypair path)
+ *   WITNESS_SPEC_BIN    prebuilt witness_spec binary (default: cargo run -p dark-shielded-pool-core)
+ *   SWV3_OLD_ZKEY + SWV3_OLD_VK  a retired zkey/vk pair: adds a negative case where a proof
+ *                       from that zkey for an unspent note must revert with ProofInvalid
+ *   TEST_WALLET_DIR / WALLET_TAG  persist ephemeral keypairs as <tag>-<role>-<pubkey>.json
+ *   EVIDENCE_OUT        evidence file path (default: evidence/dark-relay-rail-mainnet-beta.json)
  *   vk-mode=ceremony (default) : the prover uses the CEREMONY zkey/vk the deployed
  *     program embeds (forwarded to prove-v3.mjs as SWV3_VK_MODE). The single-party
  *     pilot VK is rejected on-chain (Custom(4)=ProofInvalid), so it is not supported.
@@ -53,7 +61,7 @@ const DENOM = 100_000_000; // 0.1 SOL per note
 const FEE = 1_000_000;     // 0.001 SOL relayer reimbursement (<= MAX_FEE = 0.05 SOL)
 
 const conn = new Connection(RPC, "confirmed");
-const keyPath = execFileSync("solana", ["config", "get"], { encoding: "utf8" })
+const keyPath = process.env.WALLET_KEYPAIR ?? execFileSync("solana", ["config", "get"], { encoding: "utf8" })
   .match(/Keypair Path:\s+(.+)/)[1].trim();
 const wallet = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(keyPath, "utf8"))));
 
@@ -61,7 +69,7 @@ const wallet = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(key
 // funds deposits. A SEPARATE fresh relayer submits the withdraw and is reimbursed.
 const authority = Keypair.generate();
 // Persist ephemeral keypairs when TEST_WALLET_DIR is set, so funds are recoverable if a run aborts.
-const saveKp = (tag, kp) => { if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `swv3-${tag}-${kp.publicKey.toBase58()}.json`), JSON.stringify(Array.from(kp.secretKey)), { mode: 0o600 }); };
+const saveKp = (tag, kp) => { if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `${process.env.WALLET_TAG ?? "swv3"}-${tag}-${kp.publicKey.toBase58()}.json`), JSON.stringify(Array.from(kp.secretKey)), { mode: 0o600 }); };
 saveKp("authority", authority);
 
 const SEEDS = {
@@ -200,20 +208,21 @@ function witnessSpec(scenario) {
   const tmp = mkdtempSync(join(tmpdir(), "swv3-"));
   const sIn = join(tmp, "scenario.json"), sOut = join(tmp, "spec.json");
   writeFileSync(sIn, JSON.stringify(scenario));
-  execFileSync("cargo", ["run", "-q", "-p", "dark-shielded-pool-core", "--bin", "witness_spec",
+  if (process.env.WITNESS_SPEC_BIN) execFileSync(process.env.WITNESS_SPEC_BIN, [sIn, sOut], { stdio: "pipe" });
+  else execFileSync("cargo", ["run", "-q", "-p", "dark-shielded-pool-core", "--bin", "witness_spec",
     "--features", "witness-gen", "--", sIn, sOut], { cwd: REPO, stdio: "pipe" });
   const spec = JSON.parse(readFileSync(sOut, "utf8"));
   rmSync(tmp, { recursive: true, force: true });
   return spec;
 }
-function prove(spec, { fee = FEE, denom = DENOM, expectFail = false } = {}) {
+function prove(spec, { fee = FEE, denom = DENOM, expectFail = false, env = {} } = {}) {
   const tmp = mkdtempSync(join(tmpdir(), "swv3-proof-"));
   const sIn = join(tmp, "spec.json"), sOut = join(tmp, "out.json");
   writeFileSync(sIn, JSON.stringify({ ...spec, fee: String(fee), denomination: String(denom) }));
   try {
     // Forward vk-mode so the prover uses the CEREMONY zkey/vk the deployed program embeds.
     execFileSync(process.execPath, [join(HERE, "prove-v3.mjs"), sIn, sOut],
-      { stdio: "pipe", env: { ...process.env, SWV3_VK_MODE: VK_MODE } });
+      { stdio: "pipe", env: { ...process.env, SWV3_VK_MODE: VK_MODE, ...env } });
   } catch (e) {
     rmSync(tmp, { recursive: true, force: true });
     if (expectFail) return { proofFailed: true, stderr: (e.stderr ?? Buffer.from("")).toString().slice(0, 200) };
@@ -365,6 +374,18 @@ async function main() {
     [relayerB], relayerB.publicKey, "relayer-mismatch", { expectFail: true });
   record("relayer_mismatch_rejected", rm.executed ? "FAIL" : "PASS", { reverted: !rm.executed, sig: rm.sig ?? null, err: rm.err ?? null });
 
+  // ── SCENARIO 6b: proof from a RETIRED zkey for the unspent note MUST revert ──
+  if (process.env.SWV3_OLD_ZKEY && process.env.SWV3_OLD_VK) {
+    console.log(`\n[old-zkey] proof for note #0 from the retired zkey, correct relayer + recipient -> expect revert`);
+    const oldProof = prove(spec0, { env: { SWV3_ZKEY: process.env.SWV3_OLD_ZKEY, SWV3_VK: process.env.SWV3_OLD_VK } });
+    const oz = await send(
+      [cuIx(1_400_000), withdrawIx(oldProof.publicInputsHex.nullifier, rootAfter, oldProof.proof256Hex, recipient.publicKey, relayer.publicKey, FEE)],
+      [relayer], relayer.publicKey, "old-zkey", { expectFail: true });
+    const proofInvalid = JSON.stringify(oz.err ?? null).includes('"Custom":4');
+    record("old_zkey_proof_rejected", !oz.executed && proofInvalid ? "PASS" : "FAIL",
+      { reverted: !oz.executed, sig: oz.sig ?? null, err: oz.err ?? null, zkey: oldProof.zkey, localVerifyAgainstOldVk: oldProof.localVerify });
+  }
+
   // ── SCENARIO 7: proof0 with its CORRECT relayer + recipient succeeds ────────
   console.log(`\n[withdraw#2] proof0 -> bound recipient + bound relayer A (sanity)`);
   const recB2 = await conn.getBalance(recipient.publicKey, "confirmed");
@@ -377,7 +398,7 @@ async function main() {
 
   // ── sweep ephemeral SOL back to wallet (max-recoverable-funds rule) ─────────
   console.log(`\n[sweep] returning leftover SOL from ephemeral keypairs to wallet`);
-  for (const [label, kp] of [["authority", authority], ["relayer", relayer], ["recipient", recipient]]) {
+  for (const [label, kp] of [["authority", authority], ["relayer", relayer], ["recipient", recipient], ["relayerB", relayerB]]) {
     const bal = await conn.getBalance(kp.publicKey, "confirmed");
     const FEE_RESERVE = 5_000;
     if (bal > FEE_RESERVE) {
@@ -407,7 +428,7 @@ async function main() {
     relayerFeeLamports: FEE,
     vkMode: VK_MODE,
     circuit: "shielded_withdraw_v3.circom (Poseidon commitment+nullifier, 20-level Poseidon Merkle, recipient+pool_id+relayer bound, in-proof fee: payout=denom-fee, fee<=MAX_FEE)",
-    vk: "shielded_withdraw_v3_vk (Hermez PPOT Phase 1 + drand-only beacon Phase 2, round 6000000 — no human Phase-2 contributor, no human held Phase-2 entropy). This is the VK the deployed program embeds.",
+    vk: "shielded_withdraw_v3_vk v3.1 (Hermez PPOT phase 1; phase 2: single-party contribution with discarded entropy plus drand beacons, rounds 6000000 and 6529525; vk sha256 4a1f265a…). This is the VK the deployed program embeds.",
     initSig,
     onChainRootAfterDeposits: rootAfter,
     coreCircuitRoot: rustRoot,
@@ -421,7 +442,7 @@ async function main() {
       "the withdraw and was reimbursed the proof-bound fee; the recipient received denom-fee " +
       "and never signed. Double-spend / wrong-root / wrong-recipient / over-fee / relayer-mismatch all reverted.",
     honestCaveats: [
-      "Ceremony VK: Hermez PPOT phase 1 + drand-only phase-2 beacon (round 6000000) applied to shielded_withdraw_v3_0000.zkey; no human phase-2 contributor (ceremony/shielded_withdraw_v3/transcript_v3.json, vk sha256 d1cb06d3…). Independent phase-2 contributors are the next step (ceremony/CONTRIBUTING_V3.md).",
+      "Setup: single-party contribution with discarded entropy plus public beacon (ceremony/shielded_withdraw_v3/transcript_v3_1.json, vk sha256 4a1f265a…); devnet only, a multi-party phase 2 is required before mainnet (ceremony/CONTRIBUTING_V3.md).",
       "UNAUDITED devnet pilot. mainnet_ready=false throughout.",
       "Stealth recipient (NullPay) NOT integrated — recipient is a plain wallet here. Documented as a follow-up stub.",
       "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count==0) for deterministic Merkle-path rebuild.",
@@ -429,7 +450,7 @@ async function main() {
     explorer: { program: `https://explorer.solana.com/address/${PROGRAM_ID.toBase58()}?cluster=${CLUSTER}` },
   };
   mkdirSync(join(REPO, "evidence"), { recursive: true });
-  const outPath = join(REPO, "evidence", "dark-relay-rail-mainnet-beta.json");
+  const outPath = process.env.EVIDENCE_OUT ?? join(REPO, "evidence", "dark-relay-rail-mainnet-beta.json");
   // Merge: keep both pilot and ceremony runs if the file already exists.
   let merged = evidence;
   if (existsSync(outPath)) {
@@ -441,7 +462,7 @@ async function main() {
     merged = { ...evidence, runs: { [VK_MODE]: { overall: evidence.overall, scenarios: evidence.scenarios, program: evidence.program, generatedAt: evidence.generatedAt } } };
   }
   writeFileSync(outPath, JSON.stringify(merged, null, 2) + "\n");
-  console.log(`\nEvidence: evidence/dark-relay-rail-mainnet-beta.json`);
+  console.log(`\nEvidence: ${outPath}`);
   console.log(`OVERALL (${VK_MODE}): ${evidence.overall}`);
   for (const s of results.scenarios) console.log(`  ${s.status.padEnd(4)} ${s.name}`);
   process.exit(allPass ? 0 : 1);
