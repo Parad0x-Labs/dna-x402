@@ -75,7 +75,7 @@ Runtime gate evidence:
 
 - `NODE_ENV=staging`
 - `X402_PLATFORM_FEE_MODE=direct_split`
-- `X402_PLATFORM_FEE_BPS=10`
+- `X402_PLATFORM_FEE_BPS=5`
 - `X402_ENABLE_DIRECT_SPLIT_FEES=1`
 - `X402_DIRECT_SPLIT_GATE_REF=PUBLIC_BETA_DIRECT_SPLIT_CONTABO_2026_05_16`
 - `X402_ENABLE_PROD_MONEY=0`
@@ -113,7 +113,7 @@ Scope:
 - low-risk APIs, tools, and data feeds only
 - Solana USDC only
 - manual wallet signing only
-- direct split DNA 10 bps collection through provider and DNA treasury proofs
+- direct split DNA 5 bps collection through provider and DNA treasury proofs
 - Public Beta per-transaction cap: `$200`
 - Public Beta daily spend cap: `$1,500`
 - Public Beta daily loss cap: `$300`
@@ -148,7 +148,7 @@ Allowed only after approval:
 - builder-monetized APIs in `display_only` or non-custodial accrual mode
 - allowlisted or reviewed builders
 - Solana USDC only
-- DNA 10 bps direct split required for live paid Solana USDC flows
+- DNA 5 bps direct split required for live paid Solana USDC flows
 - quote, commit, finalize, receipt, paid retry
 - visible fee waterfall
 - receipt verification
@@ -193,7 +193,7 @@ X402_ENABLE_HIGH_RISK_CATEGORIES=0
 X402_ENABLE_POLYMARKET_LIVE=0
 
 X402_PLATFORM_FEE_MODE=direct_split
-X402_PLATFORM_FEE_BPS=10
+X402_PLATFORM_FEE_BPS=5
 X402_PLATFORM_FEE_TREASURY=<dna-treasury-usdc-wallet>
 X402_ENABLE_BUILDER_FEES=1
 X402_BUILDER_FEE_DEFAULT_MODE=display_only
@@ -331,9 +331,9 @@ Required fields before changing approval:
 
 ## Direct Split Fee Gate
 
-Public Beta live paid Solana USDC flows require DNA 10 bps direct split collection. Public builder fee direct collection remains blocked until separately approved; builder fees stay display/accrual unless the builder direct split gate is explicitly approved.
+Public Beta live paid Solana USDC flows require DNA 5 bps direct split collection. Public builder fee direct collection remains blocked until separately approved; builder fees stay display/accrual unless the builder direct split gate is explicitly approved.
 
-DNA 10 bps direct split is implemented behind `X402_ENABLE_DIRECT_SPLIT_FEES=1`, `X402_PLATFORM_FEE_MODE=direct_split`, and `X402_DIRECT_SPLIT_GATE_REF`. A Public Beta Solana USDC direct split dust proof passed on 2026-05-16 with separate provider and DNA treasury SPL transfers, receipt-bound split proofs, and replay/underpay/wrong-treasury rejection. Live paid beta finalize must require both provider and DNA treasury proofs. Broader production approval still requires counsel constraints, public-production backup operators, production monitoring, and final production dust drill evidence.
+DNA direct split is implemented behind `X402_ENABLE_DIRECT_SPLIT_FEES=1`, `X402_PLATFORM_FEE_MODE=direct_split`, and `X402_DIRECT_SPLIT_GATE_REF`. A Public Beta Solana USDC direct split dust proof passed on 2026-05-16 with separate provider and DNA treasury SPL transfers, receipt-bound split proofs, and replay/underpay/wrong-treasury rejection. Live paid beta finalize must require both provider and DNA treasury proofs. Broader production approval still requires counsel constraints, public-production backup operators, production monitoring, and final production dust drill evidence.
 
 If direct split is not configured, live paid Public Beta flows must not start:
 

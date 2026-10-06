@@ -2,6 +2,8 @@
 
 # DNA x402 Boss Fight Audit Evidence
 
+> Fee rate (2026-10-06): the DNA platform fee line is the x402 protocol fee, 5 bps (0.05%), Parad0x's only fee. Mainnet dust proofs from May 2026 ran at the former 10 bps setting; their recorded amounts and transactions below are kept as recorded.
+
 Date: 2026-05-15
 
 Status: `TECHNICAL_PRE_PRODUCTION_EVIDENCE_PACK`
@@ -10,7 +12,7 @@ This document consolidates the main hardening "boss fight" evidence into one aud
 
 Blunt status:
 
-DNA x402 has passed private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split 10 bps dust proof, G-local live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local Prometheus/Alertmanager/Grafana alert routing evidence, external Telegram human-route delivery, and a hardened Contabo Public Beta HTTPS deployment route with scheduled backups.
+DNA x402 has passed private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split dust proof, G-local live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local Prometheus/Alertmanager/Grafana alert routing evidence, external Telegram human-route delivery, and a hardened Contabo Public Beta HTTPS deployment route with scheduled backups.
 
 Public production remains blocked by:
 
@@ -18,7 +20,7 @@ Public production remains blocked by:
 - backup operators for public production
 - explicit live-gate approvals
 - scheduled backup/PITR policy and release tag before public production
-- direct split fee gate before public 10 bps collection
+- direct split fee gate before public 5 bps collection
 
 No public production money movement, public fee collection, unattended signing, backend key custody, public netting, physical goods, high-risk categories, broad multi-chain settlement, or Polymarket live movement is approved by this evidence.
 
@@ -31,8 +33,8 @@ No public production money movement, public fee collection, unattended signing, 
 | Boss 2: Webhook replay after restart | Server mayhem with Postgres adapter | `PASSED_G_LOCAL_POSTGRES_18` | `npm run mayhem:x402:server` with `X402_REPOSITORY_MODE=postgres` | Webhook idempotency key survives restart and replay is rejected from persisted state. | External webhook provider integration or public webhook delivery. |
 | Boss 3: Persistent Sybil relist | Live Postgres test | `PASSED_G_LOCAL_POSTGRES_18` | `x402/tests/db/postgres-sybil-relist.test.ts` | Seller cannot regain clean trust by changing slug/linking a new wallet/relisting similar capability after persisted strikes and clustered risk. | Perfect Sybil resistance against all future adversaries. It proves current persisted controls, not identity impossibility. |
 | Boss 4: Monitoring routing | Local collector/dashboard/alert route + external Telegram delivery | `PASSED_LOCAL_STACK_AND_EXTERNAL_TELEGRAM_ROUTE` | `<repo-root>\reports\monitoring\2026-05-15T15-43-16-634+03-00\boss4-monitoring-evidence-summary.json`, `<repo-root>\reports\monitoring\2026-05-15T16-40-33-398Z-telegram-route\telegram-route-summary.json` | Prometheus scrapes `/metrics`, Grafana dashboard imports, alert rules load, Alertmanager delivers alerts to a local operator webhook, emergency pause and PII block alerts fire from real app metrics, and required Telegram alerts reached the private ops group with human confirmation. | Named operator staffing, legal approval, or live-gate approval. |
-| Builder monetization gate | Unit tests + server mayhem + live Postgres refresh | `PASSED_G_LOCAL_POSTGRES_18_DISPLAY_AND_ACCRUAL_ONLY` | `x402/src/fees/waterfall.ts`, `docs/DNA_X402_BUILDER_MONETIZATION.md`, `npm run mayhem:x402:server`, `npm --prefix x402 run db:backup:test:postgres` | Builder fee lines are visible in quote, DNA fee remains first-class, builder caps/statuses are enforced, accrual records are receipt-bound, `fee_accruals` exists, and builder accrual survives repository restart and native backup/restore. | Public direct collection, auto-sweep, backend custody, or public 10 bps collection. |
-| DNA 10 bps direct split Public Beta gate | HTTP finalize tests + server mayhem + mainnet dust split | `PUBLIC_BETA_DIRECT_SPLIT_DUST_PROOF_PASSED` | `x402/tests/serverFlow.test.ts`, `x402/scripts/mayhem/x402-server-mayhem.ts`, `<repo-root>\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json` | Approved Public Beta direct split required seller/provider and DNA treasury payment proofs before receipt issuance; real mainnet provider and DNA treasury SPL transfers verified; missing DNA proof, wrong treasury recipient, underpaid treasury proof, and proof replay failed safely; receipt binds `feeWaterfallHash`, fee lines, collection status, and split payment proof summaries. | Public direct collection, public production launch, counsel approval, direct builder fee collection, or direct split without allowlists/caps/Helius/Telegram/gate reference. |
+| Builder monetization gate | Unit tests + server mayhem + live Postgres refresh | `PASSED_G_LOCAL_POSTGRES_18_DISPLAY_AND_ACCRUAL_ONLY` | `x402/src/fees/waterfall.ts`, `docs/DNA_X402_BUILDER_MONETIZATION.md`, `npm run mayhem:x402:server`, `npm --prefix x402 run db:backup:test:postgres` | Builder fee lines are visible in quote, DNA fee remains first-class, builder caps/statuses are enforced, accrual records are receipt-bound, `fee_accruals` exists, and builder accrual survives repository restart and native backup/restore. | Public direct collection, auto-sweep, backend custody, or public 5 bps collection. |
+| DNA direct split Public Beta gate | HTTP finalize tests + server mayhem + mainnet dust split | `PUBLIC_BETA_DIRECT_SPLIT_DUST_PROOF_PASSED` | `x402/tests/serverFlow.test.ts`, `x402/scripts/mayhem/x402-server-mayhem.ts`, `<repo-root>\reports\solana-usdc-drill\2026-05-16T07-11-01-352Z-direct-split.json` | Approved Public Beta direct split required seller/provider and DNA treasury payment proofs before receipt issuance; real mainnet provider and DNA treasury SPL transfers verified; missing DNA proof, wrong treasury recipient, underpaid treasury proof, and proof replay failed safely; receipt binds `feeWaterfallHash`, fee lines, collection status, and split payment proof summaries. | Public direct collection, public production launch, counsel approval, direct builder fee collection, or direct split without allowlists/caps/Helius/Telegram/gate reference. |
 | Contabo small-scale real-money pilot deployment | VPS deployment + Cloudflare/Nginx route + firewall hardening + scheduled backup + sequential regression | `APPROVED_SMALL_SCALE_OWNER_OPERATED_REAL_MONEY_PILOT` | `https://parad0xlabs.com/x402/health`, `docs/DNA_X402_PRODUCTION_LAUNCH_APPROVAL.md` | x402 runs from `/opt/dna-x402-next` under systemd, old `/opt/dna-x402` was archived, public HTTPS `/x402/health` reaches the app, public `/x402/metrics` is blocked, raw public `8080` is blocked, local metrics remain available, scheduled daily `pg_dump` timer passed, DB migrate/health/server mayhem/backup drill passed sequentially on the VPS, and Telegram alert drill passed from the server. | Counsel approval, public-production backup operator staffing, managed PITR/failover, final tagged release approval, public permissionless marketplace, or public direct split gate approval beyond the tiny allowlisted pilot caps. |
 | Polymarket Phase 0 browser-local proof | Browser-local signing fixture | `PASSED_SIGN_ONLY_AND_WALLET_CREATE` | `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-18-000Z-browser-local.json`, `<repo-root>\reports\polymarket-phase0\2026-05-14T21-10-43-546Z-browser-local.json` | Browser-local Phantom EVM owner signer can produce a `POLY_1271` no-submit order fixture with `signatureType = 3`, builder code attached, and no mismatches; deposit wallet deployment call reported success. | Polymarket production trading, hosted automation, backend signing, pUSD transfer, copy trading, withdrawals, or public launch. |
 | Archival 50-agent mainnet mayhem | Mainnet transaction report | `ARCHIVAL_PRIOR_PROOF` | `x402/test-mainnet/MAYHEM_50_REPORT.md` | Historical report shows 50 agents, 80 total trades, 20 real USDC transfer txs (genuine, finalized on mainnet), and 80 receipts built/chained/batched off-chain, 0 failed tests at the time of that run. | Current production readiness, and **on-chain receipt anchoring** — that run anchored **0** receipts on-chain (report Audit Summary: `receiptsAnchored: 0`; no anchor TX exists). Treat as archival context unless re-run under current gates and current infra. |
@@ -395,11 +397,11 @@ Required before public production:
 - counsel review
 - backup operators for public production
 - explicit live-gate approvals
-- direct split fee gate before public 10 bps collection
+- direct split fee gate before public 5 bps collection
 
 ## Final Audit Language
 
-DNA x402 has passed private mainnet dust-size Solana USDC technical chain proof, Public Beta Solana USDC direct split 10 bps dust proof, live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local monitoring collector/dashboard/alert-route proof, external Telegram human-route proof, and Public Beta primary operator assignment. It is ready for capped Public Beta live paid flows that require DNA direct split. It is still not broad permissionless production ready until counsel review, backup operators, expanded fee gate approvals, and explicit expanded live-gate approvals are complete.
+DNA x402 has passed private mainnet dust-size Solana USDC technical chain proof, Public Beta Solana USDC direct split dust proof, live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local monitoring collector/dashboard/alert-route proof, external Telegram human-route proof, and Public Beta primary operator assignment. It is ready for capped Public Beta live paid flows that require DNA direct split. It is still not broad permissionless production ready until counsel review, backup operators, expanded fee gate approvals, and explicit expanded live-gate approvals are complete.
 # Agent/Copy Postgres Durability Gate
 
 Status: `PASSED_CONTABO_POSTGRES_16_PUBLIC_BETA_DB`

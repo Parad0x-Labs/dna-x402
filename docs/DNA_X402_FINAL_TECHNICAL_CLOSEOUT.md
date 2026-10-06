@@ -52,7 +52,7 @@ Public production marketplace readiness is still blocked by:
 2. backup operators for public production
 3. live gate approvals
 4. managed PITR or equivalent production backup policy and release tag/commit
-5. direct split fee gate before public 10 bps collection
+5. direct split fee gate before public 5 bps collection
 
 Live Postgres migration, concurrency, backup/restore, Postgres webhook replay-after-restart, and persistent Sybil relist have passed against a G-local PostgreSQL 18 drill instance. Docker Compose execution itself is not claimed because Docker is unavailable on this workstation.
 
@@ -83,7 +83,7 @@ Still blocked:
 - external counsel review
 - backup operators for public production
 - explicit live-gate approvals
-- direct split fee gate before public 10 bps collection
+- direct split fee gate before public 5 bps collection
 
 No live movement.
 No unattended signing.
@@ -118,8 +118,8 @@ Required limits:
 
 Fee status:
 
-- 10 bps is safe as display/accrual, and as gated direct split only for approved Public Beta low-risk flows
-- direct split collection is implemented, app/server-tested, and real-mainnet dust-tested for approved Public Beta DNA 10 bps flows only; public direct split remains blocked until counsel review, backup operators, and explicit gate approval
+- 5 bps is safe as display/accrual, and as gated direct split only for approved Public Beta low-risk flows
+- direct split collection is implemented, app/server-tested, and real-mainnet dust-tested for approved Public Beta DNA fee flows only; public direct split remains blocked until counsel review, backup operators, and explicit gate approval
 - auto-sweep, backend fee-wallet custody, SOL-equivalent fee thresholds, and hidden fee collection remain forbidden
 
 Verdict: Helius fixes the RPC bottleneck. It does not remove any production blockers. The remaining external blockers are counsel review, backup operators for public production, direct split fee gate review, and explicit gate approvals.
@@ -338,12 +338,12 @@ This project becomes technically pre-production complete only when:
 - counsel feedback is folded into gate checklists
 - Public Beta primary operator assigned: `PASSED`
 - backup operators for public production are assigned
-- direct split fee gate owner is assigned before public 10 bps collection
+- direct split fee gate owner is assigned before public 5 bps collection
 - all dangerous gates remain locked until explicitly approved
 
 ## Final Blunt Status Language
 
-DNA x402 has passed modular safety, local durability, hard immutable PII blocking, HTTP-level payment attack testing, admin emergency controls, monitoring endpoint exposure, live-gate documentation, private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split 10 bps dust proof, G-local live Postgres migration/concurrency/backup evidence, Contabo live Postgres agent/copy durability evidence, local Prometheus/Alertmanager/Grafana alert routing evidence, external Telegram human-route proof, and Public Beta primary operator assignment. It is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. Unlimited permissionless production, backend custody, backend signing, hidden fees, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
+DNA x402 has passed modular safety, local durability, hard immutable PII blocking, HTTP-level payment attack testing, admin emergency controls, monitoring endpoint exposure, live-gate documentation, private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split dust proof, G-local live Postgres migration/concurrency/backup evidence, Contabo live Postgres agent/copy durability evidence, local Prometheus/Alertmanager/Grafana alert routing evidence, external Telegram human-route proof, and Public Beta primary operator assignment. It is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. Unlimited permissionless production, backend custody, backend signing, hidden fees, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
 # Agent/Copy Durability Status
 
 Agent/copy Postgres durability is implemented in code and migrations.

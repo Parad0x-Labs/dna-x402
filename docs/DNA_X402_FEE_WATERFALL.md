@@ -38,7 +38,7 @@ Fee math must be canonical. No endpoint should hide fee logic.
 - DNA platform fee is first-class and cannot be overridden by builder or affiliate fees.
 - Builder fees are visible in quotes and receipt-bound through `feeWaterfallHash`.
 - Builder fees can run in `display_only` or `builder_accrual` mode for Public Beta.
-- DNA 10 bps direct split collection is implemented and real-mainnet dust-tested for approved Public Beta live paid flows. Finalize requires provider and DNA treasury proofs before receipt issuance.
+- DNA direct split collection is implemented and real-mainnet dust-tested for approved Public Beta live paid flows. Finalize requires provider and DNA treasury proofs before receipt issuance.
 - Public Beta live paid Solana USDC flows must use DNA direct split; display/accrual DNA fee modes are for demos or explicitly non-live environments.
 - Legacy `FEE_BPS`, `BASE_FEE_ATOMIC`, and `MIN_FEE_ATOMIC` must be zero when canonical direct split platform fees are enabled; hidden legacy fee stacking is rejected.
 - Dust amounts that cannot represent required bps fees fail closed instead of silently dropping the fee.
@@ -50,7 +50,7 @@ Fee math must be canonical. No endpoint should hide fee logic.
 
 Focused tests cover:
 
-- DNA 10 bps fee calculation
+- DNA 5 bps fee calculation
 - builder bps calculation
 - affiliate and alpha lines
 - caps

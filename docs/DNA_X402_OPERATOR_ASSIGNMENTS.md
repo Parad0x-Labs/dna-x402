@@ -161,7 +161,7 @@ Approval status: `ASSIGNED_PUBLIC_BETA_GATE_STILL_REQUIRES_APPROVAL`
 
 Responsibilities:
 
-- owns the direct split proof/finalization gate before public 10 bps collection
+- owns the direct split proof/finalization gate before public 5 bps collection
 - confirms no auto-sweep, no backend custody, and no SOL-equivalent threshold sweeping
 - verifies fee waterfall disclosure and receipt binding before any public fee collection
 
@@ -182,7 +182,7 @@ Responsibilities:
 - `BLOCKED`: external counsel review
 - `BLOCKED`: backup operators for public production
 - `BLOCKED`: explicit live-gate approvals
-- `BLOCKED`: direct split fee gate before public 10 bps collection
+- `BLOCKED`: direct split fee gate before public 5 bps collection
 
 ## Single-Operator Public Beta Note
 

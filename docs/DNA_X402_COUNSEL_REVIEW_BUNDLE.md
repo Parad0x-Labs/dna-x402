@@ -44,7 +44,7 @@ Send these documents together:
 - External counsel/legal review.
 - Public-production backup operators for emergency pause, monitoring/on-call, DB/backup, and release approval.
 - Explicit live-gate approvals.
-- Direct split fee proof/review before public 10 bps collection.
+- Direct split fee proof/review before public 5 bps collection.
 
 ## Priority Counsel Questions
 

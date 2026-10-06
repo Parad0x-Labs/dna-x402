@@ -73,10 +73,9 @@ The same CPI path applies for `dark_secp256k1_auth` (ETH/secp256k1 binding).
 
 ### Issuance Fee
 
-- First issuance: **0.01 USDC** paid via x402 payment header before the transaction.
-- Re-issuance (device upgrade): **0.001 USDC** (burn-and-reissue, same agent identity).
-- Payment receipt is included in the instruction data and verified on-chain (devnet: skipped).
-- Revenue: every new agent + every hardware upgrade generates recurring protocol revenue.
+- First issuance: **0** (`ISSUE_FEE_USDC_MICRO = 0`).
+- Re-issuance (device upgrade): **0** (`REISSUE_FEE_USDC_MICRO = 0`; burn-and-reissue, same agent identity).
+- Parad0x takes no passport fee. Its only fee is the 0.05% x402 protocol fee on x402 payments.
 
 ---
 
@@ -120,7 +119,7 @@ UpgradeCredential(old_device_pubkey, new_device_pubkey)
   3. Burn old credential token via PermanentDelegate CPI
   4. Mint new credential token with updated metadata (new device_pubkey, new issued_at)
   5. Update CredentialRecord PDA
-  6. Charge 0.001 USDC re-issuance fee via x402
+  6. No re-issuance fee (0)
 ```
 
 Same `agent_id` is preserved across upgrades — the agent's identity continuity is
@@ -156,7 +155,7 @@ Actions:
   - Initialize TokenMetadata with agent_id, device_pubkey, binding_type, issued_at
   - Mint 1 token to agent_token_account
   - Write CredentialRecord PDA
-  - IS_MAINNET_READY = false: skip x402 fee check, skip CPI mint (record only)
+  - IS_MAINNET_READY = false: skip CPI mint (record only); there is no issuance fee
 ```
 
 ### 0x02 — RevokeCredential

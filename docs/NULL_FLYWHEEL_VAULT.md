@@ -8,7 +8,7 @@ NULL mint: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`
 
 ## ELI5
 
-A slice of every premium fee — signal reveals, risk checks, hint tiers, sniper tax — flows into a rewards vault. Execution is randomized so nobody can front-run the timing. Every conversion is a public receipt. The vault funds community rewards.
+Fee rule (2026-10-06): Parad0x's only fee is the 0.05% x402 protocol fee. It charges no premium fees and the vault allocation defaults to 0 bps, so nothing flows into the vault by default. The mechanics below (randomized execution timing, public receipts, capped chunks) are kept for any rate governance sets.
 
 ---
 
@@ -18,8 +18,8 @@ The NULL Flywheel Vault is a premium-fee conversion layer built on top of the x4
 
 **How it works at a high level:**
 
-- Premium fees collected by the x402 rail — signal reveals, risk checks, hint tiers, sniper tax, ritual gates — are the sole input to the flywheel.
-- A small, capped allocation (0.05% / 5 basis points) of each qualifying fee event is earmarked for `$NULL` utility inventory acquisition.
+- Premium fee events — signal reveals, risk checks, hint tiers, sniper tax, ritual gates — are the only input to the flywheel. Parad0x charges no premium fees (its only fee is the 0.05% x402 protocol fee), so this input is 0 by default.
+- The allocation of each qualifying fee event to `$NULL` utility inventory is `allocation_bps`, default 0.
 - Acquired `$NULL` is deposited into the **RewardsVault**, which serves as a community warchest for distribution through separately governed reward programs.
 - No funds move automatically to any burn address. No market timing is implied. No return is promised.
 
@@ -35,7 +35,7 @@ All values are set at initialization and require a governance vote to change. Th
 
 | Parameter | Default Value | Notes |
 |---|---|---|
-| `allocation_bps` | `5` (0.05%) | Basis points of each qualifying fee routed to vault |
+| `allocation_bps` | `0` | Basis points of each qualifying fee routed to vault (Parad0x takes no treasury cut) |
 | `min_execution_usd` | `$50` | Minimum accumulated amount before execution triggers |
 | `min_execution_lamports` | `~137,500,000` | Heuristic at $4,000/SOL — recalculated at runtime via oracle |
 | `max_single_usd` | `$250` | Maximum size of any single execution chunk |
@@ -186,14 +186,14 @@ Core accumulator logic, config validation, threshold checks, daily cap enforceme
 
 | Test | Description |
 |---|---|
-| `test_allocation_bps_applied` | Verifies 5 bps is correctly applied to a fee amount |
+| `test_default_allocation_is_zero` | Default allocation is 0 bps; nothing routes to the vault |
+| `test_allocation_bps_correct` | Allocation arithmetic at an explicit rate |
 | `test_min_execution_threshold` | Accumulator does not trigger below min_execution_lamports |
 | `test_min_execution_triggers` | Accumulator triggers at or above threshold |
 | `test_daily_cap_blocks_excess` | Execution deferred when rolling 24h cap would be exceeded |
 | `test_daily_cap_resets` | Cap resets after 24h window rolls |
 | `test_chunked_plan_respects_max_single` | No chunk exceeds max_single_usd |
 | `test_chunked_plan_count` | Correct number of chunks generated for a given amount |
-| `test_config_zero_bps_rejected` | Config validation rejects allocation_bps = 0 |
 | `test_config_burn_disabled_by_default` | BurnVault not routed unless explicitly enabled |
 
 ### `null-flywheel-randomizer` — 6 tests

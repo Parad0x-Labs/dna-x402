@@ -39,7 +39,7 @@ Every paid action uses quote -> commit -> proof -> receipt -> paid retry.
 
 Builder and DNA fees are visible and receipt-bound.
 
-Live paid Solana USDC beta flows require DNA 10 bps direct split after the explicit beta gate is configured.
+Live paid Solana USDC beta flows require DNA 5 bps direct split after the explicit beta gate is configured.
 
 Backend custody, backend signing, hidden fees, unrestricted autonomous live trading, physical goods, public netting, high-risk categories, and broad multi-chain settlement are not in beta scope.
 
@@ -89,11 +89,11 @@ Do not use:
 
 Allowed:
 
-`Builder and DNA fees are visible and receipt-bound. Live paid Solana USDC beta flows require DNA 10 bps direct split: finalize needs both provider and DNA treasury proofs.`
+`Builder and DNA fees are visible and receipt-bound. Live paid Solana USDC beta flows require DNA 5 bps direct split: finalize needs both provider and DNA treasury proofs.`
 
 Not in beta scope unless a separate direct split fee gate is approved:
 
-`DNA collects 10 bps directly.`
+`DNA collects 5 bps directly.`
 
 `Builder fees are automatically collected.`
 

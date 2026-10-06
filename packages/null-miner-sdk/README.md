@@ -8,7 +8,7 @@
 
 ## What this is
 
-`null-miner-sdk` is pure payment infrastructure. Drop it into **any app** — Lovable projects, social platforms, AI builders, script-based sites — and your users' devices automatically perform micro-tasks for the network, earning USDC. You earn platform fees on every tx. We earn a tiny protocol cut.
+`null-miner-sdk` is pure payment infrastructure. Drop it into **any app** — Lovable projects, social platforms, AI builders, script-based sites — and your users' devices automatically perform micro-tasks for the network, earning USDC. You earn platform fees on every tx. Parad0x's only fee is the 0.05% x402 protocol fee on each settlement.
 
 **No app to build. No UI to design. One npm install.**
 
@@ -130,7 +130,7 @@ Task completes: $0.005 USDC
 ├── Agent host:    $0.0045  (90%) — user's device did the work
 ├── Platform:      $0.0005  (10%) — you, for integrating the SDK
 └── Protocol fee:  0.05% (5 bps) of the x402 settlement — DNA x402 protocol fee
-         + NULL emission: 5% of task value → NULL flywheel → distributed to hosts
+         + NULL yield: credited to hosts on top of the USDC payout (the flywheel takes 0% of task value)
 ```
 
 **As a platform:** You set `platformFeePct` (default 10%). Every task your users complete pays you. 100 active users × 60 tasks/hour = 6,000 tasks/hr × $0.0005 = **$3/hr per 100 users, zero marginal cost.**
@@ -276,7 +276,7 @@ The SDK falls back to mock tasks when the task marketplace API is unreachable �
 
 - **DNA x402** — Solana HTTP 402 micropayment standard. Quote→Pay→Verify→Anchor.
 - **Dark NULL** — Hash-commitment privacy layer. Stealth addresses, nullifier banks, compressed receipts. Poseidon/Groth16 Phase 2.
-- **null-flywheel-core** — 5bp of every task → NULL token yield to host.
+- **null-flywheel-core** — NULL yield accounting for hosts; takes 0 bps of task value.
 - **dark-agent-escrow** — Condition-hash escrow model in a Rust library crate; not deployed and not called by this SDK. ZK Groth16 Phase 2.
 - **Agent Passport** — SHA-256 commitment identity derived from spend key. Reputation 0–1000. Groth16 Phase 2.
 

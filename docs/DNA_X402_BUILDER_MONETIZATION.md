@@ -58,7 +58,7 @@ Allowed for Public Beta:
 Blocked:
 
 - public direct builder fee collection
-- live paid Public Beta 10 bps collection without explicit direct split fee gate approval
+- live paid Public Beta 5 bps collection without explicit direct split fee gate approval
 - auto-sweep
 - backend fee wallet custody
 - SOL-equivalent fee thresholds
@@ -160,7 +160,7 @@ Evidence:
 - Native `pg_dump`/`psql` backup/restore drill seeds and verifies a builder accrual record.
 - Postgres-mode server mayhem keeps builder fee abuse paths failing safely.
 
-This proves Public Beta display/accrual persistence. DNA 10 bps direct split HTTP finalize is also real-mainnet dust-tested for the approved Public Beta seller/provider plus DNA treasury scope. Live paid Solana USDC beta flows must use DNA direct split. Public direct builder fee collection remains outside beta scope until separately approved.
+This proves Public Beta display/accrual persistence. DNA direct split HTTP finalize is also real-mainnet dust-tested for the approved Public Beta seller/provider plus DNA treasury scope. Live paid Solana USDC beta flows must use DNA direct split. Public direct builder fee collection remains outside beta scope until separately approved.
 
 ## Example Quote
 
@@ -169,14 +169,14 @@ This proves Public Beta display/accrual persistence. DNA 10 bps direct split HTT
   "grossAmount": "100000000",
   "token": "USDC",
   "feeWaterfallV2": {
-    "providerAmount": "99400000",
-    "totalFees": "600000",
+    "providerAmount": "99450000",
+    "totalFees": "550000",
     "lines": [
       {
         "kind": "DNA_PLATFORM_FEE",
-        "label": "DNA platform fee",
-        "amount": "100000",
-        "bps": 10,
+        "label": "x402 protocol fee",
+        "amount": "50000",
+        "bps": 5,
         "recipientType": "DNA_TREASURY",
         "collectionStatus": "ACCRUED_NOT_COLLECTED"
       },
@@ -196,8 +196,8 @@ This proves Public Beta display/accrual persistence. DNA 10 bps direct split HTT
 Buyer copy:
 
 ```txt
-Seller receives: 99.40 USDC
-DNA fee: 0.10 USDC
+Seller receives: 99.45 USDC
+x402 protocol fee (0.05%): 0.05 USDC
 Builder fee: 0.50 USDC
 Total: 100.00 USDC
 ```
@@ -205,7 +205,7 @@ Total: 100.00 USDC
 ## Runtime Config
 
 ```txt
-X402_PLATFORM_FEE_BPS=10
+X402_PLATFORM_FEE_BPS=5
 X402_PLATFORM_FEE_MODE=display_only
 X402_PLATFORM_FEE_TREASURY=
 
@@ -223,7 +223,7 @@ X402_DIRECT_SPLIT_GATE_REF=
 Required Public Beta live paid DNA direct split example:
 
 ```txt
-X402_PLATFORM_FEE_BPS=10
+X402_PLATFORM_FEE_BPS=5
 X402_PLATFORM_FEE_MODE=direct_split
 X402_PLATFORM_FEE_TREASURY=<dna-treasury-public-wallet>
 X402_ENABLE_DIRECT_SPLIT_FEES=1
@@ -247,4 +247,4 @@ X402_AUTO_SWEEP_THRESHOLD_SOL=...
 
 ## Status Wording
 
-DNA x402 supports builder/integrator monetization as visible, receipt-bound fee lines. Builder fees can be represented in display-only and accrual modes without custody. DNA 10 bps direct split collection is implemented and real-mainnet dust-tested for approved Public Beta flows where finalize requires provider and DNA treasury proofs. Live paid Solana USDC beta flows require DNA direct split. DNA platform fees remain first-class and cannot be overridden by builder fees. Builder direct split collection remains separately gated.
+DNA x402 supports builder/integrator monetization as visible, receipt-bound fee lines. Builder fees can be represented in display-only and accrual modes without custody. DNA direct split collection is implemented and real-mainnet dust-tested for approved Public Beta flows where finalize requires provider and DNA treasury proofs. Live paid Solana USDC beta flows require DNA direct split. DNA platform fees remain first-class and cannot be overridden by builder fees. Builder direct split collection remains separately gated.

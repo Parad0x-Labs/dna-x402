@@ -15,7 +15,7 @@ Unapproved public direct collection status: `not in beta scope yet`.
 ## Not In Beta Scope Yet
 
 - public direct builder fee collection
-- public 10 bps collection without explicit direct split gate approval
+- public 5 bps collection without explicit direct split gate approval
 - auto-sweep
 - backend custody
 - hidden fees
@@ -32,7 +32,7 @@ Every fee line is visible and receipt-bound:
 
 ## Direct Split
 
-Direct split collection is implemented for gated Public Beta fee lines. Live paid Solana USDC beta flows must include the DNA 10 bps fee line, and finalize requires every required payment proof before issuing a receipt.
+Direct split collection is implemented for gated Public Beta fee lines. Live paid Solana USDC beta flows must include the DNA 5 bps fee line, and finalize requires every required payment proof before issuing a receipt.
 
 Current approved Public Beta direct split scope:
 
@@ -50,8 +50,8 @@ Public direct builder fee collection is not in beta scope until counsel review, 
 ## Example Quote Copy
 
 ```txt
-Seller receives: 99.40 USDC
-DNA fee: 0.10 USDC
+Seller receives: 99.45 USDC
+x402 protocol fee (0.05%): 0.05 USDC
 Builder fee: 0.50 USDC
 Total: 100.00 USDC
 ```

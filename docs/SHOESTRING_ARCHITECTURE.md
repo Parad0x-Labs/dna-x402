@@ -155,7 +155,7 @@ pub struct ScratchAccount {
 3. After expiry, any caller can invoke `close_scratch(accounts)` and receive the rent lamports as a cleanup bounty
 4. The `useful-chaff-planner` crate (Rule 8) schedules these closes automatically
 
-**Cleanup bounty mechanics:** The program transfers the full rent (minus a small protocol fee) to whoever closes the expired scratch. This creates economic pressure to clean state — janitors compete to close stale accounts, keeping the chain tidy at zero cost to the protocol.
+**Cleanup bounty mechanics:** The program transfers the full rent to whoever closes the expired scratch (no protocol fee). This creates economic pressure to clean state — janitors compete to close stale accounts, keeping the chain tidy at zero cost to the protocol.
 
 ---
 

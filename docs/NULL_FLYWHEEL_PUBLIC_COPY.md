@@ -8,7 +8,7 @@ NULL mint: `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`
 
 ## ELI5
 
-A slice of every premium fee — signal reveals, risk checks, hint tiers, sniper tax — flows into a rewards vault. Execution is randomized so nobody can front-run the timing. Every conversion is a public receipt. The vault funds community rewards.
+Fee rule (2026-10-06): Parad0x's only fee is the 0.05% x402 protocol fee. It charges no premium fees and the vault allocation defaults to 0 bps, so nothing flows into the vault by default. The mechanics below (randomized execution timing, public receipts, capped chunks) are kept for any rate governance sets.
 
 ---
 
@@ -16,13 +16,13 @@ A slice of every premium fee — signal reveals, risk checks, hint tiers, sniper
 
 **Five steps, plain English:**
 
-**1. Premium service fees are collected by the protocol.**
+**1. Premium fee input: 0.**
 
-When agents or users access premium features — signal reveals, alpha access, sniper traps, hint tiers, ritual gates — the protocol charges a fee. These fees are the sole input to the flywheel.
+Parad0x charges no fee on premium features — signal reveals, alpha access, sniper traps, hint tiers, ritual gates. Its only fee is the 0.05% x402 protocol fee. The flywheel therefore has no premium-fee input by default.
 
-**2. A small slice (0.05%) routes to a community rewards vault.**
+**2. Allocation rate: 0 bps by default.**
 
-Five basis points of each qualifying fee event flow into a `$NULL` utility inventory. This is a fixed, capped allocation set at launch. The vault is program-controlled — no individual can withdraw from it unilaterally.
+`allocation_bps` defaults to 0, so nothing routes to the `$NULL` utility inventory unless governance sets a rate. The vault is program-controlled — no individual can withdraw from it unilaterally.
 
 **3. Execution timing is randomized and publicly committed — nobody knows when.**
 

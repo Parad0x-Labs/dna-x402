@@ -2,6 +2,8 @@
 
 # DNA x402 Solana USDC Drill Report
 
+> Fee rate (2026-10-06): the DNA platform fee line is the x402 protocol fee, 5 bps (0.05%), Parad0x's only fee. Mainnet dust proofs from May 2026 ran at the former 10 bps setting; their recorded amounts and transactions below are kept as recorded.
+
 Status: `PRIVATE_STAGING_TECHNICAL_CHAIN_PROOF_PASSED`
 
 This report is the required evidence packet for a private, allowlisted, dust-size Solana USDC chain drill. It is not a public production launch packet.
@@ -182,7 +184,7 @@ Notes:
 6. Confirm no backend private key env vars are accepted.
 7. Publish one low-risk listing.
 8. Request quote.
-9. Confirm quote shows amount, token/mint, recipient, expiry, settlement mode, policy state, fee waterfall, and the active 10 bps mode: display, accrual, or approved Public Beta direct split.
+9. Confirm quote shows amount, token/mint, recipient, expiry, settlement mode, policy state, fee waterfall, and the active 5 bps mode: display, accrual, or approved Public Beta direct split.
 10. Commit quote.
 11. Buyer signs and sends tiny USDC payment manually.
 12. Submit SPL transfer proof.
@@ -332,7 +334,7 @@ npm --prefix x402 run drill:solana-usdc -- --yes-real-mainnet-drill
 
 Fee status:
 
-- 10 bps direct split collection is implemented and tested for approved Public Beta low-risk flows only
+- 5 bps direct split collection is implemented and tested for approved Public Beta low-risk flows only
 - public direct split collection remains blocked until counsel review, public-production backup operators, and explicit live-gate approval are complete
 - auto-sweep, backend fee-wallet custody, SOL-equivalent fee thresholds, and hidden fee collection remain forbidden
 
@@ -388,9 +390,9 @@ Private staging Solana USDC drill readiness: yes.
 
 Public production readiness: no.
 
-10 bps fee support: display/accrual plus approved Public Beta direct split.
+5 bps fee support: display/accrual plus approved Public Beta direct split.
 
-Direct split collection: implemented for approved Public Beta DNA 10 bps flows only; public direct split remains blocked.
+Direct split collection: implemented for approved Public Beta DNA 5 bps flows only; public direct split remains blocked.
 
 Auto-sweep: no.
 

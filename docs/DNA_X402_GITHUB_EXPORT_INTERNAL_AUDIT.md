@@ -173,7 +173,7 @@ The export includes documentation and reports covering:
 - Prompt-to-Agent and Guided Agent Builder backend support, including drafts, templates, cloneable recipes, risk summaries, and policy rejection for unsafe prompts.
 - Builder Developer Launch Pack.
 - Builder fee waterfall and non-custodial accrual model.
-- Public Beta direct split 10 bps dust proof path.
+- Public Beta direct split dust proof path.
 - Private mainnet Solana USDC dust proof and direct-split drill evidence.
 - Live Postgres migration, health, concurrency, backup, restore, webhook replay-after-restart, and Sybil relist proof.
 - Agent/copy Postgres durability for wallets, paper accounts, profiles, alpha configs, copy settings, copied lots, alpha accruals, and action ledgers.

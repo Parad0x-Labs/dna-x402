@@ -53,7 +53,7 @@ Allowed in beta:
 - paid data feeds
 - paid tools
 - builder-monetized APIs with builder fees in `display_only` or accrual mode
-- DNA 10 bps direct split required for live paid Solana USDC beta flows
+- DNA 5 bps direct split required for live paid Solana USDC beta flows
 - reviewed or capped beta builders
 - Solana USDC only
 - quote, commit, finalize, receipt, and paid retry
@@ -103,7 +103,7 @@ Allowed:
 - low-risk APIs, tools, and data feeds only
 - Solana USDC only
 - manual wallet signing only
-- direct split DNA 10 bps collection only through provider and DNA treasury proofs
+- direct split DNA 5 bps collection only through provider and DNA treasury proofs
 - buyer-visible fee waterfall before commit
 - receipt-bound fee waterfall and split proof summary
 - Public Beta per-transaction cap: `$200`
@@ -228,7 +228,7 @@ Approval: `BLOCKED`
 
 ## Direct Split Fee Gate
 
-Public Beta DNA 10 bps direct split is implemented and real-mainnet dust-tested. Live paid Solana USDC beta flows must use direct split and remain restricted to low-risk capped flows with Helius RPC, Telegram alerts, client-side signing, and explicit `X402_DIRECT_SPLIT_GATE_REF`.
+Public Beta DNA direct split is implemented and real-mainnet dust-tested. Live paid Solana USDC beta flows must use direct split and remain restricted to low-risk capped flows with Helius RPC, Telegram alerts, client-side signing, and explicit `X402_DIRECT_SPLIT_GATE_REF`.
 
 Required before public direct collection of DNA, builder, affiliate, or alpha fee lines:
 
@@ -257,7 +257,7 @@ Approval: `BLOCKED`
 
 Production config cannot enable a dangerous capability without an explicit environment flag and a checklist reference in the release packet. All dangerous `X402_ENABLE_*` reads must go through the centralized runtime gate config module. Tests must keep defaults locked, hard-reject backend key custody and unattended signing, and verify emergency pause overrides enabled flags.
 
-Direct split fee collection requires `X402_ENABLE_DIRECT_SPLIT_FEES=1` and `X402_DIRECT_SPLIT_GATE_REF`. Production-like Public Beta live paid flows additionally require `X402_PLATFORM_FEE_MODE=direct_split`, `X402_PLATFORM_FEE_BPS=10`, `X402_PLATFORM_FEE_TREASURY`, Helius RPC, Telegram alerts, client-side signing, and transaction/daily caps. Legacy `FEE_BPS`, `BASE_FEE_ATOMIC`, and `MIN_FEE_ATOMIC` must be zero when canonical direct split platform fees are enabled. Display-only and accrual-only builder fee lines are allowed for Public Beta when visible, capped, and receipt-bound; DNA platform fee display/accrual is only for demos or explicitly non-live environments.
+Direct split fee collection requires `X402_ENABLE_DIRECT_SPLIT_FEES=1` and `X402_DIRECT_SPLIT_GATE_REF`. Production-like Public Beta live paid flows additionally require `X402_PLATFORM_FEE_MODE=direct_split`, `X402_PLATFORM_FEE_BPS=5`, `X402_PLATFORM_FEE_TREASURY`, Helius RPC, Telegram alerts, client-side signing, and transaction/daily caps. Legacy `FEE_BPS`, `BASE_FEE_ATOMIC`, and `MIN_FEE_ATOMIC` must be zero when canonical direct split platform fees are enabled. Display-only and accrual-only builder fee lines are allowed for Public Beta when visible, capped, and receipt-bound; DNA platform fee display/accrual is only for demos or explicitly non-live environments.
 
 ## Agent Wallet / Copy Trading Gate
 

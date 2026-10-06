@@ -1,5 +1,7 @@
 # DNA x402 Modular Commerce Audit Packet
 
+> Fee rate (2026-10-06): the DNA platform fee line is the x402 protocol fee, 5 bps (0.05%), Parad0x's only fee. Mainnet dust proofs from May 2026 ran at the former 10 bps setting; their recorded amounts and transactions below are kept as recorded.
+
 Date: 2026-05-15
 
 This packet consolidates the modular commerce upgrade docs into one audit-readable file. The original source docs remain in place.
@@ -41,7 +43,7 @@ This packet consolidates the modular commerce upgrade docs into one audit-readab
 
 ## Current Blunt Status
 
-DNA x402 has passed modular safety, local durability, hard immutable PII blocking, HTTP-level payment attack testing, admin emergency controls, monitoring endpoint exposure, live-gate documentation, private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split 10 bps dust proof, G-local live Postgres migration/concurrency/backup evidence, local Prometheus/Alertmanager/Grafana routing evidence, external Telegram human-route delivery, Public Beta primary operator assignment, Contabo HTTPS routing, raw port lockdown, and scheduled backup timer installation. It is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. It is not broad permissionless production ready until counsel review, backup operators, managed PITR or equivalent production backup policy, explicit direct split fee gate approval for expanded public collection, and explicit expanded live-gate approvals are complete.
+DNA x402 has passed modular safety, local durability, hard immutable PII blocking, HTTP-level payment attack testing, admin emergency controls, monitoring endpoint exposure, live-gate documentation, private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split dust proof, G-local live Postgres migration/concurrency/backup evidence, local Prometheus/Alertmanager/Grafana routing evidence, external Telegram human-route delivery, Public Beta primary operator assignment, Contabo HTTPS routing, raw port lockdown, and scheduled backup timer installation. It is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. It is not broad permissionless production ready until counsel review, backup operators, managed PITR or equivalent production backup policy, explicit direct split fee gate approval for expanded public collection, and explicit expanded live-gate approvals are complete.
 
 Private staging Solana USDC technical chain proof passed for allowlisted, dust-size, low-risk sandbox listings only. This is not a public marketplace launch, public fee collection approval, Polymarket live movement approval, or production-readiness evidence.
 
@@ -96,7 +98,7 @@ Remaining hard external gate:
 - the private Solana USDC strict dust proof and Public Beta direct split dust proof have run and passed, but expanded public direct split still requires counsel review, backup operators, direct split gate approval, and live-gate approvals.
 - longer mainnet drills must use `HELIUS_RPC` or `HELIUS_API_KEY`; public Solana RPC produced `429 Too Many Requests` during the dust proof and is not acceptable for larger mayhem.
 - Helius RPC support is accepted for the next longer private mainnet drill. RPC reports must redact API keys, and public Solana RPC fallback is acceptable only for tiny/manual proof, not extended drills.
-- 10 bps direct split collection is implemented and real-mainnet dust-tested for approved low-risk Public Beta flows only. It requires provider and DNA treasury proofs at finalize, visible fee waterfall, receipt-bound split proof summary, caps, Helius RPC, Telegram alerts, client-side signing, and explicit `X402_DIRECT_SPLIT_GATE_REF`.
+- Direct split collection is implemented and real-mainnet dust-tested for approved low-risk Public Beta flows only. It requires provider and DNA treasury proofs at finalize, visible fee waterfall, receipt-bound split proof summary, caps, Helius RPC, Telegram alerts, client-side signing, and explicit `X402_DIRECT_SPLIT_GATE_REF`.
 - Public fee collection, public direct split collection, auto-sweep, backend fee-wallet custody, SOL-equivalent fee thresholds, and hidden fee collection remain blocked until their gates pass.
 - Builder fees are Public Beta safe as visible display-only or non-custodial accrual lines. Public direct builder fee collection is not in beta scope until multi-recipient split-proof finalization and direct split fee gate approval pass.
 
@@ -638,7 +640,7 @@ Still required before public production:
 - external legal/compliance review
 - backup operators for public production
 - explicit live-gate approvals
-- direct split fee gate before public 10 bps collection
+- direct split fee gate before public 5 bps collection
 
 ## Latest Validation Snapshot
 

@@ -74,7 +74,7 @@ sequenceDiagram
 | `resolveReceiptAnchorProgramId({ cluster?, anchorProgramId? })` | function | Explicit ID, else cluster → configured receipt_anchor program; throws `RECEIPT_ANCHOR_UNAVAILABLE` for a cluster with none configured (mainnet-beta) |
 | `grossAmount(amountUsdc)` | function | Net → gross USDC after solver fee |
 | `isIntentValid(intent)` | function | Checks expiry and VAA presence |
-| `SOLVER_FEE_BPS` | const | `10` (0.1% spread) |
+| `SOLVER_FEE_BPS` | const | `10` (0.1% spread, kept by the solver operator, not Parad0x) |
 | `RECEIPT_ANCHOR_PROGRAM_IDS` | const | Configured receipt_anchor per cluster: devnet `HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs` (2026-10-06); no mainnet-beta entry |
 | `RECEIPT_ANCHOR_PROGRAM_ID` | const | receipt_anchor on mainnet-beta, or `null` while none is configured |
 | `RECEIPT_ANCHOR_UNAVAILABLE` | const | Error message used when anchoring is requested without a usable program |

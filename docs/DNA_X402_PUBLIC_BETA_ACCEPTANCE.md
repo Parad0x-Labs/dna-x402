@@ -26,7 +26,7 @@ Allowed only with hard caps and monitoring:
 - low-risk API/data-feed/tool payments
 - Solana USDC
 - manual client-side signing
-- DNA 10 bps direct split is required for live paid Solana USDC beta flows once the direct split beta gate is enabled
+- DNA 5 bps direct split is required for live paid Solana USDC beta flows once the direct split beta gate is enabled
 - capped per-transaction live payment ceiling
 - capped daily spend/loss/exposure ceilings
 - Telegram monitoring
@@ -118,4 +118,4 @@ X402_ENABLE_POLYMARKET_LIVE=0
 
 ## Correct Status
 
-DNA x402 is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. Users can create agents, test strategies, publish profiles, configure copy rules, and monetize alpha through visible receipt-bound fees. Live paid Solana USDC beta flows require DNA 10 bps direct split with provider and DNA treasury proofs before finalize. Backend custody, backend signing, hidden fees, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.
+DNA x402 is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. Users can create agents, test strategies, publish profiles, configure copy rules, and monetize alpha through visible receipt-bound fees. Live paid Solana USDC beta flows require DNA 5 bps direct split with provider and DNA treasury proofs before finalize. Backend custody, backend signing, hidden fees, unrestricted autonomous live trading, physical goods, public netting, and high-risk categories are not in beta scope.

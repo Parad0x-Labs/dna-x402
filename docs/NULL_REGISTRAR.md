@@ -1,8 +1,8 @@
 # .null Domain Registrar
 
 > ⚠️ **Legacy/illustrative.** This documents the v1 (NULL-priced, `IS_MAINNET_READY`) design.
-> The mainnet registrar (retired; ran June–August 2026, records readable) was **v2** — **SOL-priced (~0.01 SOL all-in), config-driven via
-> `SetConfig`, free during the pilot** — at `NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np`.
+> The mainnet registrar (retired; ran June–August 2026, records readable) was **v2** — **SOL-priced fee config via
+> `SetConfig`, 0 during the pilot** — at `NXgQhepFpDCu935H1D4g34g59ZYbo1jR4tBCZWhV8Np`.
 > The canonical v2 registrar source/spec is maintained privately and is available to reviewers on request.
 
 **Program**: `programs/null_registrar`
@@ -49,7 +49,7 @@ Global singleton holding protocol parameters:
 |---|---|---|
 | `disc` | 1 | `0x52` ('R') |
 | `authority` | 32 | Squads multisig — the only key that can change fees |
-| `registration_fee` | 8 | NULL tokens required to register (atomic) |
+| `registration_fee` | 8 | NULL tokens required to register (atomic); 0 (`DEFAULT_REGISTRATION_FEE`) |
 | `null_mint` | 32 | The NULL token mint |
 | `treasury` | 32 | ATA that receives registration fees |
 | `total_registered` | 8 | All-time domain count (monotonic) |
@@ -95,27 +95,11 @@ Emits the current `content_hash` as a program log for indexers and RPC callers. 
 
 ---
 
-## Registration Fees → Protocol Treasury
+## Registration Fee: 0
 
-Registration costs a fee (SOL-priced, ~0.01 SOL, config-set, free during the pilot). The fee **transfers to the protocol treasury** and is **never burned**. This is a **utility** flow that funds protocol operations — it is **not** a token supply/demand, buy-pressure, or price-appreciation mechanism:
+Registering a `.null` domain carries a 0% protocol fee: the registrant pays Solana rent for the domain account and nothing else. `DEFAULT_REGISTRATION_FEE` in `programs/null_registrar/src/lib.rs` is 0, the init scripts write `registration_fee = 0`, and the devnet `RegistryConfig` account of the 2026-10-06 deployment (`3RhyFd57nP7R1HysZC14M9xs9T6e1cJNrqBTAFnaF9mZ`) holds 0. The program never debits a fee in this build. Parad0x's only fee is the 0.05% x402 protocol fee on x402 payments.
 
-```
-Agent needs identity
-       |
-       v
-Pays registration fee
-       |
-       v
-Fee transfers → protocol treasury (never burned)
-       |
-       v
-Domain minted on-chain forever
-       |
-       v
-Treasury funds protocol operations
-```
-
-The more agents, the more domains registered. Fees accrue to the treasury to fund protocol operations. No buy-pressure, burn, or price-appreciation claims are made.
+The retired mainnet registrar (`NXgQhepF…`) had a config-set SOL fee, set to 0 during its pilot. That program is retired and its fee settings do not carry forward.
 
 ---
 
@@ -171,12 +155,7 @@ When false:
 - All name validation, ownership, and content hash logic runs normally
 - Suitable for devnet testing and indexer integration
 
-To enable live NULL fee collection:
-1. Wire the SPL token transfer CPI in `processor.rs` (`process_register` — marked with TODO)
-2. Deploy treasury ATA
-3. Obtain third-party security audit
-4. Set `IS_MAINNET_READY = true`
-5. Build with `cargo build-sbf --features mainnet`
+The registration fee stays 0 under the fee rule above, so no NULL fee collection path is planned. `IS_MAINNET_READY` gates only the dormant SPL transfer code path, which moves nothing while `registration_fee` is 0.
 
 ---
 

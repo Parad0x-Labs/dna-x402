@@ -92,7 +92,7 @@ Priority counsel sequence:
 - No physical goods marketplace.
 - No high-risk category publishing.
 - No Polymarket production movement.
-- No public 10 bps fee collection or direct split collection until the direct split fee gate passes.
+- No public 5 bps fee collection or direct split collection until the direct split fee gate passes.
 
 See `docs/DNA_X402_LIVE_GATE_CHECKLISTS.md` for the concrete checklist requirements and approval fields.
 

@@ -1,42 +1,28 @@
 # NULL Miner Tokenomics
 
-> How to extend the existing NULL Flywheel without inflating NULL to zero.
-> Based on lessons from Grass, Helium, io.net — what worked and what broke.
+> How NULL Miner pays agents and hosts.
+
+> Fee rule (2026-10-06): Parad0x's only fee is the 0.05% x402 protocol fee on the
+> x402 settlement. The protocol takes no margin on task value: the flywheel, treasury
+> and reputation-fund shares are all 0 (`NULL_MINER_FLYWHEEL_BPS = 0` in
+> `crates/null-flywheel-core`).
 
 ---
 
 ## The core loop
 
 ```
-Task buyer pays USDC
+Task buyer pays USDC (x402; 0.05% x402 protocol fee on the settlement)
         │
         ├──► 90% → Agent stealth wallet (USDC)
         │
-        └──►  5% → null-flywheel-core
-                        │
-                        ├──► buys NULL from open market at spot price
-                        │    (same mechanism as existing 5bp fee path)
-                        └──► distributes NULL to hosting node (phone owner)
-                             proportional to: tasks_completed × uptime_score
+        ├──► 10% → Integrating platform (the app that sourced the task; it sets this share)
+        │
+        └──►  0% → null-flywheel-core (no protocol cut of task value)
 ```
 
-The agent earns USDC. The human host earns NULL. These are different wallets, different tokens. Clean separation.
-
----
-
-## Why 5% to flywheel (not more, not less)
-
-**Grass lesson:** They emit GRASS tokens funded by protocol margin. At $50M ARR and 8.5M nodes, per-node daily earnings are small but consistent. The token holds value because buy pressure (protocol buying from market) roughly matches sell pressure (miners selling rewards).
-
-**Helium lesson:** When emissions >> real network usage, token inflates to near-zero. Helium's 2025 restructuring tied emissions to actual data usage. Before that: infinite rewards for hosting hotspots nobody used.
-
-**Our constraint:** NULL emission rate must not exceed the rate at which the protocol buys NULL from the market to fund those rewards. At 5% of task USDC value going to flywheel:
-- $10,000/day task volume → $500/day buying NULL from market
-- If 1,000 active nodes, each earns ~$0.50/day in NULL
-- At $0.01 NULL price → 50 NULL/day per node
-- That's sustainable as long as task volume grows with node count
-
-**The floor:** Tie emission rate dynamically to utilization. If task fill rate < 50%, halve the emission rate. If fill rate > 90%, emission rate stays full. This is exactly what io.net did in their 2025 tokenomics overhaul.
+The agent earns USDC. NULL yield to the hosting node is accounted per task by the
+emission rules below; with a 0 flywheel rate, no USDC from task value is converted.
 
 ---
 
@@ -92,49 +78,22 @@ effective_rate_bps = base_rate_bps × min(1.0, network_utilization / 0.8)
 ```
 Below 80% utilization → emissions scale down proportionally. Protects against the "ghost nodes" problem (nodes online but no tasks available).
 
-**3. Market buyback source**
-The flywheel uses *real USDC from task buyers* to buy NULL from the open market. This is not inflationary minting — it's revenue-funded buyback. Same model as Grass's transition plan from reserve-funded to revenue-funded emissions.
+**3. No protocol-funded purchases**
+The protocol takes 0% of task value, so no task USDC is routed into NULL purchases.
 
 **4. Epoch-locked emissions** (from `null-flywheel-core`)
 The existing flywheel already has epoch management. Emissions are bounded per epoch. A single high-value task cannot generate unbounded NULL — there's a per-epoch cap.
 
 ---
 
-## Revenue model for the protocol
+## Fee split
 
-| Revenue source | Rate | Notes |
+| Share | Rate | Recipient |
 |---|---|---|
-| Task margin | 10% of task USDC value | Agent gets 90%, protocol gets 10% |
-| From protocol margin: | | |
-| → Flywheel (NULL buyback) | 5% of task value | Funds host yield |
-| → Treasury | 3% of task value | Protocol ops + development |
-| → Reputation fund | 2% of task value | Funds badge minting + passport ops |
-
-At $100K/day task volume:
-- $10K/day to protocol
-- $5K/day buying NULL → distributed as host yield
-- $3K/day treasury
-- $2K/day reputation fund
-
-At $1M/day task volume (Grass-comparable):
-- $100K/day protocol revenue
-- $50K/day NULL buyback pressure
-- At 1M active nodes: $0.05/day each in NULL (small but meaningful)
-- At 100K active nodes: $0.50/day each in NULL (more meaningful)
-
----
-
-## Comparison to existing DePINs
-
-| Project | Revenue | Payout method | Inflation risk |
-|---|---|---|---|
-| Grass | $50M+ ARR | Reserve → buyback (transitioning) | Medium — reserve-funded early |
-| io.net | $20M ARR | Block rewards + job earnings | Low — tied to utilization since 2025 overhaul |
-| Helium | $9.5M ARR | HNT emissions | Was high, fixed via Data Credits burn |
-| **NULL Miner** | Target: start at x402 agent traffic, scale | Revenue-funded buyback from day 1 | Low — no reserve-funded phase, pure revenue buyback |
-
-**NULL Miner's tokenomics are cleaner than every existing DePIN** because:
-- No reserve-funded emission phase (no "pre-market" inflation risk)
-- Revenue-funded from task 1 (x402 USDC is real money)
-- Utilization-gated (io.net's 2025 lesson applied from day 1)
-- Staking for tier access (creates buy pressure without Ponzi mechanics)
+| Agent payout | 90% of task USDC value | Agent stealth wallet |
+| Platform share | 10% of task USDC value | Integrating platform (operator pricing) |
+| Protocol margin | 0% | none |
+| Flywheel | 0% | none |
+| Treasury | 0% | none |
+| Reputation fund | 0% | none |
+| x402 protocol fee | 0.05% (5 bps) of the x402 settlement | Parad0x treasury |

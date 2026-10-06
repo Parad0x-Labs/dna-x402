@@ -29,7 +29,7 @@ This is not gambling infrastructure. There are no odds-makers, no pooled bets, n
 
 3. Copy-bot tries without subscriber credential
    → receives: decoy reveal (useless fake)
-   → pays: sniper tax (0.001 SOL → protocol revenue)
+   → pays: sniper tax (0.001 SOL → seller; 0% protocol share)
 
 4. User buys hint tier from clue ladder
    → tier 1: vague directional clue
@@ -74,23 +74,23 @@ Turns copy-bots from a threat into a revenue source. The public alpha feed conta
 - Valid subscriber credential routes to real reveal
 - Unknown party without credential receives decoy
 - Decoy reveal does not verify against the real pick commitment (cannot be used to reconstruct the real call)
-- Sniper tax receipt minted with 10% protocol fee and 90% seller fee
+- Sniper tax receipt minted with a 0% protocol fee; the seller receives the whole tax
 
 **Why it matters:**
-Copy-bots currently have no cost. They watch wallets, mirror trades, and extract value for free. This primitive puts a price on guessing. The more they probe, the more they pay. Wrong probes pay the protocol.
+Copy-bots currently have no cost. They watch wallets, mirror trades, and extract value for free. This primitive puts a price on guessing. The more they probe, the more they pay. Wrong probes pay the seller.
 
 ---
 
 ### `hint-ladder-market` — 5 tests
 
-A clue ladder for sealed picks. Each tier unlocks more context about the sealed pick. Tier 1 is cheap and vague. Tier 3 is expensive and specific. The pot grows with every hint purchase. Fees split automatically between seller and protocol.
+A clue ladder for sealed picks. Each tier unlocks more context about the sealed pick. Tier 1 is cheap and vague. Tier 3 is expensive and specific. The pot grows with every hint purchase. The seller receives the whole pot; the protocol share is 0.
 
 **What it proves:**
 - Hints cannot be purchased before payment
 - Higher tier index always means more revealing
 - Duplicate purchase of same tier is rejected
 - Pot grows with each purchase
-- Fee split is correct: configurable seller percentage, remainder to protocol
+- Fee split is correct: the seller receives the whole pot (0% protocol share)
 
 **Use case:**
 Before a big match, Nulla posts a sealed pick and three hint tiers. Tier 1 (500 lamports): "Home advantage is a factor." Tier 2 (1,500 lamports): "Starting 11 has no key absences." Tier 3 (5,000 lamports): "Model confidence 4/5, implied probability 62%." Subscribers buy as much context as they want. The pick itself stays sealed until after the event.
@@ -167,7 +167,7 @@ All 7 steps: proven.
 
 Solana has "fee weather." Some writable accounts are hot (high priority fee demand). Some are cold and cheap. This crate scores account heat, computes route weather, selects the coldest route, and mints a savings receipt when a cheaper path is found.
 
-**Use case:** Before a large swap, check fee weather on the candidate routes. If Route A is 4x hotter than Route B for the same output, take Route B. Savings receipt minted. Protocol takes 10% of verified savings.
+**Use case:** Before a large swap, check fee weather on the candidate routes. If Route A is 4x hotter than Route B for the same output, take Route B. Savings receipt minted. The user keeps all verified savings (0% protocol share).
 
 ---
 
