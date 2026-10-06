@@ -350,6 +350,16 @@ export interface X402Config {
   nullTips?: NullTipConfig;
 }
 
+// A security control that is on unless explicitly switched off: only 0/false/no/off
+// disable it, so an empty or mistyped value keeps the protection.
+function parseDefaultOnEnv(value: string | undefined): boolean {
+  if (value === undefined) {
+    return true;
+  }
+  const normalized = value.trim().toLowerCase();
+  return !(normalized === "0" || normalized === "false" || normalized === "no" || normalized === "off");
+}
+
 function parseBooleanEnv(value: string | undefined, fallback = false): boolean {
   if (value === undefined) {
     return fallback;
@@ -550,7 +560,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): X402Config {
     solanaRpcUrl: parsed.SOLANA_RPC_URL,
     settlementCommitment: parsed.SETTLEMENT_COMMITMENT,
     settlementRequireFinalizedAtomic: parsed.SETTLEMENT_REQUIRE_FINALIZED_ATOMIC,
-    requirePaymentMemo: parseBooleanEnv(parsed.REQUIRE_PAYMENT_MEMO, false),
+    requirePaymentMemo: parseDefaultOnEnv(parsed.REQUIRE_PAYMENT_MEMO),
     pdxDarkProtocolProgramId: parsed.PDX_DARK_PROTOCOL_PROGRAM_ID ?? parsed.PAYMENT_PROGRAM_ID,
     paymentProgramId: parsed.PAYMENT_PROGRAM_ID,
     usdcMint: effectiveMint,

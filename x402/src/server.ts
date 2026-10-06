@@ -1269,6 +1269,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
   });
 
   const quotes = new Map<string, Quote>();
+  const quoteIdByMemoHash = new Map<string, string>();
   const commits = new Map<string, CommitRecord>();
   const receipts = new Map<string, SignedReceipt>();
   const realChainFeeAccruals: RealChainFeeAccrualRecord[] = [];
@@ -2150,6 +2151,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     };
 
     quotes.set(quoteId, quote);
+    quoteIdByMemoHash.set(memoHash, quoteId);
     recordMarketEvent({
       type: "QUOTE_ISSUED",
       shopId: CORE_SHOP_ID,
@@ -2232,6 +2234,27 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
     current.consumedAt = undefined;
     commits.set(commitId, current);
+  }
+
+  function findIssuedQuoteForRequirements(required: CanonicalPaymentRequired, resource: string): Quote | undefined {
+    if (!required.memo) {
+      return undefined;
+    }
+    const quoteId = quoteIdByMemoHash.get(required.memo);
+    const issued = quoteId ? quotes.get(quoteId) : undefined;
+    if (!issued || issued.resource !== resource) {
+      return undefined;
+    }
+    if (new Date(issued.expiresAt).getTime() <= now().getTime()) {
+      return undefined;
+    }
+    if (issued.recipient !== required.recipient || issued.totalAtomic !== required.amountAtomic) {
+      return undefined;
+    }
+    if (required.settlement.mint && required.settlement.mint !== issued.mint) {
+      return undefined;
+    }
+    return issued;
   }
 
   async function tryCompatPayment(
@@ -2371,19 +2394,24 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       return { handled: true };
     }
 
+    // The requirements arrive in a client header. Accept them only when they name an
+    // unexpired quote this server issued for this resource (memo = quote.memoHash) with
+    // the same recipient, amount and mint, and verify against that server-side quote.
+    // Otherwise a client could name its own recipient or amount and pay itself.
+    const issuedQuote = findIssuedQuoteForRequirements(normalized.required, resource);
+    if (!issuedQuote) {
+      sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REQUIRED_PROOF_MISMATCH, {
+        cause: "payment requirements do not match an unexpired quote issued by this server for this resource",
+      }), {
+        dialectDetected: normalized.style,
+        paymentRequired: normalized.required,
+        paymentProof: proof,
+      });
+      return { handled: true };
+    }
     const quote: Quote = {
-      quoteId: `compat-${crypto.randomUUID()}`,
-      resource,
-      amountAtomic: normalized.required.amountAtomic,
-      feeAtomic: "0",
-      totalAtomic: normalized.required.amountAtomic,
-      mint: normalized.required.settlement.mint ?? config.usdcMint,
-      recipient: normalized.required.recipient,
-      expiresAt: normalized.required.expiresAt
-        ? new Date(normalized.required.expiresAt).toISOString()
-        : new Date(now().getTime() + config.quoteTtlSeconds * 1000).toISOString(),
+      ...issuedQuote,
       settlement: config.unsafeUnverifiedNettingEnabled ? ["transfer", "netting"] : ["transfer"],
-      memoHash: hashHex(JSON.stringify(normalized.required)),
     };
 
     if (!enforceGuardSpend(req, res, {

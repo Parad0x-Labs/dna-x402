@@ -56,6 +56,11 @@ export interface DnaSellerOptions {
   streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
   unsafeUnverifiedNettingEnabled?: boolean;
+  /**
+   * Require an SPL Memo equal to the quote's memoHash in the payment transaction
+   * (binds the transfer to one quote). Default true; set false to opt out.
+   */
+  requirePaymentMemo?: boolean;
   receiptSigner?: ReceiptSigner;
 }
 
@@ -164,6 +169,7 @@ export function dnaSeller(app: Express, options: DnaSellerOptions) {
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
+    requirePaymentMemo: options.requirePaymentMemo,
     streamflowClient: options.streamflowClient,
     paymentVerifier: options.paymentVerifier,
   });

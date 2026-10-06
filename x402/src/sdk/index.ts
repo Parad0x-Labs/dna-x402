@@ -150,3 +150,7 @@ export type {
   LiquefyProofArtifact,
   LiquefyRunManifest,
 } from "../bridge/liquefy/adapter.js";
+
+// Quote binding: buyers add this SPL Memo (text = quote.memoHash) to the payment
+// transaction; sellers require it by default (REQUIRE_PAYMENT_MEMO / requirePaymentMemo).
+export { buildMemoInstruction, MEMO_PROGRAM_ID } from "../tx/buildV0.js";

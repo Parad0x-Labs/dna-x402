@@ -12,6 +12,8 @@ export interface PaymentSupportOptions {
   rpcUrl?: string;
   maxTransferProofAgeSeconds?: number;
   allowUnverifiedNetting?: boolean;
+  /** Bind each transfer to its quote with an SPL Memo of the quote's memoHash. Default true. */
+  requirePaymentMemo?: boolean;
   streamflowClient?: StreamflowClientLike;
   paymentVerifier?: PaymentVerifier;
 }
@@ -60,6 +62,7 @@ export function createPaymentVerifier(options: PaymentSupportOptions): PaymentVe
   return new SolanaPaymentVerifier(connection, {
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.allowUnverifiedNetting,
+    requirePaymentMemo: options.requirePaymentMemo ?? true,
     streamflowClient: options.streamflowClient,
   });
 }

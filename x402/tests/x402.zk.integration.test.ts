@@ -14,6 +14,7 @@ class ObservedSolanaConnection {
   readonly observedProgramIds = new Set<string>();
   expectedRecipient = "recipient-wallet";
   expectedMint = "usdc-mint";
+  expectedMemo = "";
   observedSignature = "";
 
   async getSignatureStatus(signature: string) {
@@ -59,6 +60,8 @@ class ObservedSolanaConnection {
                 },
               },
             },
+            // Quote binding: the payment carries the quote's memoHash in an SPL Memo.
+            { program: "spl-memo", programId: "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr", parsed: this.expectedMemo },
           ],
         },
       },
@@ -121,6 +124,7 @@ describe("x402 zk/nullifier integration reality check", () => {
     const requiredHeader = String(first.headers["payment-required"] ?? "");
     expect(requiredHeader.length).toBeGreaterThan(10);
     const requiredAmountAtomic = String(first.body.paymentRequirements.quote.amount);
+    connection.expectedMemo = String(first.body.paymentRequirements.quote.memoHash);
 
     const proofHeader = encodeCanonicalProofHeader({
       version: "x402-proof-v1",

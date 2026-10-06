@@ -51,6 +51,11 @@ export interface PaywallOptions {
   streamflowClient?: StreamflowClientLike;
   maxTransferProofAgeSeconds?: number;
   unsafeUnverifiedNettingEnabled?: boolean;
+  /**
+   * Require an SPL Memo equal to the quote's memoHash in the payment transaction
+   * (binds the transfer to one quote). Default true; set false to opt out.
+   */
+  requirePaymentMemo?: boolean;
   receiptSigner?: ReceiptSigner;
   requireApiKey?: boolean;
   apiKeyHeader?: string;
@@ -742,6 +747,7 @@ export function dnaPaywall(options: PaywallOptions) {
     rpcUrl: options.solanaRpcUrl,
     maxTransferProofAgeSeconds: options.maxTransferProofAgeSeconds,
     allowUnverifiedNetting: options.unsafeUnverifiedNettingEnabled,
+    requirePaymentMemo: options.requirePaymentMemo,
     streamflowClient: options.streamflowClient,
     paymentVerifier: options.paymentVerifier,
   });

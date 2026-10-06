@@ -15,6 +15,11 @@ export interface SolanaPaymentVerifierOptions {
   allowedSignerWallets?: string[];
   settlementCommitment?: "confirmed" | "finalized";
   requireFinalizedAtomic?: string;
+  /**
+   * Require the payment transaction to carry an SPL Memo equal to the quote's
+   * memoHash, binding the transfer to exactly one quote. Default true; pass
+   * false only to accept wallets that cannot add a memo instruction.
+   */
   requirePaymentMemo?: boolean;
   rpcCache?: {
     statusTtlMs?: number;
@@ -113,7 +118,7 @@ export class SolanaPaymentVerifier implements PaymentVerifier {
         maxAgeSeconds: this.options.maxTransferProofAgeSeconds ?? 900,
         allowedSignerWallets: this.options.allowedSignerWallets,
         requiredCommitment: this.resolveSettlementCommitment(quote.totalAtomic),
-        expectedMemo: this.options.requirePaymentMemo ? quote.memoHash : undefined,
+        expectedMemo: (this.options.requirePaymentMemo ?? true) ? quote.memoHash : undefined,
       });
     } catch (error) {
       const cause = extractRpcErrorMessage(error);
