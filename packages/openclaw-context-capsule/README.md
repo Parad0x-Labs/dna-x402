@@ -42,20 +42,18 @@ enabled may not need this.
 
 ## Benchmark
 
-| Metric | Result | CI gate |
-|---|---|---|
-| Token savings | 99.3% | >= 95% |
-| Recovery score | 90% | >= 90% |
-| Runtime | 86ms | < 1000ms |
+This private copy (1.4.0) replaces older history with a short pointer string
+(topics, zlib ratio, Merkle prefix) and has no retrieval, so the model does not
+see older details. It is not the published plugin.
 
-Reproduce locally:
+The figures previously shown here (99.3% savings, 90% recovery) came from the
+standalone library's `bench-public.ts`: the savings figure is the pointer
+string vs the full history, and the recovery figure is keyword matching on
+`searchCapsule()` output, which this plugin never calls. Neither measures this
+plugin. Current measurements:
 
-```sh
-cd packages/context-capsule
-npm run bench:public
-```
-
-CI fails if savings drop below 95% or recovery falls below 90%.
+- standalone library: [docs/CONTEXT_CAPSULE_BENCHMARK.md](../../docs/CONTEXT_CAPSULE_BENCHMARK.md)
+- published plugin (1.7.0, extractive capsule + verbatim tail): [openclaw-skills docs/CONTEXT_CAPSULE_BENCHMARK.md](https://github.com/Parad0x-Labs/openclaw-skills/blob/main/docs/CONTEXT_CAPSULE_BENCHMARK.md)
 
 ## Activation
 

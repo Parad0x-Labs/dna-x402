@@ -8,8 +8,12 @@
  * Test 1: 7B model, raw large context (baseline — what everyone does)
  * Test 2: 14B model, compressed context via context-capsule (our stack)
  *
- * Expected result: 14B + capsule beats 7B + raw context on speed AND quality.
- * That's the Web0 proof: our code runs elephants through needles.
+ * What this measures: generation speed with a long prompt (Test 1) vs a short
+ * one (Test 2). Test 2 sends only the injectCapsule() pointer string, so the
+ * model does not see the session's details and answer quality is not compared.
+ * A quality comparison needs the end-to-end harness in
+ * packages/context-capsule/scripts/e2e-harness.ts (see
+ * docs/CONTEXT_CAPSULE_BENCHMARK.md).
  */
 
 import { compressContext, injectCapsule, estimateSavings } from '../packages/context-capsule/src/index.ts'

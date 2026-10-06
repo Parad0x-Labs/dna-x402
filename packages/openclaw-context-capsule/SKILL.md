@@ -37,17 +37,18 @@ GPT, Ollama, Mistral, LM Studio.
 
 ## How it works
 
-Keeps the last 10 messages verbatim. Compresses everything older into a ~60-token
-capsule (zlib deflate + a topic/Merkle summary). In benchmarks the agent still
-answers 36 of 40 memory-recall questions correctly (90% recovery).
+Keeps the last 10 messages verbatim. Replaces everything older with a short
+pointer string (zlib ratio, topic words, Merkle prefix). The pointer carries no
+facts from the older turns and this copy has no retrieval, so older details are
+not available to the model. No model-answer accuracy has been measured for it.
 
 ## Savings
 
-|                       | Without | With     |
-| --------------------- | ------- | -------- |
-| Tokens per call       | 7,919   | 53       |
-| Cost (Claude Sonnet)  | $0.024  | $0.00016 |
-| Monthly (50 calls/day)| ~$36    | ~$0.24   |
+On the 109-message fixture in `packages/context-capsule/bench/fixtures`, the
+same pointer format built by the standalone library over the whole session is
+53 estimated tokens (chars/4) where the full JSONL history is 7,919. That
+is the initial prompt size only; it says nothing about whether the model can
+still answer questions about the older turns.
 
 ## Install
 

@@ -1,14 +1,14 @@
 /**
  * @parad0x_labs/context-capsule
  *
- * LLM token compression layer for nulla-local and OpenClaw agents.
+ * Session-history archive + pointer + keyword retrieval for agents.
  *
- * Problem: AI agent sessions accumulate thousands of tokens of history.
- * Every new LLM call re-sends that full history = expensive.
- *
- * Solution: ContextCapsule compresses session history before injecting
- * into context. Instead of 8000 tokens of chat history, inject a 96-token
- * capsule summary with deterministic Merkle root for auditability.
+ * compressContext() stores the history losslessly (zlib JSONL) with a SHA-256
+ * Merkle root. injectCapsule() returns a short pointer string (topics, ratio,
+ * Merkle prefix) for the prompt; it does not carry the session's facts.
+ * searchCapsule() decompresses and returns the messages matching query terms;
+ * the caller decides when to call it and places its output in the prompt.
+ * Retrieved text costs tokens too. See docs/CONTEXT_CAPSULE_DATAFLOW.md.
  *
  * Usage:
  *   const capsule = compressContext(messages);
@@ -52,7 +52,7 @@ export interface ContextCapsule {
   originalTokenEstimate: number;
   /** Size of the compressed payload in bytes */
   compressedBytes: number;
-  /** Human-readable compression ratio, e.g. "83x" */
+  /** zlib ratio of JSONL bytes to deflated bytes, e.g. "3.1x" */
   compressionRatio: string;
   /** Up to 5 extracted key topics from message content */
   topics: string[];

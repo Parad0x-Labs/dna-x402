@@ -1,56 +1,50 @@
 # @parad0x_labs/context-capsule
 
-LLM context compression. Reduces token usage while preserving agent memory.
+Keep agent session history out of the prompt until it is needed. Stores the
+history losslessly, gives the model a short pointer, and retrieves matching
+messages on demand.
 
 ## What it does
 
-Compresses agent session history before injecting into an LLM context window.
-Instead of sending 50,000 tokens of previous conversation, send a ~80-token
-capsule that preserves the key facts.
+- `compressContext()` stores the session as zlib-compressed JSONL (lossless) with a SHA-256 Merkle root over the messages.
+- `injectCapsule()` returns a short pointer string for the prompt: session id, zlib ratio, up to 5 topic words, Merkle prefix. It does not contain the session's facts.
+- `searchCapsule()` decompresses the archive and returns every message containing any query term. Your code decides when to call it and puts the result in the prompt.
 
-## Public Benchmark
+All of it is deterministic and local. No exported function calls a model.
+How each stage works: [docs/CONTEXT_CAPSULE_DATAFLOW.md](https://github.com/Parad0x-Labs/dna-x402/blob/main/docs/CONTEXT_CAPSULE_DATAFLOW.md).
 
-Reproducible. No paid LLM required.
+## Public benchmark
 
-```bash
-npm install
-node --experimental-strip-types packages/context-capsule/scripts/bench-public.ts
-```
+Model-free and reproducible; Node.js 22, no dependencies. Bundled 109-message
+development fixture, 40 questions written with it (35 answerable from it).
+Token counts are `chars / 4` estimates.
 
-Or from within the package:
+| Measurement | Result | What it covers |
+|---|---|---|
+| Archive (zlib, lossless) | 31,818 -> 10,382 bytes (3.1x) | stored history |
+| Initial prompt payload | 7,919 -> 53 tokens | pointer string only; retrieval not counted |
+| Pointer alone, answer keywords present | 2 / 40 | no-retrieval control |
+| `searchCapsule(question)` keyword recovery | 34 / 40, ~6,800 tokens retrieved per question | retrieval returns 93 of 109 messages on average |
+| `searchCapsule(content words)` keyword recovery | 33 / 40, ~2,600 tokens per question | 22 of 109 messages on average |
+| End-to-end model task success / total tokens | not measured yet | harness defined, see benchmark doc |
+
+Keyword recovery means every required keyword occurs in the retrieved message
+text; it is not a model answering the question. Method, baselines (sliding
+window, top-k retrieval), result files and the planned model-task comparison:
+[docs/CONTEXT_CAPSULE_BENCHMARK.md](https://github.com/Parad0x-Labs/dna-x402/blob/main/docs/CONTEXT_CAPSULE_BENCHMARK.md).
 
 ```bash
 cd packages/context-capsule
-npm run bench:public
+npm run bench:public   # bench/results/latest.json, latest.md
+npm run bench:scope    # bench/results/scope.json, scope.md (all arms)
 ```
 
-| Metric | Result | Gate |
-|---|---|---|
-| Original tokens | ~7,919 | — |
-| Capsule tokens | ~53 | — |
-| Token savings | **>= 95%** | >= 95% |
-| Recovery score | **>= 90%** | >= 90% (40 questions, keyword match) |
-| Runtime | **< 1000ms** | < 1000ms |
+Limits:
 
-Token savings measured as: `(original_tokens - capsule_inject_tokens) / original_tokens`.
-Original tokens: `chars / 4` estimate on the raw JSONL session.
-Capsule tokens: `chars / 4` on the `injectCapsule()` output string.
-
-Recovery score: 40 golden questions answered from the capsule via `searchCapsule()`.
-Each question passes if all required keywords appear in the result (case-insensitive).
-No LLM is involved.
-
-Benchmark output is written to `bench/results/latest.json` and `bench/results/latest.md`.
-
-**This is a benchmark on the included 100-message fixture (`bench/fixtures/agent-session-100.json`).
-Results vary by content type.**
-
-## What it does NOT prove
-
-- That all possible session types compress this well
-- That the capsule is lossless (it is not — searchCapsule retrieves by term matching)
-- That the recovery score holds for all domains or question styles
-- Token estimates are approximate (chars/4 heuristic, not a real tokenizer)
+- The fixture is one synthetic session; other content compresses and retrieves differently.
+- The pointer is a reference, not a summary. Without retrieval the model does not see earlier details.
+- Retrieval is term matching (any term, substring). A question in different words than the session may miss; a broad query returns most of the history.
+- Token counts are estimates, not a model tokenizer.
 
 ## Install
 
@@ -66,38 +60,40 @@ import { compressContext, injectCapsule, searchCapsule, estimateSavings } from '
 // Compress session history
 const capsule = compressContext(messages, { sessionId: 'my-session' })
 
-// Inject into next LLM call (~80 tokens instead of thousands)
+// Short pointer for the next LLM call (53 estimated tokens on the bundled fixture)
 const injection = injectCapsule(capsule)
 
-// Retrieve specific context on demand
+// When earlier detail is needed, retrieve it and add it to the prompt yourself
 const relevant = searchCapsule(capsule, 'payment receipt')
 
-// Estimate cost savings
+// Pointer size vs full history (initial payload only; retrieval not included)
 const savings = estimateSavings(messages, capsule)
-console.log(savings.savedPercent)              // e.g. "97.3%"
-console.log(savings.estimatedUsdSavingsPerCall) // e.g. "$0.000109"
+console.log(savings.savedPercent)
 ```
 
 ## API
 
 ### `compressContext(messages, opts?): ContextCapsule`
 
-Compresses an array of `{ role, content }` messages using zlib deflate (level 9).
-Builds a SHA-256 Merkle root over per-message hashes for tamper-evident auditing.
+Compresses an array of `{ role, content }` messages using zlib deflate (level 9), lossless.
+Builds a SHA-256 Merkle root over per-message hashes, so a stored history can be checked against a recorded root.
 
 ### `injectCapsule(capsule): string`
 
-Returns a ~80-token summary string ready to inject as a system message.
-Includes session ID, compression ratio, extracted topics, and truncated Merkle root.
+Returns a short pointer string (53 estimated tokens on the bundled fixture) with session ID,
+zlib ratio, up to 5 topic words, and a truncated Merkle root. It does not include facts or decisions.
 
 ### `searchCapsule(capsule, query): string`
 
-Decompresses the capsule and returns only messages matching the query terms.
-Never returns the full history for a specific query — retrieval is selective.
+Decompresses the capsule and returns, in original order and untruncated, every message that
+contains any query term (case-insensitive substring). Results are not ranked or capped, so
+common words return most of the history; use specific terms.
 
 ### `estimateSavings(messages, capsule): SavingsEstimate`
 
-Returns token counts, savings percent, and estimated USD cost delta at $15/1M tokens.
+Compares `chars / 4` of the full JSONL history with `chars / 4` of the `injectCapsule()` string,
+plus a USD delta at a fixed $15 per 1M input tokens. It measures the initial pointer only;
+tokens from `searchCapsule()` results are not included.
 
 ## ContextCapsule shape
 
@@ -107,7 +103,7 @@ interface ContextCapsule {
   capsuleId: string          // sha256(sessionId + createdAt + merkleRoot)[:32]
   originalTokenEstimate: number
   compressedBytes: number
-  compressionRatio: string   // e.g. "8.3x"
+  compressionRatio: string   // zlib ratio, e.g. "3.1x"
   topics: string[]           // up to 5 extracted key topics
   merkleRoot: string         // 64-char hex SHA-256 Merkle root
   createdAt: number          // Unix ms
@@ -115,8 +111,18 @@ interface ContextCapsule {
 }
 ```
 
-Correction chains can be anchored on Solana as an SPL Memo with `anchorCorrectionChain()`.
-It returns `dry_run:<merkleRoot>` unless `SOLANA_KEYPAIR` is set and `@solana/web3.js` is installed.
+## Corrections and anchoring
+
+`taggedCompressContext()` tags each message (instruction, correction, additive, query, ack) with
+keyword heuristics and builds `activeInstructions`, where a correction replaces the earlier
+instruction it overlaps most. `injectEnrichedCapsule()` prints only the counts; render
+`capsule.activeInstructions` into your prompt if the model should see the corrected instructions.
+
+`anchorCorrectionChain()` posts a Merkle root of the correction chain as an SPL Memo
+(`correction_chain:<root>`). It returns `dry_run:<merkleRoot>` and sends nothing unless
+`SOLANA_KEYPAIR` is set and `@solana/web3.js` is installed; the dry-run string is not a
+transaction. When both are present it signs with that keypair and sends to the given RPC
+URL, defaulting to Solana mainnet-beta.
 
 ## Requirements
 
