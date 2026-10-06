@@ -63,17 +63,23 @@ async function send(ixs, label, { expectErr = null } = {}) {
   try {
     sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true });
     err = (await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed")).value.err;
-    // confirmTransaction can race and report null on a tx that actually reverted on-chain;
-    // re-read the authoritative status from the ledger so forge cases aren't flaky-passed.
-    if (err == null && sig) {
-      for (let i = 0; i < 6; i++) {
-        const t = await conn.getTransaction(sig, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
-        if (t?.meta) { err = t.meta.err; break; }
-        await new Promise((r) => setTimeout(r, 700));
-      }
+  } catch (e) { err = e?.message ?? String(e); }
+  // The ledger is authoritative: confirmTransaction can race, throw a non-Error under RPC
+  // rate limiting, or report null for a tx that reverted. Once a signature exists, read the
+  // transaction meta; if it never becomes readable, report the status as unknown.
+  if (sig) {
+    let found = false;
+    for (let i = 0; i < 20 && !found; i++) {
+      let t = null;
+      try { t = await conn.getTransaction(sig, { commitment: "confirmed", maxSupportedTransactionVersion: 0 }); } catch { t = null; }
+      if (t?.meta) { err = t.meta.err; found = true; break; }
+      await new Promise((r) => setTimeout(r, 1500));
     }
-  } catch (e) { err = e.message; }
-  return { sig, err, errStr: err == null ? "" : JSON.stringify(err) };
+    if (!found) err = err ?? "STATUS_UNAVAILABLE";
+  }
+  const errStr = err == null ? "" : JSON.stringify(err);
+  console.log(`    [tx] ${label} ${sig ?? "(not sent)"} err=${errStr || "none"}`);
+  return { sig, err, errStr };
 }
 async function logsOf(sig) {
   for (let i = 0; i < 10; i++) {
