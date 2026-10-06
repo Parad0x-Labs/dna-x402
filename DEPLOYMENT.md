@@ -33,9 +33,9 @@
 |---|---|---|
 | `dark_semaphore` | Signature verification skipped; nullifier PDA still written | Low — nullifier registry only, no token movement |
 | `dark_secp256r1_vault` | secp256r1 precompile binding enforced in every build (not feature-gated): register binds the verified P-256 key, sign-in requires that key over the live challenge | Low — identity binding only, no funds |
-| `dark_secp256k1_auth` | secp256k1 precompile binding enforced in every build (not feature-gated): verified ETH address, message and signature must match the instruction | Low — identity binding only, no funds |
+| `dark_secp256k1_auth` | secp256k1 precompile binding enforced in every build (not feature-gated): verified ETH address, message and signature must match the instruction, and the message must be the EIP-191 binding message naming the program and the agent signer (0x500A otherwise; [details](./docs/DARK_SECP256K1_AUTH.md)) | Low — identity binding only, no funds |
 | `null_token_hook` | Permissive pass-through up to `dark_pool_limit_atomic`; allowlist admin bound to the canonical `[b"hook-config"]` PDA (re-run `InitConfig` after deploying builds from this revision) | Low — existing NULL token is standard SPL; Token-2022 hooks cannot be registered on it |
-| `null_lottery` | Commit-reveal draw recorded; SPL token settlement skipped | Low — no real currency moves in this mode |
+| `null_lottery` | Commit-reveal draw recorded; claims need the owner's anchored ticket (SHA-256 tickets tree) on a Drawn or FallbackDrawn round ([details](./docs/NULL_LOTTERY.md)); SPL token settlement skipped | Low — no real currency moves in this mode |
 | `null_mint_gate` | Emission claim PDA written; SPL mint CPI skipped; claims co-signed by config authority | Low — accounting only, no NULL actually minted |
 
 All enforcement activates only when programs are rebuilt with `--features mainnet` **after external audit sign-off**.
@@ -141,7 +141,10 @@ Build notes: `dark_shielded_pool`, `dark_x402_access_gate` and `dark_reputation_
 `--features devnet`; `dark_ritual_transfer_hook` with `DARK_RITUAL_GATE_ID` set to the `dark_ritual_gate` ID
 above. The other programs use the default build. `dark_secp256r1_vault`, `dark_secp256k1_auth`,
 `dark_null_lottery`, `dark_shielded_pool` and `receipt_commitment_tree` were upgraded in place on 2026-10-06
-with the fixes `01f5e35`, `34047e2`, `3134df4`, `30a0ce6` and `c9f03f8`.
+with the fixes `01f5e35`, `34047e2`, `3134df4`, `30a0ce6` and `c9f03f8`. Later the same day
+`dark_secp256k1_auth` was upgraded again from `aabb759` (ETH binding message) and `dark_null_lottery` from
+`a32933d` and `7439dde` (claim binding, FallbackDraw selection); upgrade transactions, slots and hashes are in
+[`evidence/devnet-programs-2026-10-06.json`](./evidence/devnet-programs-2026-10-06.json).
 
 ---
 

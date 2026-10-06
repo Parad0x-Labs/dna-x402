@@ -110,6 +110,9 @@ count, and records no winner; only the owner of the selected anchored ticket can
 
 Rerun 3 totals: 41 pass, 0 fail ([`summary-rerun3.json`](./summary-rerun3.json)).
 
+The message format, ticket tree, claim rules and error codes are documented in
+[`docs/DARK_SECP256K1_AUTH.md`](../../docs/DARK_SECP256K1_AUTH.md) and [`docs/NULL_LOTTERY.md`](../../docs/NULL_LOTTERY.md).
+
 ### Raw files for reruns 2 and 3
 
 - [`raw/rerun2/logs/`](./raw/rerun2/logs/): console logs, the lottery probe (`lottery-claim-rerun2.mjs`), its
