@@ -1,0 +1,65 @@
+    Finished `test` profile [unoptimized] target(s) in 7.41s
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running tests/old_vk_forgery.rs (/work/swv31/target-host/debug/deps/old_vk_forgery-74dcb5fa85d1b7a2)
+running 2 tests
+[2026-10-06T20:14:22.473361715Z INFO  solana_program_test] "dark_shielded_pool_program" builtin program
+[2026-10-06T20:14:22.751318865Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:22.751384487Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+test earlier_vk_accepts_old_and_forged_proofs_and_rejects_v3_1 ... ok
+[2026-10-06T20:14:22.954149360Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:22.954197097Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.156807045Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.156844275Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.157195731Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.157235296Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.157261144Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.157269190Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.157276278Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.157306754Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.157317594Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.157322722Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.164787834Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: initialized denomination=100000000
+[2026-10-06T20:14:23.164804052Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.164832652Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.166325482Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.166340241Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.166654841Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.166687569Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.166702786Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.166708581Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.166714251Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.166723715Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.166731469Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.166736055Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.180567971Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v2: deposit leaf_index=0
+[2026-10-06T20:14:23.180591193Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.180625046Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.182402501Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.182422888Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.182769257Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.182806487Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.182833670Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.182840549Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.182846719Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.182862062Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.182870483Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.182875278Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.196604717Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v2: deposit leaf_index=1
+[2026-10-06T20:14:23.196633900Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.196707860Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.199065113Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.199084249Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.277473595Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:23.277552016Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:23.277582450Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.277597543Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:23.277615136Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: withdraw denom=100000000 payout=99000000 fee=1000000 recipient=mBKqcnGotbsSb5vNrdyhzZ5EhqZdids9QYiTRckvi7v relayer=AoVsGaj8MSJ6xwKxfFxo9iZWH3enC8RRTXKH2fx2F8os
+[2026-10-06T20:14:23.277618513Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.277640860Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:23.279612970Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.279646948Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:23.358759676Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx failed: custom program error: 0x4
+[2026-10-06T20:14:23.358791069Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx failed: custom program error: 0x4
+test forged_proof_withdraws_under_the_earlier_vk ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.89s
+EXIT=0

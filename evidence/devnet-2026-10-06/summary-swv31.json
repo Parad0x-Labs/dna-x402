@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-06",
+  "cluster": "devnet",
+  "repo": "dna-x402@d45fc51 (fix(dark_shielded_pool): add a secret phase-2 contribution to the shielded_withdraw_v3 key)",
+  "upgrade": {
+    "program": "dark_shielded_pool_program",
+    "id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+    "sig": "4xFWJzSBRz9BtvmYEry5T4ts1iTKzcHwDArDvGgaQ8qN4hntmQmPN7ZsLchc4UV8X63qooi5tdJYBny31YePPqGq",
+    "slot": 508210815,
+    "sha256": "4bf612ea56f368d23e8c13412399129476afcc47672ac76779a03d4501989e1b",
+    "deployerSpentLamports": 645000
+  },
+  "suites": [
+    {
+      "suite": "dna-shielded-pool-v3-relay-rail",
+      "file": "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-swv31.json",
+      "result": "PASS",
+      "pass": 9,
+      "fail": 0
+    }
+  ],
+  "programTests": {
+    "native --features devnet": "31 passed (26 unit, 3 bucket_authority, 2 withdraw_vk_v3_1)",
+    "SBF_OUT_DIR .so --features devnet": "31 passed",
+    "native mainnet build": "30 passed (guard test refuses the v3.1 proof)",
+    "v3 key differential (9f5f92a tree, native)": "forged proof verifies and withdraws 99000000 lamports; v3.1 proof refused"
+  },
+  "payerNetLamports": -11184880,
+  "testPayerLamports": {
+    "before": 4615723304,
+    "after": 4603883424,
+    "spent": 11839880
+  },
+  "generatedAt": "2026-10-06T20:19:54.489Z",
+  "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-swv31.json"
+}

@@ -1,0 +1,147 @@
+    Finished `test` profile [unoptimized] target(s) in 0.41s
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (/work/swv31/target-host/debug/deps/dark_shielded_pool_program-98fc131df1ea81d9)
+running 26 tests
+test tests::test_commitment_hash_secret_sensitivity ... ok
+test tests::test_constants ... ok
+test tests::test_error_codes ... ok
+test tests::test_commitment_hash_matches_core ... ok
+test tests::test_error_to_program_error ... ok
+test tests::test_commitment_leaf_index_sensitivity ... ok
+test tests::test_instruction_bad_discriminator ... ok
+test tests::test_instruction_deposit_roundtrip ... ok
+test tests::test_instruction_empty_data_error ... ok
+test tests::test_commitment_hash_deterministic ... ok
+test tests::test_instruction_withdraw_roundtrip ... ok
+test tests::test_instruction_init_pool_roundtrip ... ok
+test tests::test_note_leaf_len ... ok
+test tests::test_note_leaf_pack_unpack ... ok
+test tests::test_note_leaf_zero_not_initialized ... ok
+test tests::test_nullifier_hash_deterministic ... ok
+test tests::test_nullifier_record_len ... ok
+test tests::test_nullifier_record_pack_unpack ... ok
+test tests::test_pool_config_default_not_initialized ... ok
+test tests::test_pool_config_knows_root_ring ... ok
+test tests::test_pool_config_len ... ok
+test tests::test_pool_config_pack_unpack ... ok
+test tests::test_proof_is_256_bytes ... ok
+test tests::test_nullifier_pool_sensitivity ... ok
+test tests::test_nullifier_differs_from_commitment ... ok
+test tests::test_insert_leaf_matches_core_tree ... ok
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+     Running tests/bucket_authority.rs (/work/swv31/target-host/debug/deps/bucket_authority-7b652759c671b3e9)
+running 3 tests
+[2026-10-06T20:14:48.014793633Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2026-10-06T20:14:48.015884468Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:48.015936529Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.016189673Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:48.016210873Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.020796744Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM invoke [1]
+[2026-10-06T20:14:48.021659216Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM consumed 4190 of 1400000 compute units
+[2026-10-06T20:14:48.021724647Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM failed: invalid program argument
+[2026-10-06T20:14:48.024225600Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh invoke [1]
+[2026-10-06T20:14:48.025026348Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:48.025017268Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM invoke [1]
+[2026-10-06T20:14:48.025060958Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.025337009Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:48.025350712Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.025932843Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM consumed 4190 of 1400000 compute units
+[2026-10-06T20:14:48.025944005Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM failed: invalid program argument
+[2026-10-06T20:14:48.030567402Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: initialized denomination=100000000
+[2026-10-06T20:14:48.030684811Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 consumed 30531 of 1400000 compute units
+[2026-10-06T20:14:48.030753616Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 success
+[2026-10-06T20:14:48.036899750Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:48.036952728Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.040404616Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2026-10-06T20:14:48.040677335Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 consumed 589 of 1400000 compute units
+[2026-10-06T20:14:48.040692620Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 failed: invalid program argument
+[2026-10-06T20:14:48.043928265Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: initialized denomination=100000000
+[2026-10-06T20:14:48.044057169Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh consumed 36260 of 1400000 compute units
+[2026-10-06T20:14:48.044124599Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh success
+[2026-10-06T20:14:48.047340378Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:48.047399311Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.052214794Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh invoke [1]
+[2026-10-06T20:14:48.052509088Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh consumed 589 of 1400000 compute units
+[2026-10-06T20:14:48.052522541Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh failed: invalid program argument
+test legacy_init_pool_still_binds_signer_as_authority ... ok
+[2026-10-06T20:14:48.230262896Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM invoke [1]
+[2026-10-06T20:14:48.230888217Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM consumed 1127 of 1400000 compute units
+[2026-10-06T20:14:48.230921411Z DEBUG solana_runtime::message_processor::stable_log] Program 1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM failed: missing required signature for instruction
+test init_bucket_rejects_foreign_bucket_key_and_unsigned_admin ... ok
+[2026-10-06T20:14:48.245577524Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2026-10-06T20:14:48.246115215Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool: paused=true
+[2026-10-06T20:14:48.246162654Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 consumed 898 of 1400000 compute units
+[2026-10-06T20:14:48.246190767Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 success
+[2026-10-06T20:14:48.248895551Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2026-10-06T20:14:48.249207920Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 consumed 590 of 1400000 compute units
+[2026-10-06T20:14:48.249276808Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 failed: invalid program argument
+[2026-10-06T20:14:48.453201405Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2026-10-06T20:14:48.453469210Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool: paused=false
+[2026-10-06T20:14:48.453492117Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 consumed 898 of 1400000 compute units
+[2026-10-06T20:14:48.453507735Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 success
+[2026-10-06T20:14:48.455720933Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2026-10-06T20:14:48.456452627Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:48.456472952Z DEBUG solana_runtime::message_processor::stable_log] Create Account: account Address { address: 78hnbhVfTGVHcBnQ3H7fUiGrmBUVvvuJnKTQhBKx2q4g, base: None } already in use
+[2026-10-06T20:14:48.456485613Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 failed: custom program error: 0x0
+[2026-10-06T20:14:48.456494110Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 consumed 8166 of 1400000 compute units
+[2026-10-06T20:14:48.456502231Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 failed: custom program error: 0x0
+test bucket_pool_is_pda_keyed_and_only_admin_can_pause ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.75s
+     Running tests/withdraw_vk_v3_1.rs (/work/swv31/target-host/debug/deps/withdraw_vk_v3_1-799420c05e06c35b)
+running 2 tests
+[2026-10-06T20:14:48.745413195Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:48.745533520Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:48.950813675Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2026-10-06T20:14:48.950899347Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+test v3_1_vk_accepts_new_proofs_and_rejects_old_and_forged ... ok
+[2026-10-06T20:14:49.161721275Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.162626668Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.162668194Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.162922302Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.162939253Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.173138233Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: initialized denomination=100000000
+[2026-10-06T20:14:49.173189630Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 39260 of 1400000 compute units
+[2026-10-06T20:14:49.173233029Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:49.174793206Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.175753411Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.175790646Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.175925468Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.175936339Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.195660273Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v2: deposit leaf_index=0
+[2026-10-06T20:14:49.195716834Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 55607 of 1400000 compute units
+[2026-10-06T20:14:49.195741491Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:49.197749199Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.199242111Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.199286385Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.199420915Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.199431245Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.219098409Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v2: deposit leaf_index=1
+[2026-10-06T20:14:49.219161676Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 58597 of 1400000 compute units
+[2026-10-06T20:14:49.219198620Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:49.221456355Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.332721207Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 125878 of 1400000 compute units
+[2026-10-06T20:14:49.332769521Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx failed: custom program error: 0x4
+[2026-10-06T20:14:49.336490013Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.447912178Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 125878 of 1400000 compute units
+[2026-10-06T20:14:49.447985024Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx failed: custom program error: 0x4
+[2026-10-06T20:14:49.451233619Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.558361227Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.558410457Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.560715465Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: withdraw denom=100000000 payout=99000000 fee=1000000 recipient=mBKqcnGotbsSb5vNrdyhzZ5EhqZdids9QYiTRckvi7v relayer=AoVsGaj8MSJ6xwKxfFxo9iZWH3enC8RRTXKH2fx2F8os
+[2026-10-06T20:14:49.560780814Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 150643 of 1400000 compute units
+[2026-10-06T20:14:49.560806596Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+[2026-10-06T20:14:49.563088197Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.564541166Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 12511 of 1400000 compute units
+[2026-10-06T20:14:49.564628256Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx failed: custom program error: 0x3
+[2026-10-06T20:14:49.566828847Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx invoke [1]
+[2026-10-06T20:14:49.677581901Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2026-10-06T20:14:49.677643335Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2026-10-06T20:14:49.679972001Z DEBUG solana_runtime::message_processor::stable_log] Program log: ShieldedPool v3: withdraw denom=100000000 payout=99000000 fee=1000000 recipient=mBKqcnGotbsSb5vNrdyhzZ5EhqZdids9QYiTRckvi7v relayer=AoVsGaj8MSJ6xwKxfFxo9iZWH3enC8RRTXKH2fx2F8os
+[2026-10-06T20:14:49.680028895Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx consumed 150643 of 1400000 compute units
+[2026-10-06T20:14:49.680049678Z DEBUG solana_runtime::message_processor::stable_log] Program US517G5965aydkZ46HS38QLi7UQiSojurfbQfKCELFx success
+test withdraw_with_v3_1_vk_on_a_two_note_pool ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.22s
+   Doc-tests dark_shielded_pool_program
+running 0 tests
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+EXIT=0

@@ -1,0 +1,65 @@
+
+=== DARK RELAY RAIL — shielded pool v3 DEVNET e2e (vk-mode=ceremony) ===
+program   FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3
+wallet    GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3
+authority 7duCGgLyeTYQnpcrscCJyTMPfmJ6u7MDhY5udTpdbmiC (fresh)
+config    8G2muDLVSx2aWo2KKPNFDQxvaK9tRSxTGc4oEEhrrSuW
+vault     HtmzTr93N1RvH4Sfo4Xf93Efqwfu2SHgXuxsraa4RUw6
+relayer   3zrXdj7PcVcECWSACbzujSXcmHVLW9CCGXygWXrnLnzR (fresh — fronts gas/rent, reimbursed fee)
+  funded authority + relayer 2tSQNMg1J46ftNnB1HUikQjh3i6u8uf7MNsMYEBZqkfZkoHNZSs2qRJoX41C4eriEuf2yVRqPsXcyq6nbuTbU7Vy
+
+[init] InitPool denom=100000000
+  [init] succeeded 5GtB4EGTQ1HygFx8uBHQEsY5URM5UKLozuNZDAskArR8p9jtkpE58DeGLQTpsgpjcQFXxpAz3GvZ8bfhRt8EEzgu
+
+[deposit] 2 notes
+  [deposit#0] succeeded 3FJbcrZwNAsj2xEaFqtdzbBRASw1i7GbsH7QVDUdBUHnhXZHmZDdUAEBAPU5vY5Re3Z8g6nQDB1h1pEa3uRg1k7n
+  [deposit#1] succeeded 3WBZr3YrxHguwDVjPWUzuzJRhyj6uEB2wfXx57rnKB8yhKzzpSxqoEfhB3sd7VjC2FmMLWtbxsF2PWWztsDAXx3N
+  on-chain root after 2 deposits: 21d0f35a55125ebba5d67e95ef15f7cf6629519d3a518d252208ca5048f505dd
+
+[prove] recipient AbSMzLpFT2wSb4JCATmHoDgSCMMqBhjEQirL9AUsLeWd fee=1000000 (payout=99000000)
+  ROOT MATCH (on-chain Poseidon tree == circuit/core tree): true
+  snarkjs local verify: OK; proof zkey=shielded_withdraw_v3/shielded_withdraw_v3_final.zkey vk=shielded_withdraw_v3/shielded_withdraw_v3_vk.json
+
+[withdraw] valid proof — submitted by RELAYER (fee_payer != recipient)
+  [withdraw] succeeded 216Zs31AHAcKqBmKWgUHAsyG2opNgQpiMLkcmHEa12rCd1rdH1guBQmJxtp8quw3eG322Svd25piigUJAZZU7nGt
+  recipient delta = 99000000 (expect denom - fee = 99000000)
+  relayer   delta = 136480 (expect ~ +fee - txfee - nullifier_rent)
+
+[double-spend] replay same nullifier -> expect revert
+  [double-spend] reverted as expected (err={"InstructionError":[1,{"Custom":3}]}) | Program FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 failed: custom program erro
+
+[wrong-root] real proof but an unknown root in the ix -> expect revert
+  [wrong-root] reverted as expected (err={"InstructionError":[1,{"Custom":12}]}) | Program FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 failed: custom program erro
+
+[wrong-recipient] valid proof, different recipient account -> expect revert
+  [wrong-recipient] reverted as expected (err={"InstructionError":[1,{"Custom":4}]}) | Program FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 failed: custom program erro
+
+[over-fee] try to prove fee > MAX_FEE (0.05 SOL) -> circuit must reject
+
+[relayer-mismatch] proof bound to relayer A, submitted+fee_payer = relayer B -> expect revert
+  [relayer-mismatch] reverted as expected (err={"InstructionError":[1,{"Custom":4}]}) | Program FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 failed: custom program erro
+
+[old-zkey] proof for note #0 from the retired zkey, correct relayer + recipient -> expect revert
+  [old-zkey] reverted as expected (err={"InstructionError":[1,{"Custom":4}]}) | Program FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 failed: custom program erro
+
+[withdraw#2] proof0 -> bound recipient + bound relayer A (sanity)
+  [withdraw#2] succeeded 4niXQqTpCzTzgZ9d764naJyKm6sjUQSgCoHZMxXdY9UXjhgYESxJcvumpFMinq187LfKXKL1p4qYnPCdpYXQzybR
+
+[sweep] returning leftover SOL from ephemeral keypairs to wallet
+  swept authority (90592160 lam) → wallet 2bcmPWh46YAccSJRNagRG2qTmXzU3HKBWG7CuA56s41iTEhebG7AUAKdT3CKAtkSJyxYxpmcs1mtQMTgJqY2swHG
+  swept relayer (50247960 lam) → wallet 45Nn31uURvnkCiCw7xuZ659zJucpTnsUBv1BC8yDUaomKfph6qL7wgEizoXMvrUPv51ki7YiuyDYw4U3Y96SZWMu
+  swept recipient (197995000 lam) → wallet 3UpV1QeqHpoLSLTDTpN2jaWvW2cK6kVrzpCYBBhX7MULoVnDpQ2iQnzLGJ93NhExVX37ifAzWEt9BKa4hWvgzzQR
+  swept relayerB (49990000 lam) → wallet 5DU8gRqUUgM8PDBPMsfH3YnKA8p8AuCXt5mHvNw3LCdg7nVJPTvyN5YkbgP9NyKhHYEqWN8t7af1dg4f7npvVKPu
+
+Evidence: /w/out/e2e.json
+OVERALL (ceremony): PASS
+  PASS root_consistency
+  PASS valid_relayer_withdraw
+  PASS double_spend_rejected
+  PASS wrong_root_rejected
+  PASS wrong_recipient_rejected
+  PASS over_fee_proof_rejected
+  PASS relayer_mismatch_rejected
+  PASS old_zkey_proof_rejected
+  PASS second_valid_withdraw
+EXIT=0

@@ -1,0 +1,29 @@
+$ node ceremony/check-beacon-delta.mjs --vk shielded_withdraw_v3_beacon_only_vk.json --beacon 642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 --iter 10 --public <fixture note 0 public inputs>
+vk:                 shielded_withdraw_v3_beacon_only_vk.json
+gamma_2 == g2:      true
+beacon:             642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 (2^10 sha256 iterations)
+delta == beacon*g2: true
+forged proof, snarkjs groth16 verify: OK
+RESULT: delta derivable from public data; forged proof verifies
+
+$ node ceremony/check-beacon-delta.mjs --vk shielded_withdraw_v3_beacon_only_vk.json --beacon a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e --iter 10 --public <fixture note 0 public inputs>
+vk:                 shielded_withdraw_v3_beacon_only_vk.json
+gamma_2 == g2:      true
+beacon:             a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e (2^10 sha256 iterations)
+delta == beacon*g2: false
+RESULT: delta is NOT derivable from this beacon alone
+
+$ node ceremony/check-beacon-delta.mjs --vk shielded_withdraw_v3_vk.json --beacon 642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 --iter 10 --public <fixture note 0 public inputs>
+vk:                 shielded_withdraw_v3_vk.json
+gamma_2 == g2:      true
+beacon:             642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 (2^10 sha256 iterations)
+delta == beacon*g2: false
+RESULT: delta is NOT derivable from this beacon alone
+
+$ node ceremony/check-beacon-delta.mjs --vk shielded_withdraw_v3_vk.json --beacon a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e --iter 10 --public <fixture note 0 public inputs>
+vk:                 shielded_withdraw_v3_vk.json
+gamma_2 == g2:      true
+beacon:             a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e (2^10 sha256 iterations)
+delta == beacon*g2: false
+RESULT: delta is NOT derivable from this beacon alone
+

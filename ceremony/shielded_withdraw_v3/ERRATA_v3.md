@@ -43,3 +43,8 @@ The v3 files were renamed `shielded_withdraw_v3_beacon_only_final.zkey` and
 `shielded_withdraw_v3_vk.json` are now the v3.1 key. With the v3.1 verifying key the program rejects
 proofs from the v3 key, including the forged one (`programs/dark_shielded_pool/tests/withdraw_vk_v3_1.rs`,
 native and against the built `.so`).
+
+dark_shielded_pool on devnet (`FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3`) was upgraded to the v3.1
+verifying key at slot 508210815 (`4xFWJzSB…`). On devnet a real proof from the v3 zkey for an unspent
+note reverted with ProofInvalid (0x4) and v3.1 proofs withdrew
+(`evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-swv31.json`).

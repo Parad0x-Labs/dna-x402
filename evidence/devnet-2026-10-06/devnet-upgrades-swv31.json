@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-06",
+  "cluster": "devnet",
+  "repo": "dna-x402@d45fc51 (fix(dark_shielded_pool): add a secret phase-2 contribution to the shielded_withdraw_v3 key)",
+  "deployer": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+  "build": "cargo-build-sbf 4.1.0 (platform-tools v1.54, rustc 1.89.0) --features devnet --jobs 1 --offline in container dnax-sbf-build. The build tree equals git archive d45fc51 of programs/, crates/, Cargo.toml and Cargo.lock (diff -r); a second build from the archive itself gave the same sha256. Program tests ran natively and against this .so (SBF_OUT_DIR).",
+  "upgrades": [
+    {
+      "program": "dark_shielded_pool_program",
+      "id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+      "commit": "d45fc51",
+      "change": "embedded shielded_withdraw_v3 verifying key replaced by the v3.1 key (vk sha256 4a1f265a...; only delta_g2 differs)",
+      "bytes": 127232,
+      "sha256": "4bf612ea56f368d23e8c13412399129476afcc47672ac76779a03d4501989e1b",
+      "previousSha256": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+      "previousDumpCheck": "dumped before the upgrade: the leading 127232 bytes hashed to previousSha256",
+      "extend": 0,
+      "programDataLength": 136560,
+      "buffer": "2Tcg1oigFtyYfMyZnpAEqF7Qiir5yMXVBxjTZRp8MfCM (closed by the upgrade)",
+      "sig": "4xFWJzSBRz9BtvmYEry5T4ts1iTKzcHwDArDvGgaQ8qN4hntmQmPN7ZsLchc4UV8X63qooi5tdJYBny31YePPqGq",
+      "tx": {
+        "sig": "4xFWJzSBRz9BtvmYEry5T4ts1iTKzcHwDArDvGgaQ8qN4hntmQmPN7ZsLchc4UV8X63qooi5tdJYBny31YePPqGq",
+        "slot": 508210815,
+        "err": null,
+        "fee": 5000,
+        "blockTime": 1791317877,
+        "explorer": "https://explorer.solana.com/tx/4xFWJzSBRz9BtvmYEry5T4ts1iTKzcHwDArDvGgaQ8qN4hntmQmPN7ZsLchc4UV8X63qooi5tdJYBny31YePPqGq?cluster=devnet"
+      },
+      "onchainPrefixSha256Match": true,
+      "nonzeroTail": 0,
+      "lastDeployedSlot": 508210815
+    }
+  ],
+  "funding": {
+    "toDeployer": {
+      "from": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+      "lamports": 700000000,
+      "sig": "3rBj8MAUfGyGUbN5TgMisotzFrW6AEhSDsb5P7ConpYcbXrRHZQWrRUmaR9BCWDoUYHpMKBtHGemSSE1ef3zeZcA",
+      "slot": 508210719
+    },
+    "returnedToTestPayer": {
+      "lamports": 699350000,
+      "sig": "2wBvaxZAtuPc8MYQkEppT5qpXo6y7r7qTBzWfwYasLgFxAYavm7qEbJrqhk2wiYpa39em82ReG91LV2fd7C56Scu",
+      "slot": 508210932
+    }
+  },
+  "deployerLamports": {
+    "before": 50000000,
+    "afterFunding": 750000000,
+    "afterUpgrade": 749355000,
+    "after": 50000000,
+    "spentOnUpgrade": 645000
+  },
+  "testPayerLamports": {
+    "before": 4615723304,
+    "afterReturn": 4615068304,
+    "spent": 655000
+  },
+  "buffersOpenAfter": 0,
+  "command": "solana program deploy dark_shielded_pool_program.so --program-id FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3 --upgrade-authority <deployer> --keypair <deployer> (Agave CLI 4.2.1, private devnet RPC)",
+  "notes": [
+    "The .so (127232 bytes) fits the existing 136560-byte program data, so no extend; the buffer rent came back on upgrade.",
+    "On-chain program bytes re-dumped after the upgrade; the leading 127232 bytes hash to the built .so and the remaining 9328 bytes are zero."
+  ]
+}

@@ -7,6 +7,7 @@
   "source_base_commit": "8743fd7f3e5d4ee3150cda25d2544e706661c1da",
   "source_build_match": "match",
   "source_build_note": "Each program's deployed bytes equal the cargo-build-sbf output of the committed source named in source_commit. 121109d is byte-identical in programs/, crates/, Cargo.toml and Cargo.lock to the tree the 16 programs that were not upgraded were built from (8743fd7 plus the program-ID and devnet-feature change, compared with diff -r). The five programs upgraded later the same day were built from a git archive of 1157630 (programs/ and crates/ unchanged at 9ff95ee); their fixes are 01f5e35, 34047e2, 3134df4, 30a0ce6 and c9f03f8. Upgrade builds: cargo-build-sbf 4.1.0, platform-tools v1.54, offline container. Builds were not repeated in this pass; the match is the hash comparison above. Two more in-place upgrades followed: dark_secp256k1_auth from aabb759 (slot 508063592) and dark_null_lottery from a32933d (slot 508063672) and then 7439dde (slot 508071735), built with the same toolchain from those commits; after each upgrade the program was re-dumped and its first so_length bytes hash to so_sha256 with a zero tail (re-checked for both on 2026-10-06 after slot 508072616). upgrade_history lists every in-place upgrade of the two programs.",
+  "source_build_note_swv31": "dark_shielded_pool_program was upgraded in place from d45fc51 (slot 508210815) with the v3.1 shielded_withdraw_v3 verifying key; the dump was checked the same way (prefix hashes to so_sha256 4bf612ea..., zero tail).",
   "not_deployed": [
     "agent_credential_mint",
     "dark_bn254_g2_ref",
@@ -84,19 +85,39 @@
       "name": "dark_shielded_pool_program",
       "source_dir": "programs/dark_shielded_pool",
       "program_id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
-      "last_deployed_slot": 508052021,
+      "last_deployed_slot": 508210815,
       "programdata_length": 136560,
-      "so_sha256": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+      "so_sha256": "4bf612ea56f368d23e8c13412399129476afcc47672ac76779a03d4501989e1b",
       "build_variant": "devnet-feature",
       "so_length": 127232,
-      "source_commit": "1157630",
-      "fix_commit": "30a0ce6",
-      "upgrade_signature": "n1Krdkjp4WEavNxMMZ22CTqX92BemHwTJ2EwH1KuoWt8xPAvc9X223GRZyHvnkT1JR51NbkwxV53X5xpgHJ2MpN",
-      "previous_so_sha256": "ddcf6a7986c8a02a65266c7be4d080fdae1f042509467ce44f0399a7e64ae4b2",
+      "source_commit": "d45fc51",
+      "fix_commit": "d45fc51",
+      "upgrade_signature": "4xFWJzSBRz9BtvmYEry5T4ts1iTKzcHwDArDvGgaQ8qN4hntmQmPN7ZsLchc4UV8X63qooi5tdJYBny31YePPqGq",
+      "previous_so_sha256": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
       "build_command": "cargo build-sbf --features devnet",
       "test_suites": [
         "evidence/devnet-2026-10-06/dna-shielded-pool-init-buckets-rerun.json",
-        "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-rerun.json"
+        "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-rerun.json",
+        "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-swv31.json"
+      ],
+      "upgrade_history": [
+        {
+          "fix_commit": "30a0ce6",
+          "so_sha256": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+          "so_length": 127232,
+          "upgrade_signature": "n1Krdkjp4WEavNxMMZ22CTqX92BemHwTJ2EwH1KuoWt8xPAvc9X223GRZyHvnkT1JR51NbkwxV53X5xpgHJ2MpN",
+          "slot": 508052021,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json"
+        },
+        {
+          "fix_commit": "d45fc51",
+          "so_sha256": "4bf612ea56f368d23e8c13412399129476afcc47672ac76779a03d4501989e1b",
+          "so_length": 127232,
+          "upgrade_signature": "4xFWJzSBRz9BtvmYEry5T4ts1iTKzcHwDArDvGgaQ8qN4hntmQmPN7ZsLchc4UV8X63qooi5tdJYBny31YePPqGq",
+          "slot": 508210815,
+          "record": "evidence/devnet-2026-10-06/devnet-upgrades-swv31.json",
+          "change": "shielded_withdraw_v3 verifying key v3.1 (secret phase-2 contribution plus drand beacon; ceremony/shielded_withdraw_v3/ERRATA_v3.md)"
+        }
       ]
     },
     {
@@ -428,12 +449,20 @@
       "fail": 0,
       "summary": "evidence/devnet-2026-10-06/summary-rerun3.json",
       "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json"
+    },
+    "rerun_swv31": {
+      "commit": "d45fc51",
+      "suites": 1,
+      "pass": 9,
+      "fail": 0,
+      "summary": "evidence/devnet-2026-10-06/summary-swv31.json"
     }
   },
   "upgrades": "evidence/devnet-2026-10-06/devnet-upgrades-2026-10-06.json",
   "upgrades_later": [
     "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
-    "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json"
+    "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json",
+    "evidence/devnet-2026-10-06/devnet-upgrades-swv31.json"
   ],
   "deployed_later": {
     "record": "evidence/devnet-2026-10-06/devnet-deploys-x402-settle-lottery-pools-fair-draw.json",

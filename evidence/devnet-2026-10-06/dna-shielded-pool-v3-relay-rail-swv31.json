@@ -1,0 +1,292 @@
+{
+  "suite": "dna-shielded-pool-v3-relay-rail",
+  "repo": "dna-x402@68890b0 (program upgraded from d45fc51)",
+  "cluster": "devnet",
+  "rpc": "private devnet RPC (URL not recorded)",
+  "command": "RPC=<private devnet rpc> WALLET_KEYPAIR=<test payer> WITNESS_SPEC_BIN=<witness_spec built from d45fc51> TEST_WALLET_DIR=<dir> WALLET_TAG=swv31 SWV3_OLD_ZKEY=ceremony/shielded_withdraw_v3/shielded_withdraw_v3_beacon_only_final.zkey SWV3_OLD_VK=ceremony/shielded_withdraw_v3/shielded_withdraw_v3_beacon_only_vk.json node build/zk/e2e-v3-devnet.mjs FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+  "environment": "tmpfs container node:22-bookworm-slim, npm install --ignore-scripts (snarkjs 0.7.5, @solana/web3.js 1.99.0); payer key streamed in, no host mounts",
+  "programId": {
+    "dark_shielded_pool_program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3"
+  },
+  "programSha256": "4bf612ea56f368d23e8c13412399129476afcc47672ac76779a03d4501989e1b",
+  "vk": "shielded_withdraw_v3 v3.1 (transcript_v3_1.json, vk sha256 4a1f265acac87fe528b2a63882c6429df68c12180478a9d499c098d89479c375); proofs from shielded_withdraw_v3_final.zkey (c8c9d310...)",
+  "result": "PASS",
+  "pass": 9,
+  "fail": 0,
+  "timestamp": "2026-10-06T20:19:32.394Z",
+  "poolConfig": "8G2muDLVSx2aWo2KKPNFDQxvaK9tRSxTGc4oEEhrrSuW",
+  "poolVault": "HtmzTr93N1RvH4Sfo4Xf93Efqwfu2SHgXuxsraa4RUw6",
+  "onChainRootAfterDeposits": "21d0f35a55125ebba5d67e95ef15f7cf6629519d3a518d252208ca5048f505dd",
+  "signatures": [
+    {
+      "sig": "2tSQNMg1J46ftNnB1HUikQjh3i6u8uf7MNsMYEBZqkfZkoHNZSs2qRJoX41C4eriEuf2yVRqPsXcyq6nbuTbU7Vy",
+      "label": "touches authority",
+      "slot": 508211089,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2tSQNMg1J46ftNnB1HUikQjh3i6u8uf7MNsMYEBZqkfZkoHNZSs2qRJoX41C4eriEuf2yVRqPsXcyq6nbuTbU7Vy?cluster=devnet"
+    },
+    {
+      "sig": "5GtB4EGTQ1HygFx8uBHQEsY5URM5UKLozuNZDAskArR8p9jtkpE58DeGLQTpsgpjcQFXxpAz3GvZ8bfhRt8EEzgu",
+      "label": "init",
+      "slot": 508211095,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5GtB4EGTQ1HygFx8uBHQEsY5URM5UKLozuNZDAskArR8p9jtkpE58DeGLQTpsgpjcQFXxpAz3GvZ8bfhRt8EEzgu?cluster=devnet"
+    },
+    {
+      "sig": "3FJbcrZwNAsj2xEaFqtdzbBRASw1i7GbsH7QVDUdBUHnhXZHmZDdUAEBAPU5vY5Re3Z8g6nQDB1h1pEa3uRg1k7n",
+      "label": "deposit",
+      "slot": 508211100,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3FJbcrZwNAsj2xEaFqtdzbBRASw1i7GbsH7QVDUdBUHnhXZHmZDdUAEBAPU5vY5Re3Z8g6nQDB1h1pEa3uRg1k7n?cluster=devnet"
+    },
+    {
+      "sig": "3WBZr3YrxHguwDVjPWUzuzJRhyj6uEB2wfXx57rnKB8yhKzzpSxqoEfhB3sd7VjC2FmMLWtbxsF2PWWztsDAXx3N",
+      "label": "deposit",
+      "slot": 508211106,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3WBZr3YrxHguwDVjPWUzuzJRhyj6uEB2wfXx57rnKB8yhKzzpSxqoEfhB3sd7VjC2FmMLWtbxsF2PWWztsDAXx3N?cluster=devnet"
+    },
+    {
+      "sig": "216Zs31AHAcKqBmKWgUHAsyG2opNgQpiMLkcmHEa12rCd1rdH1guBQmJxtp8quw3eG322Svd25piigUJAZZU7nGt",
+      "label": "valid_relayer_withdraw",
+      "slot": 508211121,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/216Zs31AHAcKqBmKWgUHAsyG2opNgQpiMLkcmHEa12rCd1rdH1guBQmJxtp8quw3eG322Svd25piigUJAZZU7nGt?cluster=devnet"
+    },
+    {
+      "sig": "3wbp6RVr3AycRETAAhrTgHdWdsyQ5AWRiCBsapEUh4JiCEeKXodgU4sL1t9yhgnzdtSjwZWhg9YmccLkvR1nWp7z",
+      "label": "double_spend_rejected",
+      "slot": 508211128,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3wbp6RVr3AycRETAAhrTgHdWdsyQ5AWRiCBsapEUh4JiCEeKXodgU4sL1t9yhgnzdtSjwZWhg9YmccLkvR1nWp7z?cluster=devnet"
+    },
+    {
+      "sig": "3M5kDzj5GmymUo8o3wnX1QKPBZewqCKKbBzAEi4XyDFwoet5U3Qza3QM9jAv2LYZLx6We7ttoTBvh4MVDKp4fjme",
+      "label": "wrong_root_rejected",
+      "slot": 508211140,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/3M5kDzj5GmymUo8o3wnX1QKPBZewqCKKbBzAEi4XyDFwoet5U3Qza3QM9jAv2LYZLx6We7ttoTBvh4MVDKp4fjme?cluster=devnet"
+    },
+    {
+      "sig": "xwXMauwPYsKbvbZFdaxHV9hwh3J4DJndpHYoSearfBqapj1QkHpBKrXtmEVhvQr4TuzyyCgCxk29pt5ux4etWqk",
+      "label": "wrong_recipient_rejected",
+      "slot": 508211145,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/xwXMauwPYsKbvbZFdaxHV9hwh3J4DJndpHYoSearfBqapj1QkHpBKrXtmEVhvQr4TuzyyCgCxk29pt5ux4etWqk?cluster=devnet"
+    },
+    {
+      "sig": "4CLqQ4cgg1s2vLiGWn4HcTwsAkKGYiHpCWSvoQDBn2Fv8MJHS57DqWZ9RqaVzGr1m53Z2b6Td6UXG76Edq3JztjY",
+      "label": "touches relayerB",
+      "slot": 508211149,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4CLqQ4cgg1s2vLiGWn4HcTwsAkKGYiHpCWSvoQDBn2Fv8MJHS57DqWZ9RqaVzGr1m53Z2b6Td6UXG76Edq3JztjY?cluster=devnet"
+    },
+    {
+      "sig": "2S3SJq4eZ3HeF3UMpTTe5BdjZbiBLH5kmN9SdsBqxMrMx1RRzSf6BYeY7k7WUgMFWSbwSioR4RKhfxEpJBNC8v42",
+      "label": "relayer_mismatch_rejected",
+      "slot": 508211154,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/2S3SJq4eZ3HeF3UMpTTe5BdjZbiBLH5kmN9SdsBqxMrMx1RRzSf6BYeY7k7WUgMFWSbwSioR4RKhfxEpJBNC8v42?cluster=devnet"
+    },
+    {
+      "sig": "zKgUv7L5XT2FCDJdYgb4UkuR5cfkxGspHMwPhsU9FUrtCM5NjAdZpBLQM9DgwoAfGR6hEFTVCDDZAbArrkJPD6P",
+      "label": "old_zkey_proof_rejected",
+      "slot": 508211164,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "explorer": "https://explorer.solana.com/tx/zKgUv7L5XT2FCDJdYgb4UkuR5cfkxGspHMwPhsU9FUrtCM5NjAdZpBLQM9DgwoAfGR6hEFTVCDDZAbArrkJPD6P?cluster=devnet"
+    },
+    {
+      "sig": "4niXQqTpCzTzgZ9d764naJyKm6sjUQSgCoHZMxXdY9UXjhgYESxJcvumpFMinq187LfKXKL1p4qYnPCdpYXQzybR",
+      "label": "second_valid_withdraw",
+      "slot": 508211170,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/4niXQqTpCzTzgZ9d764naJyKm6sjUQSgCoHZMxXdY9UXjhgYESxJcvumpFMinq187LfKXKL1p4qYnPCdpYXQzybR?cluster=devnet"
+    },
+    {
+      "sig": "2bcmPWh46YAccSJRNagRG2qTmXzU3HKBWG7CuA56s41iTEhebG7AUAKdT3CKAtkSJyxYxpmcs1mtQMTgJqY2swHG",
+      "label": "touches authority",
+      "slot": 508211178,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/2bcmPWh46YAccSJRNagRG2qTmXzU3HKBWG7CuA56s41iTEhebG7AUAKdT3CKAtkSJyxYxpmcs1mtQMTgJqY2swHG?cluster=devnet"
+    },
+    {
+      "sig": "45Nn31uURvnkCiCw7xuZ659zJucpTnsUBv1BC8yDUaomKfph6qL7wgEizoXMvrUPv51ki7YiuyDYw4U3Y96SZWMu",
+      "label": "touches relayer",
+      "slot": 508211192,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/45Nn31uURvnkCiCw7xuZ659zJucpTnsUBv1BC8yDUaomKfph6qL7wgEizoXMvrUPv51ki7YiuyDYw4U3Y96SZWMu?cluster=devnet"
+    },
+    {
+      "sig": "3UpV1QeqHpoLSLTDTpN2jaWvW2cK6kVrzpCYBBhX7MULoVnDpQ2iQnzLGJ93NhExVX37ifAzWEt9BKa4hWvgzzQR",
+      "label": "touches recipient",
+      "slot": 508211197,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/3UpV1QeqHpoLSLTDTpN2jaWvW2cK6kVrzpCYBBhX7MULoVnDpQ2iQnzLGJ93NhExVX37ifAzWEt9BKa4hWvgzzQR?cluster=devnet"
+    },
+    {
+      "sig": "5DU8gRqUUgM8PDBPMsfH3YnKA8p8AuCXt5mHvNw3LCdg7nVJPTvyN5YkbgP9NyKhHYEqWN8t7af1dg4f7npvVKPu",
+      "label": "touches relayerB",
+      "slot": 508211203,
+      "err": null,
+      "explorer": "https://explorer.solana.com/tx/5DU8gRqUUgM8PDBPMsfH3YnKA8p8AuCXt5mHvNw3LCdg7nVJPTvyN5YkbgP9NyKhHYEqWN8t7af1dg4f7npvVKPu?cluster=devnet"
+    }
+  ],
+  "tests": [
+    {
+      "t": "root_consistency",
+      "r": "PASS",
+      "root": "21d0f35a55125ebba5d67e95ef15f7cf6629519d3a518d252208ca5048f505dd",
+      "deposits": [
+        "3FJbcrZwNAsj2xEaFqtdzbBRASw1i7GbsH7QVDUdBUHnhXZHmZDdUAEBAPU5vY5Re3Z8g6nQDB1h1pEa3uRg1k7n",
+        "3WBZr3YrxHguwDVjPWUzuzJRhyj6uEB2wfXx57rnKB8yhKzzpSxqoEfhB3sd7VjC2FmMLWtbxsF2PWWztsDAXx3N"
+      ]
+    },
+    {
+      "t": "valid_relayer_withdraw",
+      "r": "PASS",
+      "sig": "216Zs31AHAcKqBmKWgUHAsyG2opNgQpiMLkcmHEa12rCd1rdH1guBQmJxtp8quw3eG322Svd25piigUJAZZU7nGt",
+      "recipientDelta": 99000000,
+      "relayerDelta": 136480,
+      "fee": 1000000,
+      "payout": 99000000,
+      "recipientSigned": false
+    },
+    {
+      "t": "double_spend_rejected",
+      "r": "PASS",
+      "sig": "3wbp6RVr3AycRETAAhrTgHdWdsyQ5AWRiCBsapEUh4JiCEeKXodgU4sL1t9yhgnzdtSjwZWhg9YmccLkvR1nWp7z",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      }
+    },
+    {
+      "t": "wrong_root_rejected",
+      "r": "PASS",
+      "sig": "3M5kDzj5GmymUo8o3wnX1QKPBZewqCKKbBzAEi4XyDFwoet5U3Qza3QM9jAv2LYZLx6We7ttoTBvh4MVDKp4fjme",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      }
+    },
+    {
+      "t": "wrong_recipient_rejected",
+      "r": "PASS",
+      "sig": "xwXMauwPYsKbvbZFdaxHV9hwh3J4DJndpHYoSearfBqapj1QkHpBKrXtmEVhvQr4TuzyyCgCxk29pt5ux4etWqk",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      }
+    },
+    {
+      "t": "over_fee_proof_rejected",
+      "r": "PASS"
+    },
+    {
+      "t": "relayer_mismatch_rejected",
+      "r": "PASS",
+      "sig": "2S3SJq4eZ3HeF3UMpTTe5BdjZbiBLH5kmN9SdsBqxMrMx1RRzSf6BYeY7k7WUgMFWSbwSioR4RKhfxEpJBNC8v42",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      }
+    },
+    {
+      "t": "old_zkey_proof_rejected",
+      "r": "PASS",
+      "sig": "zKgUv7L5XT2FCDJdYgb4UkuR5cfkxGspHMwPhsU9FUrtCM5NjAdZpBLQM9DgwoAfGR6hEFTVCDDZAbArrkJPD6P",
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "zkey": "shielded_withdraw_v3/shielded_withdraw_v3_beacon_only_final.zkey"
+    },
+    {
+      "t": "second_valid_withdraw",
+      "r": "PASS",
+      "sig": "4niXQqTpCzTzgZ9d764naJyKm6sjUQSgCoHZMxXdY9UXjhgYESxJcvumpFMinq187LfKXKL1p4qYnPCdpYXQzybR",
+      "recipientDelta": 99000000
+    }
+  ],
+  "ledgerReread": {
+    "at": "2026-10-06T20:19:54.489Z",
+    "transactions": 16,
+    "succeeded": 11,
+    "failedAsExpected": 5,
+    "file": "evidence/devnet-2026-10-06/raw/swv31/sig-status.json"
+  },
+  "childWallets": {
+    "attacker": "51oME1aZ5YaaeTpaAVnhimK38Z22mSxypoEErfZwgboS",
+    "authority": "7duCGgLyeTYQnpcrscCJyTMPfmJ6u7MDhY5udTpdbmiC",
+    "recipient": "AbSMzLpFT2wSb4JCATmHoDgSCMMqBhjEQirL9AUsLeWd",
+    "relayer": "3zrXdj7PcVcECWSACbzujSXcmHVLW9CCGXygWXrnLnzR",
+    "relayerB": "A2j8cedTkxxMztJjJiqCAgR5miUfhNprCyVicTYokfHM"
+  },
+  "childWalletsEndLamports": {
+    "attacker": 0,
+    "authority": 0,
+    "recipient": 0,
+    "relayer": 0,
+    "relayerB": 0
+  },
+  "notes": [
+    "Every scenario is graded from a landed transaction read back with getTransaction; over-fee is rejected by the circuit (witness generation), so it has no transaction.",
+    "old_zkey_proof_rejected: a real proof for unspent note #0 from the retired v3 zkey (shielded_withdraw_v3_beacon_only_final.zkey), correct root, recipient and relayer, reverted with Custom(4) ProofInvalid; the same note then withdrew with a v3.1 proof (second_valid_withdraw).",
+    "The proof forged from the public v3 delta was not sent to devnet. It is rejected by the v3.1 key in the program tests (native and .so) and accepted by the v3 key in the native differential run (raw/swv31/test-old-vk-forgery.txt)."
+  ]
+}

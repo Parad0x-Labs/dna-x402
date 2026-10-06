@@ -1,0 +1,200 @@
+{
+  "rereadAt": "2026-10-06T20:19:54.489Z",
+  "program": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
+  "poolConfig": "8G2muDLVSx2aWo2KKPNFDQxvaK9tRSxTGc4oEEhrrSuW",
+  "poolVault": "HtmzTr93N1RvH4Sfo4Xf93Efqwfu2SHgXuxsraa4RUw6",
+  "vaultLamports": 650240,
+  "childWalletBalances": {
+    "attacker": {
+      "pubkey": "51oME1aZ5YaaeTpaAVnhimK38Z22mSxypoEErfZwgboS",
+      "lamports": 0
+    },
+    "authority": {
+      "pubkey": "7duCGgLyeTYQnpcrscCJyTMPfmJ6u7MDhY5udTpdbmiC",
+      "lamports": 0
+    },
+    "recipient": {
+      "pubkey": "AbSMzLpFT2wSb4JCATmHoDgSCMMqBhjEQirL9AUsLeWd",
+      "lamports": 0
+    },
+    "relayer": {
+      "pubkey": "3zrXdj7PcVcECWSACbzujSXcmHVLW9CCGXygWXrnLnzR",
+      "lamports": 0
+    },
+    "relayerB": {
+      "pubkey": "A2j8cedTkxxMztJjJiqCAgR5miUfhNprCyVicTYokfHM",
+      "lamports": 0
+    }
+  },
+  "transactions": [
+    {
+      "sig": "2tSQNMg1J46ftNnB1HUikQjh3i6u8uf7MNsMYEBZqkfZkoHNZSs2qRJoX41C4eriEuf2yVRqPsXcyq6nbuTbU7Vy",
+      "label": "touches authority",
+      "slot": 508211089,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "5GtB4EGTQ1HygFx8uBHQEsY5URM5UKLozuNZDAskArR8p9jtkpE58DeGLQTpsgpjcQFXxpAz3GvZ8bfhRt8EEzgu",
+      "label": "init",
+      "slot": 508211095,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "3FJbcrZwNAsj2xEaFqtdzbBRASw1i7GbsH7QVDUdBUHnhXZHmZDdUAEBAPU5vY5Re3Z8g6nQDB1h1pEa3uRg1k7n",
+      "label": "deposit",
+      "slot": 508211100,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "3WBZr3YrxHguwDVjPWUzuzJRhyj6uEB2wfXx57rnKB8yhKzzpSxqoEfhB3sd7VjC2FmMLWtbxsF2PWWztsDAXx3N",
+      "label": "deposit",
+      "slot": 508211106,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "216Zs31AHAcKqBmKWgUHAsyG2opNgQpiMLkcmHEa12rCd1rdH1guBQmJxtp8quw3eG322Svd25piigUJAZZU7nGt",
+      "label": "valid_relayer_withdraw",
+      "slot": 508211121,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "3wbp6RVr3AycRETAAhrTgHdWdsyQ5AWRiCBsapEUh4JiCEeKXodgU4sL1t9yhgnzdtSjwZWhg9YmccLkvR1nWp7z",
+      "label": "double_spend_rejected",
+      "slot": 508211128,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 3
+          }
+        ]
+      },
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "3M5kDzj5GmymUo8o3wnX1QKPBZewqCKKbBzAEi4XyDFwoet5U3Qza3QM9jAv2LYZLx6We7ttoTBvh4MVDKp4fjme",
+      "label": "wrong_root_rejected",
+      "slot": 508211140,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 12
+          }
+        ]
+      },
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "xwXMauwPYsKbvbZFdaxHV9hwh3J4DJndpHYoSearfBqapj1QkHpBKrXtmEVhvQr4TuzyyCgCxk29pt5ux4etWqk",
+      "label": "wrong_recipient_rejected",
+      "slot": 508211145,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "4CLqQ4cgg1s2vLiGWn4HcTwsAkKGYiHpCWSvoQDBn2Fv8MJHS57DqWZ9RqaVzGr1m53Z2b6Td6UXG76Edq3JztjY",
+      "label": "touches relayerB",
+      "slot": 508211149,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "2S3SJq4eZ3HeF3UMpTTe5BdjZbiBLH5kmN9SdsBqxMrMx1RRzSf6BYeY7k7WUgMFWSbwSioR4RKhfxEpJBNC8v42",
+      "label": "relayer_mismatch_rejected",
+      "slot": 508211154,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "zKgUv7L5XT2FCDJdYgb4UkuR5cfkxGspHMwPhsU9FUrtCM5NjAdZpBLQM9DgwoAfGR6hEFTVCDDZAbArrkJPD6P",
+      "label": "old_zkey_proof_rejected",
+      "slot": 508211164,
+      "err": {
+        "InstructionError": [
+          1,
+          {
+            "Custom": 4
+          }
+        ]
+      },
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "4niXQqTpCzTzgZ9d764naJyKm6sjUQSgCoHZMxXdY9UXjhgYESxJcvumpFMinq187LfKXKL1p4qYnPCdpYXQzybR",
+      "label": "second_valid_withdraw",
+      "slot": 508211170,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "2bcmPWh46YAccSJRNagRG2qTmXzU3HKBWG7CuA56s41iTEhebG7AUAKdT3CKAtkSJyxYxpmcs1mtQMTgJqY2swHG",
+      "label": "touches authority",
+      "slot": 508211178,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "45Nn31uURvnkCiCw7xuZ659zJucpTnsUBv1BC8yDUaomKfph6qL7wgEizoXMvrUPv51ki7YiuyDYw4U3Y96SZWMu",
+      "label": "touches relayer",
+      "slot": 508211192,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "3UpV1QeqHpoLSLTDTpN2jaWvW2cK6kVrzpCYBBhX7MULoVnDpQ2iQnzLGJ93NhExVX37ifAzWEt9BKa4hWvgzzQR",
+      "label": "touches recipient",
+      "slot": 508211197,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    },
+    {
+      "sig": "5DU8gRqUUgM8PDBPMsfH3YnKA8p8AuCXt5mHvNw3LCdg7nVJPTvyN5YkbgP9NyKhHYEqWN8t7af1dg4f7npvVKPu",
+      "label": "touches relayerB",
+      "slot": 508211203,
+      "err": null,
+      "fee": 5000,
+      "found": true
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "found": 16,
+    "ok": 11,
+    "failed": 5
+  }
+}

@@ -18,7 +18,7 @@ The e2e scripts take the program ID as an argument.
 | **Amount uniform per bucket** | Fixed **denomination buckets** (0.1 / 1 / 10 SOL). Every note in a bucket is identical; a withdrawal reveals the bucket and the relayer fee, not the depositor's balance. | ✅ implemented |
 | **Recipient address separate from identity** | Stealth addresses (NullPay) — recipient derives a one-time address that is not linked to their main wallet on-chain; the one-time address itself is public. | ⏳ documented, follow-up |
 | **Gas paid by permissionless relayers** | Any wallet can submit a withdraw; it is reimbursed an **in-proof fee** from the pool. No central relayer server, no allow-list. | ✅ implemented (v3) |
-| **Trustless setup** | Open multi-party ceremony: public Powers-of-Tau phase-1 + multiple independent phase-2 contributions + a public drand beacon. | ⚙️ pipeline + dry-run (real beacon); needs independent humans |
+| **Trustless setup** | Open multi-party ceremony: public Powers-of-Tau phase-1 + multiple independent phase-2 contributions + a public drand beacon. | pipeline + dry-run. The deployed devnet key (v3.1) is a single-party contribution with discarded entropy plus public beacon; devnet only, a multi-party phase 2 is required before mainnet ([`transcript_v3_1.json`](../ceremony/shielded_withdraw_v3/transcript_v3_1.json), [errata for v3](../ceremony/shielded_withdraw_v3/ERRATA_v3.md)) |
 
 ## 1. In-proof relayer fee (the trustless relayer incentive)
 
@@ -94,9 +94,12 @@ sound as long as **≥1 contributor was honest**.
 
 Anyone contributes via `ceremony/CONTRIBUTING_V3.md` — that is the decentralized part.
 
-**Honest scope:** the dry run's contributions are simulated-independent (one operator),
+**Scope:** the dry run's contributions are simulated-independent (one operator),
 so it is **not yet trustless** — it becomes trustless when those steps are run by
-independent humans. The **drand beacon is real**. The `dark_shielded_pool` program embeds
+independent humans. The key the devnet program embeds is v3.1: one operator contribution
+(entropy discarded) plus drand beacons, `ceremony/shielded_withdraw_v3/transcript_v3_1.json`.
+The earlier v3 key had no secret phase-2 contribution, so its delta was computable from the
+public beacon and withdraw proofs could be forged (`ERRATA_v3.md`). The `dark_shielded_pool` program embeds
 this ceremony VK, so `--vk-mode ceremony` is the **default** the e2e/fusion scripts run
 under (and `prove-v3.mjs` defaults to it). The single-party pilot VK verifies locally but
 is rejected on-chain (`Custom(4)=ProofInvalid`), so `--vk-mode pilot` is refused by the

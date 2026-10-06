@@ -834,7 +834,7 @@
       "id": "programs.dark-shielded-pool",
       "plain_claim": "The dark_shielded_pool program verifies a Groth16 withdraw proof over the alt_bn128 syscalls.",
       "component": "programs/dark_shielded_pool",
-      "source_sha": "9ff95ee70934fd99faaeeafd722f1d1d7fcc5373",
+      "source_sha": "d45fc517c48d7eb365aa3ded8ca0652c1fcb5582",
       "source_paths": [
         "programs/dark_shielded_pool/src/processor.rs",
         "crates/dark-groth16-core",
@@ -846,18 +846,22 @@
       "publication_status": "not-applicable",
       "network": "devnet",
       "program_id": "FmLWnMKAM834GdqMr7Z22HrAdtJNhiaF2NTEPcpdBSZ3",
-      "deployed_build_hash": "47d3384b5ebaec5e035315c42f30f7e1ef40a9486d10eadad772b2c7aad305ad",
+      "deployed_build_hash": "4bf612ea56f368d23e8c13412399129476afcc47672ac76779a03d4501989e1b",
       "source_build_match": "match",
       "authority_assumptions": [
-        "Single-party devnet verifying key (mainnet_ready = false).",
+        "Devnet verifying key from a single-party phase-2 contribution with discarded entropy plus public beacon (shielded_withdraw_v3 v3.1, mainnet_ready = false).",
         "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q."
       ],
-      "evidence_checked_at": "2026-10-06T10:12:36Z",
+      "evidence_checked_at": "2026-10-06T20:21:00Z",
       "proof_files": [
         "docs/DARK_CRATES_STATUS.md",
         "evidence/devnet-programs-2026-10-06.json",
+        "evidence/devnet-2026-10-06/devnet-upgrades-swv31.json",
+        "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-swv31.json",
         "evidence/devnet-2026-10-06/dna-shielded-pool-v3-relay-rail-rerun.json",
         "evidence/devnet-2026-10-06/dna-shielded-pool-init-buckets-rerun.json",
+        "ceremony/shielded_withdraw_v3/transcript_v3_1.json",
+        "ceremony/shielded_withdraw_v3/ERRATA_v3.md",
         "evidence/shielded-pool-devnet.json",
         "evidence/zk/shielded-withdraw-v3-hardening-devnet.json"
       ],
@@ -866,16 +870,17 @@
         "result": "pass",
         "date": "2026-10-06",
         "environment": "devnet",
-        "note": "v3 relay rail 8/8 with the committed ceremony zkey, every outcome read from the ledger; bucket init and authority rejections 6/6."
+        "note": "v3 relay rail 9/9 with the v3.1 zkey after the in-place upgrade from d45fc51, every outcome read from the ledger; a proof from the retired v3 zkey reverted with ProofInvalid. Program tests 31/31 natively and against the .so. Bucket init and authority rejections 6/6 (earlier rerun)."
       },
       "mocks_or_skips": [],
       "demonstrated_properties": [
-        "Groth16 withdraw proofs from the committed ceremony/shielded_withdraw_v3 zkey verify on devnet FmLW\u2026BSZ3 (2026-10-06)",
+        "Groth16 withdraw proofs from the v3.1 ceremony/shielded_withdraw_v3 zkey verify on devnet FmLW\u2026BSZ3 (2026-10-06, upgrade slot 508210815)",
+        "a proof from the retired v3 zkey and a proof forged from the v3 key's public delta are rejected with ProofInvalid (devnet for the former; program tests, native and .so, for both)",
         "double-spend Custom(3), wrong root Custom(12), wrong recipient Custom(4) and relayer mismatch Custom(4) rejected on-chain; over-fee rejected by the circuit",
         "relay-rail buckets are PDA-keyed and only the admin can Pause/Resume (InitBucketPool, 30a0ce6)"
       ],
       "not_demonstrated": [
-        "a multi-party trusted setup: the verifying key comes from a single-party setup plus a drand beacon",
+        "a multi-party trusted setup: phase 2 of the verifying key is a single-party contribution with discarded entropy plus public beacon",
         "withdrawals from a mainnet build: without the devnet feature the mainnet_ready guard refuses every proof",
         "that this program shares code or a deployment with Dark-Null-Protocol (it does not)"
       ],

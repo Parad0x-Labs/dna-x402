@@ -158,6 +158,31 @@ read back with `getTransaction`. Runs on the public RPC hit HTTP 429; the passin
 
 Devnet (2026-10-06): x402_settle 86/86, null_lottery_pools 147/147, null_fair_draw 96/96 checks.
 
+## Shielded pool verifying key v3.1 (dna-x402 `d45fc51`)
+
+The v3 `shielded_withdraw_v3` key had no secret phase-2 contribution (the drand round 6000000 beacon
+applied to the deterministic setup key), so its delta was computable from public data and withdraw
+proofs could be forged ([`ERRATA_v3.md`](../../ceremony/shielded_withdraw_v3/ERRATA_v3.md)). The v3.1 key
+adds one operator contribution with discarded entropy and a drand round 6529525 beacon
+([`transcript_v3_1.json`](../../ceremony/shielded_withdraw_v3/transcript_v3_1.json), vk sha256
+`4a1f265a…`): a single-party contribution with discarded entropy plus public beacon; devnet only; a
+multi-party phase 2 is required before mainnet.
+
+dark_shielded_pool_program was upgraded in place from `d45fc51` (`4xFWJzSB…`, slot 508210815, `.so`
+SHA-256 `4bf612ea…`, built with `--features devnet`; the dump prefix hashes to the `.so` with a zero
+tail; [`devnet-upgrades-swv31.json`](./devnet-upgrades-swv31.json)).
+
+| Suite | Result | Pass/Total | File |
+|---|---|---|---|
+| shielded pool v3 relay rail with v3.1 proofs: valid relayer withdraw, double spend 0x3, wrong root 0xc, wrong recipient 0x4, over-fee rejected by the circuit, relayer mismatch 0x4, a proof from the retired v3 zkey for an unspent note 0x4, second valid withdraw | PASS | 9/9 | [dna-shielded-pool-v3-relay-rail-swv31.json](./dna-shielded-pool-v3-relay-rail-swv31.json) |
+
+All 16 signatures were re-read from the ledger: 11 succeeded and 5 failed as the expected negatives
+([`raw/swv31/sig-status.json`](./raw/swv31/sig-status.json)). The forged proof was not sent to devnet. In the
+program tests (native and against the `.so`) the v3.1 key rejects it and the v3 zkey proof with
+ProofInvalid; run against the `9f5f92a` tree, the forged proof verifies and withdraws
+([`raw/swv31/`](./raw/swv31/): `forgery-check.txt`, `test-*.txt`, `old-vk-forgery-test.rs`). Totals:
+[`summary-swv31.json`](./summary-swv31.json).
+
 ## Not covered by these runs
 
 - Reputation gate positive path: only the rejection paths ran; no proving key in the repository matches the
