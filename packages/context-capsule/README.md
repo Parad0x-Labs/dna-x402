@@ -115,7 +115,8 @@ interface ContextCapsule {
 }
 ```
 
-The `merkleRoot` can be anchored on-chain via `receipt_anchor` for auditability.
+Correction chains can be anchored on Solana as an SPL Memo with `anchorCorrectionChain()`.
+It returns `dry_run:<merkleRoot>` unless `SOLANA_KEYPAIR` is set and `@solana/web3.js` is installed.
 
 ## Requirements
 
