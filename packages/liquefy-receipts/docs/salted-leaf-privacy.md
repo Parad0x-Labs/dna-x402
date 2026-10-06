@@ -190,7 +190,6 @@ Recommendation: keep the two trees separate but salt **both**.
 
 - `packages/receipt-dag/src/index.ts:270` — `hashLeafBytes(JSON.stringify(r))`,
   same unsalted plaintext leaf in the DAG construction.
-- `.clone/parad0x-website/scripts/receipt-anchor-job.mjs` — separate SHA-256 tree
   over bet receipts `{id,userId,amount,outcome,settledAt}`, same pattern (different
   repo / lane).
 

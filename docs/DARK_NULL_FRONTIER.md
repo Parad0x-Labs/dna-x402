@@ -1,6 +1,6 @@
 # Dark Null Frontier Primitives
 
-*Research directions and experimental convergences. Items marked **prototype** have working code and passing tests in the [Dark Null Protocol repo](.clone/Dark-Null-Protocol/). Items marked **research** do not. Not roadmap line items.*
+*Research directions and experimental convergences. Items marked **prototype** have working code and passing tests in the [Dark Null Protocol repo](https://github.com/Parad0x-Labs/Dark-Null-Protocol). Items marked **research** do not. Not roadmap line items.*
 
 *Evidence rule: if it is shipped, we say so and point to the code. If it is not, this document is the correct place to put it.*
 
@@ -459,4 +459,4 @@ An x402 agent calls a language model API that charges per output token. 10,000 t
 
 ---
 
-*Prototype items have passing tests in `.clone/Dark-Null-Protocol/`. None are mainnet-deployed. None are audited. If something ships to mainnet, this document will say so and link to the deploy transaction.*
+*Prototype items have passing tests in the [Dark Null Protocol repo](https://github.com/Parad0x-Labs/Dark-Null-Protocol). None are mainnet-deployed. If something ships to mainnet, this document will say so and link to the deploy transaction.*
