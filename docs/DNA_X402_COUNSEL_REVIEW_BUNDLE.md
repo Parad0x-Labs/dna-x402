@@ -78,4 +78,4 @@ Counsel feedback must be folded into:
 
 ## Current Status Language
 
-DNA x402 has passed private mainnet dust-size Solana USDC technical chain proof, live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local monitoring collector/dashboard/alert-route proof, external Telegram human-route proof, and Public Beta primary operator assignment. It is still not public production ready until counsel review, public-production backup operators, direct split fee gate review, and explicit live-gate approvals are complete.
+DNA x402 has passed private mainnet dust-size Solana USDC technical chain proof, live Postgres migration/concurrency/backup, Postgres-backed webhook replay-after-restart, persistent Sybil relist under live Postgres, local monitoring collector/dashboard/alert-route proof, external Telegram human-route proof, and Public Beta primary operator assignment. It is still not cleared for public production until counsel review, public-production backup operators, direct split fee gate review, and explicit live-gate approvals are complete.

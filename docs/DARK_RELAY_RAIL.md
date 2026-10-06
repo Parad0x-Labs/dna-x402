@@ -1,9 +1,9 @@
 # Dark Relay Rail — fixed-denomination shielded payment rail (devnet)
 
-Status: **Public Beta scope — devnet only, non-custodial, capped, UNAUDITED, no audit
-scheduled.** `mainnet_ready = false` throughout. Single-party VK is the on-chain default;
+Status: **Public Beta scope — devnet only, non-custodial, capped.**
+`mainnet_ready = false` throughout. Single-party VK is the on-chain default;
 the trustless multi-party VK is produced by a ceremony pipeline (dry-run today). Do not
-claim "audited", "trustless on mainnet", or any date.
+claim third-party security review, "trustless on mainnet", or any date.
 
 The Dark Relay Rail extends `dark_shielded_pool` (shielded_withdraw **v3**) into a
 decentralized payment rail, designed so a withdrawal does not name its deposit, with **no central relayer and no admin**.

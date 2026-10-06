@@ -389,6 +389,6 @@ Off-chain scoring of signal quality over time. No on-chain state per measurement
 | Test functions | 150+ |
 | Solana programs | 4 |
 | Doc-only primitives | 2 (Primitives 12, 13) |
-| Mainnet-ready | 0 (devnet prototype) |
+| On mainnet | 0 (devnet prototype) |
 
 _All primitives are devnet prototypes. No mainnet deployment has occurred._

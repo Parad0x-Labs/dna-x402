@@ -43,7 +43,7 @@ This packet consolidates the modular commerce upgrade docs into one audit-readab
 
 ## Current Blunt Status
 
-DNA x402 has passed modular safety, local durability, hard immutable PII blocking, HTTP-level payment attack testing, admin emergency controls, monitoring endpoint exposure, live-gate documentation, private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split dust proof, G-local live Postgres migration/concurrency/backup evidence, local Prometheus/Alertmanager/Grafana routing evidence, external Telegram human-route delivery, Public Beta primary operator assignment, Contabo HTTPS routing, raw port lockdown, and scheduled backup timer installation. It is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. It is not broad permissionless production ready until counsel review, backup operators, managed PITR or equivalent production backup policy, explicit direct split fee gate approval for expanded public collection, and explicit expanded live-gate approvals are complete.
+DNA x402 has passed modular safety, local durability, hard immutable PII blocking, HTTP-level payment attack testing, admin emergency controls, monitoring endpoint exposure, live-gate documentation, private mainnet dust-size Solana USDC proof, Public Beta Solana USDC direct split dust proof, G-local live Postgres migration/concurrency/backup evidence, local Prometheus/Alertmanager/Grafana routing evidence, external Telegram human-route delivery, Public Beta primary operator assignment, Contabo HTTPS routing, raw port lockdown, and scheduled backup timer installation. It is entering Public Beta for agents, builder APIs, paper trading, copy controls, public profiles, and low-risk capped live payments. It is not cleared for broad permissionless production until counsel review, backup operators, managed PITR or equivalent production backup policy, explicit direct split fee gate approval for expanded public collection, and explicit expanded live-gate approvals are complete.
 
 Private staging Solana USDC technical chain proof passed for allowlisted, dust-size, low-risk sandbox listings only. This is not a public marketplace launch, public fee collection approval, Polymarket live movement approval, or production-readiness evidence.
 
@@ -59,7 +59,7 @@ Hardening added in this cycle:
 - Server-level mayhem runner for integrated HTTP route attacks.
 - Global replay keying to prevent one transfer/stream proof from finalizing a different quote.
 - Protected admin endpoints for policy, denylist, appeals, emergency pause, and audit viewing.
-- Audited admin listing disable/restore and raw market-event read route.
+- Audit-logged admin listing disable/restore and raw market-event read route.
 - Prometheus-style `/metrics` endpoint and alert runbook.
 - Prometheus scrape config, alert rules, Grafana dashboard JSON, and monitoring evidence checklist.
 - G-local Prometheus, Alertmanager, and Grafana drill passed on 2026-05-15 with `/metrics` target healthy, dashboard imported, rules loaded, and alerts delivered to a local operator webhook.
@@ -463,7 +463,7 @@ Rules:
 - public stats are aggregated and thresholded
 - seller analytics cannot deanonymize buyers
 - competitor sellers cannot query raw graphs
-- admin raw access must be audited
+- admin raw access must be audit-logged
 - public copy-agent PnL shows confidence tier
 
 ## Governance And Appeals

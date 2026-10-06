@@ -205,6 +205,6 @@ From `wallet/`:
 
 ## Devnet Deploy Runbook
 
-New audited runbook:
+New reviewed runbook:
 
 - `docs/DEVNET_DEPLOY.md`

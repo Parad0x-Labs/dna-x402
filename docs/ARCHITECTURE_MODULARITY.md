@@ -44,8 +44,8 @@ identity (`registrar`/`auction`), nullifier, and tree all keep working.
 ## The one concentration — and how it's already handled
 `dark-groth16-core` is the only shared-fate crypto. Mitigations (already in the roadmap):
 - It's small + single-purpose (alt_bn128 Groth16 verify) → audit it **hardest**.
-- Planned swap to **Lightprotocol/groth16-solana** (audited, backs sp1-solana) + **light-poseidon**
-  (Veridise-audited) — turns the one liability into an audited component.
+- Planned swap to **Lightprotocol/groth16-solana** (externally reviewed, backs sp1-solana) + **light-poseidon**
+  (reviewed by Veridise) — replaces the one in-house liability with externally reviewed components.
 - It's a **compiled library**, not a deployed program: a fix = rebuild + upgrade the two gates;
   it cannot be exploited as a standalone attack surface.
 

@@ -22,7 +22,7 @@ Denylist creation requires reason and evidence. Entries without evidence are rej
 - `POST /admin/x402/appeals`
 - `POST /admin/x402/appeals/:appealId/resolve`
 
-Appeal approval is an audited governance action.
+Appeal approval is an audit-logged governance action.
 
 ## Emergency
 

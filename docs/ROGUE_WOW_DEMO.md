@@ -194,7 +194,6 @@ Output: `dist/true-frontier/ROGUE_WOW_DEMO.json`
 
 - Not production software
 - Not a mainnet deployment
-- Not audited
 - Not a financial product
 - Not a claim that this design is complete or secure
 

@@ -5,7 +5,7 @@
 1. Pause the affected flow.
 2. Preserve logs and audit export.
 3. Identify affected sellers, buyers, listings, receipts, and webhooks.
-4. Disable listings or sellers only through audited admin actions.
+4. Disable listings or sellers only through audit-logged admin actions.
 5. Do not delete policy history.
 
 ## Emergency Pause

@@ -69,7 +69,7 @@ Solana programs deployed to mainnet-beta on 2026-05-29 and retired on 2026-07-14
 - Squads multisig upgrade authority migration
 - External security audit
 - Groth16 private settlement full integration
-- `IS_MAINNET_READY=true` flag activation per-program (requires audit sign-off)
+- `IS_MAINNET_READY` flag activation per-program (requires audit sign-off)
 
 ---
 
@@ -87,6 +87,6 @@ Solana programs deployed to mainnet-beta on 2026-05-29 and retired on 2026-07-14
 
 1. External security audit (grant-funded target)
 2. Squads multisig migration for upgrade authority
-3. Activate `IS_MAINNET_READY=true` per-program on audit sign-off
+3. Activate the `IS_MAINNET_READY` flag per-program on audit sign-off
 4. On-chain fee-split enforcement (Sprint 2)
 5. Public mainnet open beta announcement

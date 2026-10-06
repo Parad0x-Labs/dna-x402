@@ -269,6 +269,6 @@ The claim scanner (`scripts/check-degen-claims.mjs`) runs across all documentati
 | Documentation files | 116 | Written, claim-scanned |
 | zkvm guests | 2 | Skeleton ready, execution pending rzup |
 
-The core payment rail is production-ready in design. The Dark Null primitive layer is test-covered. The cost models are sourced from published benchmarks. The gap between here and a public mainnet launch is: security audit, Light Protocol integration activation, P-token migration execution, and oracle endpoint deployment.
+The core payment rail is designed for production use. The Dark Null primitive layer is test-covered. The cost models are sourced from published benchmarks. The gap between here and a public mainnet launch is: security audit, Light Protocol integration activation, P-token migration execution, and oracle endpoint deployment.
 
 Nothing here is exaggerated. Everything listed as proven has a passing test or a devnet transaction behind it.

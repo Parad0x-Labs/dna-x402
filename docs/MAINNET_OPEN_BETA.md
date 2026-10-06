@@ -2,12 +2,11 @@
 
 ## Status
 
-**Open beta is not production. Open beta is not an audited release.**
+**Open beta is not production.**
 
 The six NULL Miner pilot programs and the x402 payment rail may be deployed on
 mainnet-beta in a capped configuration. All deployments under this track are:
 
-- Unaudited by any third party
 - Capped by daily payment volume
 - Gated by `MAINNET_BETA_EVIDENCE.json` (must exist before claiming beta status)
 - Subject to the `check:mainnet:beta` gate passing without blockers
@@ -25,7 +24,7 @@ mainnet-beta in a capped configuration. All deployments under this track are:
 ## What Is Blocked Until External Audit
 
 - Removing payment volume caps
-- Claiming "production ready" or "audited"
+- Claiming production status or third-party security review
 - Deploying dark_bn254_gate or dark_shielded_pool
 - Registering NULL Token-2022 hook on the live NULL token
 
@@ -39,10 +38,10 @@ mainnet-beta in a capped configuration. All deployments under this track are:
 ## Audit Funding
 
 We are seeking audit funding to move from evidence-backed public beta to
-audited mainnet production. See `GRANT_APPLICATION.md` for scope and ask.
+mainnet production after an external security review. See `GRANT_APPLICATION.md` for scope and ask.
 
 ## Risk Disclosure
 
-This software is unaudited. Use at your own risk. The security model protects
+Use at your own risk. The security model protects
 against backend/database leaks. It does not protect against a compromised
 browser or application-layer JavaScript.

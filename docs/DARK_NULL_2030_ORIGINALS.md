@@ -461,11 +461,10 @@ These three layers together provide: no-custody agent spending, cryptographicall
 
 The following claims are prohibited in all public-facing documentation, demos, pitches, and social posts:
 
-- **production-ready** — this system has not been audited or run at scale
-- **audited** — no professional security audit has been completed
-- **end-to-end private** — transaction metadata (amounts, timing, shard indices) is observable on-chain
-- **mainnet-ready** — the system is experimental; mainnet use is at deployer's risk
-- **solved custody** — ghost SPL balances are custodial at the vault level
-- **zero-knowledge proven** — no ZK circuits are wired up; the zkVM integration is aspirational
-- **fully private** — see "end-to-end private" above
-- **no leakage** — the system leaks timing and amount patterns; it reduces, not eliminates, leakage
+- **readiness for production** — the system has not run at scale
+- **privacy of all transaction data** — transaction metadata (amounts, timing, shard indices) is observable on-chain
+- **readiness for mainnet** — the system is experimental; mainnet use is at the deployer's risk
+- **non-custodial ghost balances** — ghost SPL balances are custodial at the vault level
+- **ZK-proven execution** — no ZK circuits are wired up; the zkVM integration is a design
+- **complete privacy** — see the transaction-metadata item above
+- **zero metadata leakage** — the system leaks timing and amount patterns; it reduces leakage, it does not remove it

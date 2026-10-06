@@ -60,7 +60,7 @@ modulus for ~81% of keys). The circuits take it as a private field element, so t
 
 ## Circuit `track_record.circom` (fixed K, e.g. K=16)
 **Public inputs:** `root`, `min_count`, `min_volume`, `window_start`, `reputation_nullifier`,
-`agent_commitment` *(optional — include → pseudonymous/.null-bound; omit → fully anonymous)`.
+`agent_commitment` *(optional — include → pseudonymous/.null-bound; omit → anonymous, with no agent binding)`.
 
 **Private witness:** `secret`, `agent_id`, and per receipt i∈[0,K): `amount_i, timestamp_i,
 counterparty_hash_i, receipt_nonce_i, merkle_path_i, leaf_index_i`.
@@ -103,7 +103,7 @@ counterparty_hash_i, receipt_nonce_i, merkle_path_i, leaf_index_i`.
 1. Lock the leaf schema + decide the settlement-layer leaf-writer (the trust anchor). *(design)*
 2. `track_record.circom` — Merkle-membership×K + range/sum/count + nullifier (reuse Poseidon + Merkle gadgets). Compile, `r1cs info`.
 3. Trusted setup — single-party for devnet; **multi-party ceremony before any trust claim** (same gate as the access gate; do them together).
-4. `dark_reputation_gate` — clone `dark_x402_access_gate`, swap VK + public-input parse (NR_PUBLIC_INPUTS = 5–6). Same alt_bn128 path. On-chain Poseidon via **light-poseidon** (Veridise-audited, circomlib-compatible).
+4. `dark_reputation_gate` — clone `dark_x402_access_gate`, swap VK + public-input parse (NR_PUBLIC_INPUTS = 5–6). Same alt_bn128 path. On-chain Poseidon via **light-poseidon** (reviewed by Veridise, circomlib-compatible).
 5. e2e (mirror today's `x402-access-full-e2e`): anchor test receipts → real proof CONFIRMED on devnet → forged / insufficient-count / out-of-window / replayed-nullifier all REJECTED → mainnet when green.
 
 ## Open decisions

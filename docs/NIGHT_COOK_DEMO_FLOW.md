@@ -139,7 +139,7 @@ cargo test -p poison-receipts -p copy-sniper-sim
 
 **What happens:** A mock AI model produces a signal. The model output is hashed into a `ModelOutputReceipt`. The commitment is stored as a transaction memo.
 
-**What it proves:** The signal source (model version, prompt policy, input) is verifiably bound to the output hash. The receipt can be audited without revealing model internals.
+**What it proves:** The signal source (model version, prompt policy, input) is verifiably bound to the output hash. A third party can check the receipt without seeing model internals.
 
 ```
 cargo test -p model-output-receipts

@@ -36,7 +36,7 @@ Allowed status labels:
 | Seller analytics | eventPrivacy, reputation | None | Medium | Seller role access | Aggregated thresholded events | Graph privacy controls | `ARCHITECTURE_READY` |
 | Buyer receipt vault | receipts, privacy | None | Low | Buyer account/session | Offline receipt verifier | Privacy/data-rights review | `REQUIRES_ADAPTER` |
 | Abuse reports | governance, policy | None | Medium | Reporter and evidence refs | Audit event references only | Appeal and review staffing | `ARCHITECTURE_READY` |
-| Appeals | governance, admin | None | Medium | Reviewer roles | Audited restore/reject action | Named operators | `ARCHITECTURE_READY` |
+| Appeals | governance, admin | None | Medium | Reviewer roles | Audit-logged restore/reject action | Named operators | `ARCHITECTURE_READY` |
 
 ## Agent Economy
 
@@ -48,7 +48,7 @@ Allowed status labels:
 | Bundle workflows | economics, receipts | Solana USDC default | Medium | Agent/seller profiles | Dependency graph and receipt chain | Bundle loop/depth mayhem | `SUPPORTED_SANDBOX` |
 | Reseller workflows | marketplace, fees, receipts | Solana USDC default | Medium | Seller tax and reputation | Split receipt and fee waterfall | Fee/no-double-charge tests | `REQUIRES_COUNSEL` |
 | Agent budget simulation | permissions | None | Low | Owner/session policy | Simulated spend trace | UI and SDK adapter | `ARCHITECTURE_READY` |
-| Emergency revoke | permissions, emergency | None | Low | Owner/admin action | Audited revoke event | Runtime kill switch tests | `ARCHITECTURE_READY` |
+| Emergency revoke | permissions, emergency | None | Low | Owner/admin action | Audit-logged revoke event | Runtime kill switch tests | `ARCHITECTURE_READY` |
 | Human approval thresholds | permissions, UX | Solana USDC default | Low | Owner local approval | Approval reference in receipt | Browser-local signing proof | `REQUIRES_ADAPTER` |
 | Unattended live agent spending | permissions | Live funds | High | Strong custody review | Scoped signer proof | Separate counsel/custody gate | `DO_NOT_BUILD_YET` |
 

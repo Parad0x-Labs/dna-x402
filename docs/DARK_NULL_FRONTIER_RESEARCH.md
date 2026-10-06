@@ -37,7 +37,7 @@ Path ORAM inside a TEE for block building. Clients query Ethereum state without 
 
 ### The Synthesis Nobody Has Shipped
 
-Piano for nullifier checks + TEE/MPC ORAM for Merkle path fetches = a ZK payment system with end-to-end private proof generation. Not just private on-chain — private against the node used to generate the proof. All pieces exist. Zero production deployments combining them. Engineering gap, not research.
+Piano for nullifier checks + TEE/MPC ORAM for Merkle path fetches = a ZK payment system whose proof generation is private as well. Not just private on-chain — private against the node used to generate the proof. All pieces exist. Zero production deployments combining them. Engineering gap, not research.
 
 *Papers: Piano ePrint 2023/452. Spiral ePrint 2022/368. Flashbots ORAM writings.flashbots.net. TACEO:OMap core.taceo.io. Path ORAM arXiv 1202.5150.*
 

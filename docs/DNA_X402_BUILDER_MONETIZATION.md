@@ -119,7 +119,7 @@ An accrual record is:
 
 Status starts as `ACCRUED_NOT_COLLECTED`.
 
-Manual settlement, waiver, refund, or partial refund must be an audited action before it changes status.
+Manual settlement, waiver, refund, or partial refund must be an audit-logged action before it changes status.
 
 ## Direct Split Mode
 

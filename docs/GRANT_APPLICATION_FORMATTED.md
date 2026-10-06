@@ -18,7 +18,7 @@ DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-
 
 ## PIECE 2 — What Will You Build (3–5 bullets)
 
-- **External security audit of 8 deployed Solana programs** — engage OtterSec, Neodyme, or Halborn for a full audit; address all findings; flip `IS_MAINNET_READY=true` per program on audit sign-off; publish the full report.
+- **External security audit of 8 deployed Solana programs** — engage OtterSec, Neodyme, or Halborn for a full audit; address all findings; flip the `IS_MAINNET_READY` flag per program on audit sign-off; publish the full report.
 - **`dark_bn254_gate` — real Groth16 verifier** — remove the current unconditional `0xDE 0xAD` bypass; generate a production verification key from a Powers of Tau ceremony; deliver a real on-chain Groth16 proof gate.
 - **`dark_shielded_pool` — Poseidon hash alignment and ceremony** — replace `IS_STUB=true` stub; align Poseidon parameters to match the circuit, add recipient binding, complete a multi-party trusted setup ceremony.
 - **Squads v4 multisig upgrade authority** — transfer all 8 program upgrade authorities from single-key to Squads v4 multisig before the audit code freeze; retire the single-key governance risk.
@@ -140,14 +140,14 @@ All 8 mainnet programs, the compression library, and the biometric passport flow
 
 **Month 3 — Remediation and sign-off**
 - Audit findings remediated; re-audit of critical findings if required
-- Per-program `IS_MAINNET_READY=true` flip in order of audit sign-off
+- Per-program `IS_MAINNET_READY` flag flip in order of audit sign-off
 - Public audit report (30-day embargo max if firm requires)
 - SDK stable release tagged
 
 **Deliverables at grant close:**
 - All 8 programs under Squads multisig upgrade authority
 - Published external audit report
-- `IS_MAINNET_READY=true` for each program cleared by audit
+- `IS_MAINNET_READY` flag set for each program cleared by audit
 - `dark_bn254_gate`: real VK, bypass removed
 - `dark_shielded_pool`: stub replaced, ceremony complete
 - SDK stable release tagged

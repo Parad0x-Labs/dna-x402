@@ -64,10 +64,9 @@ swarm-capsule, telegram-command-receipts, useful-chaff-planner
 ## Explicit Non-Claims
 
 > **This codebase is NOT:**
-> - Mainnet ready
-> - Audited by a third party
-> - Production ready for real user funds
-> - End-to-end private (ZK proof not wired)
+> - Deployed on mainnet
+> - Cleared for real user funds
+> - Private from payer to payee (ZK proof not wired)
 > - Using real Poseidon on-chain
 > - Bonsol integrated
 > - RISC Zero integrated

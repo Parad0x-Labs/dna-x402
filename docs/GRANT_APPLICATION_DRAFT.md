@@ -88,7 +88,7 @@ The pilot was **capped**: controlled endpoint builders, limited exposure, monito
 
 **What is pending:**
 - External security audit by a reputable Solana program auditing firm
-- `IS_MAINNET_READY=true` flag activation per-program on audit sign-off
+- `IS_MAINNET_READY` flag activation per-program on audit sign-off
 - Squads multisig migration for upgrade authority
 
 ---
@@ -101,7 +101,7 @@ The pilot was **capped**: controlled endpoint builders, limited exposure, monito
 
 | Item | Description |
 |------|-------------|
-| External security audit | Full audit of all 8 programs by a reputable Solana auditing firm. Prerequisite for `IS_MAINNET_READY=true` and public mainnet launch. |
+| External security audit | Full audit of all 8 programs by a reputable Solana auditing firm. Prerequisite for setting the `IS_MAINNET_READY` flag and public mainnet launch. |
 | Mainnet hardening | Address findings from audit. Estimated 4–8 weeks engineering. |
 | On-chain fee-split enforcement | Sprint 2: transaction-level USDC output splitting to fee recipients. Eliminates trust in SDK metadata for fee distribution. |
 
@@ -121,7 +121,7 @@ The pilot was **capped**: controlled endpoint builders, limited exposure, monito
 
 **Why audit funding specifically:**
 
-An unaudited protocol cannot responsibly enable `IS_MAINNET_READY=true` and expand to general public use. The audit is the critical path bottleneck. Without grant funding, the audit timeline slips while the technical work sits ready to ship.
+Without an external security review the protocol cannot responsibly enable the `IS_MAINNET_READY` flag and expand to general public use. The audit is the critical path bottleneck. Without grant funding, the audit timeline slips while the technical work sits ready to ship.
 
 ---
 
@@ -130,7 +130,7 @@ An unaudited protocol cannot responsibly enable `IS_MAINNET_READY=true` and expa
 | Milestone | Deliverable |
 |-----------|-------------|
 | Audit complete | Audit report published, all critical/high findings resolved |
-| Mainnet hardening | Patched program builds with IS_MAINNET_READY=true (per-program on sign-off) |
+| Mainnet hardening | Patched program builds with the IS_MAINNET_READY flag set (per-program on sign-off) |
 | On-chain fee split | Sprint 2 fee enforcement, documented and tested |
 | Multisig migration | Upgrade authority transferred to Squads multisig, documented |
 | Public launch | OSS/commercial configs published, builder quickstart updated |

@@ -59,7 +59,7 @@ Aliases such as `--template betting` map to the same restricted shell. The gener
 
 ## Production Gate
 
-A generated agent is not production-ready until these pass:
+A generated agent goes to production only after these pass:
 
 ```powershell
 npm --prefix x402 run build

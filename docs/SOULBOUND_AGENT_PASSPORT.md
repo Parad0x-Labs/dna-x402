@@ -303,7 +303,7 @@ registered agent with a live biometric/ETH binding."
 | UpgradeCredential (new device) | 0.001 USDC | protocol_authority treasury |
 
 Payment is via x402 — the caller includes a signed payment receipt in the instruction
-data. This receipt is verified on-chain (IS_MAINNET_READY = true) by checking the
+data. This receipt is verified on-chain (when the `IS_MAINNET_READY` flag is set) by checking the
 receipt against the x402 settlement record.
 
 ---
@@ -316,6 +316,4 @@ Programs that must be reviewed before any mainnet credential issuance:
 2. `dark_secp256r1_vault` — CPI caller for IssueCredential on passkey registration
 3. `dark_secp256k1_auth` — CPI caller for IssueCredential on ETH binding
 4. `spl-token-2022` version pinned in workspace (`spl-token-2022 = "3"`)
-5. x402 receipt verification path (when IS_MAINNET_READY = true)
-
-Status: EXTERNALLY UNAUDITED. Not reviewed by any third-party auditor.
+5. x402 receipt verification path (when the `IS_MAINNET_READY` flag is set)

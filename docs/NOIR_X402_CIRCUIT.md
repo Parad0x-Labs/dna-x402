@@ -1,6 +1,6 @@
 # NOIR_X402_CIRCUIT
 
-**Status**: Circom fallback WORKING | Noir path documented (experimental, Sunspot unaudited)
+**Status**: Circom fallback WORKING | Noir path documented (experimental)
 **Circuit**: `circuits/x402_access.circom`
 **Package**: `packages/x402-circuit`
 **Demo**: `scripts/zk/07-noir-x402-demo.mjs`
@@ -92,9 +92,9 @@ The Solana Foundation officially endorses it: [solana-foundation/noir-examples](
 
 Noir version required: `1.0.0-beta.18` (specifically — not current stable).
 
-### Noir circuit (equivalent, for when Sunspot is production-ready)
+### Noir circuit (equivalent, for when Sunspot is cleared for production use)
 
-The Circom circuit (`circuits/x402_access.circom`) has a direct Noir equivalent. When Sunspot is audited and a real MPC ceremony is run, migrate to `circuits/x402_access.nr`:
+The Circom circuit (`circuits/x402_access.circom`) has a direct Noir equivalent. When Sunspot has an external security review and a multi-party ceremony is run, migrate to `circuits/x402_access.nr`:
 
 ```noir
 use std::hash::poseidon::bn254::hash_2;

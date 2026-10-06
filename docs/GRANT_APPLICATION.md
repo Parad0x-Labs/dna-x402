@@ -129,16 +129,16 @@ Post-audit, this becomes a reference implementation for any developer building a
 - Track B: `dark_shielded_pool` — Poseidon alignment, recipient binding, ceremony
 - Track C: External audit running. Findings addressed in real time.
 
-**Month 3 — Remediation, sign-off, IS_MAINNET_READY=true**
+**Month 3 — Remediation, sign-off, `IS_MAINNET_READY` flag set**
 - Audit findings remediated. Re-audit critical findings if required.
-- Per-program `IS_MAINNET_READY=true` flip, one at a time, in order of sign-off.
+- Per-program `IS_MAINNET_READY` flag flip, one at a time, in order of sign-off.
 - Public audit report (full disclosure, 30-day embargo max if firm requires).
 - SDK stable release.
 
 **Deliverables at grant close:**
 - [ ] All 8 programs under Squads multisig upgrade authority
 - [ ] Published external audit report
-- [ ] `IS_MAINNET_READY=true` for each program cleared by audit
+- [ ] `IS_MAINNET_READY` flag set for each program cleared by audit
 - [ ] `dark_bn254_gate`: real VK, bypass removed
 - [ ] `dark_shielded_pool`: stub replaced, ceremony complete
 - [ ] SDK stable release tagged

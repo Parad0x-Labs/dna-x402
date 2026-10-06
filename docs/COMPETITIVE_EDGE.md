@@ -239,8 +239,8 @@ team with Solana program deployment permissions, without negotiating validator p
 This document describes technical design choices and comparisons based on publicly observable
 properties of the described systems (syscall availability, on-chain program logic, documentation).
 
-**NOT_PRODUCTION**: Nothing in this document or the associated codebase represents a production-ready
-system. No mainnet deployment has occurred. No security audit has been performed. No trusted setup
+**NOT_PRODUCTION**: Nothing in this document or the associated codebase represents a system cleared for
+production. No mainnet deployment has occurred. No security audit has been performed. No trusted setup
 ceremony with independent participants has been completed.
 
 **devnet-only**: All testing and demonstrations have been performed on Solana devnet using test

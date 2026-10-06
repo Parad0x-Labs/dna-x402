@@ -86,7 +86,7 @@ No backend custody. No backend signing. Direct on-chain payments.
 
 **Why this matters:** DNA x402 is an open, permissionless payment rail for AI agents on Solana.
 The OSS config (zero fees) demonstrates the protocol is public infrastructure, not extractive middleware.
-An audit enables responsible mainnet expansion and formally enables `IS_MAINNET_READY=true`.
+An audit enables responsible mainnet expansion and formally enables the `IS_MAINNET_READY` flag.
 
 ---
 

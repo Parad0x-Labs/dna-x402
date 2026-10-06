@@ -45,7 +45,7 @@ deposited, enabling arbitrary fund extraction.
 
 Squads Protocol v4 is already deployed on Solana mainnet and is used for
 this project's program upgrade authority. Reusing it avoids a new dependency
-and leverages audited multisig infrastructure.
+and reuses the multisig that already holds this project's upgrade authority.
 
 The `PoolConfig.authority` field is replaced with the Squads multisig vault
 PDA. All root-update and pause/resume instructions require the Squads vault
