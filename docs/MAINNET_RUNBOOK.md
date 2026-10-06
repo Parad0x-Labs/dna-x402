@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments referenced here have been retired and are no longer active. Current live deployments are devnet-only — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
 
 # DNA x402 — Mainnet Runbook
 
@@ -15,7 +15,7 @@
 |--------|---------|
 | `npm run mainnet:preflight` | Safety checks before any mainnet operation |
 | `npm run mainnet:deploy:safe` | Wrapped deploy with logging + recovery hints |
-| `npm run mainnet:verify` | Confirm all 8 programs are live and executable |
+| `npm run mainnet:verify` | Check the program accounts (all pilot programs were retired on 2026-07-14) |
 | `npm run mainnet:buffers` | Check for orphaned buffers wasting SOL |
 | `npm run mainnet:smoke:receipt` | Read-only proof_gate_lite live check |
 | `npm run mainnet:smoke:x402` | Fee computation correctness |
@@ -75,7 +75,7 @@ npm run mainnet:postdeploy:all
 ```
 
 This runs in sequence:
-1. Verify 8 programs live + executable (`evidence/mainnet/programs.json`)
+1. Verify the programs are executable (`evidence/mainnet/programs.json`; historical — all retired 2026-07-14)
 2. Check no orphaned buffers remain
 3. Read-only receipt anchor smoke
 4. Fee computation smoke (5 scenarios)
@@ -156,12 +156,11 @@ Output goes to `evidence/mainnet/programs.json` and `docs/MAINNET_PROGRAMS.md`.
 solana program show Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p -u mainnet-beta
 ```
 
-### All 8 program IDs
+### Pilot program IDs (retired 2026-07-14)
 
 | Program | ID |
 |---------|-----|
 | `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` |
 | `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` |
 | `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` |
 | `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` |
@@ -206,7 +205,7 @@ can run with zero fees. Use it for grant demonstrations.
 npm run mainnet:smoke:receipt
 ```
 
-Checks `dark_proof_gate_lite` is live and executable via `getAccountInfo`. Read-only.
+Checks `dark_proof_gate_lite` via `getAccountInfo` (retired 2026-07-14; the check now reports it closed). Read-only.
 No transaction. Output: `evidence/mainnet/smoke-receipt-anchor.json`.
 
 ### x402 fee computation smoke

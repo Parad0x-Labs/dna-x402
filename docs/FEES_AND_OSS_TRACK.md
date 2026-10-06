@@ -1,3 +1,5 @@
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
+
 # x402 Fee Model — Mainnet-Beta Evidence
 
 _Generated: 2026-05-30T18:15:59.564Z_

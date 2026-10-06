@@ -1,3 +1,5 @@
+> **Historical record — retired.** The mainnet `receipt_anchor` program referenced here ran in the 2026 mainnet pilot and was retired on 2026-07-14 (ProgramData closed). It is not active; its transaction history stays readable on explorers.
+
 # DNA x402
 
 ### The payment rail AI agents actually deserve.
@@ -96,7 +98,7 @@ Two lines. Your API now earns money.
 | Admin/audit events logged | 56 |
 | Total test cost | 0.000040 SOL |
 | Cluster | Solana mainnet-beta |
-| Program | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` |
+| Program | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` (retired 2026-07-14) |
 
 ---
 

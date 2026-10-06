@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments described in this document have been retired and are no longer active. Current live deployments are on Solana devnet (Agave 4.2.1) from the hardened `main` branch — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) for verified evidence. The content below is preserved as a historical record of its original date.
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
 
 # Solana Foundation Developer Grant Application
 
@@ -12,7 +12,7 @@
 
 ## PIECE 1 — Elevator Pitch (initial application form, <100 words)
 
-DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-gated services on-chain — no backend custody, no API keys for money movement. Eight programs are live on mainnet-beta, including a biometric passkey identity layer proven on real hardware (Solana Seeker) using the secp256r1 precompile, and a compressed receipt settlement system that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. The grant funds an external security audit of all 8 programs and removes two stub/bypass conditions blocking production readiness.
+DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-gated services on-chain — no backend custody, no API keys for money movement. Eight programs ran on mainnet-beta from 2026-05-29 (retired 2026-07-14), including a biometric passkey identity layer proven on real hardware (Solana Seeker) using the secp256r1 precompile, and a compressed receipt settlement system that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. The grant funds an external security audit of all 8 programs and removes two stub/bypass conditions blocking production readiness.
 
 ---
 
@@ -32,32 +32,25 @@ DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-
 
 DNA x402 is an open-source, on-chain payment rail for AI agents. It implements the HTTP 402 "Payment Required" protocol directly on Solana: an agent hits a gated resource, receives a 402 response, signs and submits a Solana transaction, and the resource is delivered — no backend custody, no intermediate signing service, no API keys mediating money movement. The project also includes Dark Passport (biometric passkey identity for agents) and Liquefy (compressed, private bulk receipt settlement). All code is MIT-licensed.
 
-This is not a whitepaper project. Eight programs are deployed and verifiable on Solana mainnet-beta today. The grant is to fund the external security audit that gates production launch and to finish two ZK components currently in documented stub/bypass state.
+This is not a whitepaper project. Eight programs ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14; their transaction history stays readable. The grant is to fund the external security audit that gates production launch and to finish two ZK components currently in documented stub/bypass state.
 
 ---
 
-### 2. What Is Built and Live on Mainnet-Beta
+### 2. What Ran on Mainnet-Beta (retired 2026-07-14)
 
-All 8 programs deployed 2026-05-29. All are verifiable executables.
+The pilot programs were deployed on 2026-05-29 and retired on 2026-07-14 (ProgramData closed).
 
 | Program | Mainnet Address | Status |
 |---|---|---|
-| `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Pilot |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | Pilot — P-256 proven on mainnet |
-| `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Pilot |
-| `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | Pilot |
-| `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | Pilot |
-| `null_mint_gate` | `5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1` | Pilot |
-| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | Pilot |
-| `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | Pilot |
+| `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Retired 2026-07-14 |
+| `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Retired 2026-07-14 |
+| `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | Retired 2026-07-14 |
+| `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | Retired 2026-07-14 |
+| `null_mint_gate` | `5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1` | Retired 2026-07-14 |
+| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | Retired 2026-07-14 |
+| `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | Retired 2026-07-14 |
 
 **NULL token (Token-2022):** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`
-
-**Biometric passport — proven on mainnet with real hardware:**
-- Register tx: `28sEcKdS8VwSvUtG796BJDoATQoysHnHN3edNMnk3V3vNPThuNtjyKUD7mkLPH1QUb1HJ3X6JPNMPkPkckJnVj1P`
-- Sign-in tx: `295YoPdoXbs2NMfftcRu8pa1vEjdhQbRcKNQVaoV88s5XeX5DVFhnY8ZhksEkH8Wpm82dswQo7xnNgf2mZXHj6mJ`
-- Wrong-key rejection confirmed on-chain: `0x4009 PasskeyPubkeyMismatch` — enforcement is in the Solana program, not the client
-- Tested on Solana Seeker (Android fingerprint via Chrome)
 
 **Test coverage:** 1990+ unit tests, 12-scenario adversarial mayhem suite (12/12 pass), devnet CI, BETA_READY gate at 0 blockers.
 
@@ -114,7 +107,7 @@ No salaries, marketing, or token liquidity.
 
 **Parad0x Labs / sls_0x** — solo founder and lead engineer. Scope: Anchor programs, Rust, TypeScript SDK, secp256r1 / SIMD-0075, Groth16 circuits, AES-GCM, CI/CD, adversarial test harnesses.
 
-All 8 mainnet programs, the compression library, and the biometric passport flow were built and deployed solo. Evidence: 8 programs verifiable on mainnet 2026-05-29, biometric passport transactions above, 1990+ tests, 12/12 adversarial scenarios passing.
+All 8 mainnet programs, the compression library, and the biometric passport flow were built and deployed solo. Evidence: 8 programs ran on mainnet from 2026-05-29 (retired 2026-07-14), 1990+ tests, 12/12 adversarial scenarios passing.
 
 ---
 

@@ -1,13 +1,14 @@
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
+
 # Upgrade Authority Status
 
 _Generated: 2026-05-30T22:14:29Z_
 
-## Current State
+## State at 2026-05-30 (programs retired 2026-07-14)
 
-| Program | Program ID | Current Authority |
+| Program | Program ID | Authority (2026-05-30) |
 |---------|-----------|------------------|
 | `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` |
 | `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` |
 | `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` |
 | `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` |

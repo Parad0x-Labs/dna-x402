@@ -1,3 +1,5 @@
+> **Historical record — retired.** The mainnet `receipt_anchor` program referenced here ran in the 2026 mainnet pilot and was retired on 2026-07-14 (ProgramData closed). It is not active; its transaction history stays readable on explorers.
+
 # Discord Post — DNA x402 Mainnet Stress Test Results
 
 ---
@@ -64,7 +66,7 @@ Duration:         165 seconds
 → https://solscan.io/tx/3SqBvmJN6v54yP6rpADGJZHrjqJNdEyvbVur6Ut122m6jpneK4igMfx7QvkVxMEJSZtokE6DcV4DRnXz5CVmkkUb
 
 ### Program
-`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
+`6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` (retired 2026-07-14)
 → https://solscan.io/account/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
 
 ### What This Proves
@@ -97,7 +99,7 @@ DNA x402 stress test complete.
 
 50 AI agents. 80 trades. $0.00001 to $2.00. Netting + real on-chain USDC transfers. 84/84 tests passed. 80/80 receipts anchored on Solana mainnet. Zero failures.
 
-Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
+Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN (retired 2026-07-14)
 
 Sample TXs:
 solscan.io/tx/5YkC97LzZx3eCFFoGSh4jGE62SeccqG3UK5aAnt86sLDfeu9T3pG5wFH1CnKvhY2xnRYumiWS5KmAh4EZPzdum2e

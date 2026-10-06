@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments described in this document have been retired and are no longer active. Current live deployments are on Solana devnet (Agave 4.2.1) from the hardened `main` branch — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) for verified evidence. The content below is preserved as a historical record of its original date.
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
 
 # DNA x402 — Grant Evidence Packet
 
@@ -17,16 +17,15 @@ DNA x402 is the first Solana stack combining:
 - **Groth16 private settlement roadmap** — zk-proof based settlement (dark_semaphore / dark_proof_gate_lite)
 - **Agent Passport** — biometric key binding via secp256r1 (iOS/Android Secure Enclave) and secp256k1 (EVM)
 
-8 programs are deployed to Solana mainnet-beta. NULL token is live on Token-2022.
+The pilot programs ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed).
 
 ---
 
-## Deployed Programs (mainnet-beta)
+## Mainnet-Beta Programs (retired 2026-07-14)
 
 | Program | ID | Explorer |
 |---------|-----|---------|
 | `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | [Explorer](https://explorer.solana.com/address/Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p?cluster=mainnet-beta) |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | [Explorer](https://explorer.solana.com/address/3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi?cluster=mainnet-beta) |
 | `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | [Explorer](https://explorer.solana.com/address/AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B?cluster=mainnet-beta) |
 | `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | [Explorer](https://explorer.solana.com/address/14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g?cluster=mainnet-beta) |
 | `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | [Explorer](https://explorer.solana.com/address/3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG?cluster=mainnet-beta) |
@@ -77,7 +76,7 @@ No backend custody. No backend signing. Direct on-chain payments.
 1. External security audit not yet completed. `IS_MAINNET_READY=false` in all binaries.
 2. On-chain fee-split enforcement is Sprint 2 (current: SDK/receipt metadata).
 3. Single-wallet upgrade authority → Squads multisig migration post-audit.
-4. Groth16 private settlement on roadmap (programs deployed, full verifier integration pending).
+4. Groth16 private settlement on roadmap (programs ran in the retired pilot; full verifier integration pending).
 
 ---
 
@@ -97,7 +96,7 @@ An audit enables responsible mainnet expansion and formally enables `IS_MAINNET_
 |------|-------------|
 | `evidence/mainnet/MAINNET_BETA_EVIDENCE.json` | This document (machine-readable) |
 | `evidence/mainnet/programs.json` | Program verification results |
-| `evidence/mainnet/smoke-receipt-anchor.json` | Read-only program live check |
+| `evidence/mainnet/smoke-receipt-anchor.json` | Read-only program check (historical, 2026-05) |
 | `evidence/mainnet/x402-fee-receipts.json` | Fee computation smoke tests |
 | `evidence/mainnet/usdc-smoke.json` | USDC gate check |
 | `evidence/mainnet/mayhem-results.json` | 12 adversarial SDK scenarios |

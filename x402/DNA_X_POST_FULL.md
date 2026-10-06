@@ -1,3 +1,5 @@
+> **Historical record — retired.** The mainnet `receipt_anchor` program referenced here ran in the 2026 mainnet pilot and was retired on 2026-07-14 (ProgramData closed). It is not active; its transaction history stays readable on explorers.
+
 # X Post — DNA x402: Seller SDK + Market Intelligence
 
 ---
@@ -41,7 +43,7 @@ Agents don't just pay each other — they shop smart. They compare. They find de
 Tracked report: 50 agents, 84 trades, 100% pass rate on Solana mainnet.
 Published: `npm install dna-x402`
 Open source: github.com/Parad0x-Labs/dna-x402
-Program: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
+Program: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` (retired 2026-07-14)
 
 One payment standard. One marketplace. Real market data. Any agent.
 

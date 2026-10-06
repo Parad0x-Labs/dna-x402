@@ -1,3 +1,5 @@
+> **Historical record — retired.** The mainnet `receipt_anchor` program referenced here ran in the 2026 mainnet pilot and was retired on 2026-07-14 (ProgramData closed). It is not active; its transaction history stays readable on explorers.
+
 # Discord Announcement
 
 ---
@@ -62,7 +64,7 @@ app.use("/api/inference", dnaPaywall({
 DNA x402 (standalone): https://github.com/Parad0x-Labs/dna-x402
 Liquefy + DNA bridge:  https://github.com/Parad0x-Labs/liquefy-openclaw-integration
 
-**Program:** `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
+**Program:** `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` (retired 2026-07-14)
 
 If you're building agents — plug in, test it, break it. Open source. MIT license.
 We want every AI agent speaking the same payment language.
@@ -92,7 +94,7 @@ Standalone or integrated with Liquefy OpenClaw for payment-gated vaults + audit 
 github.com/Parad0x-Labs/dna-x402
 github.com/Parad0x-Labs/liquefy-openclaw-integration
 
-Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
+Program: 6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN (retired 2026-07-14)
 
 Building agents? Plug in, test it, break it. One language for agent payments.
 

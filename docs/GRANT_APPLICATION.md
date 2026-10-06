@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments described in this document have been retired and are no longer active. Current live deployments are on Solana devnet (Agave 4.2.1) from the hardened `main` branch — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) for verified evidence. The content below is preserved as a historical record of its original date.
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
 
 # Solana Foundation Grant Application
 
@@ -11,32 +11,25 @@
 
 ## 1. Executive Summary
 
-DNA x402 is an open-source, on-chain payment rail that lets AI agents pay for services using the HTTP 402 protocol — no backend custody, no intermediary signing, no API keys for money movement. We have deployed 8 programs to Solana mainnet-beta, proven biometric passkey identity verification on-chain with real transactions, and shipped a compressed/private receipt settlement layer (Liquefy) that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. We are requesting a grant to fund an external security audit of all 8 programs and to complete the two ZK programs currently blocked on stubs, so that each program can flip `IS_MAINNET_READY=true` on audit sign-off.
+DNA x402 is an open-source, on-chain payment rail that lets AI agents pay for services using the HTTP 402 protocol — no backend custody, no intermediary signing, no API keys for money movement. We ran a mainnet-beta pilot of 8 programs (retired on 2026-07-14) and shipped a compressed/private receipt settlement layer (Liquefy) that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. We are requesting a grant to fund an external security audit of all 8 programs and to complete the two ZK programs currently blocked on stubs, so that each program can flip `IS_MAINNET_READY=true` on audit sign-off.
 
 ---
 
-## 2. What's Built and Live on Mainnet-Beta
+## 2. What Ran on Mainnet-Beta (retired 2026-07-14)
 
-All 8 programs deployed 2026-05-29 to Solana mainnet-beta, all verified executable.
+The pilot programs were deployed to Solana mainnet-beta on 2026-05-29 and retired on 2026-07-14 (ProgramData closed); their transaction history stays readable.
 
 | Program | Address | Status |
 |---|---|---|
-| `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Pilot |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | Pilot — P-256 proven on mainnet |
-| `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Pilot |
-| `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | Pilot |
-| `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | Pilot |
-| `null_mint_gate` | `5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1` | Pilot |
-| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | Pilot |
-| `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | Pilot |
+| `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Retired 2026-07-14 |
+| `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Retired 2026-07-14 |
+| `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | Retired 2026-07-14 |
+| `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | Retired 2026-07-14 |
+| `null_mint_gate` | `5jduvBZggszFeE7uxxNrvZAp8pJxzqtgzBGqg12fKhC1` | Retired 2026-07-14 |
+| `receipt_anchor` | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | Retired 2026-07-14 |
+| `dark_proof_gate_lite` | `PmSCTuehX1MYxf8GNsGsUZySYTtqWAtuTt3N2xZLpw2` | Retired 2026-07-14 |
 
 **NULL token (Token-2022):** `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump`
-
-**Biometric passport — proven on mainnet:**
-- Register tx: [28sEcKd…](https://explorer.solana.com/tx/28sEcKdS8VwSvUtG796BJDoATQoysHnHN3edNMnk3V3vNPThuNtjyKUD7mkLPH1QUb1HJ3X6JPNMPkPkckJnVj1P?cluster=mainnet-beta)
-- Sign-in tx: [295YoPd…](https://explorer.solana.com/tx/295YoPdoXbs2NMfftcRu8pa1vEjdhQbRcKNQVaoV88s5XeX5DVFhnY8ZhksEkH8Wpm82dswQo7xnNgf2mZXHj6mJ?cluster=mainnet-beta)
-- Wrong-key rejection: `0x4009 PasskeyPubkeyMismatch` — on-chain error, not client-side
-- Tested on Solana Seeker (Android fingerprint via Chrome)
 
 **Test coverage:** 1990+ unit tests, 12-scenario adversarial mayhem suite (12/12 pass), devnet CI, BETA_READY gate (0 blockers).
 
@@ -45,7 +38,7 @@ All 8 programs deployed 2026-05-29 to Solana mainnet-beta, all verified executab
 - Bilateral netting: 1M receipts → ~4,950 net settlements before compression
 - AES-256-GCM encryption (only transacting parties see amounts)
 - Streaming Merkle root: O(log N) memory, any batch → 32 bytes on-chain
-- [github.com/Parad0x-Labs/liquefy](https://github.com/Parad0x-Labs/liquefy)
+- liquefy (private repository)
 
 ---
 
@@ -82,7 +75,7 @@ Every dollar goes to audit, ZK production cryptography, and governance hardening
 
 **Parad0x Labs / sls_0x** — solo founder / lead engineer. Full-stack Solana: Anchor programs, Rust, TypeScript SDK, secp256r1/SIMD-0075, Groth16 ZK circuits, AES-GCM, CI/CD, adversarial test harnesses. All 8 mainnet programs, the compression library, and the biometric passport flow were built and deployed by one person.
 
-Evidence of execution: 8 programs on mainnet 2026-05-29, biometric passport proven on-chain same day, 1990+ tests, 12/12 adversarial scenarios passing.
+Evidence of execution: 8 programs ran on mainnet from 2026-05-29 (retired 2026-07-14), 1990+ tests, 12/12 adversarial scenarios passing.
 
 ---
 

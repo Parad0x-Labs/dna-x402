@@ -27,7 +27,7 @@
 | Oracle-Attested Inference Receipt | **Program (redeploy pending)** | Solana program implemented; devnet redeploy under a fresh key pending; `secp256k1_recover` verifies oracle sig over model+I/O hashes — oracle attestation, not EZKL |
 | Private Streaming Micropayments | **Program (redeploy pending)** | `swarm/payment-stream.mjs` + Solana program implemented; devnet redeploy under a fresh key pending; payment channel open/tick/close — no hidden-rate encryption |
 
-*All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo (113/113). The six Solana programs above await a devnet redeploy under a fresh key. None are audited.*
+*All prototype modules pass `npm run test:frontier` in the Dark Null Protocol repo (113/113). The six Solana programs above await a devnet redeploy under a fresh key.*
 
 ---
 

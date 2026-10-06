@@ -1,3 +1,5 @@
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
+
 # SIMD-0064 Revival PR — Transaction Receipts
 
 ## PR Title
@@ -22,9 +24,9 @@ Today you either trust an RPC or run a full validator. SIMD-0064 gives a third o
 a compact proof that a transaction was included in a specific block, verifiable by anyone 
 holding the block header.
 
-## What's already live
+## What ran on mainnet (retired 2026-07-14)
 
-`receipt_anchor` program on mainnet: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
+`receipt_anchor` program on mainnet (retired 2026-07-14, ProgramData closed): `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`
 
 It accumulates 32-byte anchors (SHA-256 of payment receipts) into hourly-windowed 
 AnchorBucket PDAs. Each bucket holds a running Merkle root and count. This is the 
@@ -66,7 +68,7 @@ would need to produce, not change Agave/Firedancer internals.
 ## References
 - Original SIMD-0064: https://github.com/solana-foundation/solana-improvement-documents/pull/64
 - DNA x402 repo: https://github.com/Parad0x-Labs/dna-x402
-- receipt_anchor on mainnet: https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
+- receipt_anchor on mainnet (retired 2026-07-14, history readable): https://explorer.solana.com/address/6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN
 ```
 
 ---
@@ -74,7 +76,7 @@ would need to produce, not change Agave/Firedancer internals.
 ## Foundation Email
 
 **To:** grants@solana.org (or via the grants form at solana.org/grants-funding)  
-**Subject:** SIMD-0064 revival — x402 payment receipts live on mainnet + grant application
+**Subject:** SIMD-0064 revival — x402 payment receipts on mainnet (2026 pilot) + grant application
 
 ```
 Hi,
@@ -82,8 +84,8 @@ Hi,
 We opened a PR to revive SIMD-0064 (Transaction Receipts), stagnant since Oct 2024:
 [link to PR on solana-improvement-documents]
 
-We're Parad0x Labs (github.com/Parad0x-Labs). Our receipt_anchor program is live on 
-Solana mainnet (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN) aggregating AI agent 
+We're Parad0x Labs (github.com/Parad0x-Labs). Our receipt_anchor program ran on 
+Solana mainnet (6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN, retired 2026-07-14) aggregating AI agent 
 payment receipts for our x402 payment rail. The missing piece is the block-level 
 inclusion proof SIMD-0064 would standardize.
 

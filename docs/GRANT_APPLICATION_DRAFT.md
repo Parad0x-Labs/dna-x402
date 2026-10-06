@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments described in this document have been retired and are no longer active. Current live deployments are on Solana devnet (Agave 4.2.1) from the hardened `main` branch — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md) for verified evidence. The content below is preserved as a historical record of its original date.
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
 
 # DNA x402 — Solana Foundation Grant Application
 
@@ -18,7 +18,7 @@ DNA x402: First Solana x402 Micropayment Protocol for AI Agents — External Aud
 
 ## One-Line Description
 
-The first Solana stack combining x402 micropayments, a Groth16 private settlement roadmap, and Agent Passport biometric key binding — 8 programs deployed to mainnet-beta, NULL token live on Token-2022, OSS zero-fee config for permissionless public use.
+The first Solana stack combining x402 micropayments, a Groth16 private settlement roadmap, and Agent Passport biometric key binding — 8 programs ran on mainnet-beta from 2026-05-29 (retired 2026-07-14), NULL token live on Token-2022, OSS zero-fee config for permissionless public use.
 
 ---
 
@@ -33,7 +33,7 @@ all of the following in one codebase:
 
 3. **Receipt chain linking** — multi-agent payment graphs. When agent A subcontracts to agent B which subcontracts to agent C, every payment receipt references its parent. The full chain is traversable on-chain via `dark_proof_gate_lite`.
 
-4. **Groth16 private settlement roadmap** — `dark_semaphore` and `dark_proof_gate_lite` are deployed with the cryptographic primitives for Semaphore-style zero-knowledge receipt anchoring. Full verifier integration is next sprint.
+4. **Groth16 private settlement roadmap** — `dark_semaphore` and `dark_proof_gate_lite` were deployed (now retired) with the cryptographic primitives for Semaphore-style zero-knowledge receipt anchoring. Full verifier integration is next sprint.
 
 5. **Agent Passport** — biometric key binding via `dark_secp256r1_vault` (iOS/Android Secure Enclave, WebAuthn) and `dark_secp256k1_auth` (EVM-compatible secp256k1). Agents authenticate with device biometrics, no seed phrase exposure.
 
@@ -41,14 +41,13 @@ all of the following in one codebase:
 
 ---
 
-## What Is Deployed
+## What Ran on Mainnet-Beta (retired 2026-07-14)
 
-8 programs on mainnet-beta:
+Pilot programs that ran on mainnet-beta (retired 2026-07-14, ProgramData closed):
 
 | Program | ID | Role |
 |---------|-----|------|
 | `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | ZK nullifier / Semaphore-style group membership |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | secp256r1 key vault (WebAuthn / Secure Enclave) |
 | `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | secp256k1 auth (EVM-compatible agent identity) |
 | `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` | Token-2022 transfer hook for NULL emission |
 | `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` | On-chain NULL token lottery |
@@ -75,9 +74,9 @@ Fees are enforced at the SDK/receipt-metadata level today. On-chain fee-split en
 
 ## Audit Status (honest disclosure)
 
-All 8 programs are deployed with `IS_MAINNET_READY=false` in the program binary. This flag is a compile-time guard that prevents full production settlement before an external audit approves each program.
+All 8 pilot programs were deployed with `IS_MAINNET_READY=false` in the program binary. This flag is a compile-time guard that prevents full production settlement before an external audit approves each program.
 
-The current deployment is a **capped pilot**: controlled endpoint builders, limited exposure, monitored.
+The pilot was **capped**: controlled endpoint builders, limited exposure, monitored. It was retired on 2026-07-14.
 
 **What has been done:**
 - Internal technical review

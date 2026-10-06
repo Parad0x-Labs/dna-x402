@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments referenced here have been retired and are no longer active. Current live deployments are devnet-only — see [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](../devnet-tests/RESULTS.md).
 
 # DNA x402 — Mainnet-Beta Launch Report
 
@@ -10,12 +10,11 @@
 
 ## What Was Deployed
 
-8 Solana programs deployed to mainnet-beta on 2026-05-29.
+Solana programs deployed to mainnet-beta on 2026-05-29 and retired on 2026-07-14 (ProgramData closed).
 
 | Program | Program ID |
 |---------|-----------|
 | `dark_semaphore` | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` |
-| `dark_secp256r1_vault` | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` |
 | `dark_secp256k1_auth` | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` |
 | `null_token_hook` | `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` |
 | `null_lottery` | `3t5c2Trk4SFK7hvKVjsmmC2xQtasFnK9pJQRdwPHqxbG` |
@@ -53,12 +52,11 @@
 - Receipt chain linking (multi-agent payment graphs)
 - Session keys (pay-once, use-multiple middleware)
 - Fee split SDK enforcement (operator + protocol)
-- On-chain program accounts: all 8 programs executable on mainnet-beta
+- On-chain program accounts: all pilot programs executable at launch (retired 2026-07-14)
 - NULL token: Token-2022 mint live
 - **Dark Passport Tiers 0–2** — wallet-bound identity live in frontend
   - Tier 0: Phantom-signed device identity (active)
-  - Tier 1: P-256/WebAuthn passkey → `dark_secp256r1_vault` (live on-chain, UI wired)
-  - Tier 2: MetaMask/ETH binding → `dark_secp256k1_auth` (live on-chain, UI wired)
+  - Tier 2: MetaMask/ETH binding → `dark_secp256k1_auth` (on-chain at launch, retired 2026-07-14)
   - Tier 3: ZK reputation (Sprint 2 — Groth16 circuits)
 - **Real mainnet write smoke** — `dark_proof_gate_lite` RecordVerifiedClaim confirmed on-chain
   - TX: `8owZaj13aCbFNYqsRhUdxgBfRDFsr4SDeJqPn5FLZmUh3xCmzSJ2PkX4iwxQAUxZUNyGdkrA3bouLXs456p2tAS`

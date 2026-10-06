@@ -6,7 +6,7 @@ program `Cargo.toml` deps + CPI sites, not assumed.*
 ## Three independent pillars
 Each pillar stands or falls on its own — no cross-pillar runtime dependency:
 
-1. **x402 payments** — `dark_x402_access_gate` (Groth16 access proof) · `receipt_anchor` (6HSRGivd, receipts)
+1. **x402 payments** — `dark_x402_access_gate` (Groth16 access proof) · `receipt_anchor` (receipts; mainnet `6HSRGivd` retired 2026-07-14)
 2. **.null identity** — `null_registrar` (v1 domains) · `null-auction` (resale)
 3. **privacy reputation** — `receipt_commitment_tree` (root source) · `dark_reputation_gate` (track-record proof) · `dark_nullifier_record` (single-use)
 
@@ -19,7 +19,7 @@ Each pillar stands or falls on its own — no cross-pillar runtime dependency:
 | `receipt_commitment_tree` | none | — | — |
 | `null_registrar` | none | — | — |
 | `null-auction` | none | → `null_registrar` | — |
-| `receipt_anchor` (6HSRGivd) | none | — | — |
+| `receipt_anchor` (mainnet `6HSRGivd`, retired 2026-07-14) | none | — | — |
 
 Everything not listed as a dependency is `solana-program` only. **5 of 7 programs have zero outward
 coupling.** Each program has its own program ID + upgrade authority → any one can be paused,

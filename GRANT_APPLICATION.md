@@ -1,4 +1,4 @@
-> **Status update (2026-08-25):** The mainnet program deployments described in this document have been retired and are no longer active. Current live deployments are on Solana devnet (Agave 4.2.1) from the hardened `main` branch — see [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md) for verified evidence. The content below is preserved as a historical record of its original date.
+> **Historical record — retired.** The mainnet programs referenced here ran on Solana mainnet-beta from 2026-05-29 and were retired on 2026-07-14 (ProgramData closed). None of them is active; their transaction history stays readable on explorers. Wording below describes the state at the original date. Current devnet evidence: [`devnet-tests/RESULTS.md`](./devnet-tests/RESULTS.md).
 
 # Solana Foundation Grant Application
 

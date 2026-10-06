@@ -59,7 +59,7 @@ The existing SPL mint cannot be upgraded to Token-2022 in place. A new Token-202
 1. Deploy a new Token-2022 mint (`NULL_V2`) with extensions initialized at mint creation:
    - `ConfidentialTransfer` — required
    - `ConfidentialTransferFee` — required (closes fee side channel)
-   - `TransferHook` pointing to the existing `null_token_hook` program (`14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g`) — preserves ZK gating logic
+   - `TransferHook` pointing to a `null_token_hook` deployment (the 2026 mainnet pilot program `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g` was retired on 2026-07-14) — preserves ZK gating logic
    - `MintCloseAuthority` — treasury multisig retains this
    - `MetadataPointer` — same symbol, name, URI as current NULL
 
@@ -195,7 +195,7 @@ Update `ReceiptPayload` to carry an optional `confidentialReceipt` field so the 
 
 ### 3.4 `receipt_anchor` Program Update
 
-**Program:** `programs/receipt_anchor` (mainnet: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`)
+**Program:** `programs/receipt_anchor` (mainnet pilot `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`, retired 2026-07-14; redeploy under a fresh key pending)
 
 The current `AnchorBucket` stores a 32-byte Merkle root of receipt hashes. No change to the on-chain layout is required. The `anchor32` field passed from `ReceiptAnchorClient.sendSingle()` should be the SHA-256 of the `ConfidentialReceipt` struct (including the ciphertext and range proof bytes) rather than the plaintext amount. This means the on-chain anchor commits to the encrypted receipt without revealing the amount.
 
@@ -284,8 +284,8 @@ The moat compounds: as agent wallets accumulate encrypted history, the historica
 | Payment verifier | `x402/src/paymentVerifier.ts` |
 | Payment proof types | `x402/src/types.ts` |
 | Receipt anchor client | `x402/src/onchain/receiptAnchorClient.ts` |
-| null_token_hook program | `programs/null_token_hook/` (mainnet: `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g`) |
-| receipt_anchor program | `programs/receipt_anchor/` (mainnet: `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`) |
+| null_token_hook program | `programs/null_token_hook/` (mainnet pilot `14ivonrNRmaMbJMQkGdHVVTcqZYhNvchULWxveazhW2g`, retired 2026-07-14) |
+| receipt_anchor program | `programs/receipt_anchor/` (mainnet pilot `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN`, retired 2026-07-14) |
 | Current NULL_V1 mint | `8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump` (standard SPL, transparent) |
 | Treasury authority | `9M949AfyYCHp9hUk7crZZx3N6Y8sigyWBN6RM6tFq1q5` |
 | Dark NULL privacy layer context | `docs/DARK_NULL_PRIVACY_PATH.md` |

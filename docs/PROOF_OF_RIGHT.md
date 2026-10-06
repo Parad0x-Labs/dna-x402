@@ -73,10 +73,9 @@ Such that:
 | Program | Role in POR | Status |
 |---|---|---|
 | `dark_bn254_gate` (`GCptvBYF...`) | Intended on-chain Groth16 verifier for the POR primitive | ⛔ Excluded from pilot — `0xDE 0xAD` unconditional bypass (any proof passes), documented P0, fail-closed pending bypass removal + a trustless ceremony / real VK. Off-chain Groth16 verification via `snarkjs` works today. |
-| `dark_semaphore` (`Ev7HEFhh...`) | Nullifier registry — prevents double-exercise of rights | Pilot |
-| `dark_proof_gate_lite` (`PmSCTueh...`) | Lightweight proof-of-claim anchor | Pilot |
-| `receipt_anchor` (`6HSRGivd...`) | Permanent on-chain proof of receipts | Pilot |
-| `dark_secp256r1_vault` (`3hbbtje...`) | Biometric identity — proves operator identity | Pilot |
+| `dark_semaphore` (`Ev7HEFhh...`) | Nullifier registry — prevents double-exercise of rights | Retired 2026-07-14 |
+| `dark_proof_gate_lite` (`PmSCTueh...`) | Lightweight proof-of-claim anchor | Retired 2026-07-14 |
+| `receipt_anchor` (`6HSRGivd...`) | Permanent on-chain proof of receipts | Retired 2026-07-14 |
 
 ### Circuit
 
@@ -142,9 +141,8 @@ Prove you are in a group (Semaphore nullifier tree) without revealing which memb
 | Milestone | Status |
 |---|---|
 | Groth16 verifier on Solana mainnet | ⛔ Excluded from pilot (`GCptvBYF...` — `0xDE 0xAD` bypass; fail-closed pending real VK + trustless ceremony). Off-chain verification works today. |
-| Biometric identity binding (Loop) | ✅ Live (`3hbbtje...`) |
-| Nullifier registry | ✅ Live (`Ev7HEFhh...`) |
-| Compressed private receipt batches | ✅ Live (`6HSRGivd...`) |
+| Nullifier registry | Retired 2026-07-14 (`Ev7HEFhh...`, mainnet pilot) |
+| Compressed private receipt batches | Retired 2026-07-14 (`6HSRGivd...`, mainnet pilot); redeploy under a fresh key pending |
 | Dark Pool (shielded transfers) | 🔲 Post-audit |
 | Multi-party ceremony (N > 2) | 🔲 Post-audit |
 | Full WebAuthn authenticatorData binding | 🔲 Sprint 2 |

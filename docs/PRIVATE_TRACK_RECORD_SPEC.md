@@ -26,7 +26,7 @@ the access gate); (3) scale K/depth.
 ## Reuses
 | Piece | ID | Role here |
 |---|---|---|
-| alt_bn128 Groth16 verifier (`dark_x402_access_gate`) | `EepqzV…` | same syscall + verify path; new VK + public-input layout → `dark_reputation_gate` |
+| alt_bn128 Groth16 verifier (`dark_x402_access_gate`) | redeploy pending | same syscall + verify path; new VK + public-input layout → `dark_reputation_gate` |
 | `receipt_anchor` | redeploy pending | anchors the **commitment** Merkle root (not public receipts) |
 | `dark_nullifier_record` | redeploy pending | records the per-epoch reputation nullifier → single-use proofs |
 | identity commitment | — | `agent_commitment = Poseidon(secret, agent_id)` — **identical** to the access gate, so one identity spans "prove I'm funded" and "prove my track record" |
