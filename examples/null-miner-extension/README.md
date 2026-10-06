@@ -24,7 +24,7 @@ The extension installs the SDK from a local tarball,
 npm --prefix ../.. ci --ignore-scripts           # workspace deps for the SDK
 cd ../../packages/null-miner-sdk
 npm run build && npm pack --ignore-scripts
-mv parad0x_labs-null-miner-sdk-0.1.0.tgz null-miner-sdk-0.1.0.tgz
+mv parad0x_labs-null-miner-sdk-*.tgz null-miner-sdk-0.1.0.tgz
 cd ../../examples/null-miner-extension
 npm ci --ignore-scripts
 npm run build    # outputs to dist/
