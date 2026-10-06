@@ -1,12 +1,14 @@
 // Live devnet attack-replay suite for dna-x402 security-fixes branch deployments.
 // Raw solana_program programs — discriminants and layouts transcribed from Rust source.
 //
-// Programs under test:
-//   agent_credential_mint    5ftab12xtYNLmeNZQghGK1b3CgnZDVmfAnyCr4uNuyqN
-//   null_token_hook          hrCdqUDDGEzfQCTinfc9LX5MYfo33aXrjZvcWAzyygR
-//   dark_nullifier_banks     HqaSYLB9Uk2pLQ7kZvBoYBKVJ72NihTRVnyddQRKP4gQ
-//   receipt_commitment_tree  7DdJFMwrGZKcj7MrjqvftfGt9HH99s3hNvEv6SbRj4ig
-//   dark_null_mint_gate      Tncf2ZwE3CtyEourUxPzL1Jkknw6sAt2A7SdtM8c4up
+// Programs under test (the last four are read from configs/devnet.oss.json, the
+// 2026-10-06 devnet deployment; RESULTS.md records an earlier run on the retired IDs):
+//   agent_credential_mint    5ftab12xtYNLmeNZQghGK1b3CgnZDVmfAnyCr4uNuyqN (earlier deployment;
+//                            not part of the 2026-10-06 set)
+//   null_token_hook          programs.tokenHook
+//   dark_nullifier_banks     programs.nullifierBanks
+//   receipt_commitment_tree  programs.receiptCommitmentTree
+//   dark_null_mint_gate      programs.mintGate
 //
 // Set MINT_GATE_ONLY=1 to run only the dark_null_mint_gate tests (T7+),
 // skipping the legacy T1-T6 blocks (avoids re-spending on reruns).
@@ -29,9 +31,13 @@ const RPC = "https://api.devnet.solana.com";
 const KEYS_DIR = process.env.DNA_KEYS_DIR ?? path.join(".", "devnet-keys");
 
 const ACM_ID = new PublicKey("5ftab12xtYNLmeNZQghGK1b3CgnZDVmfAnyCr4uNuyqN");
-const HOOK_ID = new PublicKey("hrCdqUDDGEzfQCTinfc9LX5MYfo33aXrjZvcWAzyygR");
-const BANKS_ID = new PublicKey("HqaSYLB9Uk2pLQ7kZvBoYBKVJ72NihTRVnyddQRKP4gQ");
-const TREE_ID = new PublicKey("7DdJFMwrGZKcj7MrjqvftfGt9HH99s3hNvEv6SbRj4ig");
+const DEVNET_PROGRAMS: Record<string, string> = JSON.parse(
+  fs.readFileSync(new URL("../configs/devnet.oss.json", import.meta.url), "utf8"),
+).programs;
+const HOOK_ID = new PublicKey(DEVNET_PROGRAMS.tokenHook);
+const BANKS_ID = new PublicKey(DEVNET_PROGRAMS.nullifierBanks);
+const TREE_ID = new PublicKey(DEVNET_PROGRAMS.receiptCommitmentTree);
+const MINT_GATE_ID = new PublicKey(DEVNET_PROGRAMS.mintGate);
 
 // Custom error codes transcribed from each program's error enum.
 const ACM_ERR: Record<number, string> = {
@@ -451,7 +457,7 @@ async function main() {
   // Source: tag 0x01 | null_mint[32] | max_per_claim u64le | epoch_dur u64le | epoch_cap u64le
   // Accounts: [emission-config PDA, admin (signer, pays), system_program]
   {
-    const GATE_ID = new PublicKey("Tncf2ZwE3CtyEourUxPzL1Jkknw6sAt2A7SdtM8c4up");
+    const GATE_ID = MINT_GATE_ID;
     const [cfgPda] = PublicKey.findProgramAddressSync([Buffer.from("emission-config")], GATE_ID);
     const existing = await conn.getAccountInfo(cfgPda);
 
