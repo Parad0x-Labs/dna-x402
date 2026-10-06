@@ -47,9 +47,9 @@ Deep research across forgotten e-cash, cryptographic holy grails, proof aggregat
 - **Snowblind** — CRYPTO 2023, threshold blind signatures in pairing-free groups with statistical blindness even if all signers collude.
 - **Penumbra ZSwap** — threshold homomorphic flow encryption for private DEX batch clearing, no individual order ever revealed. Most sophisticated private DEX on any PoS chain.
 
-[`docs/DARK_NULL_FRONTIER_RESEARCH.md`](./docs/DARK_NULL_FRONTIER_RESEARCH.md) — cryptographic primitive citations and precedence order.
+[`docs/DARK_NULL_FRONTIER_RESEARCH.md`](./DARK_NULL_FRONTIER_RESEARCH.md) — cryptographic primitive citations and precedence order.
 
-[`docs/SOLANA_FRONTIER_RESEARCH.md`](./docs/SOLANA_FRONTIER_RESEARCH.md) — Solana-native implementations: ALT fog, sharded nullifier banks, compressed receipts, receipt-spend notes, relay router, bundle cloak, chaff, swarm capsule, sealed fee quotes.
+[`docs/SOLANA_FRONTIER_RESEARCH.md`](./SOLANA_FRONTIER_RESEARCH.md) — Solana-native implementations: ALT fog, sharded nullifier banks, compressed receipts, receipt-spend notes, relay router, bundle cloak, chaff, swarm capsule, sealed fee quotes.
 
 ## Frontier Convergence
 
@@ -66,7 +66,7 @@ Where these lanes meet, the stack produces primitives that do not exist anywhere
 - **MPC sealed pricing** — Arcium-style private auctions where bids and floor prices are never revealed
 - **Private agent-to-agent API commerce** — the full convergence: anonymous machine payments, recursive settlement, MEV-blind, sub-minute privacy
 
-[`docs/DARK_NULL_FRONTIER.md`](./docs/DARK_NULL_FRONTIER.md) — research directions and precedence order.
+[`docs/DARK_NULL_FRONTIER.md`](./DARK_NULL_FRONTIER.md) — research directions and precedence order.
 
 ## LLM Quick Parse
 
