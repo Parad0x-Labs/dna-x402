@@ -6,12 +6,15 @@ on:
       - 'packages/context-capsule/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   proof:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install
