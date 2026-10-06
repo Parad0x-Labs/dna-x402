@@ -51,7 +51,7 @@ things and are counted separately.
 | `dark-shielded-pool-core` | Poseidon via `dark-poseidon-real` |
 | `dark-fedimint-ecash`, `dark-kvac`, `dark-x402-kvac`, `dark-stealth-ed25519` | `curve25519-dalek` |
 | `compute-coupon`, `swarm-capsule`, `ritual-precompile-braid`, `ritual-bound-token-demo` | `ed25519-dalek` |
-| `dark-macaroons` | `hmac` + `sha2` (RFC 2104) |
+| `dark-macaroons`, `dark-blind-oracle` | `hmac` + `sha2` (RFC 2104) |
 
 Names that look cryptographic but are not: `dark-zk-hook` and `dark-x402-e2e-demo` mention `alt_bn128` only
 in comments; `dark-poseidon-tree` and `dark-poseidon-safe` fall back to SHA-256; `dark-hash-core` uses its
@@ -68,12 +68,12 @@ member that no program, package or other crate depends on.
 |---|---|---|---|---|---|
 | `dark-macaroons` | real | real-implementation | `hmac` 0.13 + `sha2`; RFC 4231 test vector (`src/lib.rs`). MAC comparison is not constant-time | none | — |
 | `dark-proof-of-innocence` | real | real-implementation of sorted-set non-membership; hash-based, not zero-knowledge (verifier holds the set); self-declares `NOT_PRODUCTION` | `sha2` | none | — |
-| `dark-blind-oracle` | scaffold (real HMAC) | **hash-only stand-in, forgeable.** Revision 1 label corrected: the attestation is `SHA256(domain, oracle_pubkey, blinded_commitment)` and `verify_attestation` recomputes it from public fields, so no secret is involved | `sha2` | none in Rust; `x402/tests/dark-null.blind-oracle.test.ts` re-implements it in TypeScript | — |
+| `dark-blind-oracle` | scaffold (real HMAC) | **prototype, HMAC-SHA256 (fixed after revision 2).** Revision 2 found the attestation was `SHA256(domain, oracle_pubkey, blinded_commitment)`, recomputable from public fields and so forgeable. It is now HMAC-SHA256 under the oracle secret over the commitment and timestamp; `verify_attestation` needs the secret and compares in constant time. A MAC, not a signature: only a key holder can verify. RFC 4231 vector and a forgery-rejection test in `src/lib.rs` | `hmac` 0.13 + `sha2` | none in Rust; `x402/tests/dark-null.blind-oracle.test.ts` mirrors it in TypeScript | — |
 | `dark-x402-commit-reveal` | scaffold | scaffold (`IS_STUB = true`); commit/reveal logic complete, no on-chain anchor | `sha2` | none | — |
 | `dark-zk-hook` | fail-closed (fixed 2026-06-06) | fail-closed: `verify_hook_proof` returns `StubVerifierDisabled` | `sha2` | none | — |
 | `dark-imt-nullifier` | verify hardened (2026-06-06) | prototype: low node bound to the tree; Merkle root not depth-fixed and the inclusion path is still open | `sha2` | none | — |
 | `dark-nova-receipt` | hash stand-in | hash-only stand-in: `step_proof` is SHA-256, no Nova/IVC fold | `sha2` | none | — |
-| `dark-x402-stealth` | hash stand-in | hash-only stand-in: "ECDH" is SHA-256. Its source comment "First Solana implementation" is not supported | `sha2` | none | replaced in practice by `crates/dark-stealth-ed25519` (curve25519-dalek): [`evidence/zk/nullpay-stealth-ed25519-killtest.json`](../evidence/zk/nullpay-stealth-ed25519-killtest.json) (off-chain, 7/7) |
+| `dark-x402-stealth` | hash stand-in | hash-only stand-in: "ECDH" is SHA-256. The unsupported "First Solana implementation" source comment was removed after revision 2 | `sha2` | none | replaced in practice by `crates/dark-stealth-ed25519` (curve25519-dalek): [`evidence/zk/nullpay-stealth-ed25519-killtest.json`](../evidence/zk/nullpay-stealth-ed25519-killtest.json) (off-chain, 7/7) |
 | `dark-x402-private-intent` | hash stand-in | hash-only stand-in: SHA-256 commitment; range check needs the amount revealed | `sha2` | none | — |
 | `dark-x402-session-key` | hash stand-in | hash-only stand-in: `payment_token` is a hash, not a signature | `sha2` | none | — |
 | `programs/dark_shielded_pool` | scaffold, fails closed | **prototype.** Real Groth16 verify over `alt_bn128` (`dark-groth16-core`) with Poseidon (`dark-poseidon-real`). At this commit the guard `#[cfg(not(feature = "devnet"))] if !vk.mainnet_ready` is active because the VK is a single-party devnet key and `Cargo.toml` declares no `devnet` feature, so every withdraw proof is refused | `dark-groth16-core`, `dark-poseidon-real`, `dark-shielded-pool-core` | `build/zk/*.mjs` devnet scripts | historical (program since closed): [`evidence/shielded-pool-devnet.json`](../evidence/shielded-pool-devnet.json) (2026-06-09, v2 circuit, 6 scenarios with signatures, before the guard); [`evidence/zk/shielded-withdraw-v3-hardening-devnet.json`](../evidence/zk/shielded-withdraw-v3-hardening-devnet.json) (2026-06-22, circuit fix, no transaction). Redeployed to devnet 2026-10-06 as `FmLWnMKA…`, built with a `devnet` feature that is not yet in this commit; results pending |

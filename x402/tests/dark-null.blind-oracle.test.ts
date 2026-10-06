@@ -2,15 +2,18 @@
  * Blind oracle attestation tests — TypeScript mirror of
  * crates/dark-blind-oracle/src/lib.rs
  *
- * Algorithms (all SHA256-based, pure Node.js crypto):
+ * Algorithms (pure Node.js crypto):
  *   data_hash          = SHA256("blind-data-v1" || data)
  *   blinded_commitment = SHA256("blind-req-v1"  || data_hash || blinding_factor)
- *   oracle_pubkey      = SHA256("oracle-pub-v1" || oracle_secret)
- *   oracle_sig         = SHA256("oracle-sign-v1" || oracle_pubkey || blinded_commitment)
+ *   oracle_key_id      = SHA256("oracle-key-id-v1" || oracle_secret)
+ *   oracle_tag         = HMAC-SHA256(key = oracle_secret,
+ *                          "oracle-hmac-tag-v1" || oracle_key_id || blinded_commitment || i64_le(attested_at))
+ *
+ * The tag is a MAC: verifying it needs the oracle secret.
  */
 
 import { describe, it, expect } from 'vitest'
-import { createHash } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 
 // ---------------------------------------------------------------------------
 // Core primitive
@@ -34,12 +37,23 @@ function blindedCommitment(dh: Buffer, blindingFactor: Buffer): Buffer {
   return sha256(Buffer.from('blind-req-v1'), dh, blindingFactor)
 }
 
-function oraclePubkey(oracleSecret: Buffer): Buffer {
-  return sha256(Buffer.from('oracle-pub-v1'), oracleSecret)
+function oracleKeyId(oracleSecret: Buffer): Buffer {
+  return sha256(Buffer.from('oracle-key-id-v1'), oracleSecret)
 }
 
-function oracleSig(pubkey: Buffer, commitment: Buffer): Buffer {
-  return sha256(Buffer.from('oracle-sign-v1'), pubkey, commitment)
+function i64le(value: number): Buffer {
+  const out = Buffer.alloc(8)
+  out.writeBigInt64LE(BigInt(value))
+  return out
+}
+
+function oracleTag(oracleSecret: Buffer, keyId: Buffer, commitment: Buffer, attestedAt: number): Buffer {
+  return createHmac('sha256', oracleSecret)
+    .update(Buffer.from('oracle-hmac-tag-v1'))
+    .update(keyId)
+    .update(commitment)
+    .update(i64le(attestedAt))
+    .digest()
 }
 
 // ---------------------------------------------------------------------------
@@ -53,8 +67,8 @@ function blindData(data: Buffer, blindingFactor: Buffer): Buffer {
 
 interface OracleAttestation {
   blindedCommitmentHex: string
-  oraclePubkeyHex: string
-  oracleSigHex: string
+  oraclePubkeyHex: string // oracle_key_id: names the key, verifies nothing
+  oracleSigHex: string // oracle_tag: HMAC-SHA256, checkable only with the secret
   attestedAt: number
 }
 
@@ -63,14 +77,22 @@ function oracleAttest(
   commitment: Buffer,
   attestedAt: number,
 ): OracleAttestation {
-  const pubkey = oraclePubkey(oracleSecret)
-  const sig = oracleSig(pubkey, commitment)
+  const keyId = oracleKeyId(oracleSecret)
+  const tag = oracleTag(oracleSecret, keyId, commitment, attestedAt)
   return {
     blindedCommitmentHex: commitment.toString('hex'),
-    oraclePubkeyHex: pubkey.toString('hex'),
-    oracleSigHex: sig.toString('hex'),
+    oraclePubkeyHex: keyId.toString('hex'),
+    oracleSigHex: tag.toString('hex'),
     attestedAt,
   }
+}
+
+function verifyAttestation(oracleSecret: Buffer, attestation: OracleAttestation): boolean {
+  const keyId = oracleKeyId(oracleSecret)
+  if (keyId.toString('hex') !== attestation.oraclePubkeyHex) return false
+  const expected = oracleTag(oracleSecret, keyId, Buffer.from(attestation.blindedCommitmentHex, 'hex'), attestation.attestedAt)
+  const given = Buffer.from(attestation.oracleSigHex, 'hex')
+  return given.length === expected.length && timingSafeEqual(given, expected)
 }
 
 /**
@@ -195,6 +217,23 @@ describe('dark-null blind oracle attestation', () => {
     // Different oracle secrets → different pubkeys → different sigs
     expect(attA.oraclePubkeyHex).not.toBe(attB.oraclePubkeyHex)
     expect(attA.oracleSigHex).not.toBe(attB.oracleSigHex)
+  })
+
+  it('tag verifies only with the oracle secret; a tag built from public fields is rejected', () => {
+    const commitment = blindData(Buffer.from('forge me'), BLINDING_FACTOR)
+    const attestation = oracleAttest(ORACLE_SECRET, commitment, ATTESTED_AT)
+    expect(verifyAttestation(ORACLE_SECRET, attestation)).toBe(true)
+    expect(verifyAttestation(Buffer.alloc(32, 0x99), attestation)).toBe(false)
+
+    // The earlier scheme: SHA256("oracle-sign-v1" || key id || commitment), computable by anyone.
+    const forged = {
+      ...attestation,
+      oracleSigHex: sha256(Buffer.from('oracle-sign-v1'), Buffer.from(attestation.oraclePubkeyHex, 'hex'), commitment).toString('hex'),
+    }
+    expect(verifyAttestation(ORACLE_SECRET, forged)).toBe(false)
+
+    // Changing the timestamp breaks the tag.
+    expect(verifyAttestation(ORACLE_SECRET, { ...attestation, attestedAt: ATTESTED_AT + 1 })).toBe(false)
   })
 
   it('public record shape', () => {

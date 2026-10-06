@@ -1511,6 +1511,7 @@ dependencies = [
 name = "dark-blind-oracle"
 version = "0.1.0"
 dependencies = [
+ "hmac 0.13.0",
  "serde",
  "serde_json",
  "sha2 0.11.0",

@@ -1,9 +1,11 @@
 //! dark-x402-stealth — per-API-call one-time stealth payment addresses for x402
 //!
-//! First Solana implementation of ECDH stealth addresses bound to x402 payment flows.
-//! Every HTTP 402 request gets a fresh one-time address derived from the recipient's
-//! scan key + a per-call ephemeral secret. The recipient scans incoming payments with
-//! their scan key without publishing which on-chain addresses are theirs.
+//! Models the data flow of stealth addresses bound to x402 payment flows: every
+//! HTTP 402 request gets a one-time address derived from the recipient's scan key
+//! and a per-call ephemeral secret, and the recipient scans incoming payments with
+//! the scan key. The "ECDH" step here is domain-separated SHA-256, not elliptic-curve
+//! Diffie-Hellman, so it gives none of the unlinkability of a real stealth scheme.
+//! For a Curve25519 implementation see crates/dark-stealth-ed25519.
 //!
 //! IS_STUB  = true   (SHA-256 domain-separated; real impl would use Curve25519 ECDH)
 //! MAINNET_READY = false
