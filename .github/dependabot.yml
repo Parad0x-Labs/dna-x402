@@ -13,6 +13,20 @@ updates:
         dependency-type: "production"
       dev-deps:
         dependency-type: "development"
+    ignore:
+      # @noble 2.x drops the extensionless subpath exports (sha256, utils, hkdf,
+      # ed25519, secp256k1) that the workspace packages import; moving to 2.x is
+      # a deliberate crypto-library migration, not a lockfile bump.
+      - dependency-name: "@noble/curves"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@noble/hashes"
+        update-types: ["version-update:semver-major"]
+      # ts-jest 29 supports typescript >=4.3 <7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # @types/node majors move with the Node runtime CI uses, not on their own.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # pip / Python
   - package-ecosystem: "pip"
@@ -44,6 +58,10 @@ updates:
       # pinned by solana-program 1.18). Digest-generation moves are manual.
       - dependency-name: "sha2"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Solana 1.18 -> 2.x is one coordinated upgrade across the programs and the
+      # solana-program-test harness; a lone solana-program 2.x bump does not compile.
+      - dependency-name: "solana-*"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
