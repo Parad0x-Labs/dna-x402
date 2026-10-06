@@ -32,8 +32,11 @@ solana_program::entrypoint!(process_instruction);
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-/// dark_ritual_gate deployed on devnet
-pub const DARK_RITUAL_GATE_ID_STR: &str = "31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy";
+/// dark_ritual_gate program this hook trusts. `None`: no usable dark_ritual_gate
+/// deployment exists until the redeploy under a fresh key, so Execute fails
+/// closed with `RitualGateUnavailable` for every transfer. Set it to the new
+/// program ID when the gate is redeployed.
+pub const DARK_RITUAL_GATE_ID_STR: Option<&str> = None;
 /// VerifyRitualShape instruction tag
 pub const VERIFY_RITUAL_SHAPE_TAG: u8 = 0x00;
 /// AgentSpendNoCustodyV1 ritual type byte
@@ -178,9 +181,7 @@ fn process_execute(_program_id: &Pubkey, accounts: &[AccountInfo], amount: u64) 
         return Err(ProgramError::InvalidAccountData);
     }
 
-    let dark_ritual_gate_id: Pubkey = DARK_RITUAL_GATE_ID_STR
-        .parse()
-        .map_err(|_| ProgramError::InvalidAccountData)?;
+    let dark_ritual_gate_id = ritual_gate_id()?;
 
     // Scan all top-level instructions via Instructions sysvar
     // load_instruction_at_checked takes &AccountInfo directly
@@ -224,6 +225,15 @@ fn process_execute(_program_id: &Pubkey, accounts: &[AccountInfo], amount: u64) 
     set_return_data(&return_data);
 
     Ok(())
+}
+
+/// The trusted dark_ritual_gate program ID, or `RitualGateUnavailable` while
+/// none is configured.
+pub fn ritual_gate_id() -> Result<Pubkey, ProgramError> {
+    DARK_RITUAL_GATE_ID_STR
+        .ok_or(RitualHookError::RitualGateUnavailable)?
+        .parse()
+        .map_err(|_| ProgramError::InvalidAccountData)
 }
 
 /// Confirm a genuine Token-2022 transfer is in progress by reading the SOURCE
@@ -286,8 +296,12 @@ mod tests {
     }
 
     #[test]
-    fn test_ritual_gate_id_parses() {
-        assert!(DARK_RITUAL_GATE_ID_STR.parse::<Pubkey>().is_ok());
+    fn test_ritual_gate_unset_fails_closed() {
+        assert!(DARK_RITUAL_GATE_ID_STR.is_none());
+        assert_eq!(
+            ritual_gate_id(),
+            Err(ProgramError::Custom(RitualHookError::RitualGateUnavailable as u32))
+        );
     }
 
     #[test]
@@ -334,6 +348,7 @@ mod tests {
         assert_eq!(RitualHookError::InvalidAccountData as u32, 7);
         assert_eq!(RitualHookError::MissingRequiredAccount as u32, 8);
         assert_eq!(RitualHookError::NotTransferring as u32, 9);
+        assert_eq!(RitualHookError::RitualGateUnavailable as u32, 10);
     }
 
     // Extended tests -----------------------------------------------------------
@@ -360,13 +375,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ritual_gate_id_nonempty() {
-        assert!(!DARK_RITUAL_GATE_ID_STR.is_empty());
-    }
-
-    #[test]
     fn test_spl_memo_id_differs_from_ritual_gate_id() {
-        assert_ne!(SPL_MEMO_ID_STR, DARK_RITUAL_GATE_ID_STR);
+        assert_ne!(Some(SPL_MEMO_ID_STR), DARK_RITUAL_GATE_ID_STR);
     }
 }
 

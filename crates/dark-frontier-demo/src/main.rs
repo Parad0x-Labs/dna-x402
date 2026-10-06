@@ -27,7 +27,7 @@ use dark_swarm_capsule::{
     LivenessConfig, SwarmCaps, SwarmRole,
 };
 use ritual_blink_gateway::{
-    build_blink_get_response, build_ceremony_layout, compute_hook_verdict, create_blink_receipt,
+    build_blink_get_response, build_ceremony_layout_with_programs, compute_hook_verdict, create_blink_receipt,
     create_x402_intent, verify_hook_verdict, BLINK_SCHEMA_VERSION, DARK_RITUAL_HOOK_PROGRAM,
     HOOK_VERDICT_PREFIX, RITUAL_MINT,
 };
@@ -435,7 +435,14 @@ fn run_ritual_blink_gateway() -> Value {
     let intent = create_x402_intent(&resource_hash, 1_000_000, &payer_bytes, &nonce, now);
 
     // Ceremony layout
-    let ceremony = build_ceremony_layout(&intent).expect("layout ok");
+    // Off-chain simulation: no ritual programs are configured until the redeploy
+    // under a fresh key, so the layout names local simulation programs.
+    let ceremony = build_ceremony_layout_with_programs(
+        &intent,
+        "sim-dark-ritual-transfer-hook",
+        "sim-dark-ritual-gate",
+    )
+    .expect("layout ok");
 
     // Hook verdict
     let verdict = compute_hook_verdict(&mint_bytes, 1_000_000u64);
@@ -471,7 +478,7 @@ fn run_ritual_blink_gateway() -> Value {
         "what_it_proves": [
             "build_blink_get_response returns valid Solana Actions GET metadata",
             "create_x402_intent hashes payer identity — raw pubkey never stored",
-            "build_ceremony_layout encodes exactly 5 ordered instructions",
+            "build_ceremony_layout_with_programs encodes exactly 5 ordered instructions",
             "compute_hook_verdict returns capsule with prefix byte 0x01 (PASS)",
             "verify_hook_verdict recomputes hash and confirms match",
             "create_blink_receipt chains: receipt2.previous_receipt_hash = receipt1.receipt_hash"

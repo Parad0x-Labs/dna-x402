@@ -3,7 +3,8 @@
  * NullPay Stealth Inbox — offline crypto kill-test for the ed25519 explicit-scalar core.
  *
  * Pay a `.null`, funds land on a fresh ONE-TIME ed25519 address only the recipient can sweep.
- * The make-or-break claim (already landed on devnet, evidence/nullpay-stealth-devnet.json):
+ * The make-or-break claim (the on-chain leg is scripts/nullpay/devnet-e2e.mjs; a devnet
+ * redeploy under a fresh key is pending):
  * a stealth-derived scalar — which is NOT bit-clamped like a normal ed25519 seed — still
  * produces a signature that STOCK RFC-8032 ed25519 verify accepts (so Solana accepts the sweep).
  *

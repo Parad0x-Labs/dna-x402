@@ -1,7 +1,7 @@
 /**
  * Wormhole x402 Solver
  * Base agent calls API → 402 response → solver bridges payment to Solana
- * Solana receipt anchored permanently via receipt_anchor
+ * Solana receipt anchored via a caller-named receipt_anchor deployment
  * Solver earns 0.1% spread. NULL stakers back the solver float.
  */
 
@@ -18,24 +18,35 @@ import type {
 /** Solver spread in basis points (0.1%). NULL stakers back the solver float. */
 export const SOLVER_FEE_BPS = 10;
 
-/** Solana clusters with a deployed receipt_anchor program. */
+/** Solana clusters the solver knows about. */
 export type SolanaCluster = "mainnet-beta" | "devnet";
+
+/**
+ * Error message used whenever anchoring is requested without an explicit
+ * receipt_anchor program ID.
+ */
+export const RECEIPT_ANCHOR_UNAVAILABLE =
+  "receipt anchoring is unavailable until the redeploy under a fresh key: no receipt_anchor " +
+  "program is configured for any cluster. Pass options.anchorProgramId to target a " +
+  "receipt_anchor deployment you control (e.g. a local validator).";
 
 /**
  * receipt_anchor program per cluster.
  *
- * Mirrors `programs.receiptAnchor` in configs/mainnet.oss.json and
- * configs/devnet.oss.json, the repo's canonical program-ID source. Vendored
- * because the published package ships only src/; tests/wormhole-x402.test.mjs
- * fails if these drift from the config files.
+ * Empty: no cluster has a usable receipt_anchor deployment. The earlier
+ * mainnet-beta deployment was retired on 2026-07-14 and the earlier devnet
+ * deployment is withdrawn, so `programs.receiptAnchor` is absent from
+ * configs/devnet.oss.json. A cluster entry is added here only after the
+ * redeploy under a fresh key; tests/wormhole-x402.test.mjs keeps this map
+ * empty until then.
  */
-export const RECEIPT_ANCHOR_PROGRAM_IDS: Readonly<Record<SolanaCluster, string>> = Object.freeze({
-  "mainnet-beta": "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
-  devnet: "CPQ8Y1bdRiadxLMhrQG14Atc3E5eNJhqwPX1nXtH1Mst",
-});
+export const RECEIPT_ANCHOR_PROGRAM_IDS: Readonly<Partial<Record<SolanaCluster, string>>> = Object.freeze({});
 
-/** The receipt_anchor program on Solana mainnet-beta. */
-export const RECEIPT_ANCHOR_PROGRAM_ID = RECEIPT_ANCHOR_PROGRAM_IDS["mainnet-beta"];
+/**
+ * The receipt_anchor program on Solana mainnet-beta, or null while no
+ * deployment is configured (see RECEIPT_ANCHOR_PROGRAM_IDS).
+ */
+export const RECEIPT_ANCHOR_PROGRAM_ID: string | null = RECEIPT_ANCHOR_PROGRAM_IDS["mainnet-beta"] ?? null;
 
 /** receipt_anchor bucket PDA seed prefix: `["bucket", bucket_id_le8]`. */
 export const RECEIPT_ANCHOR_BUCKET_SEED = "bucket";
@@ -116,7 +127,11 @@ export interface SolveIntentOptions {
    * `[0x02][gross USDC atomic units, u64 LE]` with the payer as the only account.
    */
   x402ProgramId: string;
-  /** Cluster whose receipt_anchor program is used. Default: "mainnet-beta". */
+  /**
+   * Cluster whose configured receipt_anchor program is used. Default: "mainnet-beta".
+   * No cluster has one configured today, so solving without `anchorProgramId` throws
+   * RECEIPT_ANCHOR_UNAVAILABLE before anything is sent.
+   */
   cluster?: SolanaCluster;
   /** Explicit receipt_anchor program ID (e.g. a local validator). Overrides `cluster`. */
   anchorProgramId?: string;
@@ -124,7 +139,10 @@ export interface SolveIntentOptions {
 
 /** Options for verifyCrossChainReceipt. */
 export interface VerifyReceiptOptions {
-  /** Cluster whose receipt_anchor program is expected. Default: "mainnet-beta". */
+  /**
+   * Cluster whose configured receipt_anchor program is expected. Default: "mainnet-beta".
+   * No cluster has one configured today; pass `anchorProgramId`.
+   */
   cluster?: SolanaCluster;
   /** Explicit receipt_anchor program ID. Overrides `cluster`. */
   anchorProgramId?: string;
@@ -217,6 +235,8 @@ function isRpcUrl(rpc: string | Connection): rpc is string {
 /**
  * Resolve the receipt_anchor program ID: an explicit `anchorProgramId` wins,
  * otherwise the program configured for `cluster` (default "mainnet-beta").
+ * Throws RECEIPT_ANCHOR_UNAVAILABLE when the cluster has no configured
+ * program, which is every cluster until the redeploy under a fresh key.
  */
 export function resolveReceiptAnchorProgramId(
   options: { cluster?: SolanaCluster; anchorProgramId?: string } = {}
@@ -228,10 +248,16 @@ export function resolveReceiptAnchorProgramId(
     return options.anchorProgramId;
   }
   const cluster = options.cluster ?? "mainnet-beta";
-  if (!Object.hasOwn(RECEIPT_ANCHOR_PROGRAM_IDS, cluster)) {
-    throw new Error(`No receipt_anchor program configured for cluster "${cluster}"`);
+  if (cluster !== "mainnet-beta" && cluster !== "devnet") {
+    throw new Error(`Unknown Solana cluster "${cluster}"`);
   }
-  return RECEIPT_ANCHOR_PROGRAM_IDS[cluster];
+  const configured = Object.hasOwn(RECEIPT_ANCHOR_PROGRAM_IDS, cluster)
+    ? RECEIPT_ANCHOR_PROGRAM_IDS[cluster]
+    : undefined;
+  if (configured === undefined) {
+    throw new Error(`${RECEIPT_ANCHOR_UNAVAILABLE} (cluster "${cluster}")`);
+  }
+  return configured;
 }
 
 /**
@@ -430,8 +456,12 @@ export function buildCrossChainIntent(
  *  1. Verifying the Wormhole VAA exists and is structurally valid.
  *  2. Submitting USDC payment on Solana via the caller-named x402 program
  *     (with solver fee applied).
- *  3. Anchoring the receipt on Solana via the receipt_anchor program for the
- *     configured cluster.
+ *  3. Anchoring the receipt on Solana via the receipt_anchor program named by
+ *     `options.anchorProgramId` (or configured for `options.cluster`).
+ *
+ * No cluster has a configured receipt_anchor program today, so without
+ * `options.anchorProgramId` this throws RECEIPT_ANCHOR_UNAVAILABLE before any
+ * transaction is sent: the payment is never made without a usable anchor.
  *
  * The solver earns SOLVER_FEE_BPS (0.1%) spread; the gross amount debited from
  * the payer's Solana account is amountUsdc * 1.001. NULL stakers back the
@@ -441,8 +471,9 @@ export function buildCrossChainIntent(
  * @param solanaPayerKeypair  - Solana Keypair that signs and funds the USDC transfer.
  * @param rpc                 - Solana RPC endpoint URL, or an existing Connection.
  * @param options.x402ProgramId   - x402 payment program on the target cluster (required).
- * @param options.cluster         - Cluster for the receipt_anchor program. Default: "mainnet-beta".
+ * @param options.cluster         - Cluster for the configured receipt_anchor program. Default: "mainnet-beta".
  * @param options.anchorProgramId - Explicit receipt_anchor program ID; overrides `cluster`.
+ *                                  Required until a cluster has a configured program.
  * @returns Solana tx signatures and VAA hash.
  */
 export async function solveIntent(
@@ -556,6 +587,7 @@ export async function solveIntent(
  * @param intentId  - The intentId from the original CrossChainPaymentIntent.
  * @param rpc       - Solana RPC endpoint URL, or an existing Connection.
  * @param options   - Cluster or explicit receipt_anchor program ID. Default: mainnet-beta.
+ *                    Without `anchorProgramId` this throws RECEIPT_ANCHOR_UNAVAILABLE.
  * @returns true if the receipt is anchored on-chain and matches the intent.
  */
 export async function verifyCrossChainReceipt(

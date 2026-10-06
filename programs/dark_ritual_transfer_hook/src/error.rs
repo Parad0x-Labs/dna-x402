@@ -13,6 +13,7 @@ pub enum RitualHookError {
     InvalidAccountData = 7,
     MissingRequiredAccount = 8,
     NotTransferring = 9, // Execute invoked outside a genuine Token-2022 transfer
+    RitualGateUnavailable = 10, // no trusted dark_ritual_gate program configured
 }
 
 impl From<RitualHookError> for ProgramError {

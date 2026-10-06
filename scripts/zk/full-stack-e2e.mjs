@@ -7,7 +7,10 @@
  *
  * Proves the leaf-writer ↔ circuit ↔ verifier all agree on the Poseidon root.
  *
- * Usage: node scripts/zk/full-stack-e2e.mjs
+ * Usage: node scripts/zk/full-stack-e2e.mjs --tree <ID> --gate <ID> --nullifier-record <ID>
+ *
+ * All three program IDs are required: no receipt_commitment_tree / dark_reputation_gate /
+ * dark_nullifier_record deployment is configured until the redeploy under a fresh key.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -21,9 +24,14 @@ import { randomBytes } from "node:crypto";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = join(__dirname, "..", "..");
 const RPC = "https://api.devnet.solana.com";
-const TREE_PROGRAM = "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas";
-const GATE_PROGRAM = "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp";
-const NULLIFIER_RECORD = "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65";
+const arg = (n) => { const i = process.argv.indexOf("--" + n); return i !== -1 ? process.argv[i + 1] : undefined; };
+const TREE_PROGRAM = arg("tree");
+const GATE_PROGRAM = arg("gate");
+const NULLIFIER_RECORD = arg("nullifier-record");
+if (!TREE_PROGRAM || !GATE_PROGRAM || !NULLIFIER_RECORD) {
+  console.error("ERROR: pass --tree <ID> --gate <ID> --nullifier-record <ID>: no receipt_commitment_tree / dark_reputation_gate / dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
 const SNARKJS = join(REPO, ".tools", "external", "dark-null-protocol", "node_modules", "snarkjs", "build", "cli.cjs");
 const WASM = join(REPO, "circuits", "out", "track_record_js", "track_record.wasm");
 const ZKEY = join(REPO, "circuits", "out", "track_record_final.zkey");

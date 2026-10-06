@@ -18,6 +18,7 @@ import {
 import {
   RECEIPT_ANCHOR_PROGRAM_ID,
   RECEIPT_ANCHOR_PROGRAM_IDS,
+  RECEIPT_ANCHOR_UNAVAILABLE,
   WORMHOLE_CORE_BRIDGE_SOLANA,
   buildAnchorInstructionData,
   buildCrossChainIntent,
@@ -39,8 +40,13 @@ const REPO_ROOT = join(HERE, "..", "..", "..");
 const SRC = join(HERE, "..", "src", "index.ts");
 const readConfig = (name) => JSON.parse(readFileSync(join(REPO_ROOT, "configs", name), "utf8"));
 
-const MAINNET_ANCHOR = RECEIPT_ANCHOR_PROGRAM_IDS["mainnet-beta"];
-const DEVNET_ANCHOR = RECEIPT_ANCHOR_PROGRAM_IDS.devnet;
+// A receipt_anchor deployment the caller controls (e.g. a local validator).
+// No cluster has a configured receipt_anchor program, so every anchoring call
+// in these tests names this one explicitly.
+const ANCHOR = Keypair.generate().publicKey.toBase58();
+const OTHER_ANCHOR = Keypair.generate().publicKey.toBase58();
+const WITH_ANCHOR = { anchorProgramId: ANCHOR };
+const UNAVAILABLE = /receipt anchoring is unavailable until the redeploy under a fresh key/;
 const BLOCKHASH = new PublicKey(new Uint8Array(32).fill(7)).toBase58();
 // Any valid key the caller names as its x402 payment program.
 const X402_PROGRAM = Keypair.generate().publicKey.toBase58();
@@ -100,30 +106,26 @@ function fakeRpc(response) {
   return { getTransaction: async () => response };
 }
 
-async function anchorIx({ programId = MAINNET_ANCHOR, payer, anchor, bucketId = 123n }) {
+async function anchorIx({ programId = ANCHOR, payer, anchor, bucketId = 123n }) {
   return buildReceiptAnchorInstruction({ anchorProgramId: programId, payer: payer.toBase58(), anchor, bucketId });
 }
 
 const RECEIPT = { solanaTx: "payment-sig", receiptAnchorTx: "anchor-sig", vaaHash: "ab".repeat(32) };
 const INTENT_ID = "intent-1";
 
-// ── Program IDs come from the cluster configs ────────────────────────────────
+// ── No configured receipt_anchor program: anchoring refuses ─────────────────
 
-test("receipt_anchor IDs mirror configs/*.oss.json programs.receiptAnchor", () => {
-  assert.equal(MAINNET_ANCHOR, readConfig("mainnet.oss.json").programs.receiptAnchor);
-  assert.equal(DEVNET_ANCHOR, readConfig("devnet.oss.json").programs.receiptAnchor);
-  assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, MAINNET_ANCHOR);
-  assert.deepEqual(Object.keys(RECEIPT_ANCHOR_PROGRAM_IDS).sort(), ["devnet", "mainnet-beta"]);
+test("no cluster has a configured receipt_anchor program", () => {
+  assert.deepEqual(RECEIPT_ANCHOR_PROGRAM_IDS, {});
   assert.ok(Object.isFrozen(RECEIPT_ANCHOR_PROGRAM_IDS));
+  assert.equal(RECEIPT_ANCHOR_PROGRAM_ID, null);
+  assert.match(RECEIPT_ANCHOR_UNAVAILABLE, UNAVAILABLE);
+  // The cluster configs carry no receipt_anchor entry either.
+  assert.equal(readConfig("devnet.oss.json").programs.receiptAnchor, undefined);
 });
 
-test("every base58 pubkey literal in src is a configured program or the Wormhole bridge", () => {
+test("the only base58 pubkey literal in src is the Wormhole bridge", () => {
   const src = readFileSync(SRC, "utf8");
-  const allowed = new Set([
-    ...Object.values(readConfig("mainnet.oss.json").programs),
-    ...Object.values(readConfig("devnet.oss.json").programs),
-    WORMHOLE_CORE_BRIDGE_SOLANA,
-  ]);
   const literals = [...src.matchAll(/["'`]([1-9A-HJ-NP-Za-km-z]{32,44})["'`]/g)].map((m) => m[1]);
   const pubkeys = literals.filter((s) => {
     try {
@@ -132,16 +134,17 @@ test("every base58 pubkey literal in src is a configured program or the Wormhole
       return false;
     }
   });
-  assert.ok(pubkeys.length >= 3, "expected the vendored program IDs to be found");
-  for (const key of pubkeys) assert.ok(allowed.has(key), `hardcoded program ID not in configs: ${key}`);
+  assert.deepEqual(pubkeys, [WORMHOLE_CORE_BRIDGE_SOLANA]);
 });
 
-test("resolveReceiptAnchorProgramId: default, cluster, override, rejects unknown", () => {
-  assert.equal(resolveReceiptAnchorProgramId(), MAINNET_ANCHOR);
-  assert.equal(resolveReceiptAnchorProgramId({ cluster: "devnet" }), DEVNET_ANCHOR);
-  assert.equal(resolveReceiptAnchorProgramId({ cluster: "devnet", anchorProgramId: X402_PROGRAM }), X402_PROGRAM);
-  for (const cluster of ["testnet", "localnet", "__proto__", "toString", ""]) {
-    assert.throws(() => resolveReceiptAnchorProgramId({ cluster }), /No receipt_anchor program/);
+test("resolveReceiptAnchorProgramId: refuses without an explicit program, honours an override", () => {
+  assert.throws(() => resolveReceiptAnchorProgramId(), UNAVAILABLE);
+  assert.throws(() => resolveReceiptAnchorProgramId({ cluster: "mainnet-beta" }), UNAVAILABLE);
+  assert.throws(() => resolveReceiptAnchorProgramId({ cluster: "devnet" }), UNAVAILABLE);
+  assert.equal(resolveReceiptAnchorProgramId({ anchorProgramId: ANCHOR }), ANCHOR);
+  assert.equal(resolveReceiptAnchorProgramId({ cluster: "devnet", anchorProgramId: ANCHOR }), ANCHOR);
+  for (const cluster of ["testnet", "localnet", "__proto__", "toString", "hasOwnProperty", ""]) {
+    assert.throws(() => resolveReceiptAnchorProgramId({ cluster }), /Unknown Solana cluster/);
   }
   assert.throws(() => resolveReceiptAnchorProgramId({ anchorProgramId: "" }), /non-empty/);
 });
@@ -214,12 +217,12 @@ test("buildReceiptAnchorInstruction: payer signer+writable, bucket PDA writable,
   const payer = Keypair.generate().publicKey;
   const anchor = sha256("z");
   const ix = await anchorIx({ payer, anchor, bucketId: 42n });
-  assert.equal(ix.programId.toBase58(), MAINNET_ANCHOR);
+  assert.equal(ix.programId.toBase58(), ANCHOR);
   const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from("bucket"), Buffer.from([42, 0, 0, 0, 0, 0, 0, 0])],
-    new PublicKey(MAINNET_ANCHOR)
+    new PublicKey(ANCHOR)
   );
-  assert.equal(await deriveAnchorBucketPda(MAINNET_ANCHOR, 42n), pda.toBase58());
+  assert.equal(await deriveAnchorBucketPda(ANCHOR, 42n), pda.toBase58());
   assert.deepEqual(
     ix.keys.map((k) => [k.pubkey.toBase58(), k.isSigner, k.isWritable]),
     [
@@ -239,15 +242,29 @@ test("solveIntent requires x402ProgramId and sends nothing without it", async ()
   for (const options of [undefined, {}, { x402ProgramId: "" }, { x402ProgramId: 42 }]) {
     await assert.rejects(solveIntent(makeIntent(), payer, conn, options), /x402ProgramId/);
   }
-  await assert.rejects(solveIntent(makeIntent(), payer, conn, { x402ProgramId: "not-base58!" }));
+  await assert.rejects(solveIntent(makeIntent(), payer, conn, { x402ProgramId: "not-base58!", ...WITH_ANCHOR }));
   await assert.rejects(
-    solveIntent(makeIntent(), payer, conn, { x402ProgramId: MAINNET_ANCHOR }),
+    solveIntent(makeIntent(), payer, conn, { x402ProgramId: ANCHOR, ...WITH_ANCHOR }),
     /must differ/
   );
   await assert.rejects(
     solveIntent(makeIntent(), payer, conn, { x402ProgramId: X402_PROGRAM, cluster: "testnet" }),
-    /No receipt_anchor program/
+    /Unknown Solana cluster/
   );
+  assert.equal(conn.sent.length, 0);
+});
+
+test("solveIntent refuses before paying when no receipt_anchor program is named", async () => {
+  const conn = recordingConnection();
+  const payer = Keypair.generate();
+  for (const options of [
+    { x402ProgramId: X402_PROGRAM },
+    { x402ProgramId: X402_PROGRAM, cluster: "mainnet-beta" },
+    { x402ProgramId: X402_PROGRAM, cluster: "devnet" },
+  ]) {
+    await assert.rejects(solveIntent(makeIntent(), payer, conn, options), UNAVAILABLE);
+  }
+  // The payment leg never runs: nothing reaches the connection.
   assert.equal(conn.sent.length, 0);
 });
 
@@ -256,7 +273,7 @@ test("solveIntent pays via the named x402 program and anchors the receipt hash",
   const payer = Keypair.generate();
   const intent = makeIntent();
   const before = bucketIdForUnixSeconds(Date.now() / 1000);
-  const result = await solveIntent(intent, payer, conn, { x402ProgramId: X402_PROGRAM });
+  const result = await solveIntent(intent, payer, conn, { x402ProgramId: X402_PROGRAM, ...WITH_ANCHOR });
   const after = bucketIdForUnixSeconds(Date.now() / 1000);
 
   assert.equal(conn.sent.length, 2);
@@ -269,54 +286,66 @@ test("solveIntent pays via the named x402 program and anchors the receipt hash",
   assert.equal(payment.data.readBigUInt64LE(1), BigInt(Math.round(grossAmount(0.05) * 1_000_000)));
 
   const [anchor] = conn.sent[1].instructions;
-  assert.equal(anchor.programId.toBase58(), MAINNET_ANCHOR);
+  assert.equal(anchor.programId.toBase58(), ANCHOR);
   const decoded = parseAnchorInstructionData(anchor.data);
   assert.ok(decoded.anchor.equals(computeReceiptHash(intent.intentId, result.solanaTx, result.vaaHash)));
   assert.ok(decoded.bucketId >= before && decoded.bucketId <= after);
-  assert.equal(anchor.keys[1].pubkey.toBase58(), await deriveAnchorBucketPda(MAINNET_ANCHOR, decoded.bucketId));
+  assert.equal(anchor.keys[1].pubkey.toBase58(), await deriveAnchorBucketPda(ANCHOR, decoded.bucketId));
   assert.equal(anchor.keys.length, 3);
 
   // Round-trip: the anchor tx solveIntent sent verifies against the same receipt.
   const rpc = fakeRpc(txResponse(conn.sent[1].compileMessage()));
-  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc), true);
-  assert.equal(await verifyCrossChainReceipt(result, "other-intent", rpc), false);
-  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, { cluster: "devnet" }), false);
+  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, WITH_ANCHOR), true);
+  assert.equal(await verifyCrossChainReceipt(result, "other-intent", rpc, WITH_ANCHOR), false);
+  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, { anchorProgramId: OTHER_ANCHOR }), false);
 });
 
-test("solveIntent targets the devnet receipt_anchor program when cluster is devnet", async () => {
+test("solveIntent: an explicit anchorProgramId overrides cluster", async () => {
   const conn = recordingConnection();
   const intent = makeIntent();
   const result = await solveIntent(intent, Keypair.generate(), conn, {
     x402ProgramId: X402_PROGRAM,
     cluster: "devnet",
+    anchorProgramId: OTHER_ANCHOR,
   });
-  assert.equal(conn.sent[1].instructions[0].programId.toBase58(), DEVNET_ANCHOR);
+  assert.equal(conn.sent[1].instructions[0].programId.toBase58(), OTHER_ANCHOR);
   const rpc = fakeRpc(txResponse(conn.sent[1].compileMessage()));
-  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, { cluster: "devnet" }), true);
-  // Default (mainnet-beta) expectation must not accept a devnet anchor.
-  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc), false);
+  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, { anchorProgramId: OTHER_ANCHOR }), true);
+  // A different expected program must not accept this anchor.
+  assert.equal(await verifyCrossChainReceipt(result, intent.intentId, rpc, WITH_ANCHOR), false);
 });
 
 // ── verifyCrossChainReceipt ──────────────────────────────────────────────────
 
 const expectedAnchor = computeReceiptHash(INTENT_ID, RECEIPT.solanaTx, RECEIPT.vaaHash);
 
+test("verify: refuses without an explicit receipt_anchor program", async () => {
+  const payer = Keypair.generate().publicKey;
+  const msg = legacyMessage(payer, await anchorIx({ payer, anchor: expectedAnchor }));
+  let fetched = 0;
+  const rpc = { getTransaction: async () => { fetched += 1; return txResponse(msg); } };
+  await assert.rejects(verifyCrossChainReceipt(RECEIPT, INTENT_ID, rpc), UNAVAILABLE);
+  await assert.rejects(verifyCrossChainReceipt(RECEIPT, INTENT_ID, rpc, { cluster: "mainnet-beta" }), UNAVAILABLE);
+  await assert.rejects(verifyCrossChainReceipt(RECEIPT, INTENT_ID, rpc, { cluster: "devnet" }), UNAVAILABLE);
+  assert.equal(fetched, 0, "no RPC call is made when anchoring is unavailable");
+});
+
 test("verify: matching anchor instruction in a legacy message", async () => {
   const payer = Keypair.generate().publicKey;
   const msg = legacyMessage(payer, await anchorIx({ payer, anchor: expectedAnchor }));
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg))), true);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg)), WITH_ANCHOR), true);
 });
 
 test("verify: missing, failed, or meta-less transactions are rejected", async () => {
   const payer = Keypair.generate().publicKey;
   const msg = legacyMessage(payer, await anchorIx({ payer, anchor: expectedAnchor }));
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(null)), false);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(null), WITH_ANCHOR), false);
   assert.equal(
-    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg, { err: { InstructionError: [0, "Custom"] } }))),
+    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg, { err: { InstructionError: [0, "Custom"] } })), WITH_ANCHOR),
     false
   );
   assert.equal(
-    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc({ transaction: { message: msg }, meta: null })),
+    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc({ transaction: { message: msg }, meta: null }), WITH_ANCHOR),
     false
   );
 });
@@ -329,34 +358,35 @@ test("verify: anchor program present only as an account (the old check) is rejec
     programId: new PublicKey(X402_PROGRAM),
     keys: [
       { pubkey: payer, isSigner: true, isWritable: true },
-      { pubkey: new PublicKey(await deriveAnchorBucketPda(MAINNET_ANCHOR, 123n)), isSigner: false, isWritable: true },
-      { pubkey: new PublicKey(MAINNET_ANCHOR), isSigner: false, isWritable: false },
+      { pubkey: new PublicKey(await deriveAnchorBucketPda(ANCHOR, 123n)), isSigner: false, isWritable: true },
+      { pubkey: new PublicKey(ANCHOR), isSigner: false, isWritable: false },
     ],
     data: buildAnchorInstructionData(expectedAnchor, 123n),
   });
   const msg = legacyMessage(payer, decoy);
-  assert.ok(msg.accountKeys.some((k) => k.toBase58() === MAINNET_ANCHOR));
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg))), false);
+  assert.ok(msg.accountKeys.some((k) => k.toBase58() === ANCHOR));
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg)), WITH_ANCHOR), false);
 });
 
 test("verify: wrong hash, wrong receipt fields, or wrong program are rejected", async () => {
   const payer = Keypair.generate().publicKey;
   const wrongHash = legacyMessage(payer, await anchorIx({ payer, anchor: sha256("unrelated") }));
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(wrongHash))), false);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(wrongHash)), WITH_ANCHOR), false);
 
   const good = fakeRpc(txResponse(legacyMessage(payer, await anchorIx({ payer, anchor: expectedAnchor }))));
-  assert.equal(await verifyCrossChainReceipt({ ...RECEIPT, solanaTx: "other" }, INTENT_ID, good), false);
-  assert.equal(await verifyCrossChainReceipt({ ...RECEIPT, vaaHash: "cd".repeat(32) }, INTENT_ID, good), false);
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, good, { cluster: "devnet" }), false);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, good, WITH_ANCHOR), true);
+  assert.equal(await verifyCrossChainReceipt({ ...RECEIPT, solanaTx: "other" }, INTENT_ID, good, WITH_ANCHOR), false);
+  assert.equal(await verifyCrossChainReceipt({ ...RECEIPT, vaaHash: "cd".repeat(32) }, INTENT_ID, good, WITH_ANCHOR), false);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, good, { anchorProgramId: OTHER_ANCHOR }), false);
   assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, good, { anchorProgramId: X402_PROGRAM }), false);
 });
 
 test("verify: bucket account must be the PDA for the encoded bucket id", async () => {
   const payer = Keypair.generate().publicKey;
   const ix = await anchorIx({ payer, anchor: expectedAnchor, bucketId: 5n });
-  ix.keys[1] = { ...ix.keys[1], pubkey: new PublicKey(await deriveAnchorBucketPda(MAINNET_ANCHOR, 6n)) };
+  ix.keys[1] = { ...ix.keys[1], pubkey: new PublicKey(await deriveAnchorBucketPda(ANCHOR, 6n)) };
   const msg = legacyMessage(payer, ix);
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg))), false);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg)), WITH_ANCHOR), false);
 });
 
 test("verify: malformed anchor data or too few accounts are rejected", async () => {
@@ -365,17 +395,17 @@ test("verify: malformed anchor data or too few accounts are rejected", async () 
   badVersion.data = Buffer.from(badVersion.data);
   badVersion.data[0] = 2;
   assert.equal(
-    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(legacyMessage(payer, badVersion)))),
+    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(legacyMessage(payer, badVersion))), WITH_ANCHOR),
     false
   );
 
   const oneAccount = new TransactionInstruction({
-    programId: new PublicKey(MAINNET_ANCHOR),
+    programId: new PublicKey(ANCHOR),
     keys: [{ pubkey: payer, isSigner: true, isWritable: true }],
     data: Buffer.concat([Buffer.from([1, 0]), expectedAnchor]),
   });
   assert.equal(
-    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(legacyMessage(payer, oneAccount)))),
+    await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(legacyMessage(payer, oneAccount))), WITH_ANCHOR),
     false
   );
 });
@@ -384,16 +414,16 @@ test("verify: implicit-bucket form and a match after an unrelated instruction", 
   const payer = Keypair.generate().publicKey;
   const unrelated = SystemProgram.transfer({ fromPubkey: payer, toPubkey: Keypair.generate().publicKey, lamports: 1 });
   const implicit = new TransactionInstruction({
-    programId: new PublicKey(MAINNET_ANCHOR),
+    programId: new PublicKey(ANCHOR),
     keys: [
       { pubkey: payer, isSigner: true, isWritable: true },
-      { pubkey: new PublicKey(await deriveAnchorBucketPda(MAINNET_ANCHOR, 1n)), isSigner: false, isWritable: true },
+      { pubkey: new PublicKey(await deriveAnchorBucketPda(ANCHOR, 1n)), isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
     data: Buffer.concat([Buffer.from([1, 0]), expectedAnchor]),
   });
   const msg = legacyMessage(payer, unrelated, implicit);
-  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg))), true);
+  assert.equal(await verifyCrossChainReceipt(RECEIPT, INTENT_ID, fakeRpc(txResponse(msg)), WITH_ANCHOR), true);
 });
 
 test("verify: v0 message, including a bucket PDA loaded from a lookup table", async () => {
@@ -401,9 +431,9 @@ test("verify: v0 message, including a bucket PDA loaded from a lookup table", as
   const ix = await anchorIx({ payer, anchor: expectedAnchor, bucketId: 77n });
 
   const plain = new TransactionMessage({ payerKey: payer, recentBlockhash: BLOCKHASH, instructions: [ix] }).compileToV0Message();
-  assert.equal(await verifyReceiptAnchorTransaction(txResponse(plain), { anchorProgramId: MAINNET_ANCHOR, expectedAnchor }), true);
+  assert.equal(await verifyReceiptAnchorTransaction(txResponse(plain), { anchorProgramId: ANCHOR, expectedAnchor }), true);
 
-  const bucketPda = new PublicKey(await deriveAnchorBucketPda(MAINNET_ANCHOR, 77n));
+  const bucketPda = new PublicKey(await deriveAnchorBucketPda(ANCHOR, 77n));
   const lut = new AddressLookupTableAccount({
     key: Keypair.generate().publicKey,
     state: { deactivationSlot: 2n ** 64n - 1n, lastExtendedSlot: 0, lastExtendedSlotStartIndex: 0, addresses: [bucketPda] },
@@ -413,12 +443,12 @@ test("verify: v0 message, including a bucket PDA loaded from a lookup table", as
 
   const loaded = { writable: [bucketPda], readonly: [] };
   assert.equal(
-    await verifyReceiptAnchorTransaction(txResponse(withLut, { loadedAddresses: loaded }), { anchorProgramId: MAINNET_ANCHOR, expectedAnchor }),
+    await verifyReceiptAnchorTransaction(txResponse(withLut, { loadedAddresses: loaded }), { anchorProgramId: ANCHOR, expectedAnchor }),
     true
   );
   // Without the loaded addresses the keys cannot be resolved: reject rather than guess.
   assert.equal(
-    await verifyReceiptAnchorTransaction(txResponse(withLut, { loadedAddresses: undefined }), { anchorProgramId: MAINNET_ANCHOR, expectedAnchor }),
+    await verifyReceiptAnchorTransaction(txResponse(withLut, { loadedAddresses: undefined }), { anchorProgramId: ANCHOR, expectedAnchor }),
     false
   );
 });

@@ -16,7 +16,13 @@ import {
 } from "./lib/faceid.mjs";
 import { PublicKey } from "@solana/web3.js";
 
-const PROGRAM_ID = new PublicKey(process.argv[2] ?? "2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2");
+// No dark_secp256r1_vault devnet deployment is configured until the redeploy
+// under a fresh key, so <PROGRAM_ID> is required.
+if (!process.argv[2]) {
+  console.error("ERROR: pass <PROGRAM_ID>: no dark_secp256r1_vault devnet program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
+const PROGRAM_ID = new PublicKey(process.argv[2]);
 const RPC = process.env.FACEID_RPC ?? "https://api.devnet.solana.com";
 const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 

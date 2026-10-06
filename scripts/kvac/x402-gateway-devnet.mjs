@@ -12,7 +12,14 @@ import {
 import fs from "fs"; import os from "os"; import path from "path";
 import { fileURLToPath } from "url";
 
-const PROGRAM_ID = new PublicKey("AFTuz5s58FEwQoQBxAdvWFrXAVnS9XzC43XQgL2Canpg");
+// No dark_nullifier_record deployment is configured until the redeploy under a fresh key, so the
+// program ID must be passed explicitly (--program <ID> or NULLIFIER_RECORD_PROGRAM_ID=<ID>).
+const programArg = (() => { const i = process.argv.indexOf("--program"); return i !== -1 ? process.argv[i + 1] : process.env.NULLIFIER_RECORD_PROGRAM_ID; })();
+if (!programArg) {
+  console.error("ERROR: pass --program <ID> (or set NULLIFIER_RECORD_PROGRAM_ID): no dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
+const PROGRAM_ID = new PublicKey(programArg);
 const SEED = Buffer.from("null_record");
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..", "..");

@@ -165,16 +165,16 @@ describe("assertFeeRecipientNotProgramId", () => {
   });
 
   it("throws when address is in knownProgramIds set", () => {
-    const knownIds = new Set(["ADwL3SdoVofz9Geb89asG5UP7gjH5B7B48m3Kj8Xtzpa"]);
+    const knownIds = new Set(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"]);
     expect(() =>
-      assertFeeRecipientNotProgramId("ADwL3SdoVofz9Geb89asG5UP7gjH5B7B48m3Kj8Xtzpa", knownIds),
+      assertFeeRecipientNotProgramId("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", knownIds),
     ).toThrow(/known program ID/i);
   });
 
   it("accepts the same address when not in knownProgramIds", () => {
     const knownIds = new Set(["SomeOtherProgramId111111111111111111111111111"]);
     expect(() =>
-      assertFeeRecipientNotProgramId("ADwL3SdoVofz9Geb89asG5UP7gjH5B7B48m3Kj8Xtzpa", knownIds),
+      assertFeeRecipientNotProgramId("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", knownIds),
     ).not.toThrow();
   });
 });

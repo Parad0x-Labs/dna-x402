@@ -25,9 +25,16 @@ use sha2::{Digest, Sha256};
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-pub const DARK_RITUAL_GATE_PROGRAM: &str = "31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy";
-pub const DARK_RITUAL_HOOK_PROGRAM: &str = "F3Jt3TBWxRgzZo6NVNhc3vCLN2R5xq9DcPn2MqVCY6v1";
-pub const RITUAL_MINT: &str = "35TEfA2CT1XmZZFCjdKMBA5LVGMqMu3ixBXGmN8cZHZW";
+/// Configured dark_ritual_gate program. `None`: no usable deployment exists
+/// until the redeploy under a fresh key, so `build_ceremony_layout` refuses with
+/// `RitualBlinkError::ProgramsUnavailable`. Callers targeting their own
+/// deployment (e.g. a local validator) use `build_ceremony_layout_with_programs`.
+pub const DARK_RITUAL_GATE_PROGRAM: Option<&str> = None;
+/// Configured dark_ritual_transfer_hook program. `None` until the redeploy.
+pub const DARK_RITUAL_HOOK_PROGRAM: Option<&str> = None;
+/// Configured ritual-bound Token-2022 mint (its transfer hook is
+/// DARK_RITUAL_HOOK_PROGRAM). `None` until the redeploy.
+pub const RITUAL_MINT: Option<&str> = None;
 pub const HOOK_VERDICT_PREFIX: u8 = 0x01;
 pub const VERIFY_RITUAL_SHAPE_TAG: u8 = 0x00;
 pub const RITUAL_TYPE_AGENT_SPEND: u8 = 0x01;
@@ -108,7 +115,7 @@ pub struct HookVerdictCapsule {
     pub verdict_byte: u8,          // 0x01 = accepted
     pub hook_hash: [u8; 32],       // SHA256("dark_null_v1_hook_verdict" || mint || amount)
     pub capsule_bytes_hex: String, // hex of [verdict_byte][hook_hash] — 66 chars
-    pub mint: String,
+    pub mint: String,              // hex of the 32 mint bytes the verdict commits to
     pub amount: u64,
 }
 
@@ -147,6 +154,12 @@ pub enum RitualBlinkError {
     RawPayerLeaked,
     #[error("ceremony layout invalid: expected 5 instructions")]
     InvalidCeremonyLayout,
+    #[error(
+        "ritual programs unavailable until the redeploy under a fresh key: no dark_ritual_gate / \
+         dark_ritual_transfer_hook program is configured; use build_ceremony_layout_with_programs \
+         to target a deployment you control"
+    )]
+    ProgramsUnavailable,
 }
 
 // ── Functions ──────────────────────────────────────────────────────────────────
@@ -220,12 +233,30 @@ pub fn create_x402_intent(
     }
 }
 
-/// Builds the 5-instruction ceremony layout descriptor.
-/// The memo_content is the 64-char hex of intent_hash (x402 binding).
-/// Instructions: ComputeBudget, SplMemo, Ed25519Precompile, VerifyRitualShape, Token2022TransferChecked
+/// Builds the 5-instruction ceremony layout descriptor against the configured
+/// ritual programs. Refuses with `ProgramsUnavailable` while none are configured
+/// (see DARK_RITUAL_GATE_PROGRAM).
 pub fn build_ceremony_layout(
     intent: &X402PaymentIntent,
 ) -> Result<RitualCeremonyLayout, RitualBlinkError> {
+    match (DARK_RITUAL_HOOK_PROGRAM, DARK_RITUAL_GATE_PROGRAM) {
+        (Some(hook), Some(gate)) => build_ceremony_layout_with_programs(intent, hook, gate),
+        _ => Err(RitualBlinkError::ProgramsUnavailable),
+    }
+}
+
+/// Builds the 5-instruction ceremony layout descriptor for caller-named
+/// hook and ritual-gate programs.
+/// The memo_content is the 64-char hex of intent_hash (x402 binding).
+/// Instructions: ComputeBudget, SplMemo, Ed25519Precompile, VerifyRitualShape, Token2022TransferChecked
+pub fn build_ceremony_layout_with_programs(
+    intent: &X402PaymentIntent,
+    hook_program: &str,
+    ritual_gate_program: &str,
+) -> Result<RitualCeremonyLayout, RitualBlinkError> {
+    if hook_program.len() < 8 || ritual_gate_program.len() < 8 {
+        return Err(RitualBlinkError::InvalidCeremonyLayout);
+    }
     let instruction_names = vec![
         "ComputeBudget".to_string(),
         "SplMemo".to_string(),
@@ -242,8 +273,8 @@ pub fn build_ceremony_layout(
         x402_intent_hash: intent.intent_hash,
         ritual_type: RITUAL_TYPE_AGENT_SPEND,
         memo_content,
-        hook_program: DARK_RITUAL_HOOK_PROGRAM.to_string(),
-        ritual_gate_program: DARK_RITUAL_GATE_PROGRAM.to_string(),
+        hook_program: hook_program.to_string(),
+        ritual_gate_program: ritual_gate_program.to_string(),
     })
 }
 
@@ -264,7 +295,7 @@ pub fn compute_hook_verdict(mint_bytes: &[u8; 32], amount: u64) -> HookVerdictCa
         verdict_byte: HOOK_VERDICT_PREFIX,
         hook_hash,
         capsule_bytes_hex,
-        mint: RITUAL_MINT.to_string(),
+        mint: hex_encode(mint_bytes),
         amount,
     }
 }
@@ -548,6 +579,29 @@ mod tests {
         )
     }
 
+    const TEST_HOOK_PROGRAM: &str = "test-ritual-hook-program";
+    const TEST_GATE_PROGRAM: &str = "test-ritual-gate-program";
+
+    fn make_layout(intent: &X402PaymentIntent) -> RitualCeremonyLayout {
+        build_ceremony_layout_with_programs(intent, TEST_HOOK_PROGRAM, TEST_GATE_PROGRAM).unwrap()
+    }
+
+    #[test]
+    fn test_ceremony_layout_refuses_without_configured_programs() {
+        assert!(DARK_RITUAL_GATE_PROGRAM.is_none());
+        assert!(DARK_RITUAL_HOOK_PROGRAM.is_none());
+        assert!(RITUAL_MINT.is_none());
+        let intent = make_intent();
+        assert!(matches!(
+            build_ceremony_layout(&intent),
+            Err(RitualBlinkError::ProgramsUnavailable)
+        ));
+        assert!(matches!(
+            build_ceremony_layout_with_programs(&intent, "", TEST_GATE_PROGRAM),
+            Err(RitualBlinkError::InvalidCeremonyLayout)
+        ));
+    }
+
     fn make_verdict() -> HookVerdictCapsule {
         compute_hook_verdict(&test_mint_bytes(), 1_000)
     }
@@ -627,7 +681,7 @@ mod tests {
     #[test]
     fn test_ceremony_layout_has_5_instructions() {
         let intent = make_intent();
-        let layout = build_ceremony_layout(&intent).unwrap();
+        let layout = make_layout(&intent);
         assert_eq!(layout.instruction_count, 5);
         assert_eq!(layout.instruction_names.len(), 5);
     }
@@ -636,8 +690,9 @@ mod tests {
     #[test]
     fn test_ceremony_layout_contains_ritual_gate() {
         let intent = make_intent();
-        let layout = build_ceremony_layout(&intent).unwrap();
-        assert_eq!(layout.ritual_gate_program, DARK_RITUAL_GATE_PROGRAM);
+        let layout = make_layout(&intent);
+        assert_eq!(layout.ritual_gate_program, TEST_GATE_PROGRAM);
+        assert_eq!(layout.hook_program, TEST_HOOK_PROGRAM);
         assert!(layout
             .instruction_names
             .contains(&"VerifyRitualShape".to_string()));
@@ -647,7 +702,7 @@ mod tests {
     #[test]
     fn test_ceremony_memo_is_hex_of_intent_hash() {
         let intent = make_intent();
-        let layout = build_ceremony_layout(&intent).unwrap();
+        let layout = make_layout(&intent);
         let expected_memo = hex_encode(&intent.intent_hash);
         assert_eq!(layout.memo_content, expected_memo);
         assert_eq!(layout.memo_content.len(), 64);
@@ -794,7 +849,7 @@ mod tests {
     #[test]
     fn test_ceremony_layout_validation_passes() {
         let intent = make_intent();
-        let layout = build_ceremony_layout(&intent).unwrap();
+        let layout = make_layout(&intent);
         validate_ceremony_layout(&layout).unwrap();
     }
 
@@ -817,7 +872,7 @@ mod tests {
         assert_ne!(intent.payer_hash, payer_pub);
 
         // Step 2: build ceremony layout
-        let ceremony = build_ceremony_layout(&intent).unwrap();
+        let ceremony = make_layout(&intent);
         assert_eq!(ceremony.instruction_count, 5);
         assert_eq!(ceremony.memo_content, hex_encode(&intent.intent_hash));
 
@@ -896,10 +951,10 @@ mod tests {
 // This crate is the first implementation combining:
 // 1. Solana Actions/Blinks (live production standard, Phantom-native)
 // 2. x402 V2 payment binding (35M+ Solana transactions on x402 as of March 2026)
-// 3. Dark Null ritual grammar enforcement (dark_ritual_gate deployed:
-//    31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy)
-// 4. Token-2022 Transfer Hook verification (dark_ritual_transfer_hook:
-//    F3Jt3TBWxRgzZo6NVNhc3vCLN2R5xq9DcPn2MqVCY6v1)
+// 3. Dark Null ritual grammar enforcement (dark_ritual_gate; devnet redeploy
+//    under a fresh key pending)
+// 4. Token-2022 Transfer Hook verification (dark_ritual_transfer_hook; devnet
+//    redeploy under a fresh key pending)
 // 5. HookVerdict 33-byte capsule as atomic receipt
 // 6. Receipt DAG chaining for tamper-proof trade history
 //

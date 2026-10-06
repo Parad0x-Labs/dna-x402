@@ -49,7 +49,14 @@ const VK       = join(REPO, "circuits", "out", "x402_access_vk.json");
 const EVIDENCE = join(REPO, "evidence", "zk");
 
 // ── devnet program ─────────────────────────────────────────────────────────────
-const PROGRAM_ID = "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6";
+// No dark_x402_access_gate deployment is configured until the redeploy under a fresh key, so the
+// program ID must be passed explicitly (--program <ID> or X402_ACCESS_GATE_PROGRAM_ID=<ID>).
+const programArg = (() => { const i = process.argv.indexOf("--program"); return i !== -1 ? process.argv[i + 1] : process.env.X402_ACCESS_GATE_PROGRAM_ID; })();
+if (!programArg) {
+  console.error("ERROR: pass --program <ID> (or set X402_ACCESS_GATE_PROGRAM_ID): no dark_x402_access_gate program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
+const PROGRAM_ID = programArg;
 const RPC        = "https://api.devnet.solana.com";
 const CLUSTER    = "devnet";
 

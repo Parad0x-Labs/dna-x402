@@ -6,7 +6,9 @@
 //   1. EchoProof    — [0x01][ritual_hash:32]    — echoes back the ritual hash
 //   2. VerifyRitualShape — [0x00][0x01][shape_hash:32] — verifies AgentSpendNoCustodyV1 grammar
 //
-// Program ID: 31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy
+// Program ID: read from DARK_RITUAL_GATE_PROGRAM_ID. No dark_ritual_gate deployment
+// is configured until the redeploy under a fresh key, so the binary refuses to run
+// without it.
 // Writes: dist/ritual-vm/RITUAL_GATE_DEVNET.json
 
 use sha2::{Digest, Sha256};
@@ -21,7 +23,7 @@ use solana_sdk::{
 };
 use std::str::FromStr;
 
-const PROGRAM_ID: &str = "31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy";
+const PROGRAM_ID_ENV: &str = "DARK_RITUAL_GATE_PROGRAM_ID";
 const RPC_URL: &str = "https://api.devnet.solana.com";
 // ritual_hash from dist/ritual-vm/RITUAL_VM_DEMO.json
 const RITUAL_HASH_HEX: &str = "1c0ffefb9e1faa3846403f0cc7d9209cf46a2656c5417529f62b608c7d65aeb2";
@@ -70,7 +72,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  NOT_PRODUCTION — devnet only, mainnet_ready=false");
     println!();
 
-    let program_id = Pubkey::from_str(PROGRAM_ID)?;
+    let program_id_str = std::env::var(PROGRAM_ID_ENV).map_err(|_| {
+        format!(
+            "{PROGRAM_ID_ENV} is not set: no dark_ritual_gate program is configured until the \
+             redeploy under a fresh key. Set it to a deployment you control."
+        )
+    })?;
+    let program_id = Pubkey::from_str(&program_id_str)?;
     let rpc_url = std::env::var("SOLANA_RPC_URL").unwrap_or_else(|_| RPC_URL.to_string());
 
     // Use the persistent wallet (has 20+ devnet SOL)
@@ -162,8 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "network": "solana-devnet",
         "mainnet_ready": false,
         "production_claim": false,
-        "program_id": PROGRAM_ID,
-        "program_slot": 464996215u64,
+        "program_id": program_id_str,
         "ritual_hash": RITUAL_HASH_HEX,
         "shape_hash": hex_encode(&shape_hash),
         "tx_echo_proof": {

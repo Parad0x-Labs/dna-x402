@@ -73,11 +73,11 @@ on-chain: ≈18 MUL + 17 ADD/SUB + 2 SHA-512 ≈ 120–227k CU (well under budge
       cross-context, unlinkability, wire roundtrip + non-canonical reject).
 - [x] wire (de)serialization (448 bytes) with canonical-encoding checks on every field.
 - [x] host e2e binary (`kvac_e2e`) — issue → present → verify (×2 contexts) + adversarial checks.
-- [x] **devnet-proven**: nullifiers recorded via `dark_nullifier_record`
-      (`AFTuz5s58FEwQoQBxAdvWFrXAVnS9XzC43XQgL2Canpg`); replay reverts `AlreadyRecorded`
-      (Custom 10). Evidence in `evidence/kvac/`.
+- [ ] on-chain nullifier recording via `dark_nullifier_record`: the client
+      (`scripts/kvac/devnet-record-e2e.mjs`) is implemented; a devnet redeploy under a
+      fresh key is pending, so the script needs `--program <ID>`.
 - [ ] tier predicate (set-membership); blind issuance (v2); external audit before mainnet value.
 
-Run: `cargo test -p dark-kvac` · `cargo run -p dark-kvac --bin kvac_e2e` · `node scripts/kvac/devnet-record-e2e.mjs`.
+Run: `cargo test -p dark-kvac` · `cargo run -p dark-kvac --bin kvac_e2e` · `node scripts/kvac/devnet-record-e2e.mjs --program <ID>`.
 
 Mainnet cost: see `evidence/kvac/MAINNET_COST.md` (≈0.52 SOL one-time deploy + ≈0.00118 SOL recoverable rent per paid call; verifier is off-chain so no per-call CU).

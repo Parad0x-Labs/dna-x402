@@ -26,7 +26,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = join(__dirname, "..", "..");
 const arg = (n, d) => { const i = process.argv.indexOf("--" + n); return i !== -1 ? process.argv[i + 1] : d; };
 
-const PROGRAM_ID = arg("program", "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6");
+const PROGRAM_ID = arg("program");
+if (!PROGRAM_ID) {
+  console.error("ERROR: pass --program <ID>: no dark_x402_access_gate program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
 const CLUSTER    = arg("cluster", "devnet");
 const RPC        = arg("rpc", CLUSTER === "mainnet-beta" ? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com");
 

@@ -19,7 +19,7 @@ use dark_swarm_capsule::{
     CustodyAttestation, LivenessConfig, SwarmCaps, SwarmRole,
 };
 use ritual_blink_gateway::{
-    build_ceremony_layout, chain_blink_receipt, compute_hook_verdict, create_blink_receipt,
+    build_ceremony_layout_with_programs, chain_blink_receipt, compute_hook_verdict, create_blink_receipt,
     create_x402_intent, validate_ceremony_layout, verify_blink_receipt, verify_hook_verdict,
     verify_payer_match,
 };
@@ -82,7 +82,14 @@ pub fn run_edge_capstone() -> Value {
     let alpha_chain_2 = chain_receipt(Some(&alpha_chain_1), &paid_reveal.reveal_hash);
     let alpha_chain_ok = verify_chain_integrity(&alpha_chain_2, Some(&alpha_chain_1));
 
-    let ceremony = build_ceremony_layout(&intent).expect("x402 intent should build ceremony");
+    // Off-chain simulation: no ritual programs are configured until the redeploy
+    // under a fresh key, so the layout names local simulation programs.
+    let ceremony = build_ceremony_layout_with_programs(
+        &intent,
+        "sim-dark-ritual-transfer-hook",
+        "sim-dark-ritual-gate",
+    )
+    .expect("x402 intent should build ceremony");
     let ceremony_ok = validate_ceremony_layout(&ceremony).is_ok();
     let verdict = compute_hook_verdict(&mint_bytes, price_lamports);
     let verdict_ok = verify_hook_verdict(&verdict, &mint_bytes, price_lamports).is_ok();

@@ -306,13 +306,8 @@ pub fn build_ritual_vm_demo() -> RitualVmDemo {
             message:     "ROGUE".to_string(),
             shard_path:  vec![82, 79, 71, 85, 69],
             note:        "ritual grammar verified; shard_path spell-checks ROGUE via onchain-puzzle-compiler".to_string(),
-            solscan_links: vec![
-                "https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet".to_string(),
-                "https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet".to_string(),
-                "https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet".to_string(),
-                "https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet".to_string(),
-                "https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet".to_string(),
-            ],
+            // Devnet ritual evidence withdrawn; devnet redeploy under a fresh key pending.
+            solscan_links: Vec::new(),
         },
     }
 }
@@ -401,7 +396,7 @@ mod tests {
         let demo = build_ritual_vm_demo();
         assert_eq!(demo.devnet_ritual.message, "ROGUE");
         assert_eq!(demo.devnet_ritual.shard_path, vec![82u8, 79, 71, 85, 69]);
-        assert_eq!(demo.devnet_ritual.solscan_links.len(), 5);
+        assert!(demo.devnet_ritual.solscan_links.is_empty());
     }
 
     // Extended tests -----------------------------------------------------------

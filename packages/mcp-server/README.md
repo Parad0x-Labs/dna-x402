@@ -7,7 +7,7 @@ Exposes the Parad0x Labs stack as MCP tools. Works with Claude Desktop, Cursor, 
 | Tool | Description |
 |---|---|
 | `x402_get_quote` | Get a payment quote for an x402-gated API endpoint |
-| `anchor_receipt` | Anchor a 32-byte receipt hash on Solana mainnet via `receipt_anchor` |
+| `anchor_receipt` | Anchor a 32-byte receipt hash via `receipt_anchor`. Receipt anchoring is unavailable until the redeploy under a fresh key; the tool returns an error and sends nothing |
 | `lookup_passport` | Check if an ETH address or Solana wallet has a verified Dark Passport binding |
 | `build_outcome_receipt` | Build a signed outcome receipt with PnL, accuracy, or delivery result |
 | `compress_receipts` | Compress a batch of receipts (Liquefy format, 83x typical ratio) |
@@ -40,7 +40,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
-`SOLANA_KEYPAIR` is a JSON array of 64 bytes (the standard Solana keypair format output by `solana-keygen`). Without it, `anchor_receipt` runs in dry-run mode and returns a mock transaction for format inspection.
+`SOLANA_KEYPAIR` is a JSON array of 64 bytes (the standard Solana keypair format output by `solana-keygen`). `anchor_receipt` does not use it while receipt anchoring is unavailable.
 
 ## Cursor / Windsurf config
 
@@ -78,9 +78,10 @@ npm start
 
 ## Programs (mainnet)
 
+`receipt_anchor` and `dark_nullifier_record` have no usable deployment on any cluster until the redeploy under a fresh key, so `anchor_receipt` and `check_nullifier` return an error without sending or reading anything.
+
 | Program | Address | Status |
 |---|---|---|
-| receipt_anchor | `6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN` | Live |
 | dark_secp256r1_vault | `3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi` | Live |
 | dark_secp256k1_auth | `AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B` | Live |
 | dark_semaphore | `Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p` | Live |

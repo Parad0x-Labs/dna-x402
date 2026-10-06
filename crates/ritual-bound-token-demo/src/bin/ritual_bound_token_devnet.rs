@@ -20,7 +20,8 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 
-const DARK_RITUAL_GATE: &str = "31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy";
+/// No dark_ritual_gate deployment is configured until the redeploy under a fresh key.
+const DARK_RITUAL_GATE: &str = "pending_redeploy";
 
 // ── SHA256 helper ─────────────────────────────────────────────────────────────
 
@@ -355,8 +356,8 @@ mod tests {
     fn test_ritual_gate_id_in_json() {
         let json = make_test_evidence_json();
         assert!(
-            json.contains("31qmvs"),
-            "JSON must contain ritual gate ID prefix '31qmvs'"
+            json.contains("\"ritual_gate_program\":\"pending_redeploy\""),
+            "JSON must mark the ritual gate program as pending_redeploy"
         );
     }
 

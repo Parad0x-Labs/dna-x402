@@ -54,7 +54,7 @@ describe("Dark Null optional privacy path", () => {
       signedReceipt: makeSignedReceipt(),
       target: {
         cluster: "devnet",
-        programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+        programId: "35GMe13ExGB1JGp1wZGrEvHfQnENKADroDQApeziKuwV",
         manifestLabel: "canonical-devnet-root-2",
       },
       settlementSlot: 434395918,
@@ -79,7 +79,7 @@ describe("Dark Null optional privacy path", () => {
       signedReceipt: receipt,
       target: {
         cluster: "devnet",
-        programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+        programId: "35GMe13ExGB1JGp1wZGrEvHfQnENKADroDQApeziKuwV",
         manifestLabel: "canonical-devnet-root-2",
       },
       settlementSlot: 434395918,
@@ -91,7 +91,7 @@ describe("Dark Null optional privacy path", () => {
       signedReceipt: makeSignedReceipt(),
       target: {
         cluster: "devnet",
-        programId: "2stas3cZYnBiWpndcTXQDGLXwfQ7kjEYYrW52DsUAcxF",
+        programId: "35GMe13ExGB1JGp1wZGrEvHfQnENKADroDQApeziKuwV",
         manifestLabel: "canonical-devnet-root-2",
       },
       settlementSlot: 434395918,

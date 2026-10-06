@@ -9,7 +9,10 @@
  *   3. Off-chain verify. Submit on-chain (confirm). Then negatives, all rejected:
  *        forged proof / tampered public input (min_volume) / zero proof.
  *
- * Usage: node scripts/zk/track-record-e2e.mjs --program <ID> --cluster devnet|mainnet-beta
+ * Usage: node scripts/zk/track-record-e2e.mjs --program <ID> --nullifier-record <ID> --cluster devnet|mainnet-beta
+ *
+ * Both program IDs are required: no dark_reputation_gate / dark_nullifier_record
+ * deployment is configured until the redeploy under a fresh key.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -24,6 +27,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = join(__dirname, "..", "..");
 const arg = (n, d) => { const i = process.argv.indexOf("--" + n); return i !== -1 ? process.argv[i + 1] : d; };
 const PROGRAM_ID = arg("program");
+const NULLIFIER_RECORD_ID = arg("nullifier-record");
+if (!PROGRAM_ID || !NULLIFIER_RECORD_ID) {
+  console.error("ERROR: pass --program <ID> and --nullifier-record <ID>: no dark_reputation_gate / dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
 const CLUSTER = arg("cluster", "devnet");
 const RPC = arg("rpc", CLUSTER === "mainnet-beta" ? "https://api.mainnet-beta.solana.com" : "https://api.devnet.solana.com");
 
@@ -124,7 +132,7 @@ async function main() {
   const conn = new Connection(RPC, "confirmed");
   const pid = new PublicKey(PROGRAM_ID);
   // single-use enforcement: the gate CPIs dark_nullifier_record to record reputation_nullifier
-  const NULLIFIER_RECORD = new PublicKey("24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65");
+  const NULLIFIER_RECORD = new PublicKey(NULLIFIER_RECORD_ID);
   const nullifierBytes = decToBytes32(pub[4]); // reputation_nullifier, big-endian 32
   const [recordPda] = PublicKey.findProgramAddressSync([Buffer.from("null_record"), nullifierBytes], NULLIFIER_RECORD);
   const keys = [

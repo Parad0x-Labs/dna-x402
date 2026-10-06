@@ -30,8 +30,24 @@ use std::{fs, path::Path, str::FromStr, thread, time::Duration};
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const HOOK_PROGRAM_STR: &str = "F3Jt3TBWxRgzZo6NVNhc3vCLN2R5xq9DcPn2MqVCY6v1";
-const RITUAL_GATE_STR: &str = "31qmvsHijLMnQogQ4yvtZom7b1V9ETDx37x2LkhywtCy";
+/// Env vars naming the hook and ritual-gate programs. No deployment of either is
+/// configured until the redeploy under a fresh key, so the binary refuses to run
+/// without both.
+const HOOK_PROGRAM_ENV: &str = "RITUAL_HOOK_PROGRAM_ID";
+const RITUAL_GATE_ENV: &str = "DARK_RITUAL_GATE_PROGRAM_ID";
+
+fn required_program_id(var: &str) -> String {
+    match std::env::var(var) {
+        Ok(v) if !v.is_empty() => v,
+        _ => {
+            eprintln!(
+                "ERROR: {var} is not set: no dark_ritual_gate / dark_ritual_transfer_hook program \
+                 is configured until the redeploy under a fresh key. Set it to a deployment you control."
+            );
+            std::process::exit(2);
+        }
+    }
+}
 
 /// sha256("dark_null_v1_ritual_shape" || "AgentSpendNoCustodyV1") — known devnet value
 const SHAPE_HASH_HEX: &str = "58bc91688bc3f783dff3e106ef9ab8b0a29febb224448511ea08626939510f5f";
@@ -210,6 +226,9 @@ fn main() {
     println!("  NOT_PRODUCTION. Devnet only. No audit.");
     println!();
 
+    let hook_program_str = required_program_id(HOOK_PROGRAM_ENV);
+    let ritual_gate_str = required_program_id(RITUAL_GATE_ENV);
+
     let payer = load_keypair();
     let payer_pk = payer.pubkey();
     let rpc = rpc_url();
@@ -226,8 +245,8 @@ fn main() {
     }
 
     let token_program = spl_token_2022::id();
-    let hook_program = Pubkey::from_str(HOOK_PROGRAM_STR).unwrap();
-    let ritual_gate = Pubkey::from_str(RITUAL_GATE_STR).unwrap();
+    let hook_program = Pubkey::from_str(&hook_program_str).expect("RITUAL_HOOK_PROGRAM_ID must be a base58 pubkey");
+    let ritual_gate = Pubkey::from_str(&ritual_gate_str).expect("DARK_RITUAL_GATE_PROGRAM_ID must be a base58 pubkey");
 
     // ─────────────────────────────────────────────────────────────────────────
     // Step 1: Create Token-2022 mint with TransferHook extension
@@ -468,8 +487,8 @@ fn main() {
         mainnet_ready: false,
         production_claim: false,
         agent_had_private_key: false,
-        hook_program: HOOK_PROGRAM_STR.to_string(),
-        ritual_gate_program: RITUAL_GATE_STR.to_string(),
+        hook_program: hook_program_str.clone(),
+        ritual_gate_program: ritual_gate_str.clone(),
         mint: mint_pk.to_string(),
         source_token_account: source_ata.to_string(),
         destination_token_account: dest_ata.to_string(),
@@ -484,7 +503,7 @@ fn main() {
         good_ritual_transfer: GoodTransferEvidence {
             status: good_status.to_string(),
             tx: good_tx.clone(),
-            hook_program: HOOK_PROGRAM_STR.to_string(),
+            hook_program: hook_program_str.clone(),
         },
         not_production_note: "NOT_PRODUCTION. Devnet only. No audit. No mainnet keys.".to_string(),
         solscan_links: SolscanLinks {
@@ -515,8 +534,8 @@ fn main() {
         "  ├──────────────────────────────────────────────────────────────────────────────────┤"
     );
     println!("  │  mint         : {:<44}  │", mint_pk);
-    println!("  │  hook         : {:<44}  │", HOOK_PROGRAM_STR);
-    println!("  │  ritual_gate  : {:<44}  │", RITUAL_GATE_STR);
+    println!("  │  hook         : {:<44}  │", hook_program_str);
+    println!("  │  ritual_gate  : {:<44}  │", ritual_gate_str);
     println!(
         "  ├──────────────────────────────────────────────────────────────────────────────────┤"
     );

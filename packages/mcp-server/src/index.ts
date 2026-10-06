@@ -7,20 +7,19 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { createHash, createHmac, randomBytes, createCipheriv, createSecretKey } from "crypto";
 import { deflateSync } from "zlib";
-import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { Connection, PublicKey, Keypair } from "@solana/web3.js";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-// Live on Solana mainnet-beta — verified against evidence/mainnet + evidence/zk.
-// Full private-reputation stack live as of 2026-06-07 (reputation gate + commitment tree launched).
+// Solana mainnet-beta program addresses — verified against evidence/mainnet.
+// The previously listed receipt_anchor, dark_nullifier_record,
+// dark_reputation_gate and receipt_commitment_tree deployments are withdrawn
+// until the redeploy under a fresh key, so they are not listed here and the
+// tools that used them refuse (see UNAVAILABLE_PROGRAMS).
 const PROGRAMS = {
   dark_x402_access_gate: "EepqzVBNuzCgD6XGiB19pDDhzFG3gUL4z1nabBYxpfjS",
-  dark_nullifier_record: "24tmjEd1DhPW2QuPV6BzkFFHrq2PtELoLqv5cuv2Xu65",
-  dark_reputation_gate: "9nN7UTTT5hgKnc2LZTqr3qaLLSt5PxWUrDbpUTGYHRxp",
-  receipt_commitment_tree: "8jC8QGiDJRRxhbPXMX5wJnGUq89xJZ2LsHMdbn2urCas",
-  receipt_anchor: "6HSRGivdYR5D7yTDy1TFMCM8h3LzXxRtKU1RA3RnCMRN",
   dark_secp256r1_vault: "3hbbtjeSrTVYXq6eRwjeofDe2DCPh3n8cfN6kZcQfewi",
   dark_secp256k1_auth: "AqwBbV13AoczhoELwP8oxT3nDqB6MsLWXauNzHkssZ9B",
   dark_semaphore: "Ev7HEFhhKTXk6kS2Y6ssbUcK9C7E6yZ589jJNjUrQV5p",
@@ -32,10 +31,15 @@ const PROGRAMS = {
   dark_bn254_gate: "GCptvBYF8S6eVYoh15B7WAESc54FUHCpN1Ui6aHeQYZd",
 } as const;
 
-// Devnet-only addresses that differ from mainnet (the access gate has a separate devnet id;
-// reputation gate, tree, and nullifier share the same id on both clusters).
-const DEVNET_PROGRAMS = {
-  dark_x402_access_gate: "7LZzJnLSCCu2enc7mXz9FFCbomotME78xFG4eqkpo5U6",
+const REDEPLOY_PENDING = "unavailable until the redeploy under a fresh key";
+
+// Programs with no usable deployment on any cluster. Tools that depend on them
+// return an error instead of sending or reading anything.
+const UNAVAILABLE_PROGRAMS = {
+  receipt_anchor: `receipt anchoring is ${REDEPLOY_PENDING}`,
+  dark_nullifier_record: `nullifier lookup is ${REDEPLOY_PENDING}`,
+  dark_reputation_gate: `private track-record verification is ${REDEPLOY_PENDING}`,
+  receipt_commitment_tree: `the receipt commitment tree is ${REDEPLOY_PENDING}`,
 } as const;
 
 const EXPLORER_BASE = "https://explorer.solana.com";
@@ -220,7 +224,7 @@ async function x402GetQuote(
       price_atomic: 100000, // 0.1 USDC in atomic units (6 decimals)
       currency: "USDC",
       expiry: Date.now() + 60_000,
-      payment_address: PROGRAMS.receipt_anchor,
+      payment_address: null,
       network: "solana-mainnet",
       note: `Endpoint returned HTTP ${res.status} (not 402). This is a mock quote showing the x402 format. A real x402-gated endpoint returns 402 with x-dnp-offer header.`,
       mock: true,
@@ -233,86 +237,20 @@ async function x402GetQuote(
 
 async function anchorReceipt(
   receiptHashHex: string,
-  rpcUrl = DEFAULT_RPC,
-  confirm = false
+  _rpcUrl = DEFAULT_RPC,
+  _confirm = false
 ): Promise<object> {
   if (!/^[0-9a-fA-F]{64}$/.test(receiptHashHex)) {
     return { error: "receipt_hash_hex must be exactly 64 hex characters (32 bytes)" };
   }
-
-  const keypair = loadKeypair();
-
-  if (!keypair) {
-    // Dry-run mode — return mock response so agents can see the format
-    const mockSig = Buffer.from(randomBytes(64)).toString("base64url").slice(0, 88);
-    return {
-      solana_tx: mockSig,
-      explorer_url: explorerTx(mockSig),
-      slot: 0,
-      dry_run: true,
-      note: "SOLANA_KEYPAIR env var not set. Set it to a JSON array of 64 bytes to submit real transactions. This is a dry-run response showing the output format.",
-    };
-  }
-
-  // Zero-trust write-guard: a key is present, but do NOT submit unless the
-  // operator enabled writes on THIS machine AND the agent confirmed this call.
-  if (!ALLOW_WRITE || !confirm) {
-    return {
-      preview: true,
-      would_submit: {
-        program: PROGRAMS.receipt_anchor,
-        instruction: "anchor(0x00)",
-        receipt_hash_hex: receiptHashHex,
-        fee_payer: keypair.publicKey.toBase58(),
-      },
-      blocked_reason: !ALLOW_WRITE
-        ? "writes disabled — operator must set PARAD0X_MCP_ALLOW_WRITE=1 on this machine"
-        : "confirm:true required to submit a real transaction",
-      note: "No transaction was sent. This is a preview of exactly what WOULD be submitted.",
-    };
-  }
-
-  try {
-    const connection = new Connection(rpcUrl, "confirmed");
-    const programId = new PublicKey(PROGRAMS.receipt_anchor);
-
-    // Instruction data: [0x00 (anchor discriminator), <32 bytes hash>]
-    const hashBytes = new Uint8Array(Buffer.from(receiptHashHex, "hex"));
-    const data = new Uint8Array(33);
-    data[0] = 0x00;
-    data.set(hashBytes, 1);
-
-    const ix = new TransactionInstruction({
-      keys: [
-        { pubkey: keypair.publicKey, isSigner: true, isWritable: true },
-      ],
-      programId,
-      data: Buffer.from(data),
-    });
-
-    const tx = new Transaction().add(ix);
-    const { blockhash } = await connection.getLatestBlockhash();
-    tx.recentBlockhash = blockhash;
-    tx.feePayer = keypair.publicKey;
-    tx.sign(keypair);
-
-    const sig = await connection.sendRawTransaction(tx.serialize(), {
-      skipPreflight: false,
-    });
-
-    const conf = await connection.confirmTransaction(sig, "confirmed");
-    const slot = conf.context.slot;
-
-    return {
-      solana_tx: sig,
-      explorer_url: explorerTx(sig),
-      slot,
-      dry_run: false,
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { error: `Solana transaction failed: ${msg}` };
-  }
+  // No receipt_anchor program is usable on any cluster: refuse before loading
+  // a key or touching the network.
+  return {
+    error: UNAVAILABLE_PROGRAMS.receipt_anchor,
+    anchored: false,
+    receipt_hash_hex: receiptHashHex,
+    note: "No transaction was built or sent.",
+  };
 }
 
 async function lookupPassport(
@@ -396,31 +334,14 @@ async function checkNullifier(
     return { error: "nullifier must be a 64-char hex string or a decimal field element" };
   }
 
-  try {
-    const nullifierBytes = Buffer.from(hex, "hex");
-    const program = new PublicKey(PROGRAMS.dark_nullifier_record);
-    // Single-use record PDA — matches the on-chain seed [b"null_record", nullifier_be_32].
-    const [recordPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("null_record"), nullifierBytes],
-      program
-    );
-    const connection = new Connection(rpcUrl, "confirmed");
-    const info = await connection.getAccountInfo(recordPda);
-    const spent = info !== null && info.data.length > 0;
-    return {
-      nullifier_hex: hex,
-      record_pda: recordPda.toBase58(),
-      spent,
-      program: PROGRAMS.dark_nullifier_record,
-      explorer_url: explorerAccount(recordPda.toBase58()),
-      note: spent
-        ? "Nullifier already recorded on-chain — this proof has been spent (single-use exhausted)."
-        : "No record found — this nullifier has not been used yet.",
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { error: `Nullifier lookup failed: ${msg}` };
-  }
+  // dark_nullifier_record has no usable deployment on any cluster: refuse
+  // rather than report "not spent" from a program that cannot record anything.
+  void rpcUrl;
+  return {
+    error: UNAVAILABLE_PROGRAMS.dark_nullifier_record,
+    nullifier_hex: hex,
+    note: "No RPC call was made.",
+  };
 }
 
 function buildOutcomeReceipt(params: {
@@ -605,20 +526,6 @@ function getStackStatus(): object {
         description: "Groth16 BN254 access gate — prove funded + authorized WITHOUT revealing wallet or balance. On-chain verify via alt_bn128_pairing (~93k CU, ~$0.0007).",
       },
       {
-        name: "dark_nullifier_record",
-        address: PROGRAMS.dark_nullifier_record,
-        status: "live",
-        explorer_url: explorerAccount(PROGRAMS.dark_nullifier_record),
-        description: "Single-use / anti-replay — records a nullifier PDA so each proof is spendable exactly once.",
-      },
-      {
-        name: "receipt_anchor",
-        address: PROGRAMS.receipt_anchor,
-        status: "live",
-        explorer_url: explorerAccount(PROGRAMS.receipt_anchor),
-        description: "Anchors 32-byte receipt hashes permanently on Solana mainnet",
-      },
-      {
         name: "dark_secp256r1_vault",
         address: PROGRAMS.dark_secp256r1_vault,
         status: "live",
@@ -654,11 +561,7 @@ function getStackStatus(): object {
         description: "NULL SPL token — native currency of the Parad0x Labs protocol economy",
       },
     ],
-    private_reputation_stack: {
-      note: "Private track-record proof — LIVE on mainnet as of 2026-06-07. Single-party VK until the trusted-setup ceremony finalizes (same status as the access gate).",
-      dark_reputation_gate: PROGRAMS.dark_reputation_gate,
-      receipt_commitment_tree: PROGRAMS.receipt_commitment_tree,
-    },
+    unavailable_programs: Object.entries(UNAVAILABLE_PROGRAMS).map(([name, status]) => ({ name, status })),
     packages: [
       "@parad0x_labs/mcp-server",
       "@parad0x_labs/null-miner-sdk",
@@ -714,7 +617,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "anchor_receipt",
         description:
-          "Anchor a 32-byte receipt hash permanently on Solana mainnet via the receipt_anchor program. Read-only by default: returns a PREVIEW unless the operator enabled writes (PARAD0X_MCP_ALLOW_WRITE=1) AND you pass confirm:true.",
+          "Anchor a 32-byte receipt hash on Solana via the receipt_anchor program. Receipt anchoring is unavailable until the redeploy under a fresh key: this tool validates the hash and returns an error; no transaction is built or sent.",
         inputSchema: {
           type: "object",
           properties: {
@@ -728,7 +631,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             confirm: {
               type: "boolean",
-              description: "Must be true to actually submit. Without it the tool returns a preview only (no transaction sent).",
+              description: "Reserved for when anchoring is available again. Ignored today: no transaction is sent.",
             },
           },
           required: ["receipt_hash_hex"],
@@ -807,7 +710,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "check_nullifier",
         description:
-          "Check whether a privacy-proof nullifier has already been spent on Solana (single-use enforcement). Read-only: derives the dark_nullifier_record PDA and checks if it exists on-chain. No signing, no funds.",
+          "Check whether a privacy-proof nullifier has already been spent on Solana (single-use enforcement) via the dark_nullifier_record program. Nullifier lookup is unavailable until the redeploy under a fresh key: this tool validates the nullifier and returns an error; no RPC call is made.",
         inputSchema: {
           type: "object",
           properties: {
@@ -852,7 +755,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             anchor: {
               type: "boolean",
-              description: "If true, commit (input_hash, result_hash) to Solana via receipt_anchor",
+              description: "If true, request a commitment of (input_hash, result_hash) via receipt_anchor. Receipt anchoring is unavailable until the redeploy under a fresh key, so commitment_tx reports anchor_failed.",
             },
             rpc_url: {
               type: "string",

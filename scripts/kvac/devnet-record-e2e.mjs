@@ -19,7 +19,14 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const PROGRAM_ID = new PublicKey("AFTuz5s58FEwQoQBxAdvWFrXAVnS9XzC43XQgL2Canpg");
+// No dark_nullifier_record deployment is configured until the redeploy under a fresh key, so the
+// program ID must be passed explicitly (--program <ID> or NULLIFIER_RECORD_PROGRAM_ID=<ID>).
+const programArg = (() => { const i = process.argv.indexOf("--program"); return i !== -1 ? process.argv[i + 1] : process.env.NULLIFIER_RECORD_PROGRAM_ID; })();
+if (!programArg) {
+  console.error("ERROR: pass --program <ID> (or set NULLIFIER_RECORD_PROGRAM_ID): no dark_nullifier_record program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
+const PROGRAM_ID = new PublicKey(programArg);
 const RPC = "https://api.devnet.solana.com";
 const SEED_PREFIX = Buffer.from("null_record");
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -96,7 +103,6 @@ async function main() {
     scheme: "KVAC keyed-verification anonymous credential (MAC_GGM / ristretto255)",
     cluster: "devnet",
     program_id: PROGRAM_ID.toBase58(),
-    deploy_sig: "5Abn8EdhUwfPJmbgkGKdkSD5XTNyoXUCvfa9G8v69ZoNKq3Jq7LZqdBmoe6ohVdfk8waKdxmv4cpxuVevRHyT4RT",
     payer: payer.publicKey.toBase58(),
     host_ceremony: { all_ok: ceremony.all_ok, issuance_proof_verified: ceremony.issuance_proof_verified, ms_pok_verified: ceremony.ms_pok_verified },
     scenarios: results,

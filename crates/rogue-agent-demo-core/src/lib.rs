@@ -330,14 +330,8 @@ pub fn build_wow_demo() -> RogueWowDemo {
     let puzzle = compile_puzzle(&puzzle_input).expect("puzzle compile ROGUE");
     let shard_path: Vec<u8> = puzzle.shard_targets.iter().map(|t| t.shard_byte).collect();
 
-    // Solscan links from the live devnet run (TRUE_FRONTIER_DEVNET_DEMO.json)
-    let solscan_links = vec![
-        "https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet".to_string(),
-        "https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet".to_string(),
-        "https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet".to_string(),
-        "https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet".to_string(),
-        "https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet".to_string(),
-    ];
+    // Devnet ritual evidence withdrawn; devnet redeploy under a fresh key pending.
+    let solscan_links: Vec<String> = Vec::new();
 
     RogueWowDemo {
         network: "solana-devnet".to_string(),
@@ -525,13 +519,8 @@ pub fn build_rogue_steal_attempt_demo() -> RogueStealAttemptDemo {
     };
     let puzzle = compile_puzzle(&puzzle_input).expect("compile ROGUE");
     let shard_path: Vec<u8> = puzzle.shard_targets.iter().map(|t| t.shard_byte).collect();
-    let solscan_links = vec![
-        "https://solscan.io/tx/67jsL2KmhYfg2z1TvkGfzhDoA7YEi8Gojn3gcQkUL3zgMbXSnwjocvj1ZX3AX7ne11J1VUXnG6hnyV2f8DzczeCZ?cluster=devnet".to_string(),
-        "https://solscan.io/tx/4UDnJctmmvhmctQhJfLZuKNXgxnVqXrarDHFisozu5UMzxJ32cCXcFzEQo8UdiVmfdp1SG49P7UUoa8Ggb2br4hb?cluster=devnet".to_string(),
-        "https://solscan.io/tx/5BCtkPKLxjELu1Sg4UGHm5ja5G1RNyFkufpy62ho4RmXHjEtEMyxcNwTQwDGnCCE491j89WMVzJ8BzQhxJGJCF1a?cluster=devnet".to_string(),
-        "https://solscan.io/tx/63LQ8uUZN5f9uxo9PgYF2tgXu4oA6nH8UZH1L93seEazmhaR9zcnkbdSMFWhXaXx4GepHEb3XMQW6Y11Tge9xqZE?cluster=devnet".to_string(),
-        "https://solscan.io/tx/5Dd58QcyJSvGtx61EUjGiFexbx9fzYtEsuYNKXMFzoksBbA8dfYPqL3B8ihpgwo79PGccQGN41m6ex7rdiNpuzaQ?cluster=devnet".to_string(),
-    ];
+    // Devnet ritual evidence withdrawn; devnet redeploy under a fresh key pending.
+    let solscan_links: Vec<String> = Vec::new();
 
     RogueStealAttemptDemo {
         headline: "Rogue tried to withdraw. Dark Null blocked it.".to_string(),

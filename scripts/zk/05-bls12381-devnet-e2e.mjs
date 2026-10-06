@@ -14,9 +14,10 @@
  *   5. Write evidence/zk/bls12381-devnet.json
  *
  * Usage:
- *   node scripts/zk/05-bls12381-devnet-e2e.mjs [PROGRAM_ID]
+ *   node scripts/zk/05-bls12381-devnet-e2e.mjs <PROGRAM_ID>
  *
- *   PROGRAM_ID defaults to the deployed address — EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY
+ *   PROGRAM_ID is required: no dark_bls12_381_credential deployment is configured
+ *   until the redeploy under a fresh key.
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -27,9 +28,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = join(__dirname, "..", "..");
 
-// Deployed program on devnet (EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY)
-const DEFAULT_PROGRAM_ID = "EsVgNujKyWX9BZUL2hoqZTP6Bw48osGUpm5w8XWikAPY";
-const PROG_ID = process.argv[2] ?? DEFAULT_PROGRAM_ID;
+const PROG_ID = process.argv[2];
+if (!PROG_ID) {
+  console.error("ERROR: pass <PROGRAM_ID>: no dark_bls12_381_credential program is configured until the redeploy under a fresh key.");
+  process.exit(2);
+}
 const RPC     = process.env.SOLANA_RPC ?? "https://api.devnet.solana.com";
 const CLUSTER = RPC.includes("mainnet") ? "mainnet-beta" : "devnet";
 

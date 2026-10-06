@@ -30,8 +30,7 @@ entrypoint!(process_instruction);
 //
 // DEVNET program id of dark_receipt_commitment_tree (shared with dark_reputation_gate so
 // both gates bind the SAME tree). Mainnet redeploy MUST update this.
-// NOTE: ghostscore.md documents the receipt tree as 8jC8QGi… while the gates hardcode
-// H9nL9tErF… — that doc/id drift is tracked for cleanup; the gate constant is canonical.
+// The gate constant below is the canonical receipt tree id.
 const RECEIPT_TREE_PROGRAM: Pubkey =
     solana_program::pubkey!("H9nL9tErFXFmr2ZGkgFVz2NpjAsAeDBXDgS85qBWFGAe");
 const RECEIPT_TREE_SEED: &[u8] = b"receipt_tree";
