@@ -191,7 +191,7 @@ version = "0.1.0"
 dependencies = [
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.8.8",
  "solana-sdk",
  "statrs",
 ]
@@ -364,7 +364,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94893f1e0c6eeab764ade8dc4c0db24caf4fe7cbbaafc0eba0a9030f447b5185"
 dependencies = [
  "num-traits",
- "rand 0.8.6",
+ "rand 0.8.8",
 ]
 
 [[package]]
@@ -530,7 +530,7 @@ checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 name = "betting-alpha-receipts"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -541,7 +541,7 @@ dependencies = [
 name = "betting-proofboard"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -614,7 +614,7 @@ dependencies = [
 name = "blink-work-board"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1080,7 +1080,7 @@ dependencies = [
 name = "confidential-amount-watch"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1149,7 +1149,7 @@ dependencies = [
 name = "copy-sniper-tax-trap"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1366,7 +1366,7 @@ name = "dark-agent-payment-sdk"
 version = "0.1.0"
 dependencies = [
  "agent-shielded-capsule",
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -1625,7 +1625,7 @@ dependencies = [
 name = "dark-bundle-cloak"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "solana-sdk",
 ]
 
@@ -1910,7 +1910,7 @@ name = "dark-fedimint-ecash"
 version = "0.1.0"
 dependencies = [
  "curve25519-dalek",
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.9.9",
@@ -1922,7 +1922,7 @@ version = "0.1.0"
 dependencies = [
  "curve25519-dalek",
  "dark-fedimint-ecash",
- "rand 0.8.6",
+ "rand 0.8.8",
  "sha2 0.9.9",
  "solana-program",
  "solana-program-test",
@@ -1934,7 +1934,7 @@ dependencies = [
 name = "dark-fee-commitment"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -2105,7 +2105,7 @@ version = "0.1.0"
 dependencies = [
  "curve25519-dalek",
  "hex",
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.9.9",
@@ -2222,7 +2222,7 @@ dependencies = [
 name = "dark-mpc-ceremony"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -2328,7 +2328,7 @@ version = "0.1.0"
 dependencies = [
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rayon",
  "solana-program",
  "solana-program-test",
@@ -2971,7 +2971,7 @@ dependencies = [
  "kolmogorov_smirnov",
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.8.8",
  "reqwest 0.12.4",
  "serde_json",
  "solana-sdk",
@@ -3330,7 +3330,7 @@ dependencies = [
 name = "dark-threshold-sig"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4174,7 +4174,7 @@ dependencies = [
 name = "fee-rebate-for-solvers"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4185,7 +4185,7 @@ dependencies = [
 name = "fee-weather-market"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -4608,7 +4608,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 name = "hint-ladder-market"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -5886,7 +5886,7 @@ dependencies = [
  "lazy_static",
  "percent-encoding",
  "pin-project",
- "rand 0.8.6",
+ "rand 0.8.8",
  "thiserror 1.0.69",
 ]
 
@@ -5923,7 +5923,7 @@ dependencies = [
 name = "p-token-roi-bot"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -6302,7 +6302,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "141bf7dfde2fbc246bfd3fe12f2455aa24b0fbd9af535d8c86c7bd1381ff2b1a"
 dependencies = [
  "bytes",
- "rand 0.8.6",
+ "rand 0.8.8",
  "ring 0.16.20",
  "rustc-hash",
  "rustls",
@@ -6385,9 +6385,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.8.6"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca0ecfa931c29007047d1bc58e623ab12e5590e8c7cc53200d5202b69266d8a"
+checksum = "e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c"
 dependencies = [
  "libc",
  "rand_chacha 0.3.1",
@@ -6613,7 +6613,7 @@ dependencies = [
  "dark-poseidon-tree",
  "proptest",
  "proptest-derive",
- "rand 0.8.6",
+ "rand 0.8.8",
  "sha2 0.11.0",
 ]
 
@@ -6678,7 +6678,7 @@ dependencies = [
 name = "rent-graveyard-index"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -6868,7 +6868,7 @@ dependencies = [
 name = "ritual-mev-insurance"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -6880,7 +6880,7 @@ name = "ritual-precompile-braid"
 version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "sha2 0.11.0",
 ]
@@ -7194,7 +7194,7 @@ dependencies = [
 name = "sealed-pick-x402-wall"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -7446,7 +7446,7 @@ dependencies = [
 name = "shape-subscription"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -7622,7 +7622,7 @@ dependencies = [
  "ouroboros",
  "percentage",
  "qualifier_attr",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rayon",
  "regex",
  "rustc_version",
@@ -7751,7 +7751,7 @@ dependencies = [
  "memmap2",
  "modular-bitfield",
  "num_enum 0.7.6",
- "rand 0.8.6",
+ "rand 0.8.8",
  "solana-measure",
  "solana-sdk",
  "tempfile",
@@ -7843,7 +7843,7 @@ dependencies = [
  "futures-util",
  "indexmap 2.7.1",
  "log",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rayon",
  "rcgen",
  "solana-measure",
@@ -7974,7 +7974,7 @@ dependencies = [
  "crossbeam-channel",
  "log",
  "nix",
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_derive",
  "socket2 0.5.10",
@@ -8008,7 +8008,7 @@ dependencies = [
  "libc",
  "log",
  "nix",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rayon",
  "rustc_version",
  "serde",
@@ -8057,7 +8057,7 @@ dependencies = [
  "num-derive 0.4.2",
  "num-traits",
  "parking_lot",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rustc_version",
  "rustversion",
  "serde",
@@ -8091,7 +8091,7 @@ dependencies = [
  "num-derive 0.4.2",
  "num-traits",
  "percentage",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rustc_version",
  "serde",
  "solana-frozen-abi",
@@ -8312,7 +8312,7 @@ dependencies = [
  "ouroboros",
  "percentage",
  "qualifier_attr",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rayon",
  "regex",
  "rustc_version",
@@ -8386,7 +8386,7 @@ dependencies = [
  "qstring",
  "qualifier_attr",
  "rand 0.7.3",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rustc_version",
  "rustversion",
  "serde",
@@ -8478,7 +8478,7 @@ dependencies = [
  "pkcs8",
  "quinn",
  "quinn-proto",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rcgen",
  "rustls",
  "smallvec",
@@ -8695,7 +8695,7 @@ dependencies = [
  "hash32",
  "libc",
  "log",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rustc-demangle",
  "scroll",
  "thiserror 1.0.69",
@@ -9305,7 +9305,7 @@ dependencies = [
  "humantime",
  "opentelemetry",
  "pin-project",
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "static_assertions",
  "tarpc-plugins",
@@ -9539,7 +9539,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 name = "token-arcade-factory"
 version = "0.1.0"
 dependencies = [
- "rand 0.8.6",
+ "rand 0.8.8",
  "serde",
  "serde_json",
  "sha2 0.11.0",
@@ -9774,7 +9774,7 @@ dependencies = [
  "chaff-economy",
  "no-custody-attestation",
  "onchain-puzzle-compiler",
- "rand 0.8.6",
+ "rand 0.8.8",
  "receipt-souls",
  "roadmap-commitments",
  "serde",
@@ -9804,7 +9804,7 @@ dependencies = [
  "http 0.2.12",
  "httparse",
  "log",
- "rand 0.8.6",
+ "rand 0.8.8",
  "rustls",
  "sha1",
  "thiserror 1.0.69",
