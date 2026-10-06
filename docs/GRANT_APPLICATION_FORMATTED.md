@@ -12,7 +12,7 @@
 
 ## PIECE 1 — Elevator Pitch (initial application form, <100 words)
 
-DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-gated services on-chain — no backend custody, no API keys for money movement. Eight programs ran on mainnet-beta from 2026-05-29 (retired 2026-07-14), including a biometric passkey identity layer proven on real hardware (Solana Seeker) using the secp256r1 precompile, and a compressed receipt settlement system that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. The grant funds an external security audit of all 8 programs and removes two stub/bypass conditions blocking production readiness.
+DNA x402 is an open-source Solana payment rail that lets AI agents pay for HTTP-gated services on-chain — no backend custody, no API keys for money movement. Eight programs ran on mainnet-beta from 2026-05-29 (retired 2026-07-14), including a biometric passkey identity layer proven on real hardware (Solana Seeker) using the secp256r1 precompile, and a compressed receipt settlement system that reduces 1 million agent payment receipts to a single 32-byte on-chain commitment. The grant funds an external security audit of all 8 programs and completes two ZK components needed for production readiness.
 
 ---
 
