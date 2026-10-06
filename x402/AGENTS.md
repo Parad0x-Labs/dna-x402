@@ -15,10 +15,10 @@ Normal DNA x402 remains the default path. Use the optional Dark Null path only a
 ## Install
 
 ```bash
-npm install @parad0x_labs/x402@0.2.2
+npm install @parad0x_labs/x402@0.3.0
 ```
 
-That gives you both the SDK and the `dna-x402` CLI. This file describes 0.2.2; the 0.1.x releases on npm are deprecated.
+That gives you both the SDK and the `dna-x402` CLI. This file describes 0.3.0; the 0.1.x releases on npm are deprecated.
 
 Fastest local proof:
 

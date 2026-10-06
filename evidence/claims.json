@@ -24,9 +24,9 @@
       "package_version": {
         "name": "@parad0x_labs/x402",
         "package_json": "x402/package.json",
-        "git_version": "0.2.2",
+        "git_version": "0.3.0",
         "npm_latest": "0.2.0",
-        "npm_checked_at": "2026-10-06T19:28:12Z"
+        "npm_checked_at": "2026-10-06T19:38:14Z"
       },
       "publication_status": "published-older-version",
       "network": null,
