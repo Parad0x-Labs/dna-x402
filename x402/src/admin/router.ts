@@ -331,6 +331,8 @@ export function createAdminRouter(deps: AdminRouterDeps): express.Router {
   router.get("/replay-store", (_req, res) => {
     res.json({
       size: context.replayStore.size(),
+      kind: context.replayStore.kind,
+      durable: context.replayStore.durable,
     });
   });
 

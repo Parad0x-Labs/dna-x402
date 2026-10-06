@@ -28,7 +28,7 @@ import { AnchoringQueue } from "./market/anchoringQueue.js";
 import { ReceiptAnchorClient } from "./onchain/receiptAnchorClient.js";
 import { traceIdMiddleware } from "./middleware/traceId.js";
 import { requireHttpsMiddleware } from "./middleware/requireHttps.js";
-import { createReplayKey, ReplayStore } from "./verifier/replayStore.js";
+import { createReplayKey, PostgresReplayBackend, ReplayStore } from "./verifier/replayStore.js";
 import { encodeCanonicalRequiredHeader, normalizeX402 } from "./x402/compat/parse.js";
 import { CanonicalPaymentRequired } from "./x402/compat/types.js";
 import { analyzeX402 } from "./x402/doctor.js";
@@ -1070,6 +1070,20 @@ function createWebhookReplayClaimStore(config: X402Config): WebhookReplayClaimSt
   };
 }
 
+// Replay keys go to Postgres whenever a database URL is configured, independent of
+// X402_REPOSITORY_MODE: a payment proof must stay spent across restarts and across
+// instances. Without a database URL the store is in-memory (refused in production).
+export function createReplayStore(config: X402Config): ReplayStore {
+  if (config.databaseUrl) {
+    const db = new PostgresDbClient({
+      connectionString: config.databaseUrl,
+      ssl: process.env.X402_DATABASE_SSL === "1" || process.env.DATABASE_SSL === "1",
+    });
+    return new ReplayStore({ backend: new PostgresReplayBackend(db) });
+  }
+  return new ReplayStore();
+}
+
 function createFeeLedgerStore(config: X402Config): FeeLedgerStore {
   const databaseUrl = config.databaseUrl;
   const usePostgres = (config.repositoryMode ?? "").toLowerCase() === "postgres" && Boolean(databaseUrl);
@@ -1215,7 +1229,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     settleIntervalMs: config.nettingIntervalMs,
     feeAccrualThresholdAtomic: config.feePolicy.accrueThresholdAtomic,
   });
-  const replayStore = deps.replayStore ?? new ReplayStore();
+  const replayStore = deps.replayStore ?? createReplayStore(config);
   const auditLog = deps.auditLog ?? new AuditLogger({
     filePath: config.auditLogPath,
   });
@@ -1956,7 +1970,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
 
     for (const replay of replayKeys) {
-      if (replayStore.has(replay.global, now().getTime()) || replayStore.has(replay.scoped, now().getTime())) {
+      if (await replayStore.isClaimed(replay.global, now().getTime()) || await replayStore.isClaimed(replay.scoped, now().getTime())) {
         recordGuardReplay(req, quote.resource, "x402_direct_split_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: "transfer", proofId: replay.proofId },
@@ -1991,7 +2005,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
 
     for (const replay of replayKeys) {
-      if (!replayStore.consume(replay.global, now().getTime()) || !replayStore.consume(replay.scoped, now().getTime())) {
+      if (!(await replayStore.claim(replay.global, now().getTime())) || !(await replayStore.claim(replay.scoped, now().getTime()))) {
         recordGuardReplay(req, quote.resource, "x402_direct_split_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: "transfer", proofId: replay.proofId },
@@ -2410,7 +2424,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         proofId: verification.txSignature,
         settlement: "transfer",
       });
-      if (!replayStore.consume(globalReplayKey, now().getTime())) {
+      if (!(await replayStore.claim(globalReplayKey, now().getTime()))) {
         recordGuardReplay(req, resource, "x402_global_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
           dialectDetected: normalized.style,
@@ -2430,7 +2444,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         recipient: quote.recipient,
         mint: quote.mint,
       });
-      if (!replayStore.consume(proofReplayKey, now().getTime())) {
+      if (!(await replayStore.claim(proofReplayKey, now().getTime()))) {
         recordGuardReplay(req, resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
           dialectDetected: normalized.style,
@@ -2447,7 +2461,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         recipient: quote.recipient,
         mint: quote.mint,
       });
-      if (canonicalKey !== proofReplayKey && !replayStore.consume(canonicalKey, now().getTime())) {
+      if (canonicalKey !== proofReplayKey && !(await replayStore.claim(canonicalKey, now().getTime()))) {
         recordGuardReplay(req, resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED), {
           dialectDetected: normalized.style,
@@ -4125,7 +4139,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         proofId: verification.txSignature,
         settlement: "transfer",
       });
-      if (!replayStore.consume(globalReplayKey, now().getTime())) {
+      if (!(await replayStore.claim(globalReplayKey, now().getTime()))) {
         recordGuardReplay(req, quote.resource, "x402_global_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: paymentProof.settlement },
@@ -4143,7 +4157,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         recipient: quote.recipient,
         mint: quote.mint,
       });
-      if (!replayStore.consume(replayKey, now().getTime())) {
+      if (!(await replayStore.claim(replayKey, now().getTime()))) {
         recordGuardReplay(req, quote.resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: paymentProof.settlement },
@@ -4161,7 +4175,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         proofId: verification.streamId,
         settlement: "stream",
       });
-      if (!replayStore.consume(globalReplayKey, now().getTime())) {
+      if (!(await replayStore.claim(globalReplayKey, now().getTime()))) {
         recordGuardReplay(req, quote.resource, "x402_global_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: paymentProof.settlement },
@@ -4179,7 +4193,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
         recipient: quote.recipient,
         mint: quote.mint,
       });
-      if (!replayStore.consume(replayKey, now().getTime())) {
+      if (!(await replayStore.claim(replayKey, now().getTime()))) {
         recordGuardReplay(req, quote.resource, "x402_replay_detected");
         sendX402Error(req, res, new X402Error(X402ErrorCode.X402_REPLAY_DETECTED, {
           details: { settlement: paymentProof.settlement },
