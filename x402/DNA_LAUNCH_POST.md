@@ -48,7 +48,7 @@ That last number matters. When your test suite costs less than a fraction of a c
 
 **Receipt anchoring** — Every payment gets a cryptographically signed receipt. Receipts are batched and anchored on Solana via our `receipt_anchor` program. Immutable proof that payment happened. Auditable forever.
 
-**30 bps fees** — 0.3%. On a $0.001 payment, that's $0.000003 in fees. We're not here to take a cut. We're here to be the rail.
+**0.05% protocol fee** — 5 bps. On a $0.001 payment, that's $0.0000005 in fees. We're not here to take a cut. We're here to be the rail.
 
 **Marketplace built in** — Sellers register shops with signed manifests. Buyers discover services, compare SLAs, check reputation. It's a programmable economy for agents, not a dashboard for humans.
 
