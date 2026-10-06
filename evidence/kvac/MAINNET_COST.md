@@ -1,6 +1,6 @@
 # KVAC — mainnet launch cost
 
-All figures derived from the live devnet deploy + `solana rent`. Rent rates are a
+All figures derived from the earlier devnet deploy measurements + `solana rent` (that deployment is withdrawn; a devnet redeploy under a fresh key is pending). Rent rates are a
 protocol constant — **identical on mainnet and devnet** — so these are exact, not
 estimates. USD shown at an assumed **SOL ≈ $180** (mark-to-market before acting).
 
@@ -60,5 +60,5 @@ The SOL cost is trivial. The real gate is **not** money:
 
 - **Go live on mainnet today (devnet-equivalent posture): ≈0.52 SOL (~$94) one-time
   + ≈$0.21 recoverable per call.**
-- The blocker is an **audit**, not budget. The crypto is built, devnet-proven, and
+- The blocker is an **audit**, not budget. The crypto is built and tested, and
   the on-chain cost is near-zero by design.

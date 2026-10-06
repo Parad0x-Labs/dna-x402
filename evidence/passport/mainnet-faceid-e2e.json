@@ -27,7 +27,6 @@
     "rejectWrongKey": { "pass": true, "rejectedError": "0x4009 PasskeyPubkeyMismatch" }
   },
   "alsoProvenOn": {
-    "devnet": "2efdJX36viRxMeaSZv9jMM85Vys2xDSyUjK9PvCFXeq2",
     "device": "Solana Seeker (Chrome) — real fingerprint -> register -> Loop sign-in, chain logged 'Signal verified'"
   },
   "honestClaims": {

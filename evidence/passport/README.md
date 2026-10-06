@@ -6,21 +6,25 @@ Reproduce (devnet): `npm run passport:devnet:faceid -- <PROGRAM_ID>`
 
 The `dark_secp256r1_vault` program, built `--features mainnet`, performs **real
 on-chain P-256 verification** via the Agave secp256r1 precompile (SIMD-0075).
-Proven end-to-end on devnet:
+The devnet harness (`scripts/passport/01-devnet-faceid-e2e.mjs`) checks:
 
-| Step | Result |
+| Step | Expected result |
 |------|--------|
 | Register — bind a P-256 key (precompile-verified pubkey) | PASS (real tx) |
 | Sign-in — bound key signs the live challenge, challenge rotates | PASS (real tx) |
 | Negative — wrong message signed | REJECTED `0x400b ChallengeNotSigned` |
 | Negative — different P-256 key signs | REJECTED `0x4009 PasskeyPubkeyMismatch` |
 
+A devnet redeploy of `dark_secp256r1_vault` under a fresh key is pending, so the
+harness takes the program ID as a required argument.
+
 The two negative tests are the point: a valid signature over the *wrong* message,
 and a valid signature from the *wrong* key, are both rejected on-chain. The
 verification is real, not a presence check.
 
-`evidence/passport/devnet-faceid-e2e.json` carries the live devnet tx signatures
-and Explorer links.
+`evidence/passport/mainnet-faceid-e2e.json` records the mainnet pilot run (program
+since retired): register and sign-in confirmed, wrong key rejected with
+`0x4009 PasskeyPubkeyMismatch`, with tx signatures and Explorer links.
 
 ## Implementation notes (for reproducers)
 
@@ -38,13 +42,14 @@ and Explorer links.
 `scripts/passport/faceid-browser-test.html` is a self-contained page that runs the
 full flow in a real browser: connect Phantom (devnet), create a Face ID passkey
 (WebAuthn biometric gate + WebCrypto P-256), register on-chain, and sign in. Serve
-it locally (`npm run passport:serve`) and open the printed URL with Phantom set to
-devnet. This is the browser-level validation before the production widget wiring
+it locally (`npm run passport:serve`) and open the printed URL with
+`?program=<PROGRAM_ID>` appended and Phantom set to devnet. This is the browser-level validation before the production widget wiring
 and the mainnet flip.
 
 ## Honest scope
 
-- **Real, replayable, on-chain** P-256 verification on devnet.
+- **Real, replayable, on-chain** P-256 verification: the harness reruns against any
+  deployment named on the command line.
 - **v1**: the precompile message is the 32-byte challenge — a P-256 key (biometric-
   gated client-side) signs it directly. Full WebAuthn `authenticatorData` /
   `clientDataJSON` parsing on-chain is the audit-scope enhancement, not done yet.
