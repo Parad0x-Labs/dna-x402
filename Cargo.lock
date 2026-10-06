@@ -5552,6 +5552,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "null-lottery-pools"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "null-miner-tasks"
 version = "0.1.0"
 dependencies = [

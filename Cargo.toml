@@ -217,6 +217,8 @@ members = [
     "programs/dark_secp256r1_vault",
     "programs/dark_secp256k1_auth",
     "programs/null_lottery",
+    # Permissionless creator-seeded rolling-jackpot lottery pools
+    "programs/null_lottery_pools",
     "programs/null_mint_gate",
     "programs/live_attestation",
     # SOULBOUND_AGENT_PASSPORT - NonTransferable Token-2022 credential + PermanentDelegate revocation
