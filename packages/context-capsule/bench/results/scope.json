@@ -1,0 +1,1583 @@
+{
+  "schema": "context-capsule.scope-bench.v1",
+  "fixture": "agent-session-100",
+  "messages": 109,
+  "questions": 40,
+  "tokenizer": "chars/4 estimate (Math.ceil(length / 4)); no model tokenizer",
+  "model_calls": 0,
+  "metric_note": "keyword_pass = every required keyword present in the text the model would receive. Availability check only, not model task success.",
+  "archive": {
+    "jsonl_bytes": 31818,
+    "zlib_level9_bytes": 10382,
+    "zlib_ratio": 3.1,
+    "capsule_compressedBase64_bytes": 13844,
+    "capsule_object_json_bytes": 14225,
+    "lossless": true
+  },
+  "initial_prompt": {
+    "full_history_jsonl_tokens": 7919,
+    "full_history_formatted_tokens": 7281,
+    "full_history_content_only_tokens": 6941,
+    "injectCapsule_tokens": 53,
+    "injectEnrichedCapsule_tokens": 71,
+    "injectCapsule_text": "[CONTEXT CAPSULE: session bench-agent-session-100 compressed 3.1x. Key topics: The Merkle, On Solana, Solana Compressed, Solana Foundation, Use Redis. Merkle: c44c3735a89e... Full history available on request.]"
+  },
+  "answerable_questions": 35,
+  "unanswerable_question_ids": [
+    32,
+    35,
+    36,
+    39,
+    40
+  ],
+  "header_included_scoring": {
+    "recovery_passes": 36,
+    "passes_only_via_query_echo": [
+      39,
+      40
+    ],
+    "note": "Scoring the whole searchCapsule() string (bench-public.ts before 2026-10-06): its first line repeats the query, so a keyword found only in the question text counts as recovered."
+  },
+  "arms": {
+    "full_history": {
+      "keyword_pass": 35,
+      "keyword_pass_percent": 87.5,
+      "keyword_pass_answerable": 35,
+      "tokens_mean_per_question": 7281,
+      "tokens_total_40q": 291240
+    },
+    "window_last_10": {
+      "keyword_pass": 9,
+      "keyword_pass_percent": 22.5,
+      "keyword_pass_answerable": 9,
+      "tokens_mean_per_question": 581,
+      "tokens_total_40q": 23240
+    },
+    "window_last_20": {
+      "keyword_pass": 11,
+      "keyword_pass_percent": 27.5,
+      "keyword_pass_answerable": 11,
+      "tokens_mean_per_question": 1319,
+      "tokens_total_40q": 52760
+    },
+    "capsule_only": {
+      "keyword_pass": 2,
+      "keyword_pass_percent": 5,
+      "keyword_pass_answerable": 2,
+      "tokens_mean_per_question": 53,
+      "tokens_total_40q": 2120
+    },
+    "capsule_search_q": {
+      "keyword_pass": 34,
+      "keyword_pass_percent": 85,
+      "keyword_pass_answerable": 34,
+      "tokens_mean_per_question": 6822,
+      "tokens_total_40q": 272894,
+      "messages_returned_mean": 92.9,
+      "messages_returned_min": 28,
+      "messages_returned_max": 107
+    },
+    "capsule_search_kw": {
+      "keyword_pass": 33,
+      "keyword_pass_percent": 82.5,
+      "keyword_pass_answerable": 33,
+      "tokens_mean_per_question": 2612,
+      "tokens_total_40q": 104470,
+      "messages_returned_mean": 22.4,
+      "messages_returned_min": 1,
+      "messages_returned_max": 59
+    },
+    "retrieval_top8": {
+      "keyword_pass": 32,
+      "keyword_pass_percent": 80,
+      "keyword_pass_answerable": 32,
+      "tokens_mean_per_question": 1063,
+      "tokens_total_40q": 42526
+    }
+  },
+  "per_question": [
+    {
+      "id": 1,
+      "category": "files",
+      "query_kw": "typescript source files changed",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 4333,
+        "pass": true,
+        "returned": 35
+      },
+      "capsule_search_kw": {
+        "tokens": 2838,
+        "pass": true,
+        "returned": 18
+      },
+      "retrieval_top8": {
+        "tokens": 1416,
+        "pass": true
+      }
+    },
+    {
+      "id": 2,
+      "category": "files",
+      "query_kw": "function anchor.ts submits solana transaction",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7208,
+        "pass": true,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 4036,
+        "pass": true,
+        "returned": 34
+      },
+      "retrieval_top8": {
+        "tokens": 1134,
+        "pass": true
+      }
+    },
+    {
+      "id": 3,
+      "category": "files",
+      "query_kw": "package name module",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7111,
+        "pass": true,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 543,
+        "pass": true,
+        "returned": 7
+      },
+      "retrieval_top8": {
+        "tokens": 473,
+        "pass": true
+      }
+    },
+    {
+      "id": 4,
+      "category": "files",
+      "query_kw": "canonical field ordering compressreceipt",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7286,
+        "pass": true,
+        "returned": 104
+      },
+      "capsule_search_kw": {
+        "tokens": 2154,
+        "pass": true,
+        "returned": 17
+      },
+      "retrieval_top8": {
+        "tokens": 1180,
+        "pass": true
+      }
+    },
+    {
+      "id": 5,
+      "category": "files",
+      "query_kw": "interface defined compress.ts represent payment receipt",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7338,
+        "pass": true,
+        "returned": 106
+      },
+      "capsule_search_kw": {
+        "tokens": 5638,
+        "pass": true,
+        "returned": 54
+      },
+      "retrieval_top8": {
+        "tokens": 865,
+        "pass": true
+      }
+    },
+    {
+      "id": 6,
+      "category": "bugs",
+      "query_kw": "bigint found compress.ts crashed",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7230,
+        "pass": true,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 1990,
+        "pass": true,
+        "returned": 17
+      },
+      "retrieval_top8": {
+        "tokens": 1035,
+        "pass": true
+      }
+    },
+    {
+      "id": 7,
+      "category": "bugs",
+      "query_kw": "bigint null crash compress.ts fixed",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7158,
+        "pass": true,
+        "returned": 98
+      },
+      "capsule_search_kw": {
+        "tokens": 2389,
+        "pass": true,
+        "returned": 18
+      },
+      "retrieval_top8": {
+        "tokens": 1147,
+        "pass": true
+      }
+    },
+    {
+      "id": 8,
+      "category": "bugs",
+      "query_kw": "wrong hash combination order merkle.ts",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7175,
+        "pass": true,
+        "returned": 99
+      },
+      "capsule_search_kw": {
+        "tokens": 3164,
+        "pass": true,
+        "returned": 26
+      },
+      "retrieval_top8": {
+        "tokens": 1302,
+        "pass": true
+      }
+    },
+    {
+      "id": 9,
+      "category": "bugs",
+      "query_kw": "merkle.ts hash order fixed",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 6550,
+        "pass": true,
+        "returned": 89
+      },
+      "capsule_search_kw": {
+        "tokens": 2946,
+        "pass": true,
+        "returned": 25
+      },
+      "retrieval_top8": {
+        "tokens": 1207,
+        "pass": true
+      }
+    },
+    {
+      "id": 10,
+      "category": "bugs",
+      "query_kw": "merkle tests failed because wrong hash combination order",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7042,
+        "pass": true,
+        "returned": 94
+      },
+      "capsule_search_kw": {
+        "tokens": 4858,
+        "pass": true,
+        "returned": 44
+      },
+      "retrieval_top8": {
+        "tokens": 1115,
+        "pass": false
+      }
+    },
+    {
+      "id": 11,
+      "category": "bugs",
+      "query_kw": "error thrown trying build merkle root empty array",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7349,
+        "pass": true,
+        "returned": 107
+      },
+      "capsule_search_kw": {
+        "tokens": 5448,
+        "pass": true,
+        "returned": 51
+      },
+      "retrieval_top8": {
+        "tokens": 1427,
+        "pass": true
+      }
+    },
+    {
+      "id": 12,
+      "category": "decisions",
+      "query_kw": "poseidon rejected favour sha-256 merkle tree",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7260,
+        "pass": true,
+        "returned": 102
+      },
+      "capsule_search_kw": {
+        "tokens": 4251,
+        "pass": true,
+        "returned": 37
+      },
+      "retrieval_top8": {
+        "tokens": 1111,
+        "pass": true
+      }
+    },
+    {
+      "id": 13,
+      "category": "decisions",
+      "query_kw": "storing full receipt data on-chain rejected",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 6100,
+        "pass": true,
+        "returned": 63
+      },
+      "capsule_search_kw": {
+        "tokens": 5894,
+        "pass": true,
+        "returned": 59
+      },
+      "retrieval_top8": {
+        "tokens": 1277,
+        "pass": true
+      }
+    },
+    {
+      "id": 14,
+      "category": "decisions",
+      "query_kw": "on-chain instruction format receipt_anchor",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7115,
+        "pass": true,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 3814,
+        "pass": true,
+        "returned": 34
+      },
+      "retrieval_top8": {
+        "tokens": 1400,
+        "pass": true
+      }
+    },
+    {
+      "id": 15,
+      "category": "decisions",
+      "query_kw": "sha-256 chosen over keccak-256 project",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 5108,
+        "pass": true,
+        "returned": 50
+      },
+      "capsule_search_kw": {
+        "tokens": 1660,
+        "pass": true,
+        "returned": 14
+      },
+      "retrieval_top8": {
+        "tokens": 906,
+        "pass": true
+      }
+    },
+    {
+      "id": 16,
+      "category": "decisions",
+      "query_kw": "program come environment variables rather hard-coded source",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7243,
+        "pass": true,
+        "returned": 101
+      },
+      "capsule_search_kw": {
+        "tokens": 2807,
+        "pass": true,
+        "returned": 23
+      },
+      "retrieval_top8": {
+        "tokens": 1417,
+        "pass": true
+      }
+    },
+    {
+      "id": 17,
+      "category": "tests",
+      "query_kw": "many tests passed both bugs fixed",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 2614,
+        "pass": true,
+        "returned": 28
+      },
+      "capsule_search_kw": {
+        "tokens": 2112,
+        "pass": true,
+        "returned": 20
+      },
+      "retrieval_top8": {
+        "tokens": 709,
+        "pass": true
+      }
+    },
+    {
+      "id": 18,
+      "category": "tests",
+      "query_kw": "name top-level test suite test output",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7299,
+        "pass": true,
+        "returned": 105
+      },
+      "capsule_search_kw": {
+        "tokens": 2311,
+        "pass": true,
+        "returned": 29
+      },
+      "retrieval_top8": {
+        "tokens": 628,
+        "pass": true
+      }
+    },
+    {
+      "id": 19,
+      "category": "tests",
+      "query_kw": "exact command tests once without watch mode",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7332,
+        "pass": true,
+        "returned": 106
+      },
+      "capsule_search_kw": {
+        "tokens": 3343,
+        "pass": true,
+        "returned": 29
+      },
+      "retrieval_top8": {
+        "tokens": 1351,
+        "pass": true
+      }
+    },
+    {
+      "id": 20,
+      "category": "tests",
+      "query_kw": "many tests receipt-anchor merkle sub-suite",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": true
+      },
+      "capsule_search_q": {
+        "tokens": 7213,
+        "pass": true,
+        "returned": 99
+      },
+      "capsule_search_kw": {
+        "tokens": 4232,
+        "pass": true,
+        "returned": 39
+      },
+      "retrieval_top8": {
+        "tokens": 831,
+        "pass": true
+      }
+    },
+    {
+      "id": 21,
+      "category": "todos",
+      "query_kw": "highest-priority remaining todos project",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 6875,
+        "pass": true,
+        "returned": 96
+      },
+      "capsule_search_kw": {
+        "tokens": 910,
+        "pass": true,
+        "returned": 8
+      },
+      "retrieval_top8": {
+        "tokens": 835,
+        "pass": true
+      }
+    },
+    {
+      "id": 22,
+      "category": "todos",
+      "query_kw": "needs wired anchorreceipts function production authentication",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7237,
+        "pass": true,
+        "returned": 101
+      },
+      "capsule_search_kw": {
+        "tokens": 3001,
+        "pass": true,
+        "returned": 18
+      },
+      "retrieval_top8": {
+        "tokens": 1441,
+        "pass": true
+      }
+    },
+    {
+      "id": 23,
+      "category": "todos",
+      "query_kw": "must completed liquefy integration implemented",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 5443,
+        "pass": true,
+        "returned": 62
+      },
+      "capsule_search_kw": {
+        "tokens": 2157,
+        "pass": true,
+        "returned": 14
+      },
+      "retrieval_top8": {
+        "tokens": 1278,
+        "pass": true
+      }
+    },
+    {
+      "id": 24,
+      "category": "todos",
+      "query_kw": "external grant application remains submitted",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": true
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": true
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 6127,
+        "pass": true,
+        "returned": 78
+      },
+      "capsule_search_kw": {
+        "tokens": 816,
+        "pass": true,
+        "returned": 6
+      },
+      "retrieval_top8": {
+        "tokens": 740,
+        "pass": true
+      }
+    },
+    {
+      "id": 25,
+      "category": "security",
+      "query_kw": "types files must never committed repository",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7205,
+        "pass": true,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 2981,
+        "pass": true,
+        "returned": 20
+      },
+      "retrieval_top8": {
+        "tokens": 1342,
+        "pass": true
+      }
+    },
+    {
+      "id": 26,
+      "category": "security",
+      "query_kw": "must private keys stored according project security constraints",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7215,
+        "pass": true,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 1649,
+        "pass": true,
+        "returned": 12
+      },
+      "retrieval_top8": {
+        "tokens": 1256,
+        "pass": true
+      }
+    },
+    {
+      "id": 27,
+      "category": "security",
+      "query_kw": "exact byte layout requirement receipt_anchor instruction",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7152,
+        "pass": true,
+        "returned": 101
+      },
+      "capsule_search_kw": {
+        "tokens": 3453,
+        "pass": true,
+        "returned": 34
+      },
+      "retrieval_top8": {
+        "tokens": 1606,
+        "pass": true
+      }
+    },
+    {
+      "id": 28,
+      "category": "security",
+      "query_kw": "security exists anchorreceipts must resolved production",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 6710,
+        "pass": true,
+        "returned": 85
+      },
+      "capsule_search_kw": {
+        "tokens": 2388,
+        "pass": true,
+        "returned": 16
+      },
+      "retrieval_top8": {
+        "tokens": 1309,
+        "pass": true
+      }
+    },
+    {
+      "id": 29,
+      "category": "commands",
+      "query_kw": "cargo command build solana on-chain program",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7222,
+        "pass": true,
+        "returned": 99
+      },
+      "capsule_search_kw": {
+        "tokens": 4326,
+        "pass": true,
+        "returned": 41
+      },
+      "retrieval_top8": {
+        "tokens": 866,
+        "pass": true
+      }
+    },
+    {
+      "id": 30,
+      "category": "commands",
+      "query_kw": "solana command deploy compiled program devnet",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7225,
+        "pass": true,
+        "returned": 99
+      },
+      "capsule_search_kw": {
+        "tokens": 3445,
+        "pass": true,
+        "returned": 33
+      },
+      "retrieval_top8": {
+        "tokens": 1239,
+        "pass": true
+      }
+    },
+    {
+      "id": 31,
+      "category": "corrections",
+      "query_kw": "final decision storage system",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7225,
+        "pass": true,
+        "returned": 103
+      },
+      "capsule_search_kw": {
+        "tokens": 1724,
+        "pass": true,
+        "returned": 14
+      },
+      "retrieval_top8": {
+        "tokens": 807,
+        "pass": true
+      }
+    },
+    {
+      "id": 32,
+      "category": "corrections",
+      "query_kw": "storage decision corrected",
+      "answerable": false,
+      "header_included_pass": false,
+      "full_history": {
+        "tokens": 7281,
+        "pass": false
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7196,
+        "pass": false,
+        "returned": 100
+      },
+      "capsule_search_kw": {
+        "tokens": 1116,
+        "pass": false,
+        "returned": 9
+      },
+      "retrieval_top8": {
+        "tokens": 982,
+        "pass": false
+      }
+    },
+    {
+      "id": 33,
+      "category": "corrections",
+      "query_kw": "original storage choice correction",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": true
+      },
+      "capsule_search_q": {
+        "tokens": 6399,
+        "pass": true,
+        "returned": 88
+      },
+      "capsule_search_kw": {
+        "tokens": 1040,
+        "pass": true,
+        "returned": 8
+      },
+      "retrieval_top8": {
+        "tokens": 966,
+        "pass": true
+      }
+    },
+    {
+      "id": 34,
+      "category": "corrections",
+      "query_kw": "security constraint explicitly stated rule violate",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7338,
+        "pass": true,
+        "returned": 106
+      },
+      "capsule_search_kw": {
+        "tokens": 879,
+        "pass": true,
+        "returned": 6
+      },
+      "retrieval_top8": {
+        "tokens": 801,
+        "pass": true
+      }
+    },
+    {
+      "id": 35,
+      "category": "corrections",
+      "query_kw": "earlier messages said approach later messages said different approach approach",
+      "answerable": false,
+      "header_included_pass": false,
+      "full_history": {
+        "tokens": 7281,
+        "pass": false
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7358,
+        "pass": false,
+        "returned": 107
+      },
+      "capsule_search_kw": {
+        "tokens": 927,
+        "pass": false,
+        "returned": 8
+      },
+      "retrieval_top8": {
+        "tokens": 842,
+        "pass": false
+      }
+    },
+    {
+      "id": 36,
+      "category": "corrections",
+      "query_kw": "instructions conflict across different points conversation instruction takes precedence",
+      "answerable": false,
+      "header_included_pass": false,
+      "full_history": {
+        "tokens": 7281,
+        "pass": false
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7163,
+        "pass": false,
+        "returned": 97
+      },
+      "capsule_search_kw": {
+        "tokens": 3368,
+        "pass": false,
+        "returned": 26
+      },
+      "retrieval_top8": {
+        "tokens": 1235,
+        "pass": false
+      }
+    },
+    {
+      "id": 37,
+      "category": "corrections",
+      "query_kw": "reason given abandoning original storage approach favour corrected",
+      "answerable": true,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7270,
+        "pass": true,
+        "returned": 102
+      },
+      "capsule_search_kw": {
+        "tokens": 1046,
+        "pass": false,
+        "returned": 8
+      },
+      "retrieval_top8": {
+        "tokens": 964,
+        "pass": false
+      }
+    },
+    {
+      "id": 38,
+      "category": "corrections",
+      "query_kw": "storage technology explicitly rejected stated reason rejecting",
+      "answerable": true,
+      "header_included_pass": false,
+      "full_history": {
+        "tokens": 7281,
+        "pass": true
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 6778,
+        "pass": false,
+        "returned": 93
+      },
+      "capsule_search_kw": {
+        "tokens": 1304,
+        "pass": false,
+        "returned": 9
+      },
+      "retrieval_top8": {
+        "tokens": 1081,
+        "pass": false
+      }
+    },
+    {
+      "id": 39,
+      "category": "corrections",
+      "query_kw": "final settled decision storage intermediate proposal concluded choice",
+      "answerable": false,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": false
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7348,
+        "pass": false,
+        "returned": 107
+      },
+      "capsule_search_kw": {
+        "tokens": 1415,
+        "pass": false,
+        "returned": 11
+      },
+      "retrieval_top8": {
+        "tokens": 982,
+        "pass": false
+      }
+    },
+    {
+      "id": 40,
+      "category": "corrections",
+      "query_kw": "phrase scratch retraction retract",
+      "answerable": false,
+      "header_included_pass": true,
+      "full_history": {
+        "tokens": 7281,
+        "pass": false
+      },
+      "window_last_10": {
+        "tokens": 581,
+        "pass": false
+      },
+      "window_last_20": {
+        "tokens": 1319,
+        "pass": false
+      },
+      "capsule_only": {
+        "tokens": 53,
+        "pass": false
+      },
+      "capsule_search_q": {
+        "tokens": 7344,
+        "pass": false,
+        "returned": 106
+      },
+      "capsule_search_kw": {
+        "tokens": 97,
+        "pass": false,
+        "returned": 1
+      },
+      "retrieval_top8": {
+        "tokens": 23,
+        "pass": false
+      }
+    }
+  ],
+  "runtime_ms": 66,
+  "node": "v22.23.3",
+  "timestamp": "2026-10-06T08:38:26.685Z"
+}

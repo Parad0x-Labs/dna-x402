@@ -1,7 +1,7 @@
 {
   "name": "@parad0x_labs/context-capsule",
   "version": "1.1.0",
-  "description": "LLM token compression layer for nulla-local and OpenClaw agents. Compress session history before injection — stop paying for full history on every call.",
+  "description": "Lossless agent session-history archive (zlib + SHA-256 Merkle root), a short prompt pointer, and on-demand keyword retrieval, for nulla-local and OpenClaw agents.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "type": "module",
@@ -18,6 +18,8 @@
   "scripts": {
     "test": "node --test tests/context-capsule.test.mjs",
     "bench:public": "node --experimental-strip-types scripts/bench-public.ts",
+    "bench:scope": "node --experimental-strip-types scripts/bench-scope.ts",
+    "bench:e2e:dry": "node --experimental-strip-types scripts/e2e-harness.ts --dry-run",
     "test:quality": "node --test tests/context-capsule-quality.test.mjs"
   },
   "keywords": [

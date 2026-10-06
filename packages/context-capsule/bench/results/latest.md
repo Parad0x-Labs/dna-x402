@@ -1,19 +1,20 @@
 # Context Capsule Public Benchmark Report
 
 **Fixture:** `agent-session-100`  
-**Timestamp:** 2026-06-05T03:58:44.369Z
+**Timestamp:** 2026-10-06T08:38:26.552Z
 
 ## Metrics
 
 | Metric | Value | Gate | Status |
 |--------|-------|------|--------|
-| Token savings | 99.3% | >= 95% | **PASS** |
-| Recovery score | 90.0% | >= 90% | **PASS** |
-| Runtime | 86ms | < 1000ms | **PASS** |
+| Initial-prompt savings (pointer only, retrieval excluded) | 99.3% | >= 95% | **PASS** |
+| Keyword recovery via searchCapsule(question) | 85.0% | >= 85% | **PASS** |
+| Runtime | 35ms | < 1000ms | **PASS** |
 | Original tokens | 7919 | — | — |
 | Capsule tokens | 53 | — | — |
 | Saved tokens | 7866 | — | — |
-| Questions passed | 36/40 | — | — |
+| Questions passed | 34/40 | — | — |
+| Retrieved tokens per question (mean) | 6769 | — | — |
 
 **Overall: ALL GATES PASSED**
 
@@ -59,8 +60,8 @@
 | 36 | When instructions conflict across different points in the conversation, which instruction takes precedence? | **FAIL** | later, last | override, supersede |
 | 37 | What reason was given for abandoning the original storage approach in favour of the corrected one? | **PASS** | complexity, infrastructure, postgres | — |
 | 38 | Which storage technology was explicitly rejected and what was the stated reason for rejecting it? | **FAIL** | redis, abandoned | complexity |
-| 39 | What is the final, settled decision on session storage — not an intermediate proposal, but the concluded choice? | **PASS** | postgres, final, session | — |
-| 40 | Was the phrase 'scratch that' or an equivalent retraction used at any point, and what did it retract? | **PASS** | scratch, redis, retract | — |
+| 39 | What is the final, settled decision on session storage — not an intermediate proposal, but the concluded choice? | **FAIL** | postgres, session | final |
+| 40 | Was the phrase 'scratch that' or an equivalent retraction used at any point, and what did it retract? | **FAIL** | scratch, redis | retract |
 
 ## Reproduce
 
@@ -70,4 +71,4 @@ npm run bench:public
 npm run bench:public -- --fixture=agent-session-100
 ```
 
-> **Warning:** This benchmark tests the included fixture only. Results vary by content type.
+> This benchmark tests the included fixture only. Savings cover the initial pointer string; retrieval tokens are reported separately and are not in the savings figure. No model is called. See scripts/bench-scope.ts for per-stage numbers and baselines.

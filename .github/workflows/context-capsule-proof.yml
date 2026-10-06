@@ -23,8 +23,16 @@ jobs:
         run: node --test packages/context-capsule/tests/context-capsule.test.mjs
       - name: Quality tests
         run: node --test packages/context-capsule/tests/context-capsule-quality.test.mjs
+      - name: Keep committed results for drift check
+        run: cp -r packages/context-capsule/bench/results "$RUNNER_TEMP/committed-results"
       - name: Public benchmark
         run: node --experimental-strip-types packages/context-capsule/scripts/bench-public.ts
+      - name: Scope benchmark (per-stage numbers and baselines)
+        run: node --experimental-strip-types packages/context-capsule/scripts/bench-scope.ts
+      - name: End-to-end harness dry run (prompt sizes only, no model)
+        run: node --experimental-strip-types packages/context-capsule/scripts/e2e-harness.ts --dry-run
+      - name: Committed results match a fresh run
+        run: node packages/context-capsule/scripts/check-results-drift.mjs "$RUNNER_TEMP/committed-results" packages/context-capsule/bench/results
       - name: Upload benchmark results
         uses: actions/upload-artifact@v7
         with:

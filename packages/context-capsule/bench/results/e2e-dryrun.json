@@ -1,0 +1,868 @@
+{
+  "schema": "context-capsule.e2e-harness.v1",
+  "dry_run": true,
+  "model_calls": 0,
+  "task_success_measured": false,
+  "note": "Dry run: prompt sizes only. No model was called and no task success is reported. The capsule arm assumes one simulated search_capsule call; the summary arm needs a model.",
+  "tasks_file": "recovery-questions.json",
+  "tasks_held_out": false,
+  "tokenizer": "chars/4 estimate",
+  "tool_schema_tokens": 55,
+  "mean_input_tokens": {
+    "full": 7330,
+    "window": 630,
+    "retrieval": 1131,
+    "capsule_first_request": 152,
+    "capsule_after_one_search": 2820,
+    "capsule_both_requests": 2972,
+    "summary": "requires model"
+  },
+  "params": {
+    "window": 10,
+    "k": 8
+  },
+  "per_task": [
+    {
+      "id": 1,
+      "type": "files",
+      "full": {
+        "first_request_input_tokens": 7328
+      },
+      "window": {
+        "first_request_input_tokens": 628
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1461
+      },
+      "capsule": {
+        "first_request_input_tokens": 150,
+        "simulated_retrieval_response_tokens": 3416,
+        "second_request_input_tokens": 3586
+      }
+    },
+    {
+      "id": 2,
+      "type": "files",
+      "full": {
+        "first_request_input_tokens": 7327
+      },
+      "window": {
+        "first_request_input_tokens": 627
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1180
+      },
+      "capsule": {
+        "first_request_input_tokens": 149,
+        "simulated_retrieval_response_tokens": 3983,
+        "second_request_input_tokens": 4152
+      }
+    },
+    {
+      "id": 3,
+      "type": "files",
+      "full": {
+        "first_request_input_tokens": 7324
+      },
+      "window": {
+        "first_request_input_tokens": 624
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 516
+      },
+      "capsule": {
+        "first_request_input_tokens": 146,
+        "simulated_retrieval_response_tokens": 490,
+        "second_request_input_tokens": 656
+      }
+    },
+    {
+      "id": 4,
+      "type": "files",
+      "full": {
+        "first_request_input_tokens": 7328
+      },
+      "window": {
+        "first_request_input_tokens": 628
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1227
+      },
+      "capsule": {
+        "first_request_input_tokens": 150,
+        "simulated_retrieval_response_tokens": 2101,
+        "second_request_input_tokens": 2271
+      }
+    },
+    {
+      "id": 5,
+      "type": "files",
+      "full": {
+        "first_request_input_tokens": 7330
+      },
+      "window": {
+        "first_request_input_tokens": 630
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 914
+      },
+      "capsule": {
+        "first_request_input_tokens": 152,
+        "simulated_retrieval_response_tokens": 5585,
+        "second_request_input_tokens": 5757
+      }
+    },
+    {
+      "id": 6,
+      "type": "bugs",
+      "full": {
+        "first_request_input_tokens": 7330
+      },
+      "window": {
+        "first_request_input_tokens": 630
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1202
+      },
+      "capsule": {
+        "first_request_input_tokens": 152,
+        "simulated_retrieval_response_tokens": 3103,
+        "second_request_input_tokens": 3275
+      }
+    },
+    {
+      "id": 7,
+      "type": "bugs",
+      "full": {
+        "first_request_input_tokens": 7325
+      },
+      "window": {
+        "first_request_input_tokens": 625
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1191
+      },
+      "capsule": {
+        "first_request_input_tokens": 147,
+        "simulated_retrieval_response_tokens": 2336,
+        "second_request_input_tokens": 2503
+      }
+    },
+    {
+      "id": 8,
+      "type": "bugs",
+      "full": {
+        "first_request_input_tokens": 7327
+      },
+      "window": {
+        "first_request_input_tokens": 627
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1348
+      },
+      "capsule": {
+        "first_request_input_tokens": 149,
+        "simulated_retrieval_response_tokens": 3111,
+        "second_request_input_tokens": 3280
+      }
+    },
+    {
+      "id": 9,
+      "type": "bugs",
+      "full": {
+        "first_request_input_tokens": 7323
+      },
+      "window": {
+        "first_request_input_tokens": 623
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1249
+      },
+      "capsule": {
+        "first_request_input_tokens": 145,
+        "simulated_retrieval_response_tokens": 2893,
+        "second_request_input_tokens": 3058
+      }
+    },
+    {
+      "id": 10,
+      "type": "bugs",
+      "full": {
+        "first_request_input_tokens": 7332
+      },
+      "window": {
+        "first_request_input_tokens": 632
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1166
+      },
+      "capsule": {
+        "first_request_input_tokens": 154,
+        "simulated_retrieval_response_tokens": 4807,
+        "second_request_input_tokens": 4981
+      }
+    },
+    {
+      "id": 11,
+      "type": "bugs",
+      "full": {
+        "first_request_input_tokens": 7331
+      },
+      "window": {
+        "first_request_input_tokens": 631
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1477
+      },
+      "capsule": {
+        "first_request_input_tokens": 153,
+        "simulated_retrieval_response_tokens": 5395,
+        "second_request_input_tokens": 5568
+      }
+    },
+    {
+      "id": 12,
+      "type": "decisions",
+      "full": {
+        "first_request_input_tokens": 7329
+      },
+      "window": {
+        "first_request_input_tokens": 629
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1159
+      },
+      "capsule": {
+        "first_request_input_tokens": 151,
+        "simulated_retrieval_response_tokens": 4198,
+        "second_request_input_tokens": 4369
+      }
+    },
+    {
+      "id": 13,
+      "type": "decisions",
+      "full": {
+        "first_request_input_tokens": 7325
+      },
+      "window": {
+        "first_request_input_tokens": 625
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1321
+      },
+      "capsule": {
+        "first_request_input_tokens": 147,
+        "simulated_retrieval_response_tokens": 5841,
+        "second_request_input_tokens": 6008
+      }
+    },
+    {
+      "id": 14,
+      "type": "decisions",
+      "full": {
+        "first_request_input_tokens": 7327
+      },
+      "window": {
+        "first_request_input_tokens": 627
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1446
+      },
+      "capsule": {
+        "first_request_input_tokens": 149,
+        "simulated_retrieval_response_tokens": 3761,
+        "second_request_input_tokens": 3930
+      }
+    },
+    {
+      "id": 15,
+      "type": "decisions",
+      "full": {
+        "first_request_input_tokens": 7326
+      },
+      "window": {
+        "first_request_input_tokens": 626
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 951
+      },
+      "capsule": {
+        "first_request_input_tokens": 148,
+        "simulated_retrieval_response_tokens": 1607,
+        "second_request_input_tokens": 1775
+      }
+    },
+    {
+      "id": 16,
+      "type": "decisions",
+      "full": {
+        "first_request_input_tokens": 7336
+      },
+      "window": {
+        "first_request_input_tokens": 636
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1472
+      },
+      "capsule": {
+        "first_request_input_tokens": 158,
+        "simulated_retrieval_response_tokens": 2754,
+        "second_request_input_tokens": 2932
+      }
+    },
+    {
+      "id": 17,
+      "type": "tests",
+      "full": {
+        "first_request_input_tokens": 7325
+      },
+      "window": {
+        "first_request_input_tokens": 625
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 753
+      },
+      "capsule": {
+        "first_request_input_tokens": 147,
+        "simulated_retrieval_response_tokens": 2059,
+        "second_request_input_tokens": 2226
+      }
+    },
+    {
+      "id": 18,
+      "type": "tests",
+      "full": {
+        "first_request_input_tokens": 7330
+      },
+      "window": {
+        "first_request_input_tokens": 630
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 677
+      },
+      "capsule": {
+        "first_request_input_tokens": 152,
+        "simulated_retrieval_response_tokens": 2258,
+        "second_request_input_tokens": 2430
+      }
+    },
+    {
+      "id": 19,
+      "type": "tests",
+      "full": {
+        "first_request_input_tokens": 7329
+      },
+      "window": {
+        "first_request_input_tokens": 629
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1399
+      },
+      "capsule": {
+        "first_request_input_tokens": 151,
+        "simulated_retrieval_response_tokens": 3290,
+        "second_request_input_tokens": 3461
+      }
+    },
+    {
+      "id": 20,
+      "type": "tests",
+      "full": {
+        "first_request_input_tokens": 7327
+      },
+      "window": {
+        "first_request_input_tokens": 627
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 877
+      },
+      "capsule": {
+        "first_request_input_tokens": 149,
+        "simulated_retrieval_response_tokens": 4179,
+        "second_request_input_tokens": 4348
+      }
+    },
+    {
+      "id": 21,
+      "type": "todos",
+      "full": {
+        "first_request_input_tokens": 7328
+      },
+      "window": {
+        "first_request_input_tokens": 628
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 882
+      },
+      "capsule": {
+        "first_request_input_tokens": 150,
+        "simulated_retrieval_response_tokens": 857,
+        "second_request_input_tokens": 1027
+      }
+    },
+    {
+      "id": 22,
+      "type": "todos",
+      "full": {
+        "first_request_input_tokens": 7334
+      },
+      "window": {
+        "first_request_input_tokens": 634
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1494
+      },
+      "capsule": {
+        "first_request_input_tokens": 156,
+        "simulated_retrieval_response_tokens": 2948,
+        "second_request_input_tokens": 3124
+      }
+    },
+    {
+      "id": 23,
+      "type": "todos",
+      "full": {
+        "first_request_input_tokens": 7330
+      },
+      "window": {
+        "first_request_input_tokens": 630
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1327
+      },
+      "capsule": {
+        "first_request_input_tokens": 152,
+        "simulated_retrieval_response_tokens": 2104,
+        "second_request_input_tokens": 2276
+      }
+    },
+    {
+      "id": 24,
+      "type": "todos",
+      "full": {
+        "first_request_input_tokens": 7326
+      },
+      "window": {
+        "first_request_input_tokens": 626
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 785
+      },
+      "capsule": {
+        "first_request_input_tokens": 148,
+        "simulated_retrieval_response_tokens": 763,
+        "second_request_input_tokens": 931
+      }
+    },
+    {
+      "id": 25,
+      "type": "security",
+      "full": {
+        "first_request_input_tokens": 7328
+      },
+      "window": {
+        "first_request_input_tokens": 628
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1389
+      },
+      "capsule": {
+        "first_request_input_tokens": 150,
+        "simulated_retrieval_response_tokens": 2928,
+        "second_request_input_tokens": 3098
+      }
+    },
+    {
+      "id": 26,
+      "type": "security",
+      "full": {
+        "first_request_input_tokens": 7332
+      },
+      "window": {
+        "first_request_input_tokens": 632
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1307
+      },
+      "capsule": {
+        "first_request_input_tokens": 154,
+        "simulated_retrieval_response_tokens": 1596,
+        "second_request_input_tokens": 1770
+      }
+    },
+    {
+      "id": 27,
+      "type": "security",
+      "full": {
+        "first_request_input_tokens": 7332
+      },
+      "window": {
+        "first_request_input_tokens": 632
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1657
+      },
+      "capsule": {
+        "first_request_input_tokens": 154,
+        "simulated_retrieval_response_tokens": 3400,
+        "second_request_input_tokens": 3574
+      }
+    },
+    {
+      "id": 28,
+      "type": "security",
+      "full": {
+        "first_request_input_tokens": 7333
+      },
+      "window": {
+        "first_request_input_tokens": 633
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1361
+      },
+      "capsule": {
+        "first_request_input_tokens": 155,
+        "simulated_retrieval_response_tokens": 2335,
+        "second_request_input_tokens": 2510
+      }
+    },
+    {
+      "id": 29,
+      "type": "commands",
+      "full": {
+        "first_request_input_tokens": 7329
+      },
+      "window": {
+        "first_request_input_tokens": 629
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 914
+      },
+      "capsule": {
+        "first_request_input_tokens": 151,
+        "simulated_retrieval_response_tokens": 4273,
+        "second_request_input_tokens": 4444
+      }
+    },
+    {
+      "id": 30,
+      "type": "commands",
+      "full": {
+        "first_request_input_tokens": 7332
+      },
+      "window": {
+        "first_request_input_tokens": 632
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1290
+      },
+      "capsule": {
+        "first_request_input_tokens": 154,
+        "simulated_retrieval_response_tokens": 3392,
+        "second_request_input_tokens": 3566
+      }
+    },
+    {
+      "id": 31,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7325
+      },
+      "window": {
+        "first_request_input_tokens": 625
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 851
+      },
+      "capsule": {
+        "first_request_input_tokens": 147,
+        "simulated_retrieval_response_tokens": 1671,
+        "second_request_input_tokens": 1838
+      }
+    },
+    {
+      "id": 32,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7324
+      },
+      "window": {
+        "first_request_input_tokens": 624
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1168
+      },
+      "capsule": {
+        "first_request_input_tokens": 146,
+        "simulated_retrieval_response_tokens": 1668,
+        "second_request_input_tokens": 1834
+      }
+    },
+    {
+      "id": 33,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7327
+      },
+      "window": {
+        "first_request_input_tokens": 627
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1012
+      },
+      "capsule": {
+        "first_request_input_tokens": 149,
+        "simulated_retrieval_response_tokens": 987,
+        "second_request_input_tokens": 1156
+      }
+    },
+    {
+      "id": 34,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7330
+      },
+      "window": {
+        "first_request_input_tokens": 630
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 850
+      },
+      "capsule": {
+        "first_request_input_tokens": 152,
+        "simulated_retrieval_response_tokens": 826,
+        "second_request_input_tokens": 998
+      }
+    },
+    {
+      "id": 35,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7344
+      },
+      "window": {
+        "first_request_input_tokens": 644
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 905
+      },
+      "capsule": {
+        "first_request_input_tokens": 166,
+        "simulated_retrieval_response_tokens": 874,
+        "second_request_input_tokens": 1060
+      }
+    },
+    {
+      "id": 36,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7339
+      },
+      "window": {
+        "first_request_input_tokens": 639
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1293
+      },
+      "capsule": {
+        "first_request_input_tokens": 161,
+        "simulated_retrieval_response_tokens": 3315,
+        "second_request_input_tokens": 3496
+      }
+    },
+    {
+      "id": 37,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7337
+      },
+      "window": {
+        "first_request_input_tokens": 637
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1020
+      },
+      "capsule": {
+        "first_request_input_tokens": 159,
+        "simulated_retrieval_response_tokens": 993,
+        "second_request_input_tokens": 1172
+      }
+    },
+    {
+      "id": 38,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7337
+      },
+      "window": {
+        "first_request_input_tokens": 637
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 1137
+      },
+      "capsule": {
+        "first_request_input_tokens": 159,
+        "simulated_retrieval_response_tokens": 1251,
+        "second_request_input_tokens": 1430
+      }
+    },
+    {
+      "id": 39,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7340
+      },
+      "window": {
+        "first_request_input_tokens": 640
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 928
+      },
+      "capsule": {
+        "first_request_input_tokens": 162,
+        "simulated_retrieval_response_tokens": 1916,
+        "second_request_input_tokens": 2098
+      }
+    },
+    {
+      "id": 40,
+      "type": "corrections",
+      "full": {
+        "first_request_input_tokens": 7338
+      },
+      "window": {
+        "first_request_input_tokens": 638
+      },
+      "summary": {
+        "status": "requires model"
+      },
+      "retrieval": {
+        "first_request_input_tokens": 683
+      },
+      "capsule": {
+        "first_request_input_tokens": 160,
+        "simulated_retrieval_response_tokens": 651,
+        "second_request_input_tokens": 831
+      }
+    }
+  ],
+  "node": "v22.23.3",
+  "timestamp": "2026-10-06T08:38:26.778Z"
+}
