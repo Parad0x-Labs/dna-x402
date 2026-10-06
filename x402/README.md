@@ -19,11 +19,13 @@ Privacy-oriented Dark Null work is a separate product line. The live DNA x402 re
 ## Features
 
 ### Payments
-- **Three settlement modes**: Netting (off-chain batched, cheapest), Transfer (real on-chain USDC), Stream (Streamflow time-locked)
+- **Transfer verification (default)**: the seller checks an on-chain USDC SPL transfer by RPC before serving. The transfer must carry an SPL Memo equal to the quote's `memoHash`, which binds it to one quote (on by default; `REQUIRE_PAYMENT_MEMO=0` opts out)
+- **Stream verification**: Streamflow streams are checked when the seller passes a `streamflowClient` (SDK seller and paywall); the bundled server passes none and refuses stream proofs
+- **Netting (development only)**: an off-chain ledger that accepts a buyer's claim without on-chain verification; off by default, refused when `NODE_ENV=production`, and net totals are not settled on-chain
 - **x402 HTTP standard**: Any REST API becomes payment-gated with one middleware call
-- **Receipt anchoring**: Cryptographic receipts anchored on Solana via a `receipt_anchor` deployment you configure (`RECEIPT_ANCHOR_PROGRAM_ID`), with Merkle-style accumulator hashing
+- **Receipt anchoring (opt-in)**: folds a 32-byte value into an hourly hash chain in a `receipt_anchor` deployment you configure (`RECEIPT_ANCHOR_PROGRAM_ID`); there is no default program, and an enabled but unusable configuration stops startup
 - **Optional Dark Null privacy path**: Hash-only private receipt request after a DNA receipt is issued
-- **Replay protection**: TTL-based replay attack prevention on every payment proof
+- **Replay protection**: each payment proof is accepted once. Replay keys are stored in Postgres when `X402_DATABASE_URL` or `DATABASE_URL` is set, so a used proof stays refused after a restart and across instances; without a database they are in-process only (warning at startup, refused when `NODE_ENV=production`)
 - **Surge pricing**: Dynamic price multipliers (0.8x–2.5x) based on real-time load (queue depth, inflight, latency, error rate)
 
 ### Marketplace
@@ -147,7 +149,7 @@ cd my-buyer
 npm start
 ```
 
-The generated seller starter enables trusted local `netting` by default via `DNA_TRUSTED_LOCAL_NETTING=1`, and the generated buyer starter uses that mode so you can validate the full loop immediately. Disable it before exposing the seller beyond local development, then replace the generated demo buyer wallet with a real wallet before using real `transfer` or `stream` money flows.
+The generated seller starter accepts `transfer` and `stream` only. Unverified `netting` is off unless you start the seller with `DNA_TRUSTED_LOCAL_NETTING=1`; it accepts a buyer's claim with no on-chain check, is for local development only, and the SDK refuses it when `NODE_ENV=production`. The generated buyer starter defaults to `DNA_BUYER_MODE=netting`, so for a local loop start the seller with `DNA_TRUSTED_LOCAL_NETTING=1`, or replace the demo buyer wallet with a real wallet and use `transfer`.
 
 ## Quick Start
 
@@ -168,6 +170,8 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 
 const data = await result.response.json();
 ```
+
+The payment transaction must include an SPL Memo instruction whose text is `quote.memoHash`; sellers refuse a transfer without it by default. `buildMemoInstruction(quote.memoHash, payer)` from `@parad0x_labs/x402` builds it. A seller that has to accept wallets without memo support can opt out with `REQUIRE_PAYMENT_MEMO=0` (server) or `requirePaymentMemo: false` (`dnaSeller` / `dnaPaywall`); the transfer is then not bound to a specific quote.
 
 For a no-code smoke test instead of writing a buyer immediately:
 
@@ -213,11 +217,11 @@ For the zero-config runnable seller instead of hand-writing the app first:
 npx -p @parad0x_labs/x402 dna-x402 demo seller --mode transfer --port 3000
 ```
 
-Transfer is now the default buyer path. Unsigned netting is disabled by default in the main server, and the buyer SDK no longer auto-picks it just because `payNetted()` exists. If you deliberately run a trusted bilateral off-chain settlement loop, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1` and pass `preferNetting: true` in the buyer call.
+Transfer is the default buyer path. Unsigned netting is disabled by default in the main server, and the buyer SDK does not pick it just because `payNetted()` exists. For local development only, opt in with `UNSAFE_UNVERIFIED_NETTING_ENABLED=1` and pass `preferNetting: true` in the buyer call; the server and the SDK seller and paywall refuse it when `NODE_ENV=production`. Netting records amounts in an off-chain ledger; nothing settles the net totals on-chain.
 The main server only accrues balances into the netting ledger for actual `netting` settlements now; verified `transfer` and `stream` payments are not silently mirrored into off-chain netting state.
 
 If you expose `stream` in a scaffolded seller or paywall, wire a real `streamflowClient`; otherwise stream verification now fails closed instead of accepting a bare top-up signature. In the current per-request quote/finalize flow, verified `streamId` proofs are also treated as single-use, just like transfer proofs. If you want long-lived subscription semantics, build that session policy explicitly instead of reusing one finalize proof forever.
-The x402 header-compat flow also fails closed if a verifier claims a transfer succeeded but does not return the canonical `txSignature`.
+The x402 header-compat flow also fails closed if a verifier claims a transfer succeeded but does not return the canonical `txSignature`. It accepts `PAYMENT-REQUIRED` requirements only when they name an unexpired quote this server issued for the same resource (memo equal to the quote's `memoHash`, same recipient, amount and mint) and verifies the payment against that server-side quote; requirements a client edits or invents are refused with `X402_REQUIRED_PROOF_MISMATCH`.
 
 ### Add DNA Guard (Spend Caps + Quality + Reputation API)
 
@@ -262,9 +266,9 @@ Use `examples/dna-guard-seller.ts` for the full runnable example.
 
 | Mode | Per-TX Solana Fee | Best For | How It Works |
 |------|-------------------|----------|-------------|
-| **Netting** | None | Nano/micro payments | Off-chain ledger, batched settlement |
-| **Transfer** | ~$0.0001 | Larger payments | Real on-chain USDC SPL transfer |
-| **Stream** | ~$0.0001 | Continuous access | Streamflow time-locked payments |
+| **Transfer** (default) | ~$0.0001 | Paid requests | On-chain USDC SPL transfer, verified by RPC and bound to the quote by an SPL Memo |
+| **Stream** | ~$0.0001 | Continuous access | Streamflow stream, verified when the seller passes a `streamflowClient` |
+| **Netting** (development only) | None | Local testing | Off-chain ledger entry accepted without verification; refused in production; no on-chain settlement of net totals |
 
 ## Optional Dark Null Privacy Path
 
@@ -364,10 +368,10 @@ x402/
 │   ├── verifier/
 │   │   ├── splTransfer.ts     # On-chain USDC transfer verification
 │   │   ├── streamflow.ts      # Stream payment verification
-│   │   ├── replayStore.ts     # Replay attack prevention
+│   │   ├── replayStore.ts     # Replay keys: Postgres when a database URL is set, else in-process
 │   │   └── rpcClient.ts       # Cached RPC with circuit breaker
 │   ├── packing/
-│   │   └── anchorV1.ts        # Binary packing + Merkle accumulator hashing
+│   │   └── anchorV1.ts        # Binary packing + hash-chain accumulator
 │   ├── logging/
 │   │   └── audit.ts           # NDJSON corporate audit logger
 │   ├── bridge/liquefy/        # Vault exporter, sidecar, CLI, adapter
@@ -474,7 +478,7 @@ import { LiquefySidecar } from "@parad0x_labs/x402";
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live",
-  cluster: "mainnet-beta",
+  cluster: "devnet",
 });
 sidecar.attachAuditLogger(auditLogger);
 sidecar.startPeriodicFlush();

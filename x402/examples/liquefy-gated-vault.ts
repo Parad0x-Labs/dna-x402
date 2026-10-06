@@ -48,7 +48,7 @@ const audit = new AuditLogger({ filePath: "./audit-liquefy.ndjson" });
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live/dna-payments",
-  cluster: "mainnet-beta",
+  cluster: "devnet",
   version: "1.1.0",
 });
 sidecar.attachAuditLogger(audit);

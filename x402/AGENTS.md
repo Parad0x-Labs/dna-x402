@@ -6,7 +6,7 @@
 ## What DNA Does
 
 DNA is a payment rail for AI agents. It lets agents pay for API calls using USDC on Solana.
-Three settlement modes: **transfer** (real on-chain USDC, safest default), **stream** (continuous), **netting** (trusted/off-chain only, explicit opt-in).
+Three settlement modes: **transfer** (on-chain USDC verified by RPC and bound to the quote by an SPL Memo; the default), **stream** (Streamflow, verified when the seller passes a `streamflowClient`), **netting** (development only: an unverified off-chain ledger entry, explicit opt-in, refused when `NODE_ENV=production`).
 It is not a privacy-pool or zk-SNARK hot-path product.
 Normal DNA x402 remains the default path. Use the optional Dark Null path only after a normal signed DNA receipt exists and the receipt needs a private receipt summary.
 
@@ -15,10 +15,10 @@ Normal DNA x402 remains the default path. Use the optional Dark Null path only a
 ## Install
 
 ```bash
-npm install @parad0x_labs/x402
+npm install @parad0x_labs/x402@0.2.0
 ```
 
-That gives you both the SDK and the `dna-x402` CLI.
+That gives you both the SDK and the `dna-x402` CLI. This file describes 0.2.0; the 0.1.x releases on npm are deprecated. The command above works after 0.2.0 is published to npm; until then, build from this repository.
 
 Fastest local proof:
 
@@ -52,7 +52,7 @@ const result = await fetchWith402("https://provider.example/api/inference", {
 const data = await result.response.json();
 ```
 
-That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. Netting is no longer auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for an intentional trusted loop.
+That's it. The SDK handles the 402 handshake, quote, commit, and finalize automatically. The transfer you send must include an SPL Memo whose text is `quote.memoHash` (`buildMemoInstruction(quote.memoHash, payer)`); sellers refuse a transfer without it unless they opt out with `REQUIRE_PAYMENT_MEMO=0` or `requirePaymentMemo: false`. Netting is not auto-selected just because your wallet exposes `payNetted()`; use `preferNetting: true` only for local development against a seller that enabled it.
 If you need deterministic receipt binding, pass `payerCommitment32B` explicitly as a 32-byte hex string instead of letting the client generate a random one per call.
 If you want a no-code buyer smoke test first, use `npx -p @parad0x_labs/x402 dna-x402 demo buyer --mode transfer --base-url http://127.0.0.1:3000`.
 
@@ -91,14 +91,15 @@ import { fetchWith402 } from "@parad0x_labs/x402";
 import { Connection, Keypair } from "@solana/web3.js";
 import { getAssociatedTokenAddress, createTransferInstruction } from "@solana/spl-token";
 
-const conn = new Connection("https://api.mainnet-beta.solana.com");
+const conn = new Connection("https://api.devnet.solana.com"); // your RPC endpoint
 const agentKeypair = Keypair.fromSecretKey(/* your key */);
 
 const result = await fetchWith402("https://provider.example/api/inference", {
   wallet: {
     payTransfer: async (quote) => {
-      // Build + send real USDC transfer
-      const tx = /* build SPL transfer to quote.recipient for quote.totalAtomic */;
+      // Build + send a USDC transfer to quote.recipient for quote.totalAtomic,
+      // plus buildMemoInstruction(quote.memoHash, agentKeypair.publicKey) in the same transaction
+      const tx = /* SPL transfer + memo instruction */;
       const sig = await sendAndConfirmTransaction(conn, tx, [agentKeypair]);
       return { settlement: "transfer", txSignature: sig, amountAtomic: quote.totalAtomic };
     },
@@ -155,7 +156,7 @@ That's it. `dnaSeller` mounts `/commit`, `/finalize`, `/receipt/:id` and `/healt
 If you want a runnable seller before hand-writing the integration, use `npx -p @parad0x_labs/x402 dna-x402 demo seller --mode transfer --port 3000` or scaffold a project with `npx -p @parad0x_labs/x402 dna-x402 init seller my-seller`.
 
 If you expose `stream` in a scaffolded seller or paywall, wire a real `streamflowClient`; otherwise stream verification now fails closed instead of accepting a bare top-up signature. In the current per-request quote/finalize flow, verified `streamId` proofs are also treated as single-use, just like transfer proofs. If you want long-lived subscription semantics, build that session policy explicitly instead of reusing one finalize proof forever.
-In the full server, netting ledger accrual only happens for actual `netting` settlements, and the x402 header-compat transfer path now fails closed unless verification returns the canonical `txSignature`.
+In the full server, netting ledger accrual only happens for actual `netting` settlements, and the x402 header-compat transfer path fails closed unless verification returns the canonical `txSignature`. The header-compat path accepts only `PAYMENT-REQUIRED` requirements that match an unexpired quote this server issued for the same resource, and verifies against that quote.
 Any x402 agent hits your endpoint → gets 402 → pays → retries → gets the result.
 
 ### Multiple prices on different endpoints
@@ -295,7 +296,7 @@ import { LiquefySidecar } from "@parad0x_labs/x402";
 
 const sidecar = new LiquefySidecar({
   outDir: "./vault-live",
-  cluster: "mainnet-beta",
+  cluster: "devnet",
 });
 sidecar.attachAuditLogger(auditLogger);
 sidecar.startPeriodicFlush();
@@ -421,7 +422,7 @@ Types: `scam`, `illegal`, `malware`, `impersonation`, `other`
 | `/commit` | POST | Lock a quote for payment |
 | `/finalize` | POST | Submit payment proof |
 | `/receipt/:id` | GET | Fetch signed receipt |
-| `/settlements/flush` | POST | Settle netting batch |
+| `/settlements/flush` | POST | Return and clear due netting totals as JSON (no on-chain transfer) |
 | `/anchoring/receipt/:id` | GET | Check on-chain anchor |
 
 ### Marketplace
@@ -451,7 +452,7 @@ Types: `scam`, `illegal`, `malware`, `impersonation`, `other`
 | `/admin/audit/summary` | GET | Audit event summary |
 | `/admin/receipts/:id` | GET | Inspect a receipt |
 | `/admin/netting/snapshot` | GET | Netting ledger state |
-| `/admin/replay-store/stats` | GET | Replay protection stats |
+| `/admin/replay-store` | GET | Replay store size and kind (`postgres` or `memory`) |
 | `/admin/pause/market` | POST | Pause marketplace writes |
 | `/admin/pause/orders` | POST | Pause order execution |
 | `/admin/pause/finalize` | POST | Pause payment finalization |
@@ -459,12 +460,14 @@ Types: `scam`, `illegal`, `malware`, `impersonation`, `other`
 ## Environment Variables
 
 ```env
-CLUSTER=mainnet-beta
-SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+CLUSTER=devnet
+SOLANA_RPC_URL=https://api.devnet.solana.com
+USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU   # devnet USDC
 PAYMENT_RECIPIENT=YOUR_WALLET_ADDRESS
 RECEIPT_SIGNING_SECRET=YOUR_ED25519_SECRET_BASE58
-ANCHORING_ENABLED=0
+X402_DATABASE_URL=postgres://...   # replay keys persist here; required when NODE_ENV=production
+REQUIRE_PAYMENT_MEMO=1             # default; 0 drops quote binding
+ANCHORING_ENABLED=0                # 1 needs RECEIPT_ANCHOR_PROGRAM_ID and ANCHORING_KEYPAIR_PATH
 # RECEIPT_ANCHOR_PROGRAM_ID=<receipt_anchor deployment you control>
 FEE_BPS=30
 PORT=8080
