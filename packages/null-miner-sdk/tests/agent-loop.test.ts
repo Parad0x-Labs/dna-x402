@@ -394,6 +394,13 @@ describe("x402 payment rail (Fix 6)", () => {
     expect(ixBuf[1]).toBe(0x00);  // flags (no bucket_id override)
     expect(typeof anchor.instructionDataBase64).toBe("string");
     expect(anchor.memo).toContain("null-miner-v1");
+    // No default receipt_anchor program: null unless the caller names one.
+    expect(anchor.anchorProgramId).toBeNull();
+    const named = anchorReceiptPayload(verified, {
+      platformId: "test-platform",
+      anchorProgramId: "HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs",
+    });
+    expect(named.anchorProgramId).toBe("HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs");
   });
 
   test("platformFeeSplit computes correct split", () => {

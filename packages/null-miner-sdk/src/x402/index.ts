@@ -15,9 +15,10 @@
  *   via @solana/web3.js or any Solana wallet adapter.
  *
  * Production status:
- *   - DNA x402 anchor: mainnet pilot retired 2026-07-14; redeploy under a fresh key pending
- *   - NULL token:      LIVE on Solana mainnet (8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump)
- *   - null-miner rails: SDK/devnet until promoted (no audit yet)
+ *   - DNA x402 receipt_anchor: devnet HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs (2026-10-06);
+ *     the mainnet pilot was retired 2026-07-14
+ *   - NULL token:      SPL mint 8EeDdvCRmFAzVD4takkBrNNwkeUTUQh4MscRK5Fzpump on Solana mainnet
+ *   - null-miner rails: SDK and devnet
  */
 
 import { createHash } from "crypto";
@@ -31,16 +32,16 @@ export const X402_VERSION  = 1;
 export const MEMO_PREFIX   = "null-miner-v1";
 
 /**
- * Deployed receipt_anchor program IDs.
- * DEVNET_RECEIPT_ANCHOR_PROGRAM_ID: replace with real address after `solana program deploy`.
- * MAINNET_RECEIPT_ANCHOR_PROGRAM_ID: set after audit + mainnet deploy.
+ * Default receipt_anchor program IDs: none. anchorReceiptPayload() names a program only
+ * when the caller passes `anchorProgramId` (devnet receipt_anchor:
+ * HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs). There is no mainnet receipt_anchor.
  *
  * Instruction format (from programs/receipt_anchor):
  *   Single anchor: [0x01, 0x00, anchor32[0..32]] = 34 bytes
  *   Batch anchor:  [0x01, count, anchor1[0..32], anchor2[0..32], ...] = 2+N*32 bytes
  */
-export const DEVNET_RECEIPT_ANCHOR_PROGRAM_ID  = "ANCHRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; // replace post-deploy
-export const MAINNET_RECEIPT_ANCHOR_PROGRAM_ID = ""; // pending audit
+export const DEVNET_RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
+export const MAINNET_RECEIPT_ANCHOR_PROGRAM_ID: string | null = null;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -143,8 +144,8 @@ export interface ReceiptAnchorPayload {
   routeToFlywheel:  boolean;
   /** Serialized 34-byte instruction data for the receipt_anchor program (base64). Format: [0x01, 0x00, anchor32[32]]. */
   instructionDataBase64: string;
-  /** Program ID of the DNA x402 receipt anchor (devnet). */
-  anchorProgramId:  string;
+  /** receipt_anchor program the caller named via `anchorProgramId`, or null (no default). */
+  anchorProgramId:  string | null;
 }
 
 /** Passport metadata to attach to x402 payment requirements for agent tasks. */
@@ -288,6 +289,8 @@ export function anchorReceiptPayload(
     passportId?: string;
     slot?:       number;
     routeToFlywheel?: boolean;
+    /** receipt_anchor program to target (devnet: HSdEQWunzPtNqdzv5HfXuA3zwPLpgTXRyfbndnGamhXs). */
+    anchorProgramId?: string;
   },
 ): ReceiptAnchorPayload {
   const slot = opts.slot ?? Math.floor(Date.now() / 400);
@@ -332,9 +335,8 @@ export function anchorReceiptPayload(
     memo,
     routeToFlywheel:       opts.routeToFlywheel ?? true,
     instructionDataBase64: ixData.toString("base64"),
-    // Use devnet program ID until mainnet deploy. Replace DEVNET_RECEIPT_ANCHOR_PROGRAM_ID
-    // with the address returned by: solana program deploy target/deploy/receipt_anchor.so
-    anchorProgramId: DEVNET_RECEIPT_ANCHOR_PROGRAM_ID,
+    // No default program: null unless the caller names one.
+    anchorProgramId: opts.anchorProgramId ?? null,
   };
 }
 
