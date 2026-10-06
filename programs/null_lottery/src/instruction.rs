@@ -24,6 +24,7 @@ pub enum LotteryInstruction {
     /// 0x03 AnchorTickets
     /// Data: [0x03, tickets_root[32], ticket_count[8], total_null_deposited[8]]
     ///       = 49 bytes total
+    /// Accounts: [round_state (w), admin (signer), lottery_config PDA]
     AnchorTickets {
         tickets_root:         [u8; 32],
         ticket_count:         u64,
@@ -32,6 +33,7 @@ pub enum LotteryInstruction {
 
     /// 0x04 RevealDraw
     /// Data: [0x04, seed[32]] = 33 bytes total
+    /// Accounts: [round_state (w), admin (signer), lottery_config PDA]
     RevealDraw {
         seed: [u8; 32],
     },

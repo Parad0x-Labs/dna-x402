@@ -23,10 +23,8 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-// ⚠️  EXTERNALLY UNAUDITED — test pilot deployment. Not audited by any third party.
-//    Deploy with: cargo build-sbf --features mainnet
-//    IS_MAINNET_READY=true enables full on-chain verification (signature checks,
-//    SPL transfers, precompile validation). Use at your own risk until audited.
+// `mainnet` feature: ClaimJackpot requires the stored winner nullifier. The
+// admin checks on round transitions (require_admin) apply in every build.
 #[cfg(feature = "mainnet")]
 pub const IS_MAINNET_READY: bool = true;
 #[cfg(not(feature = "mainnet"))]
@@ -62,9 +60,9 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Pr
             tickets_root,
             ticket_count,
             total_null_deposited,
-        } => process_anchor(accounts, tickets_root, ticket_count, total_null_deposited),
+        } => process_anchor(program_id, accounts, tickets_root, ticket_count, total_null_deposited),
 
-        LotteryInstruction::RevealDraw { seed } => process_reveal(accounts, seed),
+        LotteryInstruction::RevealDraw { seed } => process_reveal(program_id, accounts, seed),
 
         LotteryInstruction::FallbackDraw {
             seed,
@@ -76,6 +74,34 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Pr
             process_claim(program_id, accounts, winner_nullifier)
         }
     }
+}
+
+/// Require `admin` to sign and to equal the admin stored in the canonical
+/// `[b"lottery-config"]` PDA owned by this program. Used by every round-state
+/// transition the house drives (CommitRound, AnchorTickets, RevealDraw,
+/// FallbackDraw), so no other signer can set tickets_root / ticket_count or
+/// reveal a draw.
+fn require_admin(
+    program_id:  &Pubkey,
+    lottery_cfg: &AccountInfo,
+    admin:       &AccountInfo,
+) -> Result<LotteryConfig, ProgramError> {
+    if !admin.is_signer {
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+    let (expected_cfg_pda, _) =
+        Pubkey::find_program_address(&[b"lottery-config"], program_id);
+    if expected_cfg_pda != *lottery_cfg.key || lottery_cfg.owner != program_id {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    let cfg = {
+        let data = lottery_cfg.try_borrow_data()?;
+        LotteryConfig::unpack_from(&data).ok_or(ProgramError::InvalidAccountData)?
+    };
+    if cfg.admin != admin.key.to_bytes() {
+        return Err(LotteryError::NotAdmin.into());
+    }
+    Ok(cfg)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,20 +183,8 @@ fn process_commit(
     let admin       = next_account_info(iter)?;
     let system_prog = next_account_info(iter)?;
 
-    if !admin.is_signer {
-        return Err(ProgramError::MissingRequiredSignature);
-    }
-
-    // ── Read and validate config ──────────────────────────────────────────
-    let mut cfg = {
-        let data = lottery_cfg.try_borrow_data()?;
-        LotteryConfig::unpack_from(&data)
-            .ok_or(ProgramError::InvalidAccountData)?
-    };
-
-    if cfg.admin != admin.key.to_bytes() {
-        return Err(LotteryError::NotAdmin.into());
-    }
+    // ── Read and validate config + admin ──────────────────────────────────
+    let mut cfg = require_admin(program_id, lottery_cfg, admin)?;
 
     let round_id = cfg.current_round_id;
     let round_id_le = round_id.to_le_bytes();
@@ -243,6 +257,7 @@ fn process_commit(
 // ─────────────────────────────────────────────────────────────────────────────
 
 fn process_anchor(
+    program_id:           &Pubkey,
     accounts:             &[AccountInfo],
     tickets_root:         [u8; 32],
     ticket_count:         u64,
@@ -251,10 +266,9 @@ fn process_anchor(
     let iter        = &mut accounts.iter();
     let round_state = next_account_info(iter)?;
     let admin       = next_account_info(iter)?;
+    let lottery_cfg = next_account_info(iter)?;
 
-    if !admin.is_signer {
-        return Err(ProgramError::MissingRequiredSignature);
-    }
+    require_admin(program_id, lottery_cfg, admin)?;
 
     let mut data  = round_state.try_borrow_mut_data()?;
     let mut round = RoundState::unpack_from(&data)
@@ -278,14 +292,13 @@ fn process_anchor(
 // 0x04 RevealDraw
 // ─────────────────────────────────────────────────────────────────────────────
 
-fn process_reveal(accounts: &[AccountInfo], seed: [u8; 32]) -> ProgramResult {
+fn process_reveal(program_id: &Pubkey, accounts: &[AccountInfo], seed: [u8; 32]) -> ProgramResult {
     let iter        = &mut accounts.iter();
     let round_state = next_account_info(iter)?;
     let admin       = next_account_info(iter)?;
+    let lottery_cfg = next_account_info(iter)?;
 
-    if !admin.is_signer {
-        return Err(ProgramError::MissingRequiredSignature);
-    }
+    require_admin(program_id, lottery_cfg, admin)?;
 
     let mut data  = round_state.try_borrow_mut_data()?;
     let mut round = RoundState::unpack_from(&data)
@@ -336,26 +349,8 @@ fn process_fallback(
     let round_state3 = next_account_info(iter)?;
     let admin        = next_account_info(iter)?;
 
-    if !admin.is_signer {
-        return Err(ProgramError::MissingRequiredSignature);
-    }
-
-    // ── Validate config PDA ───────────────────────────────────────────────
-    let (expected_cfg_pda, _) =
-        Pubkey::find_program_address(&[b"lottery-config"], program_id);
-    if expected_cfg_pda != *lottery_cfg.key {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    let cfg = {
-        let data = lottery_cfg.try_borrow_data()?;
-        LotteryConfig::unpack_from(&data)
-            .ok_or(ProgramError::InvalidAccountData)?
-    };
-
-    if cfg.admin != admin.key.to_bytes() {
-        return Err(LotteryError::NotAdmin.into());
-    }
+    // ── Validate config PDA + admin ───────────────────────────────────────
+    let cfg = require_admin(program_id, lottery_cfg, admin)?;
 
     // ── Load and validate the three round states ──────────────────────────
     let mut r1 = {

@@ -6,11 +6,12 @@
 //! Off-chain tickets (Liquefy bridge pattern), 1 tx per 5-min round.
 //! House fee: 0.5% (50 bps).
 //!
-//! ⚠️  EXTERNALLY UNAUDITED — test pilot. Not reviewed by any third-party auditor.
-//!    Deploy: `cargo build-sbf --features mainnet`
+//! Round transitions (CommitRound, AnchorTickets, RevealDraw, FallbackDraw)
+//! require the admin stored in the `[b"lottery-config"]` PDA in every build.
 //!
-//! IS_MAINNET_READY = false:
-//!   - secp / SPL token transfers are skipped.
+//! Default build (IS_MAINNET_READY = false):
+//!   - SPL token transfers are skipped.
+//!   - ClaimJackpot on a Drawn round binds the first claimed nullifier as winner.
 //!   - Winner verification is off-chain only; on-chain just marks state.
 
 use solana_program::{
