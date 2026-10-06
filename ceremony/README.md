@@ -75,3 +75,32 @@ A third party reproduces `snarkjs zkey verify` and gets the same.
 contributions + placeholder beacon + local ptau) to prove the machinery and the transcript format
 — it is NOT a trustless ceremony. The real run replaces the three DEMO pieces above with independent
 humans, a public ptau, and a committed beacon.
+
+## shielded_withdraw_v3 — committed artifacts (dark_shielded_pool)
+Hermez PPOT phase 1 (`powersOfTau28_hez_final_14.ptau`, sha256 `489be9e5…`) and a drand-only
+phase-2 beacon (League of Entropy round 6000000, randomness `642f13b2…a38114`, 10 iterations)
+applied directly to `shielded_withdraw_v3_0000.zkey`. Full record: `shielded_withdraw_v3/transcript_v3.json`.
+
+| file | sha256 |
+|---|---|
+| `shielded_withdraw_v3.r1cs` | `261a711512701a9e38dba2ef86c29d628a5b594b7c275dd6e3a428c398daa128` |
+| `shielded_withdraw_v3_0000.zkey` | `8042e728e8e8b3107482ee0f46198c4ba5ae9df12bade7bba8e3eaf14d8dc5ed` |
+| `shielded_withdraw_v3_final.zkey` | `3ed892ceed31f6be1fc9ffc46fc29bdc41091c1dc94393b28a11aaf30ee246f5` |
+| `shielded_withdraw_v3_vk.json` | `d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c` |
+
+Beacon contribution hash: `9eb6d33c b0cc29bf bcdacbc0 5e1c41e8 aa57c82e 5fe26c43 6a220cdf 60110a10 8413c79b 0e12a4ba d4702a11 d933118f faef25e3 f0f09668 7941b9c5 3cd85feb`.
+`vk.json` sha256 equals the header of `crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs`,
+i.e. the VK compiled into the program. Reproduce (snarkjs 0.7.5):
+
+```bash
+cd ceremony/shielded_withdraw_v3
+snarkjs zkey beacon shielded_withdraw_v3_0000.zkey shielded_withdraw_v3_final.zkey \
+  642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 10 \
+  -n="drand Final Beacon (fixed round 6000000)"
+snarkjs zkey export verificationkey shielded_withdraw_v3_final.zkey shielded_withdraw_v3_vk.json
+sha256sum shielded_withdraw_v3_vk.json      # d1cb06d3…
+snarkjs zkey verify shielded_withdraw_v3.r1cs powersOfTau28_hez_final_14.ptau shielded_withdraw_v3_final.zkey   # ZKey Ok!
+```
+
+The VK does not depend on the `-n` name; the final zkey sha256 does. `_0001` … `_0004.zkey` are
+from an earlier dry run (simulated contributions) and are not in the chain of the final key.

@@ -60,6 +60,9 @@ const wallet = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(key
 // Fresh authority per run → fresh pool PDA (note_count starts at 0). The authority
 // funds deposits. A SEPARATE fresh relayer submits the withdraw and is reimbursed.
 const authority = Keypair.generate();
+// Persist ephemeral keypairs when TEST_WALLET_DIR is set, so funds are recoverable if a run aborts.
+const saveKp = (tag, kp) => { if (process.env.TEST_WALLET_DIR) writeFileSync(join(process.env.TEST_WALLET_DIR, `swv3-${tag}-${kp.publicKey.toBase58()}.json`), JSON.stringify(Array.from(kp.secretKey)), { mode: 0o600 }); };
+saveKp("authority", authority);
 
 const SEEDS = {
   config: Buffer.from("pool_config"),
@@ -225,13 +228,13 @@ async function main() {
   console.log(`vault     ${poolVault.toBase58()}`);
 
   // Fund the fresh authority (deposits + rent) and a fresh relayer (gas + rent).
-  const relayer = Keypair.generate();
+  const relayer = Keypair.generate(); saveKp("relayer", relayer);
   console.log(`relayer   ${relayer.publicKey.toBase58()} (fresh — fronts gas/rent, reimbursed fee)`);
   {
     const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
     const tx = new Transaction({ blockhash, lastValidBlockHeight, feePayer: wallet.publicKey })
-      .add(SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: authority.publicKey, lamports: 1_000_000_000 }))
-      .add(SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: relayer.publicKey, lamports: 200_000_000 }));
+      .add(SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: authority.publicKey, lamports: 300_000_000 })) // devnet-budget run (was 1 SOL; leftovers swept back below)
+      .add(SystemProgram.transfer({ fromPubkey: wallet.publicKey, toPubkey: relayer.publicKey, lamports: 50_000_000 })); // devnet-budget run (was 0.2 SOL)
     tx.sign(wallet);
     const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: true });
     await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
@@ -257,7 +260,7 @@ async function main() {
   console.log(`  on-chain root after 2 deposits: ${rootAfter}`);
 
   // ── build the REAL V3 withdrawal proof for note #1 → FRESH recipient, with fee ──
-  const recipient = Keypair.generate();
+  const recipient = Keypair.generate(); saveKp("recipient", recipient);
   const recipientHex = Buffer.from(recipient.publicKey.toBytes()).toString("hex");
   console.log(`\n[prove] recipient ${recipient.publicKey.toBase58()} fee=${FEE} (payout=${DENOM - FEE})`);
   const spec = witnessSpec({ poolKeyHex, recipientHex, relayerHex, spendIndex: 1, secretsHex: [sA, sB] });
@@ -323,7 +326,7 @@ async function main() {
 
   // ── SCENARIO 4: wrong-recipient MUST revert ─────────────────────────────────
   console.log(`\n[wrong-recipient] valid proof, different recipient account -> expect revert`);
-  const attacker = Keypair.generate();
+  const attacker = Keypair.generate(); saveKp("attacker", attacker);
   const wc = await send(
     [cuIx(1_400_000), withdrawIx(proof0.publicInputsHex.nullifier, rootAfter, proof0.proof256Hex, attacker.publicKey, relayer.publicKey, FEE)],
     [relayer], relayer.publicKey, "wrong-recipient", { expectFail: true });
@@ -338,7 +341,7 @@ async function main() {
 
   // ── SCENARIO 6: relayer-mismatch — proof bound to relayer A, submitted by B ──
   console.log(`\n[relayer-mismatch] proof bound to relayer A, submitted+fee_payer = relayer B -> expect revert`);
-  const relayerB = Keypair.generate();
+  const relayerB = Keypair.generate(); saveKp("relayerB", relayerB);
   {
     const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
     const tx = new Transaction({ blockhash, lastValidBlockHeight, feePayer: wallet.publicKey })
@@ -409,7 +412,7 @@ async function main() {
       "the withdraw and was reimbursed the proof-bound fee; the recipient received denom-fee " +
       "and never signed. Double-spend / wrong-root / wrong-recipient / over-fee / relayer-mismatch all reverted.",
     honestCaveats: [
-      "Ceremony VK is a BEACON-SEALED DRY RUN: multiple SIMULATED-independent phase-2 contributions (one machine, varied entropy) finalized with a FIXED, already-published drand beacon (round 6000000). The public beacon adds unpredictability nobody controls, but this is NOT yet fully trustless — real trustlessness needs the simulated contributors replaced by independent humans (see ceremony/CONTRIBUTING_V3.md). Claim: 'beacon-sealed multi-contribution ceremony (dry-run); awaiting independent contributors.'",
+      "Ceremony VK: Hermez PPOT phase 1 + drand-only phase-2 beacon (round 6000000) applied to shielded_withdraw_v3_0000.zkey; no human phase-2 contributor (ceremony/shielded_withdraw_v3/transcript_v3.json, vk sha256 d1cb06d3…). Independent phase-2 contributors are the next step (ceremony/CONTRIBUTING_V3.md).",
       "UNAUDITED devnet pilot. mainnet_ready=false throughout.",
       "Stealth recipient (NullPay) NOT integrated — recipient is a plain wallet here. Documented as a follow-up stub.",
       "Deposit binds leaf_index into the commitment, so the e2e requires a fresh pool (note_count==0) for deterministic Merkle-path rebuild.",

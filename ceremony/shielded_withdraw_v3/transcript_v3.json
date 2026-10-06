@@ -21,10 +21,17 @@
     "genesis_time": 1595431050,
     "url": "https://api.drand.sh/8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce/public/6000000",
     "iterations": 10,
-    "contribution_hash": "9eb6d33c b0cc29bf bcdacbc0 5e1c41e8 aa57c82e 5fe26c43 6a220cdf 60110a10 8413c79b 0e12a4ba d4702a11 d933118f faef25e3 f0f09668 7941b9c5 3cd85feb"
+    "contribution_hash": "9eb6d33c b0cc29bf bcdacbc0 5e1c41e8 aa57c82e 5fe26c43 6a220cdf 60110a10 8413c79b 0e12a4ba d4702a11 d933118f faef25e3 f0f09668 7941b9c5 3cd85feb",
+    "name": "drand Final Beacon (fixed round 6000000)"
   },
-  "final_zkey_sha256": "e31006e7c059b4566a9be75aaba4d89d7b5524d86d2da6c42d519a8f1fde716b",
+  "final_zkey_sha256": "3ed892ceed31f6be1fc9ffc46fc29bdc41091c1dc94393b28a11aaf30ee246f5",
   "vk_sha256": "d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c",
+  "verify": "ZKey Ok! (snarkjs 0.7.5 zkey verify shielded_withdraw_v3.r1cs powersOfTau28_hez_final_14.ptau shielded_withdraw_v3_final.zkey)",
+  "regenerated": {
+    "at": "2026-10-06",
+    "command": "snarkjs zkey beacon shielded_withdraw_v3_0000.zkey shielded_withdraw_v3_final.zkey 642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 10 -n=\"drand Final Beacon (fixed round 6000000)\" && snarkjs zkey export verificationkey shielded_withdraw_v3_final.zkey shielded_withdraw_v3_vk.json",
+    "note": "The committed _final.zkey/_vk.json had come from an earlier dry run (0001..0004 contributions + beacon; vk sha256 3c9cce75...) and did not match the VK compiled into dark_shielded_pool. They were regenerated from 0000.zkey + this beacon; the contribution hash and vk_sha256 match this transcript and crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs. The final zkey sha256 depends on the beacon name string stored in the zkey; the name used for the earlier recorded value (e31006e7...) was not recorded, so final_zkey_sha256 is the value for the name above. 0001..0004.zkey are dry-run files and are not in the chain of this final key."
+  },
   "n_public": 7,
   "no_phase2_human_contributor": true,
   "security_model": "Phase 1 (Hermez PPOT): sound if any one PPOT contributor deleted their entropy. Phase 2: no human contributor at all — entropy is the drand beacon output, collectively produced by League of Entropy nodes (Cloudflare, EPFL, Protocol Labs, and others) and publicly verifiable on-chain. Forging a proof requires breaking BN254 discrete log. Unaudited open beta.",

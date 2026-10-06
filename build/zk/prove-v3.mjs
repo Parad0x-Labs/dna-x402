@@ -14,8 +14,9 @@
  *   public [nullifier, merkle_root, recipient, pool_id, relayer, fee, denomination]
  *
  * VK SELECTION (SWV3_VK_MODE env, default "ceremony"):
- *   - ceremony : the BEACON-SEALED multi-contribution key under
- *       ceremony/shielded_withdraw_v3/ (alpha_g1.x=2d4d9aa7…). This is the VK the
+ *   - ceremony : the Hermez-PPOT + drand-only-beacon key under
+ *       ceremony/shielded_withdraw_v3/ (beacon round 6000000 applied to _0000.zkey,
+ *       vk sha256 d1cb06d3…, alpha_g1.x=2d4d9aa7…). This is the VK the
  *       DEPLOYED devnet pool program embeds, so it is the ONLY mode whose proofs the
  *       program accepts on-chain. Default.
  *   - pilot    : the single-party key under build/zk/ (alpha_g1.x=2f881452…). Proofs
@@ -33,7 +34,10 @@ import { tmpdir } from "node:os";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "..", "..");
 const SNARKJS = join(HERE, "node_modules", "snarkjs", "build", "cli.cjs");
-const WASM = join(HERE, "out", "shielded_withdraw_v3_js", "shielded_withdraw_v3.wasm");
+// Locally compiled circuit (gitignored) if present, else the committed ceremony wasm
+// (same r1cs, sha256 261a7115…).
+const WASM_LOCAL = join(HERE, "out", "shielded_withdraw_v3_js", "shielded_withdraw_v3.wasm");
+const WASM = existsSync(WASM_LOCAL) ? WASM_LOCAL : join(REPO, "ceremony", "shielded_withdraw_v3", "shielded_withdraw_v3.wasm");
 
 // zkey/vk source — see header. ceremony (default) is what the deployed program embeds;
 // pilot is refused unless explicit SWV3_ZKEY/SWV3_VK are set.
