@@ -1,0 +1,88 @@
+{
+  "circuit": "shielded_withdraw_v3",
+  "version": "3.1",
+  "mode": "Single-party contribution with discarded entropy plus public beacon. Devnet only; a multi-party phase 2 is required before mainnet.",
+  "supersedes": {
+    "transcript": "transcript_v3.json",
+    "reason": "The v3 phase 2 was only a public drand beacon applied to the deterministic groth16 setup key, so delta was computable from public data and withdraw proofs could be forged. See ERRATA_v3.md.",
+    "earlier_final_zkey": "shielded_withdraw_v3_beacon_only_final.zkey",
+    "earlier_vk": "shielded_withdraw_v3_beacon_only_vk.json"
+  },
+  "phase1": {
+    "source": "Hermez Perpetual Powers of Tau",
+    "power": 14,
+    "ptau": "powersOfTau28_hez_final_14.ptau",
+    "ptau_sha256": "489be9e5ac65d524f7b1685baac8a183c6e77924fdb73d2b8105e335f277895d"
+  },
+  "r1cs_sha256": "261a711512701a9e38dba2ef86c29d628a5b594b7c275dd6e3a428c398daa128",
+  "setup_zkey_sha256": "8042e728e8e8b3107482ee0f46198c4ba5ae9df12bade7bba8e3eaf14d8dc5ed",
+  "chain": [
+    {
+      "index": 1,
+      "type": "beacon",
+      "name": "drand Final Beacon (fixed round 6000000)",
+      "input_zkey_sha256": "8042e728e8e8b3107482ee0f46198c4ba5ae9df12bade7bba8e3eaf14d8dc5ed",
+      "output_zkey_sha256": "3ed892ceed31f6be1fc9ffc46fc29bdc41091c1dc94393b28a11aaf30ee246f5",
+      "drand_round": 6000000,
+      "randomness": "642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114",
+      "iterations_exp": 10,
+      "contribution_hash": "9eb6d33c b0cc29bf bcdacbc0 5e1c41e8 aa57c82e 5fe26c43 6a220cdf 60110a10 8413c79b 0e12a4ba d4702a11 d933118f faef25e3 f0f09668 7941b9c5 3cd85feb",
+      "note": "The v3 key (transcript_v3.json). Public input only; on its own it leaves delta derivable."
+    },
+    {
+      "index": 2,
+      "type": "contribution",
+      "name": "swv3.1 operator contribution (single party, entropy discarded)",
+      "contributor": "the single operator of this repository",
+      "at": "2026-10-06T19:57:08Z",
+      "input_zkey_sha256": "3ed892ceed31f6be1fc9ffc46fc29bdc41091c1dc94393b28a11aaf30ee246f5",
+      "output_zkey_sha256": "0114fcc0528659dbfca5c2ef4184ef0d07bcec218f38140e1e9eaa495f9a3894",
+      "contribution_hash": "28a5e4f9 4d027cae 16bb6752 b74e8b41 ccd592f6 8e465996 30366df0 d73c29d7 ad869fa0 a497cd44 a266cfb8 e9101f86 efb8607d adaef747 897d0e33 526a14a8",
+      "command": "{ head -c 64 /dev/urandom | base64 -w0; echo; } | snarkjs zkey contribute in.zkey contrib.zkey --name=\"swv3.1 operator contribution (single party, entropy discarded)\" >/dev/null 2>&1",
+      "entropy": "64 bytes from /dev/urandom piped on stdin to snarkjs, which mixes in 64 bytes of its own crypto randomness. The entropy was never written to disk or printed; stdout and stderr of the contribute step went to /dev/null.",
+      "environment": "Throwaway container (node:22-bookworm-slim, snarkjs 0.7.5): --network none, read-only root filesystem, working directory on tmpfs. The container was removed with docker rm -f right after the output zkey was copied out.",
+      "intermediate_zkey_committed": false
+    },
+    {
+      "index": 3,
+      "type": "beacon",
+      "name": "drand beacon (round 6529525)",
+      "input_zkey_sha256": "0114fcc0528659dbfca5c2ef4184ef0d07bcec218f38140e1e9eaa495f9a3894",
+      "output_zkey_sha256": "c8c9d31044b4a034d86074e47c2a88ba15b69b283e98dd113c517c2df3c11f13",
+      "source": "drand League of Entropy default chain",
+      "chain": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
+      "scheme": "pedersen-bls-chained",
+      "chain_public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
+      "round_selection": "Chosen at 2026-10-06T19:57:51Z, after contribution 2 and its hash were fixed, as the latest round seen (6529521) plus 4. The round was emitted at 2026-10-06T19:59:30Z.",
+      "drand_round": 6529525,
+      "randomness": "a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e",
+      "signature": "a5aa7954c0679f792909e633b2306c4eb67267d612681acbcb1f4cdc1ab2285e06143995c72e43f5c17f3c0347e7846619cce94a602d13978a9ae134c16bef415710ca626381e6e6cb57cbcbdbaa6292256adfd6bed9d9d37841af43febd93f7",
+      "previous_signature": "b8a65f5886a388bab1a6996eef7851f601a6e0ff72d833e04ecc0327bf439d5c50938a163f33b8897bc01d910dbe0bfe058f37402c88b56b37bba31449212ed020d2c97566f0f5520b738a2ce11778988fabf5868daf54f0a8a237cd6ccd40dc",
+      "url": "https://api.drand.sh/8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce/public/6529525",
+      "checks": {
+        "relays_agreeing": ["https://api.drand.sh", "https://drand.cloudflare.com", "https://api2.drand.sh"],
+        "randomness_is_sha256_of_signature": true,
+        "bls_signature_verified_against_chain_public_key": true
+      },
+      "iterations_exp": 10,
+      "contribution_hash": "bf83d740 b5a7dfdc bbe524a9 4af188dd a13144ce 29150959 b313a30d 61a30481 62f64680 749d5f0c fba4c5e9 dd14284d c3403454 35514beb 1cd92a2f 224306d9",
+      "command": "snarkjs zkey beacon shielded_withdraw_v3_0001c.zkey shielded_withdraw_v3_final.zkey a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e 10 -n=\"drand beacon (round 6529525)\"",
+      "records": ["v3_1/beacon-commit.json", "v3_1/beacon.json", "v3_1/fetch-beacon.mjs"]
+    }
+  ],
+  "final_zkey": "shielded_withdraw_v3_final.zkey",
+  "final_zkey_sha256": "c8c9d31044b4a034d86074e47c2a88ba15b69b283e98dd113c517c2df3c11f13",
+  "vk": "shielded_withdraw_v3_vk.json",
+  "vk_sha256": "4a1f265acac87fe528b2a63882c6429df68c12180478a9d499c098d89479c375",
+  "vk_change": "Only vk_delta_2 differs from the v3 key; alpha, beta, gamma and IC are unchanged.",
+  "n_public": 7,
+  "verify": "ZKey Ok! (snarkjs 0.7.5 zkey verify shielded_withdraw_v3.r1cs powersOfTau28_hez_final_14.ptau shielded_withdraw_v3_final.zkey; full output in v3_1/zkey-verify.txt)",
+  "delta_check": {
+    "tool": "ceremony/check-beacon-delta.mjs",
+    "v3_key": "delta equals the round 6000000 beacon scalar times g2; a proof built from it without a witness passes snarkjs groth16 verify",
+    "v3_1_key": "delta matches neither beacon scalar nor their product"
+  },
+  "verifying_key_module": "crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs (regenerated with build/zk/vk-to-rust-v3.mjs; header VK SHA-256 4a1f265a...)",
+  "security_model": "Phase 1: Hermez PPOT, sound if any one PPOT contributor deleted their entropy. Phase 2: one secret contribution by a single operator, entropy discarded, followed by a public drand beacon fixed after the contribution hash. Soundness of phase 2 rests on that one operator having discarded the entropy. Devnet only; a multi-party phase 2 is required before mainnet.",
+  "generatedAt": "2026-10-06T20:00:00Z"
+}

@@ -77,30 +77,40 @@ contributions + placeholder beacon + local ptau) to prove the machinery and the 
 humans, a public ptau, and a committed beacon.
 
 ## shielded_withdraw_v3 — committed artifacts (dark_shielded_pool)
-Hermez PPOT phase 1 (`powersOfTau28_hez_final_14.ptau`, sha256 `489be9e5…`) and a drand-only
-phase-2 beacon (League of Entropy round 6000000, randomness `642f13b2…a38114`, 10 iterations)
-applied directly to `shielded_withdraw_v3_0000.zkey`. Full record: `shielded_withdraw_v3/transcript_v3.json`.
+Current key: v3.1, a single-party contribution with discarded entropy plus public beacon; devnet only;
+a multi-party phase 2 is required before mainnet. Full record: `shielded_withdraw_v3/transcript_v3_1.json`.
+
+Chain: Hermez PPOT phase 1 (`powersOfTau28_hez_final_14.ptau`, sha256 `489be9e5…`) →
+`groth16 setup` (`0000.zkey`) → drand round 6000000 beacon → one operator contribution (entropy from
+`/dev/urandom` in a tmpfs container with no network, discarded) → drand round 6529525 beacon
+(randomness `a0e36451…7589d3e`, 10 iterations), chosen after the contribution hash was fixed.
 
 | file | sha256 |
 |---|---|
 | `shielded_withdraw_v3.r1cs` | `261a711512701a9e38dba2ef86c29d628a5b594b7c275dd6e3a428c398daa128` |
 | `shielded_withdraw_v3_0000.zkey` | `8042e728e8e8b3107482ee0f46198c4ba5ae9df12bade7bba8e3eaf14d8dc5ed` |
-| `shielded_withdraw_v3_final.zkey` | `3ed892ceed31f6be1fc9ffc46fc29bdc41091c1dc94393b28a11aaf30ee246f5` |
-| `shielded_withdraw_v3_vk.json` | `d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c` |
+| `shielded_withdraw_v3_final.zkey` (v3.1) | `c8c9d31044b4a034d86074e47c2a88ba15b69b283e98dd113c517c2df3c11f13` |
+| `shielded_withdraw_v3_vk.json` (v3.1) | `4a1f265acac87fe528b2a63882c6429df68c12180478a9d499c098d89479c375` |
+| `shielded_withdraw_v3_beacon_only_final.zkey` (v3, retired) | `3ed892ceed31f6be1fc9ffc46fc29bdc41091c1dc94393b28a11aaf30ee246f5` |
+| `shielded_withdraw_v3_beacon_only_vk.json` (v3, retired) | `d1cb06d3956a7c1c7bc51289a395db4f6cc7341304a39405c447048acde1f60c` |
 
-Beacon contribution hash: `9eb6d33c b0cc29bf bcdacbc0 5e1c41e8 aa57c82e 5fe26c43 6a220cdf 60110a10 8413c79b 0e12a4ba d4702a11 d933118f faef25e3 f0f09668 7941b9c5 3cd85feb`.
-`vk.json` sha256 equals the header of `crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs`,
-i.e. the VK compiled into the program. Reproduce (snarkjs 0.7.5):
+Contribution hashes: #1 beacon round 6000000 `9eb6d33c…3cd85feb`, #2 operator `28a5e4f9…526a14a8`,
+#3 beacon round 6529525 `bf83d740…224306d9` (full values in the transcript and
+`shielded_withdraw_v3/v3_1/zkey-verify.txt`). `vk.json` sha256 equals the header of
+`crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs`, the VK compiled into the program.
+
+Verify (snarkjs 0.7.5):
 
 ```bash
 cd ceremony/shielded_withdraw_v3
-snarkjs zkey beacon shielded_withdraw_v3_0000.zkey shielded_withdraw_v3_final.zkey \
-  642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114 10 \
-  -n="drand Final Beacon (fixed round 6000000)"
-snarkjs zkey export verificationkey shielded_withdraw_v3_final.zkey shielded_withdraw_v3_vk.json
-sha256sum shielded_withdraw_v3_vk.json      # d1cb06d3…
 snarkjs zkey verify shielded_withdraw_v3.r1cs powersOfTau28_hez_final_14.ptau shielded_withdraw_v3_final.zkey   # ZKey Ok!
+snarkjs zkey export verificationkey shielded_withdraw_v3_final.zkey vk.json && sha256sum vk.json        # 4a1f265a…
+# delta is not derivable from either public beacon (exit 0); on the v3 key it is (exit 3)
+node ../check-beacon-delta.mjs --vk shielded_withdraw_v3_vk.json \
+  --beacon a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e --iter 10
 ```
 
-The VK does not depend on the `-n` name; the final zkey sha256 does. `_0001` … `_0004.zkey` are
-from an earlier dry run (simulated contributions) and are not in the chain of the final key.
+The v3 key (`transcript_v3.json`, kept as history) was the round 6000000 beacon applied directly to
+`0000.zkey` with no secret contribution, so its delta was computable from public data and withdraw
+proofs could be forged; see `shielded_withdraw_v3/ERRATA_v3.md`. `_0001` … `_0004.zkey` are from an
+earlier dry run (simulated contributions) and are not in the chain of either key.

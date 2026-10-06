@@ -28,8 +28,9 @@ node e2e-v3-devnet.mjs <PROGRAM_ID>           # full relayer-fee e2e -> evidence
 ```
 
 **VK mode.** `prove-v3.mjs` and the e2e/fusion scripts default to `--vk-mode ceremony`,
-which uses the Hermez-PPOT + drand-only-beacon key under
-`ceremony/shielded_withdraw_v3/` — the VK the `dark_shielded_pool` program embeds
+which uses the v3.1 key under `ceremony/shielded_withdraw_v3/` (single-party contribution with
+discarded entropy plus public beacon, `transcript_v3_1.json`, vk sha256 `4a1f265a…`; devnet only) —
+the VK the `dark_shielded_pool` program embeds
 (`crates/dark-groth16-core/src/shielded_withdraw_v3_vk.rs`, `alpha_g1.x=2d4d9aa7…`). The
 single-party **pilot** VK (`build/zk/out/shielded_withdraw_v3_vk.json`, `alpha_g1.x=2f881452…`)
 verifies locally but is **rejected on-chain with `Custom(4)=ProofInvalid`**, so `--vk-mode pilot`

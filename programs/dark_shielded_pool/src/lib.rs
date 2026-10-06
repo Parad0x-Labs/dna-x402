@@ -18,17 +18,18 @@
 //!   3. 7 public inputs (nullifier, merkle_root, recipient, pool_id, relayer, fee,
 //!      denomination). VK from `dark_groth16_core::shielded_withdraw_v3_vk`.
 //!
-//! CEREMONY — no Phase-2 human contributor (Hermez PPOT + drand beacon):
-//!   Phase 1: Hermez Perpetual Powers of Tau (power 14, sha256 489be9e5…,
-//!            publicly verifiable, multiple independent contributors).
-//!   Phase 2: ONLY the drand League of Entropy beacon (round 6000000) —
-//!            no human held or generated Phase-2 entropy; drand is collectively
-//!            operated by League of Entropy nodes and publicly verifiable.
-//!            Transcript: ceremony/shielded_withdraw_v3/transcript_v3.json.
+//! SETUP — single-party contribution with discarded entropy plus public beacon
+//! (v3.1, devnet only; a multi-party phase 2 is required before mainnet):
+//!   Phase 1: Hermez Perpetual Powers of Tau (power 14, sha256 489be9e5…).
+//!   Phase 2: 0000.zkey -> drand round 6000000 -> one operator contribution
+//!            (entropy discarded) -> drand round 6529525.
+//!            Transcript: ceremony/shielded_withdraw_v3/transcript_v3_1.json.
+//!   The earlier v3 key had no secret phase-2 contribution, so its delta was public
+//!   and proofs were forgeable (ceremony/shielded_withdraw_v3/ERRATA_v3.md).
 //!
 //! `IS_STUB = false` — hashing, tree, binding, and verifier are all real.
-//! `MAINNET_READY = false` — ceremony had ZERO independent human contributors;
-//! not trustless until re-run + fixed-binary redeploy + authority timelock/burn.
+//! `MAINNET_READY = false` — phase 2 rests on one operator; not for mainnet until a
+//! multi-party phase 2 + fixed-binary redeploy + authority timelock/burn.
 
 pub mod error;
 pub mod instruction;
@@ -43,14 +44,14 @@ pub use processor::{
 /// IS_STUB: the hash scheme, Merkle tree, recipient binding, and verifier are
 /// all REAL (real Poseidon + real incremental tree + real Groth16 VK).
 pub const IS_STUB: bool = false;
-/// MAINNET_READY = false. The deployed VK came from a setup→beacon trusted setup
-/// with ZERO independent human Phase-2 contributors (transcript_v3.json
-/// `contributions: []`), so soundness rests on one unverifiable single-party delta
-/// — NOT a trustless ceremony. A 2026-06-14 red/blue audit also found unbound-vault
-/// drains (now fixed) and a nullifier non-canonicalization double-spend (now fixed
-/// in dark-groth16-core). Do NOT flip true until: independent contributors re-run
-/// the ceremony, the fixed binary is redeployed, and the upgrade authority is
-/// timelocked/burned.
+/// MAINNET_READY = false. The deployed VK comes from a phase 2 with one secret
+/// contribution by a single operator (entropy discarded) plus public drand beacons
+/// (transcript_v3_1.json), so soundness rests on that one party. The earlier v3 key
+/// had no secret contribution at all (ERRATA_v3.md). A 2026-06-14 red/blue review
+/// also found unbound-vault drains (now fixed) and a nullifier non-canonicalization
+/// double-spend (now fixed in dark-groth16-core). Do NOT flip true until: a
+/// multi-party phase 2 is run, the fixed binary is redeployed, and the upgrade
+/// authority is timelocked/burned.
 pub const MAINNET_READY: bool = false;
 /// Minimum deposit prevents liveness DoS by making window exhaustion expensive.
 pub const MINIMUM_DEPOSIT_LAMPORTS: u64 = 100_000;

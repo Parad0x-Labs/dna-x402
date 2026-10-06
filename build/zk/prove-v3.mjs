@@ -14,9 +14,9 @@
  *   public [nullifier, merkle_root, recipient, pool_id, relayer, fee, denomination]
  *
  * VK SELECTION (SWV3_VK_MODE env, default "ceremony"):
- *   - ceremony : the Hermez-PPOT + drand-only-beacon key under
- *       ceremony/shielded_withdraw_v3/ (beacon round 6000000 applied to _0000.zkey,
- *       vk sha256 d1cb06d3…, alpha_g1.x=2d4d9aa7…). This is the VK the
+ *   - ceremony : the v3.1 key under ceremony/shielded_withdraw_v3/ (Hermez PPOT,
+ *       single-party contribution with discarded entropy plus drand beacons; vk sha256
+ *       4a1f265a…, transcript_v3_1.json). This is the VK the
  *       DEPLOYED devnet pool program embeds, so it is the ONLY mode whose proofs the
  *       program accepts on-chain. Default.
  *   - pilot    : the single-party key under build/zk/ (alpha_g1.x=2f881452…). Proofs

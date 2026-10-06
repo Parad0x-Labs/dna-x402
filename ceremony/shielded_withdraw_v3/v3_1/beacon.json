@@ -1,0 +1,15 @@
+{
+  "round": 6529525,
+  "randomness": "a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e",
+  "signature": "a5aa7954c0679f792909e633b2306c4eb67267d612681acbcb1f4cdc1ab2285e06143995c72e43f5c17f3c0347e7846619cce94a602d13978a9ae134c16bef415710ca626381e6e6cb57cbcbdbaa6292256adfd6bed9d9d37841af43febd93f7",
+  "previous_signature": "b8a65f5886a388bab1a6996eef7851f601a6e0ff72d833e04ecc0327bf439d5c50938a163f33b8897bc01d910dbe0bfe058f37402c88b56b37bba31449212ed020d2c97566f0f5520b738a2ce11778988fabf5868daf54f0a8a237cd6ccd40dc",
+  "chain": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
+  "relays_agreeing": [
+    "https://api.drand.sh",
+    "https://drand.cloudflare.com",
+    "https://api2.drand.sh"
+  ],
+  "randomness_is_sha256_of_signature": true,
+  "bls_signature_verified": true,
+  "fetched_at": "2026-10-06T19:59:33.600Z"
+}

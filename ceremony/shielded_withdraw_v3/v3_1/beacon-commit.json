@@ -1,0 +1,18 @@
+{
+  "committed_at": "2026-10-06T19:57:51.359Z",
+  "contribution_hash_fixed_before": "28a5e4f9 4d027cae 16bb6752 b74e8b41 ccd592f6 8e465996 30366df0 d73c29d7 ad869fa0 a497cd44 a266cfb8 e9101f86 efb8607d adaef747 897d0e33 526a14a8",
+  "latest_round_seen": 6529521,
+  "target_round": 6529525,
+  "target_round_time": "2026-10-06T19:59:30.000Z",
+  "info": {
+    "public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
+    "period": 30,
+    "genesis_time": 1595431050,
+    "hash": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
+    "groupHash": "176f93498eac9ca337150b46d21dd58673ea4e3581185f869672e59fa4cb390a",
+    "schemeID": "pedersen-bls-chained",
+    "metadata": {
+      "beaconID": "default"
+    }
+  }
+}

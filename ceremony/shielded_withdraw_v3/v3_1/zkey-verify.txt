@@ -1,0 +1,39 @@
+[INFO]  snarkJS: Reading r1cs
+[INFO]  snarkJS: Reading tauG1
+[INFO]  snarkJS: Reading tauG2
+[INFO]  snarkJS: Reading alphatauG1
+[INFO]  snarkJS: Reading betatauG1
+[INFO]  snarkJS: Circuit hash:
+		58cd3026 18e10d34 366832ef d1c54e08
+		90774f9e 7d7a1adb 5e830a6d 4d8f6116
+		f6bf8c97 393f16aa 6aef835a 69793fdc
+		a47122a2 7125f432 7585a0a3 8021afc8
+[INFO]  snarkJS: Circuit Hash:
+		58cd3026 18e10d34 366832ef d1c54e08
+		90774f9e 7d7a1adb 5e830a6d 4d8f6116
+		f6bf8c97 393f16aa 6aef835a 69793fdc
+		a47122a2 7125f432 7585a0a3 8021afc8
+[INFO]  snarkJS: -------------------------
+[INFO]  snarkJS: contribution #3 drand beacon (round 6529525):
+		bf83d740 b5a7dfdc bbe524a9 4af188dd
+		a13144ce 29150959 b313a30d 61a30481
+		62f64680 749d5f0c fba4c5e9 dd14284d
+		c3403454 35514beb 1cd92a2f 224306d9
+[INFO]  snarkJS: Beacon generator: a0e36451c3db3c675342740d2a5de2a59b4577bde0b5424c8a940d7647589d3e
+[INFO]  snarkJS: Beacon iterations Exp: 10
+[INFO]  snarkJS: -------------------------
+[INFO]  snarkJS: contribution #2 swv3.1 operator contribution (single party, entropy discarded):
+		28a5e4f9 4d027cae 16bb6752 b74e8b41
+		ccd592f6 8e465996 30366df0 d73c29d7
+		ad869fa0 a497cd44 a266cfb8 e9101f86
+		efb8607d adaef747 897d0e33 526a14a8
+[INFO]  snarkJS: -------------------------
+[INFO]  snarkJS: contribution #1 drand Final Beacon (fixed round 6000000):
+		9eb6d33c b0cc29bf bcdacbc0 5e1c41e8
+		aa57c82e 5fe26c43 6a220cdf 60110a10
+		8413c79b 0e12a4ba d4702a11 d933118f
+		faef25e3 f0f09668 7941b9c5 3cd85feb
+[INFO]  snarkJS: Beacon generator: 642f13b2933302bbdec93259cdd269cbddd9c637fda4b29dd975703723a38114
+[INFO]  snarkJS: Beacon iterations Exp: 10
+[INFO]  snarkJS: -------------------------
+[INFO]  snarkJS: ZKey Ok!
