@@ -28,15 +28,6 @@ updates:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
 
-  # pip / Python
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
-    labels: ["dependencies", "security"]
-
   # Cargo / Rust
   - package-ecosystem: "cargo"
     directory: "/"
