@@ -6,7 +6,7 @@
  */
 
 import { createHash } from "node:crypto";
-import type { Connection, Keypair } from "@solana/web3.js";
+import type { Connection, Keypair, PublicKey as PublicKeyType } from "@solana/web3.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -364,10 +364,10 @@ export async function verifyCrossChainReceipt(
   const accountKeys =
     "getAccountKeys" in message
       ? message.getAccountKeys().staticAccountKeys
-      : (message as { accountKeys: PublicKey[] }).accountKeys;
+      : (message as { accountKeys: PublicKeyType[] }).accountKeys;
 
   const hasAnchorProgram = accountKeys.some(
-    (key: PublicKey) => key.toBase58() === anchorProgramId.toBase58()
+    (key: PublicKeyType) => key.toBase58() === anchorProgramId.toBase58()
   );
 
   if (!hasAnchorProgram) {
