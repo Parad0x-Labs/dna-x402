@@ -1,0 +1,43 @@
+{
+  "name": "@parad0x_labs/x402-settle",
+  "version": "0.1.0",
+  "description": "Client for the x402_settle Solana program: voucher signing and encoding, SIMD-0385 V1 transaction builders, B2 and channel packers, two-phase batch builder, account decoders and a netting-ledger flush sink.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "keywords": [
+    "solana",
+    "x402",
+    "settlement",
+    "ed25519",
+    "payment-channels"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Parad0x-Labs/dna-x402"
+  },
+  "homepage": "https://github.com/Parad0x-Labs/dna-x402/tree/main/packages/x402-settle",
+  "license": "MIT",
+  "author": "Parad0x Labs",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}
