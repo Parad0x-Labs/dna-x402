@@ -14,9 +14,9 @@ import type { TaskSpec, MinerStats } from "../core/types.js";
 export const DEVNET_RPC       = "https://api.devnet.solana.com";
 export const DEVNET_PLATFORM  = "null-miner-devnet-test";
 
-/** Stub wallet for devnet testing — never use on mainnet */
+/** Fixed test wallet for devnet testing — never use on mainnet */
 export const DEVNET_STUB_WALLET = {
-  publicKey: "11111111111111111111111111111112", // System program — placeholder
+  publicKey: "11111111111111111111111111111112", // fixed test address, not a funded wallet
   signTransaction: async (tx: unknown) => tx,
 };
 

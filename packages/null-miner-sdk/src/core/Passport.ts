@@ -240,7 +240,7 @@ export class AgentPassport {
 
   /**
    * Generate a ZK attestation proving reputation without revealing payment history.
-   * Phase 1: SHA-256 stub.
+   * Phase 1: SHA-256 commitment (Groth16 in Phase 2).
    * Phase 2: Groth16 (planned).
    */
   attest(claimedScore: number): PassportAttestation {

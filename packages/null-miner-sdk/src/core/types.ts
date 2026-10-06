@@ -70,7 +70,7 @@ export interface PassportAttestation {
   passportId: string;   // H(spend_key_commitment) — stable, anonymous
   reputationScore: number;  // 0–1000
   tier: ReputationTier;
-  /** ZK proof blob (SHA-256 stub now, Groth16 Phase 2). */
+  /** ZK proof blob (SHA-256 commitment today, Groth16 in Phase 2). */
   proofBlob: string;  // hex
 }
 
