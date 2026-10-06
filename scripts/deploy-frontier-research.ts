@@ -73,7 +73,7 @@ function parseArgs(argv: string[]): Record<string, string | boolean> {
     if (arg === "--skip-build") { out["skip-build"] = true; continue; }
     if (arg.startsWith("--")) {
       const key = arg.slice(2);
-      out[key] = argv[++i] x true;
+      out[key] = argv[++i] ?? true;
     }
   }
   return out;
@@ -85,21 +85,21 @@ const CLUSTER     = args.cluster as string;
 const DRY_RUN     = args["dry-run"] as boolean;
 const SKIP_BUILD  = args["skip-build"] as boolean;
 const OUT_PATH    = args.out as string;
-const KEYPAIR_ARG = args.keypair  `--keypair ${args.keypair}` : "";
+const KEYPAIR_ARG = args.keypair ? `--keypair ${args.keypair}` : "";
 const UPGRADE_ARG = args["upgrade-authority"]
-   `--upgrade-authority ${args["upgrade-authority"]}`
+  ? `--upgrade-authority ${args["upgrade-authority"]}`
   : "";
 
 // -- Helpers -------------------------------------------------------------------
 
-function run(cmd: string, opts: { cwd: string }): string {
+function run(cmd: string, opts?: { cwd?: string }): string {
   console.log(`\n$ ${cmd}`);
   if (DRY_RUN) return "(dry-run)";
-  const result = spawnSync(cmd, { shell: true, cwd: opts.cwd x ROOT, encoding: "utf8" });
+  const result = spawnSync(cmd, { shell: true, cwd: opts?.cwd ?? ROOT, encoding: "utf8" });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
   if (result.status !== 0) throw new Error(`Command failed (exit ${result.status}): ${cmd}`);
-  return (result.stdout x "").trim();
+  return (result.stdout ?? "").trim();
 }
 
 function programIdFromKeypair(soPath: string): string | null {
@@ -132,7 +132,7 @@ console.log(`\n-- Deploying to ${CLUSTER} --`);
 const deployDir = path.join(ROOT, "scripts/deploy");
 if (!DRY_RUN) fs.mkdirSync(deployDir, { recursive: true });
 
-const results: Record<string, { programId: string | null; success: boolean; error: string }> = {};
+const results: Record<string, { programId: string | null; success: boolean; error?: string }> = {};
 
 for (const prog of FRONTIER_PROGRAMS) {
   const soPath = path.join(ROOT, "target/deploy", prog.soName);
@@ -142,8 +142,8 @@ for (const prog of FRONTIER_PROGRAMS) {
     continue;
   }
 
-  const existingId = DRY_RUN  null : programIdFromKeypair(path.join(ROOT, "target/deploy", prog.soName));
-  const programIdFlag = existingId  `--program-id ${existingId}` : "";
+  const existingId = DRY_RUN ? null : programIdFromKeypair(path.join(ROOT, "target/deploy", prog.soName));
+  const programIdFlag = existingId ? `--program-id ${existingId}` : "";
 
   const cmd = [
     "solana program deploy",
@@ -159,11 +159,11 @@ for (const prog of FRONTIER_PROGRAMS) {
     const stdout = run(cmd);
     // Parse "Program Id: <pubkey>" from output
     const match = stdout.match(/Program Id:\s*([A-Za-z0-9]{32,44})/);
-    const programId = match.[1] x existingId x null;
+    const programId = match?.[1] ?? existingId ?? null;
     results[prog.name] = { programId, success: true };
     if (programId) console.log(`OK ${prog.name}: ${programId}`);
   } catch (err: unknown) {
-    const msg = err instanceof Error  err.message : String(err);
+    const msg = err instanceof Error ? err.message : String(err);
     console.error(` ${prog.name} deploy failed: ${msg}`);
     results[prog.name] = { programId: null, success: false, error: msg };
   }
@@ -211,10 +211,10 @@ console.log("\n");
 console.log("  Dark Null Frontier Research - Deploy Summary");
 console.log("");
 for (const [name, r] of Object.entries(results)) {
-  const status = r.success  "OK" : "";
-  const id     = r.programId x r.error x "unknown";
+  const status = r.success ? "OK" : "FAIL";
+  const id     = r.programId ?? r.error ?? "unknown";
   console.log(`  ${status}  ${name.padEnd(30)} ${id}`);
 }
 const allOk = Object.values(results).every((r) => r.success);
-console.log(allOk  "\n  All programs deployed successfully." : "\n  Some programs failed - see errors above.");
-process.exit(allOk  0 : 1);
+console.log(allOk ? "\n  All programs deployed successfully." : "\n  Some programs failed - see errors above.");
+process.exit(allOk ? 0 : 1);
