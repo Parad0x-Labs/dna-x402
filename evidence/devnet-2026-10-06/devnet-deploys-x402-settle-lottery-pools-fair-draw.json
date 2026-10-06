@@ -1,0 +1,50 @@
+{
+ "cluster": "devnet",
+ "date": "2026-10-06",
+ "upgradeAuthority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+ "method": "fresh program keypair, solana program deploy with --max-len equal to the .so size (Agave CLI 4.2.1); graded from the ledger: program show (authority, dataLen, lastDeploySlot) and program dump (sha256 of the leading so_bytes bytes equals the .so; remaining bytes zero)",
+ "programs": [
+  {
+   "name": "x402_settle",
+   "programId": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+   "deploySignature": "3kseFohzzcNyM8EU7nKRGLn99koGGcdDUDuKWZF1kq2nBWuoyJ4JSTmQFWnpivrmdoG1hDxPeWfPAkPpvCjv1Vrp",
+   "lastDeploySlot": 508174975,
+   "authority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+   "dataLen": 172328,
+   "soBytes": 172328,
+   "soSha256": "c93a2cdc976430bb856a18d007b6d3d53e89fb5b64feecc6e5e7c61ac5320e9f",
+   "dumpPrefixSha256": "c93a2cdc976430bb856a18d007b6d3d53e89fb5b64feecc6e5e7c61ac5320e9f",
+   "dumpTailNonZeroBytes": 0,
+   "programdataLamports": 876305080,
+   "result": "PASS"
+  },
+  {
+   "name": "null_lottery_pools",
+   "programId": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+   "deploySignature": "1jS76dW9GoniWF3RpB1ikcTmu5G4kJuVHevkHkzjzSVonL5E9w6fMJ7UKsN8qoVkKKi9BZM1FZ6p1FnERUvkhzG",
+   "lastDeploySlot": 508177819,
+   "authority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+   "dataLen": 129440,
+   "soBytes": 129440,
+   "soSha256": "63a16e8a8ba0f2b99fa5895a5523cad629d77dffd1d9a1d3eefe322fc0e92c48",
+   "dumpPrefixSha256": "63a16e8a8ba0f2b99fa5895a5523cad629d77dffd1d9a1d3eefe322fc0e92c48",
+   "dumpTailNonZeroBytes": 0,
+   "programdataLamports": 658434040,
+   "result": "PASS"
+  },
+  {
+   "name": "null_fair_draw",
+   "programId": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+   "deploySignature": "553ZzuPAMuNCSeCWHSbjGr3gVwMbwBLfTU5LyLqVUyshfoGjoB1TWz6UcB7LfHfYDAUm75vDwf7yZH2dzMC6Dr3Z",
+   "lastDeploySlot": 508177679,
+   "authority": "9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q",
+   "dataLen": 160960,
+   "soBytes": 160960,
+   "soSha256": "09a71388b2181e0be3f53a93d267f5ea343d6311f544dec80297a6adbd7ad7d8",
+   "dumpPrefixSha256": "09a71388b2181e0be3f53a93d267f5ea343d6311f544dec80297a6adbd7ad7d8",
+   "dumpTailNonZeroBytes": 0,
+   "programdataLamports": 818555640,
+   "result": "PASS"
+  }
+ ]
+}

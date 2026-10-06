@@ -30,7 +30,10 @@
     "nullifierBanks": "499rd2qTLyeq9ei4quSzkmJa9ZXwQRaa837Angskuaue",
     "chaff": "4TQ4UrJ5bA6dzNmU5gZ5mTF6SS8crA5ffN7BeMsEUt5B",
     "fedimintRedeem": "26v61JPcTKyrUfTpULVaP5w9dCN3GtCW3gu5X1LunrNd",
-    "bls12381Credential": "C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE"
+    "bls12381Credential": "C3qeJAmoc4ziQQXxrzVdaXsvJ2Bz1ofMkt9hZYY1eyyE",
+    "x402Settle": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+    "lotteryPools": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+    "fairDraw": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL"
   },
   "rpcUrl": "https://api.devnet.solana.com",
   "deployedAt": "2026-10-06",

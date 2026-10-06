@@ -1,0 +1,2461 @@
+{
+ "program": "fair-draw",
+ "rpc": "private devnet RPC",
+ "started": "2026-10-06T18:33:05.780Z",
+ "programId": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+ "airdrop": false,
+ "steps": [
+  {
+   "label": "top-up entrant1",
+   "signature": "neZpEde3wLfRav2pJdXw7djL5dP8hEy7dsBr1gPYKvjDmBqtTzUmKQs1WUsD8sfmJJ3GvrssT2jKgzWhC6T4F5n",
+   "slot": 508184509,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": []
+  },
+  {
+   "label": "top-up entrant2",
+   "signature": "5skZ1FWxP8DpdW8eV2vSM8GoxFihQfYBHHtpLxs8jV3PLMoJneEzx33oedNydH7Wf3JJ39QC1upPQvLnm86QMohJ",
+   "slot": 508184519,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": []
+  },
+  {
+   "label": "top-up entrant3",
+   "signature": "3LxfViHZZ2YYHvMkcuW9nNRbTRrW4E2jkyAZFLKumguoP2vN2ipp6TWbuZiNjSHfUCRUE6EMEoN1AgevqtSjLBxu",
+   "slot": 508184528,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": []
+  },
+  {
+   "label": "top-up entrant4",
+   "signature": "2SM6pewmShfzRvVc2fkpicQ9pAAGmv9UMTNGq4dZNLY49zh7dXoR3nCzyHjmn2nGvrTBbxBpKEviTiK2FxYLPoSc",
+   "slot": 508184540,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": []
+  },
+  {
+   "label": "open: CreateDraw",
+   "signature": "4g2meSfr4Bwf2Y88EPdZhC4SznkDycJxHmo2tJWM2hA8FbYu8HTvLMTr4Tgv8iH43viXY4D9wvNHMjeJHDjVHKEG",
+   "slot": 508184551,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 7515,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 7515
+    }
+   ],
+   "kind": "CreateDraw (open raffle, SOL, 6 prizes, 1 re-draw round)"
+  },
+  {
+   "label": "open: FundPrizes",
+   "signature": "67WseoDm7moGHTibiKS3spEBezmTgmP1RooGjDMCvnMrJcTqZj9Evru8uhdioB34mqSsqC11iBDTMLWJmxSUwNew",
+   "slot": 508184557,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 6469,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 6469
+    }
+   ],
+   "kind": "FundPrizes (SOL, 12 slot capacity)"
+  },
+  {
+   "label": "open: Enter #0 count 3 by entrant1",
+   "signature": "3fDrsPmhj6fqjSipPHQF6QyAMukSe9epEgyBPuAW9LVfgyTWsbxSAJeDaAvUufHGxyZwk2kNPwQNbB7ycz5ESym",
+   "slot": 508184566,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 22511,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 22511
+    }
+   ],
+   "kind": "Enter (unweighted, 3 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #1 count 1 by entrant2",
+   "signature": "3rnrd5nks2RgAdzzqxP5ZcLFLajJzExxvVnW21F9AK9g8RtdYZv6dkDMBVnzKxzL2hY72PYhfcyQ7hDZUpCuhpDD",
+   "slot": 508184577,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11545,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 11545
+    }
+   ],
+   "kind": "Enter (unweighted, 1 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #2 count 4 by entrant3",
+   "signature": "3qRDpB2zzNZ5zVEdrqHDnwVBgaDycKkg3NQxpQs4wbunwGF84SAaiH7xM4zfhMqWLRgQydxxQhon6i5ysxQyPfCb",
+   "slot": 508184589,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 28006,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 28006
+    }
+   ],
+   "kind": "Enter (unweighted, 4 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #3 count 2 by entrant4",
+   "signature": "52iTHxq18oRfnG5mScjie3ZQA5iku2txWdqJbUxPy635knnC3xYbz8NagbonHDjoQcoMRK2KyPQjyhQgpWNiCMzf",
+   "slot": 508184597,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 17030,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 17030
+    }
+   ],
+   "kind": "Enter (unweighted, 2 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #4 count 1 by payeeA",
+   "signature": "3A4Vzh5GWyd4fjWQXJsV1QLxicCqK16wnduTxHybx64VmmNyngnTTLa67dKiK6wQCmiiZDzEQEdqq2xBkAHfvvPv",
+   "slot": 508184604,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11545,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 11545
+    }
+   ],
+   "kind": "Enter (unweighted, 1 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #5 count 2 by payeeB",
+   "signature": "2soqii63rcWpjryLaLCvrkFD5SZZMB1U2Kd4gnxSAKp9USzWosDhNG61d2KsMxLfDDYaNHzqD5znuQ2TF4jphZQf",
+   "slot": 508184613,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 17034,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 17034
+    }
+   ],
+   "kind": "Enter (unweighted, 2 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #6 count 1 by entrant1",
+   "signature": "2yrKXG7rGPz3kFF8To88Xf3bMBeLNfbECCxpRR4tVnPGkKGe3D9GYCgbeDhZ6HbzeGK9CcQjTxWCKDHgncSwYi6C",
+   "slot": 508184622,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11547,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 11547
+    }
+   ],
+   "kind": "Enter (unweighted, 1 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Enter #7 count 1 by entrant3",
+   "signature": "4TC4vTQA7rTTwE83cbM5pTvbfdMiVEwi7LFfDztXTimBCUfHieFhpz4Du4SD6zySdVFVVTu2RUjFJsUXcehTotUr",
+   "slot": 508184631,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11547,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 11547
+    }
+   ],
+   "kind": "Enter (unweighted, 1 leaves, SOL entry fee)"
+  },
+  {
+   "label": "open: Draw while entries open",
+   "signature": "5y7u3xyWApfx2V68eVouQyfQ6gBbbVbmEjsvjK7vB5BcvmGfXezgnFWix7y6SsFHtN5UFHhpmZ5DFxrhMtyzkTwT",
+   "slot": 508184638,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861575
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3357,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3207
+    }
+   ],
+   "kind": "Draw",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3207 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x46440007"
+   ]
+  },
+  {
+   "label": "open: Draw before target slot hash",
+   "signature": "KJ8mcC8Vxcqy18FcsBWHMcMe8Gd1pr6grcGjJRmcdrAayccJLk984BJahh6czVbCr2RDCYFbkm1xdzUAbqFhKVC",
+   "slot": 508184708,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861579
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3428,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3278
+    }
+   ],
+   "kind": "Draw",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3278 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000b"
+   ]
+  },
+  {
+   "label": "open: Enter after close",
+   "signature": "4UWkMgHcHgYjgSjFDZnLs9mWd2PBVFKBenMaKfvqEfcMFaktW274NYTy6HSC9SwT5vFK2mxT69GhRygFCqvj8yyc",
+   "slot": 508184711,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861574
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3916,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3766
+    }
+   ],
+   "kind": "Enter (unweighted, 1 leaves, SOL entry fee)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3766 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x46440006"
+   ]
+  },
+  {
+   "label": "open: crank draw round 0 next slot 0",
+   "signature": "C7VeAAMiXTPXyRw2q1iGcekwLrec8F9tDPDm4qEJriLSxpyAk5xc7XL54yPwNrtKd4jPZPihonNt26oMA7ZDx2t",
+   "slot": 508184741,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 5016,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 5016
+    }
+   ],
+   "kind": "Draw"
+  },
+  {
+   "label": "open: crank resolve round 0 next slot 0",
+   "signature": "5PcYrSFwzEzCzQjzx2TZfPw7Pt1v5Sy5mnwnyt6UH5Qm3d8BiH77hgKrpPdt7sGrivZ746Jy7C71hE6J9XgsaDhe",
+   "slot": 508184749,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 20252,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 20252
+    }
+   ],
+   "kind": "Resolve (unweighted, 6 slots)"
+  },
+  {
+   "label": "open: Claim slot 0 with a tampered proof",
+   "signature": "46K4eSwHCDofAEAunu3YrtWrd8C7nCbJZas5tN7A4P6cbfeDRe6ss4Uhc3vFa17p4qLa4Mg26d2V1jnZs6mdidek",
+   "slot": 508184780,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861580
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 8653,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 8503
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 8503 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000c"
+   ]
+  },
+  {
+   "label": "open: Claim slot 4 tier 2 round 0 by entrant1",
+   "signature": "25hbaujxg4AWSd4uK3Kd3c8rwduLFrkCuk8mJ98P3zQMhxAfBwts3Au6e6NtdTbHDoparnvSfrurhcyeXHEHm3D7",
+   "slot": 508184780,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 9939,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 9939
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)"
+  },
+  {
+   "label": "open: Claim slot 1 tier 1 round 0 by payeeB",
+   "signature": "3aChbDHqBGGgS9xqcxeZc5nzwJ4Crhb6JnkabvtahAwzFcNHDF7L1ZMAC5yqmVtrtkTGe2eSSWto13oW65xpiVuV",
+   "slot": 508184780,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 9930,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 9930
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)"
+  },
+  {
+   "label": "open: Claim slot 3 tier 2 round 0 by entrant1",
+   "signature": "5U8addeuiawQQFWHudwpBLBQSgUjQ6aSjpUPq12AuAgPTnVi6b4qrK5tGVeN61fYd89FGAUnBFbbUeJBr3RLFMDR",
+   "slot": 508184784,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 9912,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 9912
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)"
+  },
+  {
+   "label": "open: Claim slot 0 by non-winner entrant1 (own leaf proof)",
+   "signature": "ZaJtp7B4AQoMNcoEMTBjf35Dn7hKNw77AV3xwEuinkGoDUuR3x9dTy1NMC6NdccGvwiXkpjVZx96jDTCvXBmB87",
+   "slot": 508184796,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861583
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3580,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3430
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3430 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000f"
+   ]
+  },
+  {
+   "label": "open: Claim slot 0 tier 0 round 0 by payeeA",
+   "signature": "29uLNJJy6n477gxDUvS9d3qWed6KV4Hdhj8APUBfHBmKMWqENCDM9mjy84MHjSzBw1P9HBgrwaaVaVo6GdbXsLXZ",
+   "slot": 508184808,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 9930,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 9930
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)"
+  },
+  {
+   "label": "open: Claim slot 0 again",
+   "signature": "L37TS4MDQQ1RsJvEpfA8hReYs9fM2G7RNe8nMdTy9w4XiQpLF1FbMua3DNKEN5tWifyUssnxpAYamk56nUSHzBL",
+   "slot": 508184818,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861592
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3359,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3209
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3209 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x46440018"
+   ]
+  },
+  {
+   "label": "open: Claim slot 2 after the window",
+   "signature": "zzumx996s6ho8JuqFN3STL9aXHWFJkyW4js9t1q4DJBkEGdChQXQDugrNRVbQ3NPbBuTwMzusiEdQiemedUxsNr",
+   "slot": 508184908,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861584
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3537,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3387
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3387 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x46440010"
+   ]
+  },
+  {
+   "label": "open: Advance (opens re-draw round)",
+   "signature": "3QvQyLLYewBfBux7oU4mowQYqQW6gLT1fU6rYUGTs8gYTwW5ywuXoiPt3cP7ULYW4gbXhPnr3mX7rpR2oTGSqHXE",
+   "slot": 508184916,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 3905,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3905
+    }
+   ],
+   "kind": "Advance (2 forfeited, opens re-draw round)"
+  },
+  {
+   "label": "open: crank draw round 1 next slot 6",
+   "signature": "2YgEv71Ljw9S2y2CpzmEQrKMKXXnsLKhdTen3F8VY2rPAmy5xaoPcmY7mQgoK7EbXWvnS26Nj9c7YDcspGyuneFd",
+   "slot": 508184943,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 5011,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 5011
+    }
+   ],
+   "kind": "Draw"
+  },
+  {
+   "label": "open: crank resolve round 1 next slot 6",
+   "signature": "3rxU5Na8UuvTkdb6KFuZsmQSaSoJNMNkXsPBmE5yiZxkoFZddHKJwizjCxbi9PaqE1pVG3Rt9jCbVpLWAmf5Pg3c",
+   "slot": 508184952,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 9130,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 9130
+    }
+   ],
+   "kind": "Resolve (unweighted, 2 slots)"
+  },
+  {
+   "label": "open: Claim slot 6 tier 1 round 1 by entrant3",
+   "signature": "3NvoibeiDh1m7LwSqWgv2dytLyWE9jt78MDD9d6aP3jDyRTeNUVXnHMCaccFk1RzSzRYDERhXEjCMzTE38pSu8Aq",
+   "slot": 508184981,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 9939,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 9939
+    }
+   ],
+   "kind": "Claim (unweighted, leaf proof, SOL)"
+  },
+  {
+   "label": "open: Advance (complete)",
+   "signature": "5dmAtkYBcQRZLiVAAFcbPJdHX16aETUAzQM8ZscNjx4j3je4vzsP3DBsBD35UP3ZHZrFAYKFmCH82megEJfSCyBR",
+   "slot": 508185109,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 3795,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3795
+    }
+   ],
+   "kind": "Advance (1 forfeited, completes)"
+  },
+  {
+   "label": "open: Reclaim",
+   "signature": "5du18jH1BfVynciC26SqNd1UPXk4ZNjPbghSaEF6GnHFA2DMGhtsQUQVeq8dnSTm5g4oufsyCmeftMCQLM3hy8vF",
+   "slot": 508185146,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 4122,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 4122
+    }
+   ],
+   "kind": "Reclaim (SOL)"
+  },
+  {
+   "label": "open: Close",
+   "signature": "65PbevCBNEmr5bGb5TSZB82Fmhv6hvaTLC7RZ2nzpCPQQR76WEqxkgSNfnzVGAponvLFiHC2vGZMuwLgPtecuJ7Q",
+   "slot": 508185156,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 3571,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3571
+    }
+   ],
+   "kind": "Close (SOL)"
+  },
+  {
+   "label": "list: create mint + organizer token account + mint 1000000000",
+   "signature": "4F5MiwdypNv8L3DSycFTbe3RJ8tThvgkoEEV5tWkDcDFmbmY8RJ2TLwFhsS2jkqHfXFweNSb6i4x8BtpoM2Ju7e3",
+   "slot": 508185172,
+   "version": "legacy",
+   "err": null,
+   "fee": 15000,
+   "cu": 888,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 202
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 153
+    }
+   ]
+  },
+  {
+   "label": "list: CreateDraw",
+   "signature": "8XptpbwC5TgYMhByxSTtepeGiSuRQdhnpLd2JeTszSt8ocNatVhqL8UFA3yjcdhh92sNmq6wykbe5ZSNDDCMFw9",
+   "slot": 508185190,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 15665,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 15665
+    }
+   ],
+   "kind": "CreateDraw (committed list, SPL vault)"
+  },
+  {
+   "label": "list: FundPrizes",
+   "signature": "4x88qH9yJDKW8kmNVLbV1JqZdnGY3esJtBqzfAFCeHLXDk3VC3eCUNDQ4rqhJAnwgreyK9T6vesTessjBPXA9fez",
+   "slot": 508185201,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8774,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 8774
+    }
+   ],
+   "kind": "FundPrizes (SPL)"
+  },
+  {
+   "label": "list: CommitList (9 entries, total weight 49)",
+   "signature": "2vCAE7k31jdZxg9pg73kA5cgquz1B1xAxUmBpbGAUFdxaoCZbC9p8w96CcaiEtb4tQenJYrKSHCqshQwCNhU6q5n",
+   "slot": 508185209,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 4169,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 4169
+    }
+   ],
+   "kind": "CommitList"
+  },
+  {
+   "label": "list: Draw before target slot hash",
+   "signature": "5NRxe2PNprxQg9NLFEJnnX6eG1uy7cWBzkyJapazMqLADRsnorH3fQWGsEQA2er5VMQ4TXsrKJ3igitHTgSmL293",
+   "slot": 508185217,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861579
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3423,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3273
+    }
+   ],
+   "kind": "Draw",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3273 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000b"
+   ]
+  },
+  {
+   "label": "list: crank draw round 0",
+   "signature": "5jrk9yjuRbKRxxjmErc2K8kDLwXS7wwfJEyjBfJ1sz8Cf25wkaUS9M4DriNa2eS59FxGfeQCjEwKZNtnJ5z5cz6B",
+   "slot": 508185253,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 5011,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 5011
+    }
+   ],
+   "kind": "Draw"
+  },
+  {
+   "label": "list: Resolve with a tampered proof",
+   "signature": "4j6Fm63EzWQYaSRDPGFbjddE35aNVX1qrB3DMCQnTL1hngbj2huMsLgVgYr4gYVNV6XGtHJ7jonCLyqWxitvEv3n",
+   "slot": 508185262,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861580
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 6204,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 6054
+    }
+   ],
+   "kind": "Resolve (weighted, 1 proof, depth 4)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 6054 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000c"
+   ]
+  },
+  {
+   "label": "list: Resolve with a valid proof of another leaf",
+   "signature": "xhDQ8W8Cw4Tm6aebNW6PvJqKpX626XTkRefQmZnRPivzi3C9QzqfPBU117ZVzWp6SMkcLTxLwyHv8PaNU3hhV97",
+   "slot": 508185270,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861581
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 6227,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 6077
+    }
+   ],
+   "kind": "Resolve (weighted, 1 proof, depth 4)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 6077 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000d"
+   ]
+  },
+  {
+   "label": "list: crank resolve round 0 next slot 0",
+   "signature": "xjxvNAqs8dfgQgBwGzr2iYKRuF23SG6KFCLEGZL6ka1MQYsrUZtaQTrjhJrQtaDGbR6kfYXTB5MXebonBu5Fi6y",
+   "slot": 508185288,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 7575,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 7575
+    }
+   ],
+   "kind": "Resolve (weighted, 1 proof, depth 4)"
+  },
+  {
+   "label": "list: crank resolve round 0 next slot 1",
+   "signature": "5ibkyeavHDGrqgEtpGRNQLQDUA95JA5jCffGJTr9KTcgguPGe9TyXYdkTSeuRMSMBGV7v8nWSgYTvzwukGjjA5T9",
+   "slot": 508185300,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 7629,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 7629
+    }
+   ],
+   "kind": "Resolve (weighted, 1 proof, depth 4)"
+  },
+  {
+   "label": "list: crank resolve round 0 next slot 2",
+   "signature": "4rhFFwRZQ26gwi2YtXSe5RipmA9hQKq1Q2c4KvPC91aktvuaZba9M2waubZj2YXNunMg4i1TrYpeYeUHNELrzTpc",
+   "slot": 508185311,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 7670,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 7670
+    }
+   ],
+   "kind": "Resolve (weighted, 1 proof, depth 4)"
+  },
+  {
+   "label": "list: Claim slot 0 by non-winner entrant1",
+   "signature": "5YvjfXbvCZe5GPPTU16BFVjfg7TKpF3ADHEcZw6YSp2vBbKUfNrXas3odoWD7VLXYXCqB44aM3RkVXz6XmSdcJnZ",
+   "slot": 508185320,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861583
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3978,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3828
+    }
+   ],
+   "kind": "Claim (weighted, SPL)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3828 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x4644000f"
+   ]
+  },
+  {
+   "label": "list: token account + Claim slot 0 tier 0 by entrant4",
+   "signature": "2cg7BPwUHAxqEYyoX49aYYLSC72shii3KL3XQWYfbFqSzyjWCRibCTksrTsYzuUucEH14U9Mhi25PXibY6MUk1wa",
+   "slot": 508185328,
+   "version": "legacy",
+   "err": null,
+   "fee": 15000,
+   "cu": 9328,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 8945
+    }
+   ],
+   "kind": "Claim (weighted, SPL)"
+  },
+  {
+   "label": "list: token account + Claim slot 2 tier 1 by payeeB",
+   "signature": "4Y4XL5BuuaouPuwKLeqgfhET5vGqJhTw85joqHHuAawuGBSPqw2oag4tBjHA4cWfXgkZENhfg4em11ubwvC253uo",
+   "slot": 508185328,
+   "version": "legacy",
+   "err": null,
+   "fee": 15000,
+   "cu": 9328,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 8945
+    }
+   ],
+   "kind": "Claim (weighted, SPL)"
+  },
+  {
+   "label": "list: token account + Claim slot 1 tier 1 by entrant2",
+   "signature": "CHVGZ9ZNor9j7bVdYSCCmacsYJgryuN3DS1ipyvDwR6RFvS7knrDGTqViHQbdKiMrjr2NPGvdhvZoSRWBm56nEv",
+   "slot": 508185330,
+   "version": "legacy",
+   "err": null,
+   "fee": 15000,
+   "cu": 9328,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 8945
+    }
+   ],
+   "kind": "Claim (weighted, SPL)"
+  },
+  {
+   "label": "list: Claim slot 0 again",
+   "signature": "erQSSupMqWgKv6Nwp1CDvMnwpwoGMWQNEedHGuNVuC2reAefTvsqww5XQ783RRMYKitCHFTDevxLBZBbhYfv2uL",
+   "slot": 508185340,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861592
+     }
+    ]
+   },
+   "fee": 10000,
+   "cu": 3769,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3619
+    }
+   ],
+   "kind": "Claim (weighted, SPL)",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL invoke [1]",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL consumed 3619 of 199850 compute units",
+    "Program FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL failed: custom program error: 0x46440018"
+   ]
+  },
+  {
+   "label": "list: Advance (complete)",
+   "signature": "24Dyy1vgVskXq8vBdeZhazLERk7ED5B5kt2K7eygArWga4qJo9iLFJB4Uwy2TxNXnwaWVGnoUDKj6Pt8KTjStmj8",
+   "slot": 508185469,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 3689,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 3689
+    }
+   ],
+   "kind": "Advance (0 forfeited, completes)"
+  },
+  {
+   "label": "list: Close (draw + vault)",
+   "signature": "3QHrxHH26Gxz5TnLFQN1qXL4iS7r4cxahW223wRzbVQ3d5NByq37u7CYhPpRPdNJiCrTGmzZEPCepztFPFDX3LUB",
+   "slot": 508185483,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 7703,
+   "ixCu": [
+    {
+     "program": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+     "cu": 7703
+    }
+   ],
+   "kind": "Close (SPL, closes vault)"
+  },
+  {
+   "label": "list: cleanup token account of entrant4",
+   "signature": "4m66wUqaTNUq11TKpaTmkVEdpnbc75RiKquhjfWUbmjGEn2tf6wUh3pFcfCFuDAQv6ZNVWnoWEohqKyHtQMXdCrT",
+   "slot": 508185493,
+   "version": "legacy",
+   "err": null,
+   "fee": 10000,
+   "cu": 194,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 76
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    }
+   ]
+  },
+  {
+   "label": "list: cleanup token account of entrant2",
+   "signature": "2ZY2h6Avd67wXpBK8iDyKWpi7EQ3zjEhNt6WWjhUn9mi78vTKqSP3KS3jrztCDVYCdMeqQxMVskN9Q8yhCPYpgbH",
+   "slot": 508185503,
+   "version": "legacy",
+   "err": null,
+   "fee": 10000,
+   "cu": 194,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 76
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    }
+   ]
+  },
+  {
+   "label": "list: cleanup token account of payeeB",
+   "signature": "5PxR8uiyd9LSbt9jg9dvN6hqmL6zvk3jqH29ZhFQh7MbKWg4SQrDeSrLkp4giE8iJiuvYxcUR2cmAv6jHoeYEpg4",
+   "slot": 508185512,
+   "version": "legacy",
+   "err": null,
+   "fee": 10000,
+   "cu": 194,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 76
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    }
+   ]
+  },
+  {
+   "label": "list: cleanup organizer token account",
+   "signature": "4B15XxepUBYYZhYYRXhADRoAhfSKWaTXzbS5mnmpkN4jCgVcUbp14pkbmNoTwEjEjnxibxwgBk5sEmjh4J43ns6J",
+   "slot": 508185521,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 251,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 131
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 120
+    }
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "label": "setup: program deployed and executable",
+   "pass": true,
+   "programId": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL"
+  },
+  {
+   "label": "top-up entrant1",
+   "pass": true,
+   "cu": 150,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "top-up entrant2",
+   "pass": true,
+   "cu": 150,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "top-up entrant3",
+   "pass": true,
+   "cu": 150,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "top-up entrant4",
+   "pass": true,
+   "cu": 150,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "setup: organizer holds >= 0.15 SOL",
+   "pass": true,
+   "balance": "4378306464"
+  },
+  {
+   "label": "open: CreateDraw",
+   "pass": true,
+   "cu": 7515,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: FundPrizes",
+   "pass": true,
+   "cu": 6469,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: prizes escrowed",
+   "pass": true,
+   "funded": "55000000",
+   "totalPrize": "55000000"
+  },
+  {
+   "label": "open: Enter #0 count 3 by entrant1",
+   "pass": true,
+   "cu": 22511,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #0 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-35000",
+   "organizer": "30000"
+  },
+  {
+   "label": "open: Enter #1 count 1 by entrant2",
+   "pass": true,
+   "cu": 11545,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #1 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-15000",
+   "organizer": "10000"
+  },
+  {
+   "label": "open: Enter #2 count 4 by entrant3",
+   "pass": true,
+   "cu": 28006,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #2 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-45000",
+   "organizer": "40000"
+  },
+  {
+   "label": "open: Enter #3 count 2 by entrant4",
+   "pass": true,
+   "cu": 17030,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #3 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-25000",
+   "organizer": "20000"
+  },
+  {
+   "label": "open: Enter #4 count 1 by payeeA",
+   "pass": true,
+   "cu": 11545,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #4 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-15000",
+   "organizer": "10000"
+  },
+  {
+   "label": "open: Enter #5 count 2 by payeeB",
+   "pass": true,
+   "cu": 17034,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #5 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-25000",
+   "organizer": "20000"
+  },
+  {
+   "label": "open: Enter #6 count 1 by entrant1",
+   "pass": true,
+   "cu": 11547,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #6 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-15000",
+   "organizer": "10000"
+  },
+  {
+   "label": "open: Enter #7 count 1 by entrant3",
+   "pass": true,
+   "cu": 11547,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: Enter #7 fee moved payer -> organizer",
+   "pass": true,
+   "payer": "-15000",
+   "organizer": "10000"
+  },
+  {
+   "label": "open: Draw while entries open (rejected with 0x46440007)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861575
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: Draw before target slot hash (rejected with 0x4644000b)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861579
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: Enter after close (rejected with 0x46440006)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861574
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: target slot = close + 32, 15 leaves",
+   "pass": true,
+   "target": "508184727",
+   "leaves": "15"
+  },
+  {
+   "label": "open: crank draw round 0 next slot 0",
+   "pass": true,
+   "cu": 5016,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: crank resolve round 0 next slot 0",
+   "pass": true,
+   "cu": 20252,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: round 0 resolved, 6 winners",
+   "pass": true,
+   "nextSlot": 6,
+   "windowEnd": "508184899"
+  },
+  {
+   "label": "open: entries rebuilt from Enter logs",
+   "pass": true,
+   "entries": 15
+  },
+  {
+   "label": "open: verify round 0 reproduces on-chain winners",
+   "pass": true,
+   "ok": true,
+   "problems": [],
+   "winners": 6,
+   "onChain": 6,
+   "proofsChecked": 6
+  },
+  {
+   "label": "open: Claim slot 0 with a tampered proof (rejected with 0x4644000c)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861580
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: Claim slot 4 tier 2 round 0 by entrant1",
+   "pass": true,
+   "cu": 9939,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: slot 4 winner balance rose by tier amount minus own fee",
+   "pass": true,
+   "delta": "4995000",
+   "amount": "5000000",
+   "fee": 5000
+  },
+  {
+   "label": "open: Claim slot 1 tier 1 round 0 by payeeB",
+   "pass": true,
+   "cu": 9930,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: slot 1 winner balance rose by tier amount minus own fee",
+   "pass": true,
+   "delta": "9995000",
+   "amount": "10000000",
+   "fee": 5000
+  },
+  {
+   "label": "open: Claim slot 3 tier 2 round 0 by entrant1",
+   "pass": true,
+   "cu": 9912,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: slot 3 winner balance rose by tier amount minus own fee",
+   "pass": true,
+   "delta": "4995000",
+   "amount": "5000000",
+   "fee": 5000
+  },
+  {
+   "label": "open: Claim slot 0 by non-winner entrant1 (own leaf proof) (rejected with 0x4644000f)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861583
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: Claim slot 0 tier 0 round 0 by payeeA",
+   "pass": true,
+   "cu": 9930,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: slot 0 winner balance rose by tier amount minus own fee",
+   "pass": true,
+   "delta": "19995000",
+   "amount": "20000000",
+   "fee": 5000
+  },
+  {
+   "label": "open: Claim slot 0 again (rejected with 0x46440018)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861592
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: Claim slot 2 after the window (rejected with 0x46440010)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861584
+     }
+    ]
+   }
+  },
+  {
+   "label": "open: Advance (opens re-draw round)",
+   "pass": true,
+   "cu": 3905,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: re-draw round opened for 2 forfeited prizes",
+   "pass": true,
+   "status": 2,
+   "round": 1,
+   "slotCount": 8,
+   "target": "508184931"
+  },
+  {
+   "label": "open: crank draw round 1 next slot 6",
+   "pass": true,
+   "cu": 5011,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: crank resolve round 1 next slot 6",
+   "pass": true,
+   "cu": 9130,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: re-drawn winners are new leaves with the forfeited tiers",
+   "pass": true,
+   "r1": [
+    [
+     6,
+     7,
+     1
+    ],
+    [
+     7,
+     5,
+     2
+    ]
+   ]
+  },
+  {
+   "label": "open: verify after re-draw round reproduces on-chain winners",
+   "pass": true,
+   "ok": true,
+   "problems": [],
+   "winners": 8,
+   "onChain": 8,
+   "proofsChecked": 8
+  },
+  {
+   "label": "open: Claim slot 6 tier 1 round 1 by entrant3",
+   "pass": true,
+   "cu": 9939,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: slot 6 winner balance rose by tier amount minus own fee",
+   "pass": true,
+   "delta": "9995000",
+   "amount": "10000000",
+   "fee": 5000
+  },
+  {
+   "label": "open: Advance (complete)",
+   "pass": true,
+   "cu": 3795,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: complete, unclaimed re-drawn prize refundable",
+   "pass": true,
+   "status": 4,
+   "refundable": "5000000"
+  },
+  {
+   "label": "open: verify final (complete) reproduces on-chain winners",
+   "pass": true,
+   "ok": true,
+   "problems": [],
+   "winners": 8,
+   "onChain": 8,
+   "proofsChecked": 8
+  },
+  {
+   "label": "open: Reclaim",
+   "pass": true,
+   "cu": 4122,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: organizer received the refundable prize",
+   "pass": true,
+   "delta": "4995000"
+  },
+  {
+   "label": "open: prize conservation funded == paid + returned",
+   "pass": true,
+   "funded": "55000000",
+   "paid": "50000000",
+   "returned": "5000000",
+   "paidSeen": "50000000"
+  },
+  {
+   "label": "open: Close",
+   "pass": true,
+   "cu": 3571,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "open: draw closed, rent back to organizer",
+   "pass": true,
+   "rent": "13370560",
+   "delta": "13365560"
+  },
+  {
+   "label": "list: create mint + organizer token account + mint 1000000000",
+   "pass": true,
+   "cu": 888,
+   "fee": 15000,
+   "err": null
+  },
+  {
+   "label": "list: CreateDraw",
+   "pass": true,
+   "cu": 15665,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: FundPrizes",
+   "pass": true,
+   "cu": 8774,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: vault escrows the prizes",
+   "pass": true,
+   "vault": "150000000"
+  },
+  {
+   "label": "list: CommitList (9 entries, total weight 49)",
+   "pass": true,
+   "cu": 4169,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: list committed, target = commit + 32",
+   "pass": true,
+   "commitSlot": "508185209",
+   "target": "508185241"
+  },
+  {
+   "label": "list: Draw before target slot hash (rejected with 0x4644000b)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861579
+     }
+    ]
+   }
+  },
+  {
+   "label": "list: crank draw round 0",
+   "pass": true,
+   "cu": 5011,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: Resolve with a tampered proof (rejected with 0x4644000c)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861580
+     }
+    ]
+   }
+  },
+  {
+   "label": "list: Resolve with a valid proof of another leaf (rejected with 0x4644000d)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861581
+     }
+    ]
+   }
+  },
+  {
+   "label": "list: crank resolve round 0 next slot 0",
+   "pass": true,
+   "cu": 7575,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: crank resolve round 0 next slot 1",
+   "pass": true,
+   "cu": 7629,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: crank resolve round 0 next slot 2",
+   "pass": true,
+   "cu": 7670,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: 3 weighted slots resolved",
+   "pass": true,
+   "nextSlot": 3
+  },
+  {
+   "label": "list: verify round 0 reproduces on-chain winners",
+   "pass": true,
+   "ok": true,
+   "problems": [],
+   "winners": 3,
+   "onChain": 3,
+   "proofsChecked": 3
+  },
+  {
+   "label": "list: slot wallets match their list leaves",
+   "pass": true
+  },
+  {
+   "label": "list: Claim slot 0 by non-winner entrant1 (rejected with 0x4644000f)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861583
+     }
+    ]
+   }
+  },
+  {
+   "label": "list: token account + Claim slot 0 tier 0 by entrant4",
+   "pass": true,
+   "cu": 9328,
+   "fee": 15000,
+   "err": null
+  },
+  {
+   "label": "list: token account + Claim slot 2 tier 1 by payeeB",
+   "pass": true,
+   "cu": 9328,
+   "fee": 15000,
+   "err": null
+  },
+  {
+   "label": "list: slot 0 winner token account holds the tier amount",
+   "pass": true,
+   "got": "100000000",
+   "onChain": "100000000",
+   "amount": "100000000"
+  },
+  {
+   "label": "list: slot 2 winner token account holds the tier amount",
+   "pass": true,
+   "got": "25000000",
+   "onChain": "25000000",
+   "amount": "25000000"
+  },
+  {
+   "label": "list: token account + Claim slot 1 tier 1 by entrant2",
+   "pass": true,
+   "cu": 9328,
+   "fee": 15000,
+   "err": null
+  },
+  {
+   "label": "list: slot 1 winner token account holds the tier amount",
+   "pass": true,
+   "got": "25000000",
+   "onChain": "25000000",
+   "amount": "25000000"
+  },
+  {
+   "label": "list: Claim slot 0 again (rejected with 0x46440018)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1178861592
+     }
+    ]
+   }
+  },
+  {
+   "label": "list: Advance (complete)",
+   "pass": true,
+   "cu": 3689,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: complete, all prizes paid, vault empty",
+   "pass": true,
+   "status": 4,
+   "paid": "150000000",
+   "returned": "0",
+   "vaultLeft": "0"
+  },
+  {
+   "label": "list: verify final (complete) reproduces on-chain winners",
+   "pass": true,
+   "ok": true,
+   "problems": [],
+   "winners": 3,
+   "onChain": 3,
+   "proofsChecked": 3
+  },
+  {
+   "label": "list: Close (draw + vault)",
+   "pass": true,
+   "cu": 7703,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "list: draw and vault closed, rent back to organizer",
+   "pass": true,
+   "rent": "8478520",
+   "delta": "8473520"
+  },
+  {
+   "label": "list: cleanup token account of entrant4",
+   "pass": true,
+   "cu": 194,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "list: cleanup token account of entrant2",
+   "pass": true,
+   "cu": 194,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "list: cleanup token account of payeeB",
+   "pass": true,
+   "cu": 194,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "list: every minted token accounted for",
+   "pass": true,
+   "left": "1000000000"
+  },
+  {
+   "label": "list: cleanup organizer token account",
+   "pass": true,
+   "cu": 251,
+   "fee": 5000,
+   "err": null
+  }
+ ],
+ "summary": {
+  "openDraw": "FpD6HrDAvsr7tKiQYTkxVvAaPakP7A2drjpDkCCGJwYM",
+  "openRound0": [
+   {
+    "slot": 0,
+    "tier": 0,
+    "leaf": 10,
+    "wallet": "payeeA",
+    "amount": "20000000"
+   },
+   {
+    "slot": 1,
+    "tier": 1,
+    "leaf": 12,
+    "wallet": "payeeB",
+    "amount": "10000000"
+   },
+   {
+    "slot": 2,
+    "tier": 1,
+    "leaf": 14,
+    "wallet": "entrant3",
+    "amount": "10000000"
+   },
+   {
+    "slot": 3,
+    "tier": 2,
+    "leaf": 0,
+    "wallet": "entrant1",
+    "amount": "5000000"
+   },
+   {
+    "slot": 4,
+    "tier": 2,
+    "leaf": 13,
+    "wallet": "entrant1",
+    "amount": "5000000"
+   },
+   {
+    "slot": 5,
+    "tier": 2,
+    "leaf": 8,
+    "wallet": "entrant4",
+    "amount": "5000000"
+   }
+  ],
+  "openRound1": [
+   {
+    "slot": 6,
+    "tier": 1,
+    "leaf": 7,
+    "wallet": "entrant3",
+    "amount": "10000000"
+   },
+   {
+    "slot": 7,
+    "tier": 2,
+    "leaf": 5,
+    "wallet": "entrant3",
+    "amount": "5000000"
+   }
+  ],
+  "openSeconds": 147.223,
+  "listMint": "EwtBY7A3ixuHqoV1fSR3zU65QFf8AkDpic2AWMU9Juun",
+  "list": [
+   {
+    "wallet": "entrant1",
+    "weight": 5
+   },
+   {
+    "wallet": "fresh0",
+    "weight": 1
+   },
+   {
+    "wallet": "entrant2",
+    "weight": 9
+   },
+   {
+    "wallet": "fresh1",
+    "weight": 2
+   },
+   {
+    "wallet": "entrant3",
+    "weight": 3
+   },
+   {
+    "wallet": "fresh2",
+    "weight": 6
+   },
+   {
+    "wallet": "entrant4",
+    "weight": 12
+   },
+   {
+    "wallet": "payeeA",
+    "weight": 7
+   },
+   {
+    "wallet": "payeeB",
+    "weight": 4
+   }
+  ],
+  "listDraw": "BEDL8LvkFmtETjF96CnURqXAZuGDpp2UPZCLQweB41M4",
+  "listWinners": [
+   {
+    "slot": 0,
+    "tier": 0,
+    "leaf": 6,
+    "wallet": "entrant4",
+    "amount": "100000000",
+    "weight": 12
+   },
+   {
+    "slot": 1,
+    "tier": 1,
+    "leaf": 2,
+    "wallet": "entrant2",
+    "amount": "25000000",
+    "weight": 9
+   },
+   {
+    "slot": 2,
+    "tier": 1,
+    "leaf": 8,
+    "wallet": "payeeB",
+    "amount": "25000000",
+    "weight": 4
+   }
+  ],
+  "listSeconds": 86.322
+ },
+ "wallets": {
+  "organizer": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+  "entrant1": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+  "entrant2": "BXnx4XrMPhoVJ8ZjZ8KiSaW7qoAQSQbP6WCYhHSRnTV5",
+  "entrant3": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+  "entrant4": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+  "payeeA": "3DsaRjPsdiKDS8D6P8FckJxF1SwSJ8P4UcuTMdTkVi7b",
+  "payeeB": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc"
+ },
+ "organizerStartBalance": "4378306464",
+ "verify": [
+  {
+   "scenario": "open",
+   "label": "round 0",
+   "ok": true,
+   "problems": [],
+   "proofsChecked": 6,
+   "rounds": 1,
+   "winners": [
+    {
+     "slot": 0,
+     "round": 0,
+     "tier": 0,
+     "leafIndex": "10",
+     "wallet": "3DsaRjPsdiKDS8D6P8FckJxF1SwSJ8P4UcuTMdTkVi7b",
+     "status": 1,
+     "amount": "20000000"
+    },
+    {
+     "slot": 1,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "12",
+     "wallet": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc",
+     "status": 1,
+     "amount": "10000000"
+    },
+    {
+     "slot": 2,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "14",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 1,
+     "amount": "10000000"
+    },
+    {
+     "slot": 3,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "0",
+     "wallet": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+     "status": 1,
+     "amount": "5000000"
+    },
+    {
+     "slot": 4,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "13",
+     "wallet": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+     "status": 1,
+     "amount": "5000000"
+    },
+    {
+     "slot": 5,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "8",
+     "wallet": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+     "status": 1,
+     "amount": "5000000"
+    }
+   ]
+  },
+  {
+   "scenario": "open",
+   "label": "after re-draw round",
+   "ok": true,
+   "problems": [],
+   "proofsChecked": 8,
+   "rounds": 2,
+   "winners": [
+    {
+     "slot": 0,
+     "round": 0,
+     "tier": 0,
+     "leafIndex": "10",
+     "wallet": "3DsaRjPsdiKDS8D6P8FckJxF1SwSJ8P4UcuTMdTkVi7b",
+     "status": 2,
+     "amount": "20000000"
+    },
+    {
+     "slot": 1,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "12",
+     "wallet": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc",
+     "status": 2,
+     "amount": "10000000"
+    },
+    {
+     "slot": 2,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "14",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 3,
+     "amount": "10000000"
+    },
+    {
+     "slot": 3,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "0",
+     "wallet": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+     "status": 2,
+     "amount": "5000000"
+    },
+    {
+     "slot": 4,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "13",
+     "wallet": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+     "status": 2,
+     "amount": "5000000"
+    },
+    {
+     "slot": 5,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "8",
+     "wallet": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+     "status": 3,
+     "amount": "5000000"
+    },
+    {
+     "slot": 6,
+     "round": 1,
+     "tier": 1,
+     "leafIndex": "7",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 1,
+     "amount": "10000000"
+    },
+    {
+     "slot": 7,
+     "round": 1,
+     "tier": 2,
+     "leafIndex": "5",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 1,
+     "amount": "5000000"
+    }
+   ]
+  },
+  {
+   "scenario": "open",
+   "label": "final (complete)",
+   "ok": true,
+   "problems": [],
+   "proofsChecked": 8,
+   "rounds": 2,
+   "winners": [
+    {
+     "slot": 0,
+     "round": 0,
+     "tier": 0,
+     "leafIndex": "10",
+     "wallet": "3DsaRjPsdiKDS8D6P8FckJxF1SwSJ8P4UcuTMdTkVi7b",
+     "status": 2,
+     "amount": "20000000"
+    },
+    {
+     "slot": 1,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "12",
+     "wallet": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc",
+     "status": 2,
+     "amount": "10000000"
+    },
+    {
+     "slot": 2,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "14",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 3,
+     "amount": "10000000"
+    },
+    {
+     "slot": 3,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "0",
+     "wallet": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+     "status": 2,
+     "amount": "5000000"
+    },
+    {
+     "slot": 4,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "13",
+     "wallet": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+     "status": 2,
+     "amount": "5000000"
+    },
+    {
+     "slot": 5,
+     "round": 0,
+     "tier": 2,
+     "leafIndex": "8",
+     "wallet": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+     "status": 3,
+     "amount": "5000000"
+    },
+    {
+     "slot": 6,
+     "round": 1,
+     "tier": 1,
+     "leafIndex": "7",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 2,
+     "amount": "10000000"
+    },
+    {
+     "slot": 7,
+     "round": 1,
+     "tier": 2,
+     "leafIndex": "5",
+     "wallet": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+     "status": 3,
+     "amount": "5000000"
+    }
+   ]
+  },
+  {
+   "scenario": "list",
+   "label": "round 0",
+   "ok": true,
+   "problems": [],
+   "proofsChecked": 3,
+   "rounds": 1,
+   "winners": [
+    {
+     "slot": 0,
+     "round": 0,
+     "tier": 0,
+     "leafIndex": "6",
+     "wallet": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+     "status": 1,
+     "amount": "100000000"
+    },
+    {
+     "slot": 1,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "2",
+     "wallet": "BXnx4XrMPhoVJ8ZjZ8KiSaW7qoAQSQbP6WCYhHSRnTV5",
+     "status": 1,
+     "amount": "25000000"
+    },
+    {
+     "slot": 2,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "8",
+     "wallet": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc",
+     "status": 1,
+     "amount": "25000000"
+    }
+   ]
+  },
+  {
+   "scenario": "list",
+   "label": "final (complete)",
+   "ok": true,
+   "problems": [],
+   "proofsChecked": 3,
+   "rounds": 1,
+   "winners": [
+    {
+     "slot": 0,
+     "round": 0,
+     "tier": 0,
+     "leafIndex": "6",
+     "wallet": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+     "status": 2,
+     "amount": "100000000"
+    },
+    {
+     "slot": 1,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "2",
+     "wallet": "BXnx4XrMPhoVJ8ZjZ8KiSaW7qoAQSQbP6WCYhHSRnTV5",
+     "status": 2,
+     "amount": "25000000"
+    },
+    {
+     "slot": 2,
+     "round": 0,
+     "tier": 1,
+     "leafIndex": "8",
+     "wallet": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc",
+     "status": 2,
+     "amount": "25000000"
+    }
+   ]
+  }
+ ],
+ "cuPerInstruction": {
+  "CreateDraw (open raffle, SOL, 6 prizes, 1 re-draw round)": {
+   "min": 7515,
+   "max": 7515,
+   "n": 1
+  },
+  "FundPrizes (SOL, 12 slot capacity)": {
+   "min": 6469,
+   "max": 6469,
+   "n": 1
+  },
+  "Enter (unweighted, 3 leaves, SOL entry fee)": {
+   "min": 22511,
+   "max": 22511,
+   "n": 1
+  },
+  "Enter (unweighted, 1 leaves, SOL entry fee)": {
+   "min": 11545,
+   "max": 11547,
+   "n": 4
+  },
+  "Enter (unweighted, 4 leaves, SOL entry fee)": {
+   "min": 28006,
+   "max": 28006,
+   "n": 1
+  },
+  "Enter (unweighted, 2 leaves, SOL entry fee)": {
+   "min": 17030,
+   "max": 17034,
+   "n": 2
+  },
+  "Draw [rejected]": {
+   "min": 3207,
+   "max": 3278,
+   "n": 3
+  },
+  "Enter (unweighted, 1 leaves, SOL entry fee) [rejected]": {
+   "min": 3766,
+   "max": 3766,
+   "n": 1
+  },
+  "Draw": {
+   "min": 5011,
+   "max": 5016,
+   "n": 3
+  },
+  "Resolve (unweighted, 6 slots)": {
+   "min": 20252,
+   "max": 20252,
+   "n": 1
+  },
+  "Claim (unweighted, leaf proof, SOL) [rejected]": {
+   "min": 3209,
+   "max": 8503,
+   "n": 4
+  },
+  "Claim (unweighted, leaf proof, SOL)": {
+   "min": 9912,
+   "max": 9939,
+   "n": 5
+  },
+  "Advance (2 forfeited, opens re-draw round)": {
+   "min": 3905,
+   "max": 3905,
+   "n": 1
+  },
+  "Resolve (unweighted, 2 slots)": {
+   "min": 9130,
+   "max": 9130,
+   "n": 1
+  },
+  "Advance (1 forfeited, completes)": {
+   "min": 3795,
+   "max": 3795,
+   "n": 1
+  },
+  "Reclaim (SOL)": {
+   "min": 4122,
+   "max": 4122,
+   "n": 1
+  },
+  "Close (SOL)": {
+   "min": 3571,
+   "max": 3571,
+   "n": 1
+  },
+  "CreateDraw (committed list, SPL vault)": {
+   "min": 15665,
+   "max": 15665,
+   "n": 1
+  },
+  "FundPrizes (SPL)": {
+   "min": 8774,
+   "max": 8774,
+   "n": 1
+  },
+  "CommitList": {
+   "min": 4169,
+   "max": 4169,
+   "n": 1
+  },
+  "Resolve (weighted, 1 proof, depth 4) [rejected]": {
+   "min": 6054,
+   "max": 6077,
+   "n": 2
+  },
+  "Resolve (weighted, 1 proof, depth 4)": {
+   "min": 7575,
+   "max": 7670,
+   "n": 3
+  },
+  "Claim (weighted, SPL) [rejected]": {
+   "min": 3619,
+   "max": 3828,
+   "n": 2
+  },
+  "Claim (weighted, SPL)": {
+   "min": 8945,
+   "max": 8945,
+   "n": 3
+  },
+  "Advance (0 forfeited, completes)": {
+   "min": 3689,
+   "max": 3689,
+   "n": 1
+  },
+  "Close (SPL, closes vault)": {
+   "min": 7703,
+   "max": 7703,
+   "n": 1
+  }
+ },
+ "solSpent": {
+  "organizer": {
+   "pk": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+   "net": "-71161800",
+   "peakDraw": "-88400560",
+   "fees": "245000",
+   "txsPaid": 37
+  },
+  "entrant1": {
+   "pk": "9tD15ngxBDEZ1qZnR3w8mof4tpu41W88aAGFQXT8KaT5",
+   "net": "14930000",
+   "peakDraw": "0",
+   "fees": "30000",
+   "txsPaid": 6
+  },
+  "entrant2": {
+   "pk": "BXnx4XrMPhoVJ8ZjZ8KiSaW7qoAQSQbP6WCYhHSRnTV5",
+   "net": "4980000",
+   "peakDraw": "0",
+   "fees": "10000",
+   "txsPaid": 2
+  },
+  "entrant3": {
+   "pk": "7anm2w6QPbJaiBSAKTSH72JDYn9VaHTkdqfegdDLY8Ab",
+   "net": "14930000",
+   "peakDraw": "0",
+   "fees": "20000",
+   "txsPaid": 4
+  },
+  "entrant4": {
+   "pk": "9sj1tRpjsmhNxJTcxcuYuL49ZCLoABgJBxn8ybR47mSK",
+   "net": "4975000",
+   "peakDraw": "0",
+   "fees": "5000",
+   "txsPaid": 1
+  },
+  "payeeA": {
+   "pk": "3DsaRjPsdiKDS8D6P8FckJxF1SwSJ8P4UcuTMdTkVi7b",
+   "net": "19970000",
+   "peakDraw": "-20000",
+   "fees": "20000",
+   "txsPaid": 4
+  },
+  "payeeB": {
+   "pk": "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc",
+   "net": "9970000",
+   "peakDraw": "-25000",
+   "fees": "10000",
+   "txsPaid": 2
+  },
+  "fresh0": {
+   "pk": "ioS8AyFLZYYeE3dGYy7Xj4ijAh4UuG3srppHzfBofQt",
+   "net": "0",
+   "peakDraw": "0",
+   "fees": "0",
+   "txsPaid": 0
+  },
+  "fresh1": {
+   "pk": "HyJeCSx8i9u76in7SQzzsoztE77w2bF1Q6Mn32mha2oa",
+   "net": "0",
+   "peakDraw": "0",
+   "fees": "0",
+   "txsPaid": 0
+  },
+  "fresh2": {
+   "pk": "EyUTbUGe3ijYU3NaT9H5TgWHKp1pHqWePnKzypS3PL6",
+   "net": "0",
+   "peakDraw": "0",
+   "fees": "0",
+   "txsPaid": 0
+  }
+ },
+ "solSpentTotal": {
+  "net": "-1406800",
+  "fees": "340000",
+  "txs": 56
+ },
+ "finished": "2026-10-06T18:37:10.574Z",
+ "result": "PASS",
+ "failures": 0
+}

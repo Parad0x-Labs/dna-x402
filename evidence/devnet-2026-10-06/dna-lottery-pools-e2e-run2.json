@@ -1,0 +1,2499 @@
+{
+ "program": "lottery-pools",
+ "rpc": "https://api.devnet.solana.com",
+ "started": "2026-10-06T18:22:16.270Z",
+ "programId": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+ "config": {
+  "ROUND_SLOTS": "150",
+  "CLAIM_WINDOW_SLOTS": "150",
+  "TICKETS": 24,
+  "NEXT_ROUND_TICKETS": 3,
+  "AIRDROP": false
+ },
+ "steps": [
+  {
+   "label": "small: fund buyer1 112965120 lamports",
+   "signature": "3DbKAQcvRimbUHx9bbzvnWXkgNgcTQY1L7ivwiTzpCVMkzawePX18MQHpdsv9RXTB4eHwiiB53hgdnhxUJVU4rMt",
+   "slot": 508181795,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": [],
+   "kind": "fund",
+   "payer": "creator"
+  },
+  {
+   "label": "small: fund buyer2 112965120 lamports",
+   "signature": "2yzB96vnQWbRBRSnzeHs8e6o4rL83L7UTsykYXY8A6HxZ12d2GLPMhspNHXtnQrfM2DuyWNsowvh2CnNSkBNp4Qx",
+   "slot": 508181800,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": [],
+   "kind": "fund",
+   "payer": "creator"
+  },
+  {
+   "label": "small: fund buyer3 112965120 lamports",
+   "signature": "dpkbNwVFYvr4GqYDBozrVpHsPgR6zcmATdv7dwbkS7zaqMkF92wmzg2nZPeJYhW3rNnbNMSPwNfPFVWhnrpBpEQ",
+   "slot": 508181807,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": [],
+   "kind": "fund",
+   "payer": "creator"
+  },
+  {
+   "label": "small: CreatePool",
+   "signature": "RvcH7FMtjEB4YRezdVCoFa6a9BtAbwZLnPVDanBVESghrpihTPeuic14ie7T6PzrZnkQUz8hQt9SJtmjNrKRTjS",
+   "slot": 508181812,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 10100,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 9950
+    }
+   ],
+   "kind": "CreatePool",
+   "payer": "creator"
+  },
+  {
+   "label": "small: Draw before close",
+   "signature": "5dfPn7RifeTbetW7g4pBUEigCds2C8JVvpU7Zt3bTBkFyecMVRGC4QpM8h8wAjVCZS7HN3Fc4vVsNGVvK2d2Gww8",
+   "slot": 508181855,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1280311303
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 3345,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 3345
+    }
+   ],
+   "kind": "Draw",
+   "payer": "creator",
+   "logs": [
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw invoke [1]",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw consumed 3345 of 200000 compute units",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw failed: custom program error: 0x4c500007"
+   ]
+  },
+  {
+   "label": "small r0: buyer1 buys 8 ticket(s)",
+   "signature": "4EuFX3Jo1qAXTFBs1Xq4boMCQ97nk5NyPq3HAKTnpwrHX89wpr6V63PJzbi4s7hgCpMa59qjn4xEkMDzV66UCuXf",
+   "slot": 508181862,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 88410,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11034
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11033
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11033
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11033
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer1"
+  },
+  {
+   "label": "small r0: buyer2 buys 8 ticket(s)",
+   "signature": "2svy1NRTLe2Tgh3WZEJm5dwcEfTHh54b7hJ5Ftcspv9pb1oBg1mvj3M6jUxF7j5y6ftwgL2Q6mN4E1JmXQLFHN5d",
+   "slot": 508181867,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 88402,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11033
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11030
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer2"
+  },
+  {
+   "label": "small r0: buyer3 buys 8 ticket(s)",
+   "signature": "5eLBgYUmNUaYqjWz5WZKLvwFGDx9uwREttFW15Vq4VsivHxdGM8ySpBQYuZhUrdzMVMXJABnj1xn3psiVSCT2UBH",
+   "slot": 508181897,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 88402,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11033
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11030
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer3"
+  },
+  {
+   "label": "small r0: BuyTicket after close",
+   "signature": "4P6P2CFNjjY2UMqGW1FThkZQ7JfpEk71S63UQC8crACRzQgvsFo8J9AzC2xxftCFKt2tABZVhDuFQhxp5zcWpRV1",
+   "slot": 508181967,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1280311302
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 2950,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 2950
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer1",
+   "logs": [
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw invoke [1]",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw consumed 2950 of 200000 compute units",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw failed: custom program error: 0x4c500006"
+   ]
+  },
+  {
+   "label": "small r0: Draw round 0",
+   "signature": "4AstpM5Wgvt3qUQUDDZVY3RzyMBM79jj8S1KjjZFMhnYjy8QHtPcDivPi2RDADfEFGFxV9iM8945UFrk39pmdf51",
+   "slot": 508182000,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 10927,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 10777
+    }
+   ],
+   "kind": "Draw",
+   "payer": "creator"
+  },
+  {
+   "label": "small r1: buyer1 buys 1 ticket(s)",
+   "signature": "5TSCWpeX54EFLLsp8Smhir51eAhH3RbmoTK5tSdPpoQtciW6BEAavKkCJK6Pfx3DWr1c8K56LJKsP5M2iJnEfc3D",
+   "slot": 508182007,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11183,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11033
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer1"
+  },
+  {
+   "label": "small r1: buyer2 buys 1 ticket(s)",
+   "signature": "3XyA7gC6Pm8RECMnPULgzL4nN4mkzuVdvcBfVWNnTnFaAS4zqGZD9vowXB7PGDfmtKsD8ZhTarP16nAm6EJ6FKCb",
+   "slot": 508182013,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11182,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer2"
+  },
+  {
+   "label": "small r1: buyer3 buys 1 ticket(s)",
+   "signature": "3cYRyfdwbhcAz5MNXs7SNWWAy8RELNqGprf6yu5RXnu6gPAAYY4BjJ2RpSBnZRuAVXfZshWZyVWGcnXUPd7mDypa",
+   "slot": 508182019,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 11182,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer3"
+  },
+  {
+   "label": "small r0: buyer1 claims ticket 4 (tier 2)",
+   "signature": "2NDUAbQgJdET13LngCHWV644gGwbTT3Mi7WBUZbhm8Rm5J2bGcCxxD6nMzRBnqVGkV8uYwQRNi5Fdbmas5uZQrY5",
+   "slot": 508182063,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 21180,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 21030
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer1"
+  },
+  {
+   "label": "small r0: buyer3 claims ticket 19 (tier 2)",
+   "signature": "38TKohNmu3etESysp2cYckYDiG4z1bUgUFPLwGg2BsfNVKZewoivgHzbWtmwXYL5FyDG34vipwXP9jBAxCtBTZSE",
+   "slot": 508182064,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 15181,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 15031
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer3"
+  },
+  {
+   "label": "small r0: buyer2 claims ticket 13 (tier 2)",
+   "signature": "52aVr3Lba4PpV6nDoNmZQEgVegN7uvFssUv9gYpUkNM3enGVpwaK7KirnfWuNhNef81ggAZaktqfri8ZrEFbk65N",
+   "slot": 508182064,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 15182,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 15032
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer2"
+  },
+  {
+   "label": "small r0: Settle",
+   "signature": "8bQCMdFgU5Xtf4WaGSepYRiw21ryxUWTDoJRHY9Lfqamp2k3SQCYPFAbS7aDKje1RcbY55LzNAKzskfqjSNXuGp",
+   "slot": 508182156,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 6302,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 6152
+    }
+   ],
+   "kind": "Settle",
+   "payer": "creator"
+  },
+  {
+   "label": "small r0: Payout ticket 4 to buyer1",
+   "signature": "3E6A4jKn2pLsKWSU3Ez6LSuUXggheyWtyXZpqk6AcyCUgxDjnpvApzp9F8M58nq3g3L56D8ABhaPSkUmoz5eES7M",
+   "slot": 508182171,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "small r0: Payout ticket 13 to buyer2",
+   "signature": "3x7NNLTmL16z76Rox7iJdcWgJYhZZE9sW7e17ouqxK11SXAVUXYpMX9dagquK46ietrG2o3fesDp8V1Veh5CiEAH",
+   "slot": 508182196,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "small r0: Payout ticket 19 to buyer3",
+   "signature": "fRBvtLcDmirLirQXS5fZA3t7FUo5ArLNvXxAWHyjmzAd7iGYiCcvmnoxuHjasnagQiwJEfSXrFesSQ6xFKuR3Vi",
+   "slot": 508182202,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "small r0: CloseRound 0",
+   "signature": "2w1i188ymVkuDzokyMAQSoLzQMAetQNMN7CmyZpqyAfFhbpMae9dwFVwsQaz8YRkKLmiE822d3hykyTmoqntGjsX",
+   "slot": 508182220,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 5262,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 5112
+    }
+   ],
+   "kind": "CloseRound",
+   "payer": "creator"
+  },
+  {
+   "label": "small r1: Draw round 1",
+   "signature": "3kNBxqCFwRGULYRjyq4Tj8ZA8FtUUe9f3mSSs3MFGznsKvc4sq3LVuv97Rv9KRLzeyMj79uHwUzvHCpMeqL6bSa4",
+   "slot": 508182237,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 13936,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 13786
+    }
+   ],
+   "kind": "Draw",
+   "payer": "creator"
+  },
+  {
+   "label": "small r1: Settle with no registered ticket",
+   "signature": "4Gg3bEgV4Xt43YvHTE5WNfHdeCotC6yNPiN6a8Mbhi9sgsfsktzSx6hXxAGGm6DP3p7fAXhzoyxnK5yZoDKyMvHK",
+   "slot": 508182393,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 6237,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 6087
+    }
+   ],
+   "kind": "Settle",
+   "payer": "creator"
+  },
+  {
+   "label": "small r1: CloseRound 1",
+   "signature": "5qWeqFX3Re4U5WsGh2saFWgm4ymiPJUS73TYhfyV7n8BApjEHqR1oTMfZaPWsN8sni5XYBqYVyrpvw67e6EUCEuW",
+   "slot": 508182400,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 5262,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 5112
+    }
+   ],
+   "kind": "CloseRound",
+   "payer": "creator"
+  },
+  {
+   "label": "small r2: Draw of an empty round",
+   "signature": "4SX8uv4s252Ejf33pUMyL71WH6Aw3bDCnyAkVuq25YSRAi5Mj9SvVhpMXgw8AaVfzRyRcbJqsTRHvvzWNDS51TEM",
+   "slot": 508182408,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 6019,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 5869
+    }
+   ],
+   "kind": "Draw(empty)",
+   "payer": "creator"
+  },
+  {
+   "label": "small: WithdrawCreatorFees 81000000",
+   "signature": "4tuHirJkmVa5rztLBw5hcRfCTL9apGB4LnSE9ESYy21zh6DDm5MaS8ac3EniUcD6gQZGkL27ypkdHcxan6wn8uda",
+   "slot": 508182424,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 3361,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 3211
+    }
+   ],
+   "kind": "WithdrawCreatorFees",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: CreatePool",
+   "signature": "x5XCoGBXnJVJbPM8A3JHPTc2J5eUfrkbB2tik2PCz2ECEg2rbQpaP3YVPni7j5U4xqY2bBiP4pefsgNqgCNSnuU",
+   "slot": 508182451,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 12787,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 12637
+    }
+   ],
+   "kind": "CreatePool",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: buyer1 buys 2 ticket(s)",
+   "signature": "34dyZc34VpeK7v4rBMvsPHpP75n5FLjSrajZYkYuC6hL6A46xiYvM8LtysfZ9FJdWouqx4FXTJij5qS91DaVcdhQ",
+   "slot": 508182457,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 22213,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11032
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer1"
+  },
+  {
+   "label": "allcombos: buyer2 buys 2 ticket(s)",
+   "signature": "2yrQJPdPLzQw61GWGs5YRbDwQtz2UKJ1m8EnW74weYskvHJmY9nNspzYL5CfAZA7CQ4HL1GX7hfxrDQfvKAAG7ai",
+   "slot": 508182472,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 22210,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11031
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11029
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer2"
+  },
+  {
+   "label": "allcombos: buyer3 buys 2 ticket(s)",
+   "signature": "2E3iGvwVrKdXL3PdGZJGQigVYuNvUmiomXPSxn5pbzHwV6u91cMQ5qSejnSrzGJEM7j7zGP4YEtg4WswMK64UUhj",
+   "slot": 508182478,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 22209,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11030
+    },
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 11029
+    }
+   ],
+   "kind": "BuyTicket",
+   "payer": "buyer3"
+  },
+  {
+   "label": "allcombos: Draw round 0",
+   "signature": "5JtSWwEZzv284SbkeDrc74k6C7PtaQvPFhuLMNt1LZHT37TZtAYqkTUKPuHwXsmYtZZzMYBfbRwLnorXFm7GzBPC",
+   "slot": 508182644,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 10635,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 10485
+    }
+   ],
+   "kind": "Draw",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: buyer2 claims buyer1's jackpot ticket",
+   "signature": "4a9VnDZgaE8xAeCzyV8nxKpEX6dazS47Em1CmGfi3TL1BzXecoSG5iUpY14E6DjyjTeJafkhq1sRoCWySduoakz5",
+   "slot": 508182650,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1280311313
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 9392,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 9392
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer2",
+   "logs": [
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw invoke [1]",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw consumed 9392 of 200000 compute units",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw failed: custom program error: 0x4c500011"
+   ]
+  },
+  {
+   "label": "allcombos: buyer3 claims ticket 5 (tier 2)",
+   "signature": "2C7Vs1HmMoZugHWwgN63EK1PXq2xec5iEUvknNRmRzREwrst8GSnxNReYGap2y94M4X8UNsQgPn6vHc3yKoaXLBU",
+   "slot": 508182707,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 15129,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 14979
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer3"
+  },
+  {
+   "label": "allcombos: buyer2 claims ticket 2 (tier 2)",
+   "signature": "2AprQpVAdmC28oo4szLsBBLqYBvu6FHGByoQvMfL8aQes6zMzPRBkm9NPXtR9qYEmkCtjTDRzvTRzfMPemGQSZro",
+   "slot": 508182707,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 19628,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 19478
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer2"
+  },
+  {
+   "label": "allcombos: buyer2 claims ticket 3 (tier 2)",
+   "signature": "4NPAyFTsEmTyuA28S2DfosEUQoBmJo4v1WCiKMqjDMnmfH2N5yVgWzbMuh8eAwmVMNRe1osnguo93FLQTokowwbK",
+   "slot": 508182707,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 16630,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 16480
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer2"
+  },
+  {
+   "label": "allcombos: buyer1 claims ticket 0 (tier 2)",
+   "signature": "4ra7LngUJkXex44pjTGPZfPtxHFXvB7SiK8yoYCE47qqiCYCc8qmA3xSyLMqmHgD2PvA2xwiuoMMzwW3KZ2JQbuo",
+   "slot": 508182658,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 19628,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 19478
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer1"
+  },
+  {
+   "label": "allcombos: buyer1 claims ticket 1 (tier 1)",
+   "signature": "5jqAZ2Wv3zspan6BeacEopAgpexRogRWAfpy3gF9aAd5u3UmGuwGjXarBiqMmMoj7gqV97216N85Txnt3QVJ4UsU",
+   "slot": 508182677,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 18122,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 17972
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer1"
+  },
+  {
+   "label": "allcombos: buyer1 claims ticket 1 again",
+   "signature": "2JeFHAaGns7ngEZqPnrtGKfxUcspDS8eueQaEiyRruRABv2keGcx22GSS11FLDCFuabSFBhx5JseU2kvALdjiiLf",
+   "slot": 508182816,
+   "version": "legacy",
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1280311310
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 5498,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 5348
+    }
+   ],
+   "kind": "Claim",
+   "payer": "buyer1",
+   "logs": [
+    "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+    "Program ComputeBudget111111111111111111111111111111 success",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw invoke [1]",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw consumed 5348 of 60850 compute units",
+    "Program 39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw failed: custom program error: 0x4c50000e"
+   ]
+  },
+  {
+   "label": "allcombos: Settle during the claim window",
+   "signature": "nWVwpx2ynt3P1FGbD1AzoHHc7kxMS5RcsDJC8YmGqNGd35FYdj7MiseE2Pmi9Moba1ZPo23JP5zKdomERRiYZGy",
+   "slot": 508182822,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 6240,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 6240
+    }
+   ],
+   "kind": "Settle",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: Payout ticket 0 to buyer1",
+   "signature": "3e8exgKCZVuqwcqjvnFR1754umHz4PTiN7VazvdZ9k9rck7ghRGK9h7Zuz6e7aWfpk4uh5b61oMspWyihrjm2to7",
+   "slot": 508182831,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: Payout ticket 1 to buyer1",
+   "signature": "5vv7ZzXQa7vv81J7cAY2YhYCJVN2VHoCL5iDzswM83Pwf7i7fthtEKwARsSWSSEefPw77B8gLQxgJ7ZLuUyxaXwz",
+   "slot": 508182874,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8123,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7973
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: Payout ticket 2 to buyer2",
+   "signature": "2XzpCZTpgjZGVfpyHNLxkqokMJVcc8H1gwm4W4jRGUQNx7haYT331ya5sUfBL7GmoEPBbbpUfYtHRTJKczat5iEV",
+   "slot": 508182882,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: Payout ticket 3 to buyer2",
+   "signature": "4dqY8mrdnH4ec278ZCRucWbqvLPi8APcQtayMqpoaYUZtiBMoxdbNL7TS1wWZCQXp4Nt8GYx1K9Be8j6tjHMmYGc",
+   "slot": 508182891,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: Payout ticket 5 to buyer3",
+   "signature": "3bByYRJzqHwxtgANsaQrKQM4ukoXX91A4vwrbHfdujHpxY3edWp6zxEjvUYWfSvEjGYu6GrwqgGJGusrrs61tmyP",
+   "slot": 508182897,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 8126,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 7976
+    }
+   ],
+   "kind": "Payout",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: CloseRound 0",
+   "signature": "2BW1bTtFUQFCaaCX9vLTDZJU8jqd6BwqyqXKKfGm5kw26eNtsrbKNHyJH5ZxySuMAAgRsJ8ft37hi7hJqebe6pyh",
+   "slot": 508182927,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 5262,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 5112
+    }
+   ],
+   "kind": "CloseRound",
+   "payer": "creator"
+  },
+  {
+   "label": "allcombos: WithdrawCreatorFees 6000",
+   "signature": "z7UU628cYLh9yRQiN2ueAEGCEwwvMez6Z7yaqQCp1DW6vRHybxpU4nRUjqkJJQxJJGgKfmsUSCRUC1UiLJ8iPhf",
+   "slot": 508182944,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 3361,
+   "ixCu": [
+    {
+     "program": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+     "cu": 3211
+    }
+   ],
+   "kind": "WithdrawCreatorFees",
+   "payer": "creator"
+  },
+  {
+   "label": "sweep buyer1 -> creator",
+   "signature": "5Xyw9NqHiPgnbofXh8B6McViziVPVFyB9qdS39tBJNQzcXwKb41YHZZurkS7QpMQHcFjuGjriRuJDgXpj9z2ytLU",
+   "slot": 508182968,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": [],
+   "kind": "sweep",
+   "payer": "buyer1"
+  },
+  {
+   "label": "sweep buyer2 -> creator",
+   "signature": "382QMETq2AGq3oZY5zWBxUWj4iJyozBDtnbuQKqfa1JMd46aGHmGki4wXH89r6awQSLk4FhSj8Dej3ENpTv2YszN",
+   "slot": 508182983,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": [],
+   "kind": "sweep",
+   "payer": "buyer2"
+  },
+  {
+   "label": "sweep buyer3 -> creator",
+   "signature": "4YV6NySN8MauT5HPmebcautqGHNucW5mTXWcyZjq8EAvpCMjn3pHwUrk35RrVxePEPhCeKEkF3kbPq8N2UojWzNU",
+   "slot": 508183003,
+   "version": "legacy",
+   "err": null,
+   "fee": 5000,
+   "cu": 150,
+   "ixCu": [],
+   "kind": "sweep",
+   "payer": "buyer3"
+  }
+ ],
+ "checks": [
+  {
+   "label": "program account is executable",
+   "pass": true,
+   "owner": "BPFLoaderUpgradeab1e11111111111111111111111"
+  },
+  {
+   "label": "small: fund buyer1 112965120 lamports",
+   "pass": true,
+   "lamports": "112965120",
+   "err": null
+  },
+  {
+   "label": "small: fund buyer2 112965120 lamports",
+   "pass": true,
+   "lamports": "112965120",
+   "err": null
+  },
+  {
+   "label": "small: fund buyer3 112965120 lamports",
+   "pass": true,
+   "lamports": "112965120",
+   "err": null
+  },
+  {
+   "label": "small: CreatePool",
+   "pass": true,
+   "cu": 10100,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small: pool params, combos, caps and recoup volume as created",
+   "pass": true,
+   "pool": "42CBAdBRoXtTseUTLCaAb5BSzCEFpZPfEoFR5LzwbMJV",
+   "combos": "816",
+   "cap": "4896000000",
+   "tier2Cap": "816000000",
+   "lamports": "505323840"
+  },
+  {
+   "label": "small: after CreatePool: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small: after CreatePool: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "505323840",
+   "need": "505323840"
+  },
+  {
+   "label": "small: after CreatePool: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small: after CreatePool: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "500000000",
+   "rhs": "500000000"
+  },
+  {
+   "label": "small: Draw before close (rejected with 0x4c500007)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1280311303
+     }
+    ]
+   }
+  },
+  {
+   "label": "small r0: buyer1 buys 8 ticket(s)",
+   "pass": true,
+   "cu": 88410,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer2 buys 8 ticket(s)",
+   "pass": true,
+   "cu": 88402,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer3 buys 8 ticket(s)",
+   "pass": true,
+   "cu": 88402,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: after 24 buys: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r0: after 24 buys: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "745323840",
+   "need": "745323840"
+  },
+  {
+   "label": "small r0: after 24 buys: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r0: after 24 buys: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "740000000",
+   "rhs": "740000000"
+  },
+  {
+   "label": "small r0: ticket logs are contiguous 0..23 and count matches chain",
+   "pass": true,
+   "logs": 24,
+   "chainCount": "24"
+  },
+  {
+   "label": "small r0: tree rebuilt from logs equals the on-chain root",
+   "pass": true,
+   "rebuilt": "4ea6c8a41406f3b5eef364d139eaaa9fcd62c7fa694e17ac6ebb8bc8816d856e",
+   "chain": "4ea6c8a41406f3b5eef364d139eaaa9fcd62c7fa694e17ac6ebb8bc8816d856e"
+  },
+  {
+   "label": "small r0: poolSummary at the sold volume equals chain (creator fees, jackpot, caps, recoup)",
+   "pass": true,
+   "summaryCreatorFees": "72000000",
+   "chainCreatorOwed": "72000000",
+   "summaryJackpot": "632000000",
+   "chainJackpot": "632000000"
+  },
+  {
+   "label": "small r0: BuyTicket after close (rejected with 0x4c500006)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1280311302
+     }
+    ]
+   }
+  },
+  {
+   "label": "small r0: Draw round 0",
+   "pass": true,
+   "cu": 10927,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: SlotHashes selection off chain equals the recorded target/used slot/hash",
+   "pass": true,
+   "t0": "508181994",
+   "attempt": "0",
+   "target": "508181994",
+   "used": "508181994",
+   "offchainUsed": "508181994",
+   "drawTxSlot": 508182000
+  },
+  {
+   "label": "small r0: drawn numbers recomputed off chain equal the on-chain numbers",
+   "pass": true,
+   "offchain": [
+    1,
+    13,
+    14,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "chain": [
+    1,
+    13,
+    14,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "label": "small r0: locked prizes equal the pre-draw jackpot and tier-2 pool",
+   "pass": true,
+   "prize": "632000000",
+   "tier2Prize": "24000000"
+  },
+  {
+   "label": "small r0: after Draw: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r0: after Draw: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "745323840",
+   "need": "745323840"
+  },
+  {
+   "label": "small r0: after Draw: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r0: after Draw: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "740000000",
+   "rhs": "740000000"
+  },
+  {
+   "label": "small r1: buyer1 buys 1 ticket(s)",
+   "pass": true,
+   "cu": 11183,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r1: buyer2 buys 1 ticket(s)",
+   "pass": true,
+   "cu": 11182,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r1: buyer3 buys 1 ticket(s)",
+   "pass": true,
+   "cu": 11182,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer1 claims ticket 4 (tier 2)",
+   "pass": true,
+   "cu": 21180,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer3 claims ticket 19 (tier 2)",
+   "pass": true,
+   "cu": 15181,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer2 claims ticket 13 (tier 2)",
+   "pass": true,
+   "cu": 15182,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: registered winner counts on chain match the off-chain scan",
+   "pass": true,
+   "jackpot": "0",
+   "tier2": "3"
+  },
+  {
+   "label": "small r0: Settle",
+   "pass": true,
+   "cu": 6302,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: settled shares equal floor(prize / registered winners)",
+   "pass": true,
+   "share": "0",
+   "tier2Share": "8000000"
+  },
+  {
+   "label": "small r0: after Settle: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r0: after Settle: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "775323840",
+   "need": "775323840"
+  },
+  {
+   "label": "small r0: after Settle: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r0: after Settle: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "770000000",
+   "rhs": "770000000"
+  },
+  {
+   "label": "small r0: no jackpot registered, the jackpot rolled into round 1",
+   "pass": true,
+   "before": "16500000",
+   "rolled": "632000000",
+   "after": "648500000"
+  },
+  {
+   "label": "small r0: Payout ticket 4 to buyer1",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer1 received exactly share + claim rent for ticket 4, record closed",
+   "pass": true,
+   "delta": "9107440",
+   "share": "8000000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "small r0: Payout ticket 13 to buyer2",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer2 received exactly share + claim rent for ticket 13, record closed",
+   "pass": true,
+   "delta": "9107440",
+   "share": "8000000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "small r0: Payout ticket 19 to buyer3",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: buyer3 received exactly share + claim rent for ticket 19, record closed",
+   "pass": true,
+   "delta": "9107440",
+   "share": "8000000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "small r0: CloseRound 0",
+   "pass": true,
+   "cu": 5262,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r0: round rent returned to the cranker, account closed",
+   "pass": true,
+   "rent": "2032000",
+   "delta": "2027000",
+   "fee": 5000
+  },
+  {
+   "label": "small r0: after payouts and CloseRound: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r0: after payouts and CloseRound: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "751323840",
+   "need": "751323840"
+  },
+  {
+   "label": "small r0: after payouts and CloseRound: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r0: after payouts and CloseRound: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "770000000",
+   "rhs": "770000000"
+  },
+  {
+   "label": "small r1: ticket logs are contiguous 0..2 and count matches chain",
+   "pass": true,
+   "logs": 3,
+   "chainCount": "3"
+  },
+  {
+   "label": "small r1: tree rebuilt from logs equals the on-chain root",
+   "pass": true,
+   "rebuilt": "35db593545d1f87410ed6930ce6489084348dc54c00fa1198baace67929a5621",
+   "chain": "35db593545d1f87410ed6930ce6489084348dc54c00fa1198baace67929a5621"
+  },
+  {
+   "label": "small r1: Draw round 1",
+   "pass": true,
+   "cu": 13936,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r1: SlotHashes selection off chain equals the recorded target/used slot/hash",
+   "pass": true,
+   "t0": "508182182",
+   "attempt": "0",
+   "target": "508182182",
+   "used": "508182182",
+   "offchainUsed": "508182182",
+   "drawTxSlot": 508182237
+  },
+  {
+   "label": "small r1: drawn numbers recomputed off chain equal the on-chain numbers",
+   "pass": true,
+   "offchain": [
+    1,
+    16,
+    17,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "chain": [
+    1,
+    16,
+    17,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "label": "small r1: after Draw: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r1: after Draw: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "751323840",
+   "need": "751323840"
+  },
+  {
+   "label": "small r1: after Draw: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r1: after Draw: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "770000000",
+   "rhs": "770000000"
+  },
+  {
+   "label": "small r1: Settle with no registered ticket",
+   "pass": true,
+   "cu": 6237,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r1: after rollover Settle: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r1: after rollover Settle: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "751323840",
+   "need": "751323840"
+  },
+  {
+   "label": "small r1: after rollover Settle: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r1: after rollover Settle: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "770000000",
+   "rhs": "770000000"
+  },
+  {
+   "label": "small r1: next jackpot grew by the rolled prize (overflow to reserve)",
+   "pass": true,
+   "before": "0",
+   "prize": "648500000",
+   "after": "648500000"
+  },
+  {
+   "label": "small r1: next tier-2 pool grew by the rolled tier-2 prize",
+   "pass": true,
+   "before": "0",
+   "tier2Prize": "3000000",
+   "after": "3000000"
+  },
+  {
+   "label": "small r1: CloseRound 1",
+   "pass": true,
+   "cu": 5262,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r1: round rent returned to the cranker, account closed",
+   "pass": true,
+   "rent": "2032000",
+   "delta": "2027000",
+   "fee": 5000
+  },
+  {
+   "label": "small r2: Draw of an empty round",
+   "pass": true,
+   "cu": 6019,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small r2: empty round rolled by Draw (log \"empty\", no round account, jackpot kept, round 3 open)",
+   "pass": true,
+   "roundId": "3",
+   "jackpot": "648500000"
+  },
+  {
+   "label": "small r2: after empty Draw: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small r2: after empty Draw: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "751323840",
+   "need": "751323840"
+  },
+  {
+   "label": "small r2: after empty Draw: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small r2: after empty Draw: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "770000000",
+   "rhs": "770000000"
+  },
+  {
+   "label": "small: WithdrawCreatorFees 81000000",
+   "pass": true,
+   "cu": 3361,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "small: creator received the accrued fees",
+   "pass": true,
+   "amount": "81000000",
+   "delta": "80995000",
+   "fee": 5000
+  },
+  {
+   "label": "small: after withdraw: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "small: after withdraw: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "670323840",
+   "need": "670323840"
+  },
+  {
+   "label": "small: after withdraw: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "small: after withdraw: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "770000000",
+   "rhs": "770000000"
+  },
+  {
+   "label": "allcombos: params within the SDK bounds",
+   "pass": true
+  },
+  {
+   "label": "allcombos: CreatePool",
+   "pass": true,
+   "cu": 12787,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: pool params, combos, caps and recoup volume as created",
+   "pass": true,
+   "pool": "FyUPUjcLorb6yzua4LdahnZQew67kKoWfiDCD4oWuyQ",
+   "combos": "6",
+   "cap": "42000",
+   "tier2Cap": "12000",
+   "lamports": "5343840"
+  },
+  {
+   "label": "allcombos: after CreatePool: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after CreatePool: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "5343840",
+   "need": "5343840"
+  },
+  {
+   "label": "allcombos: after CreatePool: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after CreatePool: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "20000",
+   "rhs": "20000"
+  },
+  {
+   "label": "allcombos: buyer1 buys 2 ticket(s)",
+   "pass": true,
+   "cu": 22213,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer2 buys 2 ticket(s)",
+   "pass": true,
+   "cu": 22210,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer3 buys 2 ticket(s)",
+   "pass": true,
+   "cu": 22209,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: after buying all 6 combinations: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after buying all 6 combinations: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "5403840",
+   "need": "5403840"
+  },
+  {
+   "label": "allcombos: after buying all 6 combinations: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after buying all 6 combinations: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "80000",
+   "rhs": "80000"
+  },
+  {
+   "label": "allcombos: jackpot reached its cap, overflow went to the reserve",
+   "pass": true,
+   "jackpot": "42000",
+   "cap": "42000",
+   "reserve": "20000"
+  },
+  {
+   "label": "allcombos: ticket logs are contiguous 0..5 and count matches chain",
+   "pass": true,
+   "logs": 6,
+   "chainCount": "6"
+  },
+  {
+   "label": "allcombos: tree rebuilt from logs equals the on-chain root",
+   "pass": true,
+   "rebuilt": "160a33346f2edc25a0ecb0b5ee8d19bada0e891666322f3fa6c3d80e0524f4cf",
+   "chain": "160a33346f2edc25a0ecb0b5ee8d19bada0e891666322f3fa6c3d80e0524f4cf"
+  },
+  {
+   "label": "allcombos: Draw round 0",
+   "pass": true,
+   "cu": 10635,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: SlotHashes selection off chain equals the recorded target/used slot/hash",
+   "pass": true,
+   "t0": "508182633",
+   "attempt": "0",
+   "target": "508182633",
+   "used": "508182633",
+   "offchainUsed": "508182633",
+   "drawTxSlot": 508182644
+  },
+  {
+   "label": "allcombos: drawn numbers recomputed off chain equal the on-chain numbers",
+   "pass": true,
+   "offchain": [
+    2,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "chain": [
+    2,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "label": "allcombos: after Draw: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after Draw: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "5403840",
+   "need": "5403840"
+  },
+  {
+   "label": "allcombos: after Draw: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after Draw: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "80000",
+   "rhs": "80000"
+  },
+  {
+   "label": "allcombos: exactly 1 jackpot and 4 tier-2 tickets among the 6 combinations",
+   "pass": true,
+   "drawn": [
+    2,
+    3
+   ],
+   "jackpot": 1,
+   "tier2": 4
+  },
+  {
+   "label": "allcombos: buyer2 claims buyer1's jackpot ticket (rejected with 0x4c500011)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1280311313
+     }
+    ]
+   }
+  },
+  {
+   "label": "allcombos: buyer3 claims ticket 5 (tier 2)",
+   "pass": true,
+   "cu": 15129,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer2 claims ticket 2 (tier 2)",
+   "pass": true,
+   "cu": 19628,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer2 claims ticket 3 (tier 2)",
+   "pass": true,
+   "cu": 16630,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer1 claims ticket 0 (tier 2)",
+   "pass": true,
+   "cu": 19628,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer1 claims ticket 1 (tier 1)",
+   "pass": true,
+   "cu": 18122,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer1 claims ticket 1 again (rejected with 0x4c500012)",
+   "pass": false,
+   "err": {
+    "InstructionError": [
+     1,
+     {
+      "Custom": 1280311310
+     }
+    ]
+   }
+  },
+  {
+   "label": "allcombos: Settle during the claim window (rejected with 0x4c50000f)",
+   "pass": false,
+   "err": null
+  },
+  {
+   "label": "allcombos: Settle: sent",
+   "pass": false,
+   "error": "sendTransaction: Transaction simulation failed: Error processing Instruction 1: custom program error: 0x4c50000d"
+  },
+  {
+   "label": "allcombos: share = whole jackpot, tier-2 share = tier-2 pool / 4",
+   "pass": true,
+   "share": "42000",
+   "tier2Share": "3000",
+   "prize": "42000",
+   "tier2Prize": "12000"
+  },
+  {
+   "label": "allcombos: after Settle (reserve seeds the next jackpot): pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after Settle (reserve seeds the next jackpot): lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "5403840",
+   "need": "5403840"
+  },
+  {
+   "label": "allcombos: after Settle (reserve seeds the next jackpot): lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after Settle (reserve seeds the next jackpot): seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "80000",
+   "rhs": "80000"
+  },
+  {
+   "label": "allcombos: after a win the next jackpot is seeded from the reserve",
+   "pass": true,
+   "jackpot": "20000",
+   "reserve": "0"
+  },
+  {
+   "label": "allcombos: Payout ticket 0 to buyer1",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer1 received exactly share + claim rent for ticket 0, record closed",
+   "pass": true,
+   "delta": "1110440",
+   "share": "3000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "allcombos: Payout ticket 1 to buyer1",
+   "pass": true,
+   "cu": 8123,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer1 received exactly share + claim rent for ticket 1, record closed",
+   "pass": true,
+   "delta": "1149440",
+   "share": "42000",
+   "claimRent": "1107440",
+   "tier": 1
+  },
+  {
+   "label": "allcombos: Payout ticket 2 to buyer2",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer2 received exactly share + claim rent for ticket 2, record closed",
+   "pass": true,
+   "delta": "1110440",
+   "share": "3000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "allcombos: Payout ticket 3 to buyer2",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer2 received exactly share + claim rent for ticket 3, record closed",
+   "pass": true,
+   "delta": "1110440",
+   "share": "3000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "allcombos: Payout ticket 5 to buyer3",
+   "pass": true,
+   "cu": 8126,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: buyer3 received exactly share + claim rent for ticket 5, record closed",
+   "pass": true,
+   "delta": "1110440",
+   "share": "3000",
+   "claimRent": "1107440",
+   "tier": 2
+  },
+  {
+   "label": "allcombos: CloseRound 0",
+   "pass": true,
+   "cu": 5262,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: round rent returned to the cranker, account closed",
+   "pass": true,
+   "rent": "2032000",
+   "delta": "2027000",
+   "fee": 5000
+  },
+  {
+   "label": "allcombos: after payouts and CloseRound: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after payouts and CloseRound: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "5349840",
+   "need": "5349840"
+  },
+  {
+   "label": "allcombos: after payouts and CloseRound: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after payouts and CloseRound: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "80000",
+   "rhs": "80000"
+  },
+  {
+   "label": "allcombos: WithdrawCreatorFees 6000",
+   "pass": true,
+   "cu": 3361,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "allcombos: creator received the accrued fees",
+   "pass": true,
+   "amount": "6000",
+   "delta": "1000",
+   "fee": 5000
+  },
+  {
+   "label": "allcombos: after withdraw: pool books equal the off-chain model",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after withdraw: lamports >= liabilities + rent",
+   "pass": true,
+   "lamports": "5343840",
+   "need": "5343840"
+  },
+  {
+   "label": "allcombos: after withdraw: lamports == liabilities + rent (no surplus, no deficit)",
+   "pass": true
+  },
+  {
+   "label": "allcombos: after withdraw: seed + sales == jackpot + reserve + tier2 + creator owed + withdrawn + locked + owed + paid",
+   "pass": true,
+   "lhs": "80000",
+   "rhs": "80000"
+  },
+  {
+   "label": "sweep buyer1 back to the creator",
+   "pass": true,
+   "lamports": "30945120"
+  },
+  {
+   "label": "sweep buyer2 back to the creator",
+   "pass": true,
+   "lamports": "30911120"
+  },
+  {
+   "label": "sweep buyer3 back to the creator",
+   "pass": true,
+   "lamports": "30918120"
+  }
+ ],
+ "summary": {
+  "cu": {
+   "CreatePool": {
+    "n": 2,
+    "min": 9950,
+    "max": 12637,
+    "txCuMin": 10100,
+    "txCuMax": 12787
+   },
+   "BuyTicket": {
+    "n": 33,
+    "min": 11029,
+    "max": 11034,
+    "txCuMin": 11182,
+    "txCuMax": 88410
+   },
+   "Draw": {
+    "n": 3,
+    "min": 10485,
+    "max": 13786,
+    "txCuMin": 10635,
+    "txCuMax": 13936
+   },
+   "Claim": {
+    "n": 8,
+    "min": 14979,
+    "max": 21030,
+    "txCuMin": 15129,
+    "txCuMax": 21180
+   },
+   "Settle": {
+    "n": 2,
+    "min": 6087,
+    "max": 6152,
+    "txCuMin": 6237,
+    "txCuMax": 6302
+   },
+   "Payout": {
+    "n": 8,
+    "min": 7973,
+    "max": 7976,
+    "txCuMin": 8123,
+    "txCuMax": 8126
+   },
+   "CloseRound": {
+    "n": 3,
+    "min": 5112,
+    "max": 5112,
+    "txCuMin": 5262,
+    "txCuMax": 5262
+   },
+   "Draw(empty)": {
+    "n": 1,
+    "min": 5869,
+    "max": 5869,
+    "txCuMin": 6019,
+    "txCuMax": 6019
+   },
+   "WithdrawCreatorFees": {
+    "n": 2,
+    "min": 3211,
+    "max": 3211,
+    "txCuMin": 3361,
+    "txCuMax": 3361
+   }
+  },
+  "feesTotal": 245000,
+  "txCount": 49,
+  "checks": 151
+ },
+ "econ": [
+  {
+   "label": "small: after CreatePool",
+   "lamports": "505323840",
+   "liabilities": "500000000",
+   "rent": "5323840",
+   "jackpot": "500000000",
+   "reserve": "0",
+   "tier2Pool": "0",
+   "creatorOwed": "0",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "0",
+   "paidOut": "0"
+  },
+  {
+   "label": "small r0: after 24 buys",
+   "lamports": "745323840",
+   "liabilities": "740000000",
+   "rent": "5323840",
+   "jackpot": "632000000",
+   "reserve": "12000000",
+   "tier2Pool": "24000000",
+   "creatorOwed": "72000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "240000000",
+   "paidOut": "0"
+  },
+  {
+   "label": "small r0: after Draw",
+   "lamports": "745323840",
+   "liabilities": "740000000",
+   "rent": "5323840",
+   "jackpot": "0",
+   "reserve": "12000000",
+   "tier2Pool": "0",
+   "creatorOwed": "72000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "656000000",
+   "owedPrizes": "0",
+   "totalSales": "240000000",
+   "paidOut": "0"
+  },
+  {
+   "label": "small r0: after Settle",
+   "lamports": "775323840",
+   "liabilities": "770000000",
+   "rent": "5323840",
+   "jackpot": "648500000",
+   "reserve": "13500000",
+   "tier2Pool": "3000000",
+   "creatorOwed": "81000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "24000000",
+   "totalSales": "270000000",
+   "paidOut": "0"
+  },
+  {
+   "label": "small r0: after payouts and CloseRound",
+   "lamports": "751323840",
+   "liabilities": "746000000",
+   "rent": "5323840",
+   "jackpot": "648500000",
+   "reserve": "13500000",
+   "tier2Pool": "3000000",
+   "creatorOwed": "81000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "270000000",
+   "paidOut": "24000000"
+  },
+  {
+   "label": "small r1: after Draw",
+   "lamports": "751323840",
+   "liabilities": "746000000",
+   "rent": "5323840",
+   "jackpot": "0",
+   "reserve": "13500000",
+   "tier2Pool": "0",
+   "creatorOwed": "81000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "651500000",
+   "owedPrizes": "0",
+   "totalSales": "270000000",
+   "paidOut": "24000000"
+  },
+  {
+   "label": "small r1: after rollover Settle",
+   "lamports": "751323840",
+   "liabilities": "746000000",
+   "rent": "5323840",
+   "jackpot": "648500000",
+   "reserve": "13500000",
+   "tier2Pool": "3000000",
+   "creatorOwed": "81000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "270000000",
+   "paidOut": "24000000"
+  },
+  {
+   "label": "small r2: after empty Draw",
+   "lamports": "751323840",
+   "liabilities": "746000000",
+   "rent": "5323840",
+   "jackpot": "648500000",
+   "reserve": "13500000",
+   "tier2Pool": "3000000",
+   "creatorOwed": "81000000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "270000000",
+   "paidOut": "24000000"
+  },
+  {
+   "label": "small: after withdraw",
+   "lamports": "670323840",
+   "liabilities": "665000000",
+   "rent": "5323840",
+   "jackpot": "648500000",
+   "reserve": "13500000",
+   "tier2Pool": "3000000",
+   "creatorOwed": "0",
+   "creatorWithdrawn": "81000000",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "270000000",
+   "paidOut": "24000000"
+  },
+  {
+   "label": "allcombos: after CreatePool",
+   "lamports": "5343840",
+   "liabilities": "20000",
+   "rent": "5323840",
+   "jackpot": "20000",
+   "reserve": "0",
+   "tier2Pool": "0",
+   "creatorOwed": "0",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "0",
+   "paidOut": "0"
+  },
+  {
+   "label": "allcombos: after buying all 6 combinations",
+   "lamports": "5403840",
+   "liabilities": "80000",
+   "rent": "5323840",
+   "jackpot": "42000",
+   "reserve": "20000",
+   "tier2Pool": "12000",
+   "creatorOwed": "6000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "60000",
+   "paidOut": "0"
+  },
+  {
+   "label": "allcombos: after Draw",
+   "lamports": "5403840",
+   "liabilities": "80000",
+   "rent": "5323840",
+   "jackpot": "0",
+   "reserve": "20000",
+   "tier2Pool": "0",
+   "creatorOwed": "6000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "54000",
+   "owedPrizes": "0",
+   "totalSales": "60000",
+   "paidOut": "0"
+  },
+  {
+   "label": "allcombos: after Settle (reserve seeds the next jackpot)",
+   "lamports": "5403840",
+   "liabilities": "80000",
+   "rent": "5323840",
+   "jackpot": "20000",
+   "reserve": "0",
+   "tier2Pool": "0",
+   "creatorOwed": "6000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "54000",
+   "totalSales": "60000",
+   "paidOut": "0"
+  },
+  {
+   "label": "allcombos: after payouts and CloseRound",
+   "lamports": "5349840",
+   "liabilities": "26000",
+   "rent": "5323840",
+   "jackpot": "20000",
+   "reserve": "0",
+   "tier2Pool": "0",
+   "creatorOwed": "6000",
+   "creatorWithdrawn": "0",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "60000",
+   "paidOut": "54000"
+  },
+  {
+   "label": "allcombos: after withdraw",
+   "lamports": "5343840",
+   "liabilities": "20000",
+   "rent": "5323840",
+   "jackpot": "20000",
+   "reserve": "0",
+   "tier2Pool": "0",
+   "creatorOwed": "0",
+   "creatorWithdrawn": "6000",
+   "lockedPrize": "0",
+   "owedPrizes": "0",
+   "totalSales": "60000",
+   "paidOut": "54000"
+  }
+ ],
+ "draws": [
+  {
+   "label": "small r0",
+   "pool": "42CBAdBRoXtTseUTLCaAb5BSzCEFpZPfEoFR5LzwbMJV",
+   "roundId": "0",
+   "t0": "508181994",
+   "attempt": "0",
+   "targetSlot": "508181994",
+   "usedSlot": "508181994",
+   "drawSlot": "508182000",
+   "numbers": [
+    1,
+    13,
+    14
+   ],
+   "prize": "632000000",
+   "tier2Prize": "24000000",
+   "ticketCount": "24",
+   "windowEnd": "508182150"
+  },
+  {
+   "label": "small r1",
+   "pool": "42CBAdBRoXtTseUTLCaAb5BSzCEFpZPfEoFR5LzwbMJV",
+   "roundId": "1",
+   "t0": "508182182",
+   "attempt": "0",
+   "targetSlot": "508182182",
+   "usedSlot": "508182182",
+   "drawSlot": "508182237",
+   "numbers": [
+    1,
+    16,
+    17
+   ],
+   "prize": "648500000",
+   "tier2Prize": "3000000",
+   "ticketCount": "3",
+   "windowEnd": "508182387"
+  },
+  {
+   "label": "allcombos",
+   "pool": "FyUPUjcLorb6yzua4LdahnZQew67kKoWfiDCD4oWuyQ",
+   "roundId": "0",
+   "t0": "508182633",
+   "attempt": "0",
+   "targetSlot": "508182633",
+   "usedSlot": "508182633",
+   "drawSlot": "508182644",
+   "numbers": [
+    2,
+    3
+   ],
+   "prize": "42000",
+   "tier2Prize": "12000",
+   "ticketCount": "6",
+   "windowEnd": "508182794"
+  }
+ ],
+ "payouts": [
+  {
+   "label": "small r0",
+   "ticket": "4",
+   "owner": "buyer1",
+   "tier": 2,
+   "share": "8000000",
+   "claimRent": "1107440",
+   "delta": "9107440"
+  },
+  {
+   "label": "small r0",
+   "ticket": "13",
+   "owner": "buyer2",
+   "tier": 2,
+   "share": "8000000",
+   "claimRent": "1107440",
+   "delta": "9107440"
+  },
+  {
+   "label": "small r0",
+   "ticket": "19",
+   "owner": "buyer3",
+   "tier": 2,
+   "share": "8000000",
+   "claimRent": "1107440",
+   "delta": "9107440"
+  },
+  {
+   "label": "allcombos",
+   "ticket": "0",
+   "owner": "buyer1",
+   "tier": 2,
+   "share": "3000",
+   "claimRent": "1107440",
+   "delta": "1110440"
+  },
+  {
+   "label": "allcombos",
+   "ticket": "1",
+   "owner": "buyer1",
+   "tier": 1,
+   "share": "42000",
+   "claimRent": "1107440",
+   "delta": "1149440"
+  },
+  {
+   "label": "allcombos",
+   "ticket": "2",
+   "owner": "buyer2",
+   "tier": 2,
+   "share": "3000",
+   "claimRent": "1107440",
+   "delta": "1110440"
+  },
+  {
+   "label": "allcombos",
+   "ticket": "3",
+   "owner": "buyer2",
+   "tier": 2,
+   "share": "3000",
+   "claimRent": "1107440",
+   "delta": "1110440"
+  },
+  {
+   "label": "allcombos",
+   "ticket": "5",
+   "owner": "buyer3",
+   "tier": 2,
+   "share": "3000",
+   "claimRent": "1107440",
+   "delta": "1110440"
+  }
+ ],
+ "pool_small": "42CBAdBRoXtTseUTLCaAb5BSzCEFpZPfEoFR5LzwbMJV",
+ "smallPoolSummary": {
+  "combos": "816",
+  "jackpotCap": "4896000000",
+  "tier2Cap": "816000000",
+  "recoupVolume": "1666666667",
+  "recoupTickets": "167",
+  "atSales": [
+   {
+    "sales": "240000000",
+    "tickets": "24",
+    "creatorFees": "72000000",
+    "net": "-428000000",
+    "netPctOfSeed": -85.6
+   }
+  ],
+  "pJackpot": 0.0012254901960784314,
+  "pTier2": 0.05514705882352941
+ },
+ "smallRound0Winners": [
+  {
+   "ticket": "4",
+   "owner": "buyer1",
+   "numbers": [
+    1,
+    14,
+    15
+   ],
+   "tier": 2
+  },
+  {
+   "ticket": "13",
+   "owner": "buyer2",
+   "numbers": [
+    1,
+    7,
+    14
+   ],
+   "tier": 2
+  },
+  {
+   "ticket": "19",
+   "owner": "buyer3",
+   "numbers": [
+    8,
+    13,
+    14
+   ],
+   "tier": 2
+  }
+ ],
+ "smallRound1UnregisteredWinners": 0,
+ "pool_allcombos": "FyUPUjcLorb6yzua4LdahnZQew67kKoWfiDCD4oWuyQ",
+ "solSpent": {
+  "creator": {
+   "pubkey": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+   "start": "5118146824",
+   "end": "4442234144",
+   "netSpent": "675912680",
+   "fees": "130000",
+   "fundedIn": "92774360",
+   "fundedOut": "338895360",
+   "peakOutlay": "846316200"
+  },
+  "buyer1": {
+   "pubkey": "EGytdJDnsYSHXMiGnqTDxNY23FfXUymaQSozsi7TPkbW",
+   "start": "0",
+   "end": "0",
+   "netSpent": "0",
+   "fees": "45000",
+   "fundedIn": "112965120",
+   "fundedOut": "30945120",
+   "peakOutlay": "0"
+  },
+  "buyer2": {
+   "pubkey": "GUA5b5ERSsszUGmvF3WV4RpkvmgtHTBtoGea9e3rGrEK",
+   "start": "0",
+   "end": "0",
+   "netSpent": "0",
+   "fees": "40000",
+   "fundedIn": "112965120",
+   "fundedOut": "30911120",
+   "peakOutlay": "0"
+  },
+  "buyer3": {
+   "pubkey": "Gkfge7y3tpnVXB1tusH5AJAPDqtxwBS7syXAPnWd75P7",
+   "start": "0",
+   "end": "0",
+   "netSpent": "0",
+   "fees": "30000",
+   "fundedIn": "112965120",
+   "fundedOut": "30918120",
+   "peakOutlay": "0"
+  },
+  "allWalletsNet": "675912680"
+ },
+ "finished": "2026-10-06T18:27:08.483Z",
+ "result": "FAIL",
+ "failures": 3
+}

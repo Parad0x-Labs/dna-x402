@@ -24,9 +24,9 @@
       "package_version": {
         "name": "@parad0x_labs/x402",
         "package_json": "x402/package.json",
-        "git_version": "0.2.1",
+        "git_version": "0.2.2",
         "npm_latest": "0.2.0",
-        "npm_checked_at": "2026-10-06T11:36:56Z"
+        "npm_checked_at": "2026-10-06T19:28:12Z"
       },
       "publication_status": "published-older-version",
       "network": null,
@@ -881,6 +881,183 @@
       ],
       "operational_limitations": [
         "The devnet build uses the committed devnet cargo feature (121109d) to compile out the mainnet_ready guard."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.x402-settle",
+      "plain_claim": "On devnet, x402_settle settles batches of signed x402 vouchers against SOL escrows in one V1 transaction (25 distinct payers, or 32 vouchers from one escrow), with payment channels, two-phase batches and a delayed escrow exit.",
+      "component": "programs/x402_settle",
+      "source_sha": "24ce01d3204d9bb3ab9164bf1c6e7189d6bd4b77",
+      "source_paths": [
+        "programs/x402_settle/src/processor.rs",
+        "programs/x402_settle/src/instruction.rs",
+        "programs/x402_settle/src/state.rs",
+        "packages/x402-settle/src/index.ts",
+        "scripts/devnet-e2e/x402-settle-e2e.mjs"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+      "deployed_build_hash": "c93a2cdc976430bb856a18d007b6d3d53e89fb5b64feecc6e5e7c61ac5320e9f",
+      "source_build_match": "match",
+      "authority_assumptions": [
+        "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q can replace the program.",
+        "The facilitator submits batches; payees and payers sign their own vouchers and closes."
+      ],
+      "evidence_checked_at": "2026-10-06T18:47:49Z",
+      "proof_files": [
+        "evidence/devnet-2026-10-06/dna-x402-settle-e2e.json",
+        "evidence/devnet-2026-10-06/dna-x402-settle-e2e-run1.json",
+        "evidence/devnet-2026-10-06/dna-x402-settle-cleanup-run1.json",
+        "evidence/devnet-2026-10-06/dna-x402-settle-cleanup-run2.json",
+        "evidence/devnet-2026-10-06/devnet-deploys-x402-settle-lottery-pools-fair-draw.json",
+        "evidence/devnet-programs-2026-10-06.json",
+        "scripts/devnet-e2e/x402-settle-e2e.mjs"
+      ],
+      "test_command": "FUNDER_KEY=<keypair> PAYEE_KEYS=<k1>,<k2> WALLETS_FILE=<json> node --experimental-strip-types scripts/devnet-e2e/x402-settle-e2e.mjs; PHASE=cleanup after 9,000 slots",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "devnet, node:22 tmpfs container, scripts at e308957",
+        "command": "x402-settle-e2e.mjs (main), then PHASE=cleanup",
+        "note": "Devnet (2026-10-06): 86/86 checks (run 2). PHASE=cleanup after the 9,000-slot exit delay: run 1 escrows 79/79, run 2 escrows 78/78. Run 1 on the public RPC: 90/91; its failed check is an HTTP 429 at send (ReclaimChannel), not a program result."
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "Settle of 25 vouchers from 25 distinct payers in one V1 transaction: 285,367 CU (11,415 per voucher)",
+        "Settle of 32 vouchers from one escrow in one V1 transaction: 304,730 CU",
+        "payee-signed close of 25 channels in one V1 transaction: 282,237 CU",
+        "refused on chain with exact codes: tampered amount, tampered signature, replay, duplicate pair, expired voucher, wrong scope, staged pair",
+        "two-phase batch: commit across three StageChunk transactions; abort after the deadline by a non-submitter returns every reservation",
+        "solvency read from getProgramAccounts: ledger liabilities equal the sum of all entries",
+        "escrows withdrawn and closed after the 9,000-slot exit delay (PHASE=cleanup)",
+        "deployed bytes equal the .so rebuilt from 24ce01d with --features sha512-syscall (SHA-256 c93a2cdc..., no trailing bytes)"
+      ],
+      "not_demonstrated": [
+        "SPL token escrows (the run uses SOL escrows)",
+        "behaviour under several facilitators submitting at once",
+        "mainnet deployment"
+      ],
+      "operational_limitations": [
+        "One upgrade authority can replace the program.",
+        "An escrow exit waits 9,000 slots (about 60 minutes on devnet)."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.null-lottery-pools",
+      "plain_claim": "On devnet, null_lottery_pools runs pooled lottery rounds: tickets in an on-chain tree, numbers drawn from SlotHashes, claims inside a claim window, settlement, payout, rollover and creator-fee withdrawal.",
+      "component": "programs/null_lottery_pools",
+      "source_sha": "e2d3462a823564fdd72b1728f17c0d6e224c0abb",
+      "source_paths": [
+        "programs/null_lottery_pools/src/processor.rs",
+        "programs/null_lottery_pools/src/draw.rs",
+        "programs/null_lottery_pools/src/econ.rs",
+        "packages/lottery-pools/src/index.ts",
+        "scripts/devnet-e2e/lottery-pools-e2e.mjs"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+      "deployed_build_hash": "63a16e8a8ba0f2b99fa5895a5523cad629d77dffd1d9a1d3eefe322fc0e92c48",
+      "source_build_match": "unknown",
+      "authority_assumptions": [
+        "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q can replace the program.",
+        "The pool creator sets the pool parameters and withdraws creator fees."
+      ],
+      "evidence_checked_at": "2026-10-06T18:32:37Z",
+      "proof_files": [
+        "evidence/devnet-2026-10-06/dna-lottery-pools-e2e.json",
+        "evidence/devnet-2026-10-06/dna-lottery-pools-e2e-run1.json",
+        "evidence/devnet-2026-10-06/dna-lottery-pools-e2e-run2.json",
+        "evidence/devnet-2026-10-06/devnet-deploys-x402-settle-lottery-pools-fair-draw.json",
+        "evidence/devnet-programs-2026-10-06.json",
+        "scripts/devnet-e2e/lottery-pools-e2e.mjs"
+      ],
+      "test_command": "CREATOR_KEY=<keypair> BUYER_KEYS=<k1>,<k2>,<k3> node --experimental-strip-types scripts/devnet-e2e/lottery-pools-e2e.mjs",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "devnet, node:22 tmpfs container, scripts at e308957",
+        "command": "lottery-pools-e2e.mjs",
+        "note": "Devnet (2026-10-06): 147/147 checks (run 3, private devnet RPC). Runs 1 and 2 on the public RPC: 140/145 (five HTTP 429 at send) and 148/151 (retries outlasted the 150-slot claim window, so the program answered ClaimWindowClosed where the script expected AlreadyClaimed and accepted the in-window Settle check after the window)."
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "small preset (3 of 18, second tier, 0.5 SOL seed) with tickets from 3 wallets; the ticket tree root rebuilt from logs equals the chain",
+        "draw numbers recomputed off chain from SlotHashes equal the on-chain draw",
+        "all-combinations pool (2 of 4) with a guaranteed jackpot and four second-tier winners; claims, settle, payout and close round",
+        "no-winner rollover and empty-round roll; creator fee withdrawal",
+        "CU: BuyTicket 11,029-11,034, Claim 14,972-19,529, Draw 10,785-14,985"
+      ],
+      "not_demonstrated": [
+        "resistance of the SlotHashes draw to a colluding block producer",
+        "a build of the deployed bytes from a named commit in this record",
+        "mainnet deployment"
+      ],
+      "operational_limitations": [
+        "One upgrade authority can replace the program.",
+        "Claims must land inside the claim window (150 slots minimum)."
+      ],
+      "supersedes": null
+    },
+    {
+      "id": "programs.null-fair-draw",
+      "plain_claim": "On devnet, null_fair_draw runs verifiable draws: open raffles with SOL prizes and weighted committed lists with SPL prizes, winners recomputed off chain with verify() after every round.",
+      "component": "programs/null_fair_draw",
+      "source_sha": "44a3bf5a63c11ce826ab41c9695a346677bbaa7e",
+      "source_paths": [
+        "programs/null_fair_draw/src/processor.rs",
+        "programs/null_fair_draw/src/sumtree.rs",
+        "programs/null_fair_draw/src/stream.rs",
+        "packages/fair-draw/src/index.ts",
+        "scripts/devnet-e2e/fair-draw-e2e.mjs"
+      ],
+      "implementation_status": "prototype",
+      "package_version": null,
+      "publication_status": "not-applicable",
+      "network": "devnet",
+      "program_id": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+      "deployed_build_hash": "09a71388b2181e0be3f53a93d267f5ea343d6311f544dec80297a6adbd7ad7d8",
+      "source_build_match": "unknown",
+      "authority_assumptions": [
+        "Upgrade authority 9Jkphdpu3UQKgZToacyfDkwM3ZbzPjZYuK3sDyR8pU2q can replace the program.",
+        "The organizer creates and funds each draw and commits the entry list."
+      ],
+      "evidence_checked_at": "2026-10-06T18:37:10Z",
+      "proof_files": [
+        "evidence/devnet-2026-10-06/dna-fair-draw-e2e.json",
+        "evidence/devnet-2026-10-06/devnet-deploys-x402-settle-lottery-pools-fair-draw.json",
+        "evidence/devnet-programs-2026-10-06.json",
+        "scripts/devnet-e2e/fair-draw-e2e.mjs"
+      ],
+      "test_command": "ORGANIZER_KEY=<keypair> ENTRANT_KEYS=<k1>,...,<k6> node --experimental-strip-types scripts/devnet-e2e/fair-draw-e2e.mjs",
+      "test_run": {
+        "result": "pass",
+        "date": "2026-10-06",
+        "environment": "devnet, node:22 tmpfs container, scripts at e308957",
+        "command": "fair-draw-e2e.mjs",
+        "note": "Devnet (2026-10-06): 96/96 checks."
+      },
+      "mocks_or_skips": [],
+      "demonstrated_properties": [
+        "open raffle with SOL prizes in 3 tiers, 15 entries from 6 wallets, 150-slot claim window, two skipped winners, a re-draw round, Reclaim and Close; funded equals paid plus returned",
+        "weighted committed list with an SPL prize: 9 entries, proofs, claims into token accounts, vault drained, Close",
+        "verify() recomputes the on-chain winners after every round",
+        "refused on chain with exact codes: draw while entries open, draw before the target slot hash, enter after close, tampered proof, non-winner claim, second claim, claim after the window, resolve with another leaf's proof"
+      ],
+      "not_demonstrated": [
+        "resistance of the slot-hash seed to a colluding block producer",
+        "a build of the deployed bytes from a named commit in this record",
+        "mainnet deployment"
+      ],
+      "operational_limitations": [
+        "One upgrade authority can replace the program."
       ],
       "supersedes": null
     },

@@ -434,5 +434,72 @@
   "upgrades_later": [
     "evidence/devnet-2026-10-06/devnet-upgrades-rerun2.json",
     "evidence/devnet-2026-10-06/devnet-upgrades-rerun3.json"
-  ]
+  ],
+  "deployed_later": {
+    "record": "evidence/devnet-2026-10-06/devnet-deploys-x402-settle-lottery-pools-fair-draw.json",
+    "programs": [
+      {
+        "name": "x402_settle",
+        "source_dir": "programs/x402_settle",
+        "program_id": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+        "deployed_at": "2026-10-06",
+        "deploy_signature": "3kseFohzzcNyM8EU7nKRGLn99koGGcdDUDuKWZF1kq2nBWuoyJ4JSTmQFWnpivrmdoG1hDxPeWfPAkPpvCjv1Vrp",
+        "last_deployed_slot": 508174975,
+        "programdata_length": 172328,
+        "so_sha256": "c93a2cdc976430bb856a18d007b6d3d53e89fb5b64feecc6e5e7c61ac5320e9f",
+        "dump_prefix_sha256": "c93a2cdc976430bb856a18d007b6d3d53e89fb5b64feecc6e5e7c61ac5320e9f",
+        "build_variant": "sha512-syscall",
+        "source_commit": "24ce01d",
+        "build_command": "cargo +1.89.0-sbpf-solana-v1.54 build-sbf --features sha512-syscall",
+        "source_build_match": "match",
+        "build_note": "Rebuilt from 24ce01d before the deploy; byte-identical to the deployed .so (172,328 bytes).",
+        "test_suites": [
+          "evidence/devnet-2026-10-06/dna-x402-settle-e2e.json",
+          "evidence/devnet-2026-10-06/dna-x402-settle-e2e-run1.json",
+          "evidence/devnet-2026-10-06/dna-x402-settle-cleanup-run1.json",
+          "evidence/devnet-2026-10-06/dna-x402-settle-cleanup-run2.json"
+        ]
+      },
+      {
+        "name": "null_lottery_pools",
+        "source_dir": "programs/null_lottery_pools",
+        "program_id": "39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw",
+        "deployed_at": "2026-10-06",
+        "deploy_signature": "1jS76dW9GoniWF3RpB1ikcTmu5G4kJuVHevkHkzjzSVonL5E9w6fMJ7UKsN8qoVkKKi9BZM1FZ6p1FnERUvkhzG",
+        "last_deployed_slot": 508177819,
+        "programdata_length": 129440,
+        "so_sha256": "63a16e8a8ba0f2b99fa5895a5523cad629d77dffd1d9a1d3eefe322fc0e92c48",
+        "dump_prefix_sha256": "63a16e8a8ba0f2b99fa5895a5523cad629d77dffd1d9a1d3eefe322fc0e92c48",
+        "build_variant": "default",
+        "source_commit": "e2d3462",
+        "build_command": "cargo build-sbf",
+        "source_build_match": "unknown",
+        "build_note": "Build not repeated from a named commit for this record; programs/null_lottery_pools last changed in e2d3462.",
+        "test_suites": [
+          "evidence/devnet-2026-10-06/dna-lottery-pools-e2e.json",
+          "evidence/devnet-2026-10-06/dna-lottery-pools-e2e-run1.json",
+          "evidence/devnet-2026-10-06/dna-lottery-pools-e2e-run2.json"
+        ]
+      },
+      {
+        "name": "null_fair_draw",
+        "source_dir": "programs/null_fair_draw",
+        "program_id": "FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL",
+        "deployed_at": "2026-10-06",
+        "deploy_signature": "553ZzuPAMuNCSeCWHSbjGr3gVwMbwBLfTU5LyLqVUyshfoGjoB1TWz6UcB7LfHfYDAUm75vDwf7yZH2dzMC6Dr3Z",
+        "last_deployed_slot": 508177679,
+        "programdata_length": 160960,
+        "so_sha256": "09a71388b2181e0be3f53a93d267f5ea343d6311f544dec80297a6adbd7ad7d8",
+        "dump_prefix_sha256": "09a71388b2181e0be3f53a93d267f5ea343d6311f544dec80297a6adbd7ad7d8",
+        "build_variant": "default",
+        "source_commit": "44a3bf5",
+        "build_command": "cargo build-sbf",
+        "source_build_match": "unknown",
+        "build_note": "Build not repeated from a named commit for this record; programs/null_fair_draw last changed in 44a3bf5.",
+        "test_suites": [
+          "evidence/devnet-2026-10-06/dna-fair-draw-e2e.json"
+        ]
+      }
+    ]
+  }
 }

@@ -1,0 +1,4007 @@
+{
+ "program": "x402-settle",
+ "rpc": "https://api.devnet.solana.com",
+ "started": "2026-10-06T18:06:13.654Z",
+ "programId": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+ "phase": "main",
+ "funder": "GTs3YgDY4Aqi67wW4zr5xZdJCwBVHiwTrRdgWpFPjXD3",
+ "payees": [
+  "3DsaRjPsdiKDS8D6P8FckJxF1SwSJ8P4UcuTMdTkVi7b",
+  "BZRc7424noUjNUgDrXXFkyLiPWeHWzgzC3yJ8foWGwxc"
+ ],
+ "steps": [
+  {
+   "label": "InitLedger (SOL)",
+   "signature": "5ifZzSHmTTcHmKgCkzYgKkuhq1BfvoaiNCMyKKuNsAVpJCeG55ubK7p2hqiV4RHoRFjVxR7oVLW8Zv7ksN8RmY8V",
+   "slot": 508177829,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 6142,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6142
+    }
+   ],
+   "v1": {
+    "bytes": 284,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "CreateBook page 0",
+   "signature": "2Rn3NfZx9Hio2v1XSUPsFXkuVYkhTEZ3Aw8iAZ2uuYMX2G36VXebcYrnPq6CLv6XmbDtNJGvzocVTfpcp8Neog5",
+   "slot": 508177851,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 8368,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8368
+    }
+   ],
+   "v1": {
+    "bytes": 287,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "RegisterPayee page 0 slot 0",
+   "signature": "3spiHW26dHKph5xfwpedAxxFabqf7zrJWuSHHQUa6vZLAeYxsSDooBbYSmT3gPWN7ejznTKBPWjW1podYx1zoebZ",
+   "slot": 508177881,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 2254,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2254
+    }
+   ],
+   "v1": {
+    "bytes": 314,
+    "addresses": 4,
+    "signatures": 2,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "RegisterPayee page 0 slot 1",
+   "signature": "5yhixFFMZ3ZdCHy9Vp9c3xwcC8asXnnN5WgP5MjLHLJ1idU97U5Z4TduvUfJhQEZq9Cg66xG2KVce4RixSbvz3st",
+   "slot": 508177905,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 2254,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2254
+    }
+   ],
+   "v1": {
+    "bytes": 314,
+    "addresses": 4,
+    "signatures": 2,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "fund 26 payers (V1 multi-transfer)",
+   "signature": "2Qjj5XncmP3EPAQgMiRHHeW7aP3irtAG7d7vPjyXuMZfjw7Ng5FukdgnSrnLXo7nAJPZMZu5SLc2mQP9bUA2SRwQ",
+   "slot": 508177992,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 3900,
+   "ixCu": [],
+   "v1": {
+    "bytes": 1478,
+    "addresses": 28,
+    "signatures": 1,
+    "instructions": 26
+   }
+  },
+  {
+   "label": "OpenEscrow+Deposit x10",
+   "signature": "3vwBXxTmTh7wrBhRsSEPV6SU8e3Z1an4EUdgpFiRjeEMUVmB7LVFvQWyoa8ao1Xuv5A5jzeHBdQd5d5ks8DtYJnb",
+   "slot": 508178039,
+   "version": 1,
+   "err": null,
+   "fee": 55000,
+   "cu": 151233,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8546
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8545
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 13045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8545
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    }
+   ],
+   "v1": {
+    "bytes": 1792,
+    "addresses": 24,
+    "signatures": 11,
+    "instructions": 20
+   }
+  },
+  {
+   "label": "OpenEscrow+Deposit x10",
+   "signature": "4iMsDkjf4p6yHsSK1Lpk98fhVDZkctstPnrZF27Ad6y3JNLV5kyv5cbE9rtizz9XKf5qwSxDnLrwKbsmFZab4z4W",
+   "slot": 508178045,
+   "version": 1,
+   "err": null,
+   "fee": 55000,
+   "cu": 137736,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    }
+   ],
+   "v1": {
+    "bytes": 1792,
+    "addresses": 24,
+    "signatures": 11,
+    "instructions": 20
+   }
+  },
+  {
+   "label": "OpenEscrow+Deposit x6",
+   "signature": "2DaNhkMqD1gA529AgaJjoKj1cnjbEZGKqKLafAJ25HcVxHWwUmopqwqy5Dk2di6cfSi3hEsVATu8WYkH9AmrJ5cB",
+   "slot": 508178051,
+   "version": 1,
+   "err": null,
+   "fee": 35000,
+   "cu": 90141,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7045
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8545
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10046
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6728
+    }
+   ],
+   "v1": {
+    "bytes": 1172,
+    "addresses": 16,
+    "signatures": 7,
+    "instructions": 12
+   }
+  },
+  {
+   "label": "2PC-abort: BeginBatch",
+   "signature": "3XhezLZ4coVPQknzscgdkMJTdE96zF88v5KeCKprCz78u5GS2GQYd9y39sVEMZ79As3CrbPE62mKPPcd14UcYHPk",
+   "slot": 508178120,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 7211,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 7211
+    }
+   ],
+   "v1": {
+    "bytes": 337,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-abort: StageChunk 0 of 2",
+   "signature": "3BeDMLfeTiKrzW5oaeVMa5NwgmoQMyLNkNxknejuhRdA96dciSymJ1y63KES285j5Wt1cQ6qTe6gmasUJq9CkU6o",
+   "slot": 508178126,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 42874,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 42874
+    }
+   ],
+   "v1": {
+    "bytes": 765,
+    "addresses": 8,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: settle a pair staged in an open batch",
+   "signature": "EJuDLz8w2i7oi5NuxbW7dF6La3qHHEPozZzQMn8yWZEcT4HJzuu7EF5eC6RK9Toar6ojZSfa6EnCA1ds4p7tU4M",
+   "slot": 508178138,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834507
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 6477,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6477
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 6477 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x5853000b"
+   ]
+  },
+  {
+   "label": "negative: AbortBatch by non-submitter before deadline",
+   "signature": "5SknnQ94TEtnKL8ndKqVdi6FuEFiMNdoQv73Uj3uMQzZkfu7UCUct5qp7uHarXDFJDb49wfwsCZmbop8jo2SkpzS",
+   "slot": 508178147,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834521
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 2553,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2553
+    }
+   ],
+   "v1": {
+    "bytes": 217,
+    "addresses": 3,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 2553 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530019"
+   ]
+  },
+  {
+   "label": "C: OpenChannel (dispute case)",
+   "signature": "5Rc5rckAVCva5wU7z4yM9Aq34L1v3Y2v4rhKBC2g5avvtuKqpQxgvUrZpXY9eYJe9sUqFCpzEks2Y9JBLnMRFLBg",
+   "slot": 508178184,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 9247,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    }
+   ],
+   "v1": {
+    "bytes": 468,
+    "addresses": 7,
+    "signatures": 2,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: CloseChannels by facilitator (opens dispute window)",
+   "signature": "4vbXQ9PSnqhFK3bj1kGw52EgtZVJEfLEjLzSnqCCF4x8bTLXqVfakUpqtigenZVsUsHHczyJs6yjLTiNSjNzHaFD",
+   "slot": 508178208,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 13368,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 13368
+    }
+   ],
+   "v1": {
+    "bytes": 365,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: CloseChannels with a higher voucher (supersede inside the window)",
+   "signature": "5k6Wzez99yo8vchtut9aU2fWZriwWu7L8eNATX2W3aNjvHDnREBxP4prbnQEAsBVHsAtnfMsXoX2G5dpWzGY7pQr",
+   "slot": 508178232,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 13360,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 13360
+    }
+   ],
+   "v1": {
+    "bytes": 365,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: CloseChannels with the older voucher (stale)",
+   "signature": "5z7DVmYHUG9NhVFvNKqKz1KXJrf6ed72cyPbYyXcw5vkcSk3NyASDknTvngpeXKArSXkLdCtykcht6dtuAS7KmpV",
+   "slot": 508178269,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834506
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 4494,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4494
+    }
+   ],
+   "v1": {
+    "bytes": 365,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 4494 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x5853000a"
+   ]
+  },
+  {
+   "label": "negative: FinalizeChannel inside the dispute window",
+   "signature": "5YRb3Xi67f6GSoj76GywwisyBvDxmKpkP1Wwr6j7dv7aC46JWrAXNhYSpCNg9n19ptHwXdjDkfawXQJA37wB4jSc",
+   "slot": 508178273,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834517
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 2554,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2554
+    }
+   ],
+   "v1": {
+    "bytes": 250,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 2554 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530015"
+   ]
+  },
+  {
+   "label": "C: OpenChannel (expiry case, 150-slot expiry)",
+   "signature": "3iMCWbHiB2aCf1JMDuiNjG2toJU3devhWfLi9TbTLLy1gWUpvDwevTGKZEVcBtXccczgtvpzEjJm4m3vd3cH4nJ5",
+   "slot": 508178297,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 12247,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 12247
+    }
+   ],
+   "v1": {
+    "bytes": 468,
+    "addresses": 7,
+    "signatures": 2,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: OpenChannel (payer close request case)",
+   "signature": "4ApfgYaQNgVoenQ9meMCnQQUXb7YWVvDzW47Yi8EFp8hRkrA1zq8mfofmZ6Xs6KJ8XDdWcaZVz1oHW1aGTPNbWCJ",
+   "slot": 508178311,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 9247,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    }
+   ],
+   "v1": {
+    "bytes": 468,
+    "addresses": 7,
+    "signatures": 2,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: RequestChannelClose (payer)",
+   "signature": "5XnicWQsZ1Em8NBHwu48MhaBeqQac4tLtKMoS4yiJyCpcnj6APBLydi1aTidRa1FaBL7cVJUQbGaD3HHXnSdSqht",
+   "slot": 508178344,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 4530,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4530
+    }
+   ],
+   "v1": {
+    "bytes": 346,
+    "addresses": 5,
+    "signatures": 2,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: payee answers the close request with its voucher (signs, final at once)",
+   "signature": "2Tpk8d7mJN8fPVG1bGzcL7UrEKX8exv5Xw9cA7TKRiQMSNfQFmZREDMgEvbsTTAuhqChfA7sXoj9iqVSEgC43DMo",
+   "slot": 508178350,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 15611,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 15611
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: ReclaimChannel (closed channel, rest to escrow, rent to payer)",
+   "signature": "4jxC5E6CrDTVyBaG319T6v3s9XZpAFXsBqVGnX1CoyvnhRviw9nENzHGbrZdvyfTpi4JBYVSQseCtSpM8iyDsQGU",
+   "slot": 508178364,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 4565,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    }
+   ],
+   "v1": {
+    "bytes": 282,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "B2: Settle 1 voucher",
+   "signature": "5Zu3nnHZm1op6mHf6WrrqtyQSTseSZP7KPWLvGr6LTaXky5knHaLdY6xfhj83oHJfBGC6D2w2NvCZ8EbLUDt9onp",
+   "slot": 508178386,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 15475,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 15475
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "B2: Settle 2 vouchers (distinct payers)",
+   "signature": "qzob9k9zP3CFqHPaCFUns4PDx8j8mhjf6HUAbNMaLy1yyPUdNfp7QHNnKsTpYxXteQvA7wwUM4aEztBicdX8Ndx",
+   "slot": 508178400,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 26720,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 26720
+    }
+   ],
+   "v1": {
+    "bytes": 548,
+    "addresses": 6,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "B2: Settle 25 vouchers, distinct payers (pack 0)",
+   "signature": "51aFsXAHHjb5CoWr6t2CqFFL9GW6BBMusnRhV17jEctNnucWVTBFEmWz6THv8gaFHEHv2GPnzstdwPEa6LYzxKax",
+   "slot": 508178430,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 285470,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 285470
+    }
+   ],
+   "v1": {
+    "bytes": 3975,
+    "addresses": 29,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "B2: Settle 32 vouchers, one escrow (pack 0)",
+   "signature": "4iwe2jqRTmvE3EtANNnTVpd6EnQmtfqoMyaoCBE8vy8NvWa9WxdPyDaX6iBKiLoUxjiMaVkJqWamK2gVKbBiLKn3",
+   "slot": 508178455,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 304666,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 304666
+    }
+   ],
+   "v1": {
+    "bytes": 3995,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: tampered voucher (amount raised after signing)",
+   "signature": "2CYTsRND5wvFgNWgNqmmZn7WVedwbowdJSko7QtjeYF24X5xBVhj24yoLKCXoW1Doqi8SNAKNskd7NyXwQ8Vi2MP",
+   "slot": 508178460,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834504
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 15267,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 15267
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 15267 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530008"
+   ]
+  },
+  {
+   "label": "negative: tampered voucher (signature bit flip)",
+   "signature": "3npatHwFBvbvUHxDFNeZr78NCwW5TAEZeAomuz6xMfAo4AdbWy9j5UX5GDWunEvYzZF7qJefaGE7ZkUwN6CFhToo",
+   "slot": 508178469,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834504
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 15276,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 15276
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 15276 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530008"
+   ]
+  },
+  {
+   "label": "B2: settle the untampered voucher",
+   "signature": "5sEEynv4pgTaJtybAQJGur9TMWCBaNyuiyRj9vF1n7BqqSEtVDSf3Ga5WD6SrtxCSjbZcaTJbHHQ4DX5M4HgYaZQ",
+   "slot": 508178513,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 15443,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 15443
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: replay of the settled voucher",
+   "signature": "5jBS1PUNfm7aUASq7EWMLdkKtY9BBqRTbA9ce7zR2RXK3ZdcpFDbFdH2YFnV7ira46iPKSyUs7p3fKo3vQSREJKi",
+   "slot": 508178532,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834506
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 6483,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6483
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 6483 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x5853000a"
+   ]
+  },
+  {
+   "label": "negative: duplicate pair (second entry for an existing payee)",
+   "signature": "4vbxNpefREMzVVcqznYU48d7SrsVUt6Nmc7MyC6jcTXiDGVTRnJ78oMRL45JoTt9XLnc9UhDc4wN3s8em87CeXkV",
+   "slot": 508178555,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834532
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 6494,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6494
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 6494 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530024"
+   ]
+  },
+  {
+   "label": "negative: expired voucher",
+   "signature": "2E7ph1r7geMWkvdxe5rLf9bUsv9yutDBNzyVAEY3iPEhXgkentG1qJos7p1x5FiRM1jnhpNPoH7apBgH3bmof86L",
+   "slot": 508178569,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834505
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 6422,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 6422
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 6422 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530009"
+   ]
+  },
+  {
+   "label": "negative: voucher for another scope",
+   "signature": "4oJJYsh6KaxJqsjjswkCvZP6m83PywcHEJzWVg9Yvnv4Cd87NvogA3d9q9XXdr18DX7RwMRgwHu8jq1zZtmw9Tx9",
+   "slot": 508178590,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834504
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 15283,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 15283
+    }
+   ],
+   "v1": {
+    "bytes": 399,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 15283 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530008"
+   ]
+  },
+  {
+   "label": "C: OpenChannel x10",
+   "signature": "5Cj2TVLANykwvUcN31UKbo3J1V9qYDJjiYX9BA8FVi7H1bpJ6ofq56kNcB3fPU6LfFYz7hTzKwnkxQrdSLMwh8MV",
+   "slot": 508178616,
+   "version": 1,
+   "err": null,
+   "fee": 55000,
+   "cu": 96970,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    }
+   ],
+   "v1": {
+    "bytes": 2502,
+    "addresses": 34,
+    "signatures": 11,
+    "instructions": 10
+   }
+  },
+  {
+   "label": "C: OpenChannel x10",
+   "signature": "32okYQbDa5jTsqjy5SiYbKwgd8oDn8WJfgDEREwfMm6y7U1K5R48fsuSyv1kwa7mCLdUQ3Dk8QpAQJfPTsquWJs6",
+   "slot": 508178634,
+   "version": 1,
+   "err": null,
+   "fee": 55000,
+   "cu": 107470,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 12247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 13747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 12247
+    }
+   ],
+   "v1": {
+    "bytes": 2502,
+    "addresses": 34,
+    "signatures": 11,
+    "instructions": 10
+   }
+  },
+  {
+   "label": "C: OpenChannel x5",
+   "signature": "HiqStCra8g3g9fCTKD8h7kDDqHbgwvQgL39zZNY34xg5FaNN5DXPpFAbvtK6xEGh6SZGLoXhLrCRkJYribm3XN4",
+   "slot": 508178652,
+   "version": 1,
+   "err": null,
+   "fee": 30000,
+   "cu": 52235,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 10747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 13747
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 9247
+    }
+   ],
+   "v1": {
+    "bytes": 1372,
+    "addresses": 19,
+    "signatures": 6,
+    "instructions": 5
+   }
+  },
+  {
+   "label": "C: CloseChannels x25 (payee signs, pack 0)",
+   "signature": "Ly4BbAYoeN1vJbNk99aiPtBwJXKcNDYg7gtMyi4e7sMPe4JQjaLrhAAoDesFQDVUrKzzn4ShqT98TVKKPHzm7hh",
+   "slot": 508178702,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 282320,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 282320
+    }
+   ],
+   "v1": {
+    "bytes": 3951,
+    "addresses": 29,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: ReclaimChannel x12",
+   "signature": "2mrQD1a7hT2kQ8wD2vL6qKpSMJ9VAdv5Nq7DPzT4WADVjRZT1ATxHRKpCxtvXTj19aGqX53PLb2hDKv1Mzam8GAp",
+   "slot": 508178708,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 54780,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    }
+   ],
+   "v1": {
+    "bytes": 1426,
+    "addresses": 38,
+    "signatures": 1,
+    "instructions": 12
+   }
+  },
+  {
+   "label": "C: ReclaimChannel x12",
+   "signature": "3fVygWdrTx5aTDPDWzWHgY94aRiEdVExYLondgszCHZJLgiPxNQht4YZmr69FeCJuUvu4U7KL479SujjzEefwrBw",
+   "slot": 508178714,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 54780,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    }
+   ],
+   "v1": {
+    "bytes": 1426,
+    "addresses": 38,
+    "signatures": 1,
+    "instructions": 12
+   }
+  },
+  {
+   "label": "2PC-commit: BeginBatch",
+   "signature": "4rHHTYd9FC4Xqo2qFE8Z37i4nLwJfxmk8S1yD36eHGqjwntXqy47JD7KsMMJGejc5ecN3kmss4jkeoF7kw9Fnbs1",
+   "slot": 508178771,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 8710,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8710
+    }
+   ],
+   "v1": {
+    "bytes": 337,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: CommitBatch before every chunk is staged",
+   "signature": "2BsC4hLPTnDUdCZBHBgv9sxtaGwTvdH9UwrMGtC9VRdwvGRGwkdShhhAhwvrKiU6j7RRstSrGD5ekbA6jR38LfTi",
+   "slot": 508178775,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834525
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 2552,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2552
+    }
+   ],
+   "v1": {
+    "bytes": 249,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 2552 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x5853001d"
+   ]
+  },
+  {
+   "label": "2PC-commit: StageChunk 0",
+   "signature": "4QF3GWo6rSEPRXjjP3De3X6HHnonLXUXixxCxAREoxcyXjBPE3WeoezNUeoci6JUWrDezzrSA48kKSmUHwwhR1CE",
+   "slot": 508178785,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 67499,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 67499
+    }
+   ],
+   "v1": {
+    "bytes": 1095,
+    "addresses": 10,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-commit: StageChunk 1",
+   "signature": "58oL3Bmpt4tV2hDNNphVZq1kAxHSE4KQRDvHEbFHRuLge4yvFRK7hxQPS1BM4Epz5X63HLyVm3QQHBEXFk6o9PNu",
+   "slot": 508178807,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 67579,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 67579
+    }
+   ],
+   "v1": {
+    "bytes": 1095,
+    "addresses": 10,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-commit: StageChunk 2",
+   "signature": "2TemzABbuXmhAVyadCiqDhGfD4KhcUBef5C5ex2Fa7s4dEAHSVjfT1wE9poC46FkXkMqC4Y8KMGxAJff1uzMdQhw",
+   "slot": 508178824,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 55788,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 55788
+    }
+   ],
+   "v1": {
+    "bytes": 946,
+    "addresses": 9,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: StageChunk 0 again",
+   "signature": "4KdFAtryuJ47vzpFJkNwQcUzNGrJPVPzyuCLF29ahKGFRLg3gXGCwqd36YFqyDayb66CNxdWiVjh4ipYrYpCeSwk",
+   "slot": 508178842,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834522
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 5491,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 5491
+    }
+   ],
+   "v1": {
+    "bytes": 1095,
+    "addresses": 10,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 5491 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x5853001a"
+   ]
+  },
+  {
+   "label": "2PC-commit: CommitBatch",
+   "signature": "2es4sMMoy1Yrsi7D6LB6RYMiXN2XZkGoKf8PFdmfkXsnaSn97nQ5hnJzVdjpQHVFrouYDsMwRxSoNitC8ydutdfX",
+   "slot": 508178856,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 4516,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4516
+    }
+   ],
+   "v1": {
+    "bytes": 249,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-commit: ResolveStaged 0",
+   "signature": "39pMeprwHFVNPxiWTkC3baFn7pmBU4MeSbvnZLSiRt2HBg2PXuvM9BHLYP4TMrDfFmQhXcfAM6ZL1zj91c5sBQkR",
+   "slot": 508178888,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 30743,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 30743
+    }
+   ],
+   "v1": {
+    "bytes": 707,
+    "addresses": 17,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-commit: CloseBatch",
+   "signature": "2CcsXcchmcBJKbdHW1XwFQhYMVPqfVkjvyvwM2dt7zXqajL1Bkymo26Dx5mAivDKbPgvNZ95kqQ3xxXkd2evpEYj",
+   "slot": 508178903,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 2475,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2475
+    }
+   ],
+   "v1": {
+    "bytes": 217,
+    "addresses": 3,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "fan-out setup: mint + source account",
+   "signature": "2DSmmrqV3P3A9MBXhPRedVxoui8osFUfSvYDz1CRd9rEn4SoecdjeswoYvsP9fpEGqewsRpizxpnAdonENMFeiZb",
+   "slot": 508178925,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 735,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 202
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    }
+   ],
+   "v1": {
+    "bytes": 568,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 4
+   }
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "signature": "4TGiBNZQo9bxHzYBcjph646NzA6BoD8PCCm4xBzKv7gfRxAEmBnbvpKMDd87yDQXv1F58vsvu8VmMjDqPxLrn6or",
+   "slot": 508179041,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 5745,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    }
+   ],
+   "v1": {
+    "bytes": 2887,
+    "addresses": 19,
+    "signatures": 1,
+    "instructions": 30
+   }
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "signature": "3if8L2vncWW4ttwafY4ur6bR36u7ShpUAouyStzP1R6GdbD3DQrdhKToBVczgHdTmyGQqdsUuKkJSGKQMAE4cWNf",
+   "slot": 508179048,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 5745,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    }
+   ],
+   "v1": {
+    "bytes": 2897,
+    "addresses": 19,
+    "signatures": 1,
+    "instructions": 30
+   }
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "signature": "WfARzmNsqTjmctUEDwHbkfT9744Ek2yt2p9KNCMPgnr8MzPk7ChptB6mTvN695RuEsLSpURywe4XXR27gxwyTAG",
+   "slot": 508179054,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 5745,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    }
+   ],
+   "v1": {
+    "bytes": 2897,
+    "addresses": 19,
+    "signatures": 1,
+    "instructions": 30
+   }
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "signature": "5XWaeeRgoQoS1MF5s3Ziv1hQnE6TEQ6nRTagBW84emNMuwxNb4wy7rHZZ61kSi8KVREFcthDGdUvLjSYJZZKHWSq",
+   "slot": 508179061,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 5745,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 233
+    }
+   ],
+   "v1": {
+    "bytes": 2897,
+    "addresses": 19,
+    "signatures": 1,
+    "instructions": 30
+   }
+  },
+  {
+   "label": "fan-out setup: MintTo source",
+   "signature": "5L5pzybF7XEg1Hs8YkKkeYFvBPiuabkYs1midjVmGXZC4UnrE7veKXugMS5wQQkkmep6hSB2mcS3D9gYZmkuMXRX",
+   "slot": 508179108,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 120,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 120
+    }
+   ],
+   "v1": {
+    "bytes": 258,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "fan-out: V1 multi-transfer, 60 TransferChecked (tx 0)",
+   "signature": "4XJmxeWuyjcR5tvjN7TgMmKMA928zncn64rZS4eyNxViPbQnT9PHFsjKLTCPX6uKrp62nK1HkzFF9M8fjSqjiar4",
+   "slot": 508179114,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 6300,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    }
+   ],
+   "v1": {
+    "bytes": 3242,
+    "addresses": 64,
+    "signatures": 1,
+    "instructions": 60
+   }
+  },
+  {
+   "label": "fan-out cleanup: return + close 20 accounts",
+   "signature": "26fKbR1rtkFyd4b7wb54faqvkNHZr44Hk5Aotgbz64Bvc3PPHfdvS5NtgztvUaN7ZRWiqMiZXpEtSC7yQkQZzPQq",
+   "slot": 508179294,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 4460,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    }
+   ],
+   "v1": {
+    "bytes": 1498,
+    "addresses": 25,
+    "signatures": 2,
+    "instructions": 40
+   }
+  },
+  {
+   "label": "fan-out cleanup: return + close 20 accounts",
+   "signature": "rhyiU9G8svx1TsLDhkw2CKsEm2xbfZhwSS7wSiGaUGi3vYSomR3JwnYmwdLfTR3nq6Bfj4yc4r4KsnaEAZwekA5",
+   "slot": 508179301,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 4460,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    }
+   ],
+   "v1": {
+    "bytes": 1498,
+    "addresses": 25,
+    "signatures": 2,
+    "instructions": 40
+   }
+  },
+  {
+   "label": "fan-out cleanup: return + close 20 accounts",
+   "signature": "51k8hxinQyanGNT22UYkk672DtxkZnnHAhT64r8P3wgRAt2dUas56NUuSj8JeFgnVKT4dJueSnk3s75WXucHQw9g",
+   "slot": 508179307,
+   "version": 1,
+   "err": null,
+   "fee": 10000,
+   "cu": 4460,
+   "ixCu": [
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 105
+    },
+    {
+     "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+     "cu": 118
+    }
+   ],
+   "v1": {
+    "bytes": 1498,
+    "addresses": 25,
+    "signatures": 2,
+    "instructions": 40
+   }
+  },
+  {
+   "label": "WithdrawPayee (SOL), payee A",
+   "signature": "4N1yzxaLyXxqN7UsjMVUmny3YmKUFaijATdFLzfgjWkbN6f2vZcMZ7vJ7wXaHEZxe8aKUmXrzDZyt3EWbDSs6PVB",
+   "slot": 508179311,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 4961,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4961
+    }
+   ],
+   "v1": {
+    "bytes": 260,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: ReclaimChannel after expiry (full refund)",
+   "signature": "vNZ95M8B5DG9qsZM9XiDqFt3rVUc7yUaLvFFB4C4q1meihqKGdD4mNmovmUAvyzX4GngmWHVn7x2LkwKFMWHAo4",
+   "slot": 508179327,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 4566,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4566
+    }
+   ],
+   "v1": {
+    "bytes": 282,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: FinalizeChannel after the dispute window",
+   "signature": "3vkZpMwUci8pzbDpJRwTPgVya5KrRDAvkita3hL8X9y6griaBwXSrQ1SiLtRPaapZjcQPKo5pieaoXa7Yws8wneo",
+   "slot": 508179714,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 4379,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4379
+    }
+   ],
+   "v1": {
+    "bytes": 250,
+    "addresses": 4,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: ReclaimChannel (finalized channel)",
+   "signature": "4kEtVjnAknDKmyzgGwR4xh3fEj6SorRAXHs4Ztwh4cq1rzFWxGWjj9FhhiXufEsCwkYrfNk5wQiJYGswnaZ37g4G",
+   "slot": 508179733,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 4565,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4565
+    }
+   ],
+   "v1": {
+    "bytes": 282,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "negative: StageChunk after the batch deadline",
+   "signature": "3uAgLhCD8fKYzCqPoMcuJ5tRoJZMpbkw2ckGdYxyNScxVqDWFJxDNN1KHPdmh6RvSWKbsZWTH7562kEuGjZc62ub",
+   "slot": 508179779,
+   "version": 1,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834520
+     }
+    ]
+   },
+   "fee": 5000,
+   "cu": 5085,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 5085
+    }
+   ],
+   "v1": {
+    "bytes": 765,
+    "addresses": 8,
+    "signatures": 1,
+    "instructions": 1
+   },
+   "logs": [
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE invoke [1]",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE consumed 5085 of 1400000 compute units",
+    "Program DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE failed: custom program error: 0x58530018"
+   ]
+  },
+  {
+   "label": "2PC-abort: AbortBatch by a non-submitter after the deadline",
+   "signature": "2m1jJds82cuLWZtU5kF4N247FXt68SxpYrwqMNr8B7a4ay7BfCrS9zWTwgYaPEzQBj3isbXLDYP3J5uSTG5YwEM6",
+   "slot": 508179787,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 2619,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2619
+    }
+   ],
+   "v1": {
+    "bytes": 217,
+    "addresses": 3,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-abort: ResolveStaged (returns reservations)",
+   "signature": "3FV6CeQVL6GepvPyCs6krnawLYX1yWawdD22VAJRteBs7ToYGuJVfaUZDZ73EvkDe2K5UDoqtN31c4gVYMQonqea",
+   "slot": 508179804,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 8426,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 8426
+    }
+   ],
+   "v1": {
+    "bytes": 322,
+    "addresses": 6,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "2PC-abort: CloseBatch",
+   "signature": "4pMxK2vKiXveNkFFEFctZVBNqgnKeFCjMicNwgoE51S32pXn2jPxo2X4Jg7FShJAG6ztJR7eWy294yHLysFSZeEK",
+   "slot": 508179828,
+   "version": 1,
+   "err": null,
+   "fee": 5000,
+   "cu": 2475,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 2475
+    }
+   ],
+   "v1": {
+    "bytes": 217,
+    "addresses": 3,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "RequestExit x10",
+   "signature": "2i7DeSvGKDWbNCpnUbhWV8JWxKA8kT9aAez3jRH2PgQTdrn3c9kfu3huikDA7FHzsTaXyYBX7WJQRByJseEV3DJJ",
+   "slot": 508179883,
+   "version": 1,
+   "err": null,
+   "fee": 55000,
+   "cu": 43830,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    }
+   ],
+   "v1": {
+    "bytes": 1650,
+    "addresses": 23,
+    "signatures": 11,
+    "instructions": 10
+   }
+  },
+  {
+   "label": "RequestExit x10",
+   "signature": "56SoJP36rJSdppvCauhnc8VkbUmDnJ2owyGKYjAAeFCkFRo2vaLPPXNZBpP7JEPAmvJ7ZupHiSzgcB5yndj5Ccnx",
+   "slot": 508179887,
+   "version": 1,
+   "err": null,
+   "fee": 55000,
+   "cu": 43830,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    }
+   ],
+   "v1": {
+    "bytes": 1650,
+    "addresses": 23,
+    "signatures": 11,
+    "instructions": 10
+   }
+  },
+  {
+   "label": "RequestExit x6",
+   "signature": "3atk3u7TjpaPFEhk3MsLLxDDZ9KEM7CGGVTuB5mRCHdVZm5fGTrzrnYEpiF49v7MCJTZK9seKJLLBbt56mWBhMCv",
+   "slot": 508179893,
+   "version": 1,
+   "err": null,
+   "fee": 35000,
+   "cu": 26298,
+   "ixCu": [
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    },
+    {
+     "program": "DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE",
+     "cu": 4383
+    }
+   ],
+   "v1": {
+    "bytes": 1074,
+    "addresses": 15,
+    "signatures": 7,
+    "instructions": 6
+   }
+  }
+ ],
+ "checks": [
+  {
+   "label": "InitLedger (SOL)",
+   "pass": true,
+   "cu": 6142,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "CreateBook page 0",
+   "pass": true,
+   "cu": 8368,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "RegisterPayee page 0 slot 0",
+   "pass": true,
+   "cu": 2254,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "RegisterPayee page 0 slot 1",
+   "pass": true,
+   "cu": 2254,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "fund 26 payers (V1 multi-transfer)",
+   "pass": true,
+   "cu": 3900,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "OpenEscrow+Deposit x10",
+   "pass": true,
+   "cu": 151233,
+   "fee": 55000,
+   "err": null
+  },
+  {
+   "label": "OpenEscrow+Deposit x10",
+   "pass": true,
+   "cu": 137736,
+   "fee": 55000,
+   "err": null
+  },
+  {
+   "label": "OpenEscrow+Deposit x6",
+   "pass": true,
+   "cu": 90141,
+   "fee": 35000,
+   "err": null
+  },
+  {
+   "label": "solvency after setup: holdings >= liabilities",
+   "pass": true,
+   "holdings": "78000000",
+   "liabilities": "78000000"
+  },
+  {
+   "label": "solvency after setup: liabilities == sum of entries",
+   "pass": true,
+   "liabilities": "78000000",
+   "entries": "78000000",
+   "accounts": {
+    "x4sESCRW": 26,
+    "x4sBOOK_": 1,
+    "x4sLEDGR": 1
+   }
+  },
+  {
+   "label": "2PC-abort: BeginBatch",
+   "pass": true,
+   "cu": 7211,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-abort: StageChunk 0 of 2",
+   "pass": true,
+   "cu": 42874,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: settle a pair staged in an open batch (rejected with 0x5853000b)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834507
+     }
+    ]
+   }
+  },
+  {
+   "label": "negative: AbortBatch by non-submitter before deadline (rejected with 0x58530019)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834521
+     }
+    ]
+   }
+  },
+  {
+   "label": "C: OpenChannel (dispute case)",
+   "pass": true,
+   "cu": 9247,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "C: CloseChannels by facilitator (opens dispute window)",
+   "pass": true,
+   "cu": 13368,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: CloseChannels with a higher voucher (supersede inside the window)",
+   "pass": true,
+   "cu": 13360,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: CloseChannels with the older voucher (stale) (rejected with 0x5853000a)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834506
+     }
+    ]
+   }
+  },
+  {
+   "label": "negative: FinalizeChannel inside the dispute window (rejected with 0x58530015)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834517
+     }
+    ]
+   }
+  },
+  {
+   "label": "C: dispute channel is CLOSING with best voucher 250,000",
+   "pass": true,
+   "status": 2,
+   "best": "250000",
+   "disputeEnd": "508179708"
+  },
+  {
+   "label": "C: OpenChannel (expiry case, 150-slot expiry)",
+   "pass": true,
+   "cu": 12247,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "C: OpenChannel (payer close request case)",
+   "pass": true,
+   "cu": 9247,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "C: RequestChannelClose (payer)",
+   "pass": true,
+   "cu": 4530,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "C: payee answers the close request with its voucher (signs, final at once)",
+   "pass": true,
+   "cu": 15611,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: request-close channel CLOSED, payee credited 120,000",
+   "pass": true,
+   "status": 3,
+   "balance": "180000"
+  },
+  {
+   "label": "C: ReclaimChannel (closed channel, rest to escrow, rent to payer)",
+   "pass": true,
+   "cu": 4565,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "B2: Settle 1 voucher",
+   "pass": true,
+   "cu": 15475,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "B2: Settle 2 vouchers (distinct payers)",
+   "pass": true,
+   "cu": 26720,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "B2: 25 distinct-payer vouchers fit one V1 transaction",
+   "pass": true,
+   "txs": 1,
+   "size": {
+    "bytes": 3975,
+    "addresses": 29,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "B2: Settle 25 vouchers, distinct payers (pack 0)",
+   "pass": true,
+   "cu": 285470,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "B2: 32 one-escrow vouchers fit one V1 transaction",
+   "pass": true,
+   "txs": 1,
+   "size": {
+    "bytes": 3995,
+    "addresses": 5,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "B2: Settle 32 vouchers, one escrow (pack 0)",
+   "pass": true,
+   "cu": 304666,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: tampered voucher (amount raised after signing) (rejected with 0x58530008)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834504
+     }
+    ]
+   }
+  },
+  {
+   "label": "negative: tampered voucher (signature bit flip) (rejected with 0x58530008)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834504
+     }
+    ]
+   }
+  },
+  {
+   "label": "B2: settle the untampered voucher",
+   "pass": true,
+   "cu": 15443,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: replay of the settled voucher (rejected with 0x5853000a)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834506
+     }
+    ]
+   }
+  },
+  {
+   "label": "negative: duplicate pair (second entry for an existing payee) (rejected with 0x58530024)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834532
+     }
+    ]
+   }
+  },
+  {
+   "label": "negative: expired voucher (rejected with 0x58530009)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834505
+     }
+    ]
+   }
+  },
+  {
+   "label": "negative: voucher for another scope (rejected with 0x58530008)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834504
+     }
+    ]
+   }
+  },
+  {
+   "label": "B2: payee A book balance rose",
+   "pass": true,
+   "before": "0",
+   "after": "40532"
+  },
+  {
+   "label": "C: OpenChannel x10",
+   "pass": true,
+   "cu": 96970,
+   "fee": 55000,
+   "err": null
+  },
+  {
+   "label": "C: OpenChannel x10",
+   "pass": true,
+   "cu": 107470,
+   "fee": 55000,
+   "err": null
+  },
+  {
+   "label": "C: OpenChannel x5",
+   "pass": true,
+   "cu": 52235,
+   "fee": 30000,
+   "err": null
+  },
+  {
+   "label": "C: 25 payee-signed closes fit one V1 transaction",
+   "pass": true,
+   "txs": 1,
+   "size": {
+    "bytes": 3951,
+    "addresses": 29,
+    "signatures": 1,
+    "instructions": 1
+   }
+  },
+  {
+   "label": "C: CloseChannels x25 (payee signs, pack 0)",
+   "pass": true,
+   "cu": 282320,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: ReclaimChannel x12",
+   "pass": true,
+   "cu": 54780,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: ReclaimChannel x12",
+   "pass": true,
+   "cu": 54780,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: ReclaimChannel x1: sent",
+   "pass": false,
+   "error": "HTTP 429"
+  },
+  {
+   "label": "2PC-commit: plan has 3 chunks",
+   "pass": true,
+   "chunks": 3,
+   "chunkSize": 5,
+   "count": 14,
+   "total": "42000"
+  },
+  {
+   "label": "2PC-commit: BeginBatch",
+   "pass": true,
+   "cu": 8710,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: CommitBatch before every chunk is staged (rejected with 0x5853001d)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834525
+     }
+    ]
+   }
+  },
+  {
+   "label": "2PC-commit: StageChunk 0",
+   "pass": true,
+   "cu": 67499,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-commit: StageChunk 1",
+   "pass": true,
+   "cu": 67579,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-commit: StageChunk 2",
+   "pass": true,
+   "cu": 55788,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: StageChunk 0 again (rejected with 0x5853001a)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834522
+     }
+    ]
+   }
+  },
+  {
+   "label": "2PC-commit: CommitBatch",
+   "pass": true,
+   "cu": 4516,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-commit: payee B credited exactly the batch total",
+   "pass": true,
+   "credited": "42000",
+   "total": "42000"
+  },
+  {
+   "label": "2PC-commit: ResolveStaged 0",
+   "pass": true,
+   "cu": 30743,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-commit: CloseBatch",
+   "pass": true,
+   "cu": 2475,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-commit: pair settled advanced, no pending",
+   "pass": true,
+   "settled": "3000"
+  },
+  {
+   "label": "2PC-commit: pair settled advanced, no pending",
+   "pass": true,
+   "settled": "3000"
+  },
+  {
+   "label": "2PC-commit: pair settled advanced, no pending",
+   "pass": true,
+   "settled": "3000"
+  },
+  {
+   "label": "fan-out setup: mint + source account",
+   "pass": true,
+   "cu": 735,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "pass": true,
+   "cu": 5745,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "pass": true,
+   "cu": 5745,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "pass": true,
+   "cu": 5745,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out setup: 15 destination token accounts",
+   "pass": true,
+   "cu": 5745,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out setup: MintTo source",
+   "pass": true,
+   "cu": 120,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out: 60 TransferChecked fit one V1 transaction",
+   "pass": true,
+   "txs": 1,
+   "size": {
+    "bytes": 3242,
+    "addresses": 64,
+    "signatures": 1,
+    "instructions": 60
+   }
+  },
+  {
+   "label": "fan-out: V1 multi-transfer, 60 TransferChecked (tx 0)",
+   "pass": true,
+   "cu": 6300,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "fan-out: every destination holds its transfer",
+   "pass": true
+  },
+  {
+   "label": "fan-out cleanup: return + close 20 accounts",
+   "pass": true,
+   "cu": 4460,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "fan-out cleanup: return + close 20 accounts",
+   "pass": true,
+   "cu": 4460,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "fan-out cleanup: return + close 20 accounts",
+   "pass": true,
+   "cu": 4460,
+   "fee": 10000,
+   "err": null
+  },
+  {
+   "label": "WithdrawPayee (SOL), payee A",
+   "pass": true,
+   "cu": 4961,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "WithdrawPayee: payee A received its book balance (minus its fee)",
+   "pass": true,
+   "bal": "165832",
+   "delta": "160832",
+   "fee": 5000
+  },
+  {
+   "label": "C: ReclaimChannel after expiry (full refund)",
+   "pass": true,
+   "cu": 4566,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: expiry refund returned the full deposit to the escrow",
+   "pass": true,
+   "refunded": "400000"
+  },
+  {
+   "label": "C: FinalizeChannel after the dispute window",
+   "pass": true,
+   "cu": 4379,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "C: dispute finalized with the superseding voucher (250,000)",
+   "pass": true,
+   "credited": "250000"
+  },
+  {
+   "label": "C: ReclaimChannel (finalized channel)",
+   "pass": true,
+   "cu": 4565,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "negative: StageChunk after the batch deadline (rejected with 0x58530018)",
+   "pass": true,
+   "err": {
+    "InstructionError": [
+     0,
+     {
+      "Custom": 1481834520
+     }
+    ]
+   }
+  },
+  {
+   "label": "2PC-abort: AbortBatch by a non-submitter after the deadline",
+   "pass": true,
+   "cu": 2619,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-abort: ResolveStaged (returns reservations)",
+   "pass": true,
+   "cu": 8426,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "2PC-abort: every staged reservation returned, pairs unlocked",
+   "pass": true
+  },
+  {
+   "label": "2PC-abort: CloseBatch",
+   "pass": true,
+   "cu": 2475,
+   "fee": 5000,
+   "err": null
+  },
+  {
+   "label": "solvency end of main phase: holdings >= liabilities",
+   "pass": true,
+   "holdings": "77834168",
+   "liabilities": "77834168"
+  },
+  {
+   "label": "solvency end of main phase: liabilities == sum of entries",
+   "pass": true,
+   "liabilities": "77834168",
+   "entries": "77834168",
+   "accounts": {
+    "x4sESCRW": 26,
+    "x4sBOOK_": 1,
+    "x4sLEDGR": 1
+   }
+  },
+  {
+   "label": "RequestExit x10",
+   "pass": true,
+   "cu": 43830,
+   "fee": 55000,
+   "err": null
+  },
+  {
+   "label": "RequestExit x10",
+   "pass": true,
+   "cu": 43830,
+   "fee": 55000,
+   "err": null
+  },
+  {
+   "label": "RequestExit x6",
+   "pass": true,
+   "cu": 26298,
+   "fee": 35000,
+   "err": null
+  }
+ ],
+ "summary": {},
+ "payers": [
+  "2XtYewEX26FpbnuRvX41UMvESgvHeFZ6DXeCifEwVgcB",
+  "657PmXpCvF4n5pdoR6PpS1z1vMdBAWd19kAjapPBJX4s",
+  "9GoHLZtSABwH3TE3SHfuLU7yWSV6YaMYFUL2rJJGk3ME",
+  "GyQ113GxckuVz6DeEr9b1U9dV9vH6SwrfDdiDPGPyQYC",
+  "6t4tTbRzmYE4h8PSRaEGXfvRuPfdsy8aDrUKMEXPVxyw",
+  "4evSARAiBMmFbnuM1nqUmp18pxBfEK9tihAjcLbsuXfa",
+  "FCgTvRkXheu9dnajchFUbTNMSwnCPHhns2zRqDj9YbHH",
+  "9MZCRPPETfmwZDkn5JMU6PDkTKBC4xtSCvMdEFudTDdB",
+  "23S73BDhKqo6RtZ8VFLSR867uFe9rMAshTKST4zUCgxZ",
+  "4SSWDNztRxe3fkK8DvcCbfoGPHjkzhqssb6VyWFisexE",
+  "5YST3AKfPUUJG6kjZtmYjaNj3nw5xM5vvfufTGZ92UcH",
+  "A1WqUXVi5XtnhPvwqbCaU5WwUraoCRyBYtQYTfvdkREk",
+  "7gfjKMQoaQ6xAk92qJJCrRVLnkuAU8V2UWo5GaTfVCPD",
+  "9R2vjYmzD7SQzG6jpZcprbExm6XKzf5Dy9rFwzHAEB4o",
+  "GGHG52sCNdW8mExdP1KyTiBaV2XcMG195gKpzS6gpNvf",
+  "F5tMCJFYam8W2WM7MXqDii1iJ3pTaJi94F1XYfLeVjMe",
+  "8WxB46FzL1jZG4kcXCBYRj1TAij8iziDNMdJTDFupdFJ",
+  "JCeQuUAN6gtfHVG9qtkZH4LG7ct5bBjP9V6xLS9cpYMn",
+  "3u4Zrm3z3LaJmRG25D1gK7hgDytzJuutCFnQzRcC2XSA",
+  "G3Bg67MVVoUKTSryrVAUrg5nsoKU6nQPdtYQPnFovPWp",
+  "47rbiBCameYpzUkMp6nZogWP5t6tiyt7mkmhChtz3VLm",
+  "8zmuWwsDiiTyF8WquP5Vs4NjMR4QqK9M4m8Y8fLyFPQW",
+  "7xK5KzKvFJoZ8wKHr361pZWezMdLBNrrMGF91tV3Gasi",
+  "7dwiCmws5cvk9aKMhWyjHH8zDMnKgNABHoGwivjLrphP",
+  "7sD4fLQhLWx9sfgachv21SUFFWxs4hkJKBX2ESeaSGZ8",
+  "3K2Xx7XvCu3jZpc6MEqkH1ELgzUTTw4EQauBLJfrQrai"
+ ],
+ "funderStart": "436275399",
+ "ledger": {
+  "address": "84712Zcpucb3VwxqJLj2EbTJd2Pec5a6uRbCJYN1oYgt",
+  "salt": "b80166e5f1bd44f1ab89c8ba1b48c340dc35a406853548395d7a7468d182a778",
+  "exitDelaySlots": "9000",
+  "disputeSlots": "1500",
+  "batchTimeoutSlots": "1500"
+ },
+ "bookSlots": {
+  "payeeA": 0,
+  "payeeB": 1
+ },
+ "abortBatch": {
+  "batch": "4XsANcVM4ZEqXq5DbtLKKxjXVsB5ayYnQKZmGWzFVZbJ",
+  "deadlineSlot": "508179620",
+  "numChunks": 2
+ },
+ "exitReadySlot": "508188883",
+ "funderEnd": "159551879",
+ "funderSpent": "276723520",
+ "cu": [
+  {
+   "instruction": "InitLedger (SOL)",
+   "count": 1,
+   "cu": 6142,
+   "readmeClusterEstimate": 6196,
+   "fee": 5000,
+   "signature": "5ifZzSHmTTcHmKgCkzYgKkuhq1BfvoaiNCMyKKuNsAVpJCeG55ubK7p2hqiV4RHoRFjVxR7oVLW8Zv7ksN8RmY8V"
+  },
+  {
+   "instruction": "CreateBook",
+   "count": 1,
+   "cu": 8368,
+   "readmeClusterEstimate": 8422,
+   "fee": 5000,
+   "signature": "2Rn3NfZx9Hio2v1XSUPsFXkuVYkhTEZ3Aw8iAZ2uuYMX2G36VXebcYrnPq6CLv6XmbDtNJGvzocVTfpcp8Neog5"
+  },
+  {
+   "instruction": "RegisterPayee",
+   "count": 1,
+   "cu": 2254,
+   "readmeClusterEstimate": 2254,
+   "fee": 10000,
+   "signature": "3spiHW26dHKph5xfwpedAxxFabqf7zrJWuSHHQUa6vZLAeYxsSDooBbYSmT3gPWN7ejznTKBPWjW1podYx1zoebZ"
+  },
+  {
+   "instruction": "RegisterPayee",
+   "count": 1,
+   "cu": 2254,
+   "readmeClusterEstimate": 2254,
+   "fee": 10000,
+   "signature": "5yhixFFMZ3ZdCHy9Vp9c3xwcC8asXnnN5WgP5MjLHLJ1idU97U5Z4TduvUfJhQEZq9Cg66xG2KVce4RixSbvz3st"
+  },
+  {
+   "instruction": "OpenEscrow (4 pairs)",
+   "count": 10,
+   "cu": 13045,
+   "min": 7045,
+   "readmeClusterEstimate": 7099
+  },
+  {
+   "instruction": "Deposit (SOL)",
+   "count": 10,
+   "cu": 6728,
+   "min": 6728,
+   "readmeClusterEstimate": 6782
+  },
+  {
+   "instruction": "OpenEscrow (4 pairs)",
+   "count": 10,
+   "cu": 7046,
+   "min": 7045,
+   "readmeClusterEstimate": 7099
+  },
+  {
+   "instruction": "Deposit (SOL)",
+   "count": 10,
+   "cu": 6728,
+   "min": 6728,
+   "readmeClusterEstimate": 6782
+  },
+  {
+   "instruction": "OpenEscrow (4 pairs)",
+   "count": 6,
+   "cu": 10046,
+   "min": 7045,
+   "readmeClusterEstimate": 7099
+  },
+  {
+   "instruction": "Deposit (SOL)",
+   "count": 6,
+   "cu": 6728,
+   "min": 6728,
+   "readmeClusterEstimate": 6782
+  },
+  {
+   "instruction": "BeginBatch",
+   "count": 1,
+   "cu": 7211,
+   "readmeClusterEstimate": 11767,
+   "fee": 5000,
+   "signature": "3XhezLZ4coVPQknzscgdkMJTdE96zF88v5KeCKprCz78u5GS2GQYd9y39sVEMZ79As3CrbPE62mKPPcd14UcYHPk"
+  },
+  {
+   "instruction": "StageChunk (3 vouchers)",
+   "count": 3,
+   "cu": 42874,
+   "perItem": 14291,
+   "fee": 5000,
+   "signature": "3BeDMLfeTiKrzW5oaeVMa5NwgmoQMyLNkNxknejuhRdA96dciSymJ1y63KES285j5Wt1cQ6qTe6gmasUJq9CkU6o"
+  },
+  {
+   "instruction": "OpenChannel",
+   "count": 1,
+   "cu": 9247,
+   "readmeClusterEstimate": 16801,
+   "fee": 10000,
+   "signature": "5Rc5rckAVCva5wU7z4yM9Aq34L1v3Y2v4rhKBC2g5avvtuKqpQxgvUrZpXY9eYJe9sUqFCpzEks2Y9JBLnMRFLBg"
+  },
+  {
+   "instruction": "ReclaimChannel",
+   "count": 1,
+   "cu": 4565,
+   "readmeClusterEstimate": 4564,
+   "fee": 5000,
+   "signature": "4jxC5E6CrDTVyBaG319T6v3s9XZpAFXsBqVGnX1CoyvnhRviw9nENzHGbrZdvyfTpi4JBYVSQseCtSpM8iyDsQGU"
+  },
+  {
+   "instruction": "Settle, 1 voucher",
+   "count": 1,
+   "cu": 15475,
+   "readmeClusterEstimate": 15404,
+   "fee": 5000,
+   "signature": "5Zu3nnHZm1op6mHf6WrrqtyQSTseSZP7KPWLvGr6LTaXky5knHaLdY6xfhj83oHJfBGC6D2w2NvCZ8EbLUDt9onp"
+  },
+  {
+   "instruction": "Settle, 2 vouchers",
+   "count": 2,
+   "cu": 26720,
+   "perItem": 13360,
+   "readmeClusterEstimate": 26602,
+   "fee": 5000,
+   "signature": "qzob9k9zP3CFqHPaCFUns4PDx8j8mhjf6HUAbNMaLy1yyPUdNfp7QHNnKsTpYxXteQvA7wwUM4aEztBicdX8Ndx"
+  },
+  {
+   "instruction": "Settle, 25 vouchers, distinct payers",
+   "count": 25,
+   "cu": 285470,
+   "perItem": 11419,
+   "readmeClusterEstimate": 284140,
+   "fee": 5000,
+   "signature": "51aFsXAHHjb5CoWr6t2CqFFL9GW6BBMusnRhV17jEctNnucWVTBFEmWz6THv8gaFHEHv2GPnzstdwPEa6LYzxKax"
+  },
+  {
+   "instruction": "Settle, 32 vouchers, one escrow",
+   "count": 32,
+   "cu": 304666,
+   "perItem": 9521,
+   "readmeClusterEstimate": 302987,
+   "fee": 5000,
+   "signature": "4iwe2jqRTmvE3EtANNnTVpd6EnQmtfqoMyaoCBE8vy8NvWa9WxdPyDaX6iBKiLoUxjiMaVkJqWamK2gVKbBiLKn3"
+  },
+  {
+   "instruction": "CloseChannels, 25 channels",
+   "count": 25,
+   "cu": 282320,
+   "perItem": 11293,
+   "readmeClusterEstimate": 280961,
+   "fee": 5000,
+   "signature": "Ly4BbAYoeN1vJbNk99aiPtBwJXKcNDYg7gtMyi4e7sMPe4JQjaLrhAAoDesFQDVUrKzzn4ShqT98TVKKPHzm7hh"
+  },
+  {
+   "instruction": "StageChunk (5 vouchers)",
+   "count": 5,
+   "cu": 67499,
+   "perItem": 13500,
+   "fee": 5000,
+   "signature": "4QF3GWo6rSEPRXjjP3De3X6HHnonLXUXixxCxAREoxcyXjBPE3WeoezNUeoci6JUWrDezzrSA48kKSmUHwwhR1CE"
+  },
+  {
+   "instruction": "StageChunk (5 vouchers)",
+   "count": 5,
+   "cu": 67579,
+   "perItem": 13516,
+   "fee": 5000,
+   "signature": "58oL3Bmpt4tV2hDNNphVZq1kAxHSE4KQRDvHEbFHRuLge4yvFRK7hxQPS1BM4Epz5X63HLyVm3QQHBEXFk6o9PNu"
+  },
+  {
+   "instruction": "StageChunk (4 vouchers)",
+   "count": 4,
+   "cu": 55788,
+   "perItem": 13947,
+   "fee": 5000,
+   "signature": "2TemzABbuXmhAVyadCiqDhGfD4KhcUBef5C5ex2Fa7s4dEAHSVjfT1wE9poC46FkXkMqC4Y8KMGxAJff1uzMdQhw"
+  },
+  {
+   "instruction": "CommitBatch, 1 payee slot",
+   "count": 1,
+   "cu": 4516,
+   "readmeClusterEstimate": 4515,
+   "fee": 5000,
+   "signature": "2es4sMMoy1Yrsi7D6LB6RYMiXN2XZkGoKf8PFdmfkXsnaSn97nQ5hnJzVdjpQHVFrouYDsMwRxSoNitC8ydutdfX"
+  },
+  {
+   "instruction": "ResolveStaged, 14 pairs",
+   "count": 14,
+   "cu": 30743,
+   "perItem": 2196,
+   "readmeClusterEstimate": 51062,
+   "fee": 5000,
+   "signature": "39pMeprwHFVNPxiWTkC3baFn7pmBU4MeSbvnZLSiRt2HBg2PXuvM9BHLYP4TMrDfFmQhXcfAM6ZL1zj91c5sBQkR"
+  },
+  {
+   "instruction": "CloseBatch",
+   "count": 1,
+   "cu": 2475,
+   "readmeClusterEstimate": 2474,
+   "fee": 5000,
+   "signature": "2CcsXcchmcBJKbdHW1XwFQhYMVPqfVkjvyvwM2dt7zXqajL1Bkymo26Dx5mAivDKbPgvNZ95kqQ3xxXkd2evpEYj"
+  },
+  {
+   "instruction": "Fan-out V1 multi-transfer (60 TransferChecked)",
+   "count": 60,
+   "cu": 6300,
+   "fee": 5000,
+   "perPaymentFee": 83.33333333333333,
+   "signature": "4XJmxeWuyjcR5tvjN7TgMmKMA928zncn64rZS4eyNxViPbQnT9PHFsjKLTCPX6uKrp62nK1HkzFF9M8fjSqjiar4"
+  },
+  {
+   "instruction": "WithdrawPayee (SOL)",
+   "count": 1,
+   "cu": 4961,
+   "readmeClusterEstimate": 4961,
+   "fee": 5000,
+   "signature": "4N1yzxaLyXxqN7UsjMVUmny3YmKUFaijATdFLzfgjWkbN6f2vZcMZ7vJ7wXaHEZxe8aKUmXrzDZyt3EWbDSs6PVB"
+  },
+  {
+   "instruction": "FinalizeChannel",
+   "count": 1,
+   "cu": 4379,
+   "fee": 5000,
+   "signature": "3vkZpMwUci8pzbDpJRwTPgVya5KrRDAvkita3hL8X9y6griaBwXSrQ1SiLtRPaapZjcQPKo5pieaoXa7Yws8wneo"
+  },
+  {
+   "instruction": "AbortBatch",
+   "count": 1,
+   "cu": 2619,
+   "fee": 5000,
+   "signature": "2m1jJds82cuLWZtU5kF4N247FXt68SxpYrwqMNr8B7a4ay7BfCrS9zWTwgYaPEzQBj3isbXLDYP3J5uSTG5YwEM6"
+  },
+  {
+   "instruction": "ResolveStaged, 3 pairs (after abort)",
+   "count": 3,
+   "cu": 8426,
+   "perItem": 2809,
+   "fee": 5000,
+   "signature": "3FV6CeQVL6GepvPyCs6krnawLYX1yWawdD22VAJRteBs7ToYGuJVfaUZDZ73EvkDe2K5UDoqtN31c4gVYMQonqea"
+  }
+ ],
+ "finished": "2026-10-06T18:14:45.078Z",
+ "result": "FAIL",
+ "failures": 1
+}

@@ -128,6 +128,36 @@ with `solana confirm -v <sig> --url devnet`; slot and status match the recorded 
 were dumped again after rerun 3: `dark_secp256k1_auth` hashes to `3af9a00d…` and `dark_null_lottery` to
 `d7048db0…` over the built length, with a zero tail.
 
+## Night run: x402_settle, null_lottery_pools, null_fair_draw (scripts at dna-x402 `e308957`)
+
+Three programs deployed to devnet on 2026-10-06 under fresh program keys, each with `--max-len` equal to its `.so`
+size. `solana program show` returned the deployer as authority and `dataLen` equal to the `.so` size; `solana program
+dump` returned bytes whose SHA-256 equals the `.so`, with no trailing bytes
+([devnet-deploys-x402-settle-lottery-pools-fair-draw.json](./devnet-deploys-x402-settle-lottery-pools-fair-draw.json)).
+
+| Program | Program id | Deploy tx | Slot | Dumped bytes SHA-256 |
+|---|---|---|---:|---|
+| x402_settle | `DFt7SG4WUiy6qpYJRLTKdcx4dvSHE1dVG5sbTfXWbfZE` | `3kseFohz…` | 508174975 | `c93a2cdc…` |
+| null_fair_draw | `FZxUXmGNzivQCw1nS6N6GakwyWN1PrX5ebGnS7hPjzGL` | `553ZzuPA…` | 508177679 | `09a71388…` |
+| null_lottery_pools | `39QHCDuqugs2Fm16CtvD3SBmDJp9n2WbdNGQPtqFZSxw` | `1jS76dW9…` | 508177819 | `63a16e8a…` |
+
+The e2e scripts in `scripts/devnet-e2e/` ran in a tmpfs container (`npm install --ignore-scripts`); every outcome was
+read back with `getTransaction`. Runs on the public RPC hit HTTP 429; the passing runs used a private devnet RPC and
+`RPC_MAX_ATTEMPTS=12`.
+
+| Suite | Result | Pass/Total | File |
+|---|---|---|---|
+| x402_settle main (run 2): B2 settle 1 / 2 / 25 payers / 32 vouchers per V1 tx, 7 negatives, channels and disputes, two-phase commit and abort, fan-out, solvency, RequestExit | PASS | 86/86 | [dna-x402-settle-e2e.json](./dna-x402-settle-e2e.json) |
+| x402_settle main (run 1, public RPC): the failed check is an HTTP 429 at send (ReclaimChannel) | FAIL | 90/91 | [dna-x402-settle-e2e-run1.json](./dna-x402-settle-e2e-run1.json) |
+| x402_settle cleanup of the run 1 escrows after the 9,000-slot exit delay | PASS | 79/79 | [dna-x402-settle-cleanup-run1.json](./dna-x402-settle-cleanup-run1.json) |
+| x402_settle cleanup of the run 2 escrows after the 9,000-slot exit delay | PASS | 78/78 | [dna-x402-settle-cleanup-run2.json](./dna-x402-settle-cleanup-run2.json) |
+| null_lottery_pools (run 3): small preset, all-combinations pool, rollover, 5 negatives, creator fees | PASS | 147/147 | [dna-lottery-pools-e2e.json](./dna-lottery-pools-e2e.json) |
+| null_lottery_pools (run 1, public RPC): five HTTP 429 at send | FAIL | 140/145 | [dna-lottery-pools-e2e-run1.json](./dna-lottery-pools-e2e-run1.json) |
+| null_lottery_pools (run 2, public RPC): retries outlasted the 150-slot claim window | FAIL | 148/151 | [dna-lottery-pools-e2e-run2.json](./dna-lottery-pools-e2e-run2.json) |
+| null_fair_draw: open raffle (SOL), weighted list (SPL), verify() every round, negatives with exact codes | PASS | 96/96 | [dna-fair-draw-e2e.json](./dna-fair-draw-e2e.json) |
+
+Devnet (2026-10-06): x402_settle 86/86, null_lottery_pools 147/147, null_fair_draw 96/96 checks.
+
 ## Not covered by these runs
 
 - Reputation gate positive path: only the rejection paths ran; no proving key in the repository matches the
