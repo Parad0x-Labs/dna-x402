@@ -1,7 +1,7 @@
 /**
  * x402 Receipt Chains — multi-party agent payment graphs with cascade refunds.
  *
- * First x402 implementation of composable receipt chains.
+ * Composable receipt chains for x402 payments.
  *
  * When agent A calls agent B, which subcontracts work to agent C:
  *   A → pays B  (quoteId: "q-b", parentReceiptId: null,  depth: 0)

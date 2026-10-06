@@ -177,7 +177,7 @@ export class StreamingMerkleBuilder {
     // When combining, the higher-indexed (larger, older) block goes on the LEFT —
     // this matches MerkleTree's left-to-right pairwise algorithm for any batch size.
     // Example for n=7: stack=[h6, H45, H0123]
-    //   carry=h6 → H(H45, h6) → H(H0123, H(H45,h6))  ✓
+    //   carry=h6 → H(H45, h6) → H(H0123, H(H45,h6))  (matches)
     let carry: Buffer | null = null;
     for (let i = 0; i < this.stack.length; i++) {
       const node = this.stack[i];

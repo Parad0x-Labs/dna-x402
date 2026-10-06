@@ -920,7 +920,7 @@ export function createMarketRouter(deps: CreateMarketDeps = {}): { router: expre
       res.status(403).json({
         ok: false,
         error: "raw_graph_access_denied",
-        message: "Seller analytics require seller owner proof or an audited admin path.",
+        message: "Seller analytics require seller owner proof or the admin path, which writes an audit log entry.",
       });
       return;
     }

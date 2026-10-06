@@ -2542,7 +2542,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     // Attach the txSignature as a request-scoped verified identity binding so that
     // guardActorFromRequest returns identitySource='payment_proof' for this commitSpend call.
     // Full fix: extend verifyPaymentForQuote to return the on-chain sender address and
-    // attach that as _verifiedPayerWallet instead of the txSignature-derived stub.
+    // attach that as _verifiedPayerWallet instead of the txSignature-derived value.
     if (verification.txSignature) {
       (req as express.Request & { _verifiedPayerWallet?: string })._verifiedPayerWallet = verification.txSignature;
     }
@@ -4297,7 +4297,7 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     // Attach the txSignature/streamId as a request-scoped verified identity binding so that
     // guardActorFromRequest returns identitySource='payment_proof' for this commitSpend call.
     // Full fix: extend verifyPaymentForQuote to return the on-chain sender address and
-    // attach that as _verifiedPayerWallet instead of the txSignature-derived stub.
+    // attach that as _verifiedPayerWallet instead of the txSignature-derived value.
     const _verifiedProofId = verification.txSignature ?? (verification.streamId ? `stream:${verification.streamId}` : undefined);
     if (_verifiedProofId) {
       (req as express.Request & { _verifiedPayerWallet?: string })._verifiedPayerWallet = _verifiedProofId;

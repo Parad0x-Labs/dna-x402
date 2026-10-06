@@ -198,7 +198,7 @@ export function formatTelegramAlertMessage(input: {
   const summary = input.alert.annotations?.summary || input.alert.annotations?.description || `${alertName} fired.`;
 
   return [
-    "🚨 <b>DNA x402 Alert</b>",
+    "[ALERT] <b>DNA x402 Alert</b>",
     "",
     `<b>Alert:</b> ${escapeHtml(alertName)}`,
     `<b>Severity:</b> ${escapeHtml(severity)}`,
@@ -318,7 +318,7 @@ export function formatTelegramStatusDigest(metrics: TelegramStatusMetrics): stri
   const generatedAt = metrics.generatedAt ?? new Date().toISOString();
   const status = metrics.online && metrics.emergencyPauseActive === 0 ? "ONLINE" : metrics.online ? "PAUSED" : "DOWN";
   return [
-    `📊 <b>${escapeHtml(title)}</b>`,
+    `[STATUS] <b>${escapeHtml(title)}</b>`,
     "",
     `<b>Status:</b> ${escapeHtml(status)}`,
     `<b>Environment:</b> ${escapeHtml(metrics.environment)}`,
