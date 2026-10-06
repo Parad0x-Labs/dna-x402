@@ -184,7 +184,7 @@ Client                    Mint                      API / Verifier
 
 **What is not claimed:** no on-chain spent-token registry (currently in-process `Set`). No mint key rotation. No x402 gateway binding (BDHKE token not yet wired to replace HMAC in access receipts). Single mint key — no threshold.
 
-**Why this matters for Dark Null:** combining BDHKE with x402 + Groth16 creates a three-layer privacy stack: the proof hides sender-receiver linkage, the nullifier prevents double-spend, and the blind token means the payment credential itself is unlinkable to the issuance event. No current x402 implementation has all three layers.
+**Why this matters for Dark Null:** combining BDHKE with x402 + Groth16 is a three-layer research target: a proof path that does not publish the deposit link (planned; the current Dark Null root program's withdrawals are linkable to deposits), the nullifier prevents double-spend, and the blind token means the payment credential itself is unlinkable to the issuance event. No current x402 implementation has all three layers.
 
 ---
 
@@ -227,23 +227,23 @@ MagicBlock's ephemeral rollup executes transactions at game speed (sub-100ms) an
 
 ---
 
-## 5. Confidential Token-2022 Bridge — Amount + Identity Hidden
+## 5. Confidential Token-2022 Bridge — research target: amount and linkage privacy
 
 Token-2022 Confidential Transfers use ElGamal-encrypted balances. The amount is hidden; the transaction is still linkable.
 
-Dark Null hides sender-receiver linkage but (with plain SPL tokens) the amount is visible in the on-chain deposit.
+The current Dark Null root program does not hide sender-receiver linkage: its withdrawal publishes the note commitment, amount, receiver token account and mint, so it is linkable to its deposit. Unlinkable withdrawals are planned protocol work.
 
 Combined:
 
 | What you want hidden | Tool |
 |---|---|
 | Transaction amount | Token-2022 Confidential Transfer |
-| Sender-receiver link | Dark Null shield/unshield |
+| Sender-receiver link | an unlinkable Dark Null withdrawal path (planned) |
 | Both | T22 deposit into Dark Null |
 
 The bridge design: a Dark Null shield instruction that accepts a Confidential Transfer deposit. The instruction verifies a proof-of-balance-decryption: "this encrypted balance commits to amount X, and X is the shielded amount." The circuit witnesses the ElGamal opening alongside the standard Poseidon commitment.
 
-On the unshield side: the recipient receives into a Confidential Transfer account. The settlement transaction reveals nothing about sender, receiver, or amount.
+On the unshield side: the recipient receives into a Confidential Transfer account. The design goal is a settlement transaction that does not reveal the amount or the deposit link; the receiving account is still visible.
 
 **What it needs:** circuit extension to witness ElGamal commitment openings. Token-2022 Confidential Transfers are currently under audit and availability is deployment-sensitive. This is the right direction for full privacy, but it waits on the T22 audit completing cleanly.
 

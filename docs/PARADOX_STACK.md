@@ -60,7 +60,7 @@ Where these lanes meet, the stack produces primitives that do not exist anywhere
 - **Compressed nullifier state** — ZK Compression backend so the anonymity set scales to millions of deposits at minimal on-chain cost
 - **Proof-carrying relayer swarm** — relayers prove liveness and configuration with circuits; users select by proof, not trust
 - **Private ephemeral sessions** — MagicBlock-style fast sessions with a single Dark Null settlement on close
-- **Confidential Token-2022 bridge** — T22 hides amounts, Dark Null hides linkage; combined full privacy
+- **Confidential Token-2022 bridge** — T22 encrypts amounts; linkage privacy needs an unlinkable Dark Null withdrawal path, which is planned protocol work (the current root program's withdrawals are linkable to deposits)
 - **MEV-aware private settlement** — Jito bundle submission makes timing attacks provably harder
 - **Alpenglow-ready UX** — finality drops to ~150ms; maturity windows shrink; private payments feel instant
 - **MPC sealed pricing** — Arcium-style private auctions where bids and floor prices are never revealed

@@ -1,4 +1,4 @@
-# Dark Relay Rail — fully-unlinkable shielded payment rail (devnet)
+# Dark Relay Rail — fixed-denomination shielded payment rail (devnet)
 
 Status: **Public Beta scope — devnet only, non-custodial, capped, UNAUDITED, no audit
 scheduled.** `mainnet_ready = false` throughout. Single-party VK is the on-chain default;
@@ -6,15 +6,15 @@ the trustless multi-party VK is produced by a ceremony pipeline (dry-run today).
 claim "audited", "trustless on mainnet", or any date.
 
 The Dark Relay Rail extends `dark_shielded_pool` (shielded_withdraw **v3**) into a
-decentralized, unlinkable payment rail with **no central relayer and no admin**.
+decentralized payment rail, designed so a withdrawal does not name its deposit, with **no central relayer and no admin**.
 The rail is implemented in code with tests; a devnet redeploy under a fresh key is
 pending, and the e2e scripts take the program ID as an argument.
 
 | Privacy / decentralization axis | Mechanism | State |
 |---|---|---|
-| **Sender hidden** | ZK membership proof over a Poseidon Merkle tree of note commitments — a withdrawal proves "I own *a* note in this pool" without revealing which. | ✅ implemented (v2→v3) |
-| **Amount hidden** | Fixed **denomination buckets** (0.1 / 1 / 10 SOL). Every note in a bucket is identical, so a withdrawal reveals only the bucket, never the balance or exact transfer. | ✅ implemented |
-| **Recipient hidden** | Stealth addresses (NullPay) — recipient derives a one-time address; nobody links it to their main wallet. | ⏳ documented stub (follow-up) |
+| **Deposit not named at withdrawal** | ZK membership proof over a Poseidon Merkle tree of note commitments — a withdrawal proves "I own *a* note in this pool" without revealing which; linkage narrows to the deposits in the same pool, and depositors are public at deposit time. | ✅ implemented (v2→v3) |
+| **Amount uniform per bucket** | Fixed **denomination buckets** (0.1 / 1 / 10 SOL). Every note in a bucket is identical; a withdrawal reveals the bucket and the relayer fee, not the depositor's balance. | ✅ implemented |
+| **Recipient address separate from identity** | Stealth addresses (NullPay) — recipient derives a one-time address that is not linked to their main wallet on-chain; the one-time address itself is public. | ⏳ documented stub (follow-up) |
 | **Gas paid by permissionless relayers** | Any wallet can submit a withdraw; it is reimbursed an **in-proof fee** from the pool. No central relayer server, no allow-list. | ✅ implemented (v3) |
 | **Trustless setup** | Open multi-party ceremony: public Powers-of-Tau phase-1 + multiple independent phase-2 contributions + a public drand beacon. | ⚙️ pipeline + dry-run (real beacon); needs independent humans |
 
@@ -97,7 +97,7 @@ under (and `prove-v3.mjs` defaults to it). The single-party pilot VK verifies lo
 is rejected on-chain (`Custom(4)=ProofInvalid`), so `--vk-mode pilot` is refused by the
 e2e scripts; a pilot proof only applies to a pool you deployed yourself with the pilot VK.
 
-## 4. Devnet e2e (full unlinkability)
+## 4. Devnet e2e (relayer-submitted withdrawal to a fresh address)
 
 `build/zk/e2e-v3-devnet.mjs <PROGRAM_ID>` (rerun after the devnet redeploy under a fresh key):
 deposit into a bucket → real V3 proof for a withdraw to a **fresh** recipient with a
@@ -107,7 +107,7 @@ double-spend / wrong-root / wrong-recipient / over-fee / relayer-mismatch all **
 
 ## 5. NullPay stealth recipient — follow-up stub
 
-Sender + amount are hidden today; the **recipient** is still a plain wallet in the e2e.
+Today the withdrawal does not name its deposit (linkage narrows to the deposits in the pool) and every note in a bucket has the same amount; the **recipient** is still a plain wallet in the e2e.
 To make the recipient unlinkable, integrate stealth addresses (NullPay):
 
 - Recipient publishes a stealth meta-address `(B = bG)`; the sender draws ephemeral `r`,
