@@ -12,7 +12,10 @@ import {
 describe("tx size budget gates", () => {
   it("keeps settlement transactions under hard byte/account/signature/data budgets", () => {
     const payer = Keypair.generate();
+    // Any receipt_anchor deployment: there is no default program id.
+    const programId = Keypair.generate().publicKey;
     const { bucketPda, bucketId } = deriveBucketPda({
+      programId,
       nowMs: Date.UTC(2026, 1, 16, 12, 0, 0),
     });
 
@@ -21,6 +24,7 @@ describe("tx size budget gates", () => {
     const legacyTx = buildLegacyAnchorTransaction({
       payer,
       recentBlockhash,
+      programId,
       bucketPda,
       bucketId,
       anchor32: `0x${"11".repeat(32)}`,
@@ -37,6 +41,7 @@ describe("tx size budget gates", () => {
     const v0Tx = buildV0AnchorTransaction({
       payer,
       recentBlockhash,
+      programId,
       bucketPda,
       bucketId,
       anchor32: `0x${"22".repeat(32)}`,

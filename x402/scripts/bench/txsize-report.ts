@@ -4,7 +4,6 @@ import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram } fr
 import { BENCH_THRESHOLDS, SOLANA_TX_HARD_LIMIT_BYTES } from "../../src/bench/thresholds.js";
 import { measureLegacyTransaction, measureV0Transaction } from "../../src/bench/txMetrics.js";
 import {
-  DEFAULT_ANCHOR_PROGRAM_ID,
   buildLegacyAnchorBatchTransaction,
   buildLegacyAnchorTransaction,
   buildV0AnchorTransaction,
@@ -90,11 +89,11 @@ async function main(): Promise<void> {
   const outPath = parseFlagValue(argv, "--out")
     ?? path.resolve(process.cwd(), "reports", "bench_txsize.json");
   const payerPath = parseFlagValue(argv, "--payer-keypair") ?? resolveDefaultPayerKeypairPath();
-  const anchorProgramId = new PublicKey(
-    parseFlagValue(argv, "--program-id")
-      ?? process.env.RECEIPT_ANCHOR_PROGRAM_ID
-      ?? DEFAULT_ANCHOR_PROGRAM_ID.toBase58(),
-  );
+  const anchorProgramIdRaw = parseFlagValue(argv, "--program-id") ?? process.env.RECEIPT_ANCHOR_PROGRAM_ID;
+  if (!anchorProgramIdRaw) {
+    throw new Error("RECEIPT_ANCHOR_UNAVAILABLE: pass --program-id or set RECEIPT_ANCHOR_PROGRAM_ID (there is no default receipt_anchor deployment)");
+  }
+  const anchorProgramId = new PublicKey(anchorProgramIdRaw);
   const nowMs = Date.now();
 
   const payer = payerPath ? loadKeypairFromFile(payerPath) : Keypair.generate();

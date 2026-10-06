@@ -1530,9 +1530,19 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
     }
   }
 
-  const shouldEnableAnchoring = config.anchoringEnabled
-    && Boolean(config.receiptAnchorProgramId)
-    && Boolean(config.anchoringKeypairPath);
+  // Anchoring is opt-in. Once ANCHORING_ENABLED is set, a configuration that
+  // cannot anchor stops startup with RECEIPT_ANCHOR_UNAVAILABLE instead of serving
+  // with anchoring silently off.
+  if (config.anchoringEnabled && (!config.receiptAnchorProgramId || !config.anchoringKeypairPath)) {
+    const missing = [
+      !config.receiptAnchorProgramId ? "RECEIPT_ANCHOR_PROGRAM_ID" : null,
+      !config.anchoringKeypairPath ? "ANCHORING_KEYPAIR_PATH" : null,
+    ].filter(Boolean).join(" and ");
+    throw new Error(
+      `RECEIPT_ANCHOR_UNAVAILABLE: ANCHORING_ENABLED is set but ${missing} is missing. There is no default receipt_anchor deployment; set both or disable anchoring.`,
+    );
+  }
+  const shouldEnableAnchoring = Boolean(config.anchoringEnabled);
   const protocolProgramId = config.pdxDarkProtocolProgramId ?? config.paymentProgramId ?? null;
   const anchorProgramId = config.receiptAnchorProgramId ?? null;
   const anchorProgramOk = !(protocolProgramId && anchorProgramId && protocolProgramId === anchorProgramId);
@@ -1561,8 +1571,10 @@ export function createX402App(config: X402Config = loadConfig(), deps: CreateApp
       anchoringQueue.start();
       context.anchoringQueue = anchoringQueue;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(`anchoring_disabled: ${(error as Error).message}`);
+      throw new Error(
+        `RECEIPT_ANCHOR_UNAVAILABLE: ANCHORING_ENABLED is set but the anchor client could not be built: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
     }
   }
 

@@ -11,7 +11,6 @@ import {
 } from "@solana/web3.js";
 import { deriveBucketIdFromUnixMs, packAnchorBatchV1, packAnchorV1 } from "../packing/anchorV1.js";
 
-export const DEFAULT_ANCHOR_PROGRAM_ID = new PublicKey("3hYWUSYmNCzrHNgsE6xo3jKT9GjCFxCpPWXj4Q4imToz");
 export const DEFAULT_SHOP_ID = "dnp-core";
 export const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
@@ -28,6 +27,24 @@ export function buildMemoInstruction(memo: string, signer?: PublicKey): Transact
 }
 
 const U64_MAX = (1n << 64n) - 1n;
+
+export const RECEIPT_ANCHOR_UNAVAILABLE = "RECEIPT_ANCHOR_UNAVAILABLE";
+
+/**
+ * There is no default receipt_anchor program: the caller must name the
+ * deployment it controls. Throws RECEIPT_ANCHOR_UNAVAILABLE otherwise.
+ */
+export function requireAnchorProgramId(programId: PublicKey | undefined | null): PublicKey {
+  if (!programId) {
+    throw Object.assign(
+      new Error(
+        `${RECEIPT_ANCHOR_UNAVAILABLE}: no receipt_anchor program id was supplied. There is no default deployment; pass the programId of a receipt_anchor deployment you control.`,
+      ),
+      { code: RECEIPT_ANCHOR_UNAVAILABLE },
+    );
+  }
+  return programId;
+}
 
 function toU64LeBytes(value: bigint): Buffer {
   const normalized = value & U64_MAX;
@@ -71,7 +88,7 @@ export function deriveBucketPda(params: {
   nowMs?: number;
   programId?: PublicKey;
 }): { bucketPda: PublicKey; bucketId: bigint; bump: number } {
-  const programId = params.programId ?? DEFAULT_ANCHOR_PROGRAM_ID;
+  const programId = requireAnchorProgramId(params.programId);
   const bucketId = params.bucketId
     ?? deriveBucketIdFromUnixMs(params.nowMs ?? Date.now());
   const seeds: Buffer[] = [
@@ -108,7 +125,7 @@ export function buildAnchorInstruction(params: BuildAnchorInstructionParams): Tr
   }
 
   return new TransactionInstruction({
-    programId: params.programId ?? DEFAULT_ANCHOR_PROGRAM_ID,
+    programId: requireAnchorProgramId(params.programId),
     keys,
     data: Buffer.from(data),
   });
@@ -140,7 +157,7 @@ export function buildAnchorBatchInstruction(params: {
   }
 
   return new TransactionInstruction({
-    programId: params.programId ?? DEFAULT_ANCHOR_PROGRAM_ID,
+    programId: requireAnchorProgramId(params.programId),
     keys,
     data: Buffer.from(data),
   });

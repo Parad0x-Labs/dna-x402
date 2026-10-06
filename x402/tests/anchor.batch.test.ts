@@ -13,7 +13,9 @@ function deterministicAnchor(index: number): string {
 describe("anchor batch", () => {
   it("fits 32 anchors under the 1232-byte tx limit", () => {
     const payer = Keypair.generate();
+    const programId = Keypair.generate().publicKey;
     const { bucketPda } = deriveBucketPda({
+      programId,
       nowMs: Date.UTC(2026, 1, 16, 12, 0, 0),
     });
 
@@ -21,6 +23,7 @@ describe("anchor batch", () => {
     const tx = buildLegacyAnchorBatchTransaction({
       payer,
       recentBlockhash: "11111111111111111111111111111111",
+      programId,
       bucketPda,
       anchors,
       includeClockSysvar: false,
