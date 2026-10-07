@@ -211,7 +211,7 @@ function checkClaim(claim, index, seen) {
 }
 
 function cell(text) {
-  return String(text).replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
+  return String(text).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
 }
 
 function shortId(id) {

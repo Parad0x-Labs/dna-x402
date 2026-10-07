@@ -248,14 +248,21 @@ async function econ(label, P) {
 
 // ── tickets, tree, draw ─────────────────────────────────────────────────────
 
-function randomTicket(k, n) {
-  const pick = new Set();
-  const rnd = crypto.getRandomValues(new Uint32Array(64));
-  let i = 0;
-  while (pick.size < k) {
-    if (i >= rnd.length) throw new Error("rng");
-    pick.add((rnd[i++] % n) + 1);
+// Uniform integer in [0, n): rejection sampling over 32-bit CSPRNG words, so `% n` carries no modulo bias.
+function uniformBelow(n) {
+  if (!Number.isInteger(n) || n < 1 || n > 2 ** 32) throw new RangeError(`uniformBelow: bad bound ${n}`);
+  const limit = 2 ** 32 - (2 ** 32 % n);
+  const word = new Uint32Array(1);
+  for (;;) {
+    crypto.getRandomValues(word);
+    if (word[0] < limit) return word[0] % n;
   }
+}
+
+function randomTicket(k, n) {
+  if (k > n) throw new RangeError(`randomTicket: cannot pick ${k} distinct of ${n}`);
+  const pick = new Set();
+  while (pick.size < k) pick.add(uniformBelow(n) + 1);
   return [...pick].sort((a, b) => a - b);
 }
 
