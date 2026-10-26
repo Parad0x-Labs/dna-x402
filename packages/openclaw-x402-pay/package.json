@@ -34,7 +34,7 @@
     }
   },
   "dependencies": {
-    "@solana/web3.js": "^1.99.0",
+    "@solana/web3.js": "^3.1.1",
     "@solana/spl-token": "^0.4.15"
   },
   "engines": {

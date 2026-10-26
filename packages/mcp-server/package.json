@@ -12,8 +12,8 @@
     "dev": "node --experimental-strip-types src/index.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.32.0",
-    "@solana/web3.js": "^1.99.0"
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@solana/web3.js": "^3.1.1"
   },
   "devDependencies": {
     "@types/node": "^25.9.2",
